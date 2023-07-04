@@ -2,6 +2,12 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $SCRIPTPATH || exit 1
 
+DOCKER_OPTS=""
+if [ "$GITHUB_ACTION" == "" ]
+then
+DOCKER_OPTS="-it"
+fi
+
 if [ "$AWS_REGION" == "" ]
 then
   echo "Defaulting AWS_REGION to eu-north-1"
@@ -15,4 +21,4 @@ docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
 	-e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
 	-e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
 	-e AWS_REGION="$AWS_REGION" \
-	--rm -it -v "$SCRIPTPATH/aws-nuke-config.yml":"/home/aws-nuke/config.yml" quay.io/rebuy/aws-nuke:v2.23.0 --config /home/aws-nuke/config.yml --access-key-id ${AWS_ACCESS_KEY_ID} --secret-access-key ${AWS_SECRET_ACCESS_KEY} --session-token ${AWS_SESSION_TOKEN} --no-dry-run
+	--rm $DOCKER_OPTS -v "$SCRIPTPATH/aws-nuke-config.yml":"/home/aws-nuke/config.yml" quay.io/rebuy/aws-nuke:v2.23.0 --config /home/aws-nuke/config.yml --access-key-id ${AWS_ACCESS_KEY_ID} --secret-access-key ${AWS_SECRET_ACCESS_KEY} --session-token ${AWS_SESSION_TOKEN} --no-dry-run

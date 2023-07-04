@@ -29,6 +29,12 @@ resource-types:
 accounts:
   "877483565445":
     filters:
+      IAMUser:
+      - "github"
+      IAMUserPolicyAttachment:
+      - "github -> AdministratorAccess"
+      IAMUserAccessKey:
+      - "github -> AKIA4YTQYUGC4RTLXD6W"
       EC2TGW:
       - "tgw-092384f97967bfffe"
       IAMRole:
