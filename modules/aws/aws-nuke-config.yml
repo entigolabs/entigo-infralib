@@ -1,0 +1,48 @@
+regions:
+- eu-north-1
+- global
+
+account-blocklist:
+- 738582102279
+- 046792967279
+- 324427516708
+
+resource-types:
+  excludes:
+  - KMSAlias
+  - IAMSAMLProvider
+  - ElasticacheCacheParameterGroup
+  - Route53ResolverRule
+  - SESReceiptFilter
+  - FMSNotificationChannel
+  - SESReceiptRuleSet
+  - FMSPolicy
+  - AWS::Timestream::Database
+  - AWS::Timestream::ScheduledQuery
+  - AWS::Timestream::Table
+  - AWS::AppFlow::ConnectorProfile
+  - AWS::AppFlow::Flow
+  - AWS::AppRunner::Service
+  - AthenaWorkGroup
+  - MediaConvertQueue
+
+accounts:
+  "877483565445":
+    filters:
+      EC2TGW:
+      - "tgw-092384f97967bfffe"
+      IAMRole:
+      - "AWSReservedSSO_AdministratorAccess_092014765180ea16"
+      - "AWSServiceRoleForElastiCache"
+      - "OrganizationAccountAccessRole"
+      - "AWSServiceRoleForTrustedAdvisor"
+      - "AWSServiceRoleForSSO"
+      - "AWSServiceRoleForSupport"
+      IAMRolePolicyAttachment:
+      - "AWSReservedSSO_AdministratorAccess_092014765180ea16 -> AdministratorAccess"
+      - "AWSServiceRoleForElastiCache -> ElastiCacheServiceRolePolicy"
+      - "AWSServiceRoleForOrganizations -> AWSOrganizationsServiceTrustPolicy"
+      - "AWSServiceRoleForSSO -> AWSSSOServiceRolePolicy"
+      - "AWSServiceRoleForSupport -> AWSSupportServiceRolePolicy"
+      - "AWSServiceRoleForTrustedAdvisor -> AWSTrustedAdvisorServiceRolePolicy"
+      - "OrganizationAccountAccessRole -> AdministratorAccess"
