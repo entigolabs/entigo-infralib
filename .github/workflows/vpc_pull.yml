@@ -1,4 +1,4 @@
-name: Test VPC
+name: Test modules/aws/vpc
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
       - 'modules/aws/vpc/**'
 jobs:
   build:
-    name: Test VPC
+    name: Test modules/aws/vpc
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
