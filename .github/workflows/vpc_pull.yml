@@ -1,0 +1,23 @@
+name: Test VPC
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'modules/aws/vpc/**'
+jobs:
+  build:
+    name: Test VPC
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build and run Docker image
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+      run: |
+        modules/aws/vpc/test.sh
+

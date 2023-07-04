@@ -12,7 +12,7 @@ import (
 
 func TestTerraformBasicOne(t *testing.T) {
         // t.Parallel()
-	
+	spew.Dump("")
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "..",
 		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
