@@ -1,0 +1,19 @@
+name: Test VPC
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'modules/aws/vpc/**'
+jobs:
+  build:
+    name: Test VPC
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build and run Docker image
+      run: |
+        modules/aws/vpc/test.sh
+
