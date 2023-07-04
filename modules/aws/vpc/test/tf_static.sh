@@ -3,7 +3,7 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/.."
 cd $SCRIPTPATH || exit 1
 
 DOCKER_OPTS=""
-if [ "$GITHUB_ACTION" != "" ]
+if [ "$GITHUB_ACTION" == "" ]
 then
 DOCKER_OPTS="-it"
 fi
