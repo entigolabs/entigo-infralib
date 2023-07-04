@@ -4,6 +4,7 @@ cd $SCRIPTPATH || exit 1
 
 prefix="`whoami`-`git rev-parse --abbrev-ref HEAD`"
 
+
 if [ "$AWS_REGION" == "" ]
 then
   echo "Defaulting AWS_REGION to eu-north-1"
@@ -18,5 +19,5 @@ docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e TF_VAR_prefix="$prefix" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
-       	-it --rm -v "$(pwd)":"/app" -w /app  entigolabs/entigo-infralib-testing:4
+       	 --rm -v "$(pwd)":"/app" -w /app  entigolabs/entigo-infralib-testing:4
 
