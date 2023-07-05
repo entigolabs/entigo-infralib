@@ -206,7 +206,7 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update        = "OVERWRITE"
-      configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"mig35627\"}}}"
+      #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
     }
   }
