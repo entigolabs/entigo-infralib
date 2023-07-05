@@ -25,6 +25,8 @@ resource-types:
   - AWS::AppRunner::Service
   - AthenaWorkGroup
   - MediaConvertQueue
+  - CloudWatchEventsRule
+  - CloudWatchEventsTarget
 
 accounts:
   "877483565445":

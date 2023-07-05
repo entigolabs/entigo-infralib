@@ -31,6 +31,7 @@ jobs:
           const { data: releases } = await github.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
           const latestRelease = releases[0];
           core.setOutput('release_tag', latestRelease.tag_name);
+          core.info('Latest release tag: ' + latestRelease.tag_name);
 
     - name: Checkout code of latest release
       uses: actions/checkout@v2
@@ -43,8 +44,7 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        modules/aws/vpc/test.sh
-        find . 
+        modules/aws/vpc/test.sh 
     - name: Save state
       run: |
         tar -czvf state.tar.gz ./modules/aws/vpc/.terraform ./modules/aws/vpc/terraform.tfstate.d ./modules/aws/vpc/.terraform.lock.hcl
@@ -76,4 +76,3 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
-        find . 
