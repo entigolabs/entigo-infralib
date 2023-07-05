@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'modules/aws/eks/**'
+  workflow_dispatch:
+
 jobs:
   build:
     name: Test modules/aws/eks

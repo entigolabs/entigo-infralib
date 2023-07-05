@@ -4,25 +4,53 @@ import (
 	"testing"
 	"strings"
 	"os"
+	"fmt"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/davecgh/go-spew/spew"
 )
 
+func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
+	aws.EmptyS3Bucket(t, awsRegion, bucketName)
+	aws.DeleteS3Bucket(t, awsRegion, bucketName)
+}
 
 func TestTerraformBasicOne(t *testing.T) {
         // t.Parallel()
 	spew.Dump("")
+	
+	awsRegion := aws.GetRandomRegion(t, []string{"eu-north-1"}, nil)
+	bucketName := "infralib-modules-aws-vpc-tf"
+	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
+
+	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
+	 if err != nil {
+	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
+	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
+	    } else {
+	      fmt.Println("Error:", err)
+	    }
+	 }
+	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "..",
 		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
+		BackendConfig: map[string]interface{}{
+			"bucket": bucketName,
+			"key":    key,
+			"region": awsRegion,
+		},
 	})
+	terraform.Init(t, terraformOptions)
 	terraform.WorkspaceSelectOrNew(t, terraformOptions, "one")
+
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	  defer terraform.Destroy(t, terraformOptions)
+	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
 	}
 
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.Apply(t, terraformOptions)
 	vpc_id :=terraform.Output(t, terraformOptions, "vpc_id")
 	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
 
@@ -68,16 +96,28 @@ func TestTerraformBasicOne(t *testing.T) {
 func TestTerraformBasicTwo(t *testing.T) {
         // t.Parallel()
 	
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	bucketName := "infralib-modules-aws-vpc-tf"
+	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "..",
-		VarFiles: []string{"test/tf_unit_basic_test_2.tfvars"},
+		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
+		BackendConfig: map[string]interface{}{
+			"bucket": bucketName,
+			"key":    key,
+			"region": awsRegion,
+		},
 	})
+	terraform.Init(t, terraformOptions)
 	terraform.WorkspaceSelectOrNew(t, terraformOptions, "two")
+
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	  defer terraform.Destroy(t, terraformOptions)
+	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
 	}
-	terraform.InitAndApply(t, terraformOptions)
+
+	terraform.Apply(t, terraformOptions)
 
 	vpc_id :=terraform.Output(t, terraformOptions, "vpc_id")
 	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
