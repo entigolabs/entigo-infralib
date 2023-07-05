@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  nuke:
     name: Nuke AWS account
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +19,8 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
       run: |
         modules/aws/nuke.sh
+  install_stable:
+    name: Install stable release
     - name: Get latest release
       uses: actions/github-script@v4
       with:
@@ -39,3 +41,4 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
+        find . 
