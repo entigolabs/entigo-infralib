@@ -21,6 +21,7 @@ jobs:
         modules/aws/nuke.sh
   install_stable:
     name: Install stable release
+    needs: nuke
     runs-on: ubuntu-latest
     steps:
     - name: Get latest release
@@ -46,6 +47,7 @@ jobs:
         find . 
   install_main:
     name: Upgrade stable to main
+    needs: install_stable
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
