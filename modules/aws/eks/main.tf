@@ -174,6 +174,18 @@ module "ebs_csi_irsa_role" {
   }
 }
 
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
+}
+
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -189,13 +201,15 @@ module "eks" {
   cluster_addons = {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     kube-proxy = {
-      resolve_conflicts_on_update_on_update = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
-      before_compute           = true
+      resolve_conflicts_on_create = "OVERWRITE"
       configuration_values = jsonencode({
               env = {
                 # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html 
@@ -206,6 +220,7 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update        = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
     }

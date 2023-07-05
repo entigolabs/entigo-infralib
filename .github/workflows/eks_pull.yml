@@ -1,4 +1,4 @@
-name: Test modules/aws/eks
+name: PR modules/aws/eks
 
 on:
   pull_request:

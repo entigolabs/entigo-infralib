@@ -1,4 +1,4 @@
-name: Test modules/aws/vpc
+name: PR modules/aws/vpc
 
 on:
   pull_request:

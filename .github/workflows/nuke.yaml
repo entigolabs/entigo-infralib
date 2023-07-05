@@ -76,3 +76,11 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
+    - name: Save state
+      run: |
+        tar -czvf state.tar.gz ./modules/aws/vpc/.terraform ./modules/aws/vpc/terraform.tfstate.d ./modules/aws/vpc/.terraform.lock.hcl
+    - name: Publish state
+      uses: actions/upload-artifact@v2
+      with:
+        name: state-artifact
+        path: state.tar.gz
