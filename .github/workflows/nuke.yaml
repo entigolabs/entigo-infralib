@@ -49,9 +49,13 @@ jobs:
       with:
         script: |
           const { data: releases } = await github.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
-          const latestRelease = releases[0];
-          core.setOutput('release_tag', latestRelease.tag_name);
-          core.info('Latest release tag: ' + latestRelease.tag_name);
+          const latestStableRelease = releases.find(release => !release.prerelease);
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
 
     - name: Checkout code of latest release
       uses: actions/checkout@v2
