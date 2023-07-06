@@ -16,7 +16,7 @@ func TestTerraformBasicOne(t *testing.T) {
         // t.Parallel()
 	spew.Dump("")
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-vpc-tf"
+	bucketName := "infralib-modules-aws-eks-tf"
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 	
 	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
@@ -57,7 +57,7 @@ func TestTerraformBasicOne(t *testing.T) {
 func TestTerraformBasicTwo(t *testing.T) {
         // t.Parallel()
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-vpc-tf"
+	bucketName := "infralib-modules-aws-eks-tf"
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
