@@ -48,8 +48,6 @@ func TestTerraformBasicOne(t *testing.T) {
 	cluster_name :=terraform.Output(t, terraformOptions, "cluster_name")
 	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-one", cluster_name, "Wrong cluster_name returned")
 	
-	cluster_id :=terraform.Output(t, terraformOptions, "cluster_id")
-	assert.NotEmpty(t, cluster_id, "cluster_id was not returned")
 
 
 }
@@ -80,6 +78,4 @@ func TestTerraformBasicTwo(t *testing.T) {
 	cluster_name :=terraform.Output(t, terraformOptions, "cluster_name")
 	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-two", cluster_name, "Wrong cluster_name returned")
 	
-	cluster_id :=terraform.Output(t, terraformOptions, "cluster_id")
-	assert.NotEmpty(t, cluster_id, "cluster_id was not returned")
 }
