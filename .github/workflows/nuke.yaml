@@ -15,7 +15,7 @@ jobs:
       with:
         status: 'Starting'
         message: 'Nuking started of entigo-infralib AWS account!'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Nuke entigo-infralib account
@@ -31,7 +31,7 @@ jobs:
       with:
         status: 'Failed'
         message: 'Failed to Nuke the entigo-infralib account!'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
   install_stable:
     name: Install stable release
     needs: nuke
@@ -65,7 +65,7 @@ jobs:
       with:
         status: 'Failed'
         message: 'Fresh installation of latest release failed after Nuke.'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
   install_main:
     name: Upgrade stable to main
     needs: install_stable
@@ -87,11 +87,11 @@ jobs:
       with:
         status: 'Success'
         message: 'Nuke is done. Latest release updated to main.'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
     - name: Slack Failed To Update to Main Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
         status: 'Failed'
         message: 'Updating from latest release to main failed after Nuke.'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
