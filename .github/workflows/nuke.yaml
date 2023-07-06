@@ -10,8 +10,7 @@ jobs:
     name: Nuke AWS account
     runs-on: ubuntu-latest
     steps:
-    - name: Started to nuke entigo-infralib
-      if: ${{ failure() }}
+    - name: Slack Started Message
       uses: rtCamp/action-slack-notify@v2
       with:
         status: 'Starting'
@@ -26,7 +25,7 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
       run: |
         modules/aws/nuke.sh
-    - name: Nuking of the entigo-infralib account failed
+    - name: Slack Failed To Nuke Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
@@ -60,7 +59,7 @@ jobs:
       run: |
         modules/aws/vpc/test.sh 
         modules/aws/eks/test.sh 
-    - name: Fresh install of latest release failed
+    - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
@@ -83,14 +82,13 @@ jobs:
       run: |
         modules/aws/vpc/test.sh
         modules/aws/eks/test.sh 
-    - name: Finished nuking entigo-infralib
-      if: ${{ failure() }}
+    - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
       with:
         status: 'Success'
         message: 'Nuke is done. Latest release updated to main.'
         slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-    - name: Updating from stable to main failed
+    - name: Slack Failed To Update to Main Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:

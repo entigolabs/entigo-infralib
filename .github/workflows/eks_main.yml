@@ -24,7 +24,6 @@ jobs:
       run: |
         modules/aws/eks/test.sh
     - name: Slack success
-      if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
         status: 'Success'
