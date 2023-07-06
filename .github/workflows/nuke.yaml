@@ -13,7 +13,7 @@ jobs:
     - name: Slack Started Message
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_COLOR: 'yellow'
+        SLACK_COLOR: '#EBEB00'
         SLACK_USERNAME: 'github'
         SLACK_MESSAGE: 'Nuking started of entigo-infralib AWS account!'
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -29,9 +29,10 @@ jobs:
     - name: Slack Failed To Nuke Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
-      with:
-        status: 'Failed'
-        message: 'Failed to Nuke the entigo-infralib account!'
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_USERNAME: 'github'
+        SLACK_MESSAGE: 'Failed to Nuke the entigo-infralib account!'
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
   install_stable:
     name: Install stable release
@@ -64,7 +65,7 @@ jobs:
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_COLOR: 'red'
+        SLACK_COLOR: 'failure'
         SLACK_USERNAME: 'github'
         SLACK_MESSAGE: 'Fresh installation of latest release failed after Nuke.'
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -87,7 +88,7 @@ jobs:
     - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_COLOR: 'green'
+        SLACK_COLOR: 'success'
         SLACK_USERNAME: 'github'
         SLACK_MESSAGE: 'Nuke is done. Latest release updated to main.'
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -95,7 +96,7 @@ jobs:
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_COLOR: 'red'
+        SLACK_COLOR: 'failure'
         SLACK_USERNAME: 'github'
         SLACK_MESSAGE: 'Updating from latest release to main failed after Nuke.'
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
