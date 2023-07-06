@@ -157,7 +157,7 @@ jobs:
         SLACK_FOOTER: ""
   release:   
     runs-on: ubuntu-latest
-    needs: fresh_install_main
+    needs: install_main
     name: Release
     steps:
     - name: Check out code
