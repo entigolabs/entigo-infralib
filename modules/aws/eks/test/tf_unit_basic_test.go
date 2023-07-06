@@ -2,7 +2,10 @@ package test
 
 import (
 	"testing"
+	"strings"
 	"os"
+	"fmt"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/davecgh/go-spew/spew"
