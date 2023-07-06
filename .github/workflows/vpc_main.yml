@@ -29,11 +29,11 @@ jobs:
       with:
         status: 'Success'
         message: 'Updated modules/aws/vpc on main'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
     - name: Slack failure
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
         status: 'Failed'
         message: 'Failed to update modules/aws/vpc on main'
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
