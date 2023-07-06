@@ -83,7 +83,7 @@ jobs:
       run: |
         modules/aws/vpc/test.sh
         modules/aws/eks/test.sh 
-    - name: Started to nuke entigo-infralib
+    - name: Finished nuking entigo-infralib
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       with:
