@@ -23,17 +23,20 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
-    - name: Slack success
+    - name: Slack Success Message
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'success'
+        SLACK_MESSAGE: 'Updated modules/aws/vpc on main'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+    - name: Slack Failed Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
-      with:
-        status: 'Success'
-        message: 'Updated modules/aws/vpc on main'
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Failed to update modules/aws/vpc on main'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-    - name: Slack failure
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      with:
-        status: 'Failed'
-        message: 'Failed to update modules/aws/vpc on main'
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
