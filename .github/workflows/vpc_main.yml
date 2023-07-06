@@ -23,15 +23,26 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
-    - name: Slack Success Message
+    - name: Create Release
+      if: ${{ success() && github.event_name == 'push' }}
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: modules/aws/vpc-rc${{ github.run_number }}
+        release_name: Release modules/aws/vpc-rc${{ github.run_number }}
+        draft: false
+        prerelease: true
+    - name: Slack Success Release Message
+      if: ${{ success() && github.event_name == 'push' }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Updated modules/aws/vpc on main'
+        SLACK_MESSAGE: 'Released modules/aws/vpc ${{ steps.create_release.outputs.html_url }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions,commit
+        MSG_MINIMAL: actions url,commit
         SLACK_FOOTER: ""
     - name: Slack Failed Message
       if: ${{ failure() }}
