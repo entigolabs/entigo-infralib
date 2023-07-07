@@ -167,12 +167,14 @@ jobs:
       id: last_release
       run: |
         git fetch --tags
-        echo "::set-output name=tag::$(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude='*-*')"
+        echo "Current version is $(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude='*-*')"
+        echo "{tag}=$(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude='*-*')" >> $GITHUB_OUTPUT
         
     - name: Determine next version
       id: next_version
-      run: echo "::set-output name=version::$(semver bump patch "${{ steps.last_release.outputs.tag }}")"
-
+      run: |
+        echo "Next version will be $(semver bump patch "${{ steps.last_release.outputs.tag }}")"
+        echo "{version}=$(semver bump patch "${{ steps.last_release.outputs.tag }}")" >> $GITHUB_OUTPUT
       
     - name: Create Release
       id: create_release
