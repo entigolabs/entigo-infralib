@@ -179,11 +179,12 @@ module "ebs_csi_irsa_role" {
   }
 }
 
-module "vpc_cni_irsa" {
+module "vpc_cni_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "5.27.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
+  vpc_cni_enable_ipv4   = true
   vpc_cni_enable_ipv6   = true
 
   oidc_providers = {
@@ -237,14 +238,13 @@ module "eks" {
       resolve_conflicts_on_create = "OVERWRITE"
       most_recent              = true
       before_compute           = true
-      #service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
-      #configuration_values = jsonencode({
-      #  env = {
-      #    # Reference docs https://docs.aws.amazon.com/eks/latest/userguide/cni-increase-ip-addresses.html
-      #    ENABLE_PREFIX_DELEGATION = "true"
-      #    WARM_PREFIX_TARGET       = "1"
-      #  }
-      #})
+      service_account_role_arn = module.vpc_cni_irsa_role.iam_role_arn
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
     }
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update        = "OVERWRITE"
