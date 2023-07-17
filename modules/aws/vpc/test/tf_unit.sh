@@ -2,7 +2,12 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/.."
 cd $SCRIPTPATH || exit 1
 
+if [ "$PR_BRANCH" != "" ]
+then
+prefix="`whoami`-$PR_BRANCH"
+else
 prefix="`whoami`-`git rev-parse --abbrev-ref HEAD`"
+fi
 
 
 if [ "$AWS_REGION" == "" ]
