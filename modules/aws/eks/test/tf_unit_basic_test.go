@@ -30,6 +30,7 @@ func TestTerraformBasicOne(t *testing.T) {
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "..",
+		Reconfigure: true,
 		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
@@ -60,6 +61,7 @@ func TestTerraformBasicTwo(t *testing.T) {
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "..",
+		Reconfigure: true,
 		VarFiles: []string{"test/tf_unit_basic_test_2.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
