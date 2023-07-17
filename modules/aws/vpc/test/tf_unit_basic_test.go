@@ -110,7 +110,16 @@ func TestTerraformBasicTwo(t *testing.T) {
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucketName := "infralib-modules-aws-vpc-tf"
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-
+	
+	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
+	 if err != nil {
+	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
+	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
+	    } else {
+	      fmt.Println("Error:", err)
+	    }
+	 }
+	 
         rootFolder := ".."
         terraformFolderRelativeToRoot := "."
         tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)

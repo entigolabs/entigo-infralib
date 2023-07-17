@@ -49,13 +49,8 @@ variable "eks_spot_max_size" {
 variable "eks_spot_instance_types" {
   type = list(string)
   default = [
-        "m5.large",
-        "m5d.large",
-        "m6i.large",
-        "c5a.xlarge",
-        "c5.xlarge",
-        "c6i.xlarge",
-        "r6i.large"
+        "t3.medium",
+        "t3.large"
   ]
 }
 

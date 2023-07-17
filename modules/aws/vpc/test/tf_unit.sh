@@ -2,7 +2,12 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/.."
 cd $SCRIPTPATH || exit 1
 
+if [ "$PR_BRANCH" != "" ]
+then
+prefix="`whoami`-$PR_BRANCH"
+else
 prefix="`whoami`-`git rev-parse --abbrev-ref HEAD`"
+fi
 
 
 if [ "$AWS_REGION" == "" ]
@@ -23,5 +28,5 @@ docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e TF_VAR_prefix="$prefix" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
-       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -w /app  entigolabs/entigo-infralib-testing:11
+       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -w /app  entigolabs/entigo-infralib-testing:13
 
