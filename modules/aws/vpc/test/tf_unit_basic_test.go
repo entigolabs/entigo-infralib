@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -17,7 +18,7 @@ func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
 }
 
 func TestTerraformBasicOne(t *testing.T) {
-        // t.Parallel()
+        t.Parallel()
 	spew.Dump("")
 	
 	awsRegion := aws.GetRandomRegion(t, []string{"eu-north-1"}, nil)
@@ -32,9 +33,13 @@ func TestTerraformBasicOne(t *testing.T) {
 	      fmt.Println("Error:", err)
 	    }
 	 }
+ 
+        rootFolder := ".." 
+        terraformFolderRelativeToRoot := "."
+        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "..",
+		TerraformDir: tempTestFolder,
 		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
@@ -99,14 +104,18 @@ func TestTerraformBasicOne(t *testing.T) {
 }
 
 func TestTerraformBasicTwo(t *testing.T) {
-        // t.Parallel()
+        t.Parallel()
 	
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucketName := "infralib-modules-aws-vpc-tf"
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
+
+        rootFolder := ".."
+        terraformFolderRelativeToRoot := "."
+        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "..",
+		TerraformDir: tempTestFolder,
 		VarFiles: []string{"test/tf_unit_basic_test_2.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
