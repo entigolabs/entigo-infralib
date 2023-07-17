@@ -23,7 +23,7 @@ variable "eks_cluster_public" {
 
 variable "eks_main_min_size" {
   type = number
-  default = 3
+  default = 1
 }
 
 variable "eks_main_max_size" {
@@ -38,7 +38,7 @@ variable "eks_main_instance_types" {
 
 variable "eks_spot_min_size" {
   type = number
-  default = 3
+  default = 1
 }
 
 variable "eks_spot_max_size" {
@@ -61,7 +61,7 @@ variable "eks_spot_instance_types" {
 
 variable "eks_db_min_size" {
   type = number
-  default = 3
+  default = 1
 }
 
 variable "eks_db_max_size" {
@@ -77,7 +77,7 @@ variable "eks_db_instance_types" {
 
 variable "eks_monitoring_min_size" {
   type = number
-  default = 3
+  default = 1
 }
 
 variable "eks_monitoring_max_size" {
