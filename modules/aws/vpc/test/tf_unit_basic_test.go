@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -17,7 +18,7 @@ func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
 }
 
 func TestTerraformBasicOne(t *testing.T) {
-        // t.Parallel()
+        t.Parallel()
 	spew.Dump("")
 	
 	awsRegion := aws.GetRandomRegion(t, []string{"eu-north-1"}, nil)
@@ -32,9 +33,13 @@ func TestTerraformBasicOne(t *testing.T) {
 	      fmt.Println("Error:", err)
 	    }
 	 }
+ 
+        rootFolder := ".." 
+        terraformFolderRelativeToRoot := "."
+        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "..",
+		TerraformDir: tempTestFolder,
 		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
@@ -51,57 +56,66 @@ func TestTerraformBasicOne(t *testing.T) {
 	}
 
 	terraform.Apply(t, terraformOptions)
-	vpc_id :=terraform.Output(t, terraformOptions, "vpc_id")
+
+        outputs, err := terraform.OutputAllE(t, terraformOptions)
+        if err != nil {
+	  t.Fatalf("Failed to get outputs")
+        }
+
+	vpc_id := outputs["vpc_id"]
 	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
 
-	private_subnets :=terraform.Output(t, terraformOptions, "private_subnets")
-	// spew.Dump(private_subnets)
+	private_subnets := fmt.Sprint(outputs["private_subnets"])
 	assert.Equal(t, 3, len(strings.Split(private_subnets, " ")), "Wrong number of private_subnets returned")
 	  
-	public_subnets :=terraform.Output(t, terraformOptions, "public_subnets")
+	public_subnets := fmt.Sprint(outputs["public_subnets"])
 	assert.Equal(t, 3, len(strings.Split(public_subnets, " ")), "Wrong number of public_subnets returned")
 	  
-	intra_subnets :=terraform.Output(t, terraformOptions, "intra_subnets")
+	intra_subnets := fmt.Sprint(outputs["intra_subnets"])
 	assert.Equal(t, "[]", intra_subnets, "Wrong number of intra_subnets returned")
 	
-	database_subnets :=terraform.Output(t, terraformOptions, "database_subnets")
+	database_subnets := fmt.Sprint(outputs["database_subnets"])
 	assert.Equal(t, 3, len(strings.Split(database_subnets, " ")), "Wrong number of database_subnets returned")
 	
-	database_subnet_group :=terraform.Output(t, terraformOptions, "database_subnet_group")
+	database_subnet_group := outputs["database_subnet_group"]
 	assert.NotEmpty(t, database_subnet_group, "database_subnet_group was not returned")
 	
-	elasticache_subnets :=terraform.Output(t, terraformOptions, "elasticache_subnets")
+	elasticache_subnets := fmt.Sprint(outputs["elasticache_subnets"])
 	assert.Equal(t, 3, len(strings.Split(elasticache_subnets, " ")), "Wrong number of elasticache_subnets returned")
 	
-	elasticache_subnet_group :=terraform.Output(t, terraformOptions, "elasticache_subnet_group")
+	elasticache_subnet_group := outputs["elasticache_subnet_group"]
 	assert.NotEmpty(t, elasticache_subnet_group, "elasticache_subnet_group was not returned")
 	
-	private_subnet_cidrs :=terraform.Output(t, terraformOptions, "private_subnet_cidrs")
+	private_subnet_cidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
 	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", private_subnet_cidrs, "Wrong value for private_subnet_cidrs returned")
 	  
-	public_subnet_cidrs :=terraform.Output(t, terraformOptions, "public_subnet_cidrs")
+	public_subnet_cidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
 	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24 10.146.6.0/24]", public_subnet_cidrs, "Wrong value for public_subnet_cidrs returned")
 	
-	database_subnet_cidrs :=terraform.Output(t, terraformOptions, "database_subnet_cidrs")
+	database_subnet_cidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
 	assert.Equal(t, "[10.146.16.0/22 10.146.20.0/22 10.146.24.0/22]", database_subnet_cidrs, "Wrong value for database_subnet_cidrs returned")
 	
-	elasticache_subnet_cidrs :=terraform.Output(t, terraformOptions, "elasticache_subnet_cidrs")
+	elasticache_subnet_cidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
 	assert.Equal(t, "[10.146.0.0/26 10.146.0.64/26 10.146.0.128/26]", elasticache_subnet_cidrs, "Wrong value for elasticache_subnet_cidrs returned")
 	
-	intra_subnet_cidrs :=terraform.Output(t, terraformOptions, "intra_subnet_cidrs")
+	intra_subnet_cidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
 	assert.Equal(t, "[]", intra_subnet_cidrs, "Wrong value for intra_subnet_cidrs returned")
 
 }
 
 func TestTerraformBasicTwo(t *testing.T) {
-        // t.Parallel()
+        t.Parallel()
 	
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucketName := "infralib-modules-aws-vpc-tf"
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
+
+        rootFolder := ".."
+        terraformFolderRelativeToRoot := "."
+        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "..",
+		TerraformDir: tempTestFolder,
 		VarFiles: []string{"test/tf_unit_basic_test_2.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
@@ -119,36 +133,41 @@ func TestTerraformBasicTwo(t *testing.T) {
 
 	terraform.Apply(t, terraformOptions)
 
-	vpc_id :=terraform.Output(t, terraformOptions, "vpc_id")
+        outputs, err := terraform.OutputAllE(t, terraformOptions)
+        if err != nil {
+          t.Fatalf("Failed to get outputs")
+        }
+
+        vpc_id := outputs["vpc_id"]
 	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
 	
-	private_subnets :=terraform.Output(t, terraformOptions, "private_subnets")
+        private_subnets := fmt.Sprint(outputs["private_subnets"])
 	assert.Equal(t, 3, len(strings.Split(private_subnets, " ")), "Wrong number of private_subnets returned")
 	  
-	public_subnets :=terraform.Output(t, terraformOptions, "public_subnets")
+        public_subnets := fmt.Sprint(outputs["public_subnets"])
 	assert.Equal(t, 2, len(strings.Split(public_subnets, " ")), "Wrong number of public_subnets returned")
 	  
-	intra_subnets :=terraform.Output(t, terraformOptions, "intra_subnets")
+        intra_subnets := fmt.Sprint(outputs["intra_subnets"])
 	assert.Equal(t, 1, len(strings.Split(intra_subnets, " ")), "Wrong number of intra_subnets returned")
 	
-	database_subnets :=terraform.Output(t, terraformOptions, "database_subnets")
+        database_subnets := fmt.Sprint(outputs["database_subnets"])
 	assert.Equal(t, "[]", database_subnets, "Wrong number of database_subnets returned")
 	
-	elasticache_subnets :=terraform.Output(t, terraformOptions, "elasticache_subnets")
+        elasticache_subnets := fmt.Sprint(outputs["elasticache_subnets"])
 	assert.Equal(t, "[]", elasticache_subnets, "Wrong number of elasticache_subnets returned")
 	
-	private_subnet_cidrs :=terraform.Output(t, terraformOptions, "private_subnet_cidrs")
+        private_subnet_cidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
 	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", private_subnet_cidrs, "Wrong value for private_subnet_cidrs returned")
 	  
-	public_subnet_cidrs :=terraform.Output(t, terraformOptions, "public_subnet_cidrs")
+        public_subnet_cidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
 	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24]", public_subnet_cidrs, "Wrong value for public_subnet_cidrs returned")
 	
-	database_subnet_cidrs :=terraform.Output(t, terraformOptions, "database_subnet_cidrs")
+        database_subnet_cidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
 	assert.Equal(t, "[]", database_subnet_cidrs, "Wrong value for database_subnet_cidrs returned")
 	
-	elasticache_subnet_cidrs :=terraform.Output(t, terraformOptions, "elasticache_subnet_cidrs")
+        elasticache_subnet_cidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
 	assert.Equal(t, "[]", elasticache_subnet_cidrs, "Wrong value for elasticache_subnet_cidrs returned")
 	
-	intra_subnet_cidrs :=terraform.Output(t, terraformOptions, "intra_subnet_cidrs")
+        intra_subnet_cidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
 	assert.Equal(t, "[10.146.0.0/26]", intra_subnet_cidrs, "Wrong value for intra_subnet_cidrs returned")
 }
