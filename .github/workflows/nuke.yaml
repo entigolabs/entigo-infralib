@@ -53,7 +53,7 @@ jobs:
           const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
           if (latestStableRelease) {
             core.setOutput('release_tag', latestStableRelease);
-            core.info('Latest stable release tag: ' + latestStableRelease);
+            core.info('Latest stable release tag: ' + JSON.stringify(latestStableRelease, null, 4));
           } else {
             core.setFailed('No stable releases found');
           }
