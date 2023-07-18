@@ -69,7 +69,9 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
+        LATEST_RELEASE: ${{ steps.get_latest_release.outputs.release_tag }}
       run: |
+        echo "Latest release is $LATEST_RELEASE"
         modules/aws/vpc/test.sh 
         modules/aws/eks/test.sh 
     - name: Slack Failed To Install Latest Release Message
