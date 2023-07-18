@@ -155,8 +155,9 @@ jobs:
                 const major = parseInt(match[1], 10);
                 const minor = parseInt(match[2], 10);
                 const patch = parseInt(match[3], 10) + 1;
-                core.setOutput('new_version',  `v${major}.${minor}.${patch}`);
-                core.info('Latest release is not the same as main branch, need to make a new release v${major}.${minor}.${patch}');
+                const new_version = `v${major}.${minor}.${patch}`
+                core.setOutput('new_version',  new_version);
+                core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
               } else {
                 core.info('Latest release is same as main branch, no need to make a new release');
                 core.setOutput('new_release_needed', "false");
