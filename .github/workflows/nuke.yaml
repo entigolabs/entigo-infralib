@@ -28,7 +28,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
       run: |
-        #modules/aws/nuke.sh
+        modules/aws/nuke.sh
         echo "Fake nuke"
     - name: Slack Failed To Nuke Message
       if: ${{ failure() }}
