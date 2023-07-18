@@ -50,12 +50,10 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
-          const latestStableRelease = releases.find(release => !release.prerelease);
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
           if (latestStableRelease) {
-            core.setOutput('release_tag', latestStableRelease.tag_name);
-            core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
-            core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
+            core.setOutput('release_tag', latestStableRelease);
+            core.info('Latest stable release tag: ' + latestStableRelease);
           } else {
             core.setFailed('No stable releases found');
           }
