@@ -50,11 +50,11 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
-          const latestStableRelease = releases.find(release => !release.prerelease);
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
           if (latestStableRelease) {
             core.setOutput('release_tag', latestStableRelease.tag_name);
             core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
+            core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
           } else {
             core.setFailed('No stable releases found');
           }
@@ -70,11 +70,8 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
-        LATEST_RELEASE: ${{ steps.get_latest_release.outputs.release_tag }}
       run: |
-        echo "Latest stable release is $LATEST_RELEASE"
         echo "Current stable release commit is $(git rev-parse HEAD)"
-        echo "LATEST_STABLE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         #modules/aws/vpc/test.sh 
         #modules/aws/eks/test.sh 
     - name: Slack Failed To Install Latest Release Message
@@ -101,12 +98,9 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
-        LATEST_RELEASE: ${{ steps.get_latest_release.outputs.release_tag }}
       run: |
         #modules/aws/vpc/test.sh
         #modules/aws/eks/test.sh
-        echo "Latest stable release is $LATEST_RELEASE"
-        echo "LATEST_MAIN_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
@@ -134,15 +128,27 @@ jobs:
     needs: install_main
     name: Release
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-      
-    - name: Get last non-pre-release tag
-      id: last_release
-      run: |
-        git fetch --tags
-        echo "Current version is $(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude='*-*')"
-        echo "{tag}=$(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude='*-*')" >> $GITHUB_OUTPUT
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const currentMain = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
+          if (latestStableRelease) {
+            if (currentMain) {
+              core.setOutput('release_tag', latestStableRelease.tag_name);
+              core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
+              core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
+              core.info('Main branch commit: ' + currentMain.commit_sha);
+            } else {
+               core.setFailed('No main branch found');
+            }
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+
         
     - name: Determine next version
       id: next_version
