@@ -50,7 +50,7 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const { data: releases } = await github.rest.actions.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
+          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
           const latestStableRelease = releases.find(release => !release.prerelease);
           if (latestStableRelease) {
             core.setOutput('release_tag', latestStableRelease.tag_name);
