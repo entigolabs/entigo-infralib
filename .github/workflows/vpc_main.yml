@@ -23,6 +23,20 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/aws/vpc/test.sh
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const versionString = '' + latestStableRelease.data.tag_name;
+          const regex = /^v(\d+)\.(\d+)\.(\d+)$/;
+          const match = versionString.match(regex);
+          const major = parseInt(match[1], 10);
+          const minor = parseInt(match[2], 10);
+          const patch = parseInt(match[3], 10) + 1;
+          const new_version = `v${major}.${minor}.${patch}`
+          core.setOutput('new_version',  new_version);
     - name: Create Release
       if: ${{ success() && github.event_name == 'push' }}
       uses: actions/create-release@v1
@@ -30,7 +44,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: modules/aws/vpc-rc${{ github.run_number }}
+        tag_name: modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
         release_name: Release modules/aws/vpc-rc${{ github.run_number }}
         draft: false
         prerelease: true
