@@ -145,9 +145,9 @@ jobs:
               core.info('Main branch commit: ' +  currentMain.data.commit.sha);
               if ( currentStable.data.sha != currentMain.data.commit.sha) {
                 const semver = require('semver');
-                const incrementedVersion = semver.inc("${{ latestStableRelease.data.tag_name }}", "patch");
+                const incrementedVersion = semver.inc(latestStableRelease.data.tag_name, "patch");
                 
-                core.info('Latest release ${{ latestStableRelease.data.tag_name }} differs from main, going to release new version ${{ incrementedVersion }}');
+                core.info('Latest release ' + latestStableRelease.data.tag_name + 'differs from main, going to release new version' + incrementedVersion);
                 core.setOutput('new_release_needed', "true");
                 core.setOutput('new_version_tag', incrementedVersion);
               } else {
