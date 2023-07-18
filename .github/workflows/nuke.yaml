@@ -141,8 +141,15 @@ jobs:
           if (currentStable) {
             if (currentMain) {
               core.setOutput('release_tag', latestStableRelease.data.tag_name);
-              core.info('Latest stable release tag: ' + JSON.stringify(currentStable, null, 2));
+              core.info('Latest stable release tag: ' + currentStable.data.sha);
               core.info('Main branch commit: ' +  currentMain.data.commit.sha);
+              if ( currentStable.data.sha != currentMain.data.commit.sha) {
+                core.info('Latest release differs from main, going to release new version');
+                core.setOutput('new_release_needed', "true");
+              } else {
+                core.info('Latest release is same as main branch, no need to make a new release');
+                core.setOutput('new_release_needed', "false");
+              }
             } else {
                core.setFailed('No main branch found');
             }
@@ -165,6 +172,7 @@ jobs:
         release_name: Release ${{ steps.next_version.outputs.version }}
         draft: false
         prerelease: false
+      if: {{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
     - name: Slack Success Release Message
       if: ${{ success() }}
       uses: rtCamp/action-slack-notify@v2
