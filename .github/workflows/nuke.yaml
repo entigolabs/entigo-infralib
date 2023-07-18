@@ -149,8 +149,9 @@ jobs:
               if ( currentStable.data.sha != currentMain.data.commit.sha) {
                 core.info('Latest release is not the same as main branch, need to make a new release');
                 core.setOutput('new_release_needed', "true");
-                const versionString = latestStableRelease.data.tag_name;
-                match = versionString.match('/^v(\d+)\.(\d+)\.(\d+)$/');
+                const versionString = '' + latestStableRelease.data.tag_name;
+                const regex = /^v(\d+)\.(\d+)\.(\d+)$/;
+                const match = versionString.match(regex);
                 const major = parseInt(match[1], 10);
                 const minor = parseInt(match[2], 10);
                 const patch = parseInt(match[3], 10) + 1;
