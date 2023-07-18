@@ -142,7 +142,7 @@ jobs:
               core.setOutput('release_tag', latestStableRelease.tag_name);
               core.info('Latest stable release tag: ' + JSON.stringify(latestStableRelease, null, 2));
               core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
-              core.info('Main branch commit: ' +  JSON.stringify(currentMain, null, 2);
+              core.info('Main branch commit: ' +  JSON.stringify(currentMain, null, 2));
             } else {
                core.setFailed('No main branch found');
             }
