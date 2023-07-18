@@ -90,6 +90,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+        ref: main
     - name: Update resources based on main code
       id: update_to_main
       env:
@@ -133,16 +134,15 @@ jobs:
       with:
         script: |
           const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
-          const currentMain = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
-          
+          const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
+          const currentStable = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: latestStableRelease.data.tag_name });
          
           
-          if (latestStableRelease) {
+          if (currentStable) {
             if (currentMain) {
               core.setOutput('release_tag', latestStableRelease.tag_name);
-              core.info('Latest stable release tag: ' + JSON.stringify(latestStableRelease, null, 2));
-              core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
-              core.info('Main branch commit: ' +  JSON.stringify(currentMain, null, 2));
+              core.info('Latest stable release tag: ' + JSON.stringify(currentStable, null, 2));
+              core.info('Main branch commit: ' +  currentMain.data.commit.sha);
             } else {
                core.setFailed('No main branch found');
             }
