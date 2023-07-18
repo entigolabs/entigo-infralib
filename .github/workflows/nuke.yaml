@@ -136,8 +136,6 @@ jobs:
           const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
           const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
           const currentStable = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: latestStableRelease.data.tag_name });
-         
-          
           if (currentStable) {
             if (currentMain) {
               core.setOutput('release_tag', latestStableRelease.tag_name);
