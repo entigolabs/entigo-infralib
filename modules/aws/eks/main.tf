@@ -144,7 +144,7 @@ locals {
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >=0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "monitoring" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "monitoring" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
 
   }
 
@@ -325,6 +325,7 @@ module "eks" {
     iam_role_additional_policies = {
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
+    iam_role_attach_cni_policy = false
   }
 
   eks_managed_node_groups = local.eks_managed_node_groups
