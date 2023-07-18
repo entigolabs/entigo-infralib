@@ -90,6 +90,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
         ref: main
     - name: Update resources based on main code
       id: update_to_main
