@@ -132,8 +132,7 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
-          const latestStableRelease = releases.find(release => !release.prerelease);
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
           const currentMain = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
           
          
@@ -141,9 +140,9 @@ jobs:
           if (latestStableRelease) {
             if (currentMain) {
               core.setOutput('release_tag', latestStableRelease.tag_name);
-              core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
+              core.info('Latest stable release tag: ' + JSON.stringify(latestStableRelease, null, 2));
               core.info('Latest stable release commit: ' + latestStableRelease.commit_sha);
-              core.info('Main branch commit: ' + currentMain.commit_sha);
+              core.info('Main branch commit: ' +  JSON.stringify(currentMain, null, 2);
             } else {
                core.setFailed('No main branch found');
             }
