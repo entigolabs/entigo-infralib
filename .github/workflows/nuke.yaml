@@ -129,6 +129,10 @@ jobs:
     needs: install_main
     name: Release
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: main
     - name: Get latest release
       id: get_latest_release
       uses: actions/github-script@v6
@@ -159,11 +163,13 @@ jobs:
           } else {
             core.setFailed('No stable releases found');
           }
-    - uses: actions-ecosystem/action-bump-semver@v1
-      id: next_version
+
+    - name: Get Next Version
+      id: semver
+      uses: ietf-tools/semver-action@v1
       with:
-        current_version: ${{ steps.get_latest_release.outputs.current_version_tag }}
-        level: minor
+        token: ${{ github.token }}
+        branch: main
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Create Release
