@@ -159,23 +159,21 @@ jobs:
           } else {
             core.setFailed('No stable releases found');
           }
-    - name: Check out code
-      uses: actions/checkout@v2
-    - name: Determine next version
+    - uses: actions-ecosystem/action-bump-semver@v1
       id: next_version
-      run: |
-        new_version=$(semver bump patch "${{ steps.get_latest_release.outputs.current_version_tag }}")
-        echo "Next version will be $new_version)"
-        echo "{version}=$new_version" >> $GITHUB_OUTPUT
+      with:
+        current_version: ${{ steps.get_latest_release.outputs.current_version_tag }}
+        level: minor
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.next_version.outputs.version }}
-        release_name: Release ${{ steps.next_version.outputs.version }}
+        tag_name: ${{ steps.next_version.outputs.new_version }}
+        release_name: Release ${{ steps.next_version.outputs.new_version }}
         draft: false
         prerelease: false
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
@@ -184,7 +182,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released ${{ steps.next_version.outputs.version }} ${{ steps.create_release.outputs.html_url }}'
+        SLACK_MESSAGE: 'Released ${{ steps.next_version.outputs.new_version }} ${{ steps.create_release.outputs.html_url }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
