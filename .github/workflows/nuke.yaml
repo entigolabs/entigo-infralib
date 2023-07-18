@@ -148,9 +148,6 @@ jobs:
           } else {
             core.setFailed('No stable releases found');
           }
-
-
-        
     - name: Determine next version
       id: next_version
       run: |
