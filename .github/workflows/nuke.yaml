@@ -1,4 +1,4 @@
-name: Nuke
+name: Nuke and Release
 
 on:
   schedule:
@@ -143,8 +143,6 @@ jobs:
           const currentStable = await github.rest.repos.getCommit({ owner: context.repo.owner, repo: context.repo.repo, ref: 'refs/tags/' + latestStableRelease.data.tag_name });
           
           if (currentStable) {
-            core.setOutput('current_version_tag', latestStableRelease.data.tag_name);
-            
             if (currentMain) {
               core.setOutput('release_tag', latestStableRelease.data.tag_name);
               core.info('Latest stable release tag: ' + currentStable.data.sha);
@@ -152,6 +150,11 @@ jobs:
               if ( currentStable.data.sha != currentMain.data.commit.sha) {
                 core.info('Latest release is not the same as main branch, need to make a new release');
                 core.setOutput('new_release_needed', "true");
+                match = versionString.match('/^v(\d+)\.(\d+)\.(\d+)$/');
+                const major = parseInt(match[1], 10);
+                const minor = parseInt(match[2], 10);
+                const patch = parseInt(match[3], 10) + 1;
+                core.setOutput('new_version',  `v${major}.${minor}.${patch}`);
 
               } else {
                 core.info('Latest release is same as main branch, no need to make a new release');
@@ -164,22 +167,14 @@ jobs:
             core.setFailed('No stable releases found');
           }
 
-    - name: Get Next Version
-      id: semver
-      uses: ietf-tools/semver-action@v1
-      with:
-        token: ${{ github.token }}
-        branch: main
-      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.next_version.outputs.new_version }}
-        release_name: Release ${{ steps.next_version.outputs.new_version }}
+        tag_name: ${{ steps.get_latest_release.outputs.new_version }}
+        release_name: Release ${{ steps.get_latest_release.outputs.new_version }}
         draft: false
         prerelease: false
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
@@ -188,7 +183,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released ${{ steps.next_version.outputs.new_version }} ${{ steps.create_release.outputs.html_url }}'
+        SLACK_MESSAGE: 'Released ${{ steps.get_latest_release.outputs.new_version }} ${{ steps.create_release.outputs.html_url }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
