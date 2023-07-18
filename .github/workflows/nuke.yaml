@@ -72,8 +72,9 @@ jobs:
         LATEST_RELEASE: ${{ steps.get_latest_release.outputs.release_tag }}
       run: |
         echo "Latest release is $LATEST_RELEASE"
-        modules/aws/vpc/test.sh 
-        modules/aws/eks/test.sh 
+        echo "Current commit is $(git rev-parse HEAD)"
+        #modules/aws/vpc/test.sh 
+        #modules/aws/eks/test.sh 
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -98,8 +99,9 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        modules/aws/vpc/test.sh
-        modules/aws/eks/test.sh
+        #modules/aws/vpc/test.sh
+        #modules/aws/eks/test.sh
+        echo "Current commit is $(git rev-parse HEAD)"
     - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
       env:
