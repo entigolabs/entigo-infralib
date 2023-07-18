@@ -50,7 +50,8 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
+          const latestStableRelease = releases.find(release => !release.prerelease);
           if (latestStableRelease) {
             core.setOutput('release_tag', latestStableRelease.tag_name);
             core.info('Latest stable release tag: ' + latestStableRelease.tag_name);
@@ -133,7 +134,8 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const { data: releases } = await github.rest.repos.listReleases({ owner: context.repo.owner, repo: context.repo.repo });
+          const latestStableRelease = releases.find(release => !release.prerelease);
           const currentMain = await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
           if (latestStableRelease) {
             if (currentMain) {
