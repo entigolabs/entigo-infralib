@@ -6,7 +6,7 @@ locals {
       groups   = ["system:masters"]
     }
   ]
-  
+
   eks_managed_node_groups_all = {
     main = {
       min_size        = var.eks_main_min_size
@@ -40,7 +40,7 @@ locals {
       instance_types  = var.eks_spot_instance_types
       capacity_type   = "SPOT"
       release_version = var.eks_cluster_version
-      
+
       taints = [
         {
           key    = "spot"
@@ -140,11 +140,14 @@ locals {
       }
     }
   }
+
+  # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups = {
     for key, value in local.eks_managed_node_groups_all :
-      key => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "monitoring" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "monitoring" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+
   }
-  
+
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
@@ -180,8 +183,8 @@ module "ebs_csi_irsa_role" {
 }
 
 module "vpc_cni_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.27.0"
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version               = "5.27.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -222,7 +225,7 @@ module "eks" {
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = var.eks_cluster_public
   cluster_enabled_log_types       = var.cluster_enabled_log_types
-  enable_irsa     = true
+  enable_irsa                     = true
 
   cluster_addons = {
     coredns = {
@@ -236,9 +239,9 @@ module "eks" {
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      most_recent              = true
-      before_compute           = true
-      service_account_role_arn = module.vpc_cni_irsa_role.iam_role_arn
+      most_recent                 = true
+      before_compute              = true
+      service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = "true"
@@ -247,7 +250,7 @@ module "eks" {
       })
     }
     aws-ebs-csi-driver = {
-      resolve_conflicts_on_update        = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
@@ -318,8 +321,14 @@ module "eks" {
 
   cluster_encryption_config = []
 
-  eks_managed_node_groups = local.eks_managed_node_groups
+  eks_managed_node_group_defaults = {
+    iam_role_additional_policies = {
+      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    }
+    iam_role_attach_cni_policy = false
+  }
 
+  eks_managed_node_groups = local.eks_managed_node_groups
 
   # aws-auth configmap
   manage_aws_auth_configmap = true
