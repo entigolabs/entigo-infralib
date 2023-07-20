@@ -19,7 +19,7 @@ data "aws_ssm_parameter" "public_subnets" {
 }
 
 data "aws_ssm_parameters_by_path" "vpc" {
-  path = "/entigo-infralib/${var.vpc_prefix}-${terraform.workspace}/vpc"
+  path      = "/entigo-infralib/${var.vpc_prefix}-${terraform.workspace}/vpc"
   recursive = true
 }
 

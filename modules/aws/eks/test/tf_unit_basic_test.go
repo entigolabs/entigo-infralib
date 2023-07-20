@@ -30,13 +30,13 @@ func TestTerraformBasicOne(t *testing.T) {
 	}
 
         rootFolder := ".."
-        terraformFolderRelativeToRoot := "."
+        terraformFolderRelativeToRoot := "test"
         tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure: true,
-		VarFiles: []string{"test/tf_unit_basic_test_1.tfvars"},
+		VarFiles: []string{"tf_unit_basic_test_1.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
 			"key":    key,
@@ -51,11 +51,8 @@ func TestTerraformBasicOne(t *testing.T) {
 	}
 	terraform.Apply(t, terraformOptions)
 	
-	cluster_name :=terraform.Output(t, terraformOptions, "cluster_name")
+	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
 	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-one", cluster_name, "Wrong cluster_name returned")
-	
-
-
 }
 
 func TestTerraformBasicTwo(t *testing.T) {
@@ -74,13 +71,13 @@ func TestTerraformBasicTwo(t *testing.T) {
 	}
 	
         rootFolder := ".."
-        terraformFolderRelativeToRoot := "."
+        terraformFolderRelativeToRoot := "test"
         tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 	
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure: true,
-		VarFiles: []string{"test/tf_unit_basic_test_2.tfvars"},
+		VarFiles: []string{"tf_unit_basic_test_2.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
 			"key":    key,
@@ -95,7 +92,6 @@ func TestTerraformBasicTwo(t *testing.T) {
 	}
 	terraform.Apply(t, terraformOptions)
 
-	cluster_name :=terraform.Output(t, terraformOptions, "cluster_name")
+	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
 	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-two", cluster_name, "Wrong cluster_name returned")
-	
 }
