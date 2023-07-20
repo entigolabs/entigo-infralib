@@ -4,7 +4,7 @@ cd $SCRIPTPATH || exit 1
 
 if [ "$PR_BRANCH" != "" ]
 then
-prefix="`whoami`-$PR_BRANCH"
+prefix="`whoami`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]'`"
 else
 prefix="`whoami`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]'`"
 fi
