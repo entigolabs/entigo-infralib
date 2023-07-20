@@ -68,7 +68,7 @@ locals {
         }
       }
     },
-    monitoring = {
+    mon = {
       min_size        = var.eks_monitoring_min_size
       desired_size    = var.eks_monitoring_min_size
       max_size        = var.eks_monitoring_max_size
@@ -144,7 +144,7 @@ locals {
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "monitoring" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
 
   }
 
