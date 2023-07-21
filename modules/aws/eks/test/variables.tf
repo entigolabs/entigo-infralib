@@ -8,93 +8,87 @@ variable "vpc_prefix" {
 
 variable "eks_cluster_version" {
   type    = string
-  default = "1.26"
+  default = null
 }
 
 variable "iam_admin_role" {
   type    = string
-  default = "AWSReservedSSO_AdministratorAccess_.*" #Sometimes "AWSReservedSSO_AWSAdministratorAccess_.*" ?
+  default = null
 }
 
 variable "eks_cluster_public" {
   type    = bool
-  default = false
+  default = null
 }
 
 variable "eks_main_min_size" {
   type    = number
-  default = 1
+  default = null
 }
 
 variable "eks_main_max_size" {
   type    = number
-  default = 3
+  default = null
 }
 
 variable "eks_main_instance_types" {
   type    = list(string)
-  default = ["t3.large"]
+  default = null
 }
 
 variable "eks_spot_min_size" {
   type    = number
-  default = 1
+  default = null
 }
 
 variable "eks_spot_max_size" {
   type    = number
-  default = 3
+  default = null
 }
 
 variable "eks_spot_instance_types" {
   type = list(string)
-  default = [
-    "t3.medium",
-    "t3.large"
-  ]
+  default = null
 }
 
 variable "eks_db_min_size" {
   type    = number
-  default = 1
+  default = null
 }
 
 variable "eks_db_max_size" {
   type    = number
-  default = 3
+  default = null
 }
 
 variable "eks_db_instance_types" {
   type    = list(string)
-  default = ["t3.large"]
+  default = null
 }
 
 
 variable "eks_monitoring_min_size" {
   type    = number
-  default = 1
+  default = null
 }
 
 variable "eks_monitoring_max_size" {
   type    = number
-  default = 3
+  default = null
 }
 
 variable "eks_monitoring_instance_types" {
   type    = list(string)
-  default = ["t3.large"]
+  default = null
 }
 
 variable "eks_monitoring_single_subnet" {
   type    = bool
-  default = true
+  default = null
 }
 
 variable "cluster_enabled_log_types" {
   type    = list(string)
-  default = ["api", "authenticator"]
+  default = null
 }
 
-locals {
-  hname = "${var.prefix}-${terraform.workspace}"
-}
