@@ -81,24 +81,24 @@ variable "eks_db_instance_types" {
 }
 
 
-variable "eks_monitoring_min_size" {
+variable "eks_mon_min_size" {
   type    = number
   nullable = false
   default = 1
 }
 
-variable "eks_monitoring_max_size" {
+variable "eks_mon_max_size" {
   type    = number
   nullable = false
   default = 3
 }
 
-variable "eks_monitoring_instance_types" {
+variable "eks_mon_instance_types" {
   type    = list(string)
   default = ["t3.large"]
 }
 
-variable "eks_monitoring_single_subnet" {
+variable "eks_mon_single_subnet" {
   type    = bool
   nullable = false
   default = true

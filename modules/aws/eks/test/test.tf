@@ -46,10 +46,10 @@ module "test_eks" {
   eks_db_min_size               = var.eks_db_min_size
   eks_db_max_size               = var.eks_db_max_size
   eks_db_instance_types         = var.eks_db_instance_types
-  eks_monitoring_min_size       = var.eks_monitoring_min_size
-  eks_monitoring_max_size       = var.eks_monitoring_max_size
-  eks_monitoring_instance_types = var.eks_monitoring_instance_types
-  eks_monitoring_single_subnet  = var.eks_monitoring_single_subnet
+  eks_mon_min_size       = var.eks_mon_min_size
+  eks_mon_max_size       = var.eks_mon_max_size
+  eks_mon_instance_types = var.eks_mon_instance_types
+  eks_mon_single_subnet  = var.eks_mon_single_subnet
   cluster_enabled_log_types     = var.cluster_enabled_log_types
 }
 
