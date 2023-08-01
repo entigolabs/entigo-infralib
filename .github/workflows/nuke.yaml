@@ -183,7 +183,7 @@ jobs:
         prerelease: false
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
     - name: Slack Success Release Message
-      if: ${{ success() }}
+      if: ${{ success() && steps.get_latest_release.outputs.new_release_needed == 'true' }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
