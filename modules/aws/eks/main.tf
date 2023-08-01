@@ -69,22 +69,22 @@ locals {
       }
     },
     mon = {
-      min_size        = var.eks_monitoring_min_size
-      desired_size    = var.eks_monitoring_min_size
-      max_size        = var.eks_monitoring_max_size
-      instance_types  = var.eks_monitoring_instance_types
-      subnet_ids      = var.eks_monitoring_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
+      min_size        = var.eks_mon_min_size
+      desired_size    = var.eks_mon_min_size
+      max_size        = var.eks_mon_max_size
+      instance_types  = var.eks_mon_instance_types
+      subnet_ids      = var.eks_mon_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
       capacity_type   = "ON_DEMAND"
       release_version = var.eks_cluster_version
       taints = [
         {
-          key    = "monitoring"
+          key    = "mon"
           value  = "true"
           effect = "NO_SCHEDULE"
         }
       ]
       labels = {
-        monitoring = "true"
+        mon = "true"
       }
       launch_template_tags = {
         Terraform = "true"
@@ -144,7 +144,7 @@ locals {
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_monitoring_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "db" && var.eks_db_max_size > 0
 
   }
 
