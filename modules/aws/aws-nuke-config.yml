@@ -31,6 +31,8 @@ resource-types:
 accounts:
   "877483565445":
     filters:
+      Route53HostedZone:
+      - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
       IAMUser:
       - "github"
       IAMUserPolicyAttachment:
