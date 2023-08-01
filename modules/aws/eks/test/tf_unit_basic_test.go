@@ -52,7 +52,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	terraform.Apply(t, terraformOptions)
 	
 	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-one", cluster_name, "Wrong cluster_name returned")
+	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-biz", cluster_name, "Wrong cluster_name returned")
 }
 
 func TestTerraformBasicPri(t *testing.T) {
@@ -93,5 +93,5 @@ func TestTerraformBasicPri(t *testing.T) {
 	terraform.Apply(t, terraformOptions)
 
 	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-two", cluster_name, "Wrong cluster_name returned")
+	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-pri", cluster_name, "Wrong cluster_name returned")
 }
