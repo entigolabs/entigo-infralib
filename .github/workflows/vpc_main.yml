@@ -37,17 +37,24 @@ jobs:
           const patch = parseInt(match[3], 10) + 1;
           const new_version = `v${major}.${minor}.${patch}`
           core.setOutput('new_version',  new_version);
+          
+    - name: Authenticate with GitHub CLI
+      run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ github.event_name == 'push' }}
+
     - name: Create Release
-      if: ${{ success() && github.event_name == 'push' }}
-      uses: actions/create-release@v1
       id: create_release
+      run: |
+        RELEASE_URL=$(gh release create modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
+        --title "Release modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
+        --notes "" \
+        --draft=false \
+        --prerelease=true)
+        echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
-        release_name: Release modules/aws/vpc-rc${{ github.run_number }}
-        draft: false
-        prerelease: true
+      if: ${{ github.event_name == 'push' }}
+    
     - name: Slack Success Release Message
       if: ${{ success() && github.event_name == 'push' }}
       uses: rtCamp/action-slack-notify@v2

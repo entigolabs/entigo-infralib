@@ -170,17 +170,24 @@ jobs:
           } else {
             core.setFailed('No stable releases found');
           }
+      
+    - name: Authenticate with GitHub CLI
+      run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ github.event_name == 'push' }}
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      run: |
+        RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
+        --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
+        --notes "" \
+        --draft=false \
+        --prerelease=false)
+        echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.get_latest_release.outputs.new_version }}
-        release_name: Release ${{ steps.get_latest_release.outputs.new_version }}
-        draft: false
-        prerelease: false
+      if: ${{ github.event_name == 'push' }}
+        
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
     - name: Slack Success Release Message
       if: ${{ success() && steps.get_latest_release.outputs.new_release_needed == 'true' }}
