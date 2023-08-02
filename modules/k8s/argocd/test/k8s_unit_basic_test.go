@@ -19,11 +19,15 @@ func TestTerraformBasicBiz(t *testing.T) {
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
-	namespaceName := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	releaseName := fmt.Sprintf(
-			"argocd-%s",
-			namespaceName,
-	)
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
+	namespaceName := fmt.Sprintf("argocd")
+	extraArgs := make(map[string][]string)
+	
+	if prefix != "runner-main" {
+	   namespaceName = fmt.Sprintf("argocd-%s", prefix)
+	   extraArgs["upgrade"] = []string{"--skip-crds"}
+	}
+	releaseName := namespaceName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
@@ -31,6 +35,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 		ValuesFiles: []string{"./k8s_unit_basic_test_biz.yaml"},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
+		ExtraArgs: extraArgs,
 	}
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
