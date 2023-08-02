@@ -1,5 +1,7 @@
 argocd:
-
+  crds:
+    install: true
+    keep: true
   global:
     networkPolicy:
       create: true

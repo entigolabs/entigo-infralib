@@ -19,20 +19,24 @@ func TestTerraformBasicBiz(t *testing.T) {
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
-	//prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
 	namespaceName := fmt.Sprintf("argocd")
 	extraArgs := make(map[string][]string)
+	setValues := make(map[string]string)
 	
-	//if prefix != "runner-main" {
-	//   namespaceName = fmt.Sprintf("argocd-%s", prefix)
-	//   extraArgs["upgrade"] = []string{"--skip-crds"}
-	//   extraArgs["install"] = []string{"--skip-crds"}
-	//}
+	if prefix != "runner-main" {
+	   namespaceName = fmt.Sprintf("argocd-%s", prefix)
+	   extraArgs["upgrade"] = []string{"--skip-crds"}
+	   extraArgs["install"] = []string{"--skip-crds"}
+	   setValues["argocd.crds.install"] = "false"
+	   
+	}
 	releaseName := namespaceName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
 	helmOptions := &helm.Options{
+		SetValues: setValues,
 		ValuesFiles: []string{"./k8s_unit_basic_test_biz.yaml"},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
