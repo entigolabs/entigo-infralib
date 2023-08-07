@@ -29,6 +29,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	   setValues["argocd.crds.install"] = "false"
+ 	   setValues["argocd.server.config.url"]=fmt.Sprintf("https://%s.biz-internal.infralib.entigo.io", namespaceName)
+  	   setValues["argocd.server.ingress.hosts[0]"]=fmt.Sprintf("%s.biz-internal.infralib.entigo.io", namespaceName)
 	   
 	}
 	releaseName := namespaceName
@@ -80,6 +82,8 @@ func TestTerraformBasicPri(t *testing.T) {
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	   setValues["argocd.crds.install"] = "false"
+	   setValues["argocd.server.config.url"]=fmt.Sprintf("https://%s.pri-internal.infralib.entigo.io", namespaceName)
+	   setValues["argocd.server.ingress.hosts[0]"]=fmt.Sprintf("%s.pri-internal.infralib.entigo.io", namespaceName)
 	   
 	}
 	releaseName := namespaceName
