@@ -198,5 +198,3 @@ resource "aws_ssm_parameter" "intra_subnet_cidrs" {
     Workspace = terraform.workspace
   }
 }
-
-

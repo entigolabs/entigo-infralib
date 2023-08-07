@@ -45,10 +45,13 @@ jobs:
     - name: Create Release
       id: create_release
       run: |
+        git tag -a modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
+        git push origin modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
         RELEASE_URL=$(gh release create modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
         --title "Release modules/aws/vpc-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
-        --notes "" \
+        --generate-notes \
         --draft=false \
+        --latest=false \
         --prerelease=true)
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
