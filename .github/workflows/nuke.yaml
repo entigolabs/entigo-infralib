@@ -74,6 +74,7 @@ jobs:
         echo "Current stable release commit is $(git rev-parse HEAD)"
         modules/aws/vpc/test.sh 
         modules/aws/eks/test.sh 
+        modules/k8s/argocd/test.sh
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -104,6 +105,7 @@ jobs:
       run: |
         modules/aws/vpc/test.sh
         modules/aws/eks/test.sh
+        modules/k8s/argocd/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
