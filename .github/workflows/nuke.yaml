@@ -1,4 +1,4 @@
-name: Nuke and Release
+  name: Nuke and Release
 
 on:
   schedule:
@@ -178,10 +178,13 @@ jobs:
     - name: Create Release
       id: create_release
       run: |
+        git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}"
+        git push origin ${{ steps.get_latest_release.outputs.new_version }}
         RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
         --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
-        --notes "" \
+        --generate-notes \
         --draft=false \
+        --latest=true \
         --prerelease=false)
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
