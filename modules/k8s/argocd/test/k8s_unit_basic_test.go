@@ -44,7 +44,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	}
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	    helm.Delete(t, helmOptions, releaseName, true)
+	    defer helm.Delete(t, helmOptions, releaseName, true)
 	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
