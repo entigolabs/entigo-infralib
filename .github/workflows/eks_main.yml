@@ -45,10 +45,15 @@ jobs:
     - name: Create Release
       id: create_release
       run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag -a modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
+        git push origin modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
         RELEASE_URL=$(gh release create modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
         --title "Release modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
-        --notes "" \
+        --generate-notes \
         --draft=false \
+        --latest=false \
         --prerelease=true)
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
@@ -60,7 +65,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released modules/aws/eks ${{ env.RELEASE_URL }}'
+        SLACK_MESSAGE: 'Released modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} ${{ env.RELEASE_URL }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
@@ -71,7 +76,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Failed to update modules/aws/eks on main'
+        SLACK_MESSAGE: 'Failed to update modules/aws/eks-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} on main'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
