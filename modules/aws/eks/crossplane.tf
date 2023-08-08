@@ -58,6 +58,6 @@ resource "kubernetes_config_map" "aws-crossplane" {
   data = {
     awsAccount  = data.aws_caller_identity.current.account_id
     awsRegion   = data.aws_region.current.name
-    clusterOIDC = "${module.eks.oidc_provider}"
+    clusterOIDC = module.eks.oidc_provider
   }
 }
