@@ -5,6 +5,7 @@ import (
 	"strings"
 	"os"
 	"fmt"
+	"time"
 	"path/filepath"
 	"github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
@@ -61,6 +62,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	//https://entigo.atlassian.net/browse/RD-37
 	//Add tests here that check if CRD is created
+	time.Sleep(60 * time.Second)
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues: setValues,
@@ -118,6 +120,7 @@ func TestTerraformBasicPri(t *testing.T) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	//https://entigo.atlassian.net/browse/RD-37
 	//Add tests here that check if CRD is created
+	time.Sleep(60 * time.Second)
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues: setValues,
