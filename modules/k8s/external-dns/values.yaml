@@ -1,0 +1,24 @@
+ 
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${dns_arn}
+
+env: 
+ - name: AWS_DEFAULT_REGION
+   value: ${region}
+
+registry: txt
+policy: upsert-only
+sources:
+  - service
+  - ingress
+
+extraArgs:
+- --metrics-address=:7979
+
+serviceMonitor:
+  enabled: true
+  scrapeTimeout: 20s
+  additionalLabels: 
+    kubernetes.io/metadata.name: monitoring
+    release: eg-test-prometheus
