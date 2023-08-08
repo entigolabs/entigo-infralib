@@ -1,5 +1,5 @@
 resource "aws_iam_role" "crossplane" {
-  count = (var.crossplane_enable) ? 0 : 1
+  count = var.crossplane_enable ? 1 : 0
   name = "crossplane-${local.hname}"
 
   assume_role_policy = <<POLICY
@@ -26,23 +26,23 @@ POLICY
 
 
 resource "aws_iam_role_policy_attachment" "crossplane-attach" {
-  count = (var.crossplane_enable) ? 0 : 1
+  count = var.crossplane_enable ? 1 : 0
   role       = aws_iam_role.crossplane[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 resource "kubernetes_namespace" "crossplane-system" {
-  count = (var.crossplane_enable) ? 0 : 1
+  count = var.crossplane_enable ? 1 : 0
   metadata {
     name = "corssplane-system"
   }
 }
 
 resource "kubernetes_service_account" "aws-crossplane" {
-  count = (var.crossplane_enable) ? 0 : 1
+  count = var.crossplane_enable ? 1 : 0
   metadata {
     name = "aws-crossplane"
-    namespace = kubernetes_namespace.crossplane-system.name
+    namespace = kubernetes_namespace.crossplane-system[0].metadata[0].name
     annotations = {
      "eks.amazonaws.com/role-arn" = aws_iam_role.crossplane[0].arn
     }
