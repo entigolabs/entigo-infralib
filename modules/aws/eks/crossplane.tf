@@ -48,3 +48,16 @@ resource "kubernetes_service_account" "aws-crossplane" {
     }
   }
 }
+
+resource "kubernetes_config_map" "aws-crossplane" {
+  metadata {
+    name = "aws-crossplane"
+    namespace = kubernetes_namespace.crossplane-system[0].metadata[0].name
+  }
+
+  data = {
+    awsAccount  = data.aws_caller_identity.current.account_id
+    awsRegion   = data.aws_region.current.name
+    clusterOIDC = "${module.eks.oidc_provider}"
+  }
+}
