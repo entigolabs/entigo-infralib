@@ -27,7 +27,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	setValues := make(map[string]string)
 	
 	if prefix != "runner-main" {
-	   releaseName = fmt.Sprintf("crossplane-%s", prefix)
+	   //releaseName = fmt.Sprintf("crossplane-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -85,7 +85,7 @@ func TestTerraformBasicPri(t *testing.T) {
 	setValues := make(map[string]string)
 	
 	if prefix != "runner-main" {
-	   releaseName = fmt.Sprintf("crossplane-%s", prefix)
+	   //releaseName = fmt.Sprintf("crossplane-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
