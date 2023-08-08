@@ -20,30 +20,28 @@ func TestTerraformBasicBiz(t *testing.T) {
 	require.NoError(t, err)
 	
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
-	namespaceName := fmt.Sprintf("crossplane")
+	namespaceName := fmt.Sprintf("crossplane-system")
+	releaseName := "crossplane"
+	
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
 	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("crossplane-%s", prefix)
+	   releaseName = fmt.Sprintf("crossplane-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
-	   setValues["crossplane.crds.install"] = "false"
- 	   setValues["crossplane.server.config.url"]=fmt.Sprintf("https://%s.biz-internal.infralib.entigo.io", namespaceName)
-  	   setValues["crossplane.server.ingress.hosts[0]"]=fmt.Sprintf("%s.biz-internal.infralib.entigo.io", namespaceName)
-	   
 	}
-	releaseName := namespaceName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
+	setValues["installProvider"] = "false"
 	helmOptions := &helm.Options{
 		SetValues: setValues,
-		ValuesFiles: []string{"./k8s_unit_basic_test_biz.yaml"},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs: extraArgs,
 	}
+	
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	    defer helm.Delete(t, helmOptions, releaseName, true)
@@ -61,8 +59,15 @@ func TestTerraformBasicBiz(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-
+	
+	setValues["installProvider"] = "true"
+	helmOptionsSecond := &helm.Options{
+		SetValues: setValues,
+		KubectlOptions:    kubectlOptions,
+		BuildDependencies: false,
+		ExtraArgs: extraArgs,
+	}
+	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
 }
 
 
@@ -73,31 +78,27 @@ func TestTerraformBasicPri(t *testing.T) {
 	require.NoError(t, err)
 	
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
-	namespaceName := fmt.Sprintf("crossplane")
+	namespaceName := fmt.Sprintf("crossplane-system")
+	releaseName := "crossplane"
+	
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
 	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("crossplane-%s", prefix)
+	   releaseName = fmt.Sprintf("crossplane-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
-	   setValues["crossplane.crds.install"] = "false"
-	   setValues["crossplane.server.config.url"]=fmt.Sprintf("https://%s.pri-internal.infralib.entigo.io", namespaceName)
-	   setValues["crossplane.server.ingress.hosts[0]"]=fmt.Sprintf("%s.pri-internal.infralib.entigo.io", namespaceName)
-	   
 	}
-	releaseName := namespaceName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
-	
+	setValues["installProvider"] = "false"
 	helmOptions := &helm.Options{
 		SetValues: setValues,
-		ValuesFiles: []string{"./k8s_unit_basic_test_pri.yaml"},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs: extraArgs,
 	}
-
+	
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	    defer helm.Delete(t, helmOptions, releaseName, true)
 	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
@@ -114,6 +115,15 @@ func TestTerraformBasicPri(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
+	
+	setValues["installProvider"] = "true"
+	helmOptionsSecond := &helm.Options{
+		SetValues: setValues,
+		KubectlOptions:    kubectlOptions,
+		BuildDependencies: false,
+		ExtraArgs: extraArgs,
+	}
+	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
 
 
 }

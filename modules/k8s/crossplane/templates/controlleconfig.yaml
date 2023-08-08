@@ -1,7 +1,8 @@
+{{- if .Values.installProvider }}
 apiVersion: pkg.crossplane.io/v1alpha1
 kind: ControllerConfig
 metadata:
-  name: aws
+  name: aws-{{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
@@ -10,3 +11,4 @@ spec:
     fsGroup: 2000
   # args:
   # - --poll=720m
+{{- end }}
