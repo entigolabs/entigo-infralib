@@ -71,6 +71,17 @@ func TestTerraformBasicBiz(t *testing.T) {
 		ExtraArgs: extraArgs,
 	}
 	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
+	//https://entigo.atlassian.net/browse/RD-37
+	//Add tests here that check if CRD is created
+	time.Sleep(60 * time.Second)
+	setValues["installProviderConfig"] = "true"
+	helmOptionsThird := &helm.Options{
+		SetValues: setValues,
+		KubectlOptions:    kubectlOptions,
+		BuildDependencies: false,
+		ExtraArgs: extraArgs,
+	}
+	helm.Upgrade(t, helmOptionsThird, helmChartPath, releaseName)
 }
 
 
@@ -129,6 +140,16 @@ func TestTerraformBasicPri(t *testing.T) {
 		ExtraArgs: extraArgs,
 	}
 	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
-
+	//https://entigo.atlassian.net/browse/RD-37
+	//Add tests here that check if CRD is created
+	time.Sleep(60 * time.Second)
+	setValues["installProviderConfig"] = "true"
+	helmOptionsThird := &helm.Options{
+		SetValues: setValues,
+		KubectlOptions:    kubectlOptions,
+		BuildDependencies: false,
+		ExtraArgs: extraArgs,
+	}
+	helm.Upgrade(t, helmOptionsThird, helmChartPath, releaseName)
 
 }
