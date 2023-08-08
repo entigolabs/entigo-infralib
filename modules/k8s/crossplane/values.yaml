@@ -1,5 +1,5 @@
-installProvider: false
-installProviderConfig: false
+installProvider: true
+installProviderConfig: true
 
 crossplane:
   # -- The number of replicas to run for the Crossplane pods.
