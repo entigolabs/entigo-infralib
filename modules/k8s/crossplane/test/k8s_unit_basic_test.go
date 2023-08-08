@@ -59,7 +59,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	
+	//https://entigo.atlassian.net/browse/RD-37
+	//Add tests here that check if CRD is created
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues: setValues,
@@ -115,7 +116,8 @@ func TestTerraformBasicPri(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	
+	//https://entigo.atlassian.net/browse/RD-37
+	//Add tests here that check if CRD is created
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues: setValues,
