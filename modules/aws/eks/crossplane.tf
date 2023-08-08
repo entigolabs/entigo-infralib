@@ -34,7 +34,7 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
 resource "kubernetes_namespace" "crossplane-system" {
   count = var.crossplane_enable ? 1 : 0
   metadata {
-    name = "corssplane-system"
+    name = "crossplane-system"
   }
 }
 
