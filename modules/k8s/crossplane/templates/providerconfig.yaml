@@ -1,9 +1,11 @@
-#apiVersion: aws.crossplane.io/v1beta1
-#kind: ProviderConfig
-#metadata:
-#  name: aws-{{ .Release.Name }}
-#  annotations:
-#    argocd.argoproj.io/sync-wave: "5"
-#spec:
-#  credentials:
-#    source: InjectedIdentity
+{{- if .Values.installProviderConfig }}
+apiVersion: aws.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  credentials:
+    source: InjectedIdentity
+{{- end }}
