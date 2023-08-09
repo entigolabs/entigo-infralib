@@ -25,4 +25,4 @@ spec:
       }
 
   providerConfigRef:
-    name: {{ .Values.clusterName }}
+    name: aws-crossplane
