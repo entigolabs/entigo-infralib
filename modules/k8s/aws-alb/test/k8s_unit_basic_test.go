@@ -27,9 +27,10 @@ func TestTerraformBasicBiz(t *testing.T) {
 	
 	kubectlOptionsValues := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", "crossplane-system")
 	CMValues := k8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller, CMValues.Data["awsRegion"])
+	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", CMValues.Data["awsRegion"])
 	setValues["awsAccount"] = CMValues.Data["awsAccount"]
 	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
+	setValues["aws-load-balancer-controller.clusterName"] = "runner-main-biz"
 	
 	
 	if prefix != "runner-main" {
@@ -82,9 +83,10 @@ func TestTerraformBasicPri(t *testing.T) {
 	
 	kubectlOptionsValues := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", "crossplane-system")
 	CMValues := k8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller, CMValues.Data["awsRegion"])
+	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", CMValues.Data["awsRegion"])
 	setValues["awsAccount"] = CMValues.Data["awsAccount"]
 	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
+	setValues["aws-load-balancer-controller.clusterName"] = "runner-main-pri"
 	
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("aws-alb-pri-%s", prefix)
