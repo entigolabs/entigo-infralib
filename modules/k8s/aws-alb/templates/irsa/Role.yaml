@@ -17,7 +17,7 @@ spec:
             "Condition": {
               "StringEquals": {
                 "{{ .Values.clusterOIDC }}:aud": "sts.amazonaws.com",
-                "{{ .Values.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:external-dns"
+                "{{ .Values.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:aws-load-balancer-controller"
               }
             }
           }
