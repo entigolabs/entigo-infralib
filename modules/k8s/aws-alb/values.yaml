@@ -1,0 +1,23 @@
+awsAccount: ""
+clusterOIDC: ""
+
+aws-load-balancer-controller:
+  clusterName: "worker-main"
+  serviceAccount:
+    name: aws-load-balancer-controller
+    create: false
+
+  image:
+    repository: 602401143452.dkr.ecr.eu-north-1.amazonaws.com/amazon/aws-load-balancer-controller
+  resources: 
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 10Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 1Gi
+  
+  deploymentAnnotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
