@@ -1,0 +1,63 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: gp2
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  type: gp2
+  tagSpecification_1: "Environment={{ .Values.environment }}"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: gp2-no-retain
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  type: gp2
+  tagSpecification_1: "Environment={{ .Values.environment }}"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: gp3
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  type: gp3
+  tagSpecification_1: "Environment={{ .Values.environment }}"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: gp3-no-retain
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  type: gp3
+  tagSpecification_1: "Environment={{ .Values.environment }}"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
