@@ -90,12 +90,12 @@ crossplane:
   resourcesCrossplane:
     limits:
       # -- CPU resource limits for Crossplane.
-      cpu: 100m
+      cpu: 1000m
       # -- Memory resource limits for Crossplane.
       memory: 512Mi
     requests:
       # -- CPU resource requests for Crossplane.
-      cpu: 100m
+      cpu: 10m
       # -- Memory resource requests for Crossplane.
       memory: 256Mi
 
@@ -122,12 +122,12 @@ crossplane:
   resourcesRBACManager:
     limits:
       # -- CPU resource limits for RBAC Manager.
-      cpu: 100m
+      cpu: 1000m
       # -- Memory resource limits for RBAC Manager.
       memory: 512Mi
     requests:
       # -- CPU resource requests for RBAC Manager.
-      cpu: 100m
+      cpu: 10m
       # -- Memory resource requests for RBAC Manager.
       memory: 256Mi
 
@@ -212,6 +212,6 @@ crossplane:
         memory: 2Gi
       requests:
         # -- CPU resource requests for RBAC Manager.
-        cpu: 1000m
+        cpu: 100m
         # -- Memory resource requests for RBAC Manager.
         memory: 1Gi
