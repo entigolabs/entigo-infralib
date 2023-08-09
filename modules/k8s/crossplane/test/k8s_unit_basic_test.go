@@ -36,6 +36,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
 	setValues["installProvider"] = "false"
+	setValues["installProviderConfig"] = "false"
 	helmOptions := &helm.Options{
 		SetValues: setValues,
 		KubectlOptions:    kubectlOptions,
@@ -105,7 +106,9 @@ func TestTerraformBasicPri(t *testing.T) {
 	}
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
+	
 	setValues["installProvider"] = "false"
+	setValues["installProviderConfig"] = "false"
 	helmOptions := &helm.Options{
 		SetValues: setValues,
 		KubectlOptions:    kubectlOptions,
