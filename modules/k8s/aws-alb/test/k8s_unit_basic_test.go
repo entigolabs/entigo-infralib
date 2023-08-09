@@ -39,6 +39,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	setValues["aws-load-balancer-controller.ingressClass"] = releaseName
+	setValues["aws-load-balancer-controller.nameOverride"] = releaseName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
@@ -88,12 +90,15 @@ func TestTerraformBasicPri(t *testing.T) {
 	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
 	setValues["aws-load-balancer-controller.clusterName"] = "runner-main-pri"
 	
+	
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("aws-alb-pri-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	setValues["aws-load-balancer-controller.ingressClass"] = releaseName
+	setValues["aws-load-balancer-controller.nameOverride"] = releaseName
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
 	
