@@ -55,7 +55,7 @@ func WaitUntilProviderAvailable(
 }
 
 func IsProviderAvailable(provider *unstructured.Unstructured) bool {
-	status := getProviderStatus(provider)
+	status := GetProviderStatus(provider)
 	return status["Healthy"] == "True" && status["Installed"] == "True"
 }
 
@@ -65,7 +65,7 @@ type ProviderNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err ProviderNotAvailable) Error() string {
-	status := getProviderStatus(err.provider)
+	status := GetProviderStatus(err.provider)
 	return fmt.Sprintf(
 		"Deployment %s is not available, healthy: %s, installed: %s", err.provider.GetName(), status["Healthy"],
 		status["Installed"],
@@ -76,8 +76,8 @@ func NewProviderNotAvailable(provider *unstructured.Unstructured) ProviderNotAva
 	return ProviderNotAvailable{provider}
 }
 
-func getProviderStatus(provider *unstructured.Unstructured) map[string]string {
-	conditions, found, err := unstructured.NestedMap(provider.Object, "status", "conditions")
+func GetProviderStatus(provider *unstructured.Unstructured) map[string]string {
+	conditions, found, err := unstructured.NestedSlice(provider.Object, "status", "conditions")
 	if !found || err != nil {
 		return nil
 	}

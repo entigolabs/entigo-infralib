@@ -74,7 +74,6 @@ func TestTerraformBasicBiz(t *testing.T) {
 	if err != nil {
 		t.Fatal("Controllerconfigs crd error:", err)
 	}
-	// Test if provider has been created, test if pods have been launched, deployment name aws-c
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues:         setValues,
@@ -83,10 +82,11 @@ func TestTerraformBasicBiz(t *testing.T) {
 		ExtraArgs:         extraArgs,
 	}
 	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
-	//err = WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
-	//if err != nil {
-	//	t.Fatal("Provider error:", err)
-	//}
+	err = WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("Provider error:", err)
+	}
+	// TODO Test if pods have been launched
 	//https://entigo.atlassian.net/browse/RD-37
 	//Add tests here that check if CRD is created
 	time.Sleep(60 * time.Second)
