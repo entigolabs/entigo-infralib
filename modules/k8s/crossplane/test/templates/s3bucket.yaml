@@ -1,8 +1,7 @@
-{{- if .Values.installBucket }}
 apiVersion: s3.aws.crossplane.io/v1beta1
 kind: Bucket
 metadata:
-  name: {{ .Values.bucketName }}
+  name: change-me
 spec:
   forProvider:
     acl: private
@@ -21,5 +20,4 @@ spec:
         - applyServerSideEncryptionByDefault:
             sseAlgorithm: AES256
   providerConfigRef:
-    name: aws-{{ .Release.Name }}
-{{- end }}
+    name: aws-crossplane

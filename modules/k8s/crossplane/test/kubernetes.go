@@ -10,6 +10,8 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
+	"os"
 	"time"
 )
 
@@ -29,6 +31,23 @@ func WaitUntilControllerConfigAvailable(t testing.TestingT, options *k8s.Kubectl
 func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
 	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
+}
+
+func CreateS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating S3 bucket %s", name)
+	bucketObject, err := readObjectFromFile(templateFile)
+	if err != nil {
+		return nil, err
+	}
+	bucketObject.SetName(name)
+	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	return createObject(t, options, bucketObject, resource)
+}
+
+func DeleteS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting S3 bucket %s", name)
+	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	return deleteObject(t, options, name, resource)
 }
 
 type objectAvailability struct {
@@ -87,6 +106,38 @@ func getObject(t testing.TestingT, options *k8s.KubectlOptions, name string, nam
 		return nil, err
 	}
 	return dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
+}
+
+func createObject(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return nil, err
+	}
+	return dynamicClient.Resource(resource).Create(context.Background(), object, metaV1.CreateOptions{})
+}
+
+func deleteObject(t testing.TestingT, options *k8s.KubectlOptions, name string, resource schema.GroupVersionResource) error {
+	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return err
+	}
+	return dynamicClient.Resource(resource).Delete(context.Background(), name, metaV1.DeleteOptions{})
+}
+
+func readObjectFromFile(templateFile string) (*unstructured.Unstructured, error) {
+	var object unstructured.Unstructured
+	bytes, err := os.ReadFile(templateFile)
+	if err != nil {
+		return nil, err
+	}
+	err = k8sYaml.Unmarshal(bytes, &object)
+	if err != nil {
+		return nil, err
+	}
+	if object.Object == nil {
+		return nil, fmt.Errorf("failed to read object from file %s", templateFile)
+	}
+	return &object, nil
 }
 
 func isProviderAvailable(provider *unstructured.Unstructured) bool {

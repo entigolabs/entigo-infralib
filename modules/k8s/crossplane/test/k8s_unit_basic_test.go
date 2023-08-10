@@ -46,7 +46,6 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
-	setValues["installBucket"] = "false"
 	helmOptions := &helm.Options{
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
@@ -70,63 +69,53 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "crossplane", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Crossplane deployment error:", err)
-	}
+	require.NoError(t, err, "Crossplane deployment error")
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Crossplane-rbac-manager deployment error:", err)
-	}
+	require.NoError(t, err, "Crossplane-rbac-manager deployment error")
 	err = WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Providers crd error:", err)
-	}
+	require.NoError(t, err, "Providers crd error")
 	err = WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Controllerconfigs crd error:", err)
-	}
+	require.NoError(t, err, "Controllerconfigs crd error")
 
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	provider, err := WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Provider error:", err)
-	}
+	require.NoError(t, err, "Provider error")
 	assert.NotNil(t, provider, "Provider is nil")
 	providerDeployment := GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	if err != nil {
-		t.Fatalf("Provider deployment %s error: %s", providerDeployment, err)
-	}
+	require.NoError(t, err, "Provider deployment error")
 	_, err = WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Controller config error:", err)
-	}
+	require.NoError(t, err, "Controller config error")
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	err = WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Providerconfigs crd error:", err)
-	}
+	require.NoError(t, err, "Providerconfigs crd error")
 	_, err = WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("Provider config error:", err)
-	}
+	require.NoError(t, err, "Provider config error")
 
-	setValues["installBucket"] = "true"
-	bucketName := "entigo-infralib-test" + strings.ToLower(random.UniqueId()) + "-" + releaseName
-	setValues["bucketName"] = bucketName
-	helmOptions.SetValues = setValues
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
+	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
+	bucket, err := CreateS3Bucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
+	require.NoError(t, err, "Creating bucket error")
+	assert.NotNil(t, bucket, "Bucket is nil")
+	assert.Equal(t, bucketName, bucket.GetName(), "Bucket name is not equal")
 
-	err = WaitUntilBucketAvailable(t, "eu-north-1", bucketName, 60, 1*time.Second)
+	err = WaitUntilBucketAvailable(t, "eu-north-1", bucketName, 30, 2*time.Second)
 	if err != nil {
-		t.Fatal("Creating bucket error:", err)
+		_ = DeleteS3Bucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
+	require.NoError(t, err, "Bucket creation error")
+
+	err = DeleteS3Bucket(t, kubectlOptions, bucketName)
+	require.NoError(t, err, "Deleting bucket error")
+
+	// TODO Currently the bucket doesn't get deleted
+	//err = WaitUntilBucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	//require.NoError(t, err, "Bucket deletion error")
 }
