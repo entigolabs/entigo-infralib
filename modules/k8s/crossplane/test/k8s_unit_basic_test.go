@@ -15,6 +15,14 @@ import (
 )
 
 func TestTerraformBasicBiz(t *testing.T) {
+	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+}
+
+func TestTerraformBasicPri(t *testing.T) {
+	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+}
+
+func testTerraformBasic(t *testing.T, contextName string) {
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")
@@ -33,7 +41,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
-	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
+	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
@@ -77,13 +85,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 	}
 
 	setValues["installProvider"] = "true"
-	helmOptionsSecond := &helm.Options{
-		SetValues:         setValues,
-		KubectlOptions:    kubectlOptions,
-		BuildDependencies: false,
-		ExtraArgs:         extraArgs,
-	}
-	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
+	helmOptions.SetValues = setValues
+	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	provider, err := WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	if err != nil {
@@ -102,13 +105,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 	}
 
 	setValues["installProviderConfig"] = "true"
-	helmOptionsThird := &helm.Options{
-		SetValues:         setValues,
-		KubectlOptions:    kubectlOptions,
-		BuildDependencies: false,
-		ExtraArgs:         extraArgs,
-	}
-	helm.Upgrade(t, helmOptionsThird, helmChartPath, releaseName)
+	helmOptions.SetValues = setValues
+	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	err = WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	if err != nil {
@@ -118,74 +116,4 @@ func TestTerraformBasicBiz(t *testing.T) {
 	if err != nil {
 		t.Fatal("Provider config error:", err)
 	}
-}
-
-func TestTerraformBasicPri(t *testing.T) {
-	//spew.Dump("")
-	//
-	//helmChartPath, err := filepath.Abs("..")
-	//require.NoError(t, err)
-	//
-	//prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	//namespaceName := fmt.Sprintf("crossplane-system")
-	//releaseName := "crossplane"
-	//
-	//extraArgs := make(map[string][]string)
-	//setValues := make(map[string]string)
-	//
-	//if prefix != "runner-main" {
-	//	//releaseName = fmt.Sprintf("crossplane-%s", prefix)
-	//	extraArgs["upgrade"] = []string{"--skip-crds"}
-	//	extraArgs["install"] = []string{"--skip-crds"}
-	//}
-	//
-	//kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
-	//
-	//setValues["installProvider"] = "false"
-	//setValues["installProviderConfig"] = "false"
-	//helmOptions := &helm.Options{
-	//	SetValues:         setValues,
-	//	KubectlOptions:    kubectlOptions,
-	//	BuildDependencies: false,
-	//	ExtraArgs:         extraArgs,
-	//}
-	//
-	//if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	//	defer helm.Delete(t, helmOptions, releaseName, true)
-	//	//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
-	//}
-	//
-	//err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	//if err != nil {
-	//	if strings.Contains(err.Error(), "already exists") {
-	//		fmt.Println("Namespace already exists.")
-	//	} else {
-	//		t.Fatal("Error:", err)
-	//	}
-	//}
-	//
-	//helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	////https://entigo.atlassian.net/browse/RD-37
-	////Add tests here that check if CRD is created
-	//time.Sleep(60 * time.Second)
-	//setValues["installProvider"] = "true"
-	//helmOptionsSecond := &helm.Options{
-	//	SetValues:         setValues,
-	//	KubectlOptions:    kubectlOptions,
-	//	BuildDependencies: false,
-	//	ExtraArgs:         extraArgs,
-	//}
-	//helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
-	////https://entigo.atlassian.net/browse/RD-37
-	////Add tests here that check if CRD is created
-	//time.Sleep(60 * time.Second)
-	//setValues["installProviderConfig"] = "true"
-	//helmOptionsThird := &helm.Options{
-	//	SetValues:         setValues,
-	//	KubectlOptions:    kubectlOptions,
-	//	BuildDependencies: false,
-	//	ExtraArgs:         extraArgs,
-	//}
-	//helm.Upgrade(t, helmOptionsThird, helmChartPath, releaseName)
-
 }
