@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -74,7 +75,6 @@ func TestTerraformBasicBiz(t *testing.T) {
 	if err != nil {
 		t.Fatal("Controllerconfigs crd error:", err)
 	}
-	// Test if provider has been created, test if pods have been launched, deployment name aws-c
 	setValues["installProvider"] = "true"
 	helmOptionsSecond := &helm.Options{
 		SetValues:         setValues,
@@ -83,13 +83,21 @@ func TestTerraformBasicBiz(t *testing.T) {
 		ExtraArgs:         extraArgs,
 	}
 	helm.Upgrade(t, helmOptionsSecond, helmChartPath, releaseName)
-	//err = WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
-	//if err != nil {
-	//	t.Fatal("Provider error:", err)
-	//}
-	//https://entigo.atlassian.net/browse/RD-37
-	//Add tests here that check if CRD is created
-	time.Sleep(60 * time.Second)
+	err = WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("Provider error:", err)
+	}
+	provider, err := GetProvider(t, kubectlOptions, "aws-crossplane")
+	if err != nil {
+		t.Fatal("Provider error:", err)
+	}
+	assert.NotNil(t, provider, "Provider is nil")
+	providerDeployment := GetStringValue(provider.Object, "status", "currentRevision")
+	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Provider deployment %s error: %s", providerDeployment, err)
+	}
 	setValues["installProviderConfig"] = "true"
 	helmOptionsThird := &helm.Options{
 		SetValues:         setValues,
@@ -98,6 +106,8 @@ func TestTerraformBasicBiz(t *testing.T) {
 		ExtraArgs:         extraArgs,
 	}
 	helm.Upgrade(t, helmOptionsThird, helmChartPath, releaseName)
+	//https://entigo.atlassian.net/browse/RD-37
+	//Add tests here that check if CRD is created
 }
 
 func TestTerraformBasicPri(t *testing.T) {
