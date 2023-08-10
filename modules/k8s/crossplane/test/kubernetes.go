@@ -13,70 +13,97 @@ import (
 	"time"
 )
 
-func GetProvider(t testing.TestingT, options *k8s.KubectlOptions, providerName string) (*unstructured.Unstructured, error) {
-	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
-	if err != nil {
-		return nil, err
-	}
-	providerResource := schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"}
-	return dynamicClient.Resource(providerResource).Get(context.Background(), providerName, metaV1.GetOptions{})
+func WaitUntilProviderAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.isAvailable = isProviderAvailable
+	availability.objectError = NewProviderNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
 }
 
-func WaitUntilProviderAvailable(
+func WaitUntilControllerConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1alpha1", Resource: "controllerconfigs"}
+	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
+}
+
+func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
+	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
+}
+
+type objectAvailability struct {
+	name        string
+	namespace   string
+	resource    schema.GroupVersionResource
+	isAvailable isObjectAvailable
+	objectError NewObjectError
+}
+
+func defaultObjectAvailability(name string, resource schema.GroupVersionResource) objectAvailability {
+	return objectAvailability{
+		name:        name,
+		namespace:   "",
+		resource:    resource,
+		isAvailable: isObjectNotNil,
+		objectError: DefaultObjectError,
+	}
+}
+
+type isObjectAvailable func(*unstructured.Unstructured) bool
+
+func waitUntilObjectAvailable(
 	t testing.TestingT,
 	options *k8s.KubectlOptions,
-	providerName string,
+	availability objectAvailability,
 	retries int,
 	sleepBetweenRetries time.Duration,
-) error {
-	statusMsg := fmt.Sprintf("Wait for provider %s to be provisioned.", providerName)
+) (*unstructured.Unstructured, error) {
+	statusMsg := fmt.Sprintf("Wait for %s %s to be provisioned.", availability.resource.Resource, availability.name)
+	var object *unstructured.Unstructured
 	message, err := retry.DoWithRetryE(
 		t,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			provider, err := GetProvider(t, options, providerName)
+			provider, err := getObject(t, options, availability.name, availability.namespace, availability.resource)
 			if err != nil {
 				return "", err
 			}
-			if !IsProviderAvailable(provider) {
-				return "", NewProviderNotAvailable(provider)
+			if !availability.isAvailable(provider) {
+				return "", availability.objectError(provider)
 			}
-			return "Provider is now available", nil
+			object = provider
+			return fmt.Sprintf("%s %s is now available", availability.resource.Resource, availability.name), nil
 		},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for provider to be provisioned: %s", err)
-		return err
+		logger.Logf(t, "Timed out waiting for %s %s to be provisioned: %s", availability.resource.Resource,
+			availability.name, err)
+		return nil, err
 	}
 	logger.Logf(t, message)
-	return nil
+	return object, nil
 }
 
-func IsProviderAvailable(provider *unstructured.Unstructured) bool {
-	status := GetProviderStatus(provider)
+func getObject(t testing.TestingT, options *k8s.KubectlOptions, name string, namespace string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return nil, err
+	}
+	return dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
+}
+
+func isProviderAvailable(provider *unstructured.Unstructured) bool {
+	status := getProviderStatus(provider)
 	return status["Healthy"] == "True" && status["Installed"] == "True"
 }
 
-type ProviderNotAvailable struct {
-	provider *unstructured.Unstructured
+func isObjectNotNil(config *unstructured.Unstructured) bool {
+	return config != nil && config.Object != nil
 }
 
-// Error is a simple function to return a formatted error message as a string
-func (err ProviderNotAvailable) Error() string {
-	status := GetProviderStatus(err.provider)
-	return fmt.Sprintf(
-		"Deployment %s is not available, healthy: %s, installed: %s", err.provider.GetName(), status["Healthy"],
-		status["Installed"],
-	)
-}
-
-func NewProviderNotAvailable(provider *unstructured.Unstructured) ProviderNotAvailable {
-	return ProviderNotAvailable{provider}
-}
-
-func GetProviderStatus(provider *unstructured.Unstructured) map[string]string {
+func getProviderStatus(provider *unstructured.Unstructured) map[string]string {
 	conditions, found, err := unstructured.NestedSlice(provider.Object, "status", "conditions")
 	if !found || err != nil {
 		return nil
