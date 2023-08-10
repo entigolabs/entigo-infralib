@@ -88,3 +88,11 @@ func GetProviderStatus(provider *unstructured.Unstructured) map[string]string {
 	}
 	return status
 }
+
+func GetStringValue(object map[string]interface{}, fieldStrings ...string) string {
+	value, found, err := unstructured.NestedString(object, fieldStrings...)
+	if !found || err != nil {
+		return ""
+	}
+	return value
+}
