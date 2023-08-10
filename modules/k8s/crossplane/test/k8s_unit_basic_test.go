@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -45,6 +46,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
+	setValues["installBucket"] = "false"
 	helmOptions := &helm.Options{
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
@@ -115,5 +117,16 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	_, err = WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	if err != nil {
 		t.Fatal("Provider config error:", err)
+	}
+
+	setValues["installBucket"] = "true"
+	bucketName := "entigo-infralib-test" + strings.ToLower(random.UniqueId()) + "-" + releaseName
+	setValues["bucketName"] = bucketName
+	helmOptions.SetValues = setValues
+	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
+
+	err = WaitUntilBucketAvailable(t, "eu-north-1", bucketName, 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("Creating bucket error:", err)
 	}
 }

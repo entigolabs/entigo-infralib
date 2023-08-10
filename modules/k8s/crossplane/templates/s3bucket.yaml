@@ -1,0 +1,25 @@
+{{- if .Values.installBucket }}
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  name: {{ .Values.bucketName }}
+spec:
+  forProvider:
+    acl: private
+    locationConstraint: eu-north-1
+    publicAccessBlockConfiguration:
+      blockPublicPolicy: false
+      blockPublicAcls: false
+      ignorePublicAcls: false
+      restrictPublicBuckets: false
+    accelerateConfiguration:
+      status: Enabled
+    versioningConfiguration:
+      status: Suspended
+    serverSideEncryptionConfiguration:
+      rules:
+        - applyServerSideEncryptionByDefault:
+            sseAlgorithm: AES256
+  providerConfigRef:
+    name: aws-{{ .Release.Name }}
+{{- end }}

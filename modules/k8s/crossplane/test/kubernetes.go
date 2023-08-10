@@ -60,22 +60,17 @@ func waitUntilObjectAvailable(
 ) (*unstructured.Unstructured, error) {
 	statusMsg := fmt.Sprintf("Wait for %s %s to be provisioned.", availability.resource.Resource, availability.name)
 	var object *unstructured.Unstructured
-	message, err := retry.DoWithRetryE(
-		t,
-		statusMsg,
-		retries,
-		sleepBetweenRetries,
-		func() (string, error) {
-			provider, err := getObject(t, options, availability.name, availability.namespace, availability.resource)
-			if err != nil {
-				return "", err
-			}
-			if !availability.isAvailable(provider) {
-				return "", availability.objectError(provider)
-			}
-			object = provider
-			return fmt.Sprintf("%s %s is now available", availability.resource.Resource, availability.name), nil
-		},
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		provider, err := getObject(t, options, availability.name, availability.namespace, availability.resource)
+		if err != nil {
+			return "", err
+		}
+		if !availability.isAvailable(provider) {
+			return "", availability.objectError(provider)
+		}
+		object = provider
+		return fmt.Sprintf("%s %s is now available", availability.resource.Resource, availability.name), nil
+	},
 	)
 	if err != nil {
 		logger.Logf(t, "Timed out waiting for %s %s to be provisioned: %s", availability.resource.Resource,
