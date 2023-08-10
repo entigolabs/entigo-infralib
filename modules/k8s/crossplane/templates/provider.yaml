@@ -1,0 +1,13 @@
+{{- if .Values.installProvider }}
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: aws-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    helm.sh/resource-policy: keep
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.42.0
+  controllerConfigRef:
+    name: aws-{{ .Release.Name }}
+{{- end }}

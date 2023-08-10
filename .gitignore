@@ -5,3 +5,6 @@
 */*/*/terraform.tfstate.d
 */*/*/go.mod
 */*/*/go.sum
+
+.idea
+.DS_Store

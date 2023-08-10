@@ -17,7 +17,7 @@ func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
 	aws.DeleteS3Bucket(t, awsRegion, bucketName)
 }
 
-func TestTerraformBasicOne(t *testing.T) {
+func TestTerraformBasicBiz(t *testing.T) {
         t.Parallel()
 	spew.Dump("")
 	
@@ -41,7 +41,7 @@ func TestTerraformBasicOne(t *testing.T) {
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_1.tfvars"},
+		VarFiles: []string{"tf_unit_basic_test_biz.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
 			"key":    key,
@@ -49,7 +49,7 @@ func TestTerraformBasicOne(t *testing.T) {
 		},
 	})
 	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "one")
+	terraform.WorkspaceSelectOrNew(t, terraformOptions, "biz")
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	  defer terraform.Destroy(t, terraformOptions)
@@ -104,7 +104,7 @@ func TestTerraformBasicOne(t *testing.T) {
 
 }
 
-func TestTerraformBasicTwo(t *testing.T) {
+func TestTerraformBasicPri(t *testing.T) {
         t.Parallel()
 	
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
@@ -127,7 +127,7 @@ func TestTerraformBasicTwo(t *testing.T) {
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_2.tfvars"},
+		VarFiles: []string{"tf_unit_basic_test_pri.tfvars"},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
 			"key":    key,
@@ -135,7 +135,7 @@ func TestTerraformBasicTwo(t *testing.T) {
 		},
 	})
 	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "two")
+	terraform.WorkspaceSelectOrNew(t, terraformOptions, "pri")
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	  defer terraform.Destroy(t, terraformOptions)

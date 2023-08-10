@@ -1,5 +1,7 @@
 argocd:
-
+  crds:
+    install: true
+    keep: true
   global:
     networkPolicy:
       create: true
@@ -30,8 +32,6 @@ argocd:
         alb.ingress.kubernetes.io/scheme: internal
         alb.ingress.kubernetes.io/target-type: ip
       ingressClassName: "alb"
-      hosts:
-      - argocd.${domain}
       paths:
       - /
     ingressGrpc:

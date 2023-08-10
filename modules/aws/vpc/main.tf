@@ -199,4 +199,3 @@ resource "aws_ssm_parameter" "intra_subnet_cidrs" {
   }
 }
 
-

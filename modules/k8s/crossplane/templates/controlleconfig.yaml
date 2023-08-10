@@ -1,0 +1,15 @@
+{{- if .Values.installProvider }}
+apiVersion: pkg.crossplane.io/v1alpha1
+kind: ControllerConfig
+metadata:
+  name: aws-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    helm.sh/resource-policy: keep
+spec:
+  serviceAccountName: aws-crossplane #https://github.com/crossplane/crossplane/pull/2880
+  podSecurityContext:
+    fsGroup: 2000
+  # args:
+  # - --poll=720m
+{{- end }}
