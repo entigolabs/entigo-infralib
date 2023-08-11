@@ -10,6 +10,7 @@ import (
         "github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
+	"time"
 )
 
 
@@ -57,7 +58,14 @@ func TestTerraformBasicBiz(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("istiod deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("istiod deployment error:", err)
+	}
 
 }
 
@@ -106,6 +114,12 @@ func TestTerraformBasicPri(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("istiod deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 60, 1*time.Second)
+	if err != nil {
+		t.Fatal("istiod deployment error:", err)
+	}
 }

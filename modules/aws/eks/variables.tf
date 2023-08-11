@@ -27,7 +27,7 @@ variable "eks_cluster_public" {
 variable "eks_main_min_size" {
   type    = number
   nullable = false
-  default = 1
+  default = 2
 }
 
 variable "eks_main_max_size" {
