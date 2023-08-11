@@ -19,7 +19,6 @@ func TestTerraformBasicBiz(t *testing.T) {
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
 	namespaceName := fmt.Sprintf("istio-system")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
@@ -63,7 +62,6 @@ func TestTerraformBasicPri(t *testing.T) {
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
 	namespaceName := fmt.Sprintf("istio-system")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
