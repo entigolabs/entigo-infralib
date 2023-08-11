@@ -2,7 +2,7 @@
 argocd:
   server:
     config:
-      url: https://argocd.biz-internal.infralib.entigo.io
+      url: https://argocd.runner-main-biz-int.infralib.entigo.io
     ingress:
       hosts:
-      - argocd.biz-internal.infralib.entigo.io
+      - argocd.runner-main-biz-int.infralib.entigo.io

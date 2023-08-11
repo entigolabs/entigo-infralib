@@ -2,8 +2,8 @@
 argocd:
   server:
     config:
-      url: https://argocd.pri-internal.infralib.entigo.io
+      url: https://argocd.runner-main-pri.infralib.entigo.io
     ingress:
       hosts:
-      - argocd.pri-internal.infralib.entigo.io
+      - argocd.runner-main-pri.infralib.entigo.io
  
