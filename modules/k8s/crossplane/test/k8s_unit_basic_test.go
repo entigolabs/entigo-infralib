@@ -120,8 +120,8 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	err = DeleteBucket(t, kubectlOptions, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = WaitUntilS3BucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
-	require.NoError(t, err, "S3 Bucket deletion error")
 	err = WaitUntilBucketDeleted(t, kubectlOptions, bucketName, 30, 2*time.Second)
 	require.NoError(t, err, "Bucket didn't get deleted")
+	err = WaitUntilS3BucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	require.NoError(t, err, "S3 Bucket deletion error")
 }
