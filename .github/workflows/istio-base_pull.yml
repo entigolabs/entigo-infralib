@@ -1,16 +1,16 @@
-name: PR modules/k8s/crossplane
+name: PR modules/k8s/istio
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'modules/k8s/crossplane/**'
+      - 'modules/k8s/istio/**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Test modules/k8s/crossplane
+    name: Test modules/k8s/istio
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -23,5 +23,5 @@ jobs:
         PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        modules/k8s/crossplane/test.sh
+        modules/k8s/istio/test.sh
 
