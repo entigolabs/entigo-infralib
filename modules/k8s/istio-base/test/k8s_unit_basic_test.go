@@ -24,11 +24,6 @@ func TestTerraformBasicBiz(t *testing.T) {
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
-	if prefix != "runner-main" {
-	   extraArgs["upgrade"] = []string{"--skip-crds"}
-	   extraArgs["install"] = []string{"--skip-crds"}
-	   
-	}
 	releaseName := "istio-base"
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
@@ -73,11 +68,6 @@ func TestTerraformBasicPri(t *testing.T) {
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
-	if prefix != "runner-main" {
-	   extraArgs["upgrade"] = []string{"--skip-crds"}
-	   extraArgs["install"] = []string{"--skip-crds"}
-	   
-	}
 	releaseName := "istio-base"
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
