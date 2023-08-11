@@ -106,16 +106,22 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	assert.NotNil(t, bucket, "Bucket is nil")
 	assert.Equal(t, bucketName, bucket.GetName(), "Bucket name is not equal")
 
-	err = WaitUntilBucketAvailable(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	_, err = WaitUntilBucketAvailable(t, kubectlOptions, bucketName, 30, 2*time.Second)
 	if err != nil {
-		_ = DeleteS3Bucket(t, kubectlOptions, bucketName) // Try to delete bucket
+		_ = DeleteBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
-	require.NoError(t, err, "Bucket creation error")
+	require.NoError(t, err, "Bucket syncing error")
+	err = WaitUntilS3BucketExists(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	if err != nil {
+		_ = DeleteBucket(t, kubectlOptions, bucketName) // Try to delete bucket
+	}
+	require.NoError(t, err, "S3 bucket creation error")
 
-	err = DeleteS3Bucket(t, kubectlOptions, bucketName)
+	err = DeleteBucket(t, kubectlOptions, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	// TODO Currently the bucket doesn't get deleted
-	//err = WaitUntilBucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
-	//require.NoError(t, err, "Bucket deletion error")
+	err = WaitUntilS3BucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	require.NoError(t, err, "S3 Bucket deletion error")
+	err = WaitUntilBucketDeleted(t, kubectlOptions, bucketName, 30, 2*time.Second)
+	require.NoError(t, err, "Bucket didn't get deleted")
 }

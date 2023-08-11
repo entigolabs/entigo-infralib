@@ -18,10 +18,22 @@ type ProviderNotAvailable struct {
 }
 
 func (err ProviderNotAvailable) Error() string {
-	status := getProviderStatus(err.provider)
+	status := getStatusMap(err.provider)
 	return fmt.Sprintf(
 		"Provider %s is not available, healthy: %s, installed: %s", err.provider.GetName(), status["Healthy"],
 		status["Installed"],
+	)
+}
+
+type BucketNotAvailable struct {
+	bucket *unstructured.Unstructured
+}
+
+func (err BucketNotAvailable) Error() string {
+	status := getStatusMap(err.bucket)
+	return fmt.Sprintf(
+		"Bucket %s is not available, ready: %s, synced: %s", err.bucket.GetName(), status["Ready"],
+		status["Synced"],
 	)
 }
 
@@ -33,4 +45,8 @@ func DefaultObjectError(object *unstructured.Unstructured) error {
 
 func NewProviderNotAvailable(provider *unstructured.Unstructured) error {
 	return ProviderNotAvailable{provider}
+}
+
+func NewBucketNotAvailable(bucket *unstructured.Unstructured) error {
+	return BucketNotAvailable{bucket}
 }

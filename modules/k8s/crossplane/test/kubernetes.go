@@ -2,11 +2,13 @@ package test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	kubernetesErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,6 +35,20 @@ func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOp
 	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }
 
+func WaitUntilBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.isAvailable = isBucketAvailable
+	availability.objectError = NewBucketNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func WaitUntilBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	namespacedObject := defaultNamespacedObject(name, resource)
+	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
 func CreateS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
 	logger.Logf(t, "Creating S3 bucket %s", name)
 	bucketObject, err := readObjectFromFile(templateFile)
@@ -44,27 +60,37 @@ func CreateS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string
 	return createObject(t, options, bucketObject, resource)
 }
 
-func DeleteS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+func DeleteBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
 	return deleteObject(t, options, name, resource)
 }
 
 type objectAvailability struct {
-	name        string
-	namespace   string
-	resource    schema.GroupVersionResource
-	isAvailable isObjectAvailable
-	objectError NewObjectError
+	namespacedObject namespacedObject
+	isAvailable      isObjectAvailable
+	objectError      NewObjectError
 }
 
 func defaultObjectAvailability(name string, resource schema.GroupVersionResource) objectAvailability {
 	return objectAvailability{
-		name:        name,
-		namespace:   "",
-		resource:    resource,
-		isAvailable: isObjectNotNil,
-		objectError: DefaultObjectError,
+		namespacedObject: defaultNamespacedObject(name, resource),
+		isAvailable:      isObjectNotNil,
+		objectError:      DefaultObjectError,
+	}
+}
+
+type namespacedObject struct {
+	name      string
+	namespace string
+	resource  schema.GroupVersionResource
+}
+
+func defaultNamespacedObject(name string, resource schema.GroupVersionResource) namespacedObject {
+	return namespacedObject{
+		name:      name,
+		namespace: "",
+		resource:  resource,
 	}
 }
 
@@ -77,27 +103,57 @@ func waitUntilObjectAvailable(
 	retries int,
 	sleepBetweenRetries time.Duration,
 ) (*unstructured.Unstructured, error) {
-	statusMsg := fmt.Sprintf("Wait for %s %s to be provisioned.", availability.resource.Resource, availability.name)
+	namespacedObject := availability.namespacedObject
+	statusMsg := fmt.Sprintf("Wait for %s %s to be provisioned.", namespacedObject.resource.Resource, namespacedObject.name)
 	var object *unstructured.Unstructured
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
-		provider, err := getObject(t, options, availability.name, availability.namespace, availability.resource)
+		var err error
+		object, err = getObject(t, options, namespacedObject.name, namespacedObject.namespace, namespacedObject.resource)
 		if err != nil {
 			return "", err
 		}
-		if !availability.isAvailable(provider) {
-			return "", availability.objectError(provider)
+		if !availability.isAvailable(object) {
+			return "", availability.objectError(object)
 		}
-		object = provider
-		return fmt.Sprintf("%s %s is now available", availability.resource.Resource, availability.name), nil
+		return fmt.Sprintf("%s %s is now available", namespacedObject.resource.Resource, namespacedObject.name), nil
 	},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for %s %s to be provisioned: %s", availability.resource.Resource,
-			availability.name, err)
+		logger.Logf(t, "Timed out waiting for %s %s to be provisioned: %s", namespacedObject.resource.Resource,
+			namespacedObject.name, err)
 		return nil, err
 	}
 	logger.Logf(t, message)
 	return object, nil
+}
+
+func waitUntilObjectDeleted(
+	t testing.TestingT,
+	options *k8s.KubectlOptions,
+	namespacedObject namespacedObject,
+	retries int,
+	sleepBetweenRetries time.Duration,
+) error {
+	statusMsg := fmt.Sprintf("Wait for %s %s to be deleted.", namespacedObject.resource.Resource, namespacedObject.name)
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		_, err := getObject(t, options, namespacedObject.name, namespacedObject.namespace, namespacedObject.resource)
+		if err == nil {
+			return "", fmt.Errorf("%s %s still exists", namespacedObject.resource.Resource, namespacedObject.name)
+		}
+		var statusError *kubernetesErrors.StatusError
+		if errors.As(err, &statusError) && statusError.Status().Code == 404 {
+			return fmt.Sprintf("%s %s is now deleted", namespacedObject.resource.Resource, namespacedObject.name), nil
+		}
+		return "", err
+	},
+	)
+	if err != nil {
+		logger.Logf(t, "Timed out waiting for %s %s to be deleted: %s", namespacedObject.resource.Resource,
+			namespacedObject.name, err)
+		return err
+	}
+	logger.Logf(t, message)
+	return nil
 }
 
 func getObject(t testing.TestingT, options *k8s.KubectlOptions, name string, namespace string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
@@ -141,7 +197,7 @@ func readObjectFromFile(templateFile string) (*unstructured.Unstructured, error)
 }
 
 func isProviderAvailable(provider *unstructured.Unstructured) bool {
-	status := getProviderStatus(provider)
+	status := getStatusMap(provider)
 	return status["Healthy"] == "True" && status["Installed"] == "True"
 }
 
@@ -149,7 +205,12 @@ func isObjectNotNil(config *unstructured.Unstructured) bool {
 	return config != nil && config.Object != nil
 }
 
-func getProviderStatus(provider *unstructured.Unstructured) map[string]string {
+func isBucketAvailable(bucket *unstructured.Unstructured) bool {
+	status := getStatusMap(bucket)
+	return status["Ready"] == "True" && status["Synced"] == "True"
+}
+
+func getStatusMap(provider *unstructured.Unstructured) map[string]string {
 	conditions, found, err := unstructured.NestedSlice(provider.Object, "status", "conditions")
 	if !found || err != nil {
 		return nil
