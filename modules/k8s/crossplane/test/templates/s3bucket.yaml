@@ -6,18 +6,19 @@ spec:
   forProvider:
     acl: private
     locationConstraint: eu-north-1
+    objectOwnership: BucketOwnerPreferred
     publicAccessBlockConfiguration:
-      blockPublicPolicy: false
-      blockPublicAcls: false
-      ignorePublicAcls: false
-      restrictPublicBuckets: false
+      blockPublicPolicy: true
+      blockPublicAcls: true
+      ignorePublicAcls: true
+      restrictPublicBuckets: true
     accelerateConfiguration:
       status: Enabled
     versioningConfiguration:
       status: Suspended
     serverSideEncryptionConfiguration:
       rules:
-        - applyServerSideEncryptionByDefault:
-            sseAlgorithm: AES256
+      - applyServerSideEncryptionByDefault:
+          sseAlgorithm: AES256
   providerConfigRef:
     name: aws-crossplane
