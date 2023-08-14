@@ -1,4 +1,4 @@
-package test
+package k8s
 
 import (
 	"errors"

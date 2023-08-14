@@ -1,4 +1,4 @@
-package test
+package aws
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func WaitUntilS3BucketExists(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
+func WaitUntilAWSBucketExists(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for bucket %s in %s region to be created", name, region)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
 		err := aws.AssertS3BucketExistsE(t, region, name)
@@ -29,7 +29,7 @@ func WaitUntilS3BucketExists(t testing.TestingT, region string, name string, ret
 	return nil
 }
 
-func WaitUntilS3BucketDeleted(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
+func WaitUntilAWSBucketDeleted(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for bucket %s in %s region to be deleted", name, region)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
 		err := aws.AssertS3BucketExistsE(t, region, name)

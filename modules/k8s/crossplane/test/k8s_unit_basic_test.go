@@ -3,8 +3,10 @@ package test
 import (
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +44,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
-	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
@@ -55,10 +57,10 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			fmt.Println("Namespace already exists.")
@@ -68,60 +70,57 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "crossplane", 60, 1*time.Second)
-	require.NoError(t, err, "Crossplane deployment error")
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
-	require.NoError(t, err, "Crossplane-rbac-manager deployment error")
-	err = WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providers crd error")
-	err = WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Controllerconfigs crd error")
 
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	provider, err := WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	require.NoError(t, err, "Provider error")
 	assert.NotNil(t, provider, "Provider is nil")
-	providerDeployment := GetStringValue(provider.Object, "status", "currentRevision")
+	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	require.NoError(t, err, "Provider deployment error")
-	_, err = WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	require.NoError(t, err, "Controller config error")
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	err = WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
-	bucket, err := CreateS3Bucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
+	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
 	assert.NotNil(t, bucket, "Bucket is nil")
 	assert.Equal(t, bucketName, bucket.GetName(), "Bucket name is not equal")
 
-	_, err = WaitUntilBucketAvailable(t, kubectlOptions, bucketName, 30, 2*time.Second)
+	_, err = k8s.WaitUntilK8SBucketAvailable(t, kubectlOptions, bucketName, 30, 2*time.Second)
 	if err != nil {
-		_ = DeleteBucket(t, kubectlOptions, bucketName) // Try to delete bucket
+		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
 	require.NoError(t, err, "Bucket syncing error")
-	err = WaitUntilS3BucketExists(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	err = aws.WaitUntilAWSBucketExists(t, "eu-north-1", bucketName, 30, 2*time.Second)
 	if err != nil {
-		_ = DeleteBucket(t, kubectlOptions, bucketName) // Try to delete bucket
+		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
 	require.NoError(t, err, "S3 bucket creation error")
 
-	err = DeleteBucket(t, kubectlOptions, bucketName)
+	err = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = WaitUntilBucketDeleted(t, kubectlOptions, bucketName, 30, 2*time.Second)
-	require.NoError(t, err, "Bucket didn't get deleted")
-	err = WaitUntilS3BucketDeleted(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	err = aws.WaitUntilAWSBucketDeleted(t, "eu-north-1", bucketName, 6, 10*time.Second)
 	require.NoError(t, err, "S3 Bucket deletion error")
+	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
+	require.NoError(t, err, "Bucket didn't get deleted")
 }

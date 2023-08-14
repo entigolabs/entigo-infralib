@@ -1,4 +1,4 @@
-package test
+package k8s
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOp
 	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }
 
-func WaitUntilBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
 	availability := defaultObjectAvailability(name, resource)
 	availability.isAvailable = isBucketAvailable
@@ -43,13 +43,13 @@ func WaitUntilBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, n
 	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
 }
 
-func WaitUntilBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
 	namespacedObject := defaultNamespacedObject(name, resource)
 	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
 }
 
-func CreateS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
+func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
 	logger.Logf(t, "Creating S3 bucket %s", name)
 	bucketObject, err := readObjectFromFile(templateFile)
 	if err != nil {
@@ -60,7 +60,7 @@ func CreateS3Bucket(t testing.TestingT, options *k8s.KubectlOptions, name string
 	return createObject(t, options, bucketObject, resource)
 }
 
-func DeleteBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
 	return deleteObject(t, options, name, resource)
