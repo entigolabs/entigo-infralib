@@ -3,8 +3,8 @@ package test
 import (
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/entigolabs/entigo-infralib-testing/common/aws"
-	"github.com/entigolabs/entigo-infralib-testing/common/k8s"
+	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
