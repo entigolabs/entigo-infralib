@@ -44,11 +44,13 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
 	setValues["aws-load-balancer-controller.clusterName"] = runnerName
 
+	ingressClass := "alb"
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("%s-%s", namespaceName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 		setValues["aws-load-balancer-controller.ingressClass"] = namespaceName
+		ingressClass = namespaceName
 	}
 	setValues["aws-load-balancer-controller.nameOverride"] = namespaceName
 	releaseName := namespaceName
@@ -85,7 +87,7 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 	ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
 	require.NoError(t, err)
 	ingress.SetName(releaseName)
-	err = unstructured.SetNestedField(ingress.Object, releaseName, "spec", "ingressClassName")
+	err = unstructured.SetNestedField(ingress.Object, ingressClass, "spec", "ingressClassName")
 	require.NoError(t, err, "Setting ingressClassName error")
 	annotations := ingress.GetAnnotations()
 	annotations["alb.ingress.kubernetes.io/group.name"] = releaseName
