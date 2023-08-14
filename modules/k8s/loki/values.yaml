@@ -1,0 +1,151 @@
+loki:
+  fullnameOverride: loki
+  serviceAccount:
+    create: false
+    name: loki
+  
+
+  loki:
+    auth_enabled: false
+    storage:
+      bucketNames:
+        chunks: chunks
+        ruler: ruler
+        admin: admin
+      type: s3
+      s3:
+        s3: s3://eu-north-1/eg-tooling-loki
+        endpoint: null
+        region: eu-north-1
+        secretAccessKey: null
+        accessKeyId: null
+        s3ForcePathStyle: true
+        insecure: false
+        http_config: {}
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /var/loki/boltdb-shipper-active
+        cache_location: /var/loki/boltdb-shipper-cache
+        cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
+        shared_store: s3
+      aws:
+        s3forcepathstyle: true
+        s3: s3://eu-north-1/eg-tooling-loki
+        bucketnames: eg-tooling-loki
+        region: eu-north-1
+        insecure: false
+  test:
+    enabled: false
+  monitoring:
+    # Dashboards for monitoring Loki
+    dashboards:
+      enabled: true
+      namespace: monitoring
+      labels:
+        grafana_dashboard: "1"
+
+    # Recording rules for monitoring Loki, required for some dashboards
+    rules:
+      # -- If enabled, create PrometheusRule resource with Loki recording rules
+      enabled: true
+      # -- Include alerting rules
+      alerting: true
+      # -- Alternative namespace to create PrometheusRule resources in
+      namespace: monitoring
+      additionalGroups: []
+      # - name: additional-loki-rules
+      #   rules:
+      #     - record: job:loki_request_duration_seconds_bucket:sum_rate
+      #       expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
+      #     - record: job_route:loki_request_duration_seconds_bucket:sum_rate
+      #       expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
+      #     - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
+      #       expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
+
+    # ServiceMonitor configuration
+    serviceMonitor:
+      # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+      enabled: true
+      # -- Namespace selector for ServiceMonitor resources
+      metricsInstance:
+        # -- If enabled, MetricsInstance resources for Grafana Agent Operator are created
+        enabled: false
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+        enableConfigReadAPI: false
+
+
+    # The Loki canary pushes logs to and queries from this loki installation to test
+    # that it's working correctly
+    lokiCanary:
+      enabled: true
+        
+  write:
+    replicas: 3 #3
+    persistence:
+      size: 30Gi
+    nodeSelector:
+      monitoring: "true"
+    tolerations:
+       - key: "monitoring"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
+  read:
+    replicas: 2 #2
+    nodeSelector:
+      monitoring: "true"
+    tolerations:
+       - key: "monitoring"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
+    autoscaling:
+      enabled: true
+      minReplicas: 2 #2
+      maxReplicas: 9
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage:
+    persistence:
+      size: 30Gi
+      storageClass: gp2
+
+  gateway:
+    enabled: true
+    verboseLogging: true
+    autoscaling:
+      enabled: true
+      minReplicas: 2 #2
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage:
+    ingress:
+      enabled: true
+      annotations:
+        alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
+        { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+        alb.ingress.kubernetes.io/group.name: internal
+        alb.ingress.kubernetes.io/healthcheck-path: /
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+        alb.ingress.kubernetes.io/scheme: internal
+        alb.ingress.kubernetes.io/success-codes: 200-499
+        alb.ingress.kubernetes.io/target-type: ip
+        kubernetes.io/ingress.class: alb
+      hosts:
+        - host: loki.aws-internal.delfi.net
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - loki.aws-internal.delfi.net
+            
+  monitoring:
+    # Dashboards for monitoring Loki
+    dashboards:
+      # -- If enabled, create configmap with dashboards for monitoring Loki
+      enabled: true
+      # -- Alternative namespace to create dashboards ConfigMap in
+      namespace: monitoring
