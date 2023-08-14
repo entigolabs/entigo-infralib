@@ -51,19 +51,47 @@ func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, 
 
 func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
 	logger.Logf(t, "Creating S3 bucket %s", name)
-	bucketObject, err := readObjectFromFile(templateFile)
+	bucketObject, err := ReadObjectFromFile(t, templateFile)
 	if err != nil {
 		return nil, err
 	}
 	bucketObject.SetName(name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
-	return createObject(t, options, bucketObject, resource)
+	return createObject(t, options, bucketObject, "", resource)
 }
 
 func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
-	return deleteObject(t, options, name, resource)
+	return deleteObject(t, options, name, "", resource)
+}
+
+func WaitUntilK8SIngressAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.namespacedObject.namespace = options.Namespace
+	availability.isAvailable = isIngressAvailable
+	availability.objectError = NewIngressNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func WaitUntilK8SIngressDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
+	namespacedObject := defaultNamespacedObject(name, resource)
+	namespacedObject.namespace = options.Namespace
+	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
+func CreateK8SIngress(t testing.TestingT, options *k8s.KubectlOptions, ingressObject *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating Ingress %s", ingressObject.GetName())
+	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
+	return createObject(t, options, ingressObject, options.Namespace, resource)
+}
+
+func DeleteK8SIngress(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting Ingress %s", name)
+	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
+	return deleteObject(t, options, name, options.Namespace, resource)
 }
 
 type objectAvailability struct {
@@ -164,23 +192,24 @@ func getObject(t testing.TestingT, options *k8s.KubectlOptions, name string, nam
 	return dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
 }
 
-func createObject(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+func createObject(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured, namespace string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
 	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
 	}
-	return dynamicClient.Resource(resource).Create(context.Background(), object, metaV1.CreateOptions{})
+	return dynamicClient.Resource(resource).Namespace(namespace).Create(context.Background(), object, metaV1.CreateOptions{})
 }
 
-func deleteObject(t testing.TestingT, options *k8s.KubectlOptions, name string, resource schema.GroupVersionResource) error {
+func deleteObject(t testing.TestingT, options *k8s.KubectlOptions, name string, namespace string, resource schema.GroupVersionResource) error {
 	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return err
 	}
-	return dynamicClient.Resource(resource).Delete(context.Background(), name, metaV1.DeleteOptions{})
+	return dynamicClient.Resource(resource).Namespace(namespace).Delete(context.Background(), name, metaV1.DeleteOptions{})
 }
 
-func readObjectFromFile(templateFile string) (*unstructured.Unstructured, error) {
+func ReadObjectFromFile(t testing.TestingT, templateFile string) (*unstructured.Unstructured, error) {
+	logger.Log(t, fmt.Sprintf("Reading k8s object from file %s", templateFile))
 	var object unstructured.Unstructured
 	bytes, err := os.ReadFile(templateFile)
 	if err != nil {
@@ -210,8 +239,17 @@ func isBucketAvailable(bucket *unstructured.Unstructured) bool {
 	return status["Ready"] == "True" && status["Synced"] == "True"
 }
 
-func getStatusMap(provider *unstructured.Unstructured) map[string]string {
-	conditions, found, err := unstructured.NestedSlice(provider.Object, "status", "conditions")
+func isIngressAvailable(ingress *unstructured.Unstructured) bool {
+	ingresses, found, err := unstructured.NestedSlice(ingress.Object, "status", "loadBalancer", "ingress")
+	if !found || err != nil || len(ingresses) == 0 {
+		return false
+	}
+	ingressMap := ingresses[0].(map[string]interface{})
+	return ingressMap["hostname"] != ""
+}
+
+func getStatusMap(object *unstructured.Unstructured) map[string]string {
+	conditions, found, err := unstructured.NestedSlice(object.Object, "status", "conditions")
 	if !found || err != nil {
 		return nil
 	}
@@ -229,4 +267,19 @@ func GetStringValue(object map[string]interface{}, fieldStrings ...string) strin
 		return ""
 	}
 	return value
+}
+
+func SetNestedSliceString(object map[string]interface{}, index int, label string, value string, fieldStrings ...string) error {
+	rules, found, err := unstructured.NestedSlice(object, fieldStrings...)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("field %s not found", fieldStrings)
+	}
+	if (index + 1) > len(rules) {
+		return fmt.Errorf("index %d out of range", index)
+	}
+	rules[index].(map[string]interface{})[label] = value
+	return unstructured.SetNestedSlice(object, rules, fieldStrings...)
 }
