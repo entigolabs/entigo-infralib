@@ -37,6 +37,14 @@ func (err BucketNotAvailable) Error() string {
 	)
 }
 
+type IngressNotAvailable struct {
+	ingress *unstructured.Unstructured
+}
+
+func (err IngressNotAvailable) Error() string {
+	return fmt.Sprintf("Ingress %s hostname has not been set", err.ingress.GetName())
+}
+
 type NewObjectError func(object *unstructured.Unstructured) error
 
 func DefaultObjectError(object *unstructured.Unstructured) error {
@@ -49,4 +57,8 @@ func NewProviderNotAvailable(provider *unstructured.Unstructured) error {
 
 func NewBucketNotAvailable(bucket *unstructured.Unstructured) error {
 	return BucketNotAvailable{bucket}
+}
+
+func NewIngressNotAvailable(ingress *unstructured.Unstructured) error {
+	return IngressNotAvailable{ingress}
 }
