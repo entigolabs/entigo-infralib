@@ -80,6 +80,7 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, fmt.Sprintf("%s-webhook-service", releaseName), 60, 1*time.Second)
+	time.Sleep(2 * time.Second)
 
 	ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
 	require.NoError(t, err)
