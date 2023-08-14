@@ -3,7 +3,7 @@ kind: Bucket
 metadata:
   name: s3-crossplane-bucket
   annotations:
-    crossplane.io/external-name: eg-tooling-loki
+    crossplane.io/external-name: loki
 spec:
   forProvider:
     acl: private
@@ -17,105 +17,9 @@ spec:
       status: Enabled
     versioningConfiguration:
       status: Suspended
-    tagging:
-      tagSet:
-      - key: map-migrated
-        value: mig35627
     serverSideEncryptionConfiguration:
       rules:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
   providerConfigRef:
-    name: aws-eg-infra-tooling
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: Policy
-metadata:
-  name: loki 
-spec:
-  forProvider:
-    name: loki
-    document: |
-      {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Action": [
-              "s3:ListObjects*",
-              "s3:ListBucket",
-              "s3:PutObject",
-              "s3:GetObject",
-              "s3:DeleteObject"
-            ],
-            "Resource": [
-              "arn:aws:s3:::eg-tooling-loki/*"
-            ]
-          },
-          {
-            "Effect": "Allow",
-            "Action": [
-              "s3:ListBucket"
-            ],
-            "Resource": [
-              "arn:aws:s3:::eg-tooling-loki"
-            ]
-          }
-        ]
-      }
-
-  providerConfigRef:
-    name: aws-eg-infra-tooling
-
----
-
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: RolePolicyAttachment
-metadata:
-  name: loki
-spec:
-  forProvider:
-    policyArn: arn:aws:iam::011093662945:policy/loki
-    roleNameRef:
-      name: loki
-  providerConfigRef:
-    name: aws-eg-infra-tooling
-
----
-
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: Role
-metadata:
-  name: loki
-spec:
-  forProvider:
-    assumeRolePolicyDocument: |
-      {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": {
-              "Federated": "arn:aws:iam::011093662945:oidc-provider/oidc.eks.eu-north-1.amazonaws.com/id/FA1FA64B7F6A27ACC40AF0B4C10FCCFB"
-            },
-            "Action": "sts:AssumeRoleWithWebIdentity",
-            "Condition": {
-              "StringEquals": {
-                "oidc.eks.eu-north-1.amazonaws.com/id/FA1FA64B7F6A27ACC40AF0B4C10FCCFB:aud": "sts.amazonaws.com",
-                "oidc.eks.eu-north-1.amazonaws.com/id/FA1FA64B7F6A27ACC40AF0B4C10FCCFB:sub": "system:serviceaccount:loki:loki"
-              }
-            }
-          }
-        ]
-      }
-  providerConfigRef:
-    name: aws-eg-infra-tooling
-
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::011093662945:role/loki
-  name: loki
+    name: aws-{{ .Release.Name }}

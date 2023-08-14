@@ -1,3 +1,6 @@
+awsAccount: ""
+clusterOIDC: ""
+
 loki:
   fullnameOverride: loki
   serviceAccount:
@@ -44,6 +47,11 @@ loki:
       labels:
         grafana_dashboard: "1"
 
+  networkPolicy:
+    enabled: true
+  ruler:
+    enabled: false
+
     # Recording rules for monitoring Loki, required for some dashboards
     rules:
       # -- If enabled, create PrometheusRule resource with Loki recording rules
@@ -84,6 +92,15 @@ loki:
         
   write:
     replicas: 3 #3
+    resources:
+      limits:
+        cpu: 2
+        memory: 1Gi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
     persistence:
       size: 30Gi
     nodeSelector:
@@ -95,6 +112,15 @@ loki:
          effect: "NoSchedule"
   read:
     replicas: 2 #2
+    resources:
+      limits:
+        cpu: 2
+        memory: 1Gi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
     nodeSelector:
       monitoring: "true"
     tolerations:
@@ -110,11 +136,20 @@ loki:
       targetMemoryUtilizationPercentage:
     persistence:
       size: 30Gi
-      storageClass: gp2
+      storageClass: gp3
 
   gateway:
     enabled: true
     verboseLogging: true
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 128Mi
+        ephemeral-storage: 10Gi    
     autoscaling:
       enabled: true
       minReplicas: 2 #2
@@ -140,7 +175,7 @@ loki:
               pathType: Prefix
       tls:
         - hosts:
-            - loki.aws-internal.delfi.net
+            - loki.aws-internal.entigo.com
             
   monitoring:
     # Dashboards for monitoring Loki
