@@ -1,184 +1,104 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
-	"github.com/davecgh/go-spew/spew"
+	"strings"
+	"testing"
 )
 
-func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
-	aws.EmptyS3Bucket(t, awsRegion, bucketName)
-	aws.DeleteS3Bucket(t, awsRegion, bucketName)
+const bucketName = "infralib-modules-aws-vpc-tf"
+
+var awsRegion string
+
+func TestVPCRunner(t *testing.T) {
+	awsRegion = commonAWS.SetupBucket(t, bucketName)
+	t.Run("Biz", testTerraformBasicBiz)
+	t.Run("Pri", testTerraformBasicPri)
 }
 
-func TestTerraformBasicBiz(t *testing.T) {
-        t.Parallel()
-	spew.Dump("")
-	
-	awsRegion := aws.GetRandomRegion(t, []string{"eu-north-1"}, nil)
-	bucketName := "infralib-modules-aws-vpc-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
+func testTerraformBasicBiz(t *testing.T) {
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", "biz")
+	defer destroyFunc()
 
-	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	 if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	 }
- 
-        rootFolder := ".." 
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_biz.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "biz")
+	vpcId := outputs["vpc_id"]
+	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
-	}
+	privateSubnets := fmt.Sprint(outputs["private_subnets"])
+	assert.Equal(t, 3, len(strings.Split(privateSubnets, " ")), "Wrong number of private_subnets returned")
 
-	terraform.Apply(t, terraformOptions)
+	publicSubnets := fmt.Sprint(outputs["public_subnets"])
+	assert.Equal(t, 3, len(strings.Split(publicSubnets, " ")), "Wrong number of public_subnets returned")
 
-        outputs, err := terraform.OutputAllE(t, terraformOptions)
-        if err != nil {
-	  t.Fatalf("Failed to get outputs")
-        }
+	intraSubnets := fmt.Sprint(outputs["intra_subnets"])
+	assert.Equal(t, "[]", intraSubnets, "Wrong number of intra_subnets returned")
 
-	vpc_id := outputs["vpc_id"]
-	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
+	databaseSubnets := fmt.Sprint(outputs["database_subnets"])
+	assert.Equal(t, 3, len(strings.Split(databaseSubnets, " ")), "Wrong number of database_subnets returned")
 
-	private_subnets := fmt.Sprint(outputs["private_subnets"])
-	assert.Equal(t, 3, len(strings.Split(private_subnets, " ")), "Wrong number of private_subnets returned")
-	  
-	public_subnets := fmt.Sprint(outputs["public_subnets"])
-	assert.Equal(t, 3, len(strings.Split(public_subnets, " ")), "Wrong number of public_subnets returned")
-	  
-	intra_subnets := fmt.Sprint(outputs["intra_subnets"])
-	assert.Equal(t, "[]", intra_subnets, "Wrong number of intra_subnets returned")
-	
-	database_subnets := fmt.Sprint(outputs["database_subnets"])
-	assert.Equal(t, 3, len(strings.Split(database_subnets, " ")), "Wrong number of database_subnets returned")
-	
-	database_subnet_group := outputs["database_subnet_group"]
-	assert.NotEmpty(t, database_subnet_group, "database_subnet_group was not returned")
-	
-	elasticache_subnets := fmt.Sprint(outputs["elasticache_subnets"])
-	assert.Equal(t, 3, len(strings.Split(elasticache_subnets, " ")), "Wrong number of elasticache_subnets returned")
-	
-	elasticache_subnet_group := outputs["elasticache_subnet_group"]
-	assert.NotEmpty(t, elasticache_subnet_group, "elasticache_subnet_group was not returned")
-	
-	private_subnet_cidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
-	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", private_subnet_cidrs, "Wrong value for private_subnet_cidrs returned")
-	  
-	public_subnet_cidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
-	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24 10.146.6.0/24]", public_subnet_cidrs, "Wrong value for public_subnet_cidrs returned")
-	
-	database_subnet_cidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
-	assert.Equal(t, "[10.146.16.0/22 10.146.20.0/22 10.146.24.0/22]", database_subnet_cidrs, "Wrong value for database_subnet_cidrs returned")
-	
-	elasticache_subnet_cidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
-	assert.Equal(t, "[10.146.0.0/26 10.146.0.64/26 10.146.0.128/26]", elasticache_subnet_cidrs, "Wrong value for elasticache_subnet_cidrs returned")
-	
-	intra_subnet_cidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
-	assert.Equal(t, "[]", intra_subnet_cidrs, "Wrong value for intra_subnet_cidrs returned")
+	databaseSubnetGroup := outputs["database_subnet_group"]
+	assert.NotEmpty(t, databaseSubnetGroup, "database_subnet_group was not returned")
 
+	elasticacheSubnets := fmt.Sprint(outputs["elasticache_subnets"])
+	assert.Equal(t, 3, len(strings.Split(elasticacheSubnets, " ")), "Wrong number of elasticache_subnets returned")
+
+	elasticacheSubnetGroup := outputs["elasticache_subnet_group"]
+	assert.NotEmpty(t, elasticacheSubnetGroup, "elasticache_subnet_group was not returned")
+
+	privateSubnetCidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
+	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", privateSubnetCidrs, "Wrong value for private_subnet_cidrs returned")
+
+	publicSubnetCidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
+	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24 10.146.6.0/24]", publicSubnetCidrs, "Wrong value for public_subnet_cidrs returned")
+
+	databaseSubnetCidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
+	assert.Equal(t, "[10.146.16.0/22 10.146.20.0/22 10.146.24.0/22]", databaseSubnetCidrs, "Wrong value for database_subnet_cidrs returned")
+
+	elasticacheSubnetCidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
+	assert.Equal(t, "[10.146.0.0/26 10.146.0.64/26 10.146.0.128/26]", elasticacheSubnetCidrs, "Wrong value for elasticache_subnet_cidrs returned")
+
+	intraSubnetCidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
+	assert.Equal(t, "[]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-        t.Parallel()
-	
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-vpc-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
-	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	 if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	 }
-	 
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_pri.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "pri")
+func testTerraformBasicPri(t *testing.T) {
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", "pri")
+	defer destroyFunc()
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
-	}
+	vpcId := outputs["vpc_id"]
+	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 
-	terraform.Apply(t, terraformOptions)
+	privateSubnets := fmt.Sprint(outputs["private_subnets"])
+	assert.Equal(t, 3, len(strings.Split(privateSubnets, " ")), "Wrong number of private_subnets returned")
 
-        outputs, err := terraform.OutputAllE(t, terraformOptions)
-        if err != nil {
-          t.Fatalf("Failed to get outputs")
-        }
+	publicSubnets := fmt.Sprint(outputs["public_subnets"])
+	assert.Equal(t, 2, len(strings.Split(publicSubnets, " ")), "Wrong number of public_subnets returned")
 
-        vpc_id := outputs["vpc_id"]
-	assert.NotEmpty(t, vpc_id, "vpc_id was not returned")
-	
-        private_subnets := fmt.Sprint(outputs["private_subnets"])
-	assert.Equal(t, 3, len(strings.Split(private_subnets, " ")), "Wrong number of private_subnets returned")
-	  
-        public_subnets := fmt.Sprint(outputs["public_subnets"])
-	assert.Equal(t, 2, len(strings.Split(public_subnets, " ")), "Wrong number of public_subnets returned")
-	  
-        intra_subnets := fmt.Sprint(outputs["intra_subnets"])
-	assert.Equal(t, 1, len(strings.Split(intra_subnets, " ")), "Wrong number of intra_subnets returned")
-	
-        database_subnets := fmt.Sprint(outputs["database_subnets"])
-	assert.Equal(t, "[]", database_subnets, "Wrong number of database_subnets returned")
-	
-        elasticache_subnets := fmt.Sprint(outputs["elasticache_subnets"])
-	assert.Equal(t, "[]", elasticache_subnets, "Wrong number of elasticache_subnets returned")
-	
-        private_subnet_cidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
-	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", private_subnet_cidrs, "Wrong value for private_subnet_cidrs returned")
-	  
-        public_subnet_cidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
-	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24]", public_subnet_cidrs, "Wrong value for public_subnet_cidrs returned")
-	
-        database_subnet_cidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
-	assert.Equal(t, "[]", database_subnet_cidrs, "Wrong value for database_subnet_cidrs returned")
-	
-        elasticache_subnet_cidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
-	assert.Equal(t, "[]", elasticache_subnet_cidrs, "Wrong value for elasticache_subnet_cidrs returned")
-	
-        intra_subnet_cidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
-	assert.Equal(t, "[10.146.0.0/26]", intra_subnet_cidrs, "Wrong value for intra_subnet_cidrs returned")
+	intraSubnets := fmt.Sprint(outputs["intra_subnets"])
+	assert.Equal(t, 1, len(strings.Split(intraSubnets, " ")), "Wrong number of intra_subnets returned")
+
+	databaseSubnets := fmt.Sprint(outputs["database_subnets"])
+	assert.Equal(t, "[]", databaseSubnets, "Wrong number of database_subnets returned")
+
+	elasticacheSubnets := fmt.Sprint(outputs["elasticache_subnets"])
+	assert.Equal(t, "[]", elasticacheSubnets, "Wrong number of elasticache_subnets returned")
+
+	privateSubnetCidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
+	assert.Equal(t, "[10.146.32.0/21 10.146.40.0/21 10.146.48.0/21]", privateSubnetCidrs, "Wrong value for private_subnet_cidrs returned")
+
+	publicSubnetCidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
+	assert.Equal(t, "[10.146.4.0/24 10.146.5.0/24]", publicSubnetCidrs, "Wrong value for public_subnet_cidrs returned")
+
+	databaseSubnetCidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
+	assert.Equal(t, "[]", databaseSubnetCidrs, "Wrong value for database_subnet_cidrs returned")
+
+	elasticacheSubnetCidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
+	assert.Equal(t, "[]", elasticacheSubnetCidrs, "Wrong value for elasticache_subnet_cidrs returned")
+
+	intraSubnetCidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
+	assert.Equal(t, "[10.146.0.0/26]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
 }

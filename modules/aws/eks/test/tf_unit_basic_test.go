@@ -1,97 +1,37 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-        "github.com/gruntwork-io/terratest/modules/test-structure"
+	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
-	"github.com/davecgh/go-spew/spew"
+	"os"
+	"testing"
 )
 
+const bucketName = "infralib-modules-aws-eks-tf"
 
-func TestTerraformBasicBiz(t *testing.T) {
-        t.Parallel()
-	spew.Dump("")
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-eks-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
-	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	}
+var awsRegion string
 
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_biz.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "biz")
-
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	}
-	terraform.Apply(t, terraformOptions)
-	
-	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-biz", cluster_name, "Wrong cluster_name returned")
+func TestEKSRunner(t *testing.T) {
+	awsRegion = commonAWS.SetupBucket(t, bucketName)
+	t.Run("Biz", testTerraformBasicBiz)
+	t.Run("Pri", testTerraformBasicPri)
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-        t.Parallel()
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-eks-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
- 	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	}
-	
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_pri.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "pri")
+func testTerraformBasicBiz(t *testing.T) {
+	testTerraformBasic(t, "tf_unit_basic_test_biz.tfvars", "biz")
+}
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	}
-	terraform.Apply(t, terraformOptions)
+func testTerraformBasicPri(t *testing.T) {
+	testTerraformBasic(t, "tf_unit_basic_test_pri.tfvars", "pri")
+}
 
-	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-pri", cluster_name, "Wrong cluster_name returned")
+func testTerraformBasic(t *testing.T, varFile string, workspaceName string) {
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
+	defer destroyFunc() // Defer needs to be called in outermost function
+	clusterName := outputs["cluster_name"]
+	assert.Equal(t, fmt.Sprintf("%s-%s", os.Getenv("TF_VAR_prefix"), workspaceName), clusterName,
+		"Wrong cluster_name returned")
 }
