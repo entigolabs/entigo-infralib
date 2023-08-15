@@ -27,6 +27,7 @@ func testTerraformBasicPri(t *testing.T) {
 
 func testTerraformBasic(t *testing.T, varFile string, workspaceName string) {
 	t.Parallel()
-	outputs := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
+	defer destroyFunc() // Defer needs to be called in outermost function
 	spew.Dump(outputs)
 }

@@ -20,7 +20,12 @@ func TestVPCRunner(t *testing.T) {
 }
 
 func testTerraformBasicBiz(t *testing.T) {
-	outputs := testTerraformBasic(t, "tf_unit_basic_test_biz.tfvars", "biz")
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", "biz")
+	defer destroyFunc()
+
+	vpcId := outputs["vpc_id"]
+	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 
 	privateSubnets := fmt.Sprint(outputs["private_subnets"])
 	assert.Equal(t, 3, len(strings.Split(privateSubnets, " ")), "Wrong number of private_subnets returned")
@@ -60,7 +65,12 @@ func testTerraformBasicBiz(t *testing.T) {
 }
 
 func testTerraformBasicPri(t *testing.T) {
-	outputs := testTerraformBasic(t, "tf_unit_basic_test_pri.tfvars", "pri")
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", "pri")
+	defer destroyFunc()
+
+	vpcId := outputs["vpc_id"]
+	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 
 	privateSubnets := fmt.Sprint(outputs["private_subnets"])
 	assert.Equal(t, 3, len(strings.Split(privateSubnets, " ")), "Wrong number of private_subnets returned")
@@ -91,13 +101,4 @@ func testTerraformBasicPri(t *testing.T) {
 
 	intraSubnetCidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
 	assert.Equal(t, "[10.146.0.0/26]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
-
-}
-
-func testTerraformBasic(t *testing.T, varFile string, workspaceName string) map[string]interface{} {
-	t.Parallel()
-	outputs := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
-	vpcId := outputs["vpc_id"]
-	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
-	return outputs
 }
