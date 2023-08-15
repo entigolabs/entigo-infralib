@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
+	terraaws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -26,6 +27,7 @@ func TestTerraformBasicPri(t *testing.T) {
 }
 
 func testTerraformBasic(t *testing.T, contextName string) {
+	t.Parallel()
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")
@@ -99,6 +101,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
+	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
 	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
@@ -110,7 +113,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
 	require.NoError(t, err, "Bucket syncing error")
-	err = aws.WaitUntilAWSBucketExists(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	err = aws.WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 2*time.Second)
 	if err != nil {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
@@ -119,7 +122,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	err = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = aws.WaitUntilAWSBucketDeleted(t, "eu-north-1", bucketName, 6, 10*time.Second)
+	err = aws.WaitUntilAWSBucketDeleted(t, awsRegion, bucketName, 6, 10*time.Second)
 	require.NoError(t, err, "S3 Bucket deletion error")
 	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
 	require.NoError(t, err, "Bucket didn't get deleted")
