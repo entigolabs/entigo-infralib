@@ -30,6 +30,8 @@ jobs:
       run: |
         git clone https://github.com/entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
-        cd entigo-infralib-release && echo "A" && git config user.name "GitHub Actions" && echo "B" && git config user.email "actions@github.com" && echo "C" && git add --all && echo "OK" && git commit -a -m"Release ${{ steps.get_latest_release.outputs.release_tag }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.release_tag }} -m "Release ${{ steps.get_latest_release.outputs.release_tag }}"
+        echo "foo"
+        cd entigo-infralib-release
+        echo "A" && git config user.name "GitHub Actions" && echo "B" && git config user.email "actions@github.com" && echo "C" && git add --all && echo "OK" && git commit -a -m"Release ${{ steps.get_latest_release.outputs.release_tag }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.release_tag }} -m "Release ${{ steps.get_latest_release.outputs.release_tag }}"
 
 
