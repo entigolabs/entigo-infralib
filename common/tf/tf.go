@@ -1,7 +1,9 @@
 package tf
 
 import (
+	"errors"
 	"fmt"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/hcl/v2"
@@ -10,6 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+	"io/fs"
 	"os"
 	"testing"
 )
@@ -24,8 +27,8 @@ func ApplyTerraform(t *testing.T, bucketName string, awsRegion string, varFile s
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 
 	variables := copyVariablesFile(t, rootFolder, "variables.tf", tempTestFolder)
-	outputLabels := getOutputLabels(t, rootFolder, "outputs.tf")
-	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputLabels)
+	outputBlocks := getOutputBlocks(t, rootFolder, "outputs.tf")
+	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks)
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
@@ -61,22 +64,19 @@ func copyVariablesFile(t *testing.T, rootFolder string, fileName string, tempTes
 	return getBlocksLabels(t, variablesFile, "variable")
 }
 
-func getOutputLabels(t *testing.T, rootFolder string, fileName string) []string {
-	outputsFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", rootFolder, fileName))
-	return getBlocksLabels(t, outputsFile, "output")
+func getOutputBlocks(t *testing.T, rootFolder string, fileName string) []*hcl.Block {
+	fullFileName := fmt.Sprintf("%s/%s", rootFolder, fileName)
+	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
+		return []*hcl.Block{}
+	}
+	outputsFile := ReadTerraformFile(t, fullFileName)
+	return getBlocksByType(t, outputsFile, "output")
 }
 
 func getBlocksLabels(t *testing.T, file *hcl.File, blockType string) []string {
-	rootSchema := &hcl.BodySchema{Blocks: []hcl.BlockHeaderSchema{{Type: blockType, LabelNames: []string{"name"}}}}
-	content, _, diags := file.Body.PartialContent(rootSchema)
-	if diags.HasErrors() {
-		require.NoError(t, diags, "Error reading blocks with type %s", blockType)
-	}
-	if content == nil || len(content.Blocks) == 0 {
-		return []string{}
-	}
+	blocks := getBlocksByType(t, file, blockType)
 	labels := make([]string, 0)
-	for _, block := range content.Blocks {
+	for _, block := range blocks {
 		if (len(block.Labels)) == 0 {
 			continue
 		}
@@ -89,7 +89,19 @@ func getBlocksLabels(t *testing.T, file *hcl.File, blockType string) []string {
 	return labels
 }
 
-func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string, outputLabels []string) {
+func getBlocksByType(t *testing.T, file *hcl.File, blockType string) []*hcl.Block {
+	rootSchema := &hcl.BodySchema{Blocks: []hcl.BlockHeaderSchema{{Type: blockType, LabelNames: []string{"name"}}}}
+	content, _, diags := file.Body.PartialContent(rootSchema)
+	if diags.HasErrors() {
+		require.NoError(t, diags, "Error reading blocks with type %s", blockType)
+	}
+	if content == nil {
+		return []*hcl.Block{}
+	}
+	return content.Blocks
+}
+
+func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string, outputBlocks []*hcl.Block) {
 	baseTestFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", baseTestPath, fileName))
 	testFile := hclwrite.NewEmptyFile()
 	testFileBody := testFile.Body()
@@ -97,15 +109,12 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	testModuleBody := testModule.Body()
 	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
 	addVariables(variables, testModuleBody)
-	addOutputs(outputLabels, testFileBody)
+	addOutputs(t, outputBlocks, testFileBody)
 
 	WriteTerraformFile(t, tempTestFolder, fileName, append(baseTestFile.Bytes, testFile.Bytes()...))
 }
 
 func addVariables(variables []string, testModuleBody *hclwrite.Body) {
-	if len(variables) == 0 {
-		return
-	}
 	for _, variable := range variables {
 		if variable == "" {
 			continue
@@ -114,16 +123,36 @@ func addVariables(variables []string, testModuleBody *hclwrite.Body) {
 	}
 }
 
-func addOutputs(outputLabels []string, testFileBody *hclwrite.Body) {
-	if len(outputLabels) == 0 {
-		return
-	}
-	for _, outputLabel := range outputLabels {
-		if outputLabel == "" {
+func addOutputs(t *testing.T, outputBlocks []*hcl.Block, testFileBody *hclwrite.Body) {
+	for _, block := range outputBlocks {
+		if (len(block.Labels)) == 0 {
 			continue
 		}
-		output := testFileBody.AppendNewBlock("output", []string{outputLabel})
-		output.Body().SetAttributeRaw("value", getTokens("module.test."+outputLabel))
+		label := block.Labels[0]
+		if label == "" {
+			continue
+		}
+		attr, diags := block.Body.JustAttributes()
+		if diags.HasErrors() {
+			logger.Logf(t, "Error reading output %s attributes: %s", label, diags.Error())
+			continue
+		}
+		output := testFileBody.AppendNewBlock("output", []string{label})
+		output.Body().SetAttributeRaw("value", getTokens("module.test."+label))
+		addOutputSensitiveAttribute(attr, output.Body())
+	}
+}
+
+func addOutputSensitiveAttribute(attr hcl.Attributes, body *hclwrite.Body) {
+	for name, attr := range attr {
+		if name != "sensitive" {
+			continue
+		}
+		value, hclDiags := attr.Expr.Value(nil)
+		if hclDiags != nil && hclDiags.HasErrors() {
+			value = cty.BoolVal(true)
+		}
+		body.SetAttributeValue(name, value)
 	}
 }
 
