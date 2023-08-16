@@ -1,0 +1,37 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:   
+    runs-on: ubuntu-latest
+    needs: install_main
+    name: Publish
+    steps:
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    
+    - name: Clone the target repository and copy files
+      run: |
+        git clone https://github.com/entigolabs/entigo-infralib-release.git entigo-infralib-release
+        rsync -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
+        find entigo-infralib-release
+        cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git tag -a ${{ steps.get_latest_release.outputs.release_tag }} -m "Release ${{ steps.get_latest_release.outputs.release_tag }}"
+
+
