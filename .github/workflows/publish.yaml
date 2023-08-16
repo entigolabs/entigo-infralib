@@ -6,7 +6,6 @@ on:
 jobs:
   release:   
     runs-on: ubuntu-latest
-    needs: install_main
     name: Publish
     steps:
     - name: Get latest release
