@@ -202,6 +202,22 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      
+    - name: Set up SSH key
+      run: |
+        mkdir ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+        
+    - name: Clone the target repository and copy files
+      run: |
+        git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
+        cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
 
     - name: Slack Success Release Message
       if: ${{ success() && steps.get_latest_release.outputs.new_release_needed == 'true' }}
