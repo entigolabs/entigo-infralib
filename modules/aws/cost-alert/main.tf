@@ -12,7 +12,7 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   evaluation_periods  = "1"
   metric_name         = "EstimatedCharges"
   namespace           = "AWS/Billing"
-  period              = "28800"
+  period              = "21600"
   statistic           = "Maximum"
   threshold           = var.monthly_billing_threshold
   alarm_actions       = local.alarms
