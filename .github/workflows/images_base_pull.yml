@@ -1,0 +1,26 @@
+name: PR images/base
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/base/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test images/base
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Run tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+      run: |
+        cd images/base/ && docker build -t entigo-infralib-base .
+
