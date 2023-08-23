@@ -8,6 +8,11 @@ set -x
 export TF_IN_AUTOMATION=1
 cd $CODEBUILD_SRC_DIR
 
+if [ -d ".git" ]
+then
+rm -rf .git
+fi
+
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" ]
 then
 
@@ -31,9 +36,6 @@ then
 fi
 
 
-
-
-
 terraform init -input=false -backend-config=backend.conf
 if [ $? -ne 0 ]
 then
@@ -51,7 +53,7 @@ then
     exit 6
   fi
   cd $CODEBUILD_SRC_DIR
-  tar -czf tf.tar.gz .
+  tar -czf tf.tar.gz --exclude=tf.tar.gz .
 elif [ "$COMMAND" == "apply" ]
 then
   terraform apply -no-color -input=false default.tf-plan
@@ -69,7 +71,7 @@ then
     exit 6
   fi
   cd $CODEBUILD_SRC_DIR
-  tar -czf tf.tar.gz .
+  tar -czf tf.tar.gz --exclude=tf.tar.gz .
 elif [ "$COMMAND" == "apply-destroy" ]
 then
   terraform apply -no-color -input=false default.tf-plan
