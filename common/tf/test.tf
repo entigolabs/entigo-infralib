@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~>2.0"
     }
+    helm = {
+      source = "hashicorp/helm"
+      version = "2.10.1"
+    }
   }
 }
 
@@ -35,3 +39,10 @@ provider "kubernetes" {
     args        = ["eks", "get-token", "--cluster-name", module.test.cluster_name]
   }
 }
+
+provider "helm" {
+  kubernetes {
+    config_context="arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz"
+    config_path = "~/.kube/config"
+  }
+} 
