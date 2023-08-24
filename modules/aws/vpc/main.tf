@@ -45,6 +45,34 @@ module "vpc" {
   }
 } 
 
+resource "aws_security_group" "pipeline_security_group" {
+  name        = "${local.hname}-pipeline"
+  description = "${local.hname} Security group used by pipelines that run terraform"
+  vpc_id      = module.vpc.vpc_id
+  tags = {
+    Name = "Allow pipeline access to ${local.hname}"
+  }
+}
+
+resource "aws_security_group_rule" "pipeline_security_group" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = -1
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.pipeline_security_group.id
+}
+
+resource "aws_ssm_parameter" "pipeline_security_group" {
+  name  = "/entigo-infralib/${local.hname}/vpc/pipeline_security_group"
+  type  = "String"
+  value = aws_security_group.pipeline_security_group.id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
 
 resource "aws_ssm_parameter" "vpc_id" {
   name  = "/entigo-infralib/${local.hname}/vpc/vpc_id"
