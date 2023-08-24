@@ -16,7 +16,7 @@ gateway:
     type: ClusterIP
   autoscaling:
     enabled: true
-    minReplicas: 3
+    minReplicas: 2
     maxReplicas: 6
   topologySpreadConstraints:
   -  maxSkew: 1
