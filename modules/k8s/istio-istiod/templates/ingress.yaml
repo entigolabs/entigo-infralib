@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: istio-external
+  labels:
+    release: istio
+  annotations:
+    prometheus.io/probe: "false"
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/auth-session-timeout: "1800"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/success-codes: '200,301,302,404'
+    alb.ingress.kubernetes.io/inbound-cidrs: '{{ .Values.ingressInboundAllow }}'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/group.name: external
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/ttl: "60"
+    alb.ingress.kubernetes.io/tags: "map-migrated=mig35627"
+    kube-score/ignore: ingress-targets-service
+    # kubernetes.io/ingress.class: alb
+spec:
+  ingressClassName: alb
+  rules:
+  - host: "{{ .Values.domain }}"
+    http:
+      paths:
+      - backend:
+          service:
+            name: istio-gateway
+            port:
+              name: http2
+        path: /*
+        pathType: ImplementationSpecific
+  {{- if .Values.altdomain }}
+  {{- range $url := .Values.altdomain }}
+  - host: "{{ $url }}"
+    http:
+      paths:
+      - backend:
+          service:
+            name: istio-gateway
+            port:
+              name: http2
+        path: /*
+        pathType: ImplementationSpecific
+  {{- end }}
+  {{- end }}
