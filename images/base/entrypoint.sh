@@ -52,8 +52,8 @@ then
     echo "Failed to create TF plan!"
     exit 6
   fi
-  cd ..
-  tar -czf ../tf.tar.gz .
+  cd ../..
+  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
 elif [ "$COMMAND" == "apply" ]
 then
   terraform apply -no-color -input=false $WORKSPACE.tf-plan
@@ -70,8 +70,8 @@ then
     echo "Failed to create TF destroy plan!"
     exit 6
   fi
-  cd ..
-  tar -czf ../tf.tar.gz .
+  cd ../..
+  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
 elif [ "$COMMAND" == "apply-destroy" ]
 then
   terraform apply -no-color -input=false $WORKSPACE.tf-plan
