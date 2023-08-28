@@ -13,13 +13,13 @@ const bucketName = "infralib-modules-aws-vpc-tf"
 
 var awsRegion string
 
-func TestVPCRunner(t *testing.T) {
+func TestTerraformVpc(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
-	t.Run("Biz", testTerraformBasicBiz)
-	t.Run("Pri", testTerraformBasicPri)
+	t.Run("Biz", testTerraformVpcBiz)
+	t.Run("Pri", testTerraformVpcPri)
 }
 
-func testTerraformBasicBiz(t *testing.T) {
+func testTerraformVpcBiz(t *testing.T) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", "biz")
 	defer destroyFunc()
@@ -64,7 +64,7 @@ func testTerraformBasicBiz(t *testing.T) {
 	assert.Equal(t, "[]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
 }
 
-func testTerraformBasicPri(t *testing.T) {
+func testTerraformVpcPri(t *testing.T) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", "pri")
 	defer destroyFunc()

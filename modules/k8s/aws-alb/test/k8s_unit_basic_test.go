@@ -19,15 +19,15 @@ import (
 
 const domain = "infralib.entigo.io"
 
-func TestTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "aws-alb-biz", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+func TestK8sAwsAlbBiz(t *testing.T) {
+	testK8sAwsAlb(t, "aws-alb-biz", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "aws-alb-pri", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+func TestK8sAwsAlbPri(t *testing.T) {
+	testK8sAwsAlb(t, "aws-alb-pri", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func testTerraformBasic(t *testing.T, namespaceName string, contextName string, runnerName string) {
+func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runnerName string) {
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")

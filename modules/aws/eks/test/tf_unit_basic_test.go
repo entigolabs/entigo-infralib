@@ -13,21 +13,21 @@ const bucketName = "infralib-modules-aws-eks-tf"
 
 var awsRegion string
 
-func TestEKSRunner(t *testing.T) {
+func TestTerraformEks(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
-	t.Run("Biz", testTerraformBasicBiz)
-	t.Run("Pri", testTerraformBasicPri)
+	t.Run("Biz", testTerraformEksBiz)
+	t.Run("Pri", testTerraformEksPri)
 }
 
-func testTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "tf_unit_basic_test_biz.tfvars", "biz")
+func testTerraformEksBiz(t *testing.T) {
+	testTerraformEks(t, "tf_unit_basic_test_biz.tfvars", "biz")
 }
 
-func testTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "tf_unit_basic_test_pri.tfvars", "pri")
+func testTerraformEksPri(t *testing.T) {
+	testTerraformEks(t, "tf_unit_basic_test_pri.tfvars", "pri")
 }
 
-func testTerraformBasic(t *testing.T, varFile string, workspaceName string) {
+func testTerraformEks(t *testing.T, varFile string, workspaceName string) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
 	defer destroyFunc() // Defer needs to be called in outermost function
