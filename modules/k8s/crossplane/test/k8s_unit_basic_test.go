@@ -18,15 +18,15 @@ import (
 	"time"
 )
 
-func TestTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+func TestK8sCrossplaneBiz(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+func TestK8sCrossplanePri(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
 }
 
-func testTerraformBasic(t *testing.T, contextName string) {
+func testK8sCrossplane(t *testing.T, contextName string) {
 	t.Parallel()
 	spew.Dump("")
 

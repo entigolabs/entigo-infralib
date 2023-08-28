@@ -11,16 +11,16 @@ const bucketName = "infralib-modules-aws-helm-tf"
 
 var awsRegion string
 
-func TestEKSRunner(t *testing.T) {
+func TestHelmGit(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
-	t.Run("Biz", testTerraformBasicBiz)
+	t.Run("Biz", testTerraformHelmGitBiz)
 }
 
-func testTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "tf_unit_basic_test_biz.tfvars", "biz")
+func testTerraformHelmGitBiz(t *testing.T) {
+	testTerraformHelmGit(t, "tf_unit_basic_test_biz.tfvars", "biz")
 }
 
-func testTerraformBasic(t *testing.T, varFile string, workspaceName string) {
+func testTerraformHelmGit(t *testing.T, varFile string, workspaceName string) {
 
 	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
 	defer destroyFunc() // Defer needs to be called in outermost function

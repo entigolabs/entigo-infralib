@@ -13,7 +13,7 @@ import (
 )
 
 
-func TestTerraformBasicBiz(t *testing.T) {
+func TestK8sExternalSecretsBiz(t *testing.T) {
 	spew.Dump("")
 	
 	helmChartPath, err := filepath.Abs("..")
@@ -66,7 +66,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 }
 
 
-func TestTerraformBasicPri(t *testing.T) {
+func TestK8sExternalSecretsPri(t *testing.T) {
 	spew.Dump("")
 	
 	helmChartPath, err := filepath.Abs("..")
