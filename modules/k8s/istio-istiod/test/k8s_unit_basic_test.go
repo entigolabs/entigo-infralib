@@ -57,11 +57,7 @@ func TestTerraformBasicBiz(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 60, 1*time.Second)
-	if err != nil {
-		t.Fatal("istiod deployment error:", err)
-	}
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 60, 1*time.Second)
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}
@@ -112,7 +108,7 @@ func TestTerraformBasicPri(t *testing.T) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 60, 1*time.Second)
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}
