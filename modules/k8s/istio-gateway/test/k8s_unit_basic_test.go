@@ -30,7 +30,7 @@ func TestK8sIstioGatewayBiz(t *testing.T) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	   
 	}
-	releaseName := "istio-istiod"
+	releaseName := "istio-gateway"
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
 	
@@ -60,7 +60,7 @@ func TestK8sIstioGatewayBiz(t *testing.T) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 60, 1*time.Second)
 	if err != nil {
-		t.Fatal("istiod deployment error:", err)
+		t.Fatal("istio-gateway deployment error:", err)
 	}
 
 }
@@ -82,7 +82,7 @@ func TestIstioGatewayPri(t *testing.T) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	   
 	}
-	releaseName := "istio-istiod"
+	releaseName := "istio-gateway"
 	
 	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
 	
@@ -112,6 +112,6 @@ func TestIstioGatewayPri(t *testing.T) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 60, 1*time.Second)
 	if err != nil {
-		t.Fatal("istiod deployment error:", err)
+		t.Fatal("istio-gateway deployment error:", err)
 	}
 }
