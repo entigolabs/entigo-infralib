@@ -1,41 +1,4 @@
-domain: "*.example.com"
-altdomain:
-  - "*.more.example.com"
-
-#All except test should use 0.0.0.0/0
-ingressInboundAllow: "0.0.0.0/0"
-
-
-gateway:
-  name: "istio-gateway"
-  
-  annotations:
-    kube-score/ignore: pod-networkpolicy,pod-probes,container-image-tag # "auto:latest" will be populated at runtime by the mutating webhook. See https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/#customizing-injection
-  service:
-    # Type of service. Set to "None" to disable the service entirely
-    type: ClusterIP
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 6
-  topologySpreadConstraints:
-  -  maxSkew: 1
-     topologyKey: topology.kubernetes.io/zone
-     whenUnsatisfiable: DoNotSchedule
-     labelSelector: 
-       matchLabels:
-         app: istio-gateway
      
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-      ephemeral-storage: 1Gi
-    limits:
-      cpu: 2000m
-      memory: 1024Mi
-      ephemeral-storage: 10Gi
-      
 istiod:
   global:
     defaultResources:
