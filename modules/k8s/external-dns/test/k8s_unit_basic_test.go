@@ -6,10 +6,11 @@ import (
 	"os"
 	"fmt"
 	"path/filepath"
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
+	"time"
 )
 
 
@@ -33,8 +34,8 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	setValues := make(map[string]string)
 	
 	
-	kubectlOptionsValues := k8s.NewKubectlOptions(contextName, "", "crossplane-system")
-	CMValues := k8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
+	kubectlOptionsValues := terrak8s.NewKubectlOptions(contextName, "", "crossplane-system")
+	CMValues := terrak8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
 	setValues["external-dns.env[0].value"] = CMValues.Data["awsRegion"]
 	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
 	setValues["awsAccount"] = CMValues.Data["awsAccount"]
@@ -48,7 +49,7 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	}
 	releaseName := namespaceName
 	
-	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 	
 	helmOptions := &helm.Options{
 		SetValues: setValues,
@@ -59,10 +60,10 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	    //terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
 	    if strings.Contains(err.Error(), "already exists") {
 	      fmt.Println("Namespace already exists.")
@@ -73,6 +74,9 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("external-dns deployment error:", err)
+	}
 
 }

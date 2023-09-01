@@ -6,10 +6,12 @@ import (
 	"os"
 	"fmt"
 	"path/filepath"
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
+	"time"
 )
 
 func TestIstioBaseBiz(t *testing.T) {
@@ -32,7 +34,7 @@ func testIstioBase(t *testing.T, contextName string) {
 	
 	releaseName := "istio-base"
 	
-	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 	
 	helmOptions := &helm.Options{
 		SetValues: setValues,
@@ -43,10 +45,10 @@ func testIstioBase(t *testing.T, contextName string) {
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	    //terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
 	    if strings.Contains(err.Error(), "already exists") {
 	      fmt.Println("Namespace already exists.")
@@ -57,6 +59,9 @@ func testIstioBase(t *testing.T, contextName string) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices"}, 60, 1*time.Second)
+	require.NoError(t, err, "Istio Base no VirtualService CRD")
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"gateways"}, 60, 1*time.Second)
+	require.NoError(t, err, "Istio Base no Gateway CRD")
 
 }
