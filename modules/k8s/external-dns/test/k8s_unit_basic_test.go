@@ -6,7 +6,6 @@ import (
 	"os"
 	"fmt"
 	"path/filepath"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
@@ -75,7 +74,7 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("external-dns deployment error:", err)
 	}
