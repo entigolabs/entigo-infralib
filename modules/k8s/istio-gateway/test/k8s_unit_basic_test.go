@@ -68,7 +68,7 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ho
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 5*time.Second)
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 10, 5*time.Second)
 	if err != nil {
 		t.Fatal("istio-gateway deployment error:", err)
 	}
