@@ -14,15 +14,15 @@ import (
 )
 
 func TestK8sIstioGatewayBiz(t *testing.T) {
-	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz","./k8s_unit_basic_test_biz.yaml")
 }
 
 func TestK8sIstioGatewayPri(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri","./k8s_unit_basic_test_pri.yaml")
 }
 
 
-func testK8sIstioGateway(t *testing.T, contextName string) {
+func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string) {
 	spew.Dump("")
 	
 	helmChartPath, err := filepath.Abs("..")
@@ -44,7 +44,7 @@ func testK8sIstioGateway(t *testing.T, contextName string) {
 	
 	helmOptions := &helm.Options{
 		SetValues: setValues,
-		ValuesFiles: []string{"./k8s_unit_basic_test_biz.yaml"},
+		ValuesFiles: []string{valuesFile},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs: extraArgs,
