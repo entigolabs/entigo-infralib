@@ -1,15 +1,15 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
 	"fmt"
-	"path/filepath"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-        "github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
 	"time"
 )
 
@@ -22,46 +22,46 @@ func TestIstioIstiodPri(t *testing.T) {
 }
 
 func testIstioIstiod(t *testing.T, contextName string) {
+	t.Parallel()
 	spew.Dump("")
-	
+
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
-	
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
+
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := fmt.Sprintf("istio-system")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-	
+
 	if prefix != "runner-main" {
-	   extraArgs["upgrade"] = []string{"--skip-crds"}
-	   extraArgs["install"] = []string{"--skip-crds"}
-	   
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
+
 	}
 	releaseName := "istio-istiod"
-	
+
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
-	
+
 	helmOptions := &helm.Options{
-		SetValues: setValues,
+		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
-		ExtraArgs: extraArgs,
+		ExtraArgs:         extraArgs,
 	}
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
+		defer helm.Delete(t, helmOptions, releaseName, true)
+		//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
-	    if strings.Contains(err.Error(), "already exists") {
-	      fmt.Println("Namespace already exists.")
-	    } else {
-	      t.Fatal("Error:", err)
-	    }
-	}	
-	
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Println("Namespace already exists.")
+		} else {
+			t.Fatal("Error:", err)
+		}
+	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
