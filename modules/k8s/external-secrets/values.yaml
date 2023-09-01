@@ -1,6 +1,0 @@
-external-secrets:
-  installCRDs: true
-
-awsAccount: "011093662945"
-clusterName: aws-eg-infra-tooling
-clusterOIDC: FA1FA64B7F6A27ACC40AF0B4C10FCCFB
