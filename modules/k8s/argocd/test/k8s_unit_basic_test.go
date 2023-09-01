@@ -68,7 +68,10 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "argocd", 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd deployment error:", err)
+	}
 
 }
 

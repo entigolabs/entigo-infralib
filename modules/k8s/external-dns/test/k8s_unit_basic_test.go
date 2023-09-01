@@ -73,6 +73,9 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "external-dns", 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("external-dns deployment error:", err)
+	}
 
 }

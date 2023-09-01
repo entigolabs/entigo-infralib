@@ -57,6 +57,9 @@ func testIstioBase(t *testing.T, contextName string) {
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices"}, 60, 1*time.Second)
+	require.NoError(t, err, "Istio Base no VirtualService CRD")
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"gateways"}, 60, 1*time.Second)
+	require.NoError(t, err, "Istio Base no Gateway CRD")
 
 }
