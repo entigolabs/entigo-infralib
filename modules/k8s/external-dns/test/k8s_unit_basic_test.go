@@ -15,21 +15,21 @@ import (
 
 
 func TestK8sExternalDnsBiz(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
 }
 
 func TestK8sExternalDnsPri(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
 }
 
-func testK8sExternalDns(t *testing.T, contextName string) {
+func testK8sExternalDns(t *testing.T, contextName string, envName string) {
 	spew.Dump("")
 	
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
-	namespaceName := fmt.Sprintf("external-dns")
+	namespaceName := fmt.Sprintf("external-dns-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
@@ -43,7 +43,7 @@ func testK8sExternalDns(t *testing.T, contextName string) {
 	
 	
 	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("external-dns-%s", prefix)
+	   namespaceName = fmt.Sprintf("external-dns-%s-%s", envName, prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
