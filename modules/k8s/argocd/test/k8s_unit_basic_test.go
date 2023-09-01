@@ -69,9 +69,31 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "argocd", 10, 6*time.Second)
+	
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second)
+	require.NoError(t, err, "Argocd no Applications CRD")
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second)
+	require.NoError(t, err, "Argocd no Applicationsets CRD")
+	
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server",namespaceName), 10, 6*time.Second)
 	if err != nil {
-		t.Fatal("argocd deployment error:", err)
+		t.Fatal("argocd-server deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server",namespaceName), 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd-repo-server deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller",namespaceName), 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd-notifications-controller deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller",namespaceName), 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd-applicationset-controller deployment error:", err)
+	}
+	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server",namespaceName), 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd-dex-server deployment error:", err)
 	}
 
 }
