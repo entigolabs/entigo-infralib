@@ -6,7 +6,8 @@ import (
 	"os"
 	"fmt"
 	"path/filepath"
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
@@ -43,7 +44,7 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	}
 	releaseName := namespaceName
 	
-	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 	
 	helmOptions := &helm.Options{
 		SetValues: setValues,
@@ -55,10 +56,10 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	    //terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
 	    if strings.Contains(err.Error(), "already exists") {
 	      fmt.Println("Namespace already exists.")
@@ -75,23 +76,23 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second)
 	require.NoError(t, err, "Argocd no Applicationsets CRD")
 	
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server",namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server",namespaceName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-server deployment error:", err)
 	}
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server",namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server",namespaceName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-repo-server deployment error:", err)
 	}
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller",namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller",namespaceName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-notifications-controller deployment error:", err)
 	}
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller",namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller",namespaceName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-applicationset-controller deployment error:", err)
 	}
-	err = k8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server",namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server",namespaceName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
