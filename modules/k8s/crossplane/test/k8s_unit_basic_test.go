@@ -72,8 +72,8 @@ func testK8sCrossplane(t *testing.T, contextName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 60, 1*time.Second)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 5*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providers crd error")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
