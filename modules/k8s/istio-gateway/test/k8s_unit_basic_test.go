@@ -14,11 +14,11 @@ import (
 )
 
 func TestK8sIstioGatewayBiz(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", ".runner-main-biz.infralib.entigo.io")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz.infralib.entigo.io")
 }
 
 func TestK8sIstioGatewayPri(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", ".runner-main-pri.infralib.entigo.io")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
 }
 
 func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, hostName string) {
