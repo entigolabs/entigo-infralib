@@ -34,6 +34,7 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string) {
 	setValues := make(map[string]string)
 	
 	if prefix != "runner-main" {
+	   namespaceName = fmt.Sprintf("argocd-%s", prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	   
