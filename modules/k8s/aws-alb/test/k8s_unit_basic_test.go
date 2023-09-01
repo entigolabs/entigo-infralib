@@ -28,6 +28,7 @@ func TestK8sAwsAlbPri(t *testing.T) {
 }
 
 func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runnerName string) {
+	t.Parallel()
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")

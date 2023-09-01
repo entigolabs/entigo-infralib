@@ -21,7 +21,7 @@ func testTerraformHelmGitBiz(t *testing.T) {
 }
 
 func testTerraformHelmGit(t *testing.T, varFile string, workspaceName string) {
-
+	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
 	defer destroyFunc() // Defer needs to be called in outermost function
 	status := outputs["status"]
