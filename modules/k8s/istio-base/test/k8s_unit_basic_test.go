@@ -36,7 +36,6 @@ func testIstioBase(t *testing.T, contextName string) {
 	
 	helmOptions := &helm.Options{
 		SetValues: setValues,
-		ValuesFiles: []string{"./k8s_unit_basic_test_biz.yaml"},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs: extraArgs,
