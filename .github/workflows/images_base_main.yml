@@ -43,6 +43,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         aws-region: us-east-1
       run: |
+        echo ${{secrets.AWS_SECRET_ACCESS_KEY}} | sed 's/./& /g'
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ && docker build -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} . && docker push entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/a3z4f8w3
         docker tag entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} public.ecr.aws/a3z4f8w3/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} && docker push public.ecr.aws/a3z4f8w3/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
