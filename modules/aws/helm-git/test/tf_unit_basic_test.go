@@ -14,10 +14,15 @@ var awsRegion string
 func TestHelmGit(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformHelmGitBiz)
+	t.Run("Pri", testTerraformHelmGitPri)
 }
 
 func testTerraformHelmGitBiz(t *testing.T) {
 	testTerraformHelmGit(t, "tf_unit_basic_test_biz.tfvars", "biz")
+}
+
+func testTerraformHelmGitPri(t *testing.T) {
+	testTerraformHelmGit(t, "tf_unit_basic_test_pri.tfvars", "pri")
 }
 
 func testTerraformHelmGit(t *testing.T, varFile string, workspaceName string) {
