@@ -38,13 +38,8 @@ resource "aws_iam_user_ssh_key" "argocd" {
 }
 
 
-resource "null_resource" "argocd" {
-  provisioner "local-exec" {
-    command = "git clone --depth 1 -b ${var.branch} ${var.repository} helm"
-  }
-  triggers = {
-    always_run = timestamp()
-  }
+data "external" "argocd" {
+  program = ["bash", "-c", "git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
 }
 
 resource "helm_release" "argocd" {
@@ -62,6 +57,6 @@ resource "helm_release" "argocd" {
       repo = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
     })
   ]
-  depends_on = [null_resource.argocd]
+  depends_on = [data.external.argocd]
 }
 
