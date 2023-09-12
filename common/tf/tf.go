@@ -147,6 +147,10 @@ func getProviderBlocks(t *testing.T, providerName string) []*hclwrite.Block {
 	fullFileName := fmt.Sprintf("%s/%s.tf", testProvidersPath, providerName)
 	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
 		fullFileName = fmt.Sprintf("%s/%s.tf", providersPath, providerName)
+		if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
+			fmt.Printf("Provider file not found for %s\n", providerName)
+			return []*hclwrite.Block{}
+		}
 	}
 	providerFile := ReadTerraformFile(t, fullFileName)
 	return providerFile.Body().Blocks()
