@@ -1,6 +1,12 @@
 provider "helm" {
   kubernetes {
-    config_context="arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz"
-    config_path = "~/.kube/config"
+    host                   = module.test.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.test.cluster_certificate_authority_data)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      # This requires the awscli to be installed locally where Terraform is executed
+      args = ["eks", "get-token", "--cluster-name", module.test.cluster_name]
+    }
   }
 }
