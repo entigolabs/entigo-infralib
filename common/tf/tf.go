@@ -3,11 +3,9 @@ package tf
 import (
 	"errors"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/require"
@@ -17,18 +15,21 @@ import (
 	"testing"
 )
 
-const baseTestPath = "/common/tf"
+const rootFolder = ".."
+const terraformFolderRelativeToRoot = "test"
+const providersPath = "/providers"
+const testProvidersPath = "./providers"
 
 func ApplyTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, workspaceName string) (map[string]interface{}, func()) {
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 
-	rootFolder := ".."
-	terraformFolderRelativeToRoot := "test"
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 
-	variables := copyVariablesFile(t, rootFolder, "variables.tf", tempTestFolder)
-	outputBlocks := getOutputBlocks(t, rootFolder, "outputs.tf")
-	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks)
+	variables := copyVariablesFile(t, "variables.tf", tempTestFolder)
+	outputBlocks := getOutputBlocks(t, "outputs.tf")
+	versionsAttributes := getProviderVersions(t, "versions.tf")
+
+	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks, versionsAttributes)
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
@@ -58,29 +59,38 @@ func ApplyTerraform(t *testing.T, bucketName string, awsRegion string, varFile s
 	return outputs, destroy
 }
 
-func copyVariablesFile(t *testing.T, rootFolder string, fileName string, tempTestFolder string) []string {
+func copyVariablesFile(t *testing.T, fileName string, tempTestFolder string) []string {
 	variablesFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", rootFolder, fileName))
-	WriteTerraformFile(t, tempTestFolder, fileName, variablesFile.Bytes)
-	return getBlocksLabels(t, variablesFile, "variable")
+	WriteTerraformFile(t, tempTestFolder, fileName, variablesFile.Bytes())
+	return getBlocksLabels(variablesFile, "variable")
 }
 
-func getOutputBlocks(t *testing.T, rootFolder string, fileName string) []*hcl.Block {
+func getOutputBlocks(t *testing.T, fileName string) []*hclwrite.Block {
 	fullFileName := fmt.Sprintf("%s/%s", rootFolder, fileName)
 	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
-		return []*hcl.Block{}
+		return []*hclwrite.Block{}
 	}
 	outputsFile := ReadTerraformFile(t, fullFileName)
-	return getBlocksByType(t, outputsFile, "output")
+	return getBlocksByType(outputsFile, "output")
 }
 
-func getBlocksLabels(t *testing.T, file *hcl.File, blockType string) []string {
-	blocks := getBlocksByType(t, file, blockType)
+func getProviderVersions(t *testing.T, file string) map[string]*hclwrite.Attribute {
+	fullFileName := fmt.Sprintf("%s/%s", rootFolder, file)
+	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
+		require.NoError(t, err, "Error reading %s", fullFileName)
+	}
+	versionsFile := ReadTerraformFile(t, fullFileName)
+	return getRequiredProvidersBlock(t, versionsFile).Body().Attributes()
+}
+
+func getBlocksLabels(file *hclwrite.File, blockType string) []string {
+	blocks := getBlocksByType(file, blockType)
 	labels := make([]string, 0)
 	for _, block := range blocks {
-		if (len(block.Labels)) == 0 {
+		if (len(block.Labels())) == 0 {
 			continue
 		}
-		label := block.Labels[0]
+		label := block.Labels()[0]
 		if label == "" {
 			continue
 		}
@@ -89,29 +99,57 @@ func getBlocksLabels(t *testing.T, file *hcl.File, blockType string) []string {
 	return labels
 }
 
-func getBlocksByType(t *testing.T, file *hcl.File, blockType string) []*hcl.Block {
-	rootSchema := &hcl.BodySchema{Blocks: []hcl.BlockHeaderSchema{{Type: blockType, LabelNames: []string{"name"}}}}
-	content, _, diags := file.Body.PartialContent(rootSchema)
-	if diags.HasErrors() {
-		require.NoError(t, diags, "Error reading blocks with type %s", blockType)
+func getBlocksByType(file *hclwrite.File, blockType string) []*hclwrite.Block {
+	blocks := make([]*hclwrite.Block, 0)
+	for _, block := range file.Body().Blocks() {
+		if block == nil || block.Type() != blockType {
+			continue
+		}
+		blocks = append(blocks, block)
 	}
-	if content == nil {
-		return []*hcl.Block{}
-	}
-	return content.Blocks
+	return blocks
 }
 
-func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string, outputBlocks []*hcl.Block) {
-	baseTestFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", baseTestPath, fileName))
-	testFile := hclwrite.NewEmptyFile()
+func getRequiredProvidersBlock(t *testing.T, file *hclwrite.File) *hclwrite.Block {
+	terraformBlock := file.Body().FirstMatchingBlock("terraform", []string{})
+	if terraformBlock == nil {
+		require.NoError(t, errors.New("terraform block not found"), "Error parsing tf file")
+	}
+	providersBlock := terraformBlock.Body().FirstMatchingBlock("required_providers", []string{})
+	if providersBlock == nil {
+		require.NoError(t, errors.New("required_providers block not found"), "Error parsing tf file")
+	}
+	return providersBlock
+}
+
+func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string,
+	outputBlocks []*hclwrite.Block, versionsAttributes map[string]*hclwrite.Attribute) {
+
+	testFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", providersPath, "base.tf"))
 	testFileBody := testFile.Body()
+	providersBlock := getRequiredProvidersBlock(t, testFile)
+	for name, attribute := range versionsAttributes {
+		providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
+		providerBlocks := getProviderBlocks(t, name)
+		for _, providerBlock := range providerBlocks {
+			testFileBody.AppendBlock(providerBlock)
+		}
+	}
 	testModule := testFileBody.AppendNewBlock("module", []string{"test"})
 	testModuleBody := testModule.Body()
 	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
 	addVariables(variables, testModuleBody)
-	addOutputs(t, outputBlocks, testFileBody)
+	addOutputs(outputBlocks, testFileBody)
+	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
+}
 
-	WriteTerraformFile(t, tempTestFolder, fileName, append(baseTestFile.Bytes, testFile.Bytes()...))
+func getProviderBlocks(t *testing.T, providerName string) []*hclwrite.Block {
+	fullFileName := fmt.Sprintf("%s/%s.tf", testProvidersPath, providerName)
+	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
+		fullFileName = fmt.Sprintf("%s/%s.tf", providersPath, providerName)
+	}
+	providerFile := ReadTerraformFile(t, fullFileName)
+	return providerFile.Body().Blocks()
 }
 
 func addVariables(variables []string, testModuleBody *hclwrite.Body) {
@@ -123,55 +161,54 @@ func addVariables(variables []string, testModuleBody *hclwrite.Body) {
 	}
 }
 
-func addOutputs(t *testing.T, outputBlocks []*hcl.Block, testFileBody *hclwrite.Body) {
+func addOutputs(outputBlocks []*hclwrite.Block, testFileBody *hclwrite.Body) {
 	for _, block := range outputBlocks {
-		if (len(block.Labels)) == 0 {
+		if (len(block.Labels())) == 0 {
 			continue
 		}
-		label := block.Labels[0]
+		label := block.Labels()[0]
 		if label == "" {
 			continue
 		}
-		attr, diags := block.Body.JustAttributes()
-		if diags.HasErrors() {
-			logger.Logf(t, "Error reading output %s attributes: %s", label, diags.Error())
-			continue
-		}
+		attr := block.Body().Attributes()
 		output := testFileBody.AppendNewBlock("output", []string{label})
 		output.Body().SetAttributeRaw("value", getTokens("module.test."+label))
 		addOutputSensitiveAttribute(attr, output.Body())
 	}
 }
 
-func addOutputSensitiveAttribute(attr hcl.Attributes, body *hclwrite.Body) {
-	for name, attr := range attr {
+func addOutputSensitiveAttribute(attr map[string]*hclwrite.Attribute, body *hclwrite.Body) {
+	for name, _ := range attr {
 		if name != "sensitive" {
 			continue
 		}
-		value, hclDiags := attr.Expr.Value(nil)
-		if hclDiags != nil && hclDiags.HasErrors() {
-			value = cty.BoolVal(true)
-		}
-		body.SetAttributeValue(name, value)
+		body.SetAttributeValue(name, cty.BoolVal(true))
 	}
 }
 
 func getTokens(value string) hclwrite.Tokens {
+	return getBytesTokens([]byte(value))
+}
+
+func getBytesTokens(bytes []byte) hclwrite.Tokens {
 	return hclwrite.Tokens{
 		{
 			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte(value),
+			Bytes: bytes,
 		},
 	}
 }
 
-func ReadTerraformFile(t *testing.T, fileName string) *hcl.File {
-	parser := hclparse.NewParser()
-	file, diags := parser.ParseHCLFile(fileName)
-	if diags.HasErrors() {
-		require.NoError(t, diags, "Error reading %s", fileName)
+func ReadTerraformFile(t *testing.T, fileName string) *hclwrite.File {
+	file, err := os.ReadFile(fileName)
+	if err != nil {
+		require.NoError(t, err, "Error reading %s", fileName)
 	}
-	return file
+	hclFile, diags := hclwrite.ParseConfig(file, fileName, hcl.InitialPos)
+	if diags.HasErrors() {
+		require.NoError(t, diags, "Error parsing %s", fileName)
+	}
+	return hclFile
 }
 
 func WriteTerraformFile(t *testing.T, path string, fileName string, bytes []byte) {

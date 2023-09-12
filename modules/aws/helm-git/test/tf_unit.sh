@@ -29,4 +29,4 @@ docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
 	-e ENTIGO_INFRALIB_TEST_TIMEOUT="60m" \
 	-e ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="true" \
-       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:16
+       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -v "$(pwd)/../../../providers":"/providers" -w /app entigolabs/entigo-infralib-testing:16
