@@ -1,5 +1,5 @@
 resource "aws_iam_user_policy" "argocd" {
-  name = "test"
+  name = "${local.hname}-argocd-aws"
   user = aws_iam_user.argocd.name
   policy = jsonencode({
           "Version": "2012-10-17",
@@ -27,7 +27,7 @@ resource "tls_private_key" "argocd" {
 }
 
 resource "aws_iam_user" "argocd" {
-  name = "${local.hname}-argocd"
+  name = "${local.hname}-argocd-aws"
   path = "/"
 }
 
@@ -48,9 +48,9 @@ resource "null_resource" "argocd" {
 }
 
 resource "helm_release" "argocd" {
-  name = var.name == "" ? local.hname : var.name
+  name = var.name == "" ? "${local.hname}-argocd-aws" : var.name
   chart            = "helm/modules/k8s/argocd" 
-  namespace        = var.namespace == "" ? local.hname : var.namespace
+  namespace        = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
   create_namespace = var.create_namespace
   values = [
     templatefile("${path.module}/values.yaml", {
