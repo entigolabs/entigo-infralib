@@ -8,9 +8,9 @@ resource "null_resource" "clone" {
 }
 
 resource "helm_release" "helm" {
-  name = var.name == "" ? local.hname : var.name
+  name = var.name == "" ? "${local.hname}-helm-git" : var.name
   chart            = "helm/${var.path}" 
-  namespace        = var.namespace == "" ? local.hname : var.namespace
+  namespace        = var.namespace == "" ? "${local.hname}-helm-git" : var.namespace
   create_namespace = var.create_namespace
   values = [
     templatefile("${path.module}/values.yaml", {

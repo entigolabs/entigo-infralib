@@ -224,6 +224,7 @@ jobs:
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av profiles entigo-infralib-release/
+        rsync --delete -av providers entigo-infralib-release/
         cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 

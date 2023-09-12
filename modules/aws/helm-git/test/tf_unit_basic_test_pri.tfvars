@@ -8,8 +8,8 @@ argocd:
     install: false
   server:
     config:
-      url: https://argocd-helm.runner-main-biz-int.infralib.entigo.io
+      url: https://argocd-helm-git.runner-main-pri.infralib.entigo.io
     ingress:
       hosts:
-      - argocd-helm.runner-main-biz-int.infralib.entigo.io
+      - argocd-helm-git.runner-main-pri.infralib.entigo.io
 EOT
