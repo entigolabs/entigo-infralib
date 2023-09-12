@@ -1,0 +1,17 @@
+argocd:
+  server:
+    config:
+      url: https://${hostname}
+    ingress:
+      hosts:
+      - ${hostname}
+  configs:
+    repositories:
+      entigo-codecommit:
+        insecure: "true"
+        name: "entigo-codecommit"
+        project: "default"
+        type: "git"
+        url: "${repo}"
+        sshPrivateKey: |
+          ${sshPrivateKey}
