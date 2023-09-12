@@ -36,6 +36,17 @@ variable "install_crd" {
   type = bool
   default = true
 }
+
+variable "ingress_group_name" {
+  type = string
+  default = "internal"
+}
+
+variable "ingress_scheme" {
+  type = string
+  default = "internal"
+}
+
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
 }
