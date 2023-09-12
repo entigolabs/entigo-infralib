@@ -1,5 +1,5 @@
-data "external" "argocd" {
-  program = ["bash", "-c", "git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
+data "external" "helm" {
+  program = ["bash", "-c", "rm -rf helm && git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
 }
 
 resource "helm_release" "helm" {
@@ -12,5 +12,5 @@ resource "helm_release" "helm" {
       values               = var.values
     })
   ]
-  depends_on = [data.external.argocd]
+  depends_on = [data.external.helm]
 }

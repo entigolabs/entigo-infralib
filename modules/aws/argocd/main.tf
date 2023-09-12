@@ -39,7 +39,7 @@ resource "aws_iam_user_ssh_key" "argocd" {
 
 
 data "external" "argocd" {
-  program = ["bash", "-c", "git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
+  program = ["bash", "-c", "rm -rf helm && git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
 }
 
 resource "helm_release" "argocd" {
