@@ -5,9 +5,9 @@ terraform {
       source = "hashicorp/helm"
       version = "2.10.1"
     }
-    null = {
-      source = "hashicorp/null"
-      version = "3.2.1"
+    external = {
+      source = "hashicorp/external"
+      version = "2.3.1"
     }
   }
 }

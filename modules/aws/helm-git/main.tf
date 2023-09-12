@@ -1,10 +1,5 @@
-resource "null_resource" "clone" {
-  provisioner "local-exec" {
-    command = "git clone --depth 1 -b ${var.branch} ${var.repository} helm"
-  }
-  triggers = {
-    always_run = timestamp()
-  }
+data "external" "argocd" {
+  program = ["bash", "-c", "git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
 }
 
 resource "helm_release" "helm" {
@@ -17,5 +12,5 @@ resource "helm_release" "helm" {
       values               = var.values
     })
   ]
-  depends_on = [null_resource.clone]
+  depends_on = [data.external.argocd]
 }
