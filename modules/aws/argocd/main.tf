@@ -56,6 +56,8 @@ resource "helm_release" "argocd" {
     templatefile("${path.module}/values.yaml", {
       hostname = var.hostname
       install_crd = var.install_crd
+      ingress_group_name = var.ingress_group_name
+      ingress_scheme = var.ingress_scheme
       sshPrivateKey = indent(10, tls_private_key.argocd.private_key_pem)
       repo = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
     })
