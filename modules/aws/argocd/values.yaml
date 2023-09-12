@@ -5,6 +5,8 @@ argocd:
     ingress:
       hosts:
       - ${hostname}
+  crds:
+    install: ${install_crd}
   configs:
     repositories:
       entigo-codecommit:

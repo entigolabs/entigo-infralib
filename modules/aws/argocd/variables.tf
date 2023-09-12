@@ -31,6 +31,11 @@ variable "create_namespace" {
   default = true
 }
 
+
+variable "install_crd" {
+  type = bool
+  default = true
+}
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
 }
