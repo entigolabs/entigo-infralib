@@ -52,6 +52,8 @@ resource "helm_release" "argocd" {
       hostname = var.hostname
       install_crd = var.install_crd
       workspace = terraform.workspace
+      prefix = var.prefix
+      argocd_apps_name = var.argocd_apps_name
       namespace = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
       ingress_group_name = var.ingress_group_name
       ingress_scheme = var.ingress_scheme
