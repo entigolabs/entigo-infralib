@@ -4,7 +4,7 @@ kind: ControllerConfig
 metadata:
   name: aws-{{ .Release.Name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "1"
     helm.sh/resource-policy: keep
 spec:
   serviceAccountName: aws-crossplane #https://github.com/crossplane/crossplane/pull/2880
