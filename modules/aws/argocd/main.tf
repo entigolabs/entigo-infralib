@@ -62,3 +62,13 @@ resource "helm_release" "argocd" {
   depends_on = [data.external.argocd]
 }
 
+resource "aws_ssm_parameter" "argocd_user_ssh_public_key_id" {
+  name  = "/entigo-infralib/${local.hname}/argocd/ssh_public_key_id"
+  type  = "String"
+  value = aws_iam_user_ssh_key.argocd.ssh_public_key_id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
