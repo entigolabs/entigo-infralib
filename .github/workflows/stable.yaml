@@ -41,7 +41,8 @@ jobs:
         modules/aws/eks/test.sh 
         modules/aws/route53/test.sh 
         modules/k8s/argocd/test.sh
-        #modules/aws/helm-git/test.sh
+        modules/aws/argocd/test.sh
+        modules/aws/helm-git/test.sh
         modules/k8s/crossplane/test.sh
         modules/k8s/istio-base/test.sh
         modules/k8s/istio-istiod/test.sh
