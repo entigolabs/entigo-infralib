@@ -52,6 +52,8 @@ resource "helm_release" "argocd" {
       hostname = var.hostname
       install_crd = var.install_crd
       workspace = terraform.workspace
+      prefix = var.prefix
+      argocd_apps_name = var.argocd_apps_name
       namespace = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
       ingress_group_name = var.ingress_group_name
       ingress_scheme = var.ingress_scheme
@@ -62,3 +64,13 @@ resource "helm_release" "argocd" {
   depends_on = [data.external.argocd]
 }
 
+resource "aws_ssm_parameter" "argocd_repo_url" {
+  name  = "/entigo-infralib/${local.hname}/argocd/repo_url"
+  type  = "String"
+  value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
