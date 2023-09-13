@@ -1,0 +1,27 @@
+name: PR modules/aws/hello-world
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'modules/aws/hello-world/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test modules/aws/hello-world
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Run tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        ENTIGO_INFRALIB_DESTROY: true
+      run: |
+        modules/aws/hello-world/test.sh
+
