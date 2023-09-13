@@ -29,7 +29,7 @@ argocd-apps:
     source:
       repoURL: "${repo}"
       targetRevision: "main"
-      path: ${prefix}-${argocd_apps_name}/${workspace}/app-of-apps
+      path: ${argocd_apps_name}/${workspace}/app-of-apps
       directory:
         recurse: true
     destination:
