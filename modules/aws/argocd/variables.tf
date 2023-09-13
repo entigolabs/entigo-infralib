@@ -34,7 +34,7 @@ variable "create_namespace" {
 
 variable "argocd_apps_name" {
   type = string
-  default = "applications"
+  default = "ep-applications"
 }
 
 variable "install_crd" {
