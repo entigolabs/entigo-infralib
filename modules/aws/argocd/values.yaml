@@ -20,3 +20,23 @@ argocd:
         url: "${repo}"
         sshPrivateKey: |
           ${sshPrivateKey}
+
+argocd-apps:
+  applications: 
+  - name: app-of-apps
+    namespace: argocd
+    project: default
+    source:
+      repoURL: "${repo}"
+      targetRevision: "main"
+      path: ep-applications/${workspace}/app-of-apps
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc     
+      namespace: argocd
+    syncPolicy:
+      automated:
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
