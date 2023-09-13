@@ -11,7 +11,7 @@ const bucketName = "infralib-modules-aws-argocd-tf"
 
 var awsRegion string
 
-func TestArgocd(t *testing.T) {
+func TestTerraformArgocd(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformArgocdBiz)
 	t.Run("Pri", testTerraformArgocdPri)
