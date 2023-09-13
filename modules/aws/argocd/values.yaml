@@ -24,6 +24,10 @@ argocd:
 argocd-apps:
   applications: 
   - name: app-of-apps
+    additionalAnnotations:
+      helm.sh/resource-policy: keep
+      helm.sh/hook: post-install
+      helm.sh/hook-weight: "5"
     namespace: ${namespace}
     project: default
     source:
