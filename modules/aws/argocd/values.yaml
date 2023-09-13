@@ -24,8 +24,7 @@ argocd:
 argocd-apps:
   applications: 
   - name: app-of-apps
-    namespace: argocd
-    project: default
+    namespace: ${namespace}
     source:
       repoURL: "${repo}"
       targetRevision: "main"
@@ -34,7 +33,7 @@ argocd-apps:
         recurse: true
     destination:
       server: https://kubernetes.default.svc     
-      namespace: argocd
+      namespace: ${namespace}
     syncPolicy:
       automated:
         selfHeal: true
