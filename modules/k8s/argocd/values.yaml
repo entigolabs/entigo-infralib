@@ -151,7 +151,7 @@ argocd:
     resources:
       limits:
         cpu: 1000m
-        memory: 512Mi
+        memory: 1024Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m
