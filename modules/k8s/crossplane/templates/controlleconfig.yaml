@@ -6,6 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   serviceAccountName: aws-crossplane #https://github.com/crossplane/crossplane/pull/2880
   podSecurityContext:
