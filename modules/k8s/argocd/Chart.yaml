@@ -9,4 +9,6 @@ dependencies:
   version: 5.26.1
   repository: https://argoproj.github.io/argo-helm
   alias: argocd
-  skipCRDs: true
+- name: argocd-apps
+  version: 1.4.1
+  repository: https://argoproj.github.io/argo-helm

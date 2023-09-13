@@ -31,12 +31,14 @@ jobs:
         modules/k8s/argocd/test.sh
         modules/aws/argocd/test.sh
         modules/aws/helm-git/test.sh
+        modules/aws/hello-world/test.sh
         modules/k8s/crossplane/test.sh
         modules/k8s/istio-base/test.sh
         modules/k8s/istio-istiod/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
         modules/k8s/aws-alb/test.sh
+        modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Success Message
       uses: rtCamp/action-slack-notify@v2
