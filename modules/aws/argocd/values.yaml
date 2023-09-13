@@ -25,6 +25,7 @@ argocd-apps:
   applications: 
   - name: app-of-apps
     namespace: ${namespace}
+    project: default
     source:
       repoURL: "${repo}"
       targetRevision: "main"
