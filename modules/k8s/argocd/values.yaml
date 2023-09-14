@@ -51,13 +51,13 @@ argocd:
       kube-score/ignore: pod-probes
     resources:
       limits:
-        cpu: 500m
-        memory: 64Mi
-        ephemeral-storage: 10Gi
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 20Gi
       requests:
         cpu: 10m
         memory: 32Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 2Gi
         
   redis:
     enabled: true
