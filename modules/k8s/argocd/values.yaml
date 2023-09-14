@@ -49,8 +49,6 @@ argocd:
   dex:
     deploymentAnnotations:
       kube-score/ignore: pod-probes
-      helm.sh/hook: post-install
-      helm.sh/hook-weight: "5"
     resources:
       limits:
         cpu: 500m
