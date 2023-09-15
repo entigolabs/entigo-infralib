@@ -15,7 +15,7 @@ metadata:
     alb.ingress.kubernetes.io/group.name: external
     alb.ingress.kubernetes.io/target-type: ip
     external-dns.alpha.kubernetes.io/ttl: "60"
-    alb.ingress.kubernetes.io/tags: "map-migrated=mig35627"
+    alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
     kube-score/ignore: ingress-targets-service
     # kubernetes.io/ingress.class: alb
 spec:
