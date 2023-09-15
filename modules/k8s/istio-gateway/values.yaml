@@ -1,6 +1,6 @@
 #All except test should use 0.0.0.0/0
 ingressInboundAllow: "0.0.0.0/0"
-
+tags: ""
 
 gateway:
   name: "istio-gateway"
