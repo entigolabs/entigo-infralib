@@ -50,6 +50,7 @@ resource "kubernetes_service_account" "aws-crossplane" {
 }
 
 resource "kubernetes_config_map" "aws-crossplane" {
+  count = var.crossplane_enable ? 1 : 0
   metadata {
     name = "aws-crossplane"
     namespace = kubernetes_namespace.crossplane-system[0].metadata[0].name
@@ -63,7 +64,7 @@ resource "kubernetes_config_map" "aws-crossplane" {
 }
 
 resource "aws_ssm_parameter" "account" {
-  count = length(var.intra_subnets) > 0 ? 1 : 0
+  count = var.crossplane_enable ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/eks/account"
   type  = "String"
   value = data.aws_caller_identity.current.account_id
@@ -75,7 +76,7 @@ resource "aws_ssm_parameter" "account" {
 }
 
 resource "aws_ssm_parameter" "region" {
-  count = length(var.intra_subnets) > 0 ? 1 : 0
+  count = var.crossplane_enable ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/eks/region"
   type  = "String"
   value = data.aws_region.current.name
@@ -87,7 +88,7 @@ resource "aws_ssm_parameter" "region" {
 }
 
 resource "aws_ssm_parameter" "eks_oidc" {
-  count = length(var.intra_subnets) > 0 ? 1 : 0
+  count = var.crossplane_enable ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/eks/oidc"
   type  = "String"
   value = module.eks.oidc_provider
