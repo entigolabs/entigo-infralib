@@ -4,9 +4,9 @@ cd $SCRIPTPATH || exit 1
 
 if [ "$PR_BRANCH" != "" ]
 then
-prefix="`whoami`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]'`"
+prefix="`whoami`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2`"
 else
-prefix="`whoami`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]'`"
+prefix="`whoami`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2`"
 fi
 
 if [ "$AWS_REGION" == "" ]
