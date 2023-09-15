@@ -1,5 +1,6 @@
 awsAccount: ""
 clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
 
 aws-load-balancer-controller:
   clusterName: "worker-main"

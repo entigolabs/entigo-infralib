@@ -21,4 +21,4 @@ spec:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
   providerConfigRef:
-    name: aws-crossplane
+    name: aws-crossplane-system

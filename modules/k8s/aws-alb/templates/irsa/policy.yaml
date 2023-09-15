@@ -249,4 +249,4 @@ spec:
       ]
       }
   providerConfigRef:
-    name: aws-crossplane
+    name: .Values.providerConfigRefName
