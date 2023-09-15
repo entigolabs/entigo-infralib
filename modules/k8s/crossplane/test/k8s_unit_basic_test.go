@@ -83,13 +83,13 @@ func testK8sCrossplane(t *testing.T, contextName string) {
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider error")
 	assert.NotNil(t, provider, "Provider is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Controller config error")
 
 	setValues["installProviderConfig"] = "true"
@@ -98,7 +98,7 @@ func testK8sCrossplane(t *testing.T, contextName string) {
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
