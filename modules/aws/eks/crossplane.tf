@@ -61,3 +61,39 @@ resource "kubernetes_config_map" "aws-crossplane" {
     clusterOIDC = module.eks.oidc_provider
   }
 }
+
+resource "aws_ssm_parameter" "account" {
+  count = length(var.intra_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/account"
+  type  = "String"
+  value = data.aws_caller_identity.current.account_id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "region" {
+  count = length(var.intra_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/region"
+  type  = "String"
+  value = data.aws_region.current.name
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc" {
+  count = length(var.intra_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/oidc"
+  type  = "String"
+  value = module.eks.oidc_provider
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
