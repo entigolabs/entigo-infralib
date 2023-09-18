@@ -1,7 +1,7 @@
 ## Standard domain structure with route53 ##
-This module creates route53 zones (public and/or private) + adds TLS certificates for both.
+This module creates route53 zones (public and/or private) + adds ACM TLS certificates with validation for both.
 
-You need to specify either parent_zone_id(existing AWS Zone ID in the same account) or parent_domain(DNS Nameservers are configured manually).
+You need to specify either *parent_zone_id*(existing AWS Zone ID in the same account) or *parent_domain*(DNS Nameservers are configured manually).
 
 create_public defalts to true, but if set to false then the private zone is used insted of public and a public route53 zone is not created.
 create_private default to true, but if set to false then the existing parent zone is used and a private  route53 zone is not created.
