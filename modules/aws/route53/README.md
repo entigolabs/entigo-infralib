@@ -3,9 +3,9 @@ This module creates route53 zones (public and/or private) + adds ACM TLS certifi
 
 You need to specify either __parent_zone_id__(existing AWS Zone ID in the same account) or __parent_domain__(DNS Nameservers are configured manually).
 
-create_public defalts to true, but if set to false then the private zone is used insted of public and a public route53 zone is not created.
-create_private default to true, but if set to false then the existing parent zone is used and a private  route53 zone is not created.
-create_cert defaults to true, but if set to false then no ACM certificates are created.
+create_public defalts to true, but if set to false then the private zone is used insted of public and a public route53 zone is not created. The zone name will be ${prefix}-${stepname}-${modulename}.${parent-domain-name}
+create_private default to true, but if set to false then the existing parent zone is used and a private  route53 zone is not created. The zone name will be ${prefix}-${stepname}-${modulename}-int.${parent-domain-name}
+create_cert defaults to true, but if set to false then no ACM certificates are created. The private domain will also get an equal public domain so the ACM Certificate could be validated.
 
 vpc_prefix need to reference the VPC that the private dns zone will be attatched to. (prefix + step name + module name) Only needed if create_private=true.
 
@@ -17,7 +17,6 @@ vpc_prefix need to reference the VPC that the private dns zone will be attatched
 "/entigo-infralib/${local.hname}/route53/pub_domain"
 "/entigo-infralib/${local.hname}/route53/int_zone_id"
 "/entigo-infralib/${local.hname}/route53/int_domain"
-
 ```
 
 
@@ -29,5 +28,14 @@ vpc_prefix need to reference the VPC that the private dns zone will be attatched
         inputs:
           vpc_prefix: "ep-network-vpc"
           parent_zone_id: "Z0798XXXXXXXXXXXXXXXX"
+
+```
+Or 
+```
+    modules:
+      - name: dns
+        inputs:
+          create_private: false
+          parent_domain: "entigo.io"
 
 ```
