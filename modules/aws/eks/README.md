@@ -70,3 +70,6 @@ __crossplane_enable__ Defaults to true, Creates needed IRSA, Conigmap and SSM pa
             []
 
 ```
+
+### Limitations ###
+If you want multiple eks clusters then they have to be under different workspaces. The module name has to be "eks" - otherwise the terraform provider for kubernets and helm will be misconfigured.

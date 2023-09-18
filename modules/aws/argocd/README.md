@@ -45,3 +45,5 @@ __ingress_scheme__ Defaults to "internal", set to "internet-facing" if you want 
           argocd_apps_name: "ep-applications"
 
 ```
+### Limitations ###
+If you want multiple arglcd instances then they have to be under different workspaces. It uses by default the kubernetes from the same workspace.
