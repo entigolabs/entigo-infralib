@@ -6,7 +6,7 @@ This helps
 __aws-nuke-config.yml__ configuration of AWS Nuke - mostly needed to exclude some resources that won't be nuked every day in entigo-infralib AWS account.
 
 
-These modules can be used in the entigo-agent steps of "__type: terraform__"
+These modules can be used in the [entigo-infralib-agent](https://github.com/entigolabs/entigo-infralib-agent) steps of "__type: terraform__"
 
 ## Example code ##
 ```
