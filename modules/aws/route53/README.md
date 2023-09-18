@@ -11,6 +11,7 @@ __create_cert__ defaults to true, but if set to false then no ACM certificates a
 
 vpc_prefix need to reference the VPC that the private dns zone will be attatched to. (prefix + step name + module name) Only needed if create_private=true.
 
+The use of the private zone only makes sense if we have LAN access to that network (for example Client VPN or access through TGW).
 
 
 ### SSM parameters ###
