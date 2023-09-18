@@ -15,14 +15,14 @@ then
   DOCKER_OPTS="-it"
 fi
 
-docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm lint --strict ."
+docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm lint --set=aws-load-balancer-controller.clusterName=test --strict ."
 if [ $? -ne 0 ]
 then
         echo "helm lint failed"
         exit 1
 fi
 
-docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix --skip-tests --namespace $prefix . > /dev/null"
+docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix --set=aws-load-balancer-controller.clusterName=test --skip-tests --namespace $prefix . > /dev/null"
 if [ $? -ne 0 ]
 then
         echo "helm template failed"
@@ -30,7 +30,7 @@ then
 fi
 
 
-docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix --skip-tests --namespace $prefix . | kube-score score --ignore-test container-image-pull-policy --ignore-test container-security-context-readonlyrootfilesystem --ignore-test deployment-has-poddisruptionbudget --ignore-test container-security-context-user-group-id --ignore-test statefulset-has-servicename -"
+docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix --set=aws-load-balancer-controller.clusterName=test --skip-tests --namespace $prefix . | kube-score score --ignore-test container-image-pull-policy --ignore-test container-security-context-readonlyrootfilesystem --ignore-test deployment-has-poddisruptionbudget --ignore-test container-security-context-user-group-id --ignore-test statefulset-has-servicename -"
 if [ $? -ne 0 ]
 then
 	echo "kube-score failed"
