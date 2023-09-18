@@ -1,0 +1,33 @@
+## Standard domain structure with route53 ##
+This module creates route53 zones (public and/or private) + adds TLS certificates for both.
+
+You need to specify either parent_zone_id(existing AWS Zone ID in the same account) or parent_domain(DNS Nameservers are configured manually).
+
+create_public defalts to true, but if set to false then the private zone is used insted of public and a public route53 zone is not created.
+create_private default to true, but if set to false then the existing parent zone is used and a private  route53 zone is not created.
+create_cert defaults to true, but if set to false then no ACM certificates are created.
+
+vpc_prefix need to reference the VPC that the private dns zone will be attatched to. (prefix + step name + module name) Only needed if create_private=true.
+
+
+
+### SSM parameters ###
+```
+"/entigo-infralib/${local.hname}/route53/pub_zone_id" 
+"/entigo-infralib/${local.hname}/route53/pub_domain"
+"/entigo-infralib/${local.hname}/route53/int_zone_id"
+"/entigo-infralib/${local.hname}/route53/int_domain"
+
+```
+
+
+### Example code ###
+
+```
+    modules:
+      - name: dns
+        inputs:
+          vpc_prefix: "ep-network-vpc"
+          parent_zone_id: "Z0798XXXXXXXXXXXXXXXX"
+
+```
