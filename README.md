@@ -11,6 +11,10 @@ To create a new release the "Release" action should be run. It will create a rel
 ## Folders ##
 
 __modules__ contains opinnionated terraform modules or kubernetes helm charts that we repeatedly use in our projects.
+
 __images__ contains the runtime images for running infrastructure as code.
+
 __profiles__ contains base profiles used by entigo-infralib-agent that we use on many clients. It is a way of combining different module with common inputs.
+
 __providers__ contians provider configurations for terraform modules.
+
