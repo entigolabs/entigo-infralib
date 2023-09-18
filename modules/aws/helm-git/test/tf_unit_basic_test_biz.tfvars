@@ -1,5 +1,3 @@
-repository  = "https://github.com/entigolabs/entigo-infralib-release.git"
-branch = "main"
 path = "modules/k8s/argocd"
 
 values = <<EOT

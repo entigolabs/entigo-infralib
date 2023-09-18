@@ -3,7 +3,6 @@ clusterOIDC: ""
 providerConfigRefName: aws-crossplane-system
 
 aws-load-balancer-controller:
-  clusterName: "worker-main"
   serviceAccount:
     name: aws-load-balancer-controller
     create: false
