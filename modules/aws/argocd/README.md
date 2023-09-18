@@ -46,4 +46,4 @@ __ingress_scheme__ Defaults to "internal", set to "internet-facing" if you want 
 
 ```
 ### Limitations ###
-If you want multiple arglcd instances then they have to be under different workspaces. It uses by default the kubernetes from the same workspace.
+If you want multiple ArgoCD instances then they have to be under different workspaces. It uses by default the kubernetes from the same workspace.
