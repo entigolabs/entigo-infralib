@@ -4,10 +4,12 @@ variable "prefix" {
 
 variable "repository" {
   type = string
+  default = "https://github.com/entigolabs/entigo-infralib-release.git"
 }
 
 variable "branch" {
   type = string
+  default = "main"
 }
 
 variable "path" {
