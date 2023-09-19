@@ -1,5 +1,5 @@
 data "aws_eks_cluster" "eks" {
-  name = "${var.prefix}-infrastructure-eks-${terraform.workspace}"
+  name = "${split("-", var.prefix)[0]}-infrastructure-eks-${terraform.workspace}"
 }
 
 variable "prefix" {
