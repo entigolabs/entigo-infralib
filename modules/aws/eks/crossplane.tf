@@ -36,6 +36,9 @@ resource "kubernetes_namespace" "crossplane-system" {
   metadata {
     name = "crossplane-system"
   }
+  depends_on = [
+    module.eks
+  ]
 }
 
 resource "kubernetes_service_account" "aws-crossplane" {
@@ -47,6 +50,9 @@ resource "kubernetes_service_account" "aws-crossplane" {
      "eks.amazonaws.com/role-arn" = aws_iam_role.crossplane[0].arn
     }
   }
+  depends_on = [
+    module.eks
+  ]
 }
 
 resource "kubernetes_config_map" "aws-crossplane" {
@@ -61,6 +67,9 @@ resource "kubernetes_config_map" "aws-crossplane" {
     awsRegion   = data.aws_region.current.name
     clusterOIDC = module.eks.oidc_provider
   }
+  depends_on = [
+    module.eks
+  ]
 }
 
 resource "aws_ssm_parameter" "account" {
