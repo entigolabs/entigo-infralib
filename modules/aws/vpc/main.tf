@@ -1,3 +1,12 @@
+locals {
+  private_subnets     = var.private_subnets == null ? [cidrsubnet(var.vpc_cidr, 5, 0), cidrsubnet(var.vpc_cidr, 5, 1), cidrsubnet(var.vpc_cidr, 5, 2)] : var.private_subnets
+  public_subnets      = var.public_subnets == null ? [cidrsubnet(var.vpc_cidr, 5, 3), cidrsubnet(var.vpc_cidr, 5, 4)] : var.public_subnets
+  database_subnets    = var.database_subnets == null ? [cidrsubnet(var.vpc_cidr, 5, 6), cidrsubnet(var.vpc_cidr, 5, 7), cidrsubnet(var.vpc_cidr, 5, 8)] : var.database_subnets
+  elasticache_subnets = var.elasticache_subnets == null ? [cidrsubnet(var.vpc_cidr, 5, 9), cidrsubnet(var.vpc_cidr, 5, 10), cidrsubnet(var.vpc_cidr, 5, 11)] : var.elasticache_subnets
+  intra_subnets       = var.intra_subnets == null ? [cidrsubnet(var.vpc_cidr, 5, 12), cidrsubnet(var.vpc_cidr, 5, 13), cidrsubnet(var.vpc_cidr, 5, 14)] : var.intra_subnets
+}
+
+
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -7,14 +16,14 @@ module "vpc" {
   cidr = var.vpc_cidr
 
   azs                 = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  private_subnets     = var.private_subnets
-  public_subnets      = var.public_subnets
-  database_subnets    = var.database_subnets
-  elasticache_subnets = var.elasticache_subnets
-  intra_subnets       = var.intra_subnets
+  private_subnets     = local.private_subnets
+  public_subnets      = local.public_subnets
+  database_subnets    = local.database_subnets
+  elasticache_subnets = local.elasticache_subnets
+  intra_subnets       = local.intra_subnets
 
-  create_database_subnet_group    = length(var.database_subnets) > 0 ? true : false
-  create_elasticache_subnet_group = length(var.elasticache_subnets) > 0 ? true : false
+  create_database_subnet_group    = length(local.database_subnets) > 0 ? true : false
+  create_elasticache_subnet_group = length(local.elasticache_subnets) > 0 ? true : false
   
   enable_nat_gateway              = true
   single_nat_gateway              = var.one_nat_gateway_per_az ? false : true
@@ -120,7 +129,7 @@ resource "aws_ssm_parameter" "intra_subnets" {
 }
 
 resource "aws_ssm_parameter" "database_subnets" {
-  count = length(var.database_subnets) > 0 ? 1 : 0
+  count = length(local.database_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/database_subnets"
   type  = "String"
   value = join(",", module.vpc.database_subnets)
@@ -132,7 +141,7 @@ resource "aws_ssm_parameter" "database_subnets" {
 }
 
 resource "aws_ssm_parameter" "database_subnet_group" {
-  count = length(var.database_subnets) > 0 ? 1 : 0
+  count = length(local.database_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/database_subnet_group"
   type  = "String"
   insecure_value = module.vpc.database_subnet_group
@@ -144,7 +153,7 @@ resource "aws_ssm_parameter" "database_subnet_group" {
 }
 
 resource "aws_ssm_parameter" "elasticache_subnets" {
-  count = length(var.elasticache_subnets) > 0 ? 1 : 0
+  count = length(local.elasticache_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnets"
   type  = "String"
   value = join(",", module.vpc.elasticache_subnets)
@@ -156,7 +165,7 @@ resource "aws_ssm_parameter" "elasticache_subnets" {
 }
 
 resource "aws_ssm_parameter" "elasticache_subnet_group" {
-  count = length(var.elasticache_subnets) > 0 ? 1 : 0
+  count = length(local.elasticache_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnet_group"
   type  = "String"
   insecure_value = module.vpc.elasticache_subnet_group
@@ -192,7 +201,7 @@ resource "aws_ssm_parameter" "public_subnet_cidrs" {
 
 
 resource "aws_ssm_parameter" "database_subnet_cidrs" {
-  count = length(var.database_subnets) > 0 ? 1 : 0
+  count = length(local.database_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/database_subnet_cidrs"
   type  = "String"
   value = join(",", module.vpc.database_subnets_cidr_blocks)
@@ -204,7 +213,7 @@ resource "aws_ssm_parameter" "database_subnet_cidrs" {
 }
 
 resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
-  count = length(var.elasticache_subnets) > 0 ? 1 : 0
+  count = length(local.elasticache_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnet_cidrs"
   type  = "String"
   value = join(",", module.vpc.elasticache_subnets_cidr_blocks)
@@ -216,7 +225,7 @@ resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
 }
 
 resource "aws_ssm_parameter" "intra_subnet_cidrs" {
-  count = length(var.intra_subnets) > 0 ? 1 : 0
+  count = length(local.intra_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/intra_subnet_cidrs"
   type  = "String"
   value = join(",", module.vpc.intra_subnets_cidr_blocks)
