@@ -8,10 +8,16 @@ variable "vpc_cidr" {
   default = "10.156.0.0/16"
 }
 
+variable "azs" {
+  type = number
+  nullable = false
+  default = 2
+}
+
 variable "one_nat_gateway_per_az" {
   type = bool
   nullable = false
-  default = false
+  default = true
 }
 
 variable "private_subnets" {

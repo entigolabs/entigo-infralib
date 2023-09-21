@@ -23,13 +23,13 @@ __eks_spot_min_size__ Defaults to 1, minimum size of the nodegroup. Set to 0 to 
 
 __eks_spot_max_size__ Defaults to 3, maximum size of the nodegroup. Must be larger than min_size.
 
-__eks_spot_instance_types__List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
+__eks_spot_instance_types__ List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
 
 __eks_db_min_size__ Defaults to 1, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
 
 __eks_db_max_size__ Defaults to 3, maximum size of the nodegroup. Must be larger than min_size.
 
-__eks_db_instance_types__List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
+__eks_db_instance_types__ List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
 
 __eks_mon_min_size__ Defaults to 1, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
 

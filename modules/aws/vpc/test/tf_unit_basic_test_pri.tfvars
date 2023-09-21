@@ -1,4 +1,7 @@
 one_nat_gateway_per_az = false
-vpc_cidr = "10.157.0.0/16"
-intra_subnets = ["10.157.40.0/21"]
+vpc_cidr = "10.24.16.0/21"
+azs = 3
+
 elasticache_subnets = []
+intra_subnets = ["10.24.17.0/26"]
+
