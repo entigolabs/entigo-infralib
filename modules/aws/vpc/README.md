@@ -93,7 +93,6 @@ __spares:__
         source: aws/vpc
         inputs:
           vpc_cidr: "10.24.16.0/21"
-          elasticache_subnets = []
           intra_subnets = ["10.24.17.0/24"]
           azs = 3
 ```
