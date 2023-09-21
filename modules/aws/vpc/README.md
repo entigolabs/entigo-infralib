@@ -35,6 +35,7 @@ Oppinionated version of this https://registry.terraform.io/modules/terraform-aws
         source: aws/vpc
         inputs:
           vpc_cidr: "10.24.16.0/21"
+          one_nat_gateway_per_az = false #Will only create 1 nat gw, not two
           elasticache_subnets = []
           azs = 2
 ```
@@ -93,6 +94,7 @@ __spares:__
         source: aws/vpc
         inputs:
           vpc_cidr: "10.24.16.0/21"
+          one_nat_gateway_per_az = true #Will create three nat gw-s into each public subnet
           intra_subnets = ["10.24.17.0/24"]
           azs = 3
 ```
