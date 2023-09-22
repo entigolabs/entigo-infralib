@@ -15,6 +15,8 @@ func TestTerraformRoute53(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformRoute53Biz)
 	t.Run("Pri", testTerraformRoute53Pri)
+	t.Run("Min", testTerraformRoute53Min)
+	t.Run("Ext", testTerraformRoute53Ext)
 }
 
 func testTerraformRoute53Biz(t *testing.T) {
@@ -23,6 +25,14 @@ func testTerraformRoute53Biz(t *testing.T) {
 
 func testTerraformRoute53Pri(t *testing.T) {
 	testTerraformRoute53(t, "tf_unit_basic_test_pri.tfvars", "pri")
+}
+
+func testTerraformRoute53Min(t *testing.T) {
+	testTerraformRoute53(t, "tf_unit_basic_test_min.tfvars", "min")
+}
+
+func testTerraformRoute53Ext(t *testing.T) {
+	testTerraformRoute53(t, "tf_unit_basic_test_ext.tfvars", "ext")
 }
 
 func testTerraformRoute53(t *testing.T, varFile string, workspaceName string) {
