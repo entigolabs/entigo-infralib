@@ -18,15 +18,15 @@ import (
 	"time"
 )
 
-func TestTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+func TestK8sCrossplaneBiz(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+func TestK8sCrossplanePri(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
 }
 
-func testTerraformBasic(t *testing.T, contextName string) {
+func testK8sCrossplane(t *testing.T, contextName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -35,7 +35,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := fmt.Sprintf("crossplane-system")
-	releaseName := "crossplane"
+	releaseName := "crossplane-system"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
@@ -72,8 +72,8 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 60, 1*time.Second)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 5*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providers crd error")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
@@ -83,13 +83,13 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider error")
 	assert.NotNil(t, provider, "Provider is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Controller config error")
 
 	setValues["installProviderConfig"] = "true"
@@ -98,7 +98,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)

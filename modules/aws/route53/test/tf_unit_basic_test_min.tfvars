@@ -1,0 +1,3 @@
+create_public = false
+create_private = false
+parent_domain = "infralib.entigo.io"

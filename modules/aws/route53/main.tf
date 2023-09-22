@@ -1,7 +1,11 @@
 locals {
   domain = var.parent_zone_id != "" ? data.aws_route53_zone.parent_zone[0].name : var.parent_domain
-  pub_domain = var.create_public ? "${local.hname}.${local.domain}" : local.domain
-  int_domain =var.create_private ? "${local.hname}-int.${local.domain}" : local.pub_domain
+  
+  public_subdomain_name = var.public_subdomain_name != "" ? var.public_subdomain_name : local.hname
+  private_subdomain_name =  var.private_subdomain_name != "" ? var.private_subdomain_name : "${local.hname}-int"
+  
+  pub_domain = var.create_public ? "${local.public_subdomain_name}.${local.domain}" : local.domain
+  int_domain = var.create_private ? "${local.private_subdomain_name}.${local.domain}" : local.pub_domain
 
 }
 
@@ -17,7 +21,7 @@ resource "aws_acm_certificate" "pub" {
 }
 
 resource "aws_route53_record" "pub-cert" {
-  for_each = var.create_cert ? {
+  for_each = var.create_cert && ( var.create_public || var.parent_zone_id != "" ) ? {
     for dvo in aws_acm_certificate.pub[0].domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
@@ -34,7 +38,7 @@ resource "aws_route53_record" "pub-cert" {
 }
 
 resource "aws_acm_certificate_validation" "pub" {
-  count = var.create_cert ? 1 : 0
+  count = var.create_cert && var.parent_zone_id != "" ? 1 : 0
   certificate_arn         = aws_acm_certificate.pub[0].arn
 }
 
@@ -42,7 +46,7 @@ resource "aws_route53_zone" "int" {
   count = var.create_private ? 1 : 0
   name = local.int_domain
   vpc {
-    vpc_id = data.aws_ssm_parameter.vpc_id.value
+    vpc_id = data.aws_ssm_parameter.vpc_id[0].value
   }
   lifecycle {
     ignore_changes = [vpc]
@@ -78,13 +82,13 @@ resource "aws_route53_record" "int-cert" {
 }
 
 resource "aws_acm_certificate_validation" "int" {
-  count = var.create_cert && var.create_private ? 1 : 0
+  count = var.create_cert && var.create_private && var.parent_zone_id != "" ? 1 : 0
   certificate_arn         = aws_acm_certificate.int[0].arn
 }
 
 
 resource "aws_route53_record" "pub-ns" {
-  count = var.parent_zone_id != "" ? 1 : 0
+  count = var.parent_zone_id != "" && var.create_public ? 1 : 0
   zone_id = data.aws_route53_zone.parent_zone[0].zone_id
   name = local.pub_domain
   type    = "NS"
@@ -108,7 +112,7 @@ locals {
 }
 
 resource "aws_ssm_parameter" "pub" {
-  count = var.create_public ? 1 : 0
+  count = var.create_public || var.parent_zone_id != "" ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/route53/pub_zone_id"
   type  = "String"
   value = local.pub_zone
@@ -120,7 +124,6 @@ resource "aws_ssm_parameter" "pub" {
 }
 
 resource "aws_ssm_parameter" "pub-domain" {
-  count = var.create_public ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/route53/pub_domain"
   type  = "String"
   value = local.pub_domain
@@ -132,6 +135,7 @@ resource "aws_ssm_parameter" "pub-domain" {
 }
 
 resource "aws_ssm_parameter" "int" {
+  count = var.create_private || var.create_public || var.parent_zone_id != "" ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/route53/int_zone_id"
   type  = "String"
   value = local.int_zone

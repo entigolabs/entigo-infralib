@@ -19,15 +19,16 @@ import (
 
 const domain = "infralib.entigo.io"
 
-func TestTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "aws-alb-biz", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+func TestK8sAwsAlbBiz(t *testing.T) {
+	testK8sAwsAlb(t, "aws-alb-biz", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "aws-alb-pri", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+func TestK8sAwsAlbPri(t *testing.T) {
+	testK8sAwsAlb(t, "aws-alb-pri", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func testTerraformBasic(t *testing.T, namespaceName string, contextName string, runnerName string) {
+func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runnerName string) {
+	t.Parallel()
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")
@@ -80,7 +81,7 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, releaseName, 10, 6*time.Second)
 	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, fmt.Sprintf("%s-webhook-service", releaseName), 60, 1*time.Second)
 	time.Sleep(5 * time.Second)
 
@@ -100,7 +101,7 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 	assert.NotNil(t, createdIngress, "Ingress is nil")
 	assert.Equal(t, releaseName, createdIngress.GetName(), "Ingress name is not equal")
 
-	_, err = k8s.WaitUntilK8SIngressAvailable(t, kubectlOptions, createdIngress.GetName(), 60, 1*time.Second)
+	_, err = k8s.WaitUntilK8SIngressAvailable(t, kubectlOptions, createdIngress.GetName(), 40, 2*time.Second)
 	if err != nil {
 		_ = k8s.DeleteK8SIngress(t, kubectlOptions, ingress.GetName()) // Try to delete ingress
 	}
@@ -109,6 +110,6 @@ func testTerraformBasic(t *testing.T, namespaceName string, contextName string, 
 	err = k8s.DeleteK8SIngress(t, kubectlOptions, ingress.GetName())
 	require.NoError(t, err, "Deleting ingress error")
 
-	err = k8s.WaitUntilK8SIngressDeleted(t, kubectlOptions, ingress.GetName(), 60, 1*time.Second)
+	err = k8s.WaitUntilK8SIngressDeleted(t, kubectlOptions, ingress.GetName(), 40, 2*time.Second)
 	require.NoError(t, err, "Ingress didn't get deleted")
 }

@@ -36,6 +36,9 @@ resource "kubernetes_namespace" "crossplane-system" {
   metadata {
     name = "crossplane-system"
   }
+  depends_on = [
+    module.eks
+  ]
 }
 
 resource "kubernetes_service_account" "aws-crossplane" {
@@ -47,9 +50,13 @@ resource "kubernetes_service_account" "aws-crossplane" {
      "eks.amazonaws.com/role-arn" = aws_iam_role.crossplane[0].arn
     }
   }
+  depends_on = [
+    module.eks
+  ]
 }
 
 resource "kubernetes_config_map" "aws-crossplane" {
+  count = var.crossplane_enable ? 1 : 0
   metadata {
     name = "aws-crossplane"
     namespace = kubernetes_namespace.crossplane-system[0].metadata[0].name
@@ -59,5 +66,44 @@ resource "kubernetes_config_map" "aws-crossplane" {
     awsAccount  = data.aws_caller_identity.current.account_id
     awsRegion   = data.aws_region.current.name
     clusterOIDC = module.eks.oidc_provider
+  }
+  depends_on = [
+    module.eks
+  ]
+}
+
+resource "aws_ssm_parameter" "account" {
+  count = var.crossplane_enable ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/account"
+  type  = "String"
+  value = data.aws_caller_identity.current.account_id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "region" {
+  count = var.crossplane_enable ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/region"
+  type  = "String"
+  value = data.aws_region.current.name
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc" {
+  count = var.crossplane_enable ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/eks/oidc"
+  type  = "String"
+  value = module.eks.oidc_provider
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
   }
 }

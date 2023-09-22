@@ -1,5 +1,6 @@
 awsAccount: ""
 clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
 
 external-dns:
   serviceAccount:

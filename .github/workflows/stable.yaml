@@ -1,0 +1,63 @@
+name: Stable
+
+on:
+  schedule:
+    - cron: "0 5 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  install_stable:
+    name: Install stable release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        echo "Current stable release commit is $(git rev-parse HEAD)"
+        modules/aws/vpc/test.sh 
+        modules/aws/eks/test.sh 
+        modules/aws/route53/test.sh 
+        modules/k8s/argocd/test.sh
+        modules/aws/argocd/test.sh
+        modules/aws/helm-git/test.sh
+        modules/aws/hello-world/test.sh
+        modules/k8s/crossplane/test.sh
+        modules/k8s/istio-base/test.sh
+        modules/k8s/istio-istiod/test.sh
+        modules/k8s/istio-gateway/test.sh
+        modules/k8s/external-dns/test.sh
+        modules/k8s/aws-alb/test.sh
+        modules/k8s/hello-world/test.sh
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Fresh installation of latest release failed after Nuke.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""

@@ -4,5 +4,8 @@ argocd:
     config:
       url: https://argocd.runner-main-biz-int.infralib.entigo.io
     ingress:
+      annotations: 
+        alb.ingress.kubernetes.io/group.name: external
+        alb.ingress.kubernetes.io/scheme: internet-facing
       hosts:
       - argocd.runner-main-biz-int.infralib.entigo.io
