@@ -12,8 +12,8 @@ fi
 
 if [ "$AWS_REGION" == "" ]
 then
-  echo "Defaulting AWS_REGION to eu-north-1"
-  export AWS_REGION="eu-north-1"
+  echo "Defaulting AWS_REGION to us-east-1"
+  export AWS_REGION="us-east-1"
 fi
 
 DOCKER_OPTS=""

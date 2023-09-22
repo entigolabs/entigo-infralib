@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const bucketName = "infralib-modules-cost-alert-tf"
+const bucketName = "infralib-modules-cost-alert-root-us-tf"
 
 var awsRegion string
 
