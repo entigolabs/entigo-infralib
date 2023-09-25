@@ -33,5 +33,5 @@ jobs:
         echo ${{secrets.SLACK_ICON_EMOJI}} | sed 's/./& /g';
         echo ${{secrets.SLACK_USERNAME}}  | sed 's/./& /g';
         echo ${{secrets.SLACK_WEBHOOK_URL}} | sed 's/./& /g';
-        cd images/base/ && docker buildx build --output type=docker --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-base .
+        cd images/base/ && docker buildx build --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-base .
 
