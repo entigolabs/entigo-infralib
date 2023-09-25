@@ -33,6 +33,31 @@ locals {
         }
       }
     },
+    mainarm = {
+      min_size        = var.eks_mainarm_min_size
+      desired_size    = var.eks_mainarm_min_size
+      max_size        = var.eks_mainarm_max_size
+      instance_types  = var.eks_mainarm_instance_types
+      capacity_type   = "ON_DEMAND"
+      release_version = var.eks_cluster_version
+      ami_type        = "AL2_ARM_64"
+      launch_template_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        Workspace = terraform.workspace
+      }
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 100
+            volume_iops           = 3000
+            volume_type           = "gp3"
+            delete_on_termination = true
+          }
+        }
+      }
+    },
     spot = {
       min_size        = var.eks_spot_min_size
       desired_size    = var.eks_spot_min_size
@@ -104,6 +129,42 @@ locals {
         }
       }
     },
+    tools = {
+      min_size        = var.eks_tools_min_size
+      desired_size    = var.eks_tools_min_size
+      max_size        = var.eks_tools_max_size
+      instance_types  = var.eks_tools_instance_types
+      subnet_ids      = var.eks_tools_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
+      capacity_type   = "ON_DEMAND"
+      release_version = var.eks_cluster_version
+      taints = [
+        {
+          key    = "tooling"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+      labels = {
+        tooling = "true"
+      }
+      launch_template_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        Workspace = terraform.workspace
+      }
+
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 50
+            volume_iops           = 3000
+            volume_type           = "gp3"
+            delete_on_termination = true
+          }
+        }
+      }
+    },
     db = {
       min_size        = var.eks_db_min_size
       desired_size    = var.eks_db_min_size
@@ -144,7 +205,7 @@ locals {
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
 
   }
 

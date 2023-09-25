@@ -8,3 +8,5 @@ eks_db_min_size              = 0
 eks_db_max_size              = 0
 eks_main_min_size            = 4
 eks_main_max_size            = 6
+eks_mainarm_min_size         = 1
+eks_mainarm_max_size         = 2
