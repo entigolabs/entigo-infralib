@@ -48,8 +48,8 @@ jobs:
         aws-region: us-east-1
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ && 
-        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/a3z4f8w3 &&
-        docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t public.ecr.aws/a3z4f8w3/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -t public.ecr.aws/a3z4f8w3/entigo-infralib-base:latest -t entigolabs/entigo-infralib-base:latest -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} .
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
+        docker buildx build --push --platform linux/arm64/v8,linux/amd64 -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -t public.ecr.aws/entigolabs/entigo-infralib-base:latest -t entigolabs/entigo-infralib-base:latest -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} .
        
     - name: Authenticate with GitHub CLI
       run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
