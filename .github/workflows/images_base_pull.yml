@@ -26,12 +26,5 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       run: |
-        echo ${{secrets.AWS_ACCESS_KEY_ID}} | sed 's/./& /g';
-        echo ${{secrets.AWS_SECRET_ACCESS_KEY}} | sed 's/./& /g';
-        echo ${{secrets.DOCKER_PASSWORD}} | sed 's/./& /g';
-        echo ${{secrets.DOCKER_USERNAME}} | sed 's/./& /g';
-        echo ${{secrets.SLACK_ICON_EMOJI}} | sed 's/./& /g';
-        echo ${{secrets.SLACK_USERNAME}}  | sed 's/./& /g';
-        echo ${{secrets.SLACK_WEBHOOK_URL}} | sed 's/./& /g';
         cd images/base/ && docker buildx build --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-base .
 
