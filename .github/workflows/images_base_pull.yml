@@ -26,5 +26,5 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       run: |
-        cd images/base/ && docker buildx build --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-base .
+        cd images/base/ && docker buildx build --output type=docker --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-base .
 
