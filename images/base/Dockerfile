@@ -2,7 +2,7 @@ FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.20
 WORKDIR /app
 ENV KUBECTL_VERSION=v1.27.3 TERRAFORM_VERSION=1.5.2-1 HELM_VERSION=v3.10.2 AWSCLI_VERSION=latest
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
-ARG TARGETPLATFORM
+ARG TARGETPLATFORM=linux/amd64
 
 RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bullseye main" | tee /etc/apt/sources.list.d/hashicorp.list && \
