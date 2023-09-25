@@ -31,7 +31,6 @@ variable "create_namespace" {
   default = true
 }
 
-
 variable "argocd_apps_name" {
   type = string
   default = "ep-applications"
