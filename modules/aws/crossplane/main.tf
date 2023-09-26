@@ -30,7 +30,7 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
 
 
 resource "helm_release" "crossplane-terraform" {
-  name             = "crossplane-terraform"
+  name             = local.hname
   chart            = "${path. module}/helm" 
   namespace        = "crossplane-system"
   create_namespace = true
