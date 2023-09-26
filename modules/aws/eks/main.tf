@@ -394,6 +394,61 @@ module "eks" {
   }
 }
 
+resource "aws_ssm_parameter" "account" {
+  name  = "/entigo-infralib/${local.hname}/eks/account"
+  type  = "String"
+  value = data.aws_caller_identity.current.account_id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "region" {
+  name  = "/entigo-infralib/${local.hname}/eks/region"
+  type  = "String"
+  value = data.aws_region.current.name
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc" {
+  name  = "/entigo-infralib/${local.hname}/eks/oidc"
+  type  = "String"
+  value = module.eks.oidc_provider
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc_provider" {
+  name  = "/entigo-infralib/${local.hname}/eks/oidc_provider"
+  type  = "String"
+  value = module.eks.oidc_provider
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
+  name  = "/entigo-infralib/${local.hname}/eks/oidc_provider_arn"
+  type  = "String"
+  value = module.eks.oidc_provider_arn
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
 #resource "aws_eks_identity_provider_config" "aad" {
 #  cluster_name = module.eks.cluster_name
 #  oidc {
