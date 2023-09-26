@@ -26,7 +26,21 @@ external-dns:
     additionalLabels: 
       kubernetes.io/metadata.name: monitoring
       release: prometheus
-
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: tooling
+            operator: In
+            values:
+            - "true"
+  tolerations:
+      - key: "tooling"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
   resources:
     limits:
       cpu: 1000m

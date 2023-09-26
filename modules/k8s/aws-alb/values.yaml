@@ -9,6 +9,21 @@ aws-load-balancer-controller:
 
   image:
     repository: 602401143452.dkr.ecr.eu-north-1.amazonaws.com/amazon/aws-load-balancer-controller
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: tooling
+            operator: In
+            values:
+            - "true"
+  tolerations:
+      - key: "tooling"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
   resources: 
     limits:
       cpu: 1000m
