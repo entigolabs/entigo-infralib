@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const bucketName = "infralib-modules-aws-eks-tf"
+const bucketName = "infralib-modules-aws-crossplane-tf"
 
 var awsRegion string
 
