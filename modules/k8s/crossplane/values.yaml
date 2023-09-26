@@ -87,11 +87,21 @@ crossplane:
     # -- A list of additional args to be pased to the RBAC manager's container.
     args: []
     # -- Enable nodeSelector for RBAC Managers pod.
-    nodeSelector: {}
-    # -- Enable tolerations for RBAC Managers pod.
-    tolerations: []
-    # -- Enable affinity for RBAC Managers pod.
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+      - key: "tooling"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
 
   # -- Priority class name for Crossplane and RBAC Manager (if enabled) pods.
   priorityClassName: ""
