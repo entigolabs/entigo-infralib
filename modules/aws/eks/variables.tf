@@ -150,11 +150,6 @@ variable "cluster_enabled_log_types" {
   default = ["api", "authenticator"]
 }
 
-variable "crossplane_enable" {
-  type    = bool
-  default = true
-}
-
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
 }

@@ -53,8 +53,6 @@ __eks_tools_single_subnet__ Defaults to false, if set to false then monitoring n
 
 __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable logging set to [].
 
-__crossplane_enable__ Defaults to true, Creates needed IRSA, Conigmap and SSM parameters for crossplane. If modules/k8s/crossplane is used then set to true.
-
 ### SSM parameters ###
 **Only if var.crossplane_enable is true'**
 ```
