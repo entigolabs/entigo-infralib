@@ -6,6 +6,21 @@ argocd:
     networkPolicy:
       create: true
   server:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -49,6 +64,21 @@ argocd:
   dex:
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -63,6 +93,21 @@ argocd:
     enabled: true
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -76,6 +121,21 @@ argocd:
   redis-ha:
     enabled: false
     redis:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tooling
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tooling"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
           cpu: 1000m
@@ -86,6 +146,21 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 1Gi
     sentinel:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tooling
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tooling"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
           cpu: 1000m
@@ -96,6 +171,21 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 1Gi
     haproxy:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tooling
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tooling"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
           cpu: 1000m
@@ -110,6 +200,21 @@ argocd:
     autoscaling:
       enabled: true
       minReplicas: 2
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -124,6 +229,21 @@ argocd:
     replicaCount: 2
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -137,6 +257,21 @@ argocd:
   notifications:
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
@@ -148,6 +283,21 @@ argocd:
         ephemeral-storage: 1Gi
 
   controller:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tooling
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tooling"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
         cpu: 1000m
