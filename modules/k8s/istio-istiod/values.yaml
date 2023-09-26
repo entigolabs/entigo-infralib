@@ -2,6 +2,21 @@
 istiod:
   global:
     defaultResources:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tooling
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tooling"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       requests:
         cpu: 10m
         memory: 32Mi
