@@ -17,12 +17,21 @@ crossplane:
     pullPolicy: IfNotPresent
 
   # -- Enable nodeSelector for Crossplane pod.
-  nodeSelector: {}
-  # -- Enable tolerations for Crossplane pod.
-  tolerations: []
-  # -- Enable affinity for Crossplane pod.
-  affinity: {}
-
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: tooling
+            operator: In
+            values:
+            - "true"
+  tolerations:
+    - key: "tooling"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   # -- Enable hostNetwork for Crossplane. Caution: setting it to true means Crossplane's Pod will have high privileges.
   hostNetwork: false
 
