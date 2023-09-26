@@ -11,6 +11,21 @@ spec:
   serviceAccountName: aws-crossplane #https://github.com/crossplane/crossplane/pull/2880
   podSecurityContext:
     fsGroup: 2000
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: tooling
+            operator: In
+            values:
+            - "true"
+  tolerations:
+    - key: "tooling"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   # args:
   # - --poll=720m
 {{- end }}
