@@ -88,17 +88,17 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.Equal(t, "[]", elasticacheSubnets, "Wrong number of elasticache_subnets returned")
 
 	privateSubnetCidrs := fmt.Sprint(outputs["private_subnet_cidrs"])
-	assert.Equal(t, "[10.24.18.0/25 10.24.18.128/25 10.24.19.0/25]", privateSubnetCidrs, "Wrong value for private_subnet_cidrs returned")
+	assert.Equal(t, "[10.24.16.0/22 10.24.20.0/22 10.24.24.0/22]", privateSubnetCidrs, "Wrong value for private_subnet_cidrs returned")
 
 	publicSubnetCidrs := fmt.Sprint(outputs["public_subnet_cidrs"])
-	assert.Equal(t, "[10.24.16.0/26 10.24.16.64/26 10.24.16.128/26]", publicSubnetCidrs, "Wrong value for public_subnet_cidrs returned")
+	assert.Equal(t, "[10.24.0.0/23 10.24.2.0/23 10.24.4.0/23]", publicSubnetCidrs, "Wrong value for public_subnet_cidrs returned")
 
 	databaseSubnetCidrs := fmt.Sprint(outputs["database_subnet_cidrs"])
-	assert.Equal(t, "[10.24.20.0/25 10.24.20.128/25 10.24.21.0/25]", databaseSubnetCidrs, "Wrong value for database_subnet_cidrs returned")
+	assert.Equal(t, "[10.24.32.0/22 10.24.36.0/22 10.24.40.0/22]", databaseSubnetCidrs, "Wrong value for database_subnet_cidrs returned")
 
 	elasticacheSubnetCidrs := fmt.Sprint(outputs["elasticache_subnet_cidrs"])
 	assert.Equal(t, "[]", elasticacheSubnetCidrs, "Wrong value for elasticache_subnet_cidrs returned")
 
 	intraSubnetCidrs := fmt.Sprint(outputs["intra_subnet_cidrs"])
-	assert.Equal(t, "[10.24.17.0/24]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
+	assert.Equal(t, "[10.24.8.0/23]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
 }
