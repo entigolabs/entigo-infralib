@@ -150,6 +150,13 @@ variable "cluster_enabled_log_types" {
   default = ["api", "authenticator"]
 }
 
+
+variable "eks_managed_node_groups_extra" {
+  type    = map
+  nullable = false
+  default = {}
+}
+
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
 }

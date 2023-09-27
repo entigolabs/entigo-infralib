@@ -3,7 +3,7 @@ terraform {
   required_providers {
     helm = {
       source = "hashicorp/helm"
-      version = "2.10.1"
+      version = "2.4.1"
     }
     external = {
       source = "hashicorp/external"

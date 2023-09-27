@@ -203,12 +203,11 @@ locals {
   }
 
   # Need to keep role name_prefix length under 38. 
-  eks_managed_node_groups = {
+  eks_managed_node_groups_default = {
     for key, value in local.eks_managed_node_groups_all :
     "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
-
   }
-
+  eks_managed_node_groups = merge(local.eks_managed_node_groups_default,var.eks_managed_node_groups_extra)
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
