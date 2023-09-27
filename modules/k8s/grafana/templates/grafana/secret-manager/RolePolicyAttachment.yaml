@@ -1,0 +1,13 @@
+{{ if index .Values "grafana" "enabled" }}
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}-sm
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::{{ .Values.awsAccount }}:policy/{{ .Release.Name }}-sm
+    roleNameRef:
+      name: {{ .Release.Name }}-sm
+  providerConfigRef:
+    name: {{ .Values.clusterName }}
+{{ end }}

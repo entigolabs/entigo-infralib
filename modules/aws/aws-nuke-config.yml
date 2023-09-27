@@ -29,10 +29,10 @@ resource-types:
   - CloudWatchEventsRule
 
 accounts:
-  "877483565445":
+  "525764398212":
     filters:
       Route53HostedZone:
-      - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
+      - "/hostedzone/Z0708510ECZAU65YJ8ZD (kallas.entigo.co.)" #infralib.entigo.io.
       IAMUser:
       - "github"
       IAMUserPolicyAttachment:

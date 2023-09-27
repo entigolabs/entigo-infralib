@@ -1,0 +1,14 @@
+{{- $alertsPath := "grafana-alerts/*.{json,yaml}" }}
+{{- range $path, $_ := .Files.Glob $alertsPath }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-alert-%s" $.Release.Name (replace "." "-" (replace "/" "-" (base $path))) }}
+  labels:
+    grafana_alert: "1"
+data:
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+---
+{{- end }}

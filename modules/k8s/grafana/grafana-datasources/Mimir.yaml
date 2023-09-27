@@ -1,0 +1,8 @@
+access: proxy
+isDefault: true
+jsonData:
+  manageAlerts: true
+  prometheusType: Mimir
+name: Mimir
+type: prometheus
+url: https://mimir.aws-internal.delfi.net/prometheus

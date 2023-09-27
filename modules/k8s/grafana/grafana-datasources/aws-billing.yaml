@@ -1,0 +1,12 @@
+editable: true
+isDefault: false
+jsonData:
+  assumeRoleArn: arn:aws:iam::+65:role/asd
+  authType: keys
+  defaultRegion: eu-north-1
+  externalId: ${billing_external_id}
+name: aws-billing
+secureJsonData:
+  accessKey: ${tooling_acc_id}
+  secretKey: ${tooling_sec_key}
+type: cloudwatch

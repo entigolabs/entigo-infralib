@@ -1,0 +1,12 @@
+#The password is irrelevant, only the username matters.
+
+{{ if index .Values "grafana" "enabled" }}
+apiVersion: v1
+data:
+  admin-password: ZG9lc250bWF0dGVy
+  admin-user: bWFydGluLnZvb2xAZWtzcHJlc3MuZWU=
+kind: Secret
+metadata:
+  name: grafana
+
+{{ end }}

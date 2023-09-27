@@ -1,0 +1,33 @@
+{{ if index .Values "grafana" "enabled" }}
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-sm
+spec:
+  forProvider:
+    name: {{ .Release.Name }}-sm
+    document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "secretsmanager:GetResourcePolicy",
+              "secretsmanager:GetSecretValue",
+              "secretsmanager:DescribeSecret",
+              "secretsmanager:ListSecretVersionIds"
+            ],
+            "Resource": [
+              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-tooling-grafana*",
+              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-test-grafana*",
+              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-prod-ee-grafana*",
+              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-root-billing-access*"
+            ]
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.clusterName }}
+{{ end }}
