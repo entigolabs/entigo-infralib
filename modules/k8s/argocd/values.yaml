@@ -12,12 +12,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -70,12 +70,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -99,12 +99,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -127,12 +127,12 @@ argocd:
           - weight: 90
             preference:
               matchExpressions:
-              - key: tooling
+              - key: tools
                 operator: In
                 values:
                 - "true"
       tolerations:
-        - key: "tooling"
+        - key: "tools"
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
@@ -152,12 +152,12 @@ argocd:
           - weight: 90
             preference:
               matchExpressions:
-              - key: tooling
+              - key: tools
                 operator: In
                 values:
                 - "true"
       tolerations:
-        - key: "tooling"
+        - key: "tools"
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
@@ -177,12 +177,12 @@ argocd:
           - weight: 90
             preference:
               matchExpressions:
-              - key: tooling
+              - key: tools
                 operator: In
                 values:
                 - "true"
       tolerations:
-        - key: "tooling"
+        - key: "tools"
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
@@ -206,12 +206,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -235,12 +235,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -263,12 +263,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -289,12 +289,12 @@ argocd:
         - weight: 90
           preference:
             matchExpressions:
-            - key: tooling
+            - key: tools
               operator: In
               values:
               - "true"
     tolerations:
-       - key: "tooling"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"

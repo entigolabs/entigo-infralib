@@ -139,13 +139,13 @@ locals {
       release_version = var.eks_cluster_version
       taints = [
         {
-          key    = "tooling"
+          key    = "tools"
           value  = "true"
           effect = "NO_SCHEDULE"
         }
       ]
       labels = {
-        tooling = "true"
+        tools = "true"
       }
       launch_template_tags = {
         Terraform = "true"
@@ -280,17 +280,51 @@ module "eks" {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.9.3-eksbuild.3"
+      configuration_values = jsonencode({
+          tolerations: [
+            {
+            key: "tools",
+            operator: "Equal",
+            value: "true",
+            effect: "NoSchedule"
+            }
+          ],
+          affinity: {
+              nodeAffinity: {
+                preferredDuringSchedulingIgnoredDuringExecution: [
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "tools",
+                          "operator": "In",
+                          "values": [
+                            "true"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 5
+                  }
+                ]
+              }
+          }
+      })
     }
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.26.2-eksbuild.1"
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.15.0-eksbuild.2"
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
+
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = "true"
@@ -301,8 +335,55 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.23.0-eksbuild.1"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      configuration_values = jsonencode({
+        controller: {
+          tolerations: [
+            {
+            key: "tools",
+            operator: "Equal",
+            value: "true",
+            effect: "NoSchedule"
+            }
+          ],
+          affinity: {
+              nodeAffinity: {
+                preferredDuringSchedulingIgnoredDuringExecution: [
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "eks.amazonaws.com/compute-type",
+                          "operator": "NotIn",
+                          "values": [
+                            "fargate"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 1
+                  },
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "tools",
+                          "operator": "In",
+                          "values": [
+                            "true"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 5
+                  }
+                ]
+              }
+          }
+        }
+      })
     }
   }
 
