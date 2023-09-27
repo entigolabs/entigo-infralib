@@ -53,6 +53,8 @@ __eks_tools_single_subnet__ Defaults to false, if set to false then monitoring n
 
 __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable logging set to [].
 
+__eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or orverride defaults.
+
 ### SSM parameters ###
 **Only if var.crossplane_enable is true'**
 ```
