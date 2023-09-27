@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -20,16 +21,18 @@ func TestTerraformEks(t *testing.T) {
 }
 
 func testTerraformEksBiz(t *testing.T) {
-	testTerraformEks(t, "tf_unit_basic_test_biz.tfvars", "biz")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars")
+	testTerraformEks(t, "biz", options)
 }
 
 func testTerraformEksPri(t *testing.T) {
-	testTerraformEks(t, "tf_unit_basic_test_pri.tfvars", "pri")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars")
+	testTerraformEks(t, "pri", options)
 }
 
-func testTerraformEks(t *testing.T, varFile string, workspaceName string) {
+func testTerraformEks(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
-	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, varFile, workspaceName)
+	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc() // Defer needs to be called in outermost function
 	clusterName := outputs["cluster_name"]
 	assert.Equal(t, fmt.Sprintf("%s-%s", os.Getenv("TF_VAR_prefix"), workspaceName), clusterName,

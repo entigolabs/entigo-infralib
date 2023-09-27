@@ -16,7 +16,10 @@ RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/shar
       curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install --bin-dir /usr/bin && \
       curl -s "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" -o "helm.tar.gz" && tar xzf helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && chmod +x /usr/bin/helm; \
     fi
-#COPY cache /cache  #SEE https://entigo.atlassian.net/browse/RD-76
-#ENV TF_PLUGIN_CACHE_DIR=/plugin-cache  #SEE https://entigo.atlassian.net/browse/RD-76
-#RUN cd /cache && mkdir /plugin-cache && terraform init && rm -rf /cache #SEE https://entigo.atlassian.net/browse/RD-76
+COPY cache /cache  
+#SEE https://entigo.atlassian.net/browse/RD-76
+ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE="true"
+#SEE https://entigo.atlassian.net/browse/RD-76
+RUN cd /cache && mkdir /plugin-cache && terraform init && rm -rf /cache 
+#SEE https://entigo.atlassian.net/browse/RD-76
 COPY entrypoint.sh /usr/bin/entrypoint.sh 
