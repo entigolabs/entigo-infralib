@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
 	"strings"
@@ -19,9 +20,20 @@ func TestTerraformVpc(t *testing.T) {
 	t.Run("Pri", testTerraformVpcPri)
 }
 
+
 func testTerraformVpcBiz(t *testing.T) {
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars")
+	testTerraformVpcBizAssert(t, "biz", options)
+}
+
+func testTerraformVpcPri(t *testing.T) {
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars")
+	testTerraformVpcPriAssert(t, "pri", options)
+}
+
+func testTerraformVpcBizAssert(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
-	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", "biz")
+	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
 
 	vpcId := outputs["vpc_id"]
@@ -64,9 +76,9 @@ func testTerraformVpcBiz(t *testing.T) {
 	assert.Equal(t, "[]", intraSubnetCidrs, "Wrong value for intra_subnet_cidrs returned")
 }
 
-func testTerraformVpcPri(t *testing.T) {
+func testTerraformVpcPriAssert(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
-	outputs, destroyFunc := tf.ApplyTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", "pri")
+	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
 
 	vpcId := outputs["vpc_id"]

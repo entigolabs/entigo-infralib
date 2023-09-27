@@ -20,7 +20,8 @@ const terraformFolderRelativeToRoot = "test"
 const providersPath = "/providers"
 const testProvidersPath = "./providers"
 
-func ApplyTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, workspaceName string) (map[string]interface{}, func()) {
+
+func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string) (*terraform.Options) {
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
@@ -42,6 +43,11 @@ func ApplyTerraform(t *testing.T, bucketName string, awsRegion string, varFile s
 		},
 	})
 	terraform.Init(t, terraformOptions)
+        return terraformOptions
+}
+
+func ApplyTerraform(t *testing.T,  workspaceName string, terraformOptions *terraform.Options) (map[string]interface{}, func()) {
+	
 	terraform.WorkspaceSelectOrNew(t, terraformOptions, workspaceName)
 
 	var destroy = func() {
