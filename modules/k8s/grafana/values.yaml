@@ -7,14 +7,24 @@ grafana:
 
   # plugins:
   #   - https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.3/download
-  # resources:
-  #   limits:
-  #     cpu: 1
-  #     memory: 512i
-  #   requests:
-  #     cpu: 100m
-  #     memory: 128Mi
+  annotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
 
+  resources: 
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 10Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 1Gi
+  networkPolicy:
+    enabled: true
+    ingress: true
+    allowExternal: true
+    egress:
+      enabled: false
   envValueFrom:
     #tooling_acc_id:
     #  secretKeyRef:
@@ -122,9 +132,29 @@ grafana:
 #### This is the sidecar to keep secrets and datasources in sync
 
   sidecar:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+        ephemeral-storage: 1Gi
     alerts:
       enabled: true
     dashboards:
       enabled: true
     datasources:
       enabled: true
+
+  initChownData:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+        ephemeral-storage: 1Gi
