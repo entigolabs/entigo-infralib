@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: post-install
+    helm.sh/hook: pre-install
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -13,7 +13,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: post-install
+    helm.sh/hook: pre-install
 rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
@@ -28,11 +28,11 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: post-install
+    helm.sh/hook: pre-install
 subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-delete-gp2
-  namespace: default
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: {{ .Release.Name }}-delete-gp2
