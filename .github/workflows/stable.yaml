@@ -50,6 +50,7 @@ jobs:
         modules/k8s/istio-istiod/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
+        modules/k8s/external-secrets/test.sh
         modules/k8s/aws-alb/test.sh
         modules/k8s/hello-world/test.sh
     - name: Slack Failed To Install Latest Release Message
