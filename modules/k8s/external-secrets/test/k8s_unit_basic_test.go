@@ -43,6 +43,7 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("external-secrets-%s-%s", envName, prefix)
 	   setValues["external-secrets.installCRDs"] = "false"
+	   setValues["external-secrets.webhook.create"] = "false"
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
