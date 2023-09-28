@@ -5,4 +5,4 @@ jsonData:
   prometheusType: Mimir
 name: Mimir
 type: prometheus
-url: https://mimir.aws-internal.delfi.net/prometheus
+url: http://mimir.mimir/prometheus

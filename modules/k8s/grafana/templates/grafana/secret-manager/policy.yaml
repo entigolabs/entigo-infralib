@@ -1,4 +1,3 @@
-{{ if index .Values "grafana" "enabled" }}
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
 metadata:
@@ -19,15 +18,13 @@ spec:
               "secretsmanager:ListSecretVersionIds"
             ],
             "Resource": [
-              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-tooling-grafana*",
-              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-test-grafana*",
-              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-infra-prod-ee-grafana*",
-              "arn:aws:secretsmanager:eu-north-1:{{ .Values.awsAccount }}:secret:eg-root-billing-access*"
+              "arn:aws:secretsmanager:{{ .Values.awsRegion }}:{{ .Values.awsAccount }}:secret:tools-grafana*",
+              "arn:aws:secretsmanager:{{ .Values.awsRegion }}:{{ .Values.awsAccount }}:secret:root-billing-access*"
             ]
           }
         ]
       }
 
   providerConfigRef:
-    name: {{ .Values.clusterName }}
-{{ end }}
+    name: {{ .Values.providerConfigRefName }}
+

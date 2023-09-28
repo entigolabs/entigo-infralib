@@ -1,0 +1,10 @@
+#editable: true
+#isDefault: false
+#jsonData:
+#  authType: keys
+#  defaultRegion: {{ .Values.awsRegion }}
+#name: eg-tooling
+#secureJsonData:
+#  accessKey: ${tooling_acc_id}
+#  secretKey: ${tooling_sec_key}
+#type: cloudwatch
