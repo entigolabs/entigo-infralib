@@ -1,8 +1,15 @@
+awsAccount: ""
+awsRegion: ""
+clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
+
 admin_password: ""
 admin_user: ""
 
 grafana:
   enabled: true
+
+  
   fullnameOverride: "grafana"
 
   # plugins:
@@ -60,7 +67,7 @@ grafana:
   service:
     type: ClusterIP
   serviceMonitor:
-    enabled: true
+    enabled: false
   testFramework:
     enabled: false
   tolerations:

@@ -70,7 +70,7 @@ func testK8sGrafana(t *testing.T, contextName string, envName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("grafana deployment error:", err)
 	}
