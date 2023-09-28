@@ -32,7 +32,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-delete-gp2
-  namespace: default
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: {{ .Release.Name }}-delete-gp2
@@ -44,7 +44,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
-    helm.sh/hook: pre-install
+    helm.sh/hook: post-install
     kube-score/ignore: pod-networkpolicy
 spec:
   activeDeadlineSeconds: 600
@@ -71,7 +71,7 @@ spec:
 
       containers:
       - name: kubectl
-        image: bitnami/kubectl:1.25
+        image: bitnami/kubectl:1.27
         resources:
           limits:
             cpu: 1000m
@@ -82,8 +82,8 @@ spec:
             memory: 16Mi
             ephemeral-storage: 20Mi
         command:
-        - /bin/sh
+        - /bin/bash
         - -c
-        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2; fi; fi
+        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc {{ .Values.prefix }}gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2 && kubectl get sc {{ .Values.prefix }}gp2-retain -o json | jq '.metadata.name = "{{ .Values.prefix }}gp2"' | kubectl apply -f -; fi; fi
       restartPolicy: Never
   backoffLimit: 3
