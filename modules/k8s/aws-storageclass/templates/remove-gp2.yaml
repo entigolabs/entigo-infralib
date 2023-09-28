@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: pre-install
+    helm.sh/hook: post-install
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -13,7 +13,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: pre-install
+    helm.sh/hook: post-install
 rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
@@ -28,7 +28,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: pre-install
+    helm.sh/hook: post-install
 subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-delete-gp2
@@ -44,7 +44,7 @@ metadata:
   name: {{ .Release.Name }}-delete-gp2
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
-    helm.sh/hook: pre-install
+    helm.sh/hook: post-install
     kube-score/ignore: pod-networkpolicy
 spec:
   activeDeadlineSeconds: 600
@@ -84,6 +84,6 @@ spec:
         command:
         - /bin/sh
         - -c
-        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2; fi; fi
+        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2; kubectl get sc {{ .Values.prefix }}gp2-retain -o json | jq '.metadata.name = "gp2"' | kubectl apply -f -; fi; fi
       restartPolicy: Never
   backoffLimit: 3
