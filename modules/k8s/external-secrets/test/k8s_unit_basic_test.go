@@ -43,6 +43,8 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("external-secrets-%s-%s", envName, prefix)
 	   setValues["external-secrets.installCRDs"] = "false"
+	   setValues["external-secrets.webhook.create"] = "false"
+	   setValues["external-secrets.certController.create"] = "false"   
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -76,13 +78,16 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 	if err != nil {
 		t.Fatal("external-secrets deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions,   fmt.Sprintf("%s-webhook", namespaceName), 10, 12*time.Second)
-	if err != nil {
-		t.Fatal("external-secrets-webhook deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions,   fmt.Sprintf("%s-cert-controller", namespaceName), 10, 12*time.Second)
-	if err != nil {
-		t.Fatal("external-secrets-cert-controller deployment error:", err)
+	if prefix == "runner-main" {
+	  err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions,   fmt.Sprintf("%s-webhook", namespaceName), 10, 12*time.Second)
+	  if err != nil {
+		  t.Fatal("external-secrets-webhook deployment error:", err)
+	  }
+
+	  err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions,   fmt.Sprintf("%s-cert-controller", namespaceName), 10, 12*time.Second)
+	  if err != nil {
+		  t.Fatal("external-secrets-cert-controller deployment error:", err)
+	  }
 	}
 
 }
