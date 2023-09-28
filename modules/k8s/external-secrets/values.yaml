@@ -1,0 +1,93 @@
+external-secrets:
+  installCRDs: true
+  deploymentAnnotations: 
+    kube-score/ignore: pod-networkpolicy
+  resources: 
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 10Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 1Gi
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: tools
+            operator: In
+            values:
+            - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  webhook:
+    deploymentAnnotations: 
+      kube-score/ignore: pod-networkpolicy
+    resources: 
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+        ephemeral-storage: 1Gi
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+  
+  certController:
+    deploymentAnnotations: 
+      kube-score/ignore: pod-networkpolicy
+    resources: 
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+        ephemeral-storage: 1Gi
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
+awsAccount: ""
+awsRegion: ""
+clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
+
+
+gitlab_url: ""
+gitlab_project: ""
+gitlab_secet: ""
