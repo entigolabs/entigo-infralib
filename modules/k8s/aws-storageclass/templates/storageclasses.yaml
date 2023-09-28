@@ -2,8 +2,9 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
-  name: {{ .Values.prefix }}gp2csi
+  name: {{ .Values.prefix }}gp2
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
@@ -18,6 +19,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
   name: {{ .Values.prefix }}gp2-no-retain
 parameters:
@@ -34,6 +36,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "true"
   name: {{ .Values.prefix }}gp3
 parameters:
@@ -49,6 +52,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
   name: {{ .Values.prefix }}gp3-no-retain
 parameters:
