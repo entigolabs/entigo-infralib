@@ -68,7 +68,7 @@ spec:
 
       containers:
       - name: kubectl
-        image: registry.learn.entigo.io/hub/bitnami/kubectl:1.25
+        image: bitnami/kubectl:1.25
         resources:
           limits:
             cpu: 1000m
