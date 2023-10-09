@@ -21,7 +21,7 @@ const providersPath = "/providers"
 const testProvidersPath = "./providers"
 
 
-func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string) (*terraform.Options) {
+func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) (*terraform.Options) {
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
@@ -35,6 +35,7 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure:  true,
+		Vars: vars,
 		VarFiles:     []string{varFile},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
