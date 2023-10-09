@@ -25,10 +25,10 @@ func testTerraformCrossplaneBiz(t *testing.T) {
 	region := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/region")
 	account := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/account")
         options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-			"oidc_provider": oidc_provider,
-			"oidc_provider_arn": oidc_provider_arn,
-			"region": region,
-			"account": account,
+			"eks_oidc_provider": oidc_provider,
+			"eks_oidc_provider_arn": oidc_provider_arn,
+			"eks_region": region,
+			"eks_account": account,
 	})
 	testTerraformCrossplane(t, "biz", options)
 }
@@ -39,10 +39,10 @@ func testTerraformCrossplanePri(t *testing.T) {
 	region := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/region")
 	account := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/account")
         options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
-			"oidc_provider": oidc_provider,
-			"oidc_provider_arn": oidc_provider_arn,
-			"region": region,
-			"account": account,
+			"eks_oidc_provider": oidc_provider,
+			"eks_oidc_provider_arn": oidc_provider_arn,
+			"eks_region": region,
+			"eks_account": account,
 	})
 	testTerraformCrossplane(t, "pri", options)
 }

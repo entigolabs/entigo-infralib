@@ -10,11 +10,11 @@ variable "eks_oidc_provider_arn" {
   type = string
 }
 
-variable "region" {
+variable "eks_region" {
   type = string
 }
 
-variable "account" {
+variable "eks_account" {
   type = string
 }
 
