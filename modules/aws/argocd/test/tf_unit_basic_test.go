@@ -19,12 +19,12 @@ func TestTerraformArgocd(t *testing.T) {
 }
 
 func testTerraformArgocdBiz(t *testing.T) {
-	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformArgocd(t, "biz", options)
 }
 
 func testTerraformArgocdPri(t *testing.T) {
-	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformArgocd(t, "pri", options)
 }
 

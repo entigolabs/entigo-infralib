@@ -19,12 +19,12 @@ func TestHelmGit(t *testing.T) {
 }
 
 func testTerraformHelmGitBiz(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars")
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformHelmGit(t, "biz", options)
 }
 
 func testTerraformHelmGitPri(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars")
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformHelmGit(t, "pri", options)
 }
 
