@@ -21,12 +21,12 @@ func TestTerraformHelloWorld(t *testing.T) {
 }
 
 func testTerraformHelloWorldBiz(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars")
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformHelloWorldBizAssert(t, "biz", options)
 }
 
 func testTerraformHelloWorldPri(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars")
+        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformHelloWorldPriAssert(t, "pri", options)
 }
 
