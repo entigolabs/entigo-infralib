@@ -65,7 +65,7 @@ resource "helm_release" "argocd" {
 }
 
 resource "aws_ssm_parameter" "argocd_repo_url" {
-  name  = "/entigo-infralib/${local.hname}/argocd/repo_url"
+  name  = "/entigo-infralib/${local.hname}/repo_url"
   type  = "String"
   value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
   tags = {

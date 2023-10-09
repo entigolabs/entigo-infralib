@@ -4,6 +4,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"testing"
 )
@@ -21,7 +22,10 @@ func TestTerraformRoute53(t *testing.T) {
 }
 
 func testTerraformRoute53Biz(t *testing.T) {
-	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
+	vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+			"vpc_id": vpc_id,
+		})
 	testTerraformRoute53(t, "biz", options)
 }
 
