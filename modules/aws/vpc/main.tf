@@ -105,7 +105,7 @@ resource "aws_ssm_parameter" "vpc_id" {
 
 resource "aws_ssm_parameter" "private_subnets" {
   name  = "/entigo-infralib/${local.hname}/vpc/private_subnets"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.private_subnets)
   tags = {
     Terraform = "true"
@@ -116,7 +116,7 @@ resource "aws_ssm_parameter" "private_subnets" {
 
 resource "aws_ssm_parameter" "public_subnets" {
   name  = "/entigo-infralib/${local.hname}/vpc/public_subnets"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.public_subnets)
   tags = {
     Terraform = "true"
@@ -128,7 +128,7 @@ resource "aws_ssm_parameter" "public_subnets" {
 resource "aws_ssm_parameter" "intra_subnets" {
   count = length(module.vpc.intra_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/intra_subnets"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.intra_subnets)
   tags = {
     Terraform = "true"
@@ -140,7 +140,7 @@ resource "aws_ssm_parameter" "intra_subnets" {
 resource "aws_ssm_parameter" "database_subnets" {
   count = length(local.database_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/database_subnets"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.database_subnets)
   tags = {
     Terraform = "true"
@@ -164,7 +164,7 @@ resource "aws_ssm_parameter" "database_subnet_group" {
 resource "aws_ssm_parameter" "elasticache_subnets" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnets"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.elasticache_subnets)
   tags = {
     Terraform = "true"
@@ -187,7 +187,7 @@ resource "aws_ssm_parameter" "elasticache_subnet_group" {
 
 resource "aws_ssm_parameter" "private_subnet_cidrs" {
   name  = "/entigo-infralib/${local.hname}/vpc/private_subnet_cidrs"
-  type  = "String"
+  type  = "StringList"
   value = join(",", module.vpc.private_subnets_cidr_blocks)
   tags = {
     Terraform = "true"
