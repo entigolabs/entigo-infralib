@@ -37,8 +37,8 @@ resource "helm_release" "crossplane-terraform" {
   values = [
     templatefile("${path.module}/values.yaml", {
       iamRole=aws_iam_role.crossplane.arn
-      awsAccount  = var.account
-      awsRegion   = var.region
+      awsAccount  = var.eks_account
+      awsRegion   = var.eks_region
       clusterOIDC = var.eks_oidc_provider
     })
   ]
