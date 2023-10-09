@@ -2,8 +2,22 @@ variable "prefix" {
   type = string
 }
 
-variable "vpc_prefix" {
+variable "vpc_id" {
   type = string
+}
+
+variable "private_subnets" {
+  type = list(string)
+}
+
+variable "public_subnets" {
+  type = list(string)
+  default = []
+}
+
+variable "eks_api_access_cidrs" {
+  type = list(string)
+  default = []
 }
 
 variable "eks_cluster_version" {
