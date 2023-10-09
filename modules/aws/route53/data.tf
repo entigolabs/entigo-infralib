@@ -1,7 +1,3 @@
-data "aws_ssm_parameter" "vpc_id" {
-  count = var.create_private ? 1 : 0
-  name = "/entigo-infralib/${var.vpc_prefix}-${terraform.workspace}/vpc/vpc_id"
-}
 
 data "aws_route53_zone" "parent_zone" {
   count = var.parent_zone_id != "" ? 1 : 0
