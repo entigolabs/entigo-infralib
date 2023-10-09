@@ -14,17 +14,17 @@ __private_subdomain_name__ enables to override the default name of the private s
 
 __create_cert__ defaults to true, but if set to false then no ACM certificates are created. The private domain will also get an equal public domain so the ACM Certificate could be validated.
 
-__vpc_prefix__ need to reference the VPC that the private dns zone will be attatched to. (prefix + step name + module name) Only requied if __create_private__=true.
+__vpc_id__ need to reference the VPC that the private dns zone will be attatched to. Only requied if __create_private__=true.
 
 The use of the private zone only makes sense if we have LAN access to that network (for example Client VPN or access through TGW).
 
 
 ### SSM parameters ###
 ```
-"/entigo-infralib/${local.hname}/route53/pub_zone_id" 
-"/entigo-infralib/${local.hname}/route53/pub_domain"
-"/entigo-infralib/${local.hname}/route53/int_zone_id"
-"/entigo-infralib/${local.hname}/route53/int_domain"
+"/entigo-infralib/${local.hname}/pub_zone_id" 
+"/entigo-infralib/${local.hname}/pub_domain"
+"/entigo-infralib/${local.hname}/int_zone_id"
+"/entigo-infralib/${local.hname}/int_domain"
 ```
 
 

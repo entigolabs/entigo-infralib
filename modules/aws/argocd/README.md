@@ -24,7 +24,7 @@ __ingress_group_name__ Defaults to "internal", set to "external" if you want Arg
 __ingress_scheme__ Defaults to "internal", set to "internet-facing" if you want Argocd to be on public internet.
 
 ### SSM parameters ###
-"/entigo-infralib/${local.hname}/argocd/repo_url"
+"/entigo-infralib/${local.hname}/repo_url"
 
 
 ### Example code ###

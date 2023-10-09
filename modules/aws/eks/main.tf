@@ -488,17 +488,6 @@ resource "aws_ssm_parameter" "region" {
   }
 }
 
-resource "aws_ssm_parameter" "eks_oidc" {
-  name  = "/entigo-infralib/${local.hname}/oidc"
-  type  = "String"
-  value = module.eks.oidc_provider
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
-
 resource "aws_ssm_parameter" "eks_oidc_provider" {
   name  = "/entigo-infralib/${local.hname}/oidc_provider"
   type  = "String"
