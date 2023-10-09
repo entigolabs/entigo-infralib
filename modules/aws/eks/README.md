@@ -68,7 +68,7 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
 
 ### SSM parameters ###
 ```
-
+"/entigo-infralib/${local.hname}/cluster_name"
 "/entigo-infralib/${local.hname}/account"
 "/entigo-infralib/${local.hname}/region"
 "/entigo-infralib/${local.hname}/oidc_provider_arn"

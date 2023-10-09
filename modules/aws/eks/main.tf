@@ -466,6 +466,17 @@ module "eks" {
   }
 }
 
+resource "aws_ssm_parameter" "cluster_name" {
+  name  = "/entigo-infralib/${local.hname}/cluster_name"
+  type  = "String"
+  value = local.hname
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
 resource "aws_ssm_parameter" "account" {
   name  = "/entigo-infralib/${local.hname}/account"
   type  = "String"
