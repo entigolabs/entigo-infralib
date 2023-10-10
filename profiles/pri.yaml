@@ -30,9 +30,11 @@ steps:
     type: terraform
     workspace: test
     version: stable
-    vpc_id: {{ .ssm.network.vpc.vpc_id }}
-    vpc_subnet_ids: [{{ .ssm.network.vpc.private_subnets }}]
-    vpc_security_group_ids: [{{ .ssm.network.vpc.pipeline_security_group }}]
+    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_subnet_ids: |
+      [{{ .ssm.network.vpc.private_subnets }}]
+    vpc_security_group_ids: |
+      [{{ .ssm.network.vpc.pipeline_security_group }}]
     approve: minor
     modules:
       - name: dns
@@ -45,7 +47,7 @@ steps:
         source: aws/eks
         version: stable
         inputs:
-          vpc_id: {{ .ssm.network.vpc.vpc_id }}
+          vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
           private_subnets: |
             [{{ .ssm.network.vpc.private_subnets }}]
           public_subnets: |
@@ -63,19 +65,21 @@ steps:
     type: terraform
     workspace: test
     version: stable
-    vpc_id: {{ .ssm.network.vpc.vpc_id }}
-    vpc_subnet_ids: [{{ .ssm.network.vpc.private_subnets }}]
-    vpc_security_group_ids: [{{ .ssm.network.vpc.pipeline_security_group }}]
+    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_subnet_ids: |
+      [{{ .ssm.network.vpc.private_subnets }}]
+    vpc_security_group_ids: |
+      [{{ .ssm.network.vpc.pipeline_security_group }}]
     approve: major
     modules:
       - name: crossplane
         source: aws/crossplane
         version: stable
         inputs:
-          eks_oidc_provider: {{ .ssm.infrastructure.eks.oidc_provider }}
-          eks_oidc_provider_arn: {{ .ssm.infrastructure.eks.oidc_provider_arn }}
-          eks_region: {{ .ssm.infrastructure.eks.region }}
-          eks_account: {{ .ssm.infrastructure.eks.account }}
+          eks_oidc_provider: "{{ .ssm.infrastructure.eks.oidc_provider }}"
+          eks_oidc_provider_arn: "{{ .ssm.infrastructure.eks.oidc_provider_arn }}"
+          eks_region: "{{ .ssm.infrastructure.eks.region }}"
+          eks_account: "{{ .ssm.infrastructure.eks.account }}"
       - name: argocd
         source: aws/argocd
         version: stable
@@ -90,19 +94,21 @@ steps:
     type: argocd-apps
     workspace: test
     version: stable
-    vpc_id: {{ .ssm.network.vpc.vpc_id }}
-    vpc_subnet_ids: [{{ .ssm.network.vpc.private_subnets }}]
-    vpc_security_group_ids: [{{ .ssm.network.vpc.pipeline_security_group }}]
-    repo_url: {{ .ssm.helm.argocd.repo_url }}
+    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_subnet_ids: |
+      [{{ .ssm.network.vpc.private_subnets }}]
+    vpc_security_group_ids: |
+      [{{ .ssm.network.vpc.pipeline_security_group }}]
+    repo_url: "{{ .ssm.helm.argocd.repo_url }}"
     modules:
       - name: aws-alb
         source: aws-alb
         version: stable
         inputs:
-          awsAccount: {{ .ssm.infrastructure.eks.account }}
-          clusterOIDC: {{ .ssm.infrastructure.eks.oidc_provider }}
+          awsAccount: "{{ .ssm.infrastructure.eks.account }}"
+          clusterOIDC: "{{ .ssm.infrastructure.eks.oidc_provider }}"
           aws-load-balancer-controller:
-            clusterName: {{ .ssm.infrastructure.eks.cluster_name }}
+            clusterName: "{{ .ssm.infrastructure.eks.cluster_name }}"
       - name: crossplane-system
         source: crossplane
         version: stable
@@ -110,8 +116,8 @@ steps:
         source: external-dns
         version: stable
         inputs:
-          awsAccount: {{ .ssm.infrastructure.eks.account }}
-          clusterOIDC: {{ .ssm.infrastructure.eks.oidc_provider }}
+          awsAccount: "{{ .ssm.infrastructure.eks.account }}"
+          clusterOIDC: "{{ .ssm.infrastructure.eks.oidc_provider }}"
       - name: aws-storageclass
         source: aws-storageclass
         version: stable
