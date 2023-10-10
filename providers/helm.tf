@@ -2,10 +2,6 @@ data "aws_eks_cluster" "eks" {
   name = var.eks_cluster_name
 }
 
-variable "prefix" {
-  type = string
-}
-
 variable "eks_cluster_name" {
   type = string
 }
