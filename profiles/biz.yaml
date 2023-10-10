@@ -84,7 +84,7 @@ steps:
           branch: "main"
           namespace: "argocd"
           name: "argocd"
-          argocd_apps_name: "ep-applications"
+          argocd_apps_name: "{{ .config.prefix }}-applications"
   - name: applications
     type: argocd-apps
     workspace: test

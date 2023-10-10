@@ -90,7 +90,7 @@ steps:
           branch: "main"
           namespace: "argocd"
           name: "argocd"
-          argocd_apps_name: "ep-applications"
+          argocd_apps_name: "{{ .config.prefix }}-applications"
           ingress_group_name: "external"
           ingress_scheme: "internet-facing"
   - name: applications
