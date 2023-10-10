@@ -1,65 +1,37 @@
-name: Release
+name: Update profiles
 
 on:
-  workflow_run:
-    workflows: ["Stable"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
+    paths:
+      - 'profiles/**'
   workflow_dispatch:
 
 jobs:
-  install_main:
-    name: Upgrade stable to main
+  build:
+    name: Test profiles
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
         ref: main
-    - name: Update resources based on main code
-      id: update_to_main
+    - name: Run tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
+        ENTIGO_INFRALIB_DESTROY: true
       run: |
         profiles/test.sh
-        modules/aws/vpc/test.sh
-        modules/aws/eks/test.sh
-        modules/aws/crossplane/test.sh
-        modules/aws/route53/test.sh 
-        modules/k8s/argocd/test.sh
-        modules/aws/argocd/test.sh
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
-        modules/aws/hello-world/test.sh
-        modules/k8s/crossplane/test.sh
-        modules/k8s/istio-base/test.sh
-        modules/k8s/istio-istiod/test.sh
-        modules/k8s/istio-gateway/test.sh
-        modules/k8s/external-dns/test.sh
-        modules/k8s/external-secrets/test.sh
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/aws-storageclass/test.sh
-        modules/k8s/hello-world/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Success Message
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Latest release updated to main.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions url,commit
-        SLACK_FOOTER: ""
-    - name: Slack Failed To Update to Main Message
+        
+    - name: Slack Failed Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main failed.'
+        SLACK_MESSAGE: 'Failed to release profiles'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
@@ -143,9 +115,7 @@ jobs:
     - name: Clone the target repository and copy files
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' profiles entigo-infralib-release/
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
