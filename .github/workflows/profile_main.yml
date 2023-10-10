@@ -39,7 +39,7 @@ jobs:
 
   release:   
     runs-on: ubuntu-latest
-    needs: install_main
+    needs: build
     name: Release
     steps:
     - name: Checkout code
