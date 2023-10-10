@@ -65,6 +65,9 @@ steps:
     vpc_security_group_ids: |
       [{{ .ssm.network.vpc.pipeline_security_group }}]
     approve: major
+    provider:
+      inputs:
+        eks_cluster_name: "{{ .ssm.infra.eks.cluster_name }}"
     modules:
       - name: crossplane
         source: aws/crossplane
