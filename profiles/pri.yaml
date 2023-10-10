@@ -87,7 +87,7 @@ steps:
         source: aws/argocd
         version: stable
         inputs:
-          branch: "main"
+          branch: "{{ .agent.version.helm.argocd }}"
           namespace: "argocd"
           name: "argocd"
           argocd_apps_name: "{{ .config.prefix }}-applications"
