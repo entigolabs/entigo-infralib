@@ -1,10 +1,15 @@
 data "aws_eks_cluster" "eks" {
-  name = "${split("-", var.prefix)[0]}-infrastructure-eks-${terraform.workspace}"
+  name = var.eks_cluster_name
 }
 
 variable "prefix" {
   type = string
 }
+
+variable "eks_cluster_name" {
+  type = string
+}
+
 
 provider "helm" {
   kubernetes {
