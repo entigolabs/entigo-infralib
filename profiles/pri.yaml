@@ -99,7 +99,7 @@ steps:
       [{{ .ssm.network.vpc.private_subnets }}]
     vpc_security_group_ids: |
       [{{ .ssm.network.vpc.pipeline_security_group }}]
-    repo_url: {{ .ssm.helm.argocd.repo_url }}
+    repo_url: "{{ .ssm.helm.argocd.repo_url }}"
     modules:
       - name: aws-alb
         source: aws-alb
