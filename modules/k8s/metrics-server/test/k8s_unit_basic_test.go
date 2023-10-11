@@ -38,7 +38,8 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
         if prefix != "runner-main" {
                 releaseName = fmt.Sprintf("metrics-server-%s", prefix)
                 namespaceName = fmt.Sprintf("metrics-server-%s", prefix)
-                setValues["apiService.create"] = "false"
+                setValues["metrics-server.apiService.create"] = "false"
+                setValues["metrics-server.nameOverride"] = releaseName
                 extraArgs["upgrade"] = []string{"--skip-crds"}
                 extraArgs["install"] = []string{"--skip-crds"}
         } 
