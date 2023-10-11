@@ -34,7 +34,7 @@ module "vpc" {
   create_database_subnet_group    = length(local.database_subnets) > 0 ? true : false
   create_elasticache_subnet_group = length(local.elasticache_subnets) > 0 ? true : false
   
-  enable_nat_gateway              = true
+  enable_nat_gateway              = var.enable_nat_gateway
   single_nat_gateway              = var.one_nat_gateway_per_az ? false : true
   one_nat_gateway_per_az          = var.one_nat_gateway_per_az
   
