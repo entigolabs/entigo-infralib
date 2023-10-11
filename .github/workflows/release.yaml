@@ -26,9 +26,9 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         profiles/test.sh
-        providers/test.sh
         modules/aws/vpc/test.sh
         modules/aws/eks/test.sh
+        providers/test.sh
         modules/aws/crossplane/test.sh
         modules/aws/route53/test.sh 
         modules/k8s/argocd/test.sh
