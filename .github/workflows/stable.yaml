@@ -54,6 +54,7 @@ jobs:
         modules/k8s/external-secrets/test.sh
         modules/k8s/aws-alb/test.sh
         modules/k8s/aws-storageclass/test.sh
+        modules/k8s/metrics-server/test.sh
         modules/k8s/hello-world/test.sh
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
