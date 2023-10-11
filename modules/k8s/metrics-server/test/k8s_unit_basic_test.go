@@ -38,7 +38,8 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
         if prefix != "runner-main" {
                 releaseName = fmt.Sprintf("metrics-server-%s", prefix)
                 namespaceName = fmt.Sprintf("metrics-server-%s", prefix)
-                setValues["apiService.create"] = "false"
+                setValues["metrics-server.apiService.create"] = "false"
+                setValues["metrics-server.nameOverride"] = releaseName
                 extraArgs["upgrade"] = []string{"--skip-crds"}
                 extraArgs["install"] = []string{"--skip-crds"}
         } 
@@ -68,7 +69,7 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-        # Wait up to 120 seconds for deployment to become available 
+        // Wait up to 120 seconds for deployment to become available 
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, releaseName, 20, 6*time.Second) 
 	if err != nil {
 		t.Fatal("metric-server deployment error:", err)
