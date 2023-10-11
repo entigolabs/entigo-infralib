@@ -46,7 +46,7 @@ resource "aws_route53_zone" "int" {
   count = var.create_private ? 1 : 0
   name = local.int_domain
   vpc {
-    vpc_id = data.aws_ssm_parameter.vpc_id[0].value
+    vpc_id = var.vpc_id
   }
   lifecycle {
     ignore_changes = [vpc]
@@ -113,7 +113,7 @@ locals {
 
 resource "aws_ssm_parameter" "pub" {
   count = var.create_public || var.parent_zone_id != "" ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/route53/pub_zone_id"
+  name  = "/entigo-infralib/${local.hname}/pub_zone_id"
   type  = "String"
   value = local.pub_zone
   tags = {
@@ -124,7 +124,7 @@ resource "aws_ssm_parameter" "pub" {
 }
 
 resource "aws_ssm_parameter" "pub-domain" {
-  name  = "/entigo-infralib/${local.hname}/route53/pub_domain"
+  name  = "/entigo-infralib/${local.hname}/pub_domain"
   type  = "String"
   value = local.pub_domain
   tags = {
@@ -136,7 +136,7 @@ resource "aws_ssm_parameter" "pub-domain" {
 
 resource "aws_ssm_parameter" "int" {
   count = var.create_private || var.create_public || var.parent_zone_id != "" ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/route53/int_zone_id"
+  name  = "/entigo-infralib/${local.hname}/int_zone_id"
   type  = "String"
   value = local.int_zone
   tags = {
@@ -147,7 +147,7 @@ resource "aws_ssm_parameter" "int" {
 }
 
 resource "aws_ssm_parameter" "int-domain" {
-  name  = "/entigo-infralib/${local.hname}/route53/int_domain"
+  name  = "/entigo-infralib/${local.hname}/int_domain"
   type  = "String"
   value = local.int_domain
   tags = {

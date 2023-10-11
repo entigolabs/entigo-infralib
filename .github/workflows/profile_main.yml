@@ -1,0 +1,143 @@
+name: Update profiles
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'profiles/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test profiles
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Run tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        ENTIGO_INFRALIB_DESTROY: true
+      run: |
+        profiles/test.sh
+        
+    - name: Slack Failed Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Failed to release profiles'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  release:   
+    runs-on: ubuntu-latest
+    needs: build
+    name: Release
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
+          const currentStable = await github.rest.repos.getCommit({ owner: context.repo.owner, repo: context.repo.repo, ref: 'refs/tags/' + latestStableRelease.data.tag_name });
+          
+          if (currentStable) {
+            if (currentMain) {
+              core.info('Latest stable release commit: ' + currentStable.data.sha);
+              core.info('Main branch commit: ' +  currentMain.data.commit.sha);
+              if ( currentStable.data.sha != currentMain.data.commit.sha) {
+                
+                core.setOutput('new_release_needed', "true");
+                const versionString = '' + latestStableRelease.data.tag_name;
+                const regex = /^v(\d+)\.(\d+)\.(\d+)$/;
+                const match = versionString.match(regex);
+                const major = parseInt(match[1], 10);
+                const minor = parseInt(match[2], 10);
+                const patch = parseInt(match[3], 10) + 1;
+                const new_version = `v${major}.${minor}.${patch}`
+                core.setOutput('new_version',  new_version);
+                core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
+              } else {
+                core.info('Latest release is same as main branch, no need to make a new release');
+                core.setOutput('new_release_needed', "false");
+              }
+            } else {
+               core.setFailed('No main branch found');
+            }
+          } else {
+            core.setFailed('No stable releases found');
+          }
+      
+    - name: Authenticate with GitHub CLI
+      run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+    - name: Create Release
+      id: create_release
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}"
+        git push origin ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
+        --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
+        --generate-notes \
+        --draft=false \
+        --latest=true \
+        --prerelease=false)
+        echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      
+    - name: Set up SSH key
+      run: |
+        mkdir ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+        
+    - name: Clone the target repository and copy files
+      run: |
+        git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' profiles entigo-infralib-release/
+        cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+
+    - name: Slack Success Release Message
+      if: ${{ success() && steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'success'
+        SLACK_MESSAGE: 'Released PROFILES ${{ steps.get_latest_release.outputs.new_version }} ${{ env.RELEASE_URL }}'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        MSG_MINIMAL: actions url,commit
+        SLACK_FOOTER: ""
+    - name: Slack Failed To Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Releasing of new profile version failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""

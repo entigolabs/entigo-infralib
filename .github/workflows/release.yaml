@@ -25,8 +25,10 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        profiles/test.sh
         modules/aws/vpc/test.sh
         modules/aws/eks/test.sh
+        providers/test.sh
         modules/aws/crossplane/test.sh
         modules/aws/route53/test.sh 
         modules/k8s/argocd/test.sh
@@ -38,7 +40,9 @@ jobs:
         modules/k8s/istio-istiod/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
+        modules/k8s/external-secrets/test.sh
         modules/k8s/aws-alb/test.sh
+        modules/k8s/aws-storageclass/test.sh
         modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Success Message
@@ -141,8 +145,8 @@ jobs:
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' modules entigo-infralib-release/
-        rsync --delete -av profiles entigo-infralib-release/
-        rsync --delete -av providers entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' profiles entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         cd entigo-infralib-release && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 

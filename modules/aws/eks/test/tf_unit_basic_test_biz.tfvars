@@ -1,4 +1,3 @@
-vpc_prefix                   = "runner-main"
 eks_cluster_public           = true
 eks_mon_single_subnet = false
 cluster_enabled_log_types    = [] #Temporarily disabled, see https://entigo.atlassian.net/browse/RD-8

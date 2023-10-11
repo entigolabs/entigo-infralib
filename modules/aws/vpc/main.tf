@@ -82,7 +82,7 @@ resource "aws_security_group_rule" "pipeline_security_group" {
 }
 
 resource "aws_ssm_parameter" "pipeline_security_group" {
-  name  = "/entigo-infralib/${local.hname}/vpc/pipeline_security_group"
+  name  = "/entigo-infralib/${local.hname}/pipeline_security_group"
   type  = "String"
   value = aws_security_group.pipeline_security_group.id
   tags = {
@@ -93,7 +93,7 @@ resource "aws_ssm_parameter" "pipeline_security_group" {
 }
 
 resource "aws_ssm_parameter" "vpc_id" {
-  name  = "/entigo-infralib/${local.hname}/vpc/vpc_id"
+  name  = "/entigo-infralib/${local.hname}/vpc_id"
   type  = "String"
   value = module.vpc.vpc_id
   tags = {
@@ -104,9 +104,9 @@ resource "aws_ssm_parameter" "vpc_id" {
 }
 
 resource "aws_ssm_parameter" "private_subnets" {
-  name  = "/entigo-infralib/${local.hname}/vpc/private_subnets"
-  type  = "String"
-  value = join(",", module.vpc.private_subnets)
+  name  = "/entigo-infralib/${local.hname}/private_subnets"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.private_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -115,9 +115,9 @@ resource "aws_ssm_parameter" "private_subnets" {
 }
 
 resource "aws_ssm_parameter" "public_subnets" {
-  name  = "/entigo-infralib/${local.hname}/vpc/public_subnets"
-  type  = "String"
-  value = join(",", module.vpc.public_subnets)
+  name  = "/entigo-infralib/${local.hname}/public_subnets"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.public_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -127,9 +127,9 @@ resource "aws_ssm_parameter" "public_subnets" {
 
 resource "aws_ssm_parameter" "intra_subnets" {
   count = length(module.vpc.intra_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/intra_subnets"
-  type  = "String"
-  value = join(",", module.vpc.intra_subnets)
+  name  = "/entigo-infralib/${local.hname}/intra_subnets"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.intra_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -139,9 +139,9 @@ resource "aws_ssm_parameter" "intra_subnets" {
 
 resource "aws_ssm_parameter" "database_subnets" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/database_subnets"
-  type  = "String"
-  value = join(",", module.vpc.database_subnets)
+  name  = "/entigo-infralib/${local.hname}/database_subnets"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.database_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -151,7 +151,7 @@ resource "aws_ssm_parameter" "database_subnets" {
 
 resource "aws_ssm_parameter" "database_subnet_group" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/database_subnet_group"
+  name  = "/entigo-infralib/${local.hname}/database_subnet_group"
   type  = "String"
   insecure_value = module.vpc.database_subnet_group
   tags = {
@@ -163,9 +163,9 @@ resource "aws_ssm_parameter" "database_subnet_group" {
 
 resource "aws_ssm_parameter" "elasticache_subnets" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnets"
-  type  = "String"
-  value = join(",", module.vpc.elasticache_subnets)
+  name  = "/entigo-infralib/${local.hname}/elasticache_subnets"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.elasticache_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -175,7 +175,7 @@ resource "aws_ssm_parameter" "elasticache_subnets" {
 
 resource "aws_ssm_parameter" "elasticache_subnet_group" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnet_group"
+  name  = "/entigo-infralib/${local.hname}/elasticache_subnet_group"
   type  = "String"
   insecure_value = module.vpc.elasticache_subnet_group
   tags = {
@@ -186,9 +186,9 @@ resource "aws_ssm_parameter" "elasticache_subnet_group" {
 }
 
 resource "aws_ssm_parameter" "private_subnet_cidrs" {
-  name  = "/entigo-infralib/${local.hname}/vpc/private_subnet_cidrs"
-  type  = "String"
-  value = join(",", module.vpc.private_subnets_cidr_blocks)
+  name  = "/entigo-infralib/${local.hname}/private_subnet_cidrs"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.private_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -198,9 +198,9 @@ resource "aws_ssm_parameter" "private_subnet_cidrs" {
 
 
 resource "aws_ssm_parameter" "public_subnet_cidrs" {
-  name  = "/entigo-infralib/${local.hname}/vpc/public_subnet_cidrs"
-  type  = "String"
-  value = join(",", module.vpc.public_subnets_cidr_blocks)
+  name  = "/entigo-infralib/${local.hname}/public_subnet_cidrs"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.public_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -211,9 +211,9 @@ resource "aws_ssm_parameter" "public_subnet_cidrs" {
 
 resource "aws_ssm_parameter" "database_subnet_cidrs" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/database_subnet_cidrs"
-  type  = "String"
-  value = join(",", module.vpc.database_subnets_cidr_blocks)
+  name  = "/entigo-infralib/${local.hname}/database_subnet_cidrs"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.database_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -223,9 +223,9 @@ resource "aws_ssm_parameter" "database_subnet_cidrs" {
 
 resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/elasticache_subnet_cidrs"
-  type  = "String"
-  value = join(",", module.vpc.elasticache_subnets_cidr_blocks)
+  name  = "/entigo-infralib/${local.hname}/elasticache_subnet_cidrs"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.elasticache_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -235,9 +235,9 @@ resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
 
 resource "aws_ssm_parameter" "intra_subnet_cidrs" {
   count = length(local.intra_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/vpc/intra_subnet_cidrs"
-  type  = "String"
-  value = join(",", module.vpc.intra_subnets_cidr_blocks)
+  name  = "/entigo-infralib/${local.hname}/intra_subnet_cidrs"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.intra_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix

@@ -5,6 +5,17 @@ Oppinionated version of this https://registry.terraform.io/modules/terraform-aws
 
 __vpc_prefix__ look for subnets based on this SSM parameter prefix ("/entigo-infralib/${var.vpc_prefix}-${terraform.workspace}/vpc/vpc_id")
 
+
+__vpc_id__ the VPC id where eks is installed.
+  type = string
+}
+
+__private_subnets__ list(string) of the private subnet ID-s to use. Also nodegroups will be places in these subnets.
+
+__public_subnets__ list(string) of the public subnet ID-s to use. This will only add the required tags for alb.
+
+__eks_api_access_cidrs__ list(string) of the network ranges to allow api access. Usually private subents cidrs are allowed.
+
 __eks_cluster_version__ SHOULD NOT BE CHANGED, but can override the EKS version to use.
 
 __iam_admin_role__ Defaults to "AWSReservedSSO_AdministratorAccess_.*" but could be something else depending on SSO setup.
@@ -56,12 +67,12 @@ __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable l
 __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or orverride defaults.
 
 ### SSM parameters ###
-**Only if var.crossplane_enable is true'**
 ```
-
-"/entigo-infralib/${local.hname}/eks/account"
-"/entigo-infralib/${local.hname}/eks/region"
-"/entigo-infralib/${local.hname}/eks/oidc"
+"/entigo-infralib/${local.hname}/cluster_name"
+"/entigo-infralib/${local.hname}/account"
+"/entigo-infralib/${local.hname}/region"
+"/entigo-infralib/${local.hname}/oidc_provider_arn"
+"/entigo-infralib/${local.hname}/oidc_provider
 
 ```
 

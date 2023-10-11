@@ -8,13 +8,13 @@ resource "aws_iam_role" "crossplane" {
         {
             "Effect": "Allow",
             "Principal": {
-                "Federated": "${data.aws_ssm_parameter.eks_oidc_provider_arn.value}"
+                "Federated": "${var.eks_oidc_provider_arn}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "${data.aws_ssm_parameter.eks_oidc_provider.value}:aud": "sts.amazonaws.com",
-                    "${data.aws_ssm_parameter.eks_oidc_provider.value}:sub": "system:serviceaccount:crossplane-system:aws-crossplane"
+                    "${var.eks_oidc_provider}:aud": "sts.amazonaws.com",
+                    "${var.eks_oidc_provider}:sub": "system:serviceaccount:crossplane-system:aws-crossplane"
                 }
             }
         }
@@ -37,9 +37,9 @@ resource "helm_release" "crossplane-terraform" {
   values = [
     templatefile("${path.module}/values.yaml", {
       iamRole=aws_iam_role.crossplane.arn
-      awsAccount  = data.aws_ssm_parameter.account.value
-      awsRegion   = data.aws_ssm_parameter.region.value
-      clusterOIDC = data.aws_ssm_parameter.eks_oidc_provider.value
+      awsAccount  = var.eks_account
+      awsRegion   = var.eks_region
+      clusterOIDC = var.eks_oidc_provider
     })
   ]
 }

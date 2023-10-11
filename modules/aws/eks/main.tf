@@ -98,7 +98,7 @@ locals {
       desired_size    = var.eks_mon_min_size
       max_size        = var.eks_mon_max_size
       instance_types  = var.eks_mon_instance_types
-      subnet_ids      = var.eks_mon_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
+      subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
       release_version = var.eks_cluster_version
       taints = [
@@ -134,7 +134,7 @@ locals {
       desired_size    = var.eks_tools_min_size
       max_size        = var.eks_tools_max_size
       instance_types  = var.eks_tools_instance_types
-      subnet_ids      = var.eks_tools_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
+      subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
       release_version = var.eks_cluster_version
       taints = [
@@ -211,14 +211,14 @@ locals {
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
-  for_each    = toset(split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value)))
+  for_each    = toset(var.private_subnets)
   resource_id = each.key
   key         = "kubernetes.io/cluster/${local.hname}"
   value       = "shared"
 }
 
 resource "aws_ec2_tag" "publicsubnets" {
-  for_each    = toset(split(",", nonsensitive(data.aws_ssm_parameter.public_subnets.value)))
+  for_each    = toset(var.public_subnets)
   resource_id = each.key
   key         = "kubernetes.io/cluster/${local.hname}"
   value       = "shared"
@@ -386,8 +386,8 @@ module "eks" {
     }
   }
 
-  vpc_id     = data.aws_ssm_parameter.vpc_id.value
-  subnet_ids = split(",", data.aws_ssm_parameter.private_subnets.value)
+  vpc_id     = var.vpc_id
+  subnet_ids = var.private_subnets
 
   cluster_security_group_additional_rules = {
     egress_nodes_ephemeral_ports_tcp = {
@@ -404,16 +404,8 @@ module "eks" {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = split(",", data.aws_ssm_parameter.private_subnet_cidrs.value)
+      cidr_blocks = var.eks_api_access_cidrs
     }
-    #ingress_intranet = {
-    #  description = "From self intranet"
-    #  protocol    = "tcp"
-    #  from_port   = 443
-    #  to_port     = 443
-    #  type        = "ingress"
-    #  cidr_blocks = split(",", data.aws_ssm_parameter.intra_subnet_cidrs.value)
-    #}
   }
 
   node_security_group_additional_rules = {
@@ -474,8 +466,19 @@ module "eks" {
   }
 }
 
+resource "aws_ssm_parameter" "cluster_name" {
+  name  = "/entigo-infralib/${local.hname}/cluster_name"
+  type  = "String"
+  value = local.hname
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
 resource "aws_ssm_parameter" "account" {
-  name  = "/entigo-infralib/${local.hname}/eks/account"
+  name  = "/entigo-infralib/${local.hname}/account"
   type  = "String"
   value = data.aws_caller_identity.current.account_id
   tags = {
@@ -486,7 +489,7 @@ resource "aws_ssm_parameter" "account" {
 }
 
 resource "aws_ssm_parameter" "region" {
-  name  = "/entigo-infralib/${local.hname}/eks/region"
+  name  = "/entigo-infralib/${local.hname}/region"
   type  = "String"
   value = data.aws_region.current.name
   tags = {
@@ -496,19 +499,8 @@ resource "aws_ssm_parameter" "region" {
   }
 }
 
-resource "aws_ssm_parameter" "eks_oidc" {
-  name  = "/entigo-infralib/${local.hname}/eks/oidc"
-  type  = "String"
-  value = module.eks.oidc_provider
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
-
 resource "aws_ssm_parameter" "eks_oidc_provider" {
-  name  = "/entigo-infralib/${local.hname}/eks/oidc_provider"
+  name  = "/entigo-infralib/${local.hname}/oidc_provider"
   type  = "String"
   value = module.eks.oidc_provider
   tags = {
@@ -519,7 +511,7 @@ resource "aws_ssm_parameter" "eks_oidc_provider" {
 }
 
 resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
-  name  = "/entigo-infralib/${local.hname}/eks/oidc_provider_arn"
+  name  = "/entigo-infralib/${local.hname}/oidc_provider_arn"
   type  = "String"
   value = module.eks.oidc_provider_arn
   tags = {
