@@ -1,5 +1,5 @@
 #This profile is for starting up a simple EKS cluster for private use.
-#The network setup is only over 1 AZ to reduce any cross zone costs - this is not HA however. Also there is only private and public subnets.
+#The net setup is only over 1 AZ to reduce any cross zone costs - this is not HA however. Also there is only private and public subnets.
 #There is no service mesh.
 #The EKS cluster and ArgoCD will be accessible form the public internet.
 #No additional DNZ zone is created.
@@ -8,7 +8,7 @@
 version: stable
 agent_version: latest
 steps:
-  - name: network
+  - name: net
     type: terraform
     workspace: test
     approve: minor
@@ -26,35 +26,35 @@ steps:
           database_subnets: |
             []
 
-  - name: infrastructure
+  - name: infra
     type: terraform
     workspace: test
     version: stable
-    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
     vpc_subnet_ids: |
-      [{{ .ssm.network.vpc.private_subnets }}]
+      [{{ .ssm.net.vpc.private_subnets }}]
     vpc_security_group_ids: |
-      [{{ .ssm.network.vpc.pipeline_security_group }}]
+      [{{ .ssm.net.vpc.pipeline_security_group }}]
     approve: minor
     modules:
       - name: dns
         source: aws/route53
         version: stable
         inputs:
-          vpc_id: "{{ ssm.network.vpc.vpc_id }}"
+          vpc_id: "{{ ssm.net.vpc.vpc_id }}"
           create_public: false
           create_private: false
       - name: eks
         source: aws/eks
         version: stable
         inputs:
-          vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+          vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
           private_subnets: |
-            [{{ .ssm.network.vpc.private_subnets }}]
+            [{{ .ssm.net.vpc.private_subnets }}]
           public_subnets: |
-            [{{ .ssm.network.vpc.public_subnets }}]
+            [{{ .ssm.net.vpc.public_subnets }}]
           eks_api_access_cidrs: |
-            [{{ .ssm.network.vpc.private_subnet_cidrs }}]
+            [{{ .ssm.net.vpc.private_subnet_cidrs }}]
           eks_cluster_public: true
           eks_main_min_size: 2
           eks_main_max_size: 6
@@ -66,11 +66,11 @@ steps:
     type: terraform
     workspace: test
     version: stable
-    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
     vpc_subnet_ids: |
-      [{{ .ssm.network.vpc.private_subnets }}]
+      [{{ .ssm.net.vpc.private_subnets }}]
     vpc_security_group_ids: |
-      [{{ .ssm.network.vpc.pipeline_security_group }}]
+      [{{ .ssm.net.vpc.pipeline_security_group }}]
     approve: major
     provider:
       inputs:
@@ -80,15 +80,15 @@ steps:
         source: aws/crossplane
         version: stable
         inputs:
-          eks_oidc_provider: "{{ .ssm.infrastructure.eks.oidc_provider }}"
-          eks_oidc_provider_arn: "{{ .ssm.infrastructure.eks.oidc_provider_arn }}"
-          eks_region: "{{ .ssm.infrastructure.eks.region }}"
-          eks_account: "{{ .ssm.infrastructure.eks.account }}"
+          eks_oidc_provider: "{{ .ssm.infra.eks.oidc_provider }}"
+          eks_oidc_provider_arn: "{{ .ssm.infra.eks.oidc_provider_arn }}"
+          eks_region: "{{ .ssm.infra.eks.region }}"
+          eks_account: "{{ .ssm.infra.eks.account }}"
       - name: argocd
         source: aws/argocd
         version: stable
         inputs:
-          hostname: "argocd.{{ ssm.infrastructure.dns.int_domain }}"
+          hostname: "argocd.{{ ssm.infra.dns.int_domain }}"
           branch: "{{ .agent.version.helm.argocd }}"
           namespace: "argocd"
           name: "argocd"
@@ -99,21 +99,21 @@ steps:
     type: argocd-apps
     workspace: test
     version: stable
-    vpc_id: "{{ .ssm.network.vpc.vpc_id }}"
+    vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
     vpc_subnet_ids: |
-      [{{ .ssm.network.vpc.private_subnets }}]
+      [{{ .ssm.net.vpc.private_subnets }}]
     vpc_security_group_ids: |
-      [{{ .ssm.network.vpc.pipeline_security_group }}]
+      [{{ .ssm.net.vpc.pipeline_security_group }}]
     repo_url: "{{ .ssm.helm.argocd.repo_url }}"
     modules:
       - name: aws-alb
         source: aws-alb
         version: stable
         inputs:
-          awsAccount: "{{ .ssm.infrastructure.eks.account }}"
-          clusterOIDC: "{{ .ssm.infrastructure.eks.oidc_provider }}"
+          awsAccount: "{{ .ssm.infra.eks.account }}"
+          clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
           aws-load-balancer-controller:
-            clusterName: "{{ .ssm.infrastructure.eks.cluster_name }}"
+            clusterName: "{{ .ssm.infra.eks.cluster_name }}"
       - name: crossplane-system
         source: crossplane
         version: stable
@@ -121,8 +121,8 @@ steps:
         source: external-dns
         version: stable
         inputs:
-          awsAccount: "{{ .ssm.infrastructure.eks.account }}"
-          clusterOIDC: "{{ .ssm.infrastructure.eks.oidc_provider }}"
+          awsAccount: "{{ .ssm.infra.eks.account }}"
+          clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
       - name: aws-storageclass
         source: aws-storageclass
         version: stable
