@@ -41,6 +41,7 @@ steps:
         source: aws/route53
         version: stable
         inputs:
+          vpc_id: "{{ ssm.network.vpc.vpc_id }}"
           create_public: false
           create_private: false
       - name: eks
@@ -87,6 +88,7 @@ steps:
         source: aws/argocd
         version: stable
         inputs:
+          hostname: "argocd.{{ ssm.infrastructure.dns.int_domain }}"
           branch: "{{ .agent.version.helm.argocd }}"
           namespace: "argocd"
           name: "argocd"
