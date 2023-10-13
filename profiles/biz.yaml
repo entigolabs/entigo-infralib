@@ -39,7 +39,7 @@ steps:
         source: aws/route53
         version: stable
         inputs:
-          vpc_id: "{{ ssm.net.vpc.vpc_id }}"
+          vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
       - name: eks
         source: aws/eks
         version: stable
@@ -83,7 +83,7 @@ steps:
         source: aws/argocd
         version: stable
         inputs:
-          hostname: "argocd.{{ ssm.infra.dns.int_domain }}"
+          hostname: "argocd.{{ .ssm.infra.dns.int_domain }}"
           branch: "{{ .agent.version.helm.argocd }}"
           namespace: "argocd"
           name: "argocd"
@@ -126,7 +126,7 @@ steps:
         source: istio-gateway
         version: stable
         inputs:
-          domain: "*.{{ ssm.infra.dns.pub_domain }}"
+          domain: "*.{{ .ssm.infra.dns.pub_domain }}"
       - name: external-secrets
         source: external-secrets
         version: stable
