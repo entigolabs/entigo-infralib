@@ -42,7 +42,7 @@ steps:
         version: stable
         inputs:
           vpc_id: "{{ .ssm.net.vpc.vpc_id }}"
-          create_public: false
+          create_public: true
           create_private: false
       - name: eks
         source: aws/eks
