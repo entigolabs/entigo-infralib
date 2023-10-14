@@ -128,4 +128,3 @@ steps:
       - name: aws-storageclass
         source: aws-storageclass
         version: stable
-
