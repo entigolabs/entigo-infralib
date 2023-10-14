@@ -84,7 +84,7 @@ spec:
         command:
         - /bin/bash
         - -c
-        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc {{ .Values.prefix }}gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2 && kubectl get sc {{ .Values.prefix }}gp2-retain -o json | jq '.metadata.name = "{{ .Values.prefix }}gp2"' | jq 'map(del(.metadata.annotations.helm.sh/resource-policy,.metadata.annotations.meta.helm.sh/release-name,.metadata.annotations.meta.helm.sh/release-namespace))' | kubectl apply -f -; fi; fi
+        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc {{ .Values.prefix }}gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2 && kubectl get sc {{ .Values.prefix }}gp2-retain -o json | jq '.metadata.name = "{{ .Values.prefix }}gp2"' | jq 'del(.metadata.labels."argocd.argoproj.io/instance")' | kubectl apply -f -; fi; fi
       restartPolicy: Never
   backoffLimit: 3
 
