@@ -67,9 +67,9 @@ steps:
         version: stable
         inputs:
           eks_oidc_provider: |
-            modules.eks.oidc_provider
+            module.eks.oidc_provider
           eks_oidc_provider_arn: |
-            modules.eks.oidc_provider_arn
+            module.eks.oidc_provider_arn
   - name: helm
     type: terraform
     workspace: test
