@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -32,13 +33,16 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string) {
 	namespaceName := fmt.Sprintf("external-dns-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-
-	kubectlOptionsValues := terrak8s.NewKubectlOptions(contextName, "", "crossplane-system")
-	CMValues := terrak8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["external-dns.env[0].value"] = CMValues.Data["awsRegion"]
+	
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account",envName))
+	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider",envName))
+	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region",envName))
+	
+	setValues["external-dns.env[0].value"] = region
 	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["awsAccount"] = CMValues.Data["awsAccount"]
-	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
+	setValues["awsAccount"] = account
+	setValues["clusterOIDC"] = clusteroidc
 
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("external-dns-%s-%s", envName, prefix)

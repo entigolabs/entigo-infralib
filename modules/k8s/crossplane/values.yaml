@@ -1,5 +1,6 @@
 installProvider: true
 installProviderConfig: true
+awsRole: ""
 
 crossplane:
   # -- The number of replicas to run for the Crossplane pods.

@@ -6,6 +6,7 @@ import (
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,12 +38,15 @@ func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runne
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-
-	kubectlOptionsValues := terrak8s.NewKubectlOptions(contextName, "", "crossplane-system")
-	CMValues := terrak8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", CMValues.Data["awsRegion"])
-	setValues["awsAccount"] = CMValues.Data["awsAccount"]
-	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
+	
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account",runnerName))
+	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/oidc_provider",runnerName))
+	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region",runnerName))
+	
+	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region)
+	setValues["awsAccount"] = account
+	setValues["clusterOIDC"] = clusteroidc
 	setValues["aws-load-balancer-controller.clusterName"] = runnerName
 
 	ingressClass := "alb"

@@ -19,14 +19,14 @@ import (
 )
 
 func TestK8sCrossplaneBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
 func TestK8sCrossplanePri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func testK8sCrossplane(t *testing.T, contextName string) {
+func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -39,14 +39,20 @@ func testK8sCrossplane(t *testing.T, contextName string) {
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-
+	
+	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role",runnerName))
+	setValues["awsRole"] = iamrole
+	
 	if prefix != "runner-main" {
 		//releaseName = fmt.Sprintf("crossplane-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
+		
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
@@ -101,7 +107,6 @@ func testK8sCrossplane(t *testing.T, contextName string) {
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
-	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
 	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
