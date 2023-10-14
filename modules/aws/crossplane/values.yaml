@@ -1,4 +1,0 @@
-iamRole: "${iamRole}"
-awsAccount: "${awsAccount}"
-awsRegion: "${awsRegion}"
-clusterOIDC: "${clusterOIDC}"
