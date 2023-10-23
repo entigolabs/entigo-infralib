@@ -245,3 +245,64 @@ resource "aws_ssm_parameter" "intra_subnet_cidrs" {
   }
 }
 
+
+resource "aws_ssm_parameter" "intra_route_table_ids" {
+  count = length(local.intra_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/intra_route_table_ids"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.intra_route_table_ids)}\""
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "private_route_table_ids" {
+  count = length(local.private_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/private_route_table_ids"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.private_route_table_ids)}\""
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "public_route_table_ids" {
+  count = length(local.public_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/public_route_table_ids"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.public_route_table_ids)}\""
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "database_route_table_ids" {
+  count = length(local.database_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/database_route_table_ids"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.database_route_table_ids)}\""
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "elasticache_route_table_ids" {
+  count = length(local.elasticache_subnets) > 0 ? 1 : 0
+  name  = "/entigo-infralib/${local.hname}/elasticache_route_table_ids"
+  type  = "StringList"
+  value = "\"${join("\",\"", module.vpc.elasticache_route_table_ids)}\""
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
