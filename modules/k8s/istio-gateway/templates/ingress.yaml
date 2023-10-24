@@ -17,6 +17,7 @@ metadata:
     external-dns.alpha.kubernetes.io/ttl: "60"
     alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
     kube-score/ignore: ingress-targets-service
+    alb.ingress.kubernetes.io/group.order: "{{ .Values.groupOrder }}"
     # kubernetes.io/ingress.class: alb
 spec:
   ingressClassName: alb

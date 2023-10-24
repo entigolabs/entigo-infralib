@@ -4,6 +4,7 @@ tags: ""
 
 scheme: internet-facing
 groupName: external
+groupOrder: 800
 
 gateway:
   name: "istio-gateway"
