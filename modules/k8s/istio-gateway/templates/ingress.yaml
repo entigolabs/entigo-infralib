@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: istio-external
+  name: '{{ .Values.gateway.name }}'
   labels:
     release: istio
   annotations:
@@ -11,8 +11,8 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/success-codes: '200,301,302,404'
     alb.ingress.kubernetes.io/inbound-cidrs: '{{ .Values.ingressInboundAllow }}'
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/group.name: external
+    alb.ingress.kubernetes.io/scheme: '{{ .Values.scheme }}'
+    alb.ingress.kubernetes.io/group.name: '{{ .Values.groupName }}'
     alb.ingress.kubernetes.io/target-type: ip
     external-dns.alpha.kubernetes.io/ttl: "60"
     alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
@@ -26,7 +26,7 @@ spec:
       paths:
       - backend:
           service:
-            name: istio-gateway
+            name: "{{ .Values.gateway.name }}"
             port:
               name: http2
         path: /*
@@ -38,7 +38,7 @@ spec:
       paths:
       - backend:
           service:
-            name: istio-gateway
+            name: "{{ $.Values.gateway.name }}"
             port:
               name: http2
         path: /*
