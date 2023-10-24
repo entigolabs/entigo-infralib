@@ -1,10 +1,10 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: istio-gateway
+  name: '{{ .Values.gateway.name }}'
 spec:
   selector:
-    istio: gateway
+    app: '{{ .Values.gateway.name }}'
   servers:
   - hosts:
     - "{{ .Values.domain }}"
