@@ -53,6 +53,14 @@ __security_group_ingress__ at the moment only support CIDR blocks
 ### Example code ###
 
 ```
-...
+        - name: jump
+          source: aws/ec2
+          inputs:
+            instance_type: "t3.medium"
+            subnet_id: |
+              [{{ .ssm.net.main.public_subnets }}][0]
+            key_name: "martivo_x220"
+            eip: true
+            route53_zone_id: "{{ .ssm.net.dns.pub_zone_id }}"
 
 ```

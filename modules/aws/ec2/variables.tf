@@ -55,6 +55,11 @@ variable "route53_zone_id" {
   default = ""
 }
 
+variable "route53_name" {
+  type = string
+  default = ""
+}
+
 variable "user_data" {
   type = string
   default = ""
