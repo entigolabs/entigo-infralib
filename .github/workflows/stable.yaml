@@ -42,6 +42,7 @@ jobs:
         providers/test.sh
         modules/aws/crossplane/test.sh
         modules/aws/route53/test.sh 
+        modules/aws/ec2/test.sh
         modules/k8s/argocd/test.sh
         modules/aws/argocd/test.sh
         modules/aws/helm-git/test.sh
