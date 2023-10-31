@@ -24,6 +24,8 @@ __public_ip_address__ default = false assign public IP boolean
 
 __route53_zone_id__ Create DNS record to this zone (at the moment only supports instance with public IP)
 
+__route53_name__ If not set hname will be used for the DNS name of the ec2 instance
+
 __user_data__ run commands on instance creation
 
 __security_group_egress__ at the moment only support CIDR blocks
