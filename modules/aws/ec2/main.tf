@@ -76,7 +76,7 @@ resource "aws_instance" "ec2" {
 resource "aws_route53_record" "ec2" {
   count = var.route53_zone_id != "" ? 1 : 0 
   zone_id = var.route53_zone_id
-  name = var.route53_name != null ? var.route53_name : local.hname
+  name = var.route53_name == "thisisundefined" ? local.hname : var.route53_name
   type = "A"
   ttl = 60
   records = var.eip ? [aws_eip.ec2[0].public_ip] : [aws_instance.ec2.public_ip]
