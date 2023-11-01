@@ -14,35 +14,13 @@ metadata:
     alb.ingress.kubernetes.io/scheme: '{{ .Values.scheme }}'
     alb.ingress.kubernetes.io/group.name: '{{ .Values.groupName }}'
     alb.ingress.kubernetes.io/target-type: ip
-    external-dns.alpha.kubernetes.io/ttl: "60"
     alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
     kube-score/ignore: ingress-targets-service
     alb.ingress.kubernetes.io/group.order: "{{ .Values.groupOrder }}"
-    # kubernetes.io/ingress.class: alb
 spec:
   ingressClassName: alb
-  rules:
-  - host: "{{ .Values.domain }}"
-    http:
-      paths:
-      - backend:
-          service:
-            name: "{{ .Values.gateway.name }}"
-            port:
-              name: http2
-        path: /*
-        pathType: ImplementationSpecific
-  {{- if .Values.altdomain }}
-  {{- range $url := .Values.altdomain }}
-  - host: "{{ $url }}"
-    http:
-      paths:
-      - backend:
-          service:
-            name: "{{ $.Values.gateway.name }}"
-            port:
-              name: http2
-        path: /*
-        pathType: ImplementationSpecific
-  {{- end }}
-  {{- end }}
+  defaultBackend:
+    service:
+      name: "{{ .Values.gateway.name }}"
+      port:
+        name: http2

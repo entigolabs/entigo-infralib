@@ -14,14 +14,14 @@ import (
 )
 
 func TestK8sIstioGatewayBiz(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz.infralib.entigo.io")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml")
 }
 
 func TestK8sIstioGatewayPri(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml")
 }
 
-func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, hostName string) {
+func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -37,9 +37,6 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ho
 		namespaceName = fmt.Sprintf("istio-gateway-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
-		
-		setValues["domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
-		setValues["altdomain[0]"] = fmt.Sprintf("more-%s.%s", namespaceName, hostName)
 	}
 	releaseName := namespaceName
 
