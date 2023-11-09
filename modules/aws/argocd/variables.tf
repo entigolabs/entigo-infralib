@@ -2,6 +2,10 @@ variable "prefix" {
   type = string
 }
 
+variable "codecommit_name" {
+  type = string
+}
+
 variable "repository" {
   type = string
   default = "https://github.com/entigolabs/entigo-infralib-release.git"

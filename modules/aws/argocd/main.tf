@@ -58,7 +58,7 @@ resource "helm_release" "argocd" {
       ingress_group_name = var.ingress_group_name
       ingress_scheme = var.ingress_scheme
       sshPrivateKey = indent(10, tls_private_key.argocd.private_key_pem)
-      repo = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
+      repo = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/${var.codecommit_name}"
     })
   ]
   depends_on = [data.external.argocd]
@@ -67,7 +67,7 @@ resource "helm_release" "argocd" {
 resource "aws_ssm_parameter" "argocd_repo_url" {
   name  = "/entigo-infralib/${local.hname}/repo_url"
   type  = "String"
-  value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/entigo-infralib-${data.aws_caller_identity.current.account_id}"
+  value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/${var.codecommit_name}"
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
