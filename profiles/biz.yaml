@@ -85,6 +85,7 @@ steps:
         version: stable
         inputs:
           hostname: "argocd.{{ .ssm.infra.dns.int_domain }}"
+          codecommit_name: "{{ .config.prefix }}-{{ .agent.accountId }}"
           branch: "{{ .agent.version.helm.argocd }}"
           namespace: "argocd"
           name: "argocd"
