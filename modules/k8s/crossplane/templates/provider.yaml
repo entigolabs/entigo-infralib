@@ -11,4 +11,16 @@ spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.42.0
   controllerConfigRef:
     name: aws-{{ .Release.Name }}
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: k8s-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.9.0
 {{- end }}
