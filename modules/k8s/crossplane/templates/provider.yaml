@@ -16,7 +16,7 @@ spec:
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-kubernetes
+  name: provider-kubernetes-{{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     helm.sh/resource-policy: keep
