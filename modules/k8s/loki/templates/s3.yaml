@@ -1,9 +1,9 @@
 apiVersion: s3.aws.crossplane.io/v1beta1
 kind: Bucket
 metadata:
-  name: {{ .Release.Name }}-logs
+  name: {{ .Values.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Release.Name }}-logs
+    crossplane.io/external-name: {{ .Values.bucketName }}
 spec:
   forProvider:
     acl: private
