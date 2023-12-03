@@ -56,6 +56,7 @@ func testK8sLoki(t *testing.T, contextName string, envName string) {
 	setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
 	setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
 	setValues["loki.loki.storage.bucketNames.admin"] = bucketName
+	setValues["bucketName"] = bucketName
 
 	setValues["loki.loki.storage_config.aws.region"] = region
 	setValues["loki.loki.storage_config.aws.bucketnames"] = bucketName
