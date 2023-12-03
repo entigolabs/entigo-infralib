@@ -8,6 +8,7 @@ spec:
   forProvider:
     acl: private
     locationConstraint: {{ .Values.region }}
+    objectOwnership: BucketOwnerPreferred
     publicAccessBlockConfiguration:
       blockPublicPolicy: true
       blockPublicAcls: true
