@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
+	terraaws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -17,15 +18,16 @@ import (
 	"time"
 )
 
-func TestTerraformBasicBiz(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
+func TestK8sCrossplaneBiz(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-	testTerraformBasic(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+func TestK8sCrossplanePri(t *testing.T) {
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func testTerraformBasic(t *testing.T, contextName string) {
+func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
+	t.Parallel()
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")
@@ -33,18 +35,24 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := fmt.Sprintf("crossplane-system")
-	releaseName := "crossplane"
+	releaseName := "crossplane-system"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-
+	
+	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role",runnerName))
+	setValues["awsRole"] = iamrole
+	
 	if prefix != "runner-main" {
 		//releaseName = fmt.Sprintf("crossplane-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
+		
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
@@ -70,8 +78,8 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 60, 1*time.Second)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 5*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providers crd error")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
@@ -81,13 +89,13 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider error")
 	assert.NotNil(t, provider, "Provider is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Controller config error")
 
 	setValues["installProviderConfig"] = "true"
@@ -96,7 +104,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, "aws-crossplane", 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
@@ -110,7 +118,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
 	require.NoError(t, err, "Bucket syncing error")
-	err = aws.WaitUntilAWSBucketExists(t, "eu-north-1", bucketName, 30, 2*time.Second)
+	err = aws.WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 2*time.Second)
 	if err != nil {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
@@ -119,7 +127,7 @@ func testTerraformBasic(t *testing.T, contextName string) {
 	err = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = aws.WaitUntilAWSBucketDeleted(t, "eu-north-1", bucketName, 6, 10*time.Second)
+	err = aws.WaitUntilAWSBucketDeleted(t, awsRegion, bucketName, 6, 10*time.Second)
 	require.NoError(t, err, "S3 Bucket deletion error")
 	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
 	require.NoError(t, err, "Bucket didn't get deleted")

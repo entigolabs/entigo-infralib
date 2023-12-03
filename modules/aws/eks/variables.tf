@@ -2,8 +2,22 @@ variable "prefix" {
   type = string
 }
 
-variable "vpc_prefix" {
+variable "vpc_id" {
   type = string
+}
+
+variable "private_subnets" {
+  type = list(string)
+}
+
+variable "public_subnets" {
+  type = list(string)
+  default = []
+}
+
+variable "eks_api_access_cidrs" {
+  type = list(string)
+  default = []
 }
 
 variable "eks_cluster_version" {
@@ -27,13 +41,13 @@ variable "eks_cluster_public" {
 variable "eks_main_min_size" {
   type    = number
   nullable = false
-  default = 1
+  default = 2
 }
 
 variable "eks_main_max_size" {
   type    = number
   nullable = false
-  default = 3
+  default = 4
 }
 
 variable "eks_main_instance_types" {
@@ -41,16 +55,33 @@ variable "eks_main_instance_types" {
   default = ["t3.large"]
 }
 
+variable "eks_mainarm_min_size" {
+  type    = number
+  nullable = false
+  default = 0
+}
+
+variable "eks_mainarm_max_size" {
+  type    = number
+  nullable = false
+  default = 0
+}
+
+variable "eks_mainarm_instance_types" {
+  type    = list(string)
+  default = ["t4g.large"]
+}
+
 variable "eks_spot_min_size" {
   type    = number
   nullable = false
-  default = 1
+  default = 0
 }
 
 variable "eks_spot_max_size" {
   type    = number
   nullable = false
-  default = 3
+  default = 0
 }
 
 variable "eks_spot_instance_types" {
@@ -65,13 +96,13 @@ variable "eks_spot_instance_types" {
 variable "eks_db_min_size" {
   type    = number
   nullable = false
-  default = 1
+  default = 0
 }
 
 variable "eks_db_max_size" {
   type    = number
   nullable = false
-  default = 3
+  default = 0
 }
 
 variable "eks_db_instance_types" {
@@ -104,15 +135,40 @@ variable "eks_mon_single_subnet" {
   default = true
 }
 
+variable "eks_tools_min_size" {
+  type    = number
+  nullable = false
+  default = 2
+}
+
+variable "eks_tools_max_size" {
+  type    = number
+  nullable = false
+  default = 3
+}
+
+variable "eks_tools_instance_types" {
+  type    = list(string)
+  default = ["t3.large"]
+}
+
+variable "eks_tools_single_subnet" {
+  type    = bool
+  nullable = false
+  default = false
+}
+
 variable "cluster_enabled_log_types" {
   type    = list(string)
   nullable = false
   default = ["api", "authenticator"]
 }
 
-variable "crossplane_enable" {
-  type    = bool
-  default = true
+
+variable "eks_managed_node_groups_extra" {
+  type    = map
+  nullable = false
+  default = {}
 }
 
 locals {

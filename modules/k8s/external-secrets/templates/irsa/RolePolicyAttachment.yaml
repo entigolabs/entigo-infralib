@@ -1,11 +1,11 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: external-secrets
+  name: {{ .Release.Name }}
 spec:
   forProvider:
-    policyArn: arn:aws:iam::{{ .Values.awsAccount }}:policy/external-secrets
+    policyArn: arn:aws:iam::{{ .Values.awsAccount }}:policy/{{ .Release.Name }}
     roleNameRef:
-      name: secret-manager-operator
+      name: {{ .Release.Name }}
   providerConfigRef:
-    name: aws-crossplane
+    name: {{ .Values.providerConfigRefName }}

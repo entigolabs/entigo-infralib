@@ -6,10 +6,25 @@ argocd:
     networkPolicy:
       create: true
   server:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 50m
-        memory: 128Mi
+        cpu: 1000m
+        memory: 512Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 10m
@@ -49,23 +64,53 @@ argocd:
   dex:
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 50m
-        memory: 64Mi
-        ephemeral-storage: 10Gi
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 20Gi
       requests:
         cpu: 10m
         memory: 32Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 2Gi
         
   redis:
     enabled: true
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 100m
+        cpu: 1000m
         memory: 128Mi
         ephemeral-storage: 10Gi
       requests:
@@ -76,9 +121,24 @@ argocd:
   redis-ha:
     enabled: false
     redis:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
-          cpu: 100m
+          cpu: 1000m
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
@@ -86,9 +146,24 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 1Gi
     sentinel:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
-          cpu: 100m
+          cpu: 1000m
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
@@ -96,9 +171,24 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 1Gi
     haproxy:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       resources:
         limits:
-          cpu: 100m
+          cpu: 1000m
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
@@ -110,10 +200,25 @@ argocd:
     autoscaling:
       enabled: true
       minReplicas: 2
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 1000m
+        memory: 512Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m
@@ -124,10 +229,25 @@ argocd:
     replicaCount: 2
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 1000m
+        memory: 512Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m
@@ -137,9 +257,24 @@ argocd:
   notifications:
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 100m
+        cpu: 1000m
         memory: 128Mi
         ephemeral-storage: 10Gi
       requests:
@@ -148,10 +283,25 @@ argocd:
         ephemeral-storage: 1Gi
 
   controller:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+    tolerations:
+       - key: "tools"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 1000m
+        memory: 1024Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m

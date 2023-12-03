@@ -8,4 +8,4 @@ spec:
     roleNameRef:
       name: {{ .Release.Name }}
   providerConfigRef:
-    name: aws-crossplane
+    name: {{ .Values.providerConfigRefName }}

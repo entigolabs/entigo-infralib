@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: '{{ .Values.gateway.name }}'
+  labels:
+    release: istio
+  annotations:
+    prometheus.io/probe: "false"
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/auth-session-timeout: "1800"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/success-codes: '200,301,302,404'
+    alb.ingress.kubernetes.io/inbound-cidrs: '{{ .Values.ingressInboundAllow }}'
+    alb.ingress.kubernetes.io/scheme: '{{ .Values.scheme }}'
+    alb.ingress.kubernetes.io/group.name: '{{ .Values.groupName }}'
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
+    kube-score/ignore: ingress-targets-service
+    alb.ingress.kubernetes.io/group.order: "{{ .Values.groupOrder }}"
+spec:
+  ingressClassName: alb
+  defaultBackend:
+    service:
+      name: "{{ .Values.gateway.name }}"
+      port:
+        name: http2

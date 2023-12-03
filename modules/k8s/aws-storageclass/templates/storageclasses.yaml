@@ -2,12 +2,13 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
-  name: gp2
+  name: {{ .Values.prefix }}gp2-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
-  tagSpecification_1: "Environment={{ .Values.environment }}"
+  #tagSpecification_1: "Environment={{ .Values.environment }}"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
@@ -18,12 +19,12 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
-  name: gp2-no-retain
+  name: {{ .Values.prefix }}gp2-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
-  tagSpecification_1: "Environment={{ .Values.environment }}"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
@@ -35,12 +36,12 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "true"
-  name: gp3
+  name: {{ .Values.prefix }}gp3
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
-  tagSpecification_1: "Environment={{ .Values.environment }}"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
@@ -51,12 +52,12 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
+    helm.sh/resource-policy: keep
     storageclass.kubernetes.io/is-default-class: "false"
-  name: gp3-no-retain
+  name: {{ .Values.prefix }}gp3-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
-  tagSpecification_1: "Environment={{ .Values.environment }}"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true

@@ -1,125 +1,83 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
 	"fmt"
-	"path/filepath"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-        "github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/stretchr/testify/require"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
 )
 
-
-func TestTerraformBasicBiz(t *testing.T) {
-	spew.Dump("")
-	
-	helmChartPath, err := filepath.Abs("..")
-	require.NoError(t, err)
-	
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
-	namespaceName := fmt.Sprintf("external-dns-biz")
-	extraArgs := make(map[string][]string)
-	setValues := make(map[string]string)
-	
-	
-	kubectlOptionsValues := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", "crossplane-system")
-	CMValues := k8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["external-dns.env[0].value"] = CMValues.Data["awsRegion"]
-	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["awsAccount"] = CMValues.Data["awsAccount"]
-	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
-	
-	
-	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("external-dns-biz-%s", prefix)
-	   extraArgs["upgrade"] = []string{"--skip-crds"}
-	   extraArgs["install"] = []string{"--skip-crds"}
-	}
-	releaseName := namespaceName
-	
-	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "", namespaceName)
-	
-	helmOptions := &helm.Options{
-		SetValues: setValues,
-		KubectlOptions:    kubectlOptions,
-		BuildDependencies: false,
-		ExtraArgs: extraArgs,
-	}
-
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
-	}
-
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	if err != nil {
-	    if strings.Contains(err.Error(), "already exists") {
-	      fmt.Println("Namespace already exists.")
-	    } else {
-	      t.Fatal("Error:", err)
-	    }
-	}	
-	
-
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-
+func TestK8sExternalDnsBiz(t *testing.T) {
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
 }
 
+func TestK8sExternalDnsPri(t *testing.T) {
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+}
 
-func TestTerraformBasicPri(t *testing.T) {
+func testK8sExternalDns(t *testing.T, contextName string, envName string) {
+	t.Parallel()
 	spew.Dump("")
-	
+
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 	
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
-	namespaceName := fmt.Sprintf("external-dns-pri")
+	namespaceName := fmt.Sprintf("external-dns-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
-	kubectlOptionsValues := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", "crossplane-system")
-	CMValues := k8s.GetConfigMap(t, kubectlOptionsValues, "aws-crossplane")
-	setValues["external-dns.env[0].value"] = CMValues.Data["awsRegion"]
-	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["awsAccount"] = CMValues.Data["awsAccount"]
-	setValues["clusterOIDC"] = CMValues.Data["clusterOIDC"]
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account",envName))
+	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider",envName))
+	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region",envName))
 	
+	setValues["external-dns.env[0].value"] = region
+	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
+	setValues["awsAccount"] = account
+	setValues["clusterOIDC"] = clusteroidc
+
 	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("external-dns-pri-%s", prefix)
+	   namespaceName = fmt.Sprintf("external-dns-%s-%s", envName, prefix)
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	
-	kubectlOptions := k8s.NewKubectlOptions("arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "", namespaceName)
-	
+
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+
 	helmOptions := &helm.Options{
-		SetValues: setValues,
+		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
-		ExtraArgs: extraArgs,
+		ExtraArgs:         extraArgs,
 	}
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	    defer helm.Delete(t, helmOptions, releaseName, true)
-	    //k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
+		defer helm.Delete(t, helmOptions, releaseName, true)
+		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
 	if err != nil {
-	    if strings.Contains(err.Error(), "already exists") {
-	      fmt.Println("Namespace already exists.")
-	    } else {
-	      t.Fatal("Error:", err)
-	    }
-	}	
-	
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Println("Namespace already exists.")
+		} else {
+			t.Fatal("Error:", err)
+		}
+	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("external-dns deployment error:", err)
+	}
 
 }

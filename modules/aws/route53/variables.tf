@@ -2,8 +2,9 @@ variable "prefix" {
   type = string
 }
 
-variable "vpc_prefix" {
+variable "vpc_id" {
   type = string
+  default = ""
 }
 
 variable "create_public" {
@@ -27,6 +28,16 @@ variable "parent_zone_id" {
 }
 
 variable "parent_domain" {
+  type = string
+  default = ""
+}
+
+variable "public_subdomain_name" {
+  type = string
+  default = ""
+}
+
+variable "private_subdomain_name" {
   type = string
   default = ""
 }

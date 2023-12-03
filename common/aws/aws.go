@@ -8,8 +8,26 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
 	"time"
 )
+
+func SetupBucket(t testing.TestingT, bucketName string) string {
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
+	if err != nil {
+		if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
+			logger.Log(t, "Bucket already owned by you. Skipping bucket creation.")
+		} else {
+			t.Fatal(err)
+		}
+	}
+	err = WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 2*time.Second)
+	require.NoError(t, err, "Bucket creation error")
+	return awsRegion
+}
 
 func WaitUntilAWSBucketExists(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for bucket %s in %s region to be created", name, region)

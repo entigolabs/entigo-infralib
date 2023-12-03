@@ -33,6 +33,31 @@ locals {
         }
       }
     },
+    mainarm = {
+      min_size        = var.eks_mainarm_min_size
+      desired_size    = var.eks_mainarm_min_size
+      max_size        = var.eks_mainarm_max_size
+      instance_types  = var.eks_mainarm_instance_types
+      capacity_type   = "ON_DEMAND"
+      release_version = var.eks_cluster_version
+      ami_type        = "AL2_ARM_64"
+      launch_template_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        Workspace = terraform.workspace
+      }
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 100
+            volume_iops           = 3000
+            volume_type           = "gp3"
+            delete_on_termination = true
+          }
+        }
+      }
+    },
     spot = {
       min_size        = var.eks_spot_min_size
       desired_size    = var.eks_spot_min_size
@@ -73,7 +98,7 @@ locals {
       desired_size    = var.eks_mon_min_size
       max_size        = var.eks_mon_max_size
       instance_types  = var.eks_mon_instance_types
-      subnet_ids      = var.eks_mon_single_subnet ? [split(",", data.aws_ssm_parameter.private_subnets.value)[0]] : split(",", data.aws_ssm_parameter.private_subnets.value)
+      subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
       release_version = var.eks_cluster_version
       taints = [
@@ -85,6 +110,42 @@ locals {
       ]
       labels = {
         mon = "true"
+      }
+      launch_template_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        Workspace = terraform.workspace
+      }
+
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 50
+            volume_iops           = 3000
+            volume_type           = "gp3"
+            delete_on_termination = true
+          }
+        }
+      }
+    },
+    tools = {
+      min_size        = var.eks_tools_min_size
+      desired_size    = var.eks_tools_min_size
+      max_size        = var.eks_tools_max_size
+      instance_types  = var.eks_tools_instance_types
+      subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
+      capacity_type   = "ON_DEMAND"
+      release_version = var.eks_cluster_version
+      taints = [
+        {
+          key    = "tools"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+      labels = {
+        tools = "true"
       }
       launch_template_tags = {
         Terraform = "true"
@@ -142,23 +203,22 @@ locals {
   }
 
   # Need to keep role name_prefix length under 38. 
-  eks_managed_node_groups = {
+  eks_managed_node_groups_default = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "db" && var.eks_db_max_size > 0
-
+    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
   }
-
+  eks_managed_node_groups = merge(local.eks_managed_node_groups_default,var.eks_managed_node_groups_extra)
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
-  for_each    = toset(split(",", nonsensitive(data.aws_ssm_parameter.private_subnets.value)))
+  for_each    = toset(var.private_subnets)
   resource_id = each.key
   key         = "kubernetes.io/cluster/${local.hname}"
   value       = "shared"
 }
 
 resource "aws_ec2_tag" "publicsubnets" {
-  for_each    = toset(split(",", nonsensitive(data.aws_ssm_parameter.public_subnets.value)))
+  for_each    = toset(var.public_subnets)
   resource_id = each.key
   key         = "kubernetes.io/cluster/${local.hname}"
   value       = "shared"
@@ -219,17 +279,51 @@ module "eks" {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.9.3-eksbuild.3"
+      configuration_values = jsonencode({
+          tolerations: [
+            {
+            key: "tools",
+            operator: "Equal",
+            value: "true",
+            effect: "NoSchedule"
+            }
+          ],
+          affinity: {
+              nodeAffinity: {
+                preferredDuringSchedulingIgnoredDuringExecution: [
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "tools",
+                          "operator": "In",
+                          "values": [
+                            "true"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 5
+                  }
+                ]
+              }
+          }
+      })
     }
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.26.2-eksbuild.1"
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.15.0-eksbuild.2"
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
+
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = "true"
@@ -240,13 +334,60 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
+      addon_version = "v1.23.0-eksbuild.1"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      configuration_values = jsonencode({
+        controller: {
+          tolerations: [
+            {
+            key: "tools",
+            operator: "Equal",
+            value: "true",
+            effect: "NoSchedule"
+            }
+          ],
+          affinity: {
+              nodeAffinity: {
+                preferredDuringSchedulingIgnoredDuringExecution: [
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "eks.amazonaws.com/compute-type",
+                          "operator": "NotIn",
+                          "values": [
+                            "fargate"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 1
+                  },
+                  {
+                    preference: {
+                      matchExpressions: [
+                       {
+                          "key": "tools",
+                          "operator": "In",
+                          "values": [
+                            "true"
+                          ]
+                        }
+                      ]
+                    },
+                    "weight": 5
+                  }
+                ]
+              }
+          }
+        }
+      })
     }
   }
 
-  vpc_id     = data.aws_ssm_parameter.vpc_id.value
-  subnet_ids = split(",", data.aws_ssm_parameter.private_subnets.value)
+  vpc_id     = var.vpc_id
+  subnet_ids = var.private_subnets
 
   cluster_security_group_additional_rules = {
     egress_nodes_ephemeral_ports_tcp = {
@@ -263,16 +404,8 @@ module "eks" {
       from_port   = 443
       to_port     = 443
       type        = "ingress"
-      cidr_blocks = split(",", data.aws_ssm_parameter.private_subnet_cidrs.value)
+      cidr_blocks = var.eks_api_access_cidrs
     }
-    #ingress_intranet = {
-    #  description = "From self intranet"
-    #  protocol    = "tcp"
-    #  from_port   = 443
-    #  to_port     = 443
-    #  type        = "ingress"
-    #  cidr_blocks = split(",", data.aws_ssm_parameter.intra_subnet_cidrs.value)
-    #}
   }
 
   node_security_group_additional_rules = {
@@ -326,6 +459,61 @@ module "eks" {
   aws_auth_users = [
   ]
 
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "cluster_name" {
+  name  = "/entigo-infralib/${local.hname}/cluster_name"
+  type  = "String"
+  value = local.hname
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "account" {
+  name  = "/entigo-infralib/${local.hname}/account"
+  type  = "String"
+  value = data.aws_caller_identity.current.account_id
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "region" {
+  name  = "/entigo-infralib/${local.hname}/region"
+  type  = "String"
+  value = data.aws_region.current.name
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc_provider" {
+  name  = "/entigo-infralib/${local.hname}/oidc_provider"
+  type  = "String"
+  value = module.eks.oidc_provider
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
+  name  = "/entigo-infralib/${local.hname}/oidc_provider_arn"
+  type  = "String"
+  value = module.eks.oidc_provider_arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix

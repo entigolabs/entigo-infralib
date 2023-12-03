@@ -1,3 +1,0 @@
-domain: "*.example.com"
-altdomain:
-  - "*.more.example.com"

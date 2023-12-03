@@ -1,0 +1,24 @@
+
+metrics-server:
+  deploymentAnnotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      ephemeral-storage: 1Gi
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+          - key: tools
+            operator: In
+            values:
+            - "true"
+  tolerations:
+  - key: "tools"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"

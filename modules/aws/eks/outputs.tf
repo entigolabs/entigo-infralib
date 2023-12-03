@@ -18,7 +18,12 @@ output "cluster_version" {
   value = module.eks.cluster_version
 }
 
-output "ssm_test" {
-  value     = data.aws_ssm_parameters_by_path.vpc
-  sensitive = true
+
+output "oidc_provider" {
+  value = module.eks.oidc_provider
 }
+
+output "oidc_provider_arn" {
+  value = module.eks.oidc_provider_arn
+}
+

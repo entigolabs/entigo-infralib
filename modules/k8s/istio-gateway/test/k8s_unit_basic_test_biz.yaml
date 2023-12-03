@@ -1,0 +1,3 @@
+domain: "*.runner-main-biz.infralib.entigo.io"
+altdomain:
+  - "more.runner-main-biz.infralib.entigo.io"

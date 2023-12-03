@@ -1,116 +1,52 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
-	"fmt"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
-	"github.com/stretchr/testify/assert"
 	"github.com/davecgh/go-spew/spew"
+	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/entigolabs/entigo-infralib-common/tf"
+	"testing"
 )
 
-func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
-	aws.EmptyS3Bucket(t, awsRegion, bucketName)
-	aws.DeleteS3Bucket(t, awsRegion, bucketName)
+const bucketName = "infralib-modules-aws-route53-tf"
+
+var awsRegion string
+
+func TestTerraformRoute53(t *testing.T) {
+	awsRegion = commonAWS.SetupBucket(t, bucketName)
+	t.Run("Biz", testTerraformRoute53Biz)
+	t.Run("Pri", testTerraformRoute53Pri)
+	t.Run("Min", testTerraformRoute53Min)
+	t.Run("Ext", testTerraformRoute53Ext)
 }
 
-func TestTerraformBasicBiz(t *testing.T) {
-        t.Parallel()
-	spew.Dump("")
-	
-	awsRegion := aws.GetRandomRegion(t, []string{"eu-north-1"}, nil)
-	bucketName := "infralib-modules-aws-route53-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-
-	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	 if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	 }
- 
-        rootFolder := ".." 
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_biz.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "biz")
-
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
-	}
-
-	terraform.Apply(t, terraformOptions)
-
-        outputs, err := terraform.OutputAllE(t, terraformOptions)
-        if err != nil {
-	  t.Fatalf("Failed to get outputs")
-        }
-	spew.Dump(outputs)
-	assert.Equal(t, "", "", "Wrong cluster_name returned")
+func testTerraformRoute53Biz(t *testing.T) {
+	vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+			"vpc_id": vpc_id,
+		})
+	testTerraformRoute53(t, "biz", options)
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-        t.Parallel()
-	
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-route53-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
-	 err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	 if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	 }
-	 
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_pri.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "pri")
+func testTerraformRoute53Pri(t *testing.T) {
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	testTerraformRoute53(t, "pri", options)
+}
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	  // defer cleanupS3Bucket(t, awsRegion, bucketName)
-	}
+func testTerraformRoute53Min(t *testing.T) {
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_min.tfvars", map[string]interface{}{})
+	testTerraformRoute53(t, "min", options)
+}
 
-	terraform.Apply(t, terraformOptions)
+func testTerraformRoute53Ext(t *testing.T) {
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_ext.tfvars", map[string]interface{}{})  
+	testTerraformRoute53(t, "ext", options)
+}
 
-        outputs, err := terraform.OutputAllE(t, terraformOptions)
-        if err != nil {
-          t.Fatalf("Failed to get outputs")
-        }
-        
+func testTerraformRoute53(t *testing.T, workspaceName string, options *terraform.Options) {
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
+	defer destroyFunc() // Defer needs to be called in outermost function
 	spew.Dump(outputs)
-	assert.Equal(t, "", "", "Wrong cluster_name returned")
 }

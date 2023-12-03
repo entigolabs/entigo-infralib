@@ -1,97 +1,61 @@
 package test
 
 import (
-	"testing"
-	"strings"
-	"os"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/aws"
+	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-        "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
-	"github.com/davecgh/go-spew/spew"
+	"os"
+	"testing"
 )
 
+const bucketName = "infralib-modules-aws-eks-tf"
 
-func TestTerraformBasicBiz(t *testing.T) {
-        t.Parallel()
-	spew.Dump("")
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-eks-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
-	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	}
+var awsRegion string
 
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_biz.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "biz")
-
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	}
-	terraform.Apply(t, terraformOptions)
-	
-	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-biz", cluster_name, "Wrong cluster_name returned")
+func TestTerraformEks(t *testing.T) {
+	awsRegion = commonAWS.SetupBucket(t, bucketName)
+	t.Run("Biz", testTerraformEksBiz)
+	t.Run("Pri", testTerraformEksPri)
 }
 
-func TestTerraformBasicPri(t *testing.T) {
-        t.Parallel()
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucketName := "infralib-modules-aws-eks-tf"
-	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
-	
- 	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	if err != nil {
-	    if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-	      fmt.Println("Bucket already owned by you. Skipping bucket creation.")
-	    } else {
-	      fmt.Println("Error:", err)
-	    }
-	}
-	
-        rootFolder := ".."
-        terraformFolderRelativeToRoot := "test"
-        tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
-	
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure: true,
-		VarFiles: []string{"tf_unit_basic_test_pri.tfvars"},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
-	})
-	terraform.Init(t, terraformOptions)
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, "pri")
+func testTerraformEksBiz(t *testing.T) {
+        vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
+	private_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/private_subnets")
+	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
+	private_subnet_cidrs := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/private_subnet_cidrs")
+  
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+			"vpc_id": vpc_id,
+			"private_subnets": fmt.Sprintf("[%s]",private_subnets),
+			"public_subnets": fmt.Sprintf("[%s]",public_subnets),
+			"eks_api_access_cidrs": fmt.Sprintf("[%s]",private_subnet_cidrs),
+		})
+	testTerraformEks(t, "biz", options)
+}
 
-        if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-	  defer terraform.Destroy(t, terraformOptions)
-	}
-	terraform.Apply(t, terraformOptions)
+func testTerraformEksPri(t *testing.T) {
+        vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/vpc_id")
+	private_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/private_subnets")
+	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/public_subnets")
+	private_subnet_cidrs := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/private_subnet_cidrs")
+  
+	options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
+			"vpc_id": vpc_id,
+			"private_subnets": fmt.Sprintf("[%s]",private_subnets),
+			"public_subnets": fmt.Sprintf("[%s]",public_subnets),
+			"eks_api_access_cidrs": fmt.Sprintf("[%s]",private_subnet_cidrs),
+		})
+	testTerraformEks(t, "pri", options)
+}
 
-	cluster_name := terraform.Output(t, terraformOptions, "cluster_name")
-	assert.Equal(t, os.Getenv("TF_VAR_prefix") + "-pri", cluster_name, "Wrong cluster_name returned")
+func testTerraformEks(t *testing.T, workspaceName string, options *terraform.Options) {
+	t.Parallel()
+	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
+	defer destroyFunc() // Defer needs to be called in outermost function
+	clusterName := outputs["cluster_name"]
+	assert.Equal(t, fmt.Sprintf("%s-%s", os.Getenv("TF_VAR_prefix"), workspaceName), clusterName,
+		"Wrong cluster_name returned")
 }
