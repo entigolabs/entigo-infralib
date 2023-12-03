@@ -2,7 +2,7 @@ awsAccount: ""
 clusterOIDC: ""
 providerConfigRefName: aws-crossplane-system
 region: ""
-bucketName: ""
+bucketName: "loki"
 
 loki:
   fullnameOverride: loki
