@@ -51,14 +51,14 @@ func testK8sLoki(t *testing.T, contextName string, envName string) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	bucketName := fmt.Sprintf("entigoinfralib-%s", namespaceName)
+	bucketName := fmt.Sprintf("infralib-%s", namespaceName)
 	setValues["loki.loki.storage.s3.region"] = region
-	setValues["loki.loki.storage.bucketNames.chunks"] = releaseName
-	setValues["loki.loki.storage.bucketNames.ruler"] = releaseName
-	setValues["loki.loki.storage.bucketNames.admin"] = releaseName
+	setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
+	setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
+	setValues["loki.loki.storage.bucketNames.admin"] = bucketName
 
 	setValues["loki.loki.storage_config.aws.region"] = region
-	setValues["loki.loki.storage_config.aws.bucketnames"] = releaseName
+	setValues["loki.loki.storage_config.aws.bucketnames"] = bucketName
 	setValues["loki.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
 	setValues["loki.gateway.ingress.hosts[0].paths[0].path"] = "/"
 	setValues["loki.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
