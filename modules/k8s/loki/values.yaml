@@ -163,7 +163,7 @@ loki:
     autoscaling:
       enabled: true
       minReplicas: 2 #2
-      maxReplicas: 6
+      maxReplicas: 3
       targetCPUUtilizationPercentage: 60
       targetMemoryUtilizationPercentage:
     persistence:
@@ -276,7 +276,7 @@ promtail:
         ephemeral-storage: 50Gi
       requests:
         cpu: 10m
-        memory: 128Mi
+        memory: 32Mi
         ephemeral-storage: 1Gi    
 
 
