@@ -1,0 +1,14 @@
+apiVersion: v2
+name: loki
+description: A Loki chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+- name: loki
+  version: 4.7.0
+  repository: https://grafana.github.io/helm-charts
+- name: promtail
+  version: 6.9.0
+  repository: https://grafana.github.io/helm-charts
