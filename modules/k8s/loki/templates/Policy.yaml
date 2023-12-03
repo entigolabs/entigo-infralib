@@ -1,10 +1,10 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
 metadata:
-  name: loki 
+  name: {{ .Release.Name }} 
 spec:
   forProvider:
-    name: loki
+    name: {{ .Release.Name }}
     document: |
       {
         "Version": "2012-10-17",
@@ -19,7 +19,7 @@ spec:
               "s3:DeleteObject"
             ],
             "Resource": [
-              "arn:aws:s3:::loki/*"
+              "arn:aws:s3:::{{ .Release.Name }}/*"
             ]
           },
           {
@@ -28,11 +28,11 @@ spec:
               "s3:ListBucket"
             ],
             "Resource": [
-              "arn:aws:s3:::loki"
+              "arn:aws:s3:::{{ .Release.Name }}"
             ]
           }
         ]
       }
 
   providerConfigRef:
-    name: aws-{{ .Release.Name }}
+    name: {{ .Values.providerConfigRefName }}

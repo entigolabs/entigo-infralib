@@ -1,5 +1,7 @@
 awsAccount: ""
 clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
+region: ""
 
 loki:
   fullnameOverride: loki
@@ -12,17 +14,16 @@ loki:
     auth_enabled: false
     storage:
       bucketNames:
-        chunks: chunks
-        ruler: ruler
-        admin: admin
+        chunks: ""
+        ruler: ""
+        admin: ""
       type: s3
       s3:
-        s3: s3://eu-north-1/eg-tooling-loki
         endpoint: null
         region: eu-north-1
         secretAccessKey: null
         accessKeyId: null
-        s3ForcePathStyle: true
+        s3ForcePathStyle: false
         insecure: false
         http_config: {}
     storage_config:
@@ -32,20 +33,13 @@ loki:
         cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
         shared_store: s3
       aws:
-        s3forcepathstyle: true
-        s3: s3://eu-north-1/eg-tooling-loki
-        bucketnames: eg-tooling-loki
-        region: eu-north-1
+        s3forcepathstyle: false
+        bucketnames: ""
+        region: ""
         insecure: false
   test:
     enabled: false
-  monitoring:
-    # Dashboards for monitoring Loki
-    dashboards:
-      enabled: true
-      namespace: monitoring
-      labels:
-        grafana_dashboard: "1"
+
 
   networkPolicy:
     enabled: true
@@ -91,7 +85,7 @@ loki:
       enabled: true
         
   write:
-    replicas: 3 #3
+    replicas: 2 #3
     resources:
       limits:
         cpu: 2
@@ -100,18 +94,26 @@ loki:
       requests:
         cpu: 100m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
     persistence:
       size: 30Gi
-    nodeSelector:
-      monitoring: "true"
+    affinity: |
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: mon
+              operator: In
+              values:
+              - "true"
     tolerations:
-       - key: "monitoring"
+       - key: "mon"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
   read:
-    replicas: 2 #2
+    replicas: 1 #2
     resources:
       limits:
         cpu: 2
@@ -120,11 +122,19 @@ loki:
       requests:
         cpu: 100m
         memory: 512Mi
-        ephemeral-storage: 10Gi
-    nodeSelector:
-      monitoring: "true"
+        ephemeral-storage: 1Gi
+    affinity: |
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+            - key: mon
+              operator: In
+              values:
+              - "true"
     tolerations:
-       - key: "monitoring"
+       - key: "mon"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -149,7 +159,7 @@ loki:
       requests:
         cpu: 10m
         memory: 128Mi
-        ephemeral-storage: 10Gi    
+        ephemeral-storage: 1Gi    
     autoscaling:
       enabled: true
       minReplicas: 2 #2
@@ -169,18 +179,72 @@ loki:
         alb.ingress.kubernetes.io/target-type: ip
         kubernetes.io/ingress.class: alb
       hosts:
-        - host: loki.aws-internal.delfi.net
+        - host: loki
           paths:
             - path: /
               pathType: Prefix
-      tls:
-        - hosts:
-            - loki.aws-internal.entigo.com
-            
+      tls: []
   monitoring:
+  
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
     # Dashboards for monitoring Loki
+    lokiCanary:
+      enabled: false
     dashboards:
-      # -- If enabled, create configmap with dashboards for monitoring Loki
-      enabled: true
-      # -- Alternative namespace to create dashboards ConfigMap in
-      namespace: monitoring
+      enabled: false
+      labels:
+        grafana_dashboard: "1"
+
+promtail:
+  nameOverride: promtail
+  fullnameOverride: promtail
+
+  daemonset:
+    enabled: true
+
+  deployment:
+    enabled: false
+  
+  configmap:
+    enabled: true
+  networkPolicy:
+    enabled: true
+  tolerations:
+    - key: "node-group"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - effect: NoSchedule
+      operator: Exists
+  resources:
+      limits:
+        cpu: 2
+        memory: 1Gi
+        ephemeral-storage: 50Gi
+      requests:
+        cpu: 10m
+        memory: 128Mi
+        ephemeral-storage: 1Gi    
+
+
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+    - url: http://loki-gateway/loki/api/v1/push
+
+  
+  # ServiceMonitor configuration
+  serviceMonitor:
+    # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+    enabled: false
+    # -- Alternative namespace for ServiceMonitor resources
+    #         name: client_secret

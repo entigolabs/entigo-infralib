@@ -1,13 +1,13 @@
 apiVersion: s3.aws.crossplane.io/v1beta1
 kind: Bucket
 metadata:
-  name: s3-crossplane-bucket
+  name: {{ .Release.Name }}
   annotations:
-    crossplane.io/external-name: loki
+    crossplane.io/external-name: {{ .Release.Name }}
 spec:
   forProvider:
     acl: private
-    locationConstraint: eu-north-1
+    locationConstraint: {{ .Values.region }}
     publicAccessBlockConfiguration:
       blockPublicPolicy: true
       blockPublicAcls: true
@@ -22,4 +22,4 @@ spec:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
   providerConfigRef:
-    name: aws-{{ .Release.Name }}
+    name: {{ .Values.providerConfigRefName }}
