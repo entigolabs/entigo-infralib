@@ -92,8 +92,8 @@ loki:
         memory: 1Gi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
-        memory: 512Mi
+        cpu: 50m
+        memory: 256Mi
         ephemeral-storage: 1Gi
     persistence:
       size: 30Gi
@@ -107,8 +107,19 @@ loki:
               operator: In
               values:
               - "true"
+        - weight: 10
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
     tolerations:
        - key: "mon"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
@@ -120,8 +131,8 @@ loki:
         memory: 1Gi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
-        memory: 512Mi
+        cpu: 50m
+        memory: 256Mi
         ephemeral-storage: 1Gi
     affinity: |
       nodeAffinity:
@@ -133,8 +144,19 @@ loki:
               operator: In
               values:
               - "true"
+        - weight: 10
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
     tolerations:
        - key: "mon"
+         operator: "Equal"
+         value: "true"
+         effect: "NoSchedule"
+       - key: "tools"
          operator: "Equal"
          value: "true"
          effect: "NoSchedule"
