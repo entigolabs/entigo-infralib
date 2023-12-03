@@ -40,8 +40,6 @@ func testK8sLoki(t *testing.T, contextName string, envName string) {
 	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region",envName))
 	
 	setValues["region"] = region
-	
-	
 	setValues["awsAccount"] = account
 	setValues["clusterOIDC"] = clusteroidc
 

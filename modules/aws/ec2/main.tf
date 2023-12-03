@@ -69,7 +69,7 @@ resource "aws_instance" "ec2" {
     "Name" = local.hname
   }
   lifecycle {
-     ignore_changes = [ user_data ]
+     ignore_changes = [ user_data, ami ]
   }
 }
 
