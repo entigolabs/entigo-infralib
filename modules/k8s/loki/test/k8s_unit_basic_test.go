@@ -51,7 +51,7 @@ func testK8sLoki(t *testing.T, contextName string, envName string) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	bucketName := fmt.Sprintf("infralib-%s", namespaceName)
+	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 	setValues["loki.loki.storage.s3.region"] = region
 	setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
 	setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
