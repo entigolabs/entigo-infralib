@@ -199,9 +199,6 @@ loki:
         grafana_dashboard: "1"
 
 promtail:
-  nameOverride: promtail
-  fullnameOverride: promtail
-
   daemonset:
     enabled: true
 
