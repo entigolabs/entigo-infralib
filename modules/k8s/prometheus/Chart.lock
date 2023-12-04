@@ -1,0 +1,6 @@
+dependencies:
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 25.8.0
+digest: sha256:d0a5cb885ab6b5e9f10887d0db0c6ae322e40482a69519a955ed6d8a7056ddab
+generated: "2023-12-04T15:37:27.878563371+02:00"
