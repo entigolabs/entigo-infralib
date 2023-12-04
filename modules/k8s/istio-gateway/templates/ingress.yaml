@@ -17,6 +17,12 @@ metadata:
     alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
     kube-score/ignore: ingress-targets-service
     alb.ingress.kubernetes.io/group.order: "{{ .Values.groupOrder }}"
+    {{- if .Values.certificateArn }}
+    alb.ingress.kubernetes.io/certificate-arn: "{{ .Values.certificateArn }}"
+    {{- end }}   
+    {{- with .Values.additionalIngressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: alb
   defaultBackend:
