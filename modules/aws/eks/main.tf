@@ -25,9 +25,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 100
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_main_volume_size
+            volume_iops           = var.eks_main_volume_iops
+            volume_type           = var.eks_main_volume_type
             delete_on_termination = true
           }
         }
@@ -50,9 +50,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 100
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_mainarm_volume_size
+            volume_iops           = var.eks_mainarm_volume_iops
+            volume_type           = var.eks_mainarm_volume_type
             delete_on_termination = true
           }
         }
@@ -85,9 +85,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 100
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_spot_volume_size
+            volume_iops           = var.eks_spot_volume_iops
+            volume_type           = var.eks_spot_volume_type
             delete_on_termination = true
           }
         }
@@ -121,9 +121,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 50
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_mon_volume_size
+            volume_iops           = var.eks_mon_volume_iops
+            volume_type           = var.eks_mon_volume_type
             delete_on_termination = true
           }
         }
@@ -157,9 +157,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 50
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_tools_volume_size
+            volume_iops           = var.eks_tools_volume_iops
+            volume_type           = var.eks_tools_volume_type
             delete_on_termination = true
           }
         }
@@ -192,9 +192,9 @@ locals {
         xvda = {
           device_name = "/dev/xvda"
           ebs = {
-            volume_size           = 50
-            volume_iops           = 3000
-            volume_type           = "gp3"
+            volume_size           = var.eks_db_volume_size
+            volume_iops           = var.eks_db_volume_iops
+            volume_type           = var.eks_db_volume_type
             delete_on_termination = true
           }
         }
