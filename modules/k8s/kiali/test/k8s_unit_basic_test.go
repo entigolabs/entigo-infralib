@@ -40,7 +40,7 @@ func testK8sPrometheus(t *testing.T, contextName string, envName string) {
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	
+	setValues["kiali-server.fullnameOverride"] = namespaceName
 	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -67,9 +67,9 @@ func testK8sPrometheus(t *testing.T, contextName string, envName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kiali", 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
 	if err != nil {
-		t.Fatal("Kiali deployment error:", err)
+		t.Fatal("kiali deployment error:", err)
 	}
 
 
