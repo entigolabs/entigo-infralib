@@ -3,6 +3,9 @@ kiali-server:
   istio_namespace: "istio-system"
   server:
     web_fqdn: ""
+  external_services:
+    prometheus:
+      url: "http://prometheus-server.prometheus:80/"
   deployment:
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
