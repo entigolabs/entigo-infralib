@@ -195,7 +195,7 @@ variable "eks_tools_instance_types" {
 
 variable "eks_tools_volume_size" {
   type    = number
-  default = 100
+  default = 50
 }
 
 variable "eks_tools_volume_iops" {
