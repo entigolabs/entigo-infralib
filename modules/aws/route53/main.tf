@@ -115,7 +115,7 @@ resource "aws_ssm_parameter" "pub-cert-arn" {
   count = var.create_cert && var.parent_zone_id != "" ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/pub_cert_arn"
   type  = "String"
-  value = aws_acm_certificate.pub.arn
+  value = aws_acm_certificate.pub[0].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -150,7 +150,7 @@ resource "aws_ssm_parameter" "int-cert-arn" {
   count = var.create_cert && var.create_private ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/int_cert_arn"
   type  = "String"
-  value = aws_acm_certificate.int.arn
+  value = aws_acm_certificate.int[0].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
