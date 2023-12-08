@@ -16,7 +16,8 @@ external-dns:
   sources:
     - service
     - ingress
-
+    - istio-gateway
+    - istio-virtualservice
   extraArgs:
   - --metrics-address=:7979
 
