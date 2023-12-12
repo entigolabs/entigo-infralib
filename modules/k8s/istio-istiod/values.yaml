@@ -1,6 +1,7 @@
      
 istiod:
   global:
+    imagePullPolicy: "IfNotPresent"
     defaultResources:
       requests:
         cpu: 10m

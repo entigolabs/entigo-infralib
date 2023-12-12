@@ -7,6 +7,7 @@ kiali-server:
     prometheus:
       url: "http://prometheus-server.prometheus:80/"
   deployment:
+    image_pull_policy: "IfNotPresent"
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     ingress:
