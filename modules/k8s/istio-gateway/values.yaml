@@ -10,7 +10,7 @@ groupOrder: 800
 
 gateway:
   name: "istio-gateway"
-  
+  imagePullPolicy: "IfNotPresent"
   annotations:
     kube-score/ignore: pod-networkpolicy,pod-probes,container-image-tag # "auto:latest" will be populated at runtime by the mutating webhook. See https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/#customizing-injection
   service:
