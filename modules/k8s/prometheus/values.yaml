@@ -47,12 +47,12 @@ prometheus:
          effect: "NoSchedule"
     resources:
       limits:
-        cpu: 2000m
-        memory: 2Gi
+        cpu: 4000m
+        memory: 8Gi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 300m
+        memory: 2048Mi
         ephemeral-storage: 10Mi
   configmapReload:
     prometheus:
@@ -143,7 +143,7 @@ prometheus:
     resources: 
       limits:
         cpu: 1
-        memory: 128Mi
+        memory: 256Mi
         ephemeral-storage: 1Gi
       requests:
         cpu: 10m
