@@ -41,7 +41,9 @@ func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName 
 	}
 	releaseName := namespaceName
 	setValues["keycloak.fullnameOverride"] = namespaceName
-	setValues["hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	setValues["keycloak.ingress.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	setValues["keycloak.extraEnvVars[0].name"] = "KC_HOSTNAME"
+	setValues["keycloak.extraEnvVars[0].value"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
