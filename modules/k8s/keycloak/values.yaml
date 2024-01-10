@@ -1,14 +1,15 @@
-hostname: &useHostname "keycloak-biz-martivo-rd-150.runner-main-biz-int.infralib.entigo.io"
-
 keycloak:
   proxy: edge
   production: true
   args:
   - "start"
-  - "--hostname"
-  - *useHostname
   - "--proxy"
   - "edge"
+  
+  extraEnvVars:
+   - name: KC_HOSTNAME
+     value: ""
+  
   image:
     registry: quay.io
     repository: phasetwo/phasetwo-keycloak
@@ -16,7 +17,7 @@ keycloak:
     
   ingress:
     enabled: true
-    hostname: *useHostname
+    hostname: ""
     pathType: Prefix
     ingressClassName: "alb"
     annotations: 
