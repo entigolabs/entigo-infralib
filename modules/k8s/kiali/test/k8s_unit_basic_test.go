@@ -13,15 +13,15 @@ import (
 	"time"
 )
 
-func TestK8sPrometheusBiz(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+func TestK8sKialiBiz(t *testing.T) {
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
 }
 
-func TestK8sPrometheusPri(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+func TestK8sKialiPri(t *testing.T) {
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
 }
 
-func testK8sPrometheus(t *testing.T, contextName string, envName string) {
+func testK8sKiali(t *testing.T, contextName string, envName string) {
 	t.Parallel()
 	spew.Dump("")
 

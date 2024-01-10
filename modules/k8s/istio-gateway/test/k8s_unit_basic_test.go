@@ -5,6 +5,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -14,14 +15,18 @@ import (
 )
 
 func TestK8sIstioGatewayBiz(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml")
+        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/pub_cert_arn")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", certificateArn)
 }
 
 func TestK8sIstioGatewayPri(t *testing.T) {
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml")
+        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/pub_cert_arn")
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", certificateArn)
 }
 
-func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string) {
+func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, certificateArn string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -32,7 +37,8 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string) {
 	namespaceName := fmt.Sprintf("istio-gateway")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-
+	
+	setValues["certificateArn"] = certificateArn
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("istio-gateway-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
