@@ -14,14 +14,14 @@ import (
 )
 
 func TestK8sKialiBiz(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io")
 }
 
 func TestK8sKialiPri(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io")
 }
 
-func testK8sKiali(t *testing.T, contextName string, envName string) {
+func testK8sKiali(t *testing.T, contextName string, envName string, hostName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -41,7 +41,7 @@ func testK8sKiali(t *testing.T, contextName string, envName string) {
 	}
 	releaseName := namespaceName
 	setValues["kiali-server.fullnameOverride"] = namespaceName
-	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
+	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 

@@ -15,14 +15,14 @@ import (
 )
 
 func TestK8sLokiBiz(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io")
 }
 
 func TestK8sLokiPri(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io")
 }
 
-func testK8sLoki(t *testing.T, contextName string, envName string) {
+func testK8sLoki(t *testing.T, contextName string, envName string, hostName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -58,7 +58,7 @@ func testK8sLoki(t *testing.T, contextName string, envName string) {
 
 	setValues["loki.loki.storage_config.aws.region"] = region
 	setValues["loki.loki.storage_config.aws.bucketnames"] = bucketName
-	setValues["loki.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
+	setValues["loki.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	setValues["loki.gateway.ingress.hosts[0].paths[0].path"] = "/"
 	setValues["loki.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
 	
