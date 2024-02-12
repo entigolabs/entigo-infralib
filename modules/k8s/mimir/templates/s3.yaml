@@ -1,0 +1,26 @@
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+spec:
+  forProvider:
+    acl: private
+    locationConstraint: {{ .Values.global.region }}
+    objectOwnership: BucketOwnerPreferred
+    publicAccessBlockConfiguration:
+      blockPublicPolicy: true
+      blockPublicAcls: true
+      ignorePublicAcls: true
+      restrictPublicBuckets: true
+    accelerateConfiguration:
+      status: Enabled
+    versioningConfiguration:
+      status: Suspended
+    serverSideEncryptionConfiguration:
+      rules:
+      - applyServerSideEncryptionByDefault:
+          sseAlgorithm: AES256
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}

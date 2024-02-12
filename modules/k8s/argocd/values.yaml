@@ -305,5 +305,5 @@ argocd:
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m
-        memory: 128Mi
+        memory: 512Mi
         ephemeral-storage: 1Gi
