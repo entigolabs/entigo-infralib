@@ -46,6 +46,7 @@ jobs:
         modules/k8s/aws-storageclass/test.sh
         modules/k8s/metrics-server/test.sh
         modules/k8s/loki/test.sh
+        modules/k8s/mimir/test.sh
         modules/k8s/keycloak/test.sh
         modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
