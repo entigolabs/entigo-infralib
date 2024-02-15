@@ -2,4 +2,4 @@ spec:
   ignoreDifferences:
   - jsonPointers:
     - /data/config.yaml
-    kind: Secret
+    kind: ConfigMap
