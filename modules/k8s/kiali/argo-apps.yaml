@@ -3,3 +3,7 @@ spec:
   - jsonPointers:
     - /data/config.yaml
     kind: ConfigMap
+  - jsonPointers:
+    - '/spec/template/metadata/annotations/checksum~1config'
+    kind: StatefulSet
+    group: apps
