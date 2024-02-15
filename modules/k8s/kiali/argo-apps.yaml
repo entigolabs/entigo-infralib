@@ -5,5 +5,5 @@ spec:
     kind: ConfigMap
   - jsonPointers:
     - '/spec/template/metadata/annotations/checksum~1config'
-    kind: StatefulSet
+    kind: Deployment
     group: apps
