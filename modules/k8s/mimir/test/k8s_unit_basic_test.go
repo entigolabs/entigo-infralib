@@ -52,6 +52,10 @@ func testK8sMimir(t *testing.T, contextName string, envName string, hostName str
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 	setValues["global.bucketName"] = bucketName
 	
+	setValues["mimir-distributed.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].path"] = "/"
+	setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
+	
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
