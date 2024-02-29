@@ -35,6 +35,7 @@ then
   cd "$TF_VAR_prefix/$WORKSPACE"
 fi
 
+/usr/bin/gitlogin.sh
 
 terraform init -input=false -backend-config=../backend.conf
 if [ $? -ne 0 ]
