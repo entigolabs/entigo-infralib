@@ -1,0 +1,9 @@
+spec:
+  ignoreDifferences:
+  - jsonPointers:
+    - /data/config.yaml
+    kind: ConfigMap
+  - jsonPointers:
+    - '/spec/template/metadata/annotations/checksum~1config'
+    kind: Deployment
+    group: apps

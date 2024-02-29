@@ -3,57 +3,85 @@ variable "prefix" {
 }
 
 variable "vpc_cidr" {
-  type = string
+  type     = string
   nullable = false
-  default = "10.156.0.0/16"
+  default  = "10.156.0.0/16"
 }
 
 variable "azs" {
-  type = number
+  type     = number
   nullable = false
-  default = 2
+  default  = 2
 }
 
 variable "one_nat_gateway_per_az" {
-  type = bool
+  type     = bool
   nullable = false
-  default = true
+  default  = true
 }
 
 variable "private_subnets" {
-  type = list(string)
+  type     = list(string)
   nullable = true
-  default = null
+  default  = null
 }
 
 variable "public_subnets" {
-  type = list(string)
+  type     = list(string)
   nullable = true
-  default = null
+  default  = null
 }
 
 variable "database_subnets" {
-  type = list(string)
+  type     = list(string)
   nullable = true
-  default = null
+  default  = null
 }
 
 variable "elasticache_subnets" {
-  type = list(string)
+  type     = list(string)
   nullable = true
-  default = null
+  default  = null
 }
 
 variable "intra_subnets" {
-  type = list(string)
+  type     = list(string)
   nullable = true
-  default = null
+  default  = null
+}
+
+variable "private_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "public_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "database_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "elasticache_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "intra_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
 }
 
 variable "enable_nat_gateway" {
-  type = bool
+  type     = bool
   nullable = false
-  default = true
+  default  = true
 }
 
 locals {
