@@ -2,10 +2,10 @@ apiVersion: v2
 name: keycloak
 description: A Keycloak chart for Kubernetes
 type: application
-version: 0.1.0
-appVersion: "1.0"
+version: 0.2.0
+appVersion: "2.0"
 
 dependencies:
-- name: keycloak
-  version: 18.0.2
-  repository: oci://registry-1.docker.io/bitnamicharts
+- name: keycloakx
+  version: 2.3.0
+  repository: https://codecentric.github.io/helm-charts
