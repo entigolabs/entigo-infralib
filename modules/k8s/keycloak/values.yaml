@@ -26,7 +26,10 @@ keycloakx:
   
   networkPolicy:
     enabled: true
-    
+  
+  http:
+    relativePath: "/"
+  
   ingress:
     enabled: true
     ingressClassName: "alb"
