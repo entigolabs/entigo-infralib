@@ -50,16 +50,6 @@ jobs:
         modules/k8s/keycloak/test.sh
         modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Success Message
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Latest release updated to main.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions url,commit
-        SLACK_FOOTER: ""
     - name: Slack Failed To Update to Main Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
