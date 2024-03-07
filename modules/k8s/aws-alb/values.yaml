@@ -33,6 +33,8 @@ aws-load-balancer-controller:
       cpu: 10m
       memory: 64Mi
       ephemeral-storage: 1Gi
+  ingressClassConfig:
+    default: true
   
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
