@@ -10,6 +10,7 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   alarm_description   = var.aws_account_id == null ? "Billing consolidated alarm >= ${var.currency} ${var.monthly_billing_threshold}" : "Billing alarm account ${var.aws_account_id} >= ${var.currency} ${var.monthly_billing_threshold}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
+  datapoints_to_alarm = "1"
   metric_name         = "EstimatedCharges"
   namespace           = "AWS/Billing"
   period              = "21600"
@@ -17,8 +18,8 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   threshold           = var.monthly_billing_threshold
   alarm_actions       = local.alarms
   dimensions = {
-    currency       = var.currency
-    linked_account = var.aws_account_id
+    Currency      = var.currency
+    LinkedAccount = var.aws_account_id
   }
   tags = {
     Terraform   = "true"
