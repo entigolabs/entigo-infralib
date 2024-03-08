@@ -1,0 +1,3 @@
+monthly_billing_threshold = 500
+alert_emails              = ["priit.randla@entigo.com"]
+aws_account_id            = "877483565445"
