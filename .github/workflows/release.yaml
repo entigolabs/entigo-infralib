@@ -128,10 +128,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -139,7 +140,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-
     - name: Tag correct version
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -148,7 +148,7 @@ jobs:
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ && 
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
-        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest
+        docker buildx imagetools create --platform linux/arm64/v8,linux/amd64 -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Set up SSH key
