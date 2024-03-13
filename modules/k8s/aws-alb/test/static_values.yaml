@@ -1,0 +1,2 @@
+aws-load-balancer-controller:
+  clusterName: test
