@@ -20,6 +20,10 @@ then
   VALUES_OPTS="-f test/static_values.yaml"
 fi
 
+if [ "$KUBESCORE_EXTRA_OPTS" == "" ]
+then
+  KUBESCORE_EXTRA_OPTS=""
+fi
 
 docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm lint $VALUES_OPTS --strict ."
 if [ $? -ne 0 ]
@@ -36,7 +40,7 @@ then
 fi
 
 
-docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix $VALUES_OPTS --skip-tests --namespace $prefix . | kube-score score --ignore-test container-image-pull-policy --ignore-test container-security-context-readonlyrootfilesystem --ignore-test deployment-has-poddisruptionbudget --ignore-test container-security-context-user-group-id --ignore-test statefulset-has-servicename -"
+docker run $DOCKER_OPTS --rm -v "$(pwd)":/project -w /project --entrypoint /bin/bash martivo/kube-score:latest -c "helm template $prefix $VALUES_OPTS --skip-tests --namespace $prefix . | kube-score score --ignore-test container-image-pull-policy --ignore-test container-security-context-readonlyrootfilesystem --ignore-test deployment-has-poddisruptionbudget --ignore-test container-security-context-user-group-id --ignore-test statefulset-has-servicename $KUBESCORE_EXTRA_OPTS -"
 if [ $? -ne 0 ]
 then
 	echo "kube-score failed"
