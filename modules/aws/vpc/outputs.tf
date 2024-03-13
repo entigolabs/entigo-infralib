@@ -50,4 +50,22 @@ output "intra_subnet_cidrs" {
   value = module.vpc.intra_subnets_cidr_blocks
 }
 
+output "intra_route_table_ids" {
+  value = module.vpc.intra_route_table_ids
+}
 
+output "private_route_table_ids" {
+  value = module.vpc.private_route_table_ids
+}
+
+output "public_route_table_ids" {
+  value = module.vpc.public_route_table_ids
+}
+
+output "database_route_table_ids" {
+  value = module.vpc.database_route_table_ids
+}
+
+output "elasticache_route_table_ids" {
+  value = module.vpc.elasticache_route_table_ids
+}

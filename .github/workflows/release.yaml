@@ -31,6 +31,7 @@ jobs:
         providers/test.sh
         modules/aws/crossplane/test.sh
         modules/aws/route53/test.sh 
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
         modules/k8s/argocd/test.sh
         modules/aws/argocd/test.sh
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
@@ -43,18 +44,12 @@ jobs:
         modules/k8s/external-secrets/test.sh
         modules/k8s/aws-alb/test.sh
         modules/k8s/aws-storageclass/test.sh
+        modules/k8s/metrics-server/test.sh
+        modules/k8s/loki/test.sh
+        modules/k8s/mimir/test.sh
+        modules/k8s/keycloak/test.sh
         modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Success Message
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Latest release updated to main.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions url,commit
-        SLACK_FOOTER: ""
     - name: Slack Failed To Update to Main Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -132,7 +127,30 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-      
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+    - name: Tag correct version
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        aws-region: us-east-1
+      run: |
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ && 
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
     - name: Set up SSH key
       run: |
         mkdir ~/.ssh
@@ -140,7 +158,7 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan github.com >> ~/.ssh/known_hosts
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-        
+    
     - name: Clone the target repository and copy files
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release

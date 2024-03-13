@@ -28,18 +28,13 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-
-resource "helm_release" "crossplane-terraform" {
-  name             = local.hname
-  chart            = "${path. module}/helm" 
-  namespace        = "crossplane-system"
-  create_namespace = true
-  values = [
-    templatefile("${path.module}/values.yaml", {
-      iamRole=aws_iam_role.crossplane.arn
-      awsAccount  = var.eks_account
-      awsRegion   = var.eks_region
-      clusterOIDC = var.eks_oidc_provider
-    })
-  ]
+resource "aws_ssm_parameter" "iam_role" {
+  name  = "/entigo-infralib/${local.hname}/iam_role"
+  type  = "String"
+  value = aws_iam_role.crossplane.arn
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
 }

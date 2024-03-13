@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Slack Started Message
+      if: github.event_name != 'schedule'
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: '#EBEB00'

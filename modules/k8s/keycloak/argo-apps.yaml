@@ -1,0 +1,11 @@
+spec:
+  ignoreDifferences:
+  - jsonPointers:
+    - /data/admin-password
+    - /data/password
+    - /data/postgres-password
+    kind: Secret
+  - jsonPointers:
+    - '/spec/template/metadata/annotations/checksum~1secrets'
+    kind: StatefulSet
+    group: apps

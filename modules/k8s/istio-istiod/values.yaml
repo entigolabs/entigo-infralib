@@ -1,6 +1,7 @@
      
 istiod:
   global:
+    imagePullPolicy: "IfNotPresent"
     defaultResources:
       requests:
         cpu: 10m
@@ -11,6 +12,8 @@ istiod:
         memory: 512Mi
         ephemeral-storage: 10Gi
   pilot:
+    autoscaleMin: 2
+    replicaCount: 2
     podAnnotations:
       kube-score/ignore: pod-networkpolicy
     affinity:

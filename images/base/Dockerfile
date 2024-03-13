@@ -22,4 +22,4 @@ ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_
 #SEE https://entigo.atlassian.net/browse/RD-76
 RUN cd /cache && mkdir /plugin-cache && terraform init && rm -rf /cache 
 #SEE https://entigo.atlassian.net/browse/RD-76
-COPY entrypoint.sh /usr/bin/entrypoint.sh 
+COPY *.sh /usr/bin/

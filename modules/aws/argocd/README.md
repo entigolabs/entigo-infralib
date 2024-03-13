@@ -5,6 +5,8 @@ This is a specialized version of the __helm-git__ module.
 If we do not have a Helm chart registry then we can't just install our k8s modules with only [helm_release](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) terraform resource. 
 This module will clone the desired helm chart from git and install it using __helm_release__.
 
+__codecommit_name__ Name of the codecommit repo to configure (usually {{ .config.prefix }}-{{ .agent.accountId }})
+
 __repository__ the repository to use for cloning (https://github.com/entigolabs/entigo-infralib-release)
 
 __branch__ the branch to use (main for latest version in our repo).
@@ -37,6 +39,7 @@ __ingress_scheme__ Defaults to "internal", set to "internet-facing" if you want 
           depends_on: |
             [module.eks]
           hostname: "argocd.ep-infrastructure-dns-test.infralib.entigo.io"
+          codecommit_name: "{{ .config.prefix }}-{{ .agent.accountId }}"
           ingress_group_name: "external"
           ingress_scheme: "internet-facing"
           branch: "main"

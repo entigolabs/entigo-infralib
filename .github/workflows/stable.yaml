@@ -42,6 +42,7 @@ jobs:
         providers/test.sh
         modules/aws/crossplane/test.sh
         modules/aws/route53/test.sh 
+        modules/aws/ec2/test.sh
         modules/k8s/argocd/test.sh
         modules/aws/argocd/test.sh
         modules/aws/helm-git/test.sh
@@ -54,6 +55,10 @@ jobs:
         modules/k8s/external-secrets/test.sh
         modules/k8s/aws-alb/test.sh
         modules/k8s/aws-storageclass/test.sh
+        modules/k8s/metrics-server/test.sh
+        modules/k8s/loki/test.sh
+        modules/k8s/mimir/test.sh
+        modules/k8s/keycloak/test.sh
         modules/k8s/hello-world/test.sh
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}

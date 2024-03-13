@@ -1,18 +1,13 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: istio-gateway
+  name: '{{ .Values.gateway.name }}'
 spec:
   selector:
-    istio: gateway
+    app: '{{ .Values.gateway.name }}'
   servers:
   - hosts:
-    - "{{ .Values.domain }}"
-    {{- if .Values.altdomain }}
-    {{- range $url := .Values.altdomain }}
-    - "{{ $url }}"
-    {{- end }}
-    {{- end }}
+    - "*"
     port:
       name: http
       number: 80
