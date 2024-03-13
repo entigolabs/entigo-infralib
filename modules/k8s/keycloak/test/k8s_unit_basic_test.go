@@ -40,10 +40,10 @@ func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName 
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	setValues["keycloak.fullnameOverride"] = namespaceName
-	setValues["keycloak.ingress.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-	setValues["keycloak.extraEnvVars[0].name"] = "KC_HOSTNAME"
-	setValues["keycloak.extraEnvVars[0].value"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	setValues["keycloakx.fullnameOverride"] = namespaceName
+	setValues["keycloakx.ingress.rules[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	setValues["keycloakx.ingress.rules[0].paths[0].path"] = "/"
+	setValues["keycloakx.ingress.rules[0].paths[0].pathType"] = "Prefix"
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
@@ -69,7 +69,7 @@ func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName 
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-keycloakx-0", namespaceName), 30, 6*time.Second)
+	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-0", namespaceName), 30, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-0 pod error:", namespaceName), err)
 	}
