@@ -2,6 +2,8 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: '{{ .Values.gateway.name }}'
+  annotations:
+    external-dns.alpha.kubernetes.io/ingress: {{ .Release.Namespace }}/{{ .Values.gateway.name }}
 spec:
   selector:
     app: '{{ .Values.gateway.name }}'
@@ -11,4 +13,4 @@ spec:
     port:
       name: http
       number: 80
-      protocol: HTTP 
+      protocol: HTTP
