@@ -1,5 +1,0 @@
-access: proxy
-isDefault: false
-name: Loki
-type: loki
-url: http://loki-read.loki:3100

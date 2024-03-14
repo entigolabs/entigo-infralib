@@ -1,8 +1,0 @@
-access: proxy
-isDefault: true
-jsonData:
-  manageAlerts: true
-  prometheusType: Mimir
-name: Mimir
-type: prometheus
-url: http://mimir.mimir/prometheus
