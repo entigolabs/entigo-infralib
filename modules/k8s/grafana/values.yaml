@@ -1,0 +1,182 @@
+grafana:
+  enabled: true
+  fullnameOverride: "grafana"
+
+  annotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
+
+  datasources: {}
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+  dashboards:
+    default:
+      global:
+        gnetId: 15757
+        revision: 31
+        datasource: Prometheus
+      nodes:
+        gnetId: 13824
+        revision: 2
+        datasource: Prometheus
+      namespaces:
+        gnetId: 15758
+        revision: 27
+        datasource: Prometheus
+      pods:
+        gnetId: 15760
+        revision: 22
+        datasource: Prometheus
+      pvc:
+        gnetId: 13646
+        revision: 2
+        datasource: Prometheus
+      cluster:
+        gnetId: 7249
+        revision: 1
+        datasource: Prometheus
+      nodejs:
+        gnetId: 18575
+        revision: 3
+        datasource: Prometheus
+
+  deploymentStrategy:
+    type: Recreate
+
+  rbac:
+    create: true
+    namespaced: true
+
+    
+
+  downloadDashboards:
+    resources: 
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+        ephemeral-storage: 1Gi
+
+    
+  resources: 
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 10Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 1Gi
+  networkPolicy:
+    enabled: false
+    ingress: true
+    allowExternal: true
+    egress:
+      enabled: false
+
+  serviceAccount:
+    create: true
+
+  persistence:
+    enabled: true
+    storageClassName: "gp3"
+    size: 2Gi
+
+  service:
+    type: ClusterIP
+  serviceMonitor:
+    enabled: false
+  testFramework:
+    enabled: false
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
+      { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+      alb.ingress.kubernetes.io/group.name: external
+      alb.ingress.kubernetes.io/healthcheck-path: /
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/success-codes: 200-499
+      alb.ingress.kubernetes.io/target-type: ip
+    path: /
+    hosts: []
+    tls: []
+  grafana.ini:
+    default:
+      instance_name: Grafana
+    server:
+      root_url: "https://"
+
+  #      auth.basic:
+  #        enabled: true
+
+  sidecar:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+        ephemeral-storage: 1Gi
+    alerts:
+      enabled: true
+    dashboards:
+      enabled: true
+    datasources:
+      enabled: true
+
+  initChownData:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+        ephemeral-storage: 10Gi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+        ephemeral-storage: 1Gi
+
+  affinity: 
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 90
+        preference:
+          matchExpressions:
+          - key: mon
+            operator: In
+            values:
+            - "true"
+      - weight: 10
+        preference:
+          matchExpressions:
+          - key: tools
+            operator: In
+            values:
+            - "true"
+  tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
