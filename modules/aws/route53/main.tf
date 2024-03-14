@@ -112,7 +112,7 @@ locals {
 }
 
 resource "aws_ssm_parameter" "pub-cert-arn" {
-  count = var.create_cert && var.parent_zone_id != "" ? 1 : 0
+  count = var.create_cert && ( var.create_public || var.parent_zone_id != "" ) ? 1 : 0
   name  = "/entigo-infralib/${local.hname}/pub_cert_arn"
   type  = "String"
   value = aws_acm_certificate.pub[0].arn
