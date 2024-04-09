@@ -20,8 +20,7 @@ const terraformFolderRelativeToRoot = "test"
 const providersPath = "/providers"
 const testProvidersPath = "./providers"
 
-
-func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) (*terraform.Options) {
+func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) *terraform.Options {
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
@@ -35,7 +34,7 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
 		Reconfigure:  true,
-		Vars: vars,
+		Vars:         vars,
 		VarFiles:     []string{varFile},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,
@@ -44,12 +43,15 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 		},
 	})
 	terraform.Init(t, terraformOptions)
-        return terraformOptions
+	return terraformOptions
 }
 
-func ApplyTerraform(t *testing.T,  workspaceName string, terraformOptions *terraform.Options) (map[string]interface{}, func()) {
-	
-	terraform.WorkspaceSelectOrNew(t, terraformOptions, workspaceName)
+func ApplyTerraform(t *testing.T, workspaceName string, terraformOptions *terraform.Options) (map[string]interface{}, func()) {
+
+	_, err := terraform.WorkspaceSelectOrNewE(t, terraformOptions, workspaceName)
+	if err != nil {
+		terraform.WorkspaceSelectOrNew(t, terraformOptions, workspaceName) // Retry once
+	}
 
 	var destroy = func() {
 		// Do nothing
