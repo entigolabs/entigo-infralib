@@ -23,7 +23,7 @@ variable "eks_api_access_cidrs" {
 variable "eks_cluster_version" {
   type    = string
   nullable = false
-  default = "1.26"
+  default = "1.27"
 }
 
 variable "iam_admin_role" {

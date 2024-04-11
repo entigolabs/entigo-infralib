@@ -266,7 +266,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.15.3"
+  version = "19.21.0"
 
   cluster_name                    = local.hname
   cluster_version                 = var.eks_cluster_version
@@ -279,7 +279,7 @@ module "eks" {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.9.3-eksbuild.3"
+      addon_version = "v1.10.1-eksbuild.4"
       configuration_values = jsonencode({
           tolerations: [
             {
@@ -314,12 +314,12 @@ module "eks" {
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.26.2-eksbuild.1"
+      addon_version = "v1.27.6-eksbuild.2"
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.15.0-eksbuild.2"
+      addon_version = "v1.18.0-eksbuild.1"
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
@@ -334,7 +334,7 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.23.0-eksbuild.1"
+      addon_version = "v1.29.1-eksbuild.1"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({
