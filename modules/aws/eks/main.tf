@@ -417,6 +417,14 @@ module "eks" {
       source_cluster_security_group = true
       description                   = "Allow istio to inject sidecars"
     }
+    ingress_from_control_plane = {
+      type                          = "ingress"
+      protocol                      = "tcp"
+      from_port                     = 8080
+      to_port                       = 8080
+      source_cluster_security_group = true
+      description                   = "Allow http from control plane"
+    }
     ingress_self_all = {
       description = "Node to node all ports/protocols"
       protocol    = "-1"
