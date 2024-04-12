@@ -20,6 +20,11 @@ variable "eks_api_access_cidrs" {
   default = []
 }
 
+variable "eks_nodeport_access_cidrs" {
+  type = list(string)
+  default = []
+}
+
 variable "eks_cluster_version" {
   type    = string
   nullable = false

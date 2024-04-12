@@ -433,6 +433,16 @@ module "eks" {
       type        = "egress"
       cidr_blocks = ["0.0.0.0/0"]
     }
+    
+    ingress_allow_nodeport = {
+      description = "Allow NodePort"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "ingress"
+      cidr_blocks = var.eks_nodeport_access_cidrs
+    }
+    
   }
 
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
