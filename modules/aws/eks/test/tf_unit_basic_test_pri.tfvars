@@ -7,3 +7,4 @@ eks_mon_min_size            = 0
 eks_mon_max_size            = 0
 eks_main_min_size            = 4
 eks_main_max_size            = 6
+eks_nodeport_access_cidrs   = ["10.10.10.10/32"]
