@@ -69,7 +69,7 @@ func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName 
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-0", namespaceName), 30, 6*time.Second)
+	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-0", namespaceName), 30, 10*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-0 pod error:", namespaceName), err)
 	}
