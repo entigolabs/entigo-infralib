@@ -226,7 +226,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.27.0"
+  version               = "5.39.0"
   role_name             = "${local.hname}-ebs-csi"
   attach_ebs_csi_policy = true
   oidc_providers = {
@@ -244,7 +244,7 @@ module "ebs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.27.0"
+  version               = "5.39.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
