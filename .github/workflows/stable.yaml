@@ -37,31 +37,33 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         echo "Current stable release commit is $(git rev-parse HEAD)"
+        providers/test.sh &
+        modules/aws/cost-alert/test.sh &
+        modules/aws/hello-world/test.sh &
         modules/aws/vpc/test.sh 
+        modules/aws/route53/test.sh &
         modules/aws/eks/test.sh 
-        providers/test.sh
+        modules/aws/ec2/test.sh &
+        modules/k8s/hello-world/test.sh &
+        modules/k8s/aws-storageclass/test.sh &
+        modules/k8s/metrics-server/test.sh &
+        modules/k8s/argocd/test.sh &
+        modules/aws/argocd/test.sh &
+        modules/aws/helm-git/test.sh &
+        modules/k8s/istio-base/test.sh &
+        modules/k8s/istio-istiod/test.sh &
         modules/aws/crossplane/test.sh
-        modules/aws/route53/test.sh
-        modules/aws/cost-alert/test.sh
-        modules/aws/ec2/test.sh
-        modules/k8s/argocd/test.sh
-        modules/aws/argocd/test.sh
-        modules/aws/helm-git/test.sh
-        modules/aws/hello-world/test.sh
         modules/k8s/crossplane/test.sh
-        modules/k8s/istio-base/test.sh
-        modules/k8s/istio-istiod/test.sh
+        modules/k8s/external-secrets/test.sh &
+        modules/k8s/aws-alb/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
-        modules/k8s/external-secrets/test.sh
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/aws-storageclass/test.sh
-        modules/k8s/metrics-server/test.sh
-        modules/k8s/loki/test.sh
-        modules/k8s/mimir/test.sh
-        modules/k8s/grafana/test.sh
-        modules/k8s/keycloak/test.sh
-        modules/k8s/hello-world/test.sh
+        modules/k8s/loki/test.sh &
+        modules/k8s/mimir/test.sh &
+        modules/k8s/grafana/test.sh &
+        modules/k8s/keycloak/test.sh &
+
+        wait
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
