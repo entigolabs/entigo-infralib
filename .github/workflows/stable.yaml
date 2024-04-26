@@ -38,7 +38,6 @@ jobs:
       run: |
         echo "Current stable release commit is $(git rev-parse HEAD)"
         pids=()
-        
         providers/test.sh &
         pids+=$!
         modules/aws/cost-alert/test.sh &
@@ -82,8 +81,6 @@ jobs:
         pids+=$!
         modules/k8s/keycloak/test.sh &
         pids+=$!
-        
-        
         for p in ${pids[@]}; do
           wait $p || exit 1
         done
