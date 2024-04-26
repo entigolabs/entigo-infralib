@@ -7,6 +7,7 @@ eks_db_min_size              = 0
 eks_db_max_size              = 0
 eks_main_min_size            = 3
 eks_main_max_size            = 6
+eks_nodeport_access_cidrs   = ["10.10.10.10/32"]
 eks_main_instance_types   = ["t3.small"]
 eks_mainarm_min_size         = 1
 eks_mainarm_max_size         = 2

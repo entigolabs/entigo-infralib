@@ -38,8 +38,6 @@ jobs:
       run: |
         echo "Current stable release commit is $(git rev-parse HEAD)"
         pids=()
-        providers/test.sh &
-        pids+=$!
         modules/aws/cost-alert/test.sh &
         pids+=$!
         modules/aws/hello-world/test.sh &
@@ -48,6 +46,8 @@ jobs:
         modules/aws/route53/test.sh &
         pids+=$!
         modules/aws/eks/test.sh 
+        providers/test.sh &
+        pids+=$!
         modules/aws/ec2/test.sh &
         pids+=$!
         modules/k8s/hello-world/test.sh &
