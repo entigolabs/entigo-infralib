@@ -8,16 +8,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  install_main:
-    name: Upgrade stable to main
+  install_tfmain:
+    name: Upgrade stable to main (tfmain)
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
+    - name: Checkout code (tfmain)
       uses: actions/checkout@v3
       with:
         ref: main
-    - name: Update resources based on main code
-      id: update_to_main
+    - name: Update resources based on main code (tfmain)
+      id: update_to_main_tfmain
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        modules/aws/vpc/test.sh
+        modules/aws/eks/test.sh
+        modules/aws/crossplane/test.sh
+        echo "Current main commit is $(git rev-parse HEAD)"
+    - name: Slack Failed To Update to Main Message (tfmain)
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main (tfmain) failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  install_standalone:
+    name: Upgrade stable to main (standalone)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (standalone)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Update resources based on main code (standalone)
+      id: update_to_main_standalone
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -26,46 +58,105 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         profiles/test.sh
-        modules/aws/vpc/test.sh
-        modules/aws/eks/test.sh
         providers/test.sh
-        modules/aws/crossplane/test.sh
-        modules/aws/route53/test.sh 
         modules/aws/cost-alert/test.sh
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
-        modules/k8s/argocd/test.sh
-        modules/aws/argocd/test.sh
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
         modules/aws/hello-world/test.sh
-        modules/k8s/crossplane/test.sh
-        modules/k8s/istio-base/test.sh
-        modules/k8s/istio-istiod/test.sh
-        modules/k8s/istio-gateway/test.sh
-        modules/k8s/external-dns/test.sh
-        modules/k8s/external-secrets/test.sh
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/aws-storageclass/test.sh
-        modules/k8s/metrics-server/test.sh
-        modules/k8s/loki/test.sh
-        modules/k8s/mimir/test.sh
-        modules/k8s/grafana/test.sh
-        modules/k8s/keycloak/test.sh
-        modules/k8s/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message
+    - name: Slack Failed To Update to Main Message  (standalone)
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main failed.'
+        SLACK_MESSAGE: 'Updating from latest release to main (standalone) failed.'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
 
+  install_eksa:
+    needs: [install_tfmain]
+    name: Upgrade stable to main (eksa)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (eksa)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Update resources based on main code (eksa)
+      id: update_to_main_eksa
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        modules/k8s/crossplane/test.sh
+        modules/k8s/aws-alb/test.sh
+        modules/k8s/istio-base/test.sh
+        modules/k8s/istio-istiod/test.sh
+        modules/k8s/istio-gateway/test.sh
+        modules/k8s/external-dns/test.sh
+        modules/k8s/external-secrets/test.sh
+        modules/k8s/loki/test.sh
+        modules/k8s/mimir/test.sh
+        modules/k8s/grafana/test.sh
+        modules/k8s/keycloak/test.sh
+        echo "Current main commit is $(git rev-parse HEAD)"
+    - name: Slack Failed To Update to Main Message (eksa)
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main (eksa) failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+  
+  install_eksb:
+    needs: [install_tfmain]
+    name: Upgrade stable to main (eksb)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (eksb)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Update resources based on main code (eksb)
+      id: update_to_main_eksb
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        modules/k8s/aws-storageclass/test.sh
+        modules/aws/route53/test.sh 
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
+        modules/k8s/metrics-server/test.sh
+        modules/k8s/hello-world/test.sh
+        modules/k8s/argocd/test.sh
+        modules/aws/argocd/test.sh
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
+        echo "Current main commit is $(git rev-parse HEAD)"
+    - name: Slack Failed To Update to Main Message (tfsecondary)
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main (tfsecondary) failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+        
+
+
   release:   
     runs-on: ubuntu-latest
-    needs: install_main
+    needs: [install_standalone,install_tfmain,install_eksa,install_eksb]
     name: Release
     steps:
     - name: Checkout code
@@ -97,7 +188,9 @@ jobs:
                 
                 const fs = require('fs')
                 const versionFile = fs.readFileSync('release_version.txt')
-                core.info('Release from file is ' + versionFile);
+                if ( versionFile != `v${major}.${minor}` ) {
+                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionFile + '.0!');
+                }
                 
                 const new_version = `v${major}.${minor}.${patch}`
                 core.setOutput('new_version',  new_version);
