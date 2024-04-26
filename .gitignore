@@ -10,3 +10,4 @@ providers/test_base.tf
 */go.sum
 .idea
 .DS_Store
+providers/tmp_tf/
