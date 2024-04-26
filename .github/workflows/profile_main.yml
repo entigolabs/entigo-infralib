@@ -72,11 +72,12 @@ jobs:
                 const fs = require('fs')
                 const versionFile = fs.readFileSync('release_version.txt');
                 const versionValue = versionFile.toString().trim();
+                let new_version;
                 if ( versionValue != `${major}.${minor}` ) {
                   core.info('File majour and minor version differ from latest release, initializing new release! ' + versionValue + ' vs ' + major + '.' + minor);
-                  const new_version = `v${versionValue}.0`
+                  new_version = `v${versionValue}.0`
                 } else {
-                  const new_version = `v${major}.${minor}.${patch}`
+                  new_version = `v${major}.${minor}.${patch}`
                 }
                 core.setOutput('new_version = ',  new_version);
                 core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
