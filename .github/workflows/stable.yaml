@@ -37,53 +37,54 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         echo "Current stable release commit is $(git rev-parse HEAD)"
-        pids=()
+        PIDS=""
         modules/aws/cost-alert/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/aws/hello-world/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/aws/vpc/test.sh 
         modules/aws/route53/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/aws/eks/test.sh 
         providers/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/aws/ec2/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/hello-world/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/aws-storageclass/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/metrics-server/test.sh &
-        pids+=$!
-        modules/k8s/argocd/test.sh &
-        pids+=$!
-        modules/aws/argocd/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
+
         modules/aws/helm-git/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/istio-base/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/istio-istiod/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/aws/crossplane/test.sh
         modules/k8s/crossplane/test.sh
         modules/k8s/external-secrets/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/aws-alb/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
+        modules/k8s/argocd/test.sh &
+        PIDS="$PIDS $!"
+        modules/aws/argocd/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/mimir/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/grafana/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         modules/k8s/keycloak/test.sh &
-        pids+=$!
+        PIDS="$PIDS $!"
         
         FAIL=0
-        for p in ${pids[@]}; do
+        for p in $PIDS; do
             wait $p || let "FAIL+=1"
             echo $p $FAIL
         done
