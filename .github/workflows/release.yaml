@@ -156,8 +156,6 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        modules/k8s/istio-base/test.sh
-        modules/k8s/istio-istiod/test.sh
         modules/k8s/external-secrets/test.sh
         modules/k8s/loki/test.sh
         modules/k8s/mimir/test.sh
@@ -227,6 +225,8 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/k8s/aws-storageclass/test.sh
+        modules/k8s/istio-base/test.sh
+        modules/k8s/istio-istiod/test.sh
         modules/k8s/metrics-server/test.sh
         modules/k8s/hello-world/test.sh
         modules/k8s/argocd/test.sh
