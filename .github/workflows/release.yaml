@@ -120,6 +120,8 @@ jobs:
         pids+=$!
         modules/k8s/keycloak/test.sh &
         pids+=$!
+        modules/k8s/argocd/test.sh &
+        pids+=$!
         
         FAIL=0
         for p in ${pids[@]}; do
@@ -167,7 +169,7 @@ jobs:
         modules/k8s/istio-istiod/test.sh
         modules/k8s/metrics-server/test.sh
         modules/k8s/hello-world/test.sh
-        modules/k8s/argocd/test.sh
+        
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfsecondary)
       if: ${{ failure() }}
