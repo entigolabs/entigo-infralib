@@ -173,7 +173,7 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
   
-  install_eksalblb:
+  install_eksalb:
     needs: [install_tfmain,install_ekscp]
     name: Upgrade stable to main (eksalb)
     runs-on: ubuntu-latest
