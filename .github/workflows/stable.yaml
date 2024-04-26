@@ -81,9 +81,17 @@ jobs:
         pids+=$!
         modules/k8s/keycloak/test.sh &
         pids+=$!
+        
+        FAIL=0
         for p in ${pids[@]}; do
-          wait $p || exit 1
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
         done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2

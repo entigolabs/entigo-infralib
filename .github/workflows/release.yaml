@@ -30,9 +30,17 @@ jobs:
         modules/aws/route53/test.sh &
         pids+=$!
         modules/aws/eks/test.sh
+        
+        FAIL=0
         for p in ${pids[@]}; do
-          wait $p || exit 1
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
         done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfmain)
       if: ${{ failure() }}
@@ -112,9 +120,17 @@ jobs:
         pids+=$!
         modules/k8s/keycloak/test.sh &
         pids+=$!
+        
+        FAIL=0
         for p in ${pids[@]}; do
-          wait $p || exit 1
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
         done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (ekscp)
       if: ${{ failure() }}
@@ -183,6 +199,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         pids=()
+        
         ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
         pids+=$!
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
@@ -191,9 +208,17 @@ jobs:
         pids+=$!
         providers/test.sh &
         pids+=$!
+        
+        FAIL=0
         for p in ${pids[@]}; do
-          wait $p || exit 1
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
         done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfsecondary)
       if: ${{ failure() }}
