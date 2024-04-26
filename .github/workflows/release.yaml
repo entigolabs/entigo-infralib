@@ -25,10 +25,14 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        pids=()
         modules/aws/vpc/test.sh
         modules/aws/route53/test.sh &
+        pids+=$!
         modules/aws/eks/test.sh
-        wait
+        for p in ${pids[@]}; do
+          wait $p || exit 1
+        done
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfmain)
       if: ${{ failure() }}
@@ -91,17 +95,26 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        pids=()
         modules/aws/crossplane/test.sh
         modules/k8s/crossplane/test.sh
         modules/k8s/external-secrets/test.sh &
+        pids+=$!
         modules/k8s/aws-alb/test.sh
         modules/k8s/external-dns/test.sh
         modules/k8s/istio-gateway/test.sh &
+        pids+=$!
         modules/k8s/loki/test.sh &
+        pids+=$!
         modules/k8s/mimir/test.sh &
+        pids+=$!
         modules/k8s/grafana/test.sh &
+        pids+=$!
         modules/k8s/keycloak/test.sh &
-        wait
+        pids+=$!
+        for p in ${pids[@]}; do
+          wait $p || exit 1
+        done
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (ekscp)
       if: ${{ failure() }}
@@ -169,11 +182,18 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        pids=()
         ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
+        pids+=$!
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
+        pids+=$!
         modules/aws/argocd/test.sh &
+        pids+=$!
         providers/test.sh &
-        wait
+        pids+=$!
+        for p in ${pids[@]}; do
+          wait $p || exit 1
+        done
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfsecondary)
       if: ${{ failure() }}
