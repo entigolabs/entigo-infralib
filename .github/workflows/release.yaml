@@ -72,40 +72,6 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
 
-  install_tfalt:
-    needs: [install_tfmain]
-    name: Upgrade stable to main (tfalt)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (tfalt)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (tfalt)
-      id: update_to_main_tfalt
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        modules/aws/route53/test.sh 
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
-        modules/aws/argocd/test.sh
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (tfsecondary)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (tfsecondary) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-
   install_ekscp:
     needs: [install_tfmain]
     name: Upgrade stable to main (ekscp)
@@ -126,6 +92,17 @@ jobs:
       run: |
         modules/aws/crossplane/test.sh
         modules/k8s/crossplane/test.sh
+        modules/k8s/external-secrets/test.sh &
+        modules/k8s/loki/test.sh &
+        modules/k8s/mimir/test.sh &
+        
+        modules/k8s/aws-alb/test.sh
+        modules/k8s/istio-gateway/test.sh
+        modules/k8s/external-dns/test.sh
+        modules/k8s/grafana/test.sh &
+        modules/k8s/keycloak/test.sh &
+        wait
+
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (ekscp)
       if: ${{ failure() }}
@@ -138,73 +115,6 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
 
-  install_eksa:
-    needs: [install_tfmain, install_ekscp]
-    name: Upgrade stable to main (eksa)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (eksa)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (eksa)
-      id: update_to_main_eksa
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        modules/k8s/external-secrets/test.sh
-        modules/k8s/loki/test.sh
-        modules/k8s/mimir/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (eksa)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (eksa) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-  
-  install_eksalb:
-    needs: [install_tfmain,install_ekscp]
-    name: Upgrade stable to main (eksalb)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (eksalb)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (eksalb)
-      id: update_to_main_eksalb
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/istio-gateway/test.sh
-        modules/k8s/external-dns/test.sh
-        modules/k8s/grafana/test.sh
-        modules/k8s/keycloak/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (eksalb)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (eksalb) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
   
   install_eksb:
     needs: [install_tfmain]
@@ -242,11 +152,43 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
         
-
+  install_tfalt:
+    needs: [install_tfmain]
+    name: Upgrade stable to main (tfalt)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (tfalt)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Update resources based on main code (tfalt)
+      id: update_to_main_tfalt
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        modules/aws/route53/test.sh 
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
+        modules/aws/argocd/test.sh
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
+        echo "Current main commit is $(git rev-parse HEAD)"
+    - name: Slack Failed To Update to Main Message (tfsecondary)
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main (tfsecondary) failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
 
   release:   
     runs-on: ubuntu-latest
-    needs: [install_standalone,install_tfmain,install_tfalt,install_ekscp,install_eksalb,install_eksa,install_eksb]
+    needs: [install_standalone,install_tfmain,install_ekscp,install_eksb,install_tfalt]
     name: Release
     steps:
     - name: Checkout code
@@ -277,9 +219,10 @@ jobs:
                 const patch = parseInt(match[3], 10) + 1;
                 
                 const fs = require('fs')
-                const versionFile = fs.readFileSync('release_version.txt').toString().trim();
-                if ( versionFile != `v${major}.${minor}` ) {
-                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionFile) + '.0!');
+                const versionFile = fs.readFileSync('release_version.txt')
+                const versionValue= versionFile.toString().trim();
+                if ( versionValue != `v${major}.${minor}` ) {
+                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionValue);
                 }
                 
                 const new_version = `v${major}.${minor}.${patch}`
