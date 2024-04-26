@@ -9,7 +9,7 @@ on:
 
 jobs:
   install_tfmain:
-    name: Upgrade stable to main (tfmain)
+    name: Stable to main (tfmain)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (tfmain)
@@ -40,7 +40,7 @@ jobs:
         SLACK_FOOTER: ""
 
   install_standalone:
-    name: Upgrade stable to main (standalone)
+    name: Stable to main (standalone)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (standalone)
@@ -74,7 +74,7 @@ jobs:
 
   install_ekscp:
     needs: [install_tfmain]
-    name: Upgrade stable to main (ekscp)
+    name: Stable to main (ekscp)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (ekscp)
@@ -93,12 +93,11 @@ jobs:
         modules/aws/crossplane/test.sh
         modules/k8s/crossplane/test.sh
         modules/k8s/external-secrets/test.sh &
+        modules/k8s/aws-alb/test.sh
+        modules/k8s/istio-gateway/test.sh &
+        modules/k8s/external-dns/test.sh
         modules/k8s/loki/test.sh &
         modules/k8s/mimir/test.sh &
-        
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/istio-gateway/test.sh
-        modules/k8s/external-dns/test.sh
         modules/k8s/grafana/test.sh &
         modules/k8s/keycloak/test.sh &
         wait
@@ -118,7 +117,7 @@ jobs:
   
   install_eksb:
     needs: [install_tfmain]
-    name: Upgrade stable to main (eksb)
+    name: Stable to main (eksb)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (eksb)
@@ -154,7 +153,7 @@ jobs:
         
   install_tfalt:
     needs: [install_tfmain]
-    name: Upgrade stable to main (tfalt)
+    name: Stable to main (tfalt)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (tfalt)
@@ -170,10 +169,11 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
         modules/aws/route53/test.sh 
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh
-        modules/aws/argocd/test.sh
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
+        modules/aws/argocd/test.sh &
+        wait
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfsecondary)
       if: ${{ failure() }}
@@ -219,10 +219,10 @@ jobs:
                 const patch = parseInt(match[3], 10) + 1;
                 
                 const fs = require('fs')
-                const versionFile = fs.readFileSync('release_version.txt')
-                const versionValue= versionFile.toString().trim();
-                if ( versionValue != `v${major}.${minor}` ) {
-                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionValue);
+                const versionFile = fs.readFileSync('release_version.txt');
+                const versionValue = versionFile.toString().trim();
+                if ( versionValue != `${major}.${minor}` ) {
+                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionValue + ' vs ' + major + '.' + minor);
                 }
                 
                 const new_version = `v${major}.${minor}.${patch}`
