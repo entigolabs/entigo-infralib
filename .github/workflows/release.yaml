@@ -59,7 +59,6 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         profiles/test.sh
-        providers/test.sh
         modules/aws/cost-alert/test.sh
         modules/aws/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
@@ -173,6 +172,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
         modules/aws/argocd/test.sh &
+        providers/test.sh &
         wait
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfsecondary)
