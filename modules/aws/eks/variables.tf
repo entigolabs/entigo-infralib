@@ -22,7 +22,7 @@ variable "eks_api_access_cidrs" {
 
 variable "eks_nodeport_access_cidrs" {
   type = list(string)
-  default = []
+  default = ["127.0.0.1"] #Empty list will cause EKS to fail on first run. So this is a dummy value.
 }
 
 variable "eks_cluster_version" {
