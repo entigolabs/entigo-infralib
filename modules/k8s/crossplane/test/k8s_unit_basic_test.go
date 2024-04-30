@@ -82,8 +82,9 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providers crd error")
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1alpha1", []string{"controllerconfigs"}, 60, 1*time.Second)
-	require.NoError(t, err, "Controllerconfigs crd error")
+	
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 1*time.Second)
+	require.NoError(t, err, "DeploymentRuntimeConfig crd error")
 
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues
@@ -95,8 +96,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, err, "Controller config error")
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
