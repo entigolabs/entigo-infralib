@@ -3,14 +3,12 @@ apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
   name: aws-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "1"
+    helm.sh/resource-policy: keep
 spec:
   deploymentTemplate:
-    metadata:
-      annotations:
-        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-        argocd.argoproj.io/sync-wave: "1"
-        eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
-        helm.sh/resource-policy: keep
     spec:
       selector: {}
       strategy: {}
@@ -26,7 +24,9 @@ spec:
                     values:
                     - "true"
                 weight: 90
-          containers: null
+          containers:
+          - name: package-runtime
+            securityContext: {}
           securityContext:
             fsGroup: 2000
           serviceAccountName: aws-crossplane
@@ -38,15 +38,6 @@ spec:
   serviceAccountTemplate:
     metadata:
       annotations:
-        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-        argocd.argoproj.io/sync-wave: "1"
         eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
-        helm.sh/resource-policy: keep
-  serviceTemplate:
-    metadata:
-      annotations:
-        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-        argocd.argoproj.io/sync-wave: "1"
-        eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
-        helm.sh/resource-policy: keep 
+
 {{- end }}
