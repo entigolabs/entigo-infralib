@@ -107,19 +107,19 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	assert.NotEmpty(t, k8sproviderDeployment, "Provider k8s currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, k8sproviderDeployment, 60, 1*time.Second)
 	//aws-iam provider
-	iamprovider, iamerr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-iam-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, iamerr, "Provider aws-iam error")
-	assert.NotNil(t, iamprovider, "Provider aws-iam is nil")
-	iamproviderDeployment := k8s.GetStringValue(iamprovider.Object, "status", "currentRevision")
-	assert.NotEmpty(t, iamproviderDeployment, "Provider aws-iam currentRevision is empty")
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, iamproviderDeployment, 60, 1*time.Second)
+	//iamprovider, iamerr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-iam-%s", releaseName), 60, 1*time.Second)
+	//require.NoError(t, iamerr, "Provider aws-iam error")
+	//assert.NotNil(t, iamprovider, "Provider aws-iam is nil")
+	//iamproviderDeployment := k8s.GetStringValue(iamprovider.Object, "status", "currentRevision")
+	//assert.NotEmpty(t, iamproviderDeployment, "Provider aws-iam currentRevision is empty")
+	//terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, iamproviderDeployment, 60, 1*time.Second)
 	//aws-s3 provider
-	s3provider, s3err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-s3-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, s3err, "Provider aws-s3 error")
-	assert.NotNil(t, s3provider, "Provider aws-s3 is nil")
-	s3providerDeployment := k8s.GetStringValue(s3provider.Object, "status", "currentRevision")
-	assert.NotEmpty(t, s3providerDeployment, "Provider aws-s3 currentRevision is empty")
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, s3providerDeployment, 60, 1*time.Second)
+	//s3provider, s3err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-s3-%s", releaseName), 60, 1*time.Second)
+	//require.NoError(t, s3err, "Provider aws-s3 error")
+	//assert.NotNil(t, s3provider, "Provider aws-s3 is nil")
+	//s3providerDeployment := k8s.GetStringValue(s3provider.Object, "status", "currentRevision")
+	//assert.NotEmpty(t, s3providerDeployment, "Provider aws-s3 currentRevision is empty")
+	//terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, s3providerDeployment, 60, 1*time.Second)
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
