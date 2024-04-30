@@ -59,14 +59,6 @@ crossplane:
     # -- The list of Configuration packages to install together with Crossplane.
     packages: []
 
-  # -- Names of image pull secrets to use.
-  imagePullSecrets: {}
-
-  registryCaBundleConfig:
-    # -- Name of ConfigMap containing additional CA bundle for fetching from package registries.
-    name: {}
-    # -- Key to use from ConfigMap containing additional CA bundle for fetching from package registries.
-    key: {}
 
   webhooks:
     # -- Enable webhook functionality for Crossplane as well as packages installed by Crossplane.
