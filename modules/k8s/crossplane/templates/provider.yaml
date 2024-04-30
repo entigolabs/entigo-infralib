@@ -11,6 +11,25 @@ spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.47.2
   runtimeConfigRef:
     name: aws-{{ .Release.Name }}
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: aws-iam-{{ .Release.Name }}
+#spec:
+#  package: xpkg.upbound.io/upbound/provider-aws-iam:v1.4.0
+#  runtimeConfigRef:
+#    name: aws-{{ .Release.Name }}
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: aws-s3-{{ .Release.Name }}
+#spec:
+#  package: xpkg.upbound.io/upbound/provider-aws-s3:v1.4.0
+#  runtimeConfigRef:
+#    name: aws-{{ .Release.Name }}
+
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
