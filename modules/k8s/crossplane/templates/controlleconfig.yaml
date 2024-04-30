@@ -1,6 +1,6 @@
 {{- if .Values.installProvider }}
-apiVersion: pkg.crossplane.io/v1alpha1
-kind: ControllerConfig
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
 metadata:
   name: aws-{{ .Release.Name }}
   annotations:
