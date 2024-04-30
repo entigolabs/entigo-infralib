@@ -35,8 +35,10 @@ spec:
             key: tools
             operator: Equal
             value: "true"
+  serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
+      name: aws-crossplane
       annotations:
         eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
 
