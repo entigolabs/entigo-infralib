@@ -100,10 +100,10 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	assert.NotEmpty(t, providerDeployment, "Provider aws currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
 	//k8s provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, err, "Provider k8s error")
-	assert.NotNil(t, provider, "Provider k8s is nil")
-	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
+	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, k8serr, "Provider k8s error")
+	assert.NotNil(t, k8sprovider, "Provider k8s is nil")
+	providerDeployment := k8s.GetStringValue(k8sprovider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider k8s currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
 	
