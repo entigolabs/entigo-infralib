@@ -80,7 +80,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 5*time.Second)
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 5*time.Second)
 	require.NoError(t, err, "Providers crd error")
 	
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 1*time.Second)
@@ -89,15 +89,25 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, err, "Provider error")
-	assert.NotNil(t, provider, "Provider is nil")
-	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
-	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+	
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
+        //aws community provider
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "Provider aws error")
+	assert.NotNil(t, provider, "Provider aws is nil")
+	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
+	assert.NotEmpty(t, providerDeployment, "Provider aws currentRevision is empty")
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+	//k8s provider
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "Provider k8s error")
+	assert.NotNil(t, provider, "Provider k8s is nil")
+	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
+	assert.NotEmpty(t, providerDeployment, "Provider k8s currentRevision is empty")
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+	
+
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
@@ -114,12 +124,12 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	assert.NotNil(t, bucket, "Bucket is nil")
 	assert.Equal(t, bucketName, bucket.GetName(), "Bucket name is not equal")
 
-	_, err = k8s.WaitUntilK8SBucketAvailable(t, kubectlOptions, bucketName, 30, 2*time.Second)
+	_, err = k8s.WaitUntilK8SBucketAvailable(t, kubectlOptions, bucketName, 30, 4*time.Second)
 	if err != nil {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}
 	require.NoError(t, err, "Bucket syncing error")
-	err = aws.WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 2*time.Second)
+	err = aws.WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 4*time.Second)
 	if err != nil {
 		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
 	}

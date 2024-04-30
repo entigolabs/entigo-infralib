@@ -120,7 +120,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/keycloak/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/argocd/test.sh &
+        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh &
         PIDS="$PIDS $!"
         
         FAIL=0
@@ -205,8 +205,6 @@ jobs:
         ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
         PIDS="$PIDS $!"
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
-        PIDS="$PIDS $!"
-        modules/aws/argocd/test.sh &
         PIDS="$PIDS $!"
         providers/test.sh &
         PIDS="$PIDS $!"
