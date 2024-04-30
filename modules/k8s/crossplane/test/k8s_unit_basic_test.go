@@ -96,8 +96,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
-	require.NoError(t, err, "Controller config error")
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
