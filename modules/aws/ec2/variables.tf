@@ -14,7 +14,7 @@ variable "ami_architectures" {
 
 variable "ami_names" {
   type = list(string)
-  default = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  default = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
 }
 
 variable "instance_type" {
