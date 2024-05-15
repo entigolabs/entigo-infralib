@@ -8,6 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 	"time"
 )
 
@@ -39,7 +40,7 @@ func WaitUntilResourcesAvailable(
 				return "", err
 			}
 			for _, resource := range resources {
-				if !containsResource(resourceList, resource) {
+				if !containsResource(resourceList, groupVersion, resource) {
 					return "", errors.New(fmt.Sprintf("Resource %s not found in group %s", resource, groupVersion))
 				}
 			}
@@ -54,9 +55,10 @@ func WaitUntilResourcesAvailable(
 	return nil
 }
 
-func containsResource(list *metaV1.APIResourceList, resource string) bool {
+func containsResource(list *metaV1.APIResourceList, groupVersion string, resource string) bool {
+	group := strings.Split(groupVersion, "/")[0]
 	for _, r := range list.APIResources {
-		if r.Name == resource {
+		if r.Name == resource && (r.Group == group || r.Group == "") {
 			return true
 		}
 	}
