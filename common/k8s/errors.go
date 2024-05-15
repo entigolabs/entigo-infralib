@@ -32,7 +32,7 @@ type CrossplaneObjectNotAvailable struct {
 func (err CrossplaneObjectNotAvailable) Error() string {
 	status := getStatusMap(err.object)
 	return fmt.Sprintf(
-		"Bucket %s is not available, ready: %s, synced: %s", err.object.GetName(), status["Ready"],
+		"%s %s is not available, ready: %s, synced: %s", err.object.GetKind(), err.object.GetName(), status["Ready"],
 		status["Synced"],
 	)
 }
@@ -55,8 +55,8 @@ func NewProviderNotAvailable(provider *unstructured.Unstructured) error {
 	return ProviderNotAvailable{provider}
 }
 
-func NewCrossplaneObjectNotAvailable(bucket *unstructured.Unstructured) error {
-	return CrossplaneObjectNotAvailable{bucket}
+func NewCrossplaneObjectNotAvailable(object *unstructured.Unstructured) error {
+	return CrossplaneObjectNotAvailable{object}
 }
 
 func NewIngressNotAvailable(ingress *unstructured.Unstructured) error {
