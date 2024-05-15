@@ -35,8 +35,7 @@ func WaitUntilDeploymentRuntimeConfigAvailable(t testing.TestingT, options *k8s.
 	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }
 
-func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
-	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
+func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }
 

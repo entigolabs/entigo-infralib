@@ -11,6 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,7 +127,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
@@ -156,7 +158,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "kubernetes.crossplane.io/v1alpha1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	resource = schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha1", Resource: "providerconfigs"}
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	serviceName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
