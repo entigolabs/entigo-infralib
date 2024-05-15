@@ -39,20 +39,19 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-	
+
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role",runnerName))
+	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role", runnerName))
 	setValues["awsRole"] = iamrole
-	
+
 	if prefix != "runner-main" {
 		//releaseName = fmt.Sprintf("crossplane-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
-		
+
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
-
 
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
@@ -82,17 +81,17 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 5*time.Second)
 	require.NoError(t, err, "Providers crd error")
-	
+
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfig crd error")
 
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	
+
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-        //aws community provider
+	//aws community provider
 	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
@@ -154,4 +153,28 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err, "S3 Bucket deletion error")
 	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
 	require.NoError(t, err, "Bucket didn't get deleted")
+
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "kubernetes.crossplane.io/v1alpha1", []string{"providerconfigs"}, 60, 1*time.Second)
+	require.NoError(t, err, "Providerconfigs crd error")
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "Provider config error")
+
+	serviceName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
+	object, err := k8s.CreateK8SObject(t, kubectlOptions, serviceName, "./templates/object.yaml")
+	require.NoError(t, err, "Creating object error")
+	assert.NotNil(t, object, "Object is nil")
+	assert.Equal(t, serviceName, object.GetName(), "Object name is not equal")
+
+	_, err = k8s.WaitUntilK8SObjectAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
+	if err != nil {
+		_ = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
+	}
+	require.NoError(t, err, "Object syncing error")
+	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
+
+	err = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
+	require.NoError(t, err, "Deleting object error")
+
+	err = k8s.WaitUntilK8SObjectDeleted(t, kubectlOptions, serviceName, 12, 5*time.Second)
+	require.NoError(t, err, "Object didn't get deleted")
 }

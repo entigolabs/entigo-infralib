@@ -43,8 +43,8 @@ func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOp
 func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
 	availability := defaultObjectAvailability(name, resource)
-	availability.isAvailable = isBucketAvailable
-	availability.objectError = NewBucketNotAvailable
+	availability.isAvailable = isCrossplaneObjectAvailable
+	availability.objectError = NewCrossplaneObjectNotAvailable
 	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
 }
 
@@ -68,6 +68,45 @@ func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	return deleteObject(t, options, name, "", resource)
+}
+
+func WaitUntilK8SObjectAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha2", Resource: "objects"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.isAvailable = isCrossplaneObjectAvailable
+	availability.objectError = NewCrossplaneObjectNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func WaitUntilK8SObjectDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha2", Resource: "objects"}
+	namespacedObject := defaultNamespacedObject(name, resource)
+	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
+func CreateK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating k8s provider object %s", name)
+	object, err := ReadObjectFromFile(t, templateFile)
+	if err != nil {
+		return nil, err
+	}
+	object.SetName(name)
+	err = unstructured.SetNestedField(object.Object, name, "spec", "forProvider", "manifest", "metadata", "name")
+	if err != nil {
+		return nil, err
+	}
+	err = unstructured.SetNestedField(object.Object, options.Namespace, "spec", "forProvider", "manifest", "metadata", "namespace")
+	if err != nil {
+		return nil, err
+	}
+	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha2", Resource: "objects"}
+	return createObject(t, options, object, "", resource)
+}
+
+func DeleteK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting k8s provider object %s", name)
+	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha2", Resource: "objects"}
 	return deleteObject(t, options, name, "", resource)
 }
 
@@ -239,8 +278,8 @@ func isObjectNotNil(config *unstructured.Unstructured) bool {
 	return config != nil && config.Object != nil
 }
 
-func isBucketAvailable(bucket *unstructured.Unstructured) bool {
-	status := getStatusMap(bucket)
+func isCrossplaneObjectAvailable(object *unstructured.Unstructured) bool {
+	status := getStatusMap(object)
 	return status["Ready"] == "True" && status["Synced"] == "True"
 }
 
