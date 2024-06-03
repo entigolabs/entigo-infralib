@@ -41,4 +41,6 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
 spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0
+  runtimeConfigRef:
+    name: k8s-{{ .Release.Name }}
 {{- end }}
