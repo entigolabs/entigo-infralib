@@ -18,7 +18,7 @@ func SetupBucket(t testing.TestingT, bucketName string) string {
 	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT") , []string{os.Getenv("GOOGLE_REGION")}, nil)
 	err := gcp.CreateStorageBucketE(t, os.Getenv("GOOGLE_PROJECT"), bucketName, nil)
 	if err != nil {
-		if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
+		if strings.Contains(err.Error(), "Your previous request to create the named bucket succeeded and you already own it.") {
 			logger.Log(t, "Bucket already owned by you. Skipping bucket creation.")
 		} else {
 			t.Fatal(err)
