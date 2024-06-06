@@ -152,19 +152,19 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	testFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", providersPath, "base.tf"))
 	testFileBody := testFile.Body()
 	modifyBackendType(t, testFileBody, providerType)
-	//providersBlock := getRequiredProvidersBlock(t, testFile)
-	//for name, attribute := range versionsAttributes {
-	//	providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
-	//	providerBlocks := getProviderBlocks(t, name)
-	//	for _, providerBlock := range providerBlocks {
-	//		testFileBody.AppendBlock(providerBlock)
-	//	}
-	//}
-	//testModule := testFileBody.AppendNewBlock("module", []string{"test"})
-	//testModuleBody := testModule.Body()
-	//testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
-	//addVariables(variables, testModuleBody)
-	//addOutputs(outputBlocks, testFileBody)
+	providersBlock := getRequiredProvidersBlock(t, testFile)
+	for name, attribute := range versionsAttributes {
+		providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
+		providerBlocks := getProviderBlocks(t, name)
+		for _, providerBlock := range providerBlocks {
+			testFileBody.AppendBlock(providerBlock)
+		}
+	}
+	testModule := testFileBody.AppendNewBlock("module", []string{"test"})
+	testModuleBody := testModule.Body()
+	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
+	addVariables(variables, testModuleBody)
+	addOutputs(outputBlocks, testFileBody)
 	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
 }
 
