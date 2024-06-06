@@ -45,17 +45,22 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 	versionsAttributes := getProviderVersions(t, "versions.tf")
 
 	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks, versionsAttributes, providerType)
+	backendConfig := map[string]interface{}{
+		"bucket": bucketName,
+	}
+	if providerType == GCloud {
+		backendConfig["prefix"] = key
+	} else {
+		backendConfig["key"] = key
+		backendConfig["region"] = awsRegion
+	}
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: tempTestFolder,
-		Reconfigure:  true,
-		Vars:         vars,
-		VarFiles:     []string{varFile},
-		BackendConfig: map[string]interface{}{
-			"bucket": bucketName,
-			"key":    key,
-			"region": awsRegion,
-		},
+		TerraformDir:  tempTestFolder,
+		Reconfigure:   true,
+		Vars:          vars,
+		VarFiles:      []string{varFile},
+		BackendConfig: backendConfig,
 	})
 	terraform.Init(t, terraformOptions)
 	return terraformOptions
