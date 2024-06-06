@@ -2,9 +2,9 @@ package test
 
 import (
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,21 +20,21 @@ func TestTerraformCrossplane(t *testing.T) {
 }
 
 func testTerraformCrossplaneBiz(t *testing.T) {
-        oidc_provider := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/oidc_provider")
+	oidc_provider := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/oidc_provider")
 	oidc_provider_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/oidc_provider_arn")
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-			"eks_oidc_provider": oidc_provider,
-			"eks_oidc_provider_arn": oidc_provider_arn,
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+		"eks_oidc_provider":     oidc_provider,
+		"eks_oidc_provider_arn": oidc_provider_arn,
 	})
 	testTerraformCrossplane(t, "biz", options)
 }
 
 func testTerraformCrossplanePri(t *testing.T) {
-        oidc_provider := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/oidc_provider")
+	oidc_provider := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/oidc_provider")
 	oidc_provider_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/oidc_provider_arn")
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
-			"eks_oidc_provider": oidc_provider,
-			"eks_oidc_provider_arn": oidc_provider_arn,
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
+		"eks_oidc_provider":     oidc_provider,
+		"eks_oidc_provider_arn": oidc_provider_arn,
 	})
 	testTerraformCrossplane(t, "pri", options)
 }

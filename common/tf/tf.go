@@ -20,7 +20,22 @@ const terraformFolderRelativeToRoot = "test"
 const providersPath = "/providers"
 const testProvidersPath = "./providers"
 
-func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) *terraform.Options {
+type ProviderType string
+
+const (
+	AWS    ProviderType = "aws"
+	GCloud ProviderType = "gcloud"
+)
+
+func InitAWSTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) *terraform.Options {
+	return InitTerraform(t, bucketName, awsRegion, varFile, vars, AWS)
+}
+
+func InitGCloudTerraform(t *testing.T, bucketName string, gcloudRegion string, varFile string, vars map[string]interface{}) *terraform.Options {
+	return InitTerraform(t, bucketName, gcloudRegion, varFile, vars, GCloud)
+}
+
+func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}, providerType ProviderType) *terraform.Options {
 	key := fmt.Sprintf("%s/terraform.tfstate", os.Getenv("TF_VAR_prefix"))
 
 	tempTestFolder := testStructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
@@ -29,7 +44,7 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 	outputBlocks := getOutputBlocks(t, "outputs.tf")
 	versionsAttributes := getProviderVersions(t, "versions.tf")
 
-	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks, versionsAttributes)
+	createTestTfFile(t, "test.tf", tempTestFolder, variables, outputBlocks, versionsAttributes, providerType)
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTestFolder,
@@ -132,24 +147,37 @@ func getRequiredProvidersBlock(t *testing.T, file *hclwrite.File) *hclwrite.Bloc
 }
 
 func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string,
-	outputBlocks []*hclwrite.Block, versionsAttributes map[string]*hclwrite.Attribute) {
+	outputBlocks []*hclwrite.Block, versionsAttributes map[string]*hclwrite.Attribute, providerType ProviderType) {
 
 	testFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", providersPath, "base.tf"))
 	testFileBody := testFile.Body()
-	providersBlock := getRequiredProvidersBlock(t, testFile)
-	for name, attribute := range versionsAttributes {
-		providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
-		providerBlocks := getProviderBlocks(t, name)
-		for _, providerBlock := range providerBlocks {
-			testFileBody.AppendBlock(providerBlock)
-		}
-	}
-	testModule := testFileBody.AppendNewBlock("module", []string{"test"})
-	testModuleBody := testModule.Body()
-	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
-	addVariables(variables, testModuleBody)
-	addOutputs(outputBlocks, testFileBody)
+	modifyBackendType(t, testFileBody, providerType)
+	//providersBlock := getRequiredProvidersBlock(t, testFile)
+	//for name, attribute := range versionsAttributes {
+	//	providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
+	//	providerBlocks := getProviderBlocks(t, name)
+	//	for _, providerBlock := range providerBlocks {
+	//		testFileBody.AppendBlock(providerBlock)
+	//	}
+	//}
+	//testModule := testFileBody.AppendNewBlock("module", []string{"test"})
+	//testModuleBody := testModule.Body()
+	//testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
+	//addVariables(variables, testModuleBody)
+	//addOutputs(outputBlocks, testFileBody)
 	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
+}
+
+func modifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderType) {
+	terraformBlock := body.FirstMatchingBlock("terraform", []string{})
+	require.NotNil(t, terraformBlock, "terraform block not found")
+	backendBlock := terraformBlock.Body().FirstMatchingBlock("backend", []string{"TYPE"})
+	require.NotNil(t, backendBlock, "backend block not found")
+	if providerType == GCloud {
+		backendBlock.SetLabels([]string{"gcs"})
+	} else {
+		backendBlock.SetLabels([]string{"s3"})
+	}
 }
 
 func getProviderBlocks(t *testing.T, providerName string) []*hclwrite.Block {
