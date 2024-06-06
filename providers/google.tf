@@ -1,5 +1,5 @@
 provider "google" {
-  default_labels {
+  default_labels = {
   }
 }
 
