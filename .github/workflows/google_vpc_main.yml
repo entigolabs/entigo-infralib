@@ -20,7 +20,7 @@ jobs:
         GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
         GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
         GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GCLOUD_KEYFILE_JSON:  ${{ secrets.GCLOUD_KEYFILE_JSON }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         modules/google/vpc/test.sh
