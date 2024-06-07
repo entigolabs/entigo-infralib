@@ -26,6 +26,8 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         PIDS=""
+        modules/google/vpc/test.sh &
+        PIDS="$PIDS $!"
         modules/aws/vpc/test.sh
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
@@ -71,6 +73,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         profiles/test.sh
+        modules/google/services/test.sh
         modules/aws/cost-alert/test.sh
         modules/aws/hello-world/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"

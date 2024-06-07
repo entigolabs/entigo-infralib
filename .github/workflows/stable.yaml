@@ -42,6 +42,10 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/hello-world/test.sh &
         PIDS="$PIDS $!"
+        modules/google/services/test.sh &
+        PIDS="$PIDS $!"
+        modules/google/vpc/test.sh &
+        PIDS="$PIDS $!"
         modules/aws/vpc/test.sh 
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
