@@ -2,8 +2,8 @@ package test
 
 import (
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -19,16 +19,16 @@ func TestHelmGit(t *testing.T) {
 }
 
 func testTerraformHelmGitBiz(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-			"eks_cluster_name": "runner-main-biz",
-		})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+		"eks_cluster_name": "runner-main-biz",
+	})
 	testTerraformHelmGit(t, "biz", options)
 }
 
 func testTerraformHelmGitPri(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
-			"eks_cluster_name": "runner-main-pri",
-		})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
+		"eks_cluster_name": "runner-main-pri",
+	})
 	testTerraformHelmGit(t, "pri", options)
 }
 

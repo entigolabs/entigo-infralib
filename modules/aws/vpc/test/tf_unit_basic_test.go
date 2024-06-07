@@ -3,8 +3,8 @@ package test
 import (
 	"fmt"
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -20,14 +20,13 @@ func TestTerraformVpc(t *testing.T) {
 	t.Run("Pri", testTerraformVpcPri)
 }
 
-
 func testTerraformVpcBiz(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformVpcBizAssert(t, "biz", options)
 }
 
 func testTerraformVpcPri(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformVpcPriAssert(t, "pri", options)
 }
 

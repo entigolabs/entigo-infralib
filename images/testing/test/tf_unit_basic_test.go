@@ -5,6 +5,7 @@ import (
 	"testing"
 	"strings"
 	"os"
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/aws"
         "github.com/gruntwork-io/terratest/modules/k8s"
         "github.com/gruntwork-io/terratest/modules/helm"
@@ -22,12 +23,14 @@ func TestTerraformBasicOne(t *testing.T) {
 	})
 	terraform.WorkspaceSelectOrNew(t, terraformOptions, "one")
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	randomValidGcpName := gcp.RandomValidGcpName()
 	rootFolder := ".."
         terraformFolderRelativeToRoot := "."
 	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
         if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 	  spew.Dump(awsRegion)
 	  spew.Dump(tempTestFolder)
+	  spew.Dump(randomValidGcpName)
 	}
 
 	assert.Equal(t, 1, len(strings.Split("foo", " ")), "Mock test")

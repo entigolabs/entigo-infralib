@@ -1,13 +1,13 @@
 package test
 
 import (
-	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/entigolabs/entigo-infralib-common/tf"
-	"github.com/stretchr/testify/assert"
-	"testing"
 	"fmt"
+	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/stretchr/testify/assert"
 	"os"
+	"testing"
 )
 
 const bucketName = "infralib-modules-aws-hello-world-tf"
@@ -21,12 +21,12 @@ func TestTerraformHelloWorld(t *testing.T) {
 }
 
 func testTerraformHelloWorldBiz(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformHelloWorldBizAssert(t, "biz", options)
 }
 
 func testTerraformHelloWorldPri(t *testing.T) {
-        options := tf.InitTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformHelloWorldPriAssert(t, "pri", options)
 }
 
