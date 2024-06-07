@@ -33,9 +33,13 @@ fi
 DOCKER_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
 then
-  DOCKER_OPTS="-it -v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json"
+  DOCKER_OPTS="-it "
 else
+  #This is needed for terratest terraform execution
   DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+  #This is needed for terratest bucket creation
+  mkdir -p $(echo ~)/.config/gcloud 
+  echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
 fi
 
 TIMEOUT_OPTS=""
@@ -51,5 +55,6 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \
 	-e TF_VAR_prefix="$prefix" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
+	-v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json \
         $TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -v "$(pwd)/../../../providers":"/providers" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
  
