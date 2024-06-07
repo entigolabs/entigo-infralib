@@ -35,7 +35,7 @@ if [ "$GITHUB_ACTION" == "" ]
 then
   DOCKER_OPTS="-it -v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json"
 else
-  DOCKER_OPTS="-e GOOGLE_CREDENTIALS=\"${GOOGLE_CREDENTIALS}\""
+  DOCKER_OPTS='-e GOOGLE_CREDENTIALS="${GOOGLE_CREDENTIALS}"'
 fi
 
 TIMEOUT_OPTS=""
