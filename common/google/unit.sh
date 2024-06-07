@@ -25,8 +25,8 @@ fi
 
 if [ "$GOOGLE_PROJECT" == "" ]
 then
-  echo "Defaulting GOOGLE_PROJECT to martin-vool"
-  export GOOGLE_PROJECT="martin-vool"
+  echo "Defaulting GOOGLE_PROJECT to entigo-infralib"
+  export GOOGLE_PROJECT="entigo-infralib"
 fi
 
 
@@ -43,7 +43,7 @@ then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
 
-echo "If authentication fails use command 'gcloud auth application-default login'"
+echo "If authentication fails use command 'gcloud auth application-default login', if you used different project then run also 'gcloud config set project entigo-infralib' beforehand."
 
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
