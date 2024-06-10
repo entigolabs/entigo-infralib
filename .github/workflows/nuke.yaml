@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  nuke:
-    name: Nuke AWS and google account
+  nuke_aws:
+    name: Nuke AWS account
     runs-on: ubuntu-latest
     steps:
     - name: Slack Started Message
@@ -15,7 +15,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: '#EBEB00'
-        SLACK_MESSAGE: 'Nuking started of entigo-infralib AWS and google account!'
+        SLACK_MESSAGE: 'Nuking started of entigo-infralib AWS and google accounts!'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
@@ -28,19 +28,39 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
       run: |
-        modules/google/nuke.sh
         modules/aws/nuke.sh
     - name: Slack Failed To Nuke Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Failed to Nuke the entigo-infralib account!'
+        SLACK_MESSAGE: 'Failed to Nuke the entigo-infralib AWS account!'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  nuke_gcp:
+    name: Nuke Google project
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Nuke entigo-infralib google project
+      env:
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+      run: |
+        modules/google/nuke.sh
+    - name: Slack Failed To Nuke Google Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Failed to Nuke the entigo-infralib google project!'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
