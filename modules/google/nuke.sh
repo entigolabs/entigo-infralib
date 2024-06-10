@@ -14,13 +14,17 @@ gcloud -q config set project "entigo-infralib" || exit 1
 
 gsutil ls | while read line
 do
-  echo "gsutil rm -r $line"
-
+  gsutil rm -r $line
 done
 
 gcloud -q "compute" "firewall-rules" list --uri | while read line
 do
   gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line
+done
+
+gcloud -q "compute" "networks" "subnets" list --uri | while read line
+do
+  gcloud 'compute' "networks" "subnets" delete --project entigo-infralib -q $line
 done
 
 gcloud -q "compute" "networks" list --uri | while read line
