@@ -37,3 +37,8 @@ gcloud "secrets" list --uri | while read line
 do
   gcloud 'secrets' delete --project entigo-infralib -q $line
 done
+
+gcloud dns managed-zones list --uri | grep -ve"gcp-infralib-entigo-io" | while read line
+do
+  gcloud 'dns' 'managed-zones' delete --project entigo-infralib -q $line
+done
