@@ -1,6 +1,26 @@
  
-resource "google_compute_network" "vpc" {
-  name                                      = local.hname
+ resource "google_compute_network" "vpc" {
+  name = local.hname
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "subnet" {
+  network       = google_compute_network.vpc.name
+  name          = local.hname
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region
+
+  secondary_ip_range {
+    range_name    = format("%s-secondary1", local.hname)
+    ip_cidr_range = var.secondary_cidr_pods
+  }
+
+  secondary_ip_range {
+    range_name    = format("%s-secondary2", local.hname)
+    ip_cidr_range = var.secondary_cidr_services
+  }
+
+  private_ip_google_access = true
 }
 
 
