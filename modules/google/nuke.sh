@@ -12,7 +12,6 @@ fi
 
 gcloud -q config set project "entigo-infralib" || exit 1
 
-
 gsutil ls | while read line
 do
   echo "gsutil rm -r $line"
@@ -21,26 +20,25 @@ done
 
 gcloud -q "compute" "firewall-rules" list --uri | while read line
 do
-  echo "gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line"
+  gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line
 done
 
 gcloud -q "compute" "networks" list --uri | while read line
 do
-  echo "gcloud 'compute' 'networks' delete --project entigo-infralib -q $line"
+  gcloud 'compute' 'networks' delete --project entigo-infralib -q $line
 done
 
 gcloud -q "compute" "routes" list --uri | while read line
 do
-  echo "gcloud 'compute' 'routes' delete --project entigo-infralib -q $line"
-done
-
-gcloud -q "compute" "networks" list --uri | while read line
-do
-  echo "gcloud 'compute' 'networks' delete --project entigo-infralib -q $line"
+  gcloud 'compute' 'routes' delete --project entigo-infralib -q $line
 done
 
 gcloud "secrets" list --uri | while read line
 do
-  echo "gcloud 'secrets' delete --project entigo-infralib -q $line"
+  gcloud 'secrets' delete --project entigo-infralib -q $line
+done
 
+gcloud dns managed-zones list --uri | grep -ve"gcp-infralib-entigo-io" | while read line
+do
+  gcloud 'dns' 'managed-zones' delete --project entigo-infralib -q $line
 done

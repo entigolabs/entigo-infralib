@@ -34,6 +34,8 @@ accounts:
     filters:
       Route53HostedZone:
       - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
+      Route53ResourceRecordSet:
+      - "gcp.infralib.entigo.io." 
       IAMUser:
       - "github"
       IAMUserPolicyAttachment:
