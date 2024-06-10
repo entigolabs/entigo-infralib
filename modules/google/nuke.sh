@@ -9,6 +9,7 @@ then
   echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
 fi
 
+
 gcloud -q config set project "entigo-infralib" || exit 1
 
 
