@@ -22,6 +22,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
@@ -69,6 +73,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
@@ -103,6 +111,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
@@ -164,6 +176,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
@@ -200,6 +216,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
