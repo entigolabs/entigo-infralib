@@ -1,30 +1,24 @@
-data "google_compute_zones" "available" {
-  region = "europe-north1"
-  status = "UP"
-}
-
 resource "google_service_account" "service_account" {
   account_id   = "${local.hname}-sa"
   display_name = "${local.hname}-sa"
 }
 
-
 module "gke" {
   source = "terraform-google-modules/kubernetes-engine/google//modules/beta-private-cluster"
   version = "31.0.0"
 
-  name       = "${local.hname}-gke"
-  kubernetes_version     = "1.27.11-gke.1062004"
+  project_id             = var.project_id
+  name                   = "${local.hname}-gke"
+  kubernetes_version     = var.kubernetes_version
   release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
-  region                 = "europe-north1"
-  network                = google_compute_network.vpc.name
-  subnetwork             = google_compute_subnetwork.subnet.name
-  master_ipv4_cidr_block = "10.1.0.0/28"
-  ip_range_pods          = google_compute_subnetwork.subnet.secondary_ip_range[0].range_name
-  ip_range_services      = google_compute_subnetwork.subnet.secondary_ip_range[1].range_name
+  region                 = var.region
+  network                = "${local.hname}-vpc"
+  subnetwork             = "${local.hname}-subnet"
+  master_ipv4_cidr_block = var.master_ipv4_cidr_block
+  ip_range_pods          = "${local.hname}-pods"
+  ip_range_services      = "${local.hname}-services"
 
   service_account                 = google_service_account.service_account.email
-  master_authorized_networks      = var.master_authorized_networks
   master_global_access_enabled    = false
   istio                           = false
   issue_client_certificate        = false
@@ -41,21 +35,20 @@ module "gke" {
   node_pools                      = [
         {
             name               = "node-pool"
-            machine_type       = "e2-small"
-            node_locations     = join(",", slice(data.google_compute_zones.available.names, 0, 3))
+            machine_type       = var.machine_type
+            node_locations     = var.node_locations
             initial_node_count = 1
             min_count          = 1
             max_count          = 2
             max_pods_per_node  = 64
-            disk_size_gb       = 30
+            disk_size_gb       = 10
             disk_type          = "pd-standard"
             image_type         = "COS_CONTAINERD"
             auto_repair        = true
             auto_upgrade       = false
-            preemptible        = false
-            max_surge          = 1
-            max_unavailable    = 0
-        },
+            spot               = false
+
+        }
     ]
 
   node_pools_oauth_scopes = {
@@ -87,5 +80,5 @@ module "gke" {
     all = []
   }
 
-
+  master_authorized_networks = var.master_authorized_networks
 }

@@ -1,0 +1,5 @@
+project_id = "entigo-infralib"
+region = "europe-north1"
+kubernetes_version = "1.27.11-gke.1062004"
+machine_type = "e2-small"
+node_locations = "europe-north1-a"
