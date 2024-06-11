@@ -6,7 +6,15 @@ set -x
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
 [ -z $WORKSPACE ] && echo "WORKSPACE must be set" && exit 1
 export TF_IN_AUTOMATION=1
-cd $CODEBUILD_SRC_DIR
+
+if [ ! -z "$GOOGLE_REGION" ]
+then
+  sleep 1
+  cp -r $CODEBUILD_SRC_DIR/* /project/
+  cd /project
+else
+  cd $CODEBUILD_SRC_DIR
+fi
 
 if [ -d ".git" ]
 then
@@ -26,17 +34,27 @@ then
 
 elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
-  if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
+  if [ ! -z "$GOOGLE_REGION" ]
   then
-    echo "Unable to find artifacts from plan stage! $CODEBUILD_SRC_DIR_Plan/tf.tar.gz"
-    exit 4
+    if [ ! -f $TF_VAR_prefix-$WORKSPACE-tf.tar.gz ]
+    then
+      echo "Unable to find artifacts from plan stage! $TF_VAR_prefix-$WORKSPACE-tf.tar.gz"
+      exit 4
+    fi
+    tar -xvzf $TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+  else
+    if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
+    then
+      echo "Unable to find artifacts from plan stage! $CODEBUILD_SRC_DIR_Plan/tf.tar.gz"
+      exit 4
+    fi
+    tar -xvzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
   fi
-  tar -xvzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
   cd "$TF_VAR_prefix/$WORKSPACE"
 fi
 
 /usr/bin/gitlogin.sh
-
+cat ../backend.conf
 terraform init -input=false -backend-config=../backend.conf
 if [ $? -ne 0 ]
 then
@@ -55,6 +73,12 @@ then
   fi
   cd ../..
   tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    echo "Copy plan to Google S3"
+    env
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+  fi
 elif [ "$COMMAND" == "apply" ]
 then
   terraform apply -no-color -input=false $WORKSPACE.tf-plan
@@ -73,6 +97,11 @@ then
   fi
   cd ../..
   tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    echo "Copy plan to Google S3"
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+  fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
   terraform apply -no-color -input=false $WORKSPACE.tf-plan
