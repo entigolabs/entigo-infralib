@@ -370,7 +370,7 @@ jobs:
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         cd entigo-infralib-release
         
-        find . -type d | while read -r dir; do
+        find . -type d -not -path '*/.*' -maxdepth 3 | while read -r dir; do
         if [ "$dir" != "." ]; then
             echo "$dir: $(find "$dir" -type f -exec sha256sum {} + | awk '{print $1}' | sort | sha256sum | awk '{print $1}')"
         fi
