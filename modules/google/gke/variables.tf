@@ -22,7 +22,7 @@ variable "master_ipv4_cidr_block" {
 
 variable "kubernetes_version" {
   type = string
-  default = "1.27.11-gke.1062004"
+  default = "1.28.9-gke.1000000"
 }
 
 variable "machine_type" {

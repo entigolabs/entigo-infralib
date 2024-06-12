@@ -14,10 +14,6 @@ output "subnet_cidr_services" {
   value = google_compute_subnetwork.subnet.secondary_ip_range[1].ip_cidr_range
 }
 
-output "project_id" {
-  value = var.project_id
-}
-
 output "nat_name" {
   value = module.cloud_nat.name
 }
