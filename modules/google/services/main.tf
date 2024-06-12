@@ -22,3 +22,7 @@ resource "google_project_service" "container" {
 resource "google_project_service" "dns" {
   service = "dns.googleapis.com"
 }
+
+resource "google_project_service" "clouddeploy" {
+  service = "clouddeploy.googleapis.com"
+}
