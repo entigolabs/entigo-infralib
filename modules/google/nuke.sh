@@ -42,14 +42,14 @@ do
   gcloud 'compute' "networks" "subnets" delete --project entigo-infralib -q $line
 done
 
-gcloud -q "compute" "networks" list --uri | while read line
-do
-  gcloud 'compute' 'networks' delete --project entigo-infralib -q $line
-done
-
 gcloud -q "compute" "routes" list --uri | while read line
 do
   gcloud 'compute' 'routes' delete --project entigo-infralib -q $line
+done
+
+gcloud -q "compute" "networks" list --uri | while read line
+do
+  gcloud 'compute' 'networks' delete --project entigo-infralib -q $line
 done
 
 gcloud "secrets" list --uri | while read line

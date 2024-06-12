@@ -1,19 +1,19 @@
 resource "google_service_account" "service_account" {
-  account_id   = "${local.hname}-sa"
-  display_name = "${local.hname}-sa"
+  account_id   = local.hname
+  display_name = local.hname
 }
 
 module "gke" {
   source = "terraform-google-modules/kubernetes-engine/google//modules/beta-private-cluster"
   version = "31.0.0"
 
-  project_id             = var.project_id
-  name                   = "${local.hname}-gke"
+  project_id             = data.google_client_config.this.project
+  name                   = local.hname
   kubernetes_version     = var.kubernetes_version
   release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
-  region                 = var.region
-  network                = "${local.hname}-vpc"
-  subnetwork             = "${local.hname}-subnet"
+  region                 = data.google_client_config.this.region
+  network                = local.hname
+  subnetwork             = local.hname
   master_ipv4_cidr_block = var.master_ipv4_cidr_block
   ip_range_pods          = "${local.hname}-pods"
   ip_range_services      = "${local.hname}-services"
@@ -34,9 +34,9 @@ module "gke" {
 
   node_pools                      = [
         {
-            name               = "node-pool"
+            name               = "main"
             machine_type       = var.machine_type
-            node_locations     = var.node_locations
+            node_locations     = data.google_client_config.this.zone
             initial_node_count = 1
             min_count          = 1
             max_count          = 2

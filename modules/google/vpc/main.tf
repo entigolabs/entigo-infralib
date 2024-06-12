@@ -1,14 +1,14 @@
  
  resource "google_compute_network" "vpc" {
-  name = "${local.hname}-vpc"
+  name = local.hname
   auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "subnet" {
   network       = google_compute_network.vpc.name
-  name          = "${local.hname}-subnet"
+  name          = local.hname
   ip_cidr_range = var.subnet_cidr
-  region        = var.region
+  region        =  data.google_client_config.this.region
 
   secondary_ip_range {
     range_name    = format("%s-pods", local.hname)
@@ -26,18 +26,16 @@ resource "google_compute_subnetwork" "subnet" {
 module "cloud_nat" {
   source                             = "terraform-google-modules/cloud-nat/google"
   version                            = "~> 5.0"
-  project_id                         = var.project_id
-  region                             = var.region
+  project_id                         = data.google_client_config.this.project
+  region                             =  data.google_client_config.this.region
   router                             = google_compute_router.router.name
-  name                               = "${local.hname}-nat-config"
+  name                               = local.hname
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
 resource "google_compute_router" "router" {
-  project = var.project_id
-  name    = "${local.hname}-nat-router"
+  name    = local.hname
   network = google_compute_network.vpc.name
-  region  = var.region
 }
 
 # Secrets
