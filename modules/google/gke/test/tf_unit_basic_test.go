@@ -36,6 +36,6 @@ func testTerraformGke(t *testing.T, workspaceName string, options *terraform.Opt
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc() // Defer needs to be called in outermost function
 	clusterName := outputs["cluster_name"]
-	assert.Equal(t, fmt.Sprintf("%s-%s-gke", os.Getenv("TF_VAR_prefix"), workspaceName), clusterName,
+	assert.Equal(t, fmt.Sprintf("%s-%s", os.Getenv("TF_VAR_prefix"), workspaceName), clusterName,
 		"Wrong cluster_name returned")
 }

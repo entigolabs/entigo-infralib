@@ -2,19 +2,6 @@ variable "prefix" {
   type = string
 }
 
-variable "project_id" {
-  type = string
-}
-
-variable "region" {
-  type = string
-}
-
-variable "node_locations" {
-  type = string
-  default = ""
-}
-
 variable "master_ipv4_cidr_block" {
   type = string
   default = "10.1.0.0/28"
