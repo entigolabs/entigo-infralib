@@ -1,16 +1,16 @@
-name: PR modules/google/vpc
+name: PR modules/google/gke
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'modules/google/vpc/**'
+      - 'modules/google/gke/**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Test modules/google/vpc
+    name: Test modules/google/gke
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,6 +22,6 @@ jobs:
           GOOGLE_ZONE: ${{ secrets.GOOGLE_ZONE }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          ENTIGO_INFRALIB_DESTROY: false
+          ENTIGO_INFRALIB_DESTROY: true
         run: |
-          modules/google/vpc/test.sh
+          modules/google/gke/test.sh
