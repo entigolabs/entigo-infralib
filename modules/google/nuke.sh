@@ -24,7 +24,7 @@ done
 
 gcloud container clusters list --uri | while read line
 do
-  gcloud 'container' 'clusters' delete --project entigo-infralib --timeout 30m  -q $line
+  gcloud 'container' 'clusters' delete --project entigo-infralib --timeout 3600  -q $line
 done
 
 gcloud run jobs list --uri | while read line
