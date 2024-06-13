@@ -32,27 +32,27 @@ variable "intra_subnets" {
   default  = null
 }
 
-# variable "private_subnet_names" {
-#   type     = list(string)
-#   default  = []
-# }
-# 
-# variable "public_subnet_names" {
-#   type     = list(string)
-#   default  = []
-# }
-# 
-# variable "database_subnet_names" {
-#   type     = list(string)
-#   nullable = true
-#   default  = []
-# }
-# 
-# variable "intra_subnet_names" {
-#   type     = list(string)
-#   nullable = true
-#   default  = []
-# }
+variable "private_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "public_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "database_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "intra_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
 
 variable "enable_nat_gateway" {
   type     = bool

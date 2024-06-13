@@ -20,7 +20,8 @@ resource "google_compute_network" "vpc" {
 resource "google_compute_subnetwork" "private" {
   count = length(local.private_subnets)
   network       = google_compute_network.vpc.name
-  name          = "${local.hname}-private-${count.index}"
+  name          = try(var.private_subnet_names[count.index], "${local.hname}-private-${count.index}")
+
   ip_cidr_range =  cidrsubnet(local.private_subnets[count.index], 2, 0)
 
   secondary_ip_range {
@@ -39,7 +40,7 @@ resource "google_compute_subnetwork" "private" {
 resource "google_compute_subnetwork" "public" {
   count = length(local.public_subnets)
   network       = google_compute_network.vpc.name
-  name          = "${local.hname}-public-${count.index}"
+  name          = try(var.public_subnet_names[count.index], "${local.hname}-public-${count.index}")
   ip_cidr_range = local.public_subnets[count.index]
   purpose       = "REGIONAL_MANAGED_PROXY"
   role          = count.index == 0 ? "ACTIVE" : "BACKUP"
@@ -50,14 +51,14 @@ resource "google_compute_subnetwork" "public" {
 resource "google_compute_subnetwork" "intra" {
   count = length(local.intra_subnets)
   network       = google_compute_network.vpc.name
-  name          = "${local.hname}-intra-${count.index}"
+  name          = try(var.intra_subnet_names[count.index], "${local.hname}-intra-${count.index}")
   ip_cidr_range    = local.intra_subnets[count.index]
 }
 
 resource "google_compute_subnetwork" "database" {
   count = length(local.database_subnets)
   network       = google_compute_network.vpc.name
-  name          = "${local.hname}-database-${count.index}"
+  name          = try(var.database_subnet_names[count.index], "${local.hname}-database-${count.index}")
   ip_cidr_range    = local.database_subnets[count.index]
 }
 
@@ -78,23 +79,96 @@ resource "google_compute_router" "router" {
 }
 
 # Secrets
-resource "google_secret_manager_secret" "vpc_id" {
-  secret_id = "entigo-infralib-${local.hname}-vpc_id"
 
-  annotations = {
-    product = "entigo-infralib"
-    hname = local.hname
-    workspace = terraform.workspace
-    prefix = var.prefix
-    parameter = "vpc_id"
-  }
-  
-  replication {
-    auto {}
-  }
+module "vpc_id" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "vpc_id"
+  value = google_compute_network.vpc.id
 }
 
-resource "google_secret_manager_secret_version" "vpc_id" {
-  secret = google_secret_manager_secret.vpc_id.id
-  secret_data = google_compute_network.vpc.id
-} 
+module "private_subnets" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnets"
+  value = google_compute_subnetwork.private[*].id
+}
+
+module "public_subnets" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "public_subnets"
+  value = google_compute_subnetwork.public[*].id
+}
+
+module "intra_subnets" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "intra_subnets"
+  value = google_compute_subnetwork.intra[*].id
+}
+
+module "database_subnets" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "database_subnets"
+  value = google_compute_subnetwork.database[*].id
+}
+
+module "private_subnet_cidrs" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnet_cidrs"
+  value = google_compute_subnetwork.private[*].ip_cidr_range
+}
+
+module "private_subnet_cidrs_pods" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnet_cidrs_pods"
+  value = google_compute_subnetwork.private[*].secondary_ip_range[0].ip_cidr_range
+}
+
+module "private_subnet_cidrs_services" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnet_cidrs_services"
+  value = google_compute_subnetwork.private[*].secondary_ip_range[1].ip_cidr_range
+}
+
+module "public_subnet_cidrs" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "public_subnet_cidrs"
+  value = google_compute_subnetwork.public[*].ip_cidr_range
+}
+
+module "intra_subnet_cidrs" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "intra_subnet_cidrs"
+  value = google_compute_subnetwork.intra[*].ip_cidr_range
+}
+
+module "database_subnet_cidrs" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "database_subnet_cidrs"
+  value = google_compute_subnetwork.database[*].ip_cidr_range
+}
+
+
+module "router_id" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "router_id"
+  value = google_compute_router.router.id
+}
+
+module "nat_name" {
+  count                    = var.enable_nat_gateway ? 1 : 0
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "nat_name"
+  value = module.cloud_nat[0].name
+}

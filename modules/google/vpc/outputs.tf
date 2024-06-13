@@ -2,6 +2,22 @@ output "vpc_id" {
   value = google_compute_network.vpc.id
 }
 
+output "private_subnets" {
+  value = google_compute_subnetwork.private[*].id
+}
+
+output "public_subnets" {
+  value = google_compute_subnetwork.public[*].id
+}
+
+output "intra_subnets" {
+  value = google_compute_subnetwork.intra[*].id
+}
+
+output "database_subnets" {
+  value = google_compute_subnetwork.database[*].id
+}
+
 output "private_subnet_cidrs" {
   value = google_compute_subnetwork.private[*].ip_cidr_range
 }
@@ -24,6 +40,10 @@ output "database_subnet_cidrs" {
 
 output "intra_subnet_cidrs" {
   value = google_compute_subnetwork.intra[*].ip_cidr_range
+}
+
+output "router_id" {
+  value = google_compute_router.router.id
 }
 
 output "nat_name" {
