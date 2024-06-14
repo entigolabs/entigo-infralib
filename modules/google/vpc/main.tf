@@ -87,6 +87,13 @@ module "vpc_id" {
   value = google_compute_network.vpc.id
 }
 
+module "vpc_name" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "vpc_name"
+  value = google_compute_network.vpc.name
+}
+
 module "private_subnets" {
   source                             = "./secret"
   prefix = var.prefix
