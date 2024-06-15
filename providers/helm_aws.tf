@@ -6,7 +6,6 @@ variable "eks_cluster_name" {
   type = string
 }
 
-
 provider "helm" {
   burst_limit = 300
   kubernetes {

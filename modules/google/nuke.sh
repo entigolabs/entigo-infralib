@@ -11,6 +11,7 @@ then
 fi
 
 gcloud -q config set project "entigo-infralib" || exit 1
+gcloud -q config set compute/region "europe-north1" || exit 1
 
 gsutil ls | while read line
 do
