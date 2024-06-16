@@ -2,19 +2,62 @@ variable "prefix" {
   type = string
 }
 
-variable "subnet_cidr" {
+variable "vpc_cidr" {
   type     = string
-  default  = "10.0.0.0/16"
+  nullable = false
+  default  = "10.156.0.0/16"
 }
 
-variable "secondary_cidr_pods" {
-  type    = string
-  default = "10.4.0.0/14"
+variable "private_subnets" {
+  type     = list(string)
+  nullable = true
+  default  = null
 }
 
-variable "secondary_cidr_services" {
-  type    = string
-  default = "10.8.0.0/20"
+variable "public_subnets" {
+  type     = list(string)
+  nullable = true
+  default  = null
+}
+
+variable "database_subnets" {
+  type     = list(string)
+  nullable = true
+  default  = null
+}
+
+variable "intra_subnets" {
+  type     = list(string)
+  nullable = true
+  default  = null
+}
+
+variable "private_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "public_subnet_names" {
+  type     = list(string)
+  default  = []
+}
+
+variable "database_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "intra_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "enable_nat_gateway" {
+  type     = bool
+  nullable = false
+  default  = true
 }
 
 locals {
