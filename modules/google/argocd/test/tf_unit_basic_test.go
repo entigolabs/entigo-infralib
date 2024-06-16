@@ -16,11 +16,17 @@ var Region string
 func TestTerraformArgocd(t *testing.T) {
 	Region = commonGCP.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformArgocdBiz)
+	t.Run("Pri", testTerraformArgocdPri)
 }
 
 func testTerraformArgocdBiz(t *testing.T) {
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
 	testTerraformDnsArgocdAssert(t, "biz", options)
+}
+
+func testTerraformArgocdPri(t *testing.T) {
+	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	testTerraformDnsArgocdAssert(t, "pri", options)
 }
 
 func testTerraformDnsArgocdAssert(t *testing.T, workspaceName string, options *terraform.Options) {
