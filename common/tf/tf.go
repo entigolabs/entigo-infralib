@@ -170,6 +170,7 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
 	addVariables(variables, testModuleBody)
 	addOutputs(outputBlocks, testFileBody)
+	fmt.Println(string(testFile.Bytes()))
 	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
 }
 
