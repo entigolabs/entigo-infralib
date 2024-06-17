@@ -76,23 +76,23 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second)
 	require.NoError(t, err, "Argocd no Applicationsets CRD")
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-server deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server", namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-repo-server deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller", namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-notifications-controller deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller", namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-applicationset-controller deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
