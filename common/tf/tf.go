@@ -186,14 +186,6 @@ func modifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderT
 }
 
 func getProviderBlocks(t *testing.T, providerName string, providerType ProviderType) []*hclwrite.Block {
-	if providerName == "helm" {
-		switch providerType {
-		case "aws":
-			providerName = "helm_aws"
-		case "gcloud":
-			providerName = "helm_google"
-		}
-	}
 	fullFileName := fmt.Sprintf("%s/%s.tf", testProvidersPath, providerName)
 	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
 		fullFileName = fmt.Sprintf("%s/%s.tf", providersPath, providerName)
