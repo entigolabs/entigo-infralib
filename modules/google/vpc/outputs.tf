@@ -7,19 +7,27 @@ output "vpc_name" {
 }
 
 output "private_subnets" {
-  value = google_compute_subnetwork.private[*].id
+  value = google_compute_subnetwork.private[*].name
+}
+
+output "private_subnets_pods" {
+  value = google_compute_subnetwork.private[*].secondary_ip_range[0].range_name
+}
+
+output "private_subnets_services" {
+  value = google_compute_subnetwork.private[*].secondary_ip_range[1].range_name
 }
 
 output "public_subnets" {
-  value = google_compute_subnetwork.public[*].id
+  value = google_compute_subnetwork.public[*].name
 }
 
 output "intra_subnets" {
-  value = google_compute_subnetwork.intra[*].id
+  value = google_compute_subnetwork.intra[*].name
 }
 
 output "database_subnets" {
-  value = google_compute_subnetwork.database[*].id
+  value = google_compute_subnetwork.database[*].name
 }
 
 output "private_subnet_cidrs" {

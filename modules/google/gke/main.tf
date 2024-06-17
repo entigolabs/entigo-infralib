@@ -4,7 +4,7 @@ resource "google_service_account" "service_account" {
 }
 
 module "gke" {
-  source = "terraform-google-modules/kubernetes-engine/google//modules/beta-private-cluster"
+  source = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
   version = "31.0.0"
 
   project_id             = data.google_client_config.this.project

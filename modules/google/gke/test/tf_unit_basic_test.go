@@ -85,6 +85,7 @@ func testTerraformGkeBiz(t *testing.T) {
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
 	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
+	subnetwork = subnetwork[strings.LastIndex(subnetwork,"/")+1:]
 	
   
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
@@ -152,6 +153,7 @@ func testTerraformGkePri(t *testing.T) {
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
 	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
+	subnetwork = subnetwork[strings.LastIndex(subnetwork,"/")+1:]
 	
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
 	        "network":                network,
