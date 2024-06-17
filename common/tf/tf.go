@@ -160,7 +160,7 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	providersBlock := getRequiredProvidersBlock(t, testFile)
 	for name, attribute := range versionsAttributes {
 		providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
-		providerBlocks := getProviderBlocks(t, name)
+		providerBlocks := getProviderBlocks(t, name, providerType)
 		for _, providerBlock := range providerBlocks {
 			testFileBody.AppendBlock(providerBlock)
 		}
@@ -170,6 +170,7 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	testModuleBody.SetAttributeValue("source", cty.StringVal("../"))
 	addVariables(variables, testModuleBody)
 	addOutputs(outputBlocks, testFileBody)
+	fmt.Println(string(testFile.Bytes()))
 	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
 }
 
@@ -184,7 +185,7 @@ func modifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderT
 	backendBlock.SetLabels([]string{"gcs"})
 }
 
-func getProviderBlocks(t *testing.T, providerName string) []*hclwrite.Block {
+func getProviderBlocks(t *testing.T, providerName string, providerType ProviderType) []*hclwrite.Block {
 	fullFileName := fmt.Sprintf("%s/%s.tf", testProvidersPath, providerName)
 	if _, err := os.Stat(fullFileName); err != nil && errors.Is(err, fs.ErrNotExist) {
 		fullFileName = fmt.Sprintf("%s/%s.tf", providersPath, providerName)
