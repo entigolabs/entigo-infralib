@@ -13,7 +13,7 @@ resource "google_dns_managed_zone_iam_member" "member" {
 
 module "dns" {
   source  = "terraform-google-modules/cloud-dns/google"
-  version = "~> 5.0"
+  version = "5.2.0"
 
   project_id                         = data.google_client_config.this.project
   type                               = var.type
@@ -34,7 +34,7 @@ resource "google_dns_record_set" "root_ns_record" {
   name         = "${local.hname}.${var.domain}"
   type         = "NS"
   ttl          = 300
-  managed_zone = "gcp-infralib-entigo-io"
+  managed_zone = var.zone
   rrdatas      = module.dns.name_servers
 }
 
