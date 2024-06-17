@@ -7,6 +7,22 @@ variable "master_ipv4_cidr_block" {
   default = "10.1.0.0/28"
 }
 
+variable "network" {
+  type = string
+}
+
+variable "subnetwork" {
+  type = string
+}
+
+variable "ip_range_pods" {
+  type = string
+}
+
+variable "ip_range_services" {
+  type = string
+}
+
 variable "kubernetes_version" {
   type = string
   default = "1.28.9-gke.1000000"
@@ -33,6 +49,9 @@ variable "master_authorized_networks" {
     }
   ]
 }
+
+
+
 
 locals {
   hname = "${var.prefix}-${terraform.workspace}"

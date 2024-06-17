@@ -87,32 +87,53 @@ module "vpc_id" {
   value = google_compute_network.vpc.id
 }
 
+module "vpc_name" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "vpc_name"
+  value = google_compute_network.vpc.name
+}
+
 module "private_subnets" {
   source                             = "./secret"
   prefix = var.prefix
   key = "private_subnets"
-  value = google_compute_subnetwork.private[*].id
+  value = google_compute_subnetwork.private[*].name
+}
+
+module "private_subnets_pods" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnets_pods"
+  value = google_compute_subnetwork.private[*].secondary_ip_range[0].range_name
+}
+
+module "private_subnets_services" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "private_subnets_services"
+  value = google_compute_subnetwork.private[*].secondary_ip_range[1].range_name
 }
 
 module "public_subnets" {
   source                             = "./secret"
   prefix = var.prefix
   key = "public_subnets"
-  value = google_compute_subnetwork.public[*].id
+  value = google_compute_subnetwork.public[*].name
 }
 
 module "intra_subnets" {
   source                             = "./secret"
   prefix = var.prefix
   key = "intra_subnets"
-  value = google_compute_subnetwork.intra[*].id
+  value = google_compute_subnetwork.intra[*].name
 }
 
 module "database_subnets" {
   source                             = "./secret"
   prefix = var.prefix
   key = "database_subnets"
-  value = google_compute_subnetwork.database[*].id
+  value = google_compute_subnetwork.database[*].name
 }
 
 module "private_subnet_cidrs" {
