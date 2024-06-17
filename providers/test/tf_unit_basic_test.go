@@ -29,6 +29,7 @@ func TestTerraformProviders(t *testing.T) {
 		Reconfigure:  true,
 		Vars: map[string]interface{}{
 			"eks_cluster_name": "runner-main-biz",
+			"gke_cluster_name": "runner-main-biz",
 		},
 		BackendConfig: map[string]interface{}{
 			"bucket": bucketName,

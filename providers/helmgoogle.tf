@@ -1,8 +1,12 @@
 data "google_client_config" "this" {}
 
 data "google_container_cluster" "this" {
-  name     = local.hname
+  name     = var.gke_cluster_name
   location = data.google_client_config.this.region
+}
+
+variable "gke_cluster_name" {
+  type = string
 }
 
 provider "helmgoogle" {
