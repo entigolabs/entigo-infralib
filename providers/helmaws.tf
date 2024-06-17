@@ -6,8 +6,7 @@ variable "eks_cluster_name" {
   type = string
 }
 
-
-provider "helm" {
+provider "helmaws" {
   burst_limit = 300
   kubernetes {
     host                   = data.aws_eks_cluster.eks.endpoint

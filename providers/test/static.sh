@@ -16,9 +16,10 @@ do
   echo "Version unity check of $line"
   lastversion=""
   providername=`echo $line | cut -d"." -f1`
+
   for verfile in `find ../modules/ -name versions.tf`
   do
-    versionfound=`awk -v keyword="$providername" '$0 ~ keyword { getline; while($1 != "}") { if($1 == "version") print $3; getline; } }' $verfile | tr -d '\"'`
+    versionfound=`awk -v keyword="$providername" '$0 ~ " " keyword { getline; while($1 != "}") { if($1 == "version") print $3; getline; } }' $verfile | tr -d '\"'`
     if [ "$versionfound" != "" ]
     then
       echo "Found $providername version $versionfound in $verfile"
@@ -32,9 +33,14 @@ do
       fi
     fi
   done
+  if [ "$providername" == "helmaws" -o "$providername" == "helmgoogle" ]
+  then
+    modulename="helm"
+  else
+    modulename="$providername"
+  fi
   
-  awk -v providername="$providername" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"hashicorp/" providername "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
-  
+  awk -v providername="$providername" -v modulename="$modulename" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"hashicorp/" modulename "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
 
 done
 

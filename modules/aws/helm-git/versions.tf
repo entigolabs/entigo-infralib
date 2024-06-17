@@ -1,7 +1,7 @@
 terraform {
   required_version = ">= 1.5"
   required_providers {
-    helm = {
+    helmaws = {
       source = "hashicorp/helm"
       version = "2.13.1"
     }
