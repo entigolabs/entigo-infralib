@@ -53,6 +53,8 @@ jobs:
         modules/aws/vpc/test.sh 
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
+        modules/google/gke/test.sh &
+        PIDS="$PIDS $!"
         modules/aws/eks/test.sh 
         providers/test.sh &
         PIDS="$PIDS $!"

@@ -45,6 +45,7 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e TF_VAR_prefix="$prefix" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
 	-e ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="true" \
+	-e ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS="true" \
 	-v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json \
 	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
  
