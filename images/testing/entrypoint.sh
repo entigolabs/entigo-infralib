@@ -44,33 +44,36 @@ then
     fi
   fi
 
-if [ "$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" == "true" ]
-  then
-    gcloud container clusters get-credentials runner-main-biz --region $GOOGLE_REGOIN --project $GOOGLE_PROJECT
-    if [ $? -ne 0 ]
+  if [ "$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" == "true" ]
     then
-      echo "Failed to configure runner-main-biz GKE context"
-      exit 1
+      gcloud auth activate-service-account --key-file=/root/.config/gcloud/application_default_credentials.json
+      gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+
+      gcloud container clusters get-credentials runner-main-biz --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to configure runner-main-biz GKE context"
+        exit 1
+      fi
+      gcloud container clusters get-credentials runner-main-pri --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to configure runner-main-pri GKE context"
+        exit 2
+      fi
+      kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-biz
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to connect to runner-main-biz GKE k8s cluster"
+        exit 3
+      fi
+      kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-pri
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to connect to runner-main-pri GKE k8s cluster"
+        exit 4
+      fi
     fi
-    gcloud container clusters get-credentials runner-main-pri --region $GOOGLE_REGOIN --project $GOOGLE_PROJECT
-    if [ $? -ne 0 ]
-    then
-      echo "Failed to configure runner-main-pri GKE context"
-      exit 2
-    fi
-    kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-biz
-    if [ $? -ne 0 ]
-    then
-      echo "Failed to connect to runner-main-biz GKE k8s cluster"
-      exit 3
-    fi
-    kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-pri
-    if [ $? -ne 0 ]
-    then
-      echo "Failed to connect to runner-main-pri GKE k8s cluster"
-      exit 4
-    fi
-  fi
   
   cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
   exit $?

@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ "$TESTING_VERSION" == "" ]
 then
-  TESTING_VERSION="v0.11.14-rc5"
+  TESTING_VERSION="v0.11.21-rc8"
 fi
 
 if [ "$PR_BRANCH" != "" ]
@@ -15,6 +15,12 @@ if [ "$AWS_REGION" == "" ]
 then
   echo "Defaulting AWS_REGION to eu-north-1"
   export AWS_REGION="eu-north-1"
+fi
+
+if [ "$GOOGLE_REGION" == "" ]
+then
+  echo "Defaulting GOOGLE_REGION to europe-north1"
+  export GOOGLE_REGION="europe-north1"
 fi
 
 DOCKER_OPTS=""
