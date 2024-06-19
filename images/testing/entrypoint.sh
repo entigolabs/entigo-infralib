@@ -46,16 +46,14 @@ then
 
   if [ "$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" == "true" ]
     then
-      gcloud auth activate-service-account --key-file=/root/.config/gcloud/application_default_credentials.json
-      gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 
-      gcloud container clusters get-credentials runner-main-biz --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+      gcloud container clusters get-credentials runner-main-biz --region $GOOGLE_REGION
       if [ $? -ne 0 ]
       then
         echo "Failed to configure runner-main-biz GKE context"
         exit 1
       fi
-      gcloud container clusters get-credentials runner-main-pri --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+      gcloud container clusters get-credentials runner-main-pri --region $GOOGLE_REGION
       if [ $? -ne 0 ]
       then
         echo "Failed to configure runner-main-pri GKE context"
