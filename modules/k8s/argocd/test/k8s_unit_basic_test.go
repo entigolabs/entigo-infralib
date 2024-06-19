@@ -14,12 +14,20 @@ import (
 	"time"
 )
 
-func TestK8sArgocdBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
+func TestK8sArgocdAWSBiz(t *testing.T) {
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
 }
 
-func TestK8sArgocdPri(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
+func TestK8sArgocdAWSPri(t *testing.T) {
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io")
+}
+
+func TestK8sArgocdGKEBiz(t *testing.T) {
+	testK8sArgocd(t, "gke_entigo-infralib_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io")
+}
+
+func TestK8sArgocdGKEPri(t *testing.T) {
+	testK8sArgocd(t, "gke_entigo-infralib_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io")
 }
 
 func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string) {
