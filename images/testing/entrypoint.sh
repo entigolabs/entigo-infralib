@@ -46,8 +46,6 @@ then
 
   if [ "$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" == "true" ]
     then
-      gcloud auth activate-service-account --key-file=/root/.config/gcloud/application_default_credentials.json
-      gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 
       gcloud container clusters get-credentials runner-main-biz --region $GOOGLE_REGION --project $GOOGLE_PROJECT
       if [ $? -ne 0 ]
