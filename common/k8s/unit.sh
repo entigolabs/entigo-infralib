@@ -33,7 +33,8 @@ else
   #This is needed for terratest bucket creation
   mkdir -p $(echo ~)/.config/gcloud 
   echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
-  gcloud auth activate-service-account --key-file=/root/.config/gcloud/application_default_credentials.json
+  ls -l 
+  gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
   gcloud auth list
   gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 fi
