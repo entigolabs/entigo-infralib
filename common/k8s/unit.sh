@@ -23,6 +23,18 @@ then
   export GOOGLE_REGION="europe-north1"
 fi
 
+if [ "$GOOGLE_ZONE" == "" ]
+then
+  echo "Defaulting GOOGLE_ZONE to europe-north1-a"
+  export GOOGLE_ZONE="europe-north1-a"
+fi
+
+if [ "$GOOGLE_PROJECT" == "" ]
+then
+  echo "Defaulting GOOGLE_PROJECT to entigo-infralib"
+  export GOOGLE_PROJECT="entigo-infralib"
+fi
+
 DOCKER_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
 then
@@ -35,6 +47,7 @@ else
   echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
   ls -l 
   gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
+  gcloud config set project $GOOGLE_PROJECT
   gcloud auth list
   gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 fi
