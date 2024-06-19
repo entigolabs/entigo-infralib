@@ -1,3 +1,5 @@
+master_authorized_networks = ["0.0.0.0/0"]
+
 eks_tools_min_size            = 0
 eks_tools_max_size            = 0
 eks_mon_min_size            = 0
