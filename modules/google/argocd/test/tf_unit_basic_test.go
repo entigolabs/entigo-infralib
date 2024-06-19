@@ -20,16 +20,20 @@ func TestTerraformArgocd(t *testing.T) {
 }
 
 func testTerraformArgocdBiz(t *testing.T) {
-	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
-	testTerraformDnsArgocdAssert(t, "biz", options)
+	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+		"gke_cluster_name": "runner-main-biz",
+	})
+	testTerraformArgocd(t, "biz", options)
 }
 
 func testTerraformArgocdPri(t *testing.T) {
-	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
-	testTerraformDnsArgocdAssert(t, "pri", options)
+	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
+		"gke_cluster_name": "runner-main-pri",
+	})
+	testTerraformArgocd(t, "pri", options)
 }
 
-func testTerraformDnsArgocdAssert(t *testing.T, workspaceName string, options *terraform.Options) {
+func testTerraformArgocd(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
