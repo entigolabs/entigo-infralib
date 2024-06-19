@@ -12,7 +12,7 @@ locals {
       install_crd = var.install_crd
       namespace = local.namespace
   })
-  values_hash = sha1(local.values_template + " " + var.branch)
+  values_hash = sha1("${local.values_template} ${var.branch}")
   
 }
 
@@ -31,24 +31,16 @@ resource "helm_release" "argocd" {
   depends_on = [data.external.argocd]
 }
 
-resource "aws_ssm_parameter" "argocd_namespace" {
-  name  = "/entigo-infralib/${local.hname}/namespace"
-  type  = "String"
+module "argocd_namespace" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "namespace"
   value = local.namespace
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
 }
 
-resource "aws_ssm_parameter" "argocd_hostname" {
-  name  = "/entigo-infralib/${local.hname}/hostname"
-  type  = "String"
+module "argocd_hostname" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "hostname"
   value = var.hostname
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
 }
