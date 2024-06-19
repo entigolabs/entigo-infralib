@@ -1,3 +1,10 @@
+master_authorized_networks = [
+    {
+      display_name = "Allow all"
+      cidr_block   = "0.0.0.0/0"
+    }
+    ]
+
 eks_spot_min_size            = 0
 eks_spot_max_size            = 0
 eks_db_min_size              = 0

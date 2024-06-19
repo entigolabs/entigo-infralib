@@ -1,4 +1,9 @@
-master_authorized_networks = ["0.0.0.0/0"]
+master_authorized_networks = [
+    {
+      display_name = "Allow all"
+      cidr_block   = "0.0.0.0/0"
+    }
+    ]
 
 eks_tools_min_size            = 0
 eks_tools_max_size            = 0
