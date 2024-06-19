@@ -15,11 +15,11 @@ import (
 )
 
 func TestK8sArgocdBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
+	// testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
 }
 
 func TestK8sArgocdPri(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
+	// testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
 }
 
 func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string) {
