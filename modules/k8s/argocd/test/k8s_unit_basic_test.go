@@ -47,8 +47,7 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 		setValues["argocd.crds.install"] = "false"
-		setValues["argocd.server.config.url"] = fmt.Sprintf("https://%s.%s", namespaceName, hostName)
-		setValues["argocd.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
+		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
 
 	}
 	releaseName := namespaceName

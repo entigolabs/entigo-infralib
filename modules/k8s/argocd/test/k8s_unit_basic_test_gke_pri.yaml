@@ -1,17 +1,14 @@
- 
 argocd:
+  global:
+    domain: argocd.runner-main-pri.gcp.infralib.entigo.io
   server:
-    config:
-      url: https://argocd.runner-main-pri.infralib.entigo.io
+    service:
+      annotations:
+        cloud.google.com/neg: '{"ingress": true}'
+        cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
+        kubernetes.io/ingress.class: 'gce'
     ingress:
-      annotations: 
-        alb.ingress.kubernetes.io/group.name: external
-        alb.ingress.kubernetes.io/scheme: internet-facing
-      hosts:
-      - argocd.runner-main-pri.infralib.entigo.io
- 
-    ingress:
-      enabled: true
+      ingressClassName: "gce"
       controller: gke
       gke:
         backendConfig:
