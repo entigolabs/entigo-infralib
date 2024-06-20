@@ -8,7 +8,7 @@ argocd:
         cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
         kubernetes.io/ingress.class: 'gce'
     ingress:
-      ingressClassName: "gce"
+      ingressClassName: ""
       controller: gke
       gke:
         backendConfig:

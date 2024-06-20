@@ -6,6 +6,9 @@ argocd:
     domain: argocd.${domain}
     networkPolicy:
       create: true
+  configs:
+    params:
+      server.insecure: true
   server:
     affinity:
       nodeAffinity:
@@ -39,8 +42,6 @@ argocd:
       admin.enabled: "true"
       exec.enabled: "true"
       url: https://argocd.${domain}
-      params:
-        server.insecure: true
     ingress:
       enabled: true
       controller: aws
