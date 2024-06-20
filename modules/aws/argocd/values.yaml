@@ -1,4 +1,6 @@
 argocd:
+  global:
+    domain: ${hostname}
   server:
     config:
       url: https://${hostname}
