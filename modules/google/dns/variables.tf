@@ -31,7 +31,6 @@ variable "project_number" {
   description = "Project number"
 }
 
-data "google_client_config" "this" {}
 
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
