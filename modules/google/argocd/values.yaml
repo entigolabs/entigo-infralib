@@ -15,7 +15,7 @@ argocd:
   server:
     service:
       annotations:
-        cloud.google.com/backend-config: '{"ports": {"http":"${namespace}"}}'
+        cloud.google.com/backend-config: '{"ports": {"http":"${namespace}-server"}}'
 
     ingress:
       annotations: 
