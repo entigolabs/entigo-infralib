@@ -86,6 +86,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/argocd/test.sh &
         PIDS="$PIDS $!"
+        modules/google/argocd/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/mimir/test.sh &

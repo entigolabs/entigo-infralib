@@ -139,7 +139,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/keycloak/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh &
+        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh && modules/google/argocd/test.sh &
         PIDS="$PIDS $!"
         
         FAIL=0
