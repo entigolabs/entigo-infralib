@@ -1,2 +1,2 @@
-hostname = "argocd-aws.runner-main-biz-int.infralib.entigo.io"
-install_crd = true
+gke_cluster_name = "runner-main-biz"
+install_crd = false
