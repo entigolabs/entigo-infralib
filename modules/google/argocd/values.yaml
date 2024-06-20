@@ -15,15 +15,14 @@ argocd:
     install: ${install_crd}
   
   server:
-    config:
-      url: https://${hostname}
     service:
       annotations:
         cloud.google.com/neg: '{"ingress": true}'
         cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
+        kubernetes.io/ingress.class: 'gce'
 
     ingress:
-      enabled: true
+      ingressClassName: "gce"
       controller: gke
       gke:
         backendConfig:
