@@ -1,12 +1,27 @@
- 
 argocd:
+  global:
+    domain: argocd.runner-main-pri.gcp.infralib.entigo.io
   server:
-    config:
-      url: https://argocd.runner-main-pri.infralib.entigo.io
+    service:
+      annotations:
+        cloud.google.com/neg: '{"ingress": true}'
+        cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
+        kubernetes.io/ingress.class: 'gce'
     ingress:
-      annotations: 
-        alb.ingress.kubernetes.io/group.name: external
-        alb.ingress.kubernetes.io/scheme: internet-facing
-      hosts:
-      - argocd.runner-main-pri.infralib.entigo.io
- 
+      ingressClassName: "gce"
+      controller: gke
+      gke:
+        backendConfig:
+          healthCheck:
+            checkIntervalSec: 30
+            timeoutSec: 5
+            healthyThreshold: 1
+            unhealthyThreshold: 2
+            type: HTTP
+            requestPath: /healthz
+            port: 8080
+        frontendConfig:
+          redirectToHttps:
+            enabled: true
+        managedCertificate:
+          enabled: true
