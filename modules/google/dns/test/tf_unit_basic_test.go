@@ -26,7 +26,7 @@ func testTerraformDnsBiz(t *testing.T) {
 
 func testTerraformDnsPri(t *testing.T) {
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
-	testTerraformDnsBizAssert(t, "biz", options)
+	testTerraformDnsBizAssert(t, "pri", options)
 }
 
 func testTerraformDnsBizAssert(t *testing.T, workspaceName string, options *terraform.Options) {
