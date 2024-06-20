@@ -1,3 +1,4 @@
+gke_cluster_name = "runner-main-pri"
 zone = "gcp-infralib-entigo-io"
 domain = "gcp.infralib.entigo.io."
 type = "public"

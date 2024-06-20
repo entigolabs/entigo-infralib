@@ -26,7 +26,7 @@ func testTerraformDnsBiz(t *testing.T) {
 
 func testTerraformDnsPri(t *testing.T) {
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
-	testTerraformDnsBizAssert(t, "biz", options)
+	testTerraformDnsBizAssert(t, "pri", options)
 }
 
 func testTerraformDnsBizAssert(t *testing.T, workspaceName string, options *terraform.Options) {
@@ -35,7 +35,7 @@ func testTerraformDnsBizAssert(t *testing.T, workspaceName string, options *terr
 	defer destroyFunc()
 	_ = outputs
 	assert.NotEmpty(t, outputs["google_project_iam_member"], "google_project_iam_member was not returned")
-	assert.NotEmpty(t, outputs["dns_zone_name"], "dns_zone_name was not returned")
+	assert.NotEmpty(t, outputs["dns_zone"], "dns_zone was not returned")
 }
 
 func testTerraformDnsPriAssert(t *testing.T, workspaceName string, options *terraform.Options) {
@@ -44,5 +44,5 @@ func testTerraformDnsPriAssert(t *testing.T, workspaceName string, options *terr
 	defer destroyFunc()
 	_ = outputs
 	assert.NotEmpty(t, outputs["google_project_iam_member"], "google_project_iam_member was not returned")
-	assert.NotEmpty(t, outputs["dns_zone_name"], "dns_zone_name was not returned")
+	assert.NotEmpty(t, outputs["dns_zone"], "dns_zone was not returned")
 }

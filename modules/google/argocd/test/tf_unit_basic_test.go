@@ -24,10 +24,10 @@ func TestTerraformArgocd(t *testing.T) {
 
 func testTerraformArgocdBiz(t *testing.T) {
 	namespace := "argocd-google"
-	hostname := "argocd-google.runner-main-biz-int.gcp.infralib.entigo.io"
+	hostname := "argocd-google.runner-main-biz.gcp.infralib.entigo.io"
         if prefix != "runner-main" {
 	  namespace = fmt.Sprintf("argocd-google-%s", prefix)
-	  hostname = fmt.Sprintf("argocd-google-%s.runner-main-biz-int.gcp.infralib.entigo.io", prefix)
+	  hostname = fmt.Sprintf("argocd-google-%s.runner-main-biz.gcp.infralib.entigo.io", prefix)
 	}
 	
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
