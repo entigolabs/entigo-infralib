@@ -3,8 +3,6 @@ argocd:
     domain: ${hostname}
 
   configs:
-    params:
-      server.insecure: true
     cm:
       accounts.infralib: apiKey
     rbac:
@@ -19,10 +17,11 @@ argocd:
       annotations:
         cloud.google.com/neg: '{"ingress": true}'
         cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
-        kubernetes.io/ingress.class: 'gce'
 
     ingress:
-      ingressClassName: "gce"
+      annotations: 
+        kubernetes.io/ingress.class: 'gce'
+      ingressClassName: ""
       controller: gke
       gke:
         backendConfig:
