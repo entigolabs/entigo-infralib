@@ -1,6 +1,6 @@
 argocd:
   global:
-    domain: argocd.runner-main-biz-int.gcp.infralib.entigo.io
+    domain: argocd.runner-main-biz.gcp.infralib.entigo.io
   server:
     service:
       annotations:
