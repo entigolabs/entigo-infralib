@@ -33,6 +33,7 @@ func testTerraformArgocdBiz(t *testing.T) {
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"hostname": hostname,
 		"namespace": namespace,
+		"name": namespace,
 	})
 	testTerraformArgocd(t, "biz", options)
 }
@@ -48,6 +49,7 @@ func testTerraformArgocdPri(t *testing.T) {
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
 		"hostname": hostname,
 		"namespace": namespace,
+		"name": namespace,
 	})
 	testTerraformArgocd(t, "pri", options)
 }
