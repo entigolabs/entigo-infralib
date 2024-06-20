@@ -31,6 +31,8 @@ variable "project_number" {
   description = "Project number"
 }
 
+data "google_client_config" "this" {}
+
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
   member = "principal://iam.googleapis.com/projects/${var.project_number}/locations/global/workloadIdentityPools/${data.google_client_config.this.project}.svc.id.goog/subject/ns/${var.kns_name}/sa/${var.ksa_name}"
