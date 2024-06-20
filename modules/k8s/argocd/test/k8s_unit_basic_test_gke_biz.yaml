@@ -1,6 +1,9 @@
 argocd:
   global:
     domain: argocd.runner-main-biz.gcp.infralib.entigo.io
+  configs:
+    params:
+      server.insecure: true
   server:
     ingress:
       annotations: 

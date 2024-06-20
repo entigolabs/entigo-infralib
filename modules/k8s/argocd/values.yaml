@@ -8,7 +8,7 @@ argocd:
       create: true
   configs:
     params:
-      server.insecure: true
+      server.insecure: false
   server:
     affinity:
       nodeAffinity:
