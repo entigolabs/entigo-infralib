@@ -35,6 +35,8 @@ jobs:
         modules/aws/vpc/test.sh
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
+        modules/google/dns/test.sh &
+        PIDS="$PIDS $!"
         modules/google/gke/test.sh &
         PIDS="$PIDS $!"
         modules/aws/eks/test.sh
@@ -137,7 +139,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/keycloak/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh &
+        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh && modules/google/argocd/test.sh &
         PIDS="$PIDS $!"
         
         FAIL=0

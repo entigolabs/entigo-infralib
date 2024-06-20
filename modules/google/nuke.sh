@@ -72,6 +72,11 @@ do
   gcloud dns record-sets delete --type=NS --zone=gcp-infralib-entigo-io --project entigo-infralib -q $RECORD_NAME
 done
 
+gcloud compute ssl-certificates list --uri | while read line
+do
+  gcloud 'compute' 'ssl-certificates' delete --project entigo-infralib -q $line
+done
+
 gcloud iam service-accounts list --format='value(email)' | grep -vE '175436099636-compute@developer.gserviceaccount.com|infralib-agent@entigo-infralib.iam.gserviceaccount.com|github@entigo-infralib.iam.gserviceaccount.com' | while read line
 do
   gcloud 'iam' 'service-accounts' delete --project entigo-infralib -q $line
