@@ -42,6 +42,9 @@ argocd:
       admin.enabled: "true"
       exec.enabled: "true"
       url: https://argocd.${domain}
+    service:
+      annotations:
+        cloud.google.com/neg: '{"ingress": true}'
     ingress:
       enabled: true
       controller: aws
