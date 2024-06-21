@@ -53,11 +53,11 @@ jobs:
         modules/aws/vpc/test.sh 
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
-        modules/google/dns/test.sh &
-        PIDS="$PIDS $!"
         modules/google/gke/test.sh &
         PIDS="$PIDS $!"
         modules/aws/eks/test.sh 
+        modules/google/dns/test.sh &
+        PIDS="$PIDS $!"
         providers/test.sh &
         PIDS="$PIDS $!"
         modules/aws/ec2/test.sh &
