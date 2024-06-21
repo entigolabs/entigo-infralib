@@ -116,22 +116,35 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
-  gcloud auth activate-service-account --key-file=application_default_credentials.json
-  gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
-  gcloud container clusters get-credentials $GKS_CLUSTER --region $GOOGLE_REGION --project $GOOGLE_PROJECT
-
-
+  #gcloud auth activate-service-account --key-file=application_default_credentials.json
+  #gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+  gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  export ARGOCD_HOSTNAME=`kubectl get ingress -n argocd -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
+  
+  export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
+  
+  if [ "$ARGO_TOKEN" == "" ]
+  then
+    echo "No infralib argocd token found, probably it is first run. Trying to create token using admin credentials."
+    ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
+    argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
+    export ARGO_TOKEN=`argocd account generate-token --account infralib`
+    argocd logout ${ARGOCD_HOSTNAME}
+    kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGO_TOKEN
+  fi
+  
   find . -type f -name '*.yaml' | while read line
   do
-    kubectl apply -n argocd -f $line
+    kubectl apply -n ${ARGOCD_NAMESPACE} -f $line
     if [ $? -ne 0 ]
     then
       echo "Failed to apply ArgoCD Application file $line to Kubernetes cluster!"
       exit 24
     fi
-    app=`echo $line | cut -d"." -f1`
-    argocd --server ${ARGOCD_HOST} --auth-token=${ARGOCD_TOKEN} app get --refresh $app
-    argocd --server ${ARGOCD_HOST} --auth-token=${ARGOCD_TOKEN} app diff --exit-code=false $app
+    app=`yq -r '.metadata.name' $line`
+    argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app get --refresh $app
+    argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app diff --exit-code=false $app
   done
   if [ $? -ne 0 ]
   then
@@ -140,9 +153,14 @@ then
   fi
 elif [ "$COMMAND" == "argocd-apply" ]
 then
+  gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  export ARGOCD_HOSTNAME=`kubectl get ingress -n argocd -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
+  export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
+  
   find . -type f -name '*.yaml' | while read line
   do
-    app=`echo $line | cut -d"." -f1`
+    app=`yq -r '.metadata.name' $line`
     argocd --server ${ARGOCD_HOST} --auth-token=${ARGOCD_TOKEN} app sync $app
     argocd --server ${ARGOCD_HOST} --auth-token=${ARGOCD_TOKEN} app wait --timeout 300 --health --sync --operation $app
   done
