@@ -34,8 +34,6 @@ jobs:
         modules/aws/vpc/test.sh
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
-        modules/google/dns/test.sh &
-        PIDS="$PIDS $!"
         modules/google/gke/test.sh &
         PIDS="$PIDS $!"
         modules/aws/eks/test.sh &
@@ -51,6 +49,7 @@ jobs:
           echo "FAILED JOBS $FAIL"
           exit 1
         fi
+        modules/google/dns/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfmain)
       if: ${{ failure() }}

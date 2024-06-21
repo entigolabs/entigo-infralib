@@ -18,6 +18,17 @@ do
   gsutil rm -r $line
 done
 
+gcloud deploy delivery-pipelines list --project entigo-infralib --region europe-north1 --uri | while read line
+do
+  gcloud deploy delivery-pipelines delete --project entigo-infralib --region europe-north1 --force -q $line
+done
+
+gcloud deploy targets list --project entigo-infralib --region europe-north1 --uri | while read line
+do
+  gcloud deploy targets delete --project entigo-infralib --region europe-north1 --force -q $line
+done
+
+
 gcloud -q "compute" "firewall-rules" list --uri | while read line
 do
   gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line
