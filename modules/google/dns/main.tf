@@ -58,6 +58,6 @@ module "dns_zone" {
   source                             = "./secret"
   prefix = var.prefix
   key = "dns_zone"
-  value = module.dns.domain
+  value = trimsuffix(module.dns.domain, ".")
 }
 
