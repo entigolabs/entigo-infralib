@@ -33,6 +33,12 @@ do
   gcloud 'run' 'jobs' delete --project entigo-infralib --region europe-north1 -q $line
 done
 
+gcloud compute network-endpoint-groups list --uri | while read line
+do
+  gcloud 'compute' 'network-endpoint-groups' delete --project entigo-infralib -q $line
+done
+
+
 gcloud compute routers list --uri | while read line
 do
   gcloud 'compute' 'routers' delete --project entigo-infralib -q $line
