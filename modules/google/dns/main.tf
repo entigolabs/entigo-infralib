@@ -52,3 +52,12 @@ resource "helm_release" "external-dns" {
   create_namespace = true
   values = [file("${path.module}/values.yaml")]
 }
+
+
+module "dns_zone" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "dns_zone"
+  value = module.dns.domain
+}
+

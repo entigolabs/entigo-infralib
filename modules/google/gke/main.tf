@@ -202,13 +202,13 @@ module "cluster_endpoint" {
 module "cluster_name" {
   source                             = "./secret"
   prefix = var.prefix
-  key = "cluster_id"
+  key = "cluster_name"
   value = module.gke.name
 }
 
 module "region" {
   source                             = "./secret"
   prefix = var.prefix
-  key = "cluster_id"
+  key = "region"
   value = module.gke.region
 }
