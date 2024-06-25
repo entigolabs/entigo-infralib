@@ -47,6 +47,7 @@ data "external" "argocd" {
 
 locals {
   # This hash forces Terraform to redeploy if a new template file is added or changed, or values are updated
+  namespace = var.namespace == "" ? "${local.hname}-aws" : var.namespace
   # chart_hash = sha1(join("", [for f in fileset("helm/modules/k8s/argocd", "**/*.yaml"): filesha1("helm/modules/k8s/argocd/${f}")]))
   values_template = templatefile("${path.module}/values.yaml", {
       hostname = var.hostname
@@ -54,7 +55,7 @@ locals {
       workspace = terraform.workspace
       prefix = var.prefix
       argocd_apps_name = var.argocd_apps_name
-      namespace = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
+      namespace = local.namespace
       ingress_group_name = var.ingress_group_name
       ingress_scheme = var.ingress_scheme
       sshPrivateKey = indent(10, tls_private_key.argocd.private_key_pem)
@@ -67,7 +68,7 @@ locals {
 resource "helm_release" "argocd" {
   name = var.name == "" ? "${local.hname}-argocd-aws" : var.name
   chart            = "helm/modules/k8s/argocd" 
-  namespace        = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
+  namespace        = local.namespace
   create_namespace = var.create_namespace
   values = [
     local.values_template
@@ -83,6 +84,17 @@ resource "aws_ssm_parameter" "argocd_repo_url" {
   name  = "/entigo-infralib/${local.hname}/repo_url"
   type  = "String"
   value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/${var.codecommit_name}"
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    Workspace = terraform.workspace
+  }
+}
+
+resource "aws_ssm_parameter" "argocd_namespace" {
+  name  = "/entigo-infralib/${local.hname}/namespace"
+  type  = "String"
+  value = local.namespace
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
