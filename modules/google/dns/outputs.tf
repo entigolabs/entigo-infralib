@@ -3,5 +3,5 @@ output "google_project_iam_member" {
 }
 
 output "dns_zone" {
-    value = module.dns.domain
+    value = trimsuffix(module.dns.domain, ".")
 }

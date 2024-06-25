@@ -1,11 +1,10 @@
 argocd:
   global:
     domain: argocd.runner-main-biz.gcp.infralib.entigo.io
+  configs:
+    params:
+      server.insecure: true
   server:
-    service:
-      annotations:
-        cloud.google.com/neg: '{"ingress": true}'
-        cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
     ingress:
       annotations: 
         kubernetes.io/ingress.class: 'gce'

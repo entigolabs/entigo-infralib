@@ -18,6 +18,17 @@ do
   gsutil rm -r $line
 done
 
+gcloud deploy delivery-pipelines list --project entigo-infralib --region europe-north1 --uri | while read line
+do
+  gcloud deploy delivery-pipelines delete --project entigo-infralib --region europe-north1 --force -q $line
+done
+
+gcloud deploy targets list --project entigo-infralib --region europe-north1 --uri | while read line
+do
+  gcloud deploy targets delete --project entigo-infralib --region europe-north1 --force -q $line
+done
+
+
 gcloud -q "compute" "firewall-rules" list --uri | while read line
 do
   gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line
@@ -32,6 +43,12 @@ gcloud run jobs list --uri | while read line
 do
   gcloud 'run' 'jobs' delete --project entigo-infralib --region europe-north1 -q $line
 done
+
+gcloud compute network-endpoint-groups list --uri | while read line
+do
+  gcloud 'compute' 'network-endpoint-groups' delete --project entigo-infralib -q $line
+done
+
 
 gcloud compute routers list --uri | while read line
 do
@@ -70,6 +87,11 @@ done
 gcloud dns record-sets list --zone=gcp-infralib-entigo-io --format="get(name)" | grep -vEx "gcp.infralib.entigo.io." | while read -r RECORD_NAME
 do
   gcloud dns record-sets delete --type=NS --zone=gcp-infralib-entigo-io --project entigo-infralib -q $RECORD_NAME
+done
+
+gcloud compute ssl-certificates list --uri | while read line
+do
+  gcloud 'compute' 'ssl-certificates' delete --project entigo-infralib -q $line
 done
 
 gcloud iam service-accounts list --format='value(email)' | grep -vE '175436099636-compute@developer.gserviceaccount.com|infralib-agent@entigo-infralib.iam.gserviceaccount.com|github@entigo-infralib.iam.gserviceaccount.com' | while read line

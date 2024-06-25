@@ -3,11 +3,16 @@ argocd:
     domain: ${hostname}
 
   configs:
+    params:
+      server.insecure: true
     cm:
       accounts.infralib: apiKey
     rbac:
       policy.csv: |
         p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
+
       
   crds:
     install: ${install_crd}
@@ -15,8 +20,7 @@ argocd:
   server:
     service:
       annotations:
-        cloud.google.com/neg: '{"ingress": true}'
-        cloud.google.com/backend-config: '{"ports": {"http":"argocd-server"}}'
+        cloud.google.com/backend-config: '{"ports": {"http":"${namespace}-server"}}'
 
     ingress:
       annotations: 

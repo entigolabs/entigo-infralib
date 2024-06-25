@@ -1,11 +1,15 @@
+locals {
+   yqcomm = "yq -y -i '.version = \"${var.branch == "main" ? "0.1.0" : var.branch}\"' helm/modules/k8s/argocd/Chart.yaml"
+}
+
 data "external" "argocd" {
-  program = ["bash", "-c", "rm -rf helm && git clone --depth 1 -b ${var.branch} ${var.repository} helm && echo '{}'"]
+  program = ["bash", "-c", "rm -rf helm && git clone --depth 1 -b ${var.branch} ${var.repository} helm && ${local.yqcomm} && echo '{}'"]
 }
 
 
 locals {
   # This hash forces Terraform to redeploy if a new template file is added or changed, or values are updated
-  namespace = var.namespace == "" ? "${local.hname}-argocd-aws" : var.namespace
+  namespace = var.namespace == "" ? "${local.hname}-gcp" : var.namespace
   # chart_hash = sha1(join("", [for f in fileset("helm/modules/k8s/argocd", "**/*.yaml"): filesha1("helm/modules/k8s/argocd/${f}")]))
   values_template = templatefile("${path.module}/values.yaml", {
       hostname = var.hostname

@@ -183,3 +183,32 @@ module "gke" {
 
   master_authorized_networks = var.master_authorized_networks
 }
+
+
+module "cluster_id" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "cluster_id"
+  value = module.gke.cluster_id
+}
+
+module "cluster_endpoint" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "cluster_endpoint"
+  value = nonsensitive(module.gke.endpoint)
+}
+
+module "cluster_name" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "cluster_name"
+  value = module.gke.name
+}
+
+module "region" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "region"
+  value = module.gke.region
+}

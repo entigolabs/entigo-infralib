@@ -30,14 +30,14 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         PIDS=""
-        modules/google/vpc/test.sh &
-        PIDS="$PIDS $!"
+        modules/google/vpc/test.sh
         modules/aws/vpc/test.sh
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
         modules/google/gke/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/eks/test.sh
+        modules/aws/eks/test.sh &
+        PIDS="$PIDS $!"
         
         FAIL=0
         for p in $PIDS; do
@@ -49,6 +49,7 @@ jobs:
           echo "FAILED JOBS $FAIL"
           exit 1
         fi
+        modules/google/dns/test.sh
         echo "Current main commit is $(git rev-parse HEAD)"
     - name: Slack Failed To Update to Main Message (tfmain)
       if: ${{ failure() }}
@@ -123,10 +124,10 @@ jobs:
         PIDS=""
         modules/aws/crossplane/test.sh
         modules/k8s/crossplane/test.sh
-        modules/k8s/external-secrets/test.sh &
-        PIDS="$PIDS $!"
         modules/k8s/aws-alb/test.sh
         modules/k8s/external-dns/test.sh
+        modules/k8s/external-secrets/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/istio-gateway/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
@@ -137,7 +138,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/keycloak/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh &
+        modules/k8s/argocd/test.sh && modules/aws/argocd/test.sh && modules/google/argocd/test.sh &
         PIDS="$PIDS $!"
         
         FAIL=0

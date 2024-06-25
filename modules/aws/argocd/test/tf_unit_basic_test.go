@@ -36,6 +36,8 @@ func testTerraformArgocd(t *testing.T, workspaceName string, options *terraform.
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc() // Defer needs to be called in outermost function
-	assert.NotEmpty(t, outputs["ssh-pub-key-id"],
+	assert.NotEmpty(t, outputs["namespace"],
+		"No key fingerprint returned")
+	assert.NotEmpty(t, outputs["hostname"],
 		"No key fingerprint returned")
 }

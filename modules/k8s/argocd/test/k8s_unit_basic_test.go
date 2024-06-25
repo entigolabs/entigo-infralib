@@ -48,15 +48,15 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 		extraArgs["install"] = []string{"--skip-crds"}
 		setValues["argocd.crds.install"] = "false"
 		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
-
 	}
+	setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
 	releaseName := namespaceName
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		SetValues:         setValues,
 		ValuesFiles:       []string{valuesFile},
+		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs:         extraArgs,
