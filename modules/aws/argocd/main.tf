@@ -1,41 +1,3 @@
-resource "aws_iam_user_policy" "argocd" {
-  name = "${local.hname}-argocd-aws"
-  user = aws_iam_user.argocd.name
-  policy = jsonencode({
-          "Version": "2012-10-17",
-          "Statement": [
-              {
-                  "Effect": "Allow",
-                  "Action": [
-                      "codecommit:BatchGet*",
-                      "codecommit:BatchDescribe*",
-                      "codecommit:Describe*",
-                      "codecommit:EvaluatePullRequestApprovalRules",
-                      "codecommit:Get*",
-                      "codecommit:List*",
-                      "codecommit:GitPull"
-                  ],
-                  "Resource": "*"
-              }
-          ]
-      })
-}
-
-resource "tls_private_key" "argocd" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
-}
-
-resource "aws_iam_user" "argocd" {
-  name = "${local.hname}-argocd-aws"
-  path = "/"
-}
-
-resource "aws_iam_user_ssh_key" "argocd" {
-  username   = aws_iam_user.argocd.name
-  encoding   = "SSH"
-  public_key = tls_private_key.argocd.public_key_openssh
-}
 
 locals {
    yqcomm = "yq -y -i '.version = \"${var.branch == "main" ? "0.1.0" : var.branch}\"' helm/modules/k8s/argocd/Chart.yaml"
@@ -54,12 +16,9 @@ locals {
       install_crd = var.install_crd
       workspace = terraform.workspace
       prefix = var.prefix
-      argocd_apps_name = var.argocd_apps_name
       namespace = local.namespace
       ingress_group_name = var.ingress_group_name
       ingress_scheme = var.ingress_scheme
-      sshPrivateKey = indent(10, tls_private_key.argocd.private_key_pem)
-      repo = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/${var.codecommit_name}"
   })
   values_hash = sha1(local.values_template)
   
@@ -80,10 +39,10 @@ resource "helm_release" "argocd" {
   depends_on = [data.external.argocd]
 }
 
-resource "aws_ssm_parameter" "argocd_repo_url" {
-  name  = "/entigo-infralib/${local.hname}/repo_url"
+resource "aws_ssm_parameter" "argocd_namespace" {
+  name  = "/entigo-infralib/${local.hname}/namespace"
   type  = "String"
-  value = "ssh://${aws_iam_user_ssh_key.argocd.ssh_public_key_id}@git-codecommit.${data.aws_region.current.name}.amazonaws.com/v1/repos/${var.codecommit_name}"
+  value = local.namespace
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -91,10 +50,10 @@ resource "aws_ssm_parameter" "argocd_repo_url" {
   }
 }
 
-resource "aws_ssm_parameter" "argocd_namespace" {
-  name  = "/entigo-infralib/${local.hname}/namespace"
+resource "aws_ssm_parameter" "argocd_hostname" {
+  name  = "/entigo-infralib/${local.hname}/hostname"
   type  = "String"
-  value = local.namespace
+  value = var.hostname
   tags = {
     Terraform = "true"
     Prefix    = var.prefix

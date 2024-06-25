@@ -1,48 +1,25 @@
 argocd:
   global:
     domain: ${hostname}
+  configs:
+    params:
+      server.insecure: true
+    cm:
+      accounts.infralib: apiKey
+    rbac:
+      policy.csv: |
+        p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
+
+  crds:
+    install: ${install_crd}
   server:
-    config:
-      url: https://${hostname}
+    service:
+      annotations:
+        cloud.google.com/backend-config: '{"ports": {"http":"${namespace}-server"}}'
     ingress:
       annotations: 
         alb.ingress.kubernetes.io/group.name: ${ingress_group_name}
         alb.ingress.kubernetes.io/scheme: ${ingress_scheme}
-      hosts:
-      - ${hostname}
-  crds:
-    install: ${install_crd}
-  configs:
-    repositories:
-      entigo-codecommit:
-        insecure: "true"
-        name: "entigo-codecommit"
-        project: "default"
-        type: "git"
-        url: "${repo}"
-        sshPrivateKey: |
-          ${sshPrivateKey}
 
-argocd-apps:
-  applications: 
-  - name: app-of-apps
-    additionalAnnotations:
-      helm.sh/resource-policy: keep
-      helm.sh/hook: post-install
-      helm.sh/hook-weight: "5"
-    namespace: ${namespace}
-    project: default
-    source:
-      repoURL: "${repo}"
-      targetRevision: "main"
-      path: ${argocd_apps_name}/${workspace}/app-of-apps
-      directory:
-        recurse: true
-    destination:
-      server: https://kubernetes.default.svc     
-      namespace: ${namespace}
-    syncPolicy:
-      automated:
-        selfHeal: true
-      syncOptions:
-        - CreateNamespace=true

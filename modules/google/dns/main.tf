@@ -45,13 +45,7 @@ resource "google_dns_record_set" "root_ns_record" {
   rrdatas      = module.dns.name_servers
 }
 
-resource "helm_release" "external-dns" {
-  name  = "external-dns"
-  chart = "https://github.com/kubernetes-sigs/external-dns/releases/download/external-dns-helm-chart-1.14.2/external-dns-1.14.2.tgz"
-  namespace        = "external-dns"
-  create_namespace = true
-  values = [file("${path.module}/values.yaml")]
-}
+
 
 
 module "dns_zone" {

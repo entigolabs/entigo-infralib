@@ -1,3 +1,8 @@
-output "name" {
-    value = resource.helm_release.argocd.name
+output "namespace" {
+    value = local.namespace
+}
+
+
+output "hostname" {
+    value = var.hostname
 }
