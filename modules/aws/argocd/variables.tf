@@ -2,10 +2,6 @@ variable "prefix" {
   type = string
 }
 
-variable "codecommit_name" {
-  type = string
-}
-
 variable "repository" {
   type = string
   default = "https://github.com/entigolabs/entigo-infralib-release.git"
@@ -33,11 +29,6 @@ variable "hostname" {
 variable "create_namespace" {
   type = bool
   default = true
-}
-
-variable "argocd_apps_name" {
-  type = string
-  default = "ep-applications"
 }
 
 variable "install_crd" {

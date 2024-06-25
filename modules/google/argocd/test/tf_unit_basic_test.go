@@ -59,5 +59,6 @@ func testTerraformArgocd(t *testing.T, workspaceName string, options *terraform.
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
 
-	assert.NotEmpty(t, outputs["name"], "name was not returned")
+	assert.NotEmpty(t, outputs["hostname"], "name was not returned")
+	assert.NotEmpty(t, outputs["namespace"], "name was not returned")
 }
