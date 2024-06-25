@@ -16,6 +16,7 @@ var googleRegion string
 func TestTerraformCrossplane(t *testing.T) {
 	googleRegion = commonGoogle.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformCrossplaneBiz)
+	t.Run("Pri", testTerraformCrossplanePri)
 }
 
 func testTerraformCrossplaneBiz(t *testing.T) {
@@ -23,9 +24,14 @@ func testTerraformCrossplaneBiz(t *testing.T) {
 	testTerraformCrossplane(t, "biz", options)
 }
 
+func testTerraformCrossplanePri(t *testing.T) {
+	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	testTerraformCrossplane(t, "pri", options)
+}
+
 func testTerraformCrossplane(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
-	assert.NotEqual(t, outputs, "", "outputs not defined")
+	assert.NotEmpty(t, outputs["service_account_email"], "service_account_email was not returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
 }
