@@ -190,22 +190,24 @@ then
   fi
   echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
   export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-  if [ "$ARGO_TOKEN" != "" ]
-  then
-    find . -type f -name '*.yaml' | while read line
-    do
-      app=`yq -r '.metadata.name' $line`
+  find . -type f -name '*.yaml' | while read line
+  do
+    app=`yq -r '.metadata.name' $line`
+    if [ "$ARGO_TOKEN" != "" ]
+    then
       argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app sync $app
       argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
-    done
+    else
+      echo "No ArgoCD Token, falling back to kubectl patch"
+      kubectl create ns -o yaml --dry-run=client $app | kubectl apply -f-
+      kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"operation": { "initiatedBy": { "username": "infralib" }, "sync": { "syncStrategy": { "hook": {} } } } }'
+    fi
+  done
     if [ $? -ne 0 ]
     then
       echo "Apply ArgoCD failed!"
       exit 21
     fi
-  else
-    echo "No ArgoCD Token, unable to verify applications"
-  fi
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then
   false
