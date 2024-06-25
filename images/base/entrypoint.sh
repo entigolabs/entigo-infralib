@@ -116,12 +116,19 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
-  #gcloud auth activate-service-account --key-file=application_default_credentials.json
-  #gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
-  gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  else
+    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+  fi
   export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  if [ "$ARGOCD_HOSTNAME" == "" ]
+  then
+    echo "Unable to get ArgoCD hostname."
+    exit 25
+  fi
   echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
-  
   export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
   
   if [ "$ARGO_TOKEN" == "" ]
@@ -131,7 +138,12 @@ then
     argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
     export ARGO_TOKEN=`argocd account generate-token --account infralib`
     argocd logout ${ARGOCD_HOSTNAME}
-    kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGO_TOKEN
+    if [ "$ARGO_TOKEN" != "" ]
+    then
+      kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGO_TOKEN
+    else
+      echo "Failed to create ARGO_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+    fi
   fi
   
   find . -type f -name '*.yaml' | while read line
@@ -142,32 +154,57 @@ then
       echo "Failed to apply ArgoCD Application file $line to Kubernetes cluster!"
       exit 24
     fi
-    app=`yq -r '.metadata.name' $line`
-    argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app get --refresh $app
-    argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app diff --exit-code=false $app
+    
+    if [ "$ARGO_TOKEN" != "" ]
+    then
+      app=`yq -r '.metadata.name' $line`
+      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app get --refresh $app
+      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app diff --exit-code=false $app
+    fi
   done
   if [ $? -ne 0 ]
   then
     echo "Plan ArgoCD failed!"
     exit 20
   fi
+  cd ../..
+  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    echo "Copy plan to Google S3"
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+  fi
 elif [ "$COMMAND" == "argocd-apply" ]
 then
-  gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+  else
+    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+  fi
   export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  if [ "$ARGOCD_HOSTNAME" == "" ]
+  then
+    echo "Unable to get ArgoCD hostname."
+    exit 25
+  fi
   echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
   export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-  
-  find . -type f -name '*.yaml' | while read line
-  do
-    app=`yq -r '.metadata.name' $line`
-    argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app sync $app
-    argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
-  done
-  if [ $? -ne 0 ]
+  if [ "$ARGO_TOKEN" != "" ]
   then
-    echo "Apply ArgoCD failed!"
-    exit 21
+    find . -type f -name '*.yaml' | while read line
+    do
+      app=`yq -r '.metadata.name' $line`
+      argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app sync $app
+      argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
+    done
+    if [ $? -ne 0 ]
+    then
+      echo "Apply ArgoCD failed!"
+      exit 21
+    fi
+  else
+    echo "No ArgoCD Token, unable to verify applications"
   fi
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then
