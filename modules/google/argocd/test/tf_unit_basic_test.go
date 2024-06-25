@@ -23,11 +23,11 @@ func TestTerraformArgocd(t *testing.T) {
 }
 
 func testTerraformArgocdBiz(t *testing.T) {
-	namespace := "argocd-google"
-	hostname := "argocd-google.runner-main-biz.gcp.infralib.entigo.io"
+	namespace := "argocd-gcp"
+	hostname := "argocd-gcp.runner-main-biz.gcp.infralib.entigo.io"
         if prefix != "runner-main" {
-	  namespace = fmt.Sprintf("argocd-google-%s", prefix)
-	  hostname = fmt.Sprintf("argocd-google-%s.runner-main-biz.gcp.infralib.entigo.io", prefix)
+	  namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
+	  hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-biz.gcp.infralib.entigo.io", prefix)
 	}
 	
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
@@ -39,11 +39,11 @@ func testTerraformArgocdBiz(t *testing.T) {
 }
 
 func testTerraformArgocdPri(t *testing.T) {
-	namespace := "argocd-google"
-	hostname := "argocd-google.runner-main-pri.gcp.infralib.entigo.io"
+	namespace := "argocd-gcp"
+	hostname := "argocd-gcp.runner-main-pri.gcp.infralib.entigo.io"
         if prefix != "runner-main" {
-	  namespace = fmt.Sprintf("argocd-google-%s", prefix)
-	  hostname = fmt.Sprintf("argocd-google-%s.runner-main-pri.gcp.infralib.entigo.io", prefix)
+	  namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
+	  hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-pri.gcp.infralib.entigo.io", prefix)
 	}
 	
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
