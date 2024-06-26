@@ -48,7 +48,7 @@ then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
 
-echo "If authentication fails use command 'gcloud auth application-default login', if you used different project then run also 'gcloud config set project entigo-infralib' beforehand."
+echo "If authentication fails use command 'gcloud auth application-default login', if you used different project then run also 'gcloud config set project entigo-infralib2' beforehand."
 
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
