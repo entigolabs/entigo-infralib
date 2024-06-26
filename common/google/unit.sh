@@ -25,8 +25,8 @@ fi
 
 if [ "$GOOGLE_PROJECT" == "" ]
 then
-  echo "Defaulting GOOGLE_PROJECT to entigo-infralib"
-  export GOOGLE_PROJECT="entigo-infralib"
+  echo "Defaulting GOOGLE_PROJECT to entigo-infralib2"
+  export GOOGLE_PROJECT="entigo-infralib2"
 fi
 
 
