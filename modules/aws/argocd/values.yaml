@@ -2,8 +2,6 @@ argocd:
   global:
     domain: ${hostname}
   configs:
-    params:
-      server.insecure: true
     cm:
       accounts.infralib: apiKey
     rbac:
