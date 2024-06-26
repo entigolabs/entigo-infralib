@@ -59,13 +59,13 @@ then
         echo "Failed to configure runner-main-pri GKE context"
         exit 2
       fi
-      kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-biz
+      kubectl get ns kube-system --context gke_entigo-infralib2_europe-north1_runner-main-biz
       if [ $? -ne 0 ]
       then
         echo "Failed to connect to runner-main-biz GKE k8s cluster"
         exit 3
       fi
-      kubectl get ns kube-system --context gke_entigo-infralib_europe-north1_runner-main-pri
+      kubectl get ns kube-system --context gke_entigo-infralib2_europe-north1_runner-main-pri
       if [ $? -ne 0 ]
       then
         echo "Failed to connect to runner-main-pri GKE k8s cluster"
