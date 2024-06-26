@@ -26,11 +26,6 @@ variable "kns_name" {
   default = "external-dns"
 }
 
-variable "project_number" {
-  type = string
-  description = "Project number"
-}
-
 
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
