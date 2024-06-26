@@ -133,7 +133,7 @@ do
   gcloud 'compute' 'ssl-certificates' delete --project entigo-infralib2 -q $line
 done
 
-gcloud iam service-accounts list --format='value(email)' | grep -vE '175436099636-compute@developer.gserviceaccount.com|infralib-agent@entigo-infralib.iam.gserviceaccount.com|github@entigo-infralib.iam.gserviceaccount.com' | while read line
+gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent@entigo-infralib|github@entigo-infralib' | while read line
 do
   gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
 done
