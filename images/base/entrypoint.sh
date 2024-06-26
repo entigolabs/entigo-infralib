@@ -198,9 +198,10 @@ then
       argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app sync $app
       argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
     else
-      echo "No ArgoCD Token, falling back to kubectl patch"
-      kubectl create ns -o yaml --dry-run=client $app | kubectl apply -f-
-      kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"operation": { "initiatedBy": { "username": "infralib" }, "sync": { "syncStrategy": { "hook": {} } } } }'
+      echo "No ArgoCD Token, falling back to kubectl patch and auto sync."
+      #kubectl create ns -o yaml --dry-run=client $app | kubectl apply -f-
+      kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
+      #kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"operation": { "initiatedBy": { "username": "infralib" }, "sync": { "syncStrategy": { "hook": {} } } } }'
     fi
   done
     if [ $? -ne 0 ]

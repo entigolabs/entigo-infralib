@@ -23,11 +23,11 @@ func TestK8sArgocdAWSPri(t *testing.T) {
 }
 
 func TestK8sArgocdGKEBiz(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz.gcp.infralib.entigo.io")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz.gcp.infralib.entigo.io")
 }
 
 func TestK8sArgocdGKEPri(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io")
 }
 
 func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string) {
