@@ -148,16 +148,18 @@ then
   
   find . -type f -name '*.yaml' | while read line
   do
+    app=`yq -r '.metadata.name' $line`
+    kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]"
     kubectl apply -n ${ARGOCD_NAMESPACE} -f $line
     if [ $? -ne 0 ]
     then
       echo "Failed to apply ArgoCD Application file $line to Kubernetes cluster!"
       exit 24
     fi
+
     
     if [ "$ARGO_TOKEN" != "" ]
     then
-      app=`yq -r '.metadata.name' $line`
       argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app get --refresh $app
       argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app diff --exit-code=false $app
     fi
@@ -199,9 +201,7 @@ then
       argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
     else
       echo "No ArgoCD Token, falling back to kubectl patch and auto sync."
-      #kubectl create ns -o yaml --dry-run=client $app | kubectl apply -f-
       kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
-      #kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"operation": { "initiatedBy": { "username": "infralib" }, "sync": { "syncStrategy": { "hook": {} } } } }'
     fi
   done
     if [ $? -ne 0 ]
