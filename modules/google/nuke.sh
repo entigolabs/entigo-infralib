@@ -34,10 +34,23 @@ do
   gcloud 'compute' 'firewall-rules' delete --project entigo-infralib -q $line
 done
 
-gcloud container clusters list --uri | while read line
+PIDS=""
+for line in $(gcloud container clusters list --uri)
 do
-  gcloud 'container' 'clusters' delete --project entigo-infralib --region europe-north1 --timeout 3600 -q $line
+  gcloud 'container' 'clusters' delete --project entigo-infralib --region europe-north1 --timeout 3600 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+    wait $p || let "FAIL+=1"
+    echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]
+then
+  echo "FAILED to delete container clusters. $FAIL"
+  exit 1
+fi
+
 
 gcloud run jobs list --uri | while read line
 do
@@ -55,20 +68,46 @@ do
   gcloud 'compute' 'routers' delete --project entigo-infralib -q $line
 done
 
-gcloud -q "compute" "networks" "subnets" list --uri | while read line
+PIDS=""
+for line in $(gcloud -q "compute" "networks" "subnets" list --uri)
 do
-  gcloud 'compute' "networks" "subnets" delete --project entigo-infralib -q $line
+  gcloud 'compute' "networks" "subnets" delete --project entigo-infralib -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+    wait $p || let "FAIL+=1"
+    echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]
+then
+  echo "FAILED to delete container clusters. $FAIL"
+  exit 1
+fi
 
 gcloud -q "compute" "routes" list --uri | while read line
 do
   gcloud 'compute' 'routes' delete --project entigo-infralib -q $line
 done
 
-gcloud -q "compute" "networks" list --uri | while read line
+
+PIDS=""
+for line in $(gcloud -q "compute" "networks" list --uri)
 do
-  gcloud 'compute' 'networks' delete --project entigo-infralib -q $line
+  gcloud 'compute' 'networks' delete --project entigo-infralib -q $line &
+  PIDS="$PIDS $!"
 done
+
+FAIL=0
+for p in $PIDS; do
+    wait $p || let "FAIL+=1"
+    echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]
+then
+  echo "FAILED to delete compute networks $FAIL"
+  exit 1
+fi
 
 gcloud "secrets" list --uri | while read line
 do
