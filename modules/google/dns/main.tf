@@ -2,7 +2,7 @@
 data "google_client_config" "this" {}
 
 locals {
-  member = "principal://iam.googleapis.com/projects/${var.project_number}/locations/global/workloadIdentityPools/${data.google_client_config.this.project}.svc.id.goog/subject/ns/${var.kns_name}/sa/${var.ksa_name}"
+  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kns_name}/${var.ksa_name}]"
 }
 
 resource "google_project_iam_member" "external_dns" {
