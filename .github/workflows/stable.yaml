@@ -42,15 +42,40 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/hello-world/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/vpc/test.sh 
+        modules/aws/vpc/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+        PIDS=""
         modules/aws/route53/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/eks/test.sh
+        modules/aws/eks/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+        PIDS=""
         modules/aws/ec2/test.sh &
         PIDS="$PIDS $!"
         modules/aws/helm-git/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/crossplane/test.sh
+        modules/aws/crossplane/test.sh &
+        PIDS="$PIDS $!"
         FAIL=0
         for p in $PIDS; do
             wait $p || let "FAIL+=1"
@@ -96,9 +121,6 @@ jobs:
     - name: Create resources based on latest release
       id: create_latest_release
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
         GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
         GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
         GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
@@ -182,12 +204,25 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/istio-istiod/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/crossplane/test.sh
-        modules/k8s/external-secrets/test.sh &
+        modules/k8s/crossplane/test.sh &
         PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+        PIDS=""
+        
         modules/k8s/aws-alb/test.sh
         modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
+        modules/k8s/external-secrets/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/argocd/test.sh &
         PIDS="$PIDS $!"
         modules/aws/argocd/test.sh &
