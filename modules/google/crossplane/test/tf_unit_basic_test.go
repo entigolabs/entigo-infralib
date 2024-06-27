@@ -1,6 +1,9 @@
 package test
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
@@ -12,6 +15,7 @@ import (
 const bucketName = "infralib-modules-gcp-crossplane-tf"
 
 var googleRegion string
+var vars = make(map[string]interface{})
 
 func TestTerraformCrossplane(t *testing.T) {
 	googleRegion = commonGoogle.SetupBucket(t, bucketName)
@@ -20,12 +24,22 @@ func TestTerraformCrossplane(t *testing.T) {
 }
 
 func testTerraformCrossplaneBiz(t *testing.T) {
-	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
+	if prefix != "runner-main" {
+		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-biz", prefix)
+		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-biz", prefix)
+	}
+	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_biz.tfvars", vars)
 	testTerraformCrossplane(t, "biz", options)
 }
 
 func testTerraformCrossplanePri(t *testing.T) {
-	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
+	if prefix != "runner-main" {
+		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-pri", prefix)
+		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-pri", prefix)
+	}
+	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_pri.tfvars", vars)
 	testTerraformCrossplane(t, "pri", options)
 }
 
