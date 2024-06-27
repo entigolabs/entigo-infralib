@@ -14,12 +14,20 @@ import (
 	"time"
 )
 
-func TestIstioBaseBiz(t *testing.T) {
+func TestIstioBaseAWSBiz(t *testing.T) {
 	testIstioBase(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
 }
 
-func TestIstioBasePri(t *testing.T) {
+func TestIstioBaseAWSPri(t *testing.T) {
 	testIstioBase(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+}
+
+func TestIstioBaseGKEBiz(t *testing.T) {
+	testIstioBase(t, "gke_entigo-infralib2_europe-north1_runner-main-biz")
+}
+
+func TestIstioBaseGKEPri(t *testing.T) {
+	testIstioBase(t, "gke_entigo-infralib2_europe-north1_runner-main-pri")
 }
 
 func testIstioBase(t *testing.T, contextName string) {
