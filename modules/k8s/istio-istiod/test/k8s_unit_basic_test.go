@@ -13,12 +13,20 @@ import (
 	"time"
 )
 
-func TestIstioIstiodBiz(t *testing.T) {
+func TestIstioIstiodAWSBiz(t *testing.T) {
 	testIstioIstiod(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz")
 }
 
-func TestIstioIstiodPri(t *testing.T) {
+func TestIstioIstiodAWSPri(t *testing.T) {
 	testIstioIstiod(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
+}
+
+func TestIstioIstiodGKEBiz(t *testing.T) {
+	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_runner-main-biz")
+}
+
+func TestIstioIstiodGKEPri(t *testing.T) {
+	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_runner-main-pri")
 }
 
 func testIstioIstiod(t *testing.T, contextName string) {
