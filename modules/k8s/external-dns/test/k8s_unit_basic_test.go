@@ -14,15 +14,23 @@ import (
 	"time"
 )
 
-func TestK8sExternalDnsBiz(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+func TestK8sExternalDnsAWSBiz(t *testing.T) {
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
 }
 
-func TestK8sExternalDnsPri(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+func TestK8sExternalDnsAWSPri(t *testing.T) {
+	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
 }
 
-func testK8sExternalDns(t *testing.T, contextName string, envName string) {
+func TestK8sExternalDnsGKEBiz(t *testing.T) {
+	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
+}
+
+func TestK8sExternalDnsGKEPri(t *testing.T) {
+	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
+}
+
+func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -34,15 +42,17 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string) {
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 	
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account",envName))
-	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider",envName))
-	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region",envName))
-	
-	setValues["external-dns.env[0].value"] = region
-	setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["awsAccount"] = account
-	setValues["clusterOIDC"] = clusteroidc
+	if cloudName == "aws" {
+	  awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	  account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account",envName))
+	  clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider",envName))
+	  region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region",envName))
+	  
+	  setValues["external-dns.env[0].value"] = region
+	  setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
+	  setValues["awsAccount"] = account
+	  setValues["clusterOIDC"] = clusteroidc
+	}
 
 	if prefix != "runner-main" {
 	   namespaceName = fmt.Sprintf("external-dns-%s-%s", envName, prefix)
@@ -54,6 +64,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string) {
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

@@ -1,0 +1,7 @@
+cloudProvider: google
+
+external-dns:
+  provider:
+    name: google
+  serviceAccount:
+    create: true

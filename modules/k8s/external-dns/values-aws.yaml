@@ -1,0 +1,12 @@
+cloudProvider: aws
+
+awsAccount: ""
+clusterOIDC: ""
+providerConfigRefName: aws-crossplane-system
+
+external-dns:
+  env: 
+  - name: AWS_DEFAULT_REGION
+    value: ""
+
+    
