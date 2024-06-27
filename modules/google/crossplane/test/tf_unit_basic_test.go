@@ -16,6 +16,8 @@ const bucketName = "infralib-modules-gcp-crossplane-tf"
 
 var googleRegion string
 var vars = make(map[string]interface{})
+var prefix = strings.ToLower(os.Getenv("TF_VAR_prefix"))
+var googleProject = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 
 func TestTerraformCrossplane(t *testing.T) {
 	googleRegion = commonGoogle.SetupBucket(t, bucketName)
@@ -24,7 +26,6 @@ func TestTerraformCrossplane(t *testing.T) {
 }
 
 func testTerraformCrossplaneBiz(t *testing.T) {
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	if prefix != "runner-main" {
 		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-biz", prefix)
 		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-biz", prefix)
@@ -34,7 +35,6 @@ func testTerraformCrossplaneBiz(t *testing.T) {
 }
 
 func testTerraformCrossplanePri(t *testing.T) {
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	if prefix != "runner-main" {
 		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-pri", prefix)
 		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-pri", prefix)
@@ -46,6 +46,6 @@ func testTerraformCrossplanePri(t *testing.T) {
 func testTerraformCrossplane(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
-	assert.NotEmpty(t, outputs["service_account_email"], "service_account_email was not returned")
+	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s-%s-cp@%s.iam.gserviceaccount.com", prefix, workspaceName, googleProject), "Wrong service_account_email returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
 }
