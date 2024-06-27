@@ -9,15 +9,18 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestK8sCrossplaneBiz(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-bix")
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
 func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
@@ -90,4 +93,52 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "gcp.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}, "workload-id-providerconfig", 60, 5*time.Second)
 	require.NoError(t, err, "ProviderConfig crd error")
+
+	// Create S3 bucket
+	bucketName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
+	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/bucket.yaml")
+	require.NoError(t, err, "Creating bucket error")
+	assert.NotNil(t, bucket, "Bucket is nil")
+	assert.Equal(t, bucketName, bucket.GetName(), "Bucket name is not equal")
+
+	_, err = k8s.WaitUntilK8SBucketAvailable(t, kubectlOptions, bucketName, 30, 4*time.Second)
+	if err != nil {
+		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
+	}
+	require.NoError(t, err, "Bucket syncing error")
+
+	err = google.WaitUntilGCPBucketExists(t, bucketName, 30, 4*time.Second)
+	if err != nil {
+		_ = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName) // Try to delete bucket
+	}
+	require.NoError(t, err, "S3 bucket creation error")
+
+	err = k8s.DeleteK8SBucket(t, kubectlOptions, bucketName)
+	require.NoError(t, err, "Deleting bucket error")
+
+	err = google.WaitUntilGCPBucketDeleted(t, bucketName, 6, 10*time.Second)
+	require.NoError(t, err, "S3 Bucket deletion error")
+
+	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
+	require.NoError(t, err, "Bucket didn't get deleted")
+
+	// // Create Object
+	// serviceName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
+	// object, err := k8s.CreateK8SObject(t, kubectlOptions, serviceName, "./templates/object.yaml")
+	// require.NoError(t, err, "Creating object error")
+	// assert.NotNil(t, object, "Object is nil")
+	// assert.Equal(t, serviceName, object.GetName(), "Object name is not equal")
+
+	// _, err = k8s.WaitUntilK8SObjectAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
+	// if err != nil {
+	// 	_ = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
+	// }
+	// require.NoError(t, err, "Object syncing error")
+	// terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
+
+	// err = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
+	// require.NoError(t, err, "Deleting object error")
+
+	// err = k8s.WaitUntilK8SObjectDeleted(t, kubectlOptions, serviceName, 12, 5*time.Second)
+	// require.NoError(t, err, "Object didn't get deleted")
 }

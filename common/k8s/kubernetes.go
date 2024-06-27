@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -13,8 +17,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
-	"os"
-	"time"
+)
+
+type ProviderType string
+
+const (
+	AWS    ProviderType = "aws"
+	GCloud ProviderType = "gcloud"
 )
 
 func WaitUntilProviderAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
@@ -41,6 +50,9 @@ func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOp
 
 func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	if getProviderType(options) == GCloud {
+		resource.Group = "storage.gcp.upbound.io"
+	}
 	availability := defaultObjectAvailability(name, resource)
 	availability.isAvailable = isCrossplaneObjectAvailable
 	availability.objectError = NewCrossplaneObjectNotAvailable
@@ -49,6 +61,9 @@ func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions
 
 func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	if getProviderType(options) == GCloud {
+		resource.Group = "storage.gcp.upbound.io"
+	}
 	namespacedObject := defaultNamespacedObject(name, resource)
 	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
 }
@@ -61,12 +76,18 @@ func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	}
 	bucketObject.SetName(name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	if getProviderType(options) == GCloud {
+		resource.Group = "storage.gcp.upbound.io"
+	}
 	return createObject(t, options, bucketObject, "", resource)
 }
 
 func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
 	resource := schema.GroupVersionResource{Group: "s3.aws.crossplane.io", Version: "v1beta1", Resource: "buckets"}
+	if getProviderType(options) == GCloud {
+		resource.Group = "storage.gcp.upbound.io"
+	}
 	return deleteObject(t, options, name, "", resource)
 }
 
@@ -325,4 +346,11 @@ func SetNestedSliceString(object map[string]interface{}, index int, label string
 	}
 	rules[index].(map[string]interface{})[label] = value
 	return unstructured.SetNestedSlice(object, rules, fieldStrings...)
+}
+
+func getProviderType(options *k8s.KubectlOptions) ProviderType {
+	if strings.HasPrefix(options.ContextName, "gke_") {
+		return GCloud
+	}
+	return AWS
 }
