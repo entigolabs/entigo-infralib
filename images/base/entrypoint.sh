@@ -41,14 +41,14 @@ then
       echo "Unable to find artifacts from plan stage! $TF_VAR_prefix-$WORKSPACE-tf.tar.gz"
       exit 4
     fi
-    tar -xvzf $TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+    tar -xzf $TF_VAR_prefix-$WORKSPACE-tf.tar.gz
   else
     if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
     then
       echo "Unable to find artifacts from plan stage! $CODEBUILD_SRC_DIR_Plan/tf.tar.gz"
       exit 4
     fi
-    tar -xvzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
+    tar -xzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
   fi
   cd "$TF_VAR_prefix/$WORKSPACE"
 fi
