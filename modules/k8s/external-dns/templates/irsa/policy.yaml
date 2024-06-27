@@ -1,3 +1,4 @@
+{{- if eq .Values.cloudProvider "aws" }}
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
 metadata:
@@ -29,3 +30,5 @@ spec:
 
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
+
+{{- end }}
