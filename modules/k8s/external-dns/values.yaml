@@ -1,3 +1,5 @@
+cloudProvider: aws
+
 awsAccount: ""
 clusterOIDC: ""
 providerConfigRefName: aws-crossplane-system
