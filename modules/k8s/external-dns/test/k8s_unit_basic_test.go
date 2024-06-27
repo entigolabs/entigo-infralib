@@ -52,6 +52,8 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	  setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
 	  setValues["awsAccount"] = account
 	  setValues["clusterOIDC"] = clusteroidc
+	} else {
+	  namespaceName = fmt.Sprintf("external-dns")
 	}
 
 	if prefix != "runner-main" {
