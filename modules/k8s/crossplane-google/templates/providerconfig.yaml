@@ -1,0 +1,16 @@
+{{- if .Values.installProviderConfig }}
+
+apiVersion: gcp.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: workload-id-providerconfig
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  credentials:
+    source: InjectedIdentity
+  projectID: entigo-infralib2
+
+{{- end }}

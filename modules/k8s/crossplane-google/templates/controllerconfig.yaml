@@ -1,0 +1,12 @@
+{{- if .Values.installControllerConfig }} 
+
+apiVersion: pkg.crossplane.io/v1alpha1
+kind: ControllerConfig
+metadata:
+  name: my-controller-config
+  annotations:
+    iam.gke.io/gcp-service-account: {{ .Values.controllerConfig.googleServiceAccount}}
+spec:
+  serviceAccountName: crossplane
+  
+{{- end }}

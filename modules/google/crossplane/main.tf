@@ -23,6 +23,6 @@ resource "google_project_iam_member" "crossplane_workload_identity_user" {
 }
 
 resource "google_service_account" "crossplane" {
-  account_id   = "${local.hname}-cp"
+  account_id   = "${substr(local.hname, 0, 25)}-cp"
   display_name = "${local.hname}-cp"
 }

@@ -14,10 +14,12 @@ import (
 
 const bucketName = "infralib-modules-gcp-crossplane-tf"
 
-var googleRegion string
-var vars = make(map[string]interface{})
-var prefix = strings.ToLower(os.Getenv("TF_VAR_prefix"))
-var googleProject = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+var (
+	googleRegion  string
+	vars          = make(map[string]interface{})
+	prefix        = strings.ToLower(os.Getenv("TF_VAR_prefix"))
+	googleProject = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+)
 
 func TestTerraformCrossplane(t *testing.T) {
 	googleRegion = commonGoogle.SetupBucket(t, bucketName)
@@ -46,6 +48,11 @@ func testTerraformCrossplanePri(t *testing.T) {
 func testTerraformCrossplane(t *testing.T, workspaceName string, options *terraform.Options) {
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
-	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s-%s-cp@%s.iam.gserviceaccount.com", prefix, workspaceName, googleProject), "Wrong service_account_email returned")
+	runnerName := fmt.Sprintf("%s-%s", prefix, workspaceName)
+	googleServiceAccountId := fmt.Sprintf("%s-cp", runnerName)
+	if len(runnerName) > 25 {
+		googleServiceAccountId = fmt.Sprintf("%s-cp", runnerName[:26])
+	}
+	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject), "Wrong service_account_email returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
 }
