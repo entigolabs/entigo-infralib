@@ -23,6 +23,10 @@ func TestK8sCrossplaneBiz(t *testing.T) {
 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
+func TestK8sCrossplanePri(t *testing.T) {
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
+}
+
 func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	t.Parallel()
 	spew.Dump("")
@@ -75,6 +79,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	setValues["installControllerConfig"] = "true"
+	setValues["controllerConfig.googleServiceAccount"] = fmt.Sprintf("%s-cp@entigo-infralib2.iam.gserviceaccount.com", runnerName)
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "my-controller-config", 60, 5*time.Second)
@@ -121,24 +126,4 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	err = k8s.WaitUntilK8SBucketDeleted(t, kubectlOptions, bucketName, 12, 5*time.Second)
 	require.NoError(t, err, "Bucket didn't get deleted")
-
-	// // Create Object
-	// serviceName := "entigo-infralib-test" + "-" + strings.ToLower(random.UniqueId()) + "-" + releaseName
-	// object, err := k8s.CreateK8SObject(t, kubectlOptions, serviceName, "./templates/object.yaml")
-	// require.NoError(t, err, "Creating object error")
-	// assert.NotNil(t, object, "Object is nil")
-	// assert.Equal(t, serviceName, object.GetName(), "Object name is not equal")
-
-	// _, err = k8s.WaitUntilK8SObjectAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
-	// if err != nil {
-	// 	_ = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
-	// }
-	// require.NoError(t, err, "Object syncing error")
-	// terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 30, 4*time.Second)
-
-	// err = k8s.DeleteK8SObject(t, kubectlOptions, serviceName)
-	// require.NoError(t, err, "Deleting object error")
-
-	// err = k8s.WaitUntilK8SObjectDeleted(t, kubectlOptions, serviceName, 12, 5*time.Second)
-	// require.NoError(t, err, "Object didn't get deleted")
 }

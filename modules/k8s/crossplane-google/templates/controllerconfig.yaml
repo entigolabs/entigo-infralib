@@ -5,7 +5,7 @@ kind: ControllerConfig
 metadata:
   name: my-controller-config
   annotations:
-    iam.gke.io/gcp-service-account: runner-main-biz-cp@entigo-infralib2.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: {{ .Values.controllerConfig.googleServiceAccount}}
 spec:
   serviceAccountName: crossplane
   

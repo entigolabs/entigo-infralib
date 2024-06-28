@@ -2,6 +2,9 @@ installProvider: true
 installProviderConfig: true
 installControllerConfig: true
 
+controllerConfig:
+  googleServiceAccount: ""
+
 crossplane:
   # -- The number of replicas to run for the Crossplane pods.
   replicas: 1
