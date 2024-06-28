@@ -134,7 +134,10 @@ jobs:
         PIDS="$PIDS $!"
         modules/google/vpc/test.sh
         modules/google/gke/test.sh
-        modules/google/dns/test.sh
+        modules/google/dns/test.sh &
+        PIDS="$PIDS $!"
+        modules/google/crossplane/test.sh &
+        PIDS="$PIDS $!"
         FAIL=0
         for p in $PIDS; do
             wait $p || let "FAIL+=1"
