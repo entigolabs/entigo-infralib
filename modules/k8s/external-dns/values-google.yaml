@@ -3,6 +3,7 @@ kubernetesServiceAccount: ""
 kubernetesNamespace: ""
 projectID: ""
 managedZone: ""
+installProvider: true
 
 external-dns:
   provider:

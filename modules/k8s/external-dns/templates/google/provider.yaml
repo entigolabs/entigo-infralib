@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if and (eq .Values.cloudProvider "google") .Values.installProvider }}
 
 apiVersion: pkg.crossplane.io/v1
 kind: Provider

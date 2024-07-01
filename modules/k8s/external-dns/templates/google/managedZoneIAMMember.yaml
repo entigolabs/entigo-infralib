@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if and (eq .Values.cloudProvider "google") .Values.createMembers }}
 
 apiVersion: dns.gcp.upbound.io/v1beta1
 kind: ManagedZoneIAMMember
