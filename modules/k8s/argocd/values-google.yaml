@@ -1,0 +1,29 @@
+argocd:
+  configs:
+    params:
+      server.insecure: true
+  server:
+    service:
+      annotations:
+        cloud.google.com/backend-config: '{"ports": {"http":"${namespace}-server"}}'
+    ingress:
+      annotations: 
+        kubernetes.io/ingress.class: 'gce'
+      ingressClassName: ""
+      controller: gke
+      gke:
+        backendConfig:
+          healthCheck:
+            checkIntervalSec: 30
+            timeoutSec: 5
+            healthyThreshold: 1
+            unhealthyThreshold: 2
+            type: HTTP
+            requestPath: /healthz
+            port: 8080
+        frontendConfig:
+          redirectToHttps:
+            enabled: true
+        managedCertificate:
+          enabled: true
+ 

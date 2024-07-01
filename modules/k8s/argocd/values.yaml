@@ -9,6 +9,13 @@ argocd:
   configs:
     params:
       server.insecure: false
+    cm:
+      accounts.infralib: apiKey
+    rbac:
+      policy.csv: |
+        p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
   server:
     affinity:
       nodeAffinity:
