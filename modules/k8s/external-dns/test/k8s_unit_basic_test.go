@@ -2,16 +2,17 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sExternalDnsAWSBiz(t *testing.T) {
@@ -53,7 +54,11 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	  setValues["awsAccount"] = account
 	  setValues["clusterOIDC"] = clusteroidc
 	} else {
-	  namespaceName = fmt.Sprintf("external-dns")
+	  namespaceName = "external-dns"
+	  setValues["kubernetesNamespace"] = namespaceName
+	  setValues["kubernetesServiceAccount"] = "external-dns"
+	  setValues["projectID"] = "entigo-infralib2"
+	  setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 	}
 
 	if prefix != "runner-main" {

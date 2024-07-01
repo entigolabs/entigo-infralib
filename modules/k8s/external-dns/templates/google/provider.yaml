@@ -1,0 +1,21 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-gcp-cloudplatform
+spec:
+  package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v1.4.0
+  controllerConfigRef:
+    name: my-controller-config
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-gcp-dns
+spec:
+  package: xpkg.upbound.io/upbound/provider-gcp-dns:v1.4.0
+  controllerConfigRef:
+    name: my-controller-config
+
+{{- end }}

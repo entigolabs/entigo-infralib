@@ -1,22 +1,22 @@
 
 data "google_client_config" "this" {}
 
-locals {
-  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kns_name}/${var.ksa_name}]"
-}
+# locals {
+#   member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kns_name}/${var.ksa_name}]"
+# }
 
-resource "google_project_iam_member" "external_dns" {
-  member  = local.member
-  role    = "roles/dns.reader"
-  project = data.google_client_config.this.project
-}
+# resource "google_project_iam_member" "external_dns" {
+#   member  = local.member
+#   role    = "roles/dns.reader"
+#   project = data.google_client_config.this.project
+# }
 
-resource "google_dns_managed_zone_iam_member" "member" {
-  project = data.google_client_config.this.project
-  managed_zone = module.dns.name
-  role         = "roles/dns.admin"
-  member       = local.member
-}
+# resource "google_dns_managed_zone_iam_member" "member" {
+#   project = data.google_client_config.this.project
+#   managed_zone = module.dns.name
+#   role         = "roles/dns.admin"
+#   member       = local.member
+# }
 
 module "dns" {
   source  = "terraform-google-modules/cloud-dns/google"
