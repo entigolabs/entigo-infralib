@@ -55,10 +55,6 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	  setValues["clusterOIDC"] = clusteroidc
 	} else {
 	  namespaceName = "external-dns"
-	  setValues["kubernetesNamespace"] = namespaceName
-	  setValues["kubernetesServiceAccount"] = "external-dns"
-	  setValues["projectID"] = "entigo-infralib2"
-	  setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 	}
 
 	if prefix != "runner-main" {
@@ -66,6 +62,14 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	   extraArgs["upgrade"] = []string{"--skip-crds"}
 	   extraArgs["install"] = []string{"--skip-crds"}
 	}
+
+	if cloudName == "google" {
+		setValues["kubernetesNamespace"] = namespaceName
+		setValues["kubernetesServiceAccount"] = "external-dns"
+		setValues["projectID"] = "entigo-infralib2"
+		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
+	}
+
 	releaseName := namespaceName
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
