@@ -122,6 +122,26 @@ then
   else
     aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
   fi
+  echo "Detecting ArgoCD modules."
+  find . -type f -name '*.yaml' -exec sh -c '
+  for file; do
+    if yq eval ".spec.sources[].path" "$file" | grep -q "modules/k8s/argocd"; then
+      echo "$file"
+    fi
+  done
+  ' | while read line
+  do
+    echo "Found $line, installing using helm."
+    yq -r '.spec.sources[0].helm.values' $line > values-$app.yaml
+    app=`yq -r '.metadata.name' $line`
+    namespace=`yq -r '.spec.destination.namespace' $line`
+    version=`yq -r '.spec.sources[0].targetRevision' $line`
+    repo=`yq -r '.spec.sources[0].repoURL' $line`
+    path=`yq -r '.spec.sources[0].path' $line`
+    git clone --depth 1 --single-branch --branch $version $repo git-$app
+    helm upgrade --create-namespace --install -n $namespace -f values-$app.yaml $app git-$app/$path
+  done
+  
   export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then

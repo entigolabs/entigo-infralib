@@ -15,22 +15,22 @@ import (
 )
 
 func TestK8sArgocdAWSBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sArgocdAWSPri(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io")
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sArgocdGKEBiz(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz.gcp.infralib.entigo.io")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sArgocdGKEPri(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string) {
+func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -55,7 +55,7 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{valuesFile},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
