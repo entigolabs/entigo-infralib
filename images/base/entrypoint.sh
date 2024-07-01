@@ -119,27 +119,33 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+    export PROVIDER="google"
   else
     aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+    export PROVIDER="aws"
   fi
-  echo "Detecting ArgoCD modules."
-  find . -type f -name '*.yaml' | while read line
-  do
-    if yq -r '.spec.sources[0].path' $line | grep -q "modules/k8s/argocd"
-    then
-      echo "Found $line, installing using helm."
-      app=`yq -r '.metadata.name' $line`
-      yq -r '.spec.sources[0].helm.values' $line > values-$app.yaml
-      namespace=`yq -r '.spec.destination.namespace' $line`
-      version=`yq -r '.spec.sources[0].targetRevision' $line`
-      repo=`yq -r '.spec.sources[0].repoURL' $line`
-      path=`yq -r '.spec.sources[0].path' $line`
-      git clone --depth 1 --single-branch --branch $version $repo git-$app
-      helm upgrade --create-namespace --install -n $namespace -f values-$app.yaml $app git-$app/$path
-      rm -rf values-$app.yaml git-$app
-    fi
-  done
   
+  export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  if [ "$ARGOCD_HOSTNAME" == "" ]
+  then
+    echo "Detecting ArgoCD modules."
+    find . -type f -name '*.yaml' | while read line
+    do
+      if yq -r '.spec.sources[0].path' $line | grep -q "modules/k8s/argocd"
+      then
+        echo "Found $line, installing using helm."
+        app=`yq -r '.metadata.name' $line`
+        yq -r '.spec.sources[0].helm.values' $line > values-$app.yaml
+        namespace=`yq -r '.spec.destination.namespace' $line`
+        version=`yq -r '.spec.sources[0].targetRevision' $line`
+        repo=`yq -r '.spec.sources[0].repoURL' $line`
+        path=`yq -r '.spec.sources[0].path' $line`
+        git clone --depth 1 --single-branch --branch $version $repo git-$app
+        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml $app git-$app/$path
+        rm -rf values-$app.yaml git-$app
+      fi
+    done
+  fi
   export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
