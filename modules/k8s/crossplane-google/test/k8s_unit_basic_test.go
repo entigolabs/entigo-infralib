@@ -34,9 +34,10 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 
+	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := "crossplane-system"
-	releaseName := "crossplane"
+	releaseName := "crossplane-system"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
@@ -78,15 +79,15 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, "default", 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
-	googleServiceAccountId := fmt.Sprintf("%s-cp", runnerName)
+	googleServiceAccountID := fmt.Sprintf("%s-cp", runnerName)
 	if len(runnerName) > 25 {
-		googleServiceAccountId = fmt.Sprintf("%s-cp", runnerName[:26])
+		googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
 	}
 	setValues["installControllerConfig"] = "true"
-	setValues["controllerConfig.googleServiceAccount"] = fmt.Sprintf("%s@entigo-infralib2.iam.gserviceaccount.com", googleServiceAccountId)
+	setValues["controllerConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, "my-controller-config", 60, 5*time.Second)
+	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("google-%s", releaseName), 60, 5*time.Second)
 	require.NoError(t, err, "ControllerConfig crd error")
 
 	setValues["installProvider"] = "true"
@@ -102,7 +103,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "gcp.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}, "workload-id-providerconfig", 60, 5*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "gcp.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}, fmt.Sprintf("google-%s", releaseName), 60, 5*time.Second)
 	require.NoError(t, err, "ProviderConfig crd error")
 
 	// Create S3 bucket

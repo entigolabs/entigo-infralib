@@ -57,11 +57,11 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 
 	case "google":
 		namespaceName = "external-dns"
-		setValues["projectID"] = "entigo-infralib2"
+		setValues["googleProjectID"] = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 
 	default:
-		t.Fatalf("Invalid cloud name: %s", cloudName)
+		t.Fatalf("invalid cloud name: %s", cloudName)
 	}
 
 	if prefix != "runner-main" {
