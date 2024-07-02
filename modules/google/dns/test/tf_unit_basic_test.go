@@ -33,8 +33,6 @@ func testTerraformDnsBizAssert(t *testing.T, workspaceName string, options *terr
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
-	_ = outputs
-	// assert.NotEmpty(t, outputs["google_project_iam_member"], "google_project_iam_member was not returned")
 	assert.NotEmpty(t, outputs["dns_zone"], "dns_zone was not returned")
 }
 
@@ -42,7 +40,5 @@ func testTerraformDnsPriAssert(t *testing.T, workspaceName string, options *terr
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
-	_ = outputs
-	// assert.NotEmpty(t, outputs["google_project_iam_member"], "google_project_iam_member was not returned")
 	assert.NotEmpty(t, outputs["dns_zone"], "dns_zone was not returned")
 }

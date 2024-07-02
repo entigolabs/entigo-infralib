@@ -1,6 +1,5 @@
 cloudProvider: google
 projectID: ""
-managedZone: ""
 
 external-dns:
   provider:

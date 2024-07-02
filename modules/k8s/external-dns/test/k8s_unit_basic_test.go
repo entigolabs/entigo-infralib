@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	// "github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -44,7 +43,8 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	if cloudName == "aws" {
+	switch cloudName {
+	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
@@ -54,19 +54,20 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 		setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
-	} else {
+
+	case "google":
 		namespaceName = "external-dns"
+		setValues["projectID"] = "entigo-infralib2"
+		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
+
+	default:
+		t.Fatalf("Invalid cloud name: %s", cloudName)
 	}
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("external-dns-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
-	}
-
-	if cloudName == "google" {
-		setValues["projectID"] = "entigo-infralib2"
-		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 	}
 
 	releaseName := namespaceName
