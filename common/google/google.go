@@ -3,19 +3,20 @@ package google
 import (
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"os"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/storage"
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"time"
 )
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
-	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT") , []string{os.Getenv("GOOGLE_REGION")}, nil)
+	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
 	err := gcp.CreateStorageBucketE(t, os.Getenv("GOOGLE_PROJECT"), bucketName, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Your previous request to create the named bucket succeeded and you already own it.") {
@@ -40,10 +41,10 @@ func WaitUntilGCPBucketExists(t testing.TestingT, name string, retries int, slee
 	},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for bucket to be created: %s", err)
+		logger.Log(t, "Timed out waiting for bucket to be created: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	logger.Log(t, message)
 	return nil
 }
 
@@ -52,11 +53,8 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
 		err := gcp.AssertStorageBucketExistsE(t, name)
 		if err != nil {
-			var awsErr awserr.Error
-			if errors.As(err, &awsErr) {
-				if awsErr.Code() == "NotFound" {
-					return "Bucket is now deleted", nil
-				}
+			if errors.Is(err, storage.ErrBucketNotExist) {
+				return "Bucket is now deleted", nil
 			}
 			return "", err
 		}
@@ -64,9 +62,9 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 	},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for bucket to be deleted: %s", err)
+		logger.Log(t, "Timed out waiting for bucket to be deleted: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	logger.Log(t, message)
 	return nil
 }

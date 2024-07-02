@@ -1,0 +1,9 @@
+apiVersion: storage.gcp.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: change-me
+spec:
+  forProvider:
+    location: US
+  providerConfigRef:
+    name: google-crossplane-system
