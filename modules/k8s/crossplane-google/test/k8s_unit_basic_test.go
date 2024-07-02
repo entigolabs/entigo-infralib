@@ -80,8 +80,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	googleServiceAccountId := fmt.Sprintf("%s-cp", runnerName)
 	if len(runnerName) > 25 {
-        googleServiceAccountId = fmt.Sprintf("%s-cp", runnerName[:26])
-    }
+		googleServiceAccountId = fmt.Sprintf("%s-cp", runnerName[:26])
+	}
 	setValues["installControllerConfig"] = "true"
 	setValues["controllerConfig.googleServiceAccount"] = fmt.Sprintf("%s@entigo-infralib2.iam.gserviceaccount.com", googleServiceAccountId)
 	helmOptions.SetValues = setValues
@@ -95,6 +95,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-storage", 60, 5*time.Second)
 	require.NoError(t, err, "Providers crd error")
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-family-gcp", 60, 5*time.Second)
+	require.NoError(t, err, "Providers crd error")
+	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-cloudplatform", 60, 5*time.Second)
 	require.NoError(t, err, "Providers crd error")
 
 	setValues["installProviderConfig"] = "true"

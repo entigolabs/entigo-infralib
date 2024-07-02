@@ -125,6 +125,7 @@ jobs:
         modules/aws/crossplane/test.sh
         modules/google/crossplane/test.sh
         modules/k8s/crossplane/test.sh
+        modules/k8s/crossplane-google/test.sh
         modules/k8s/aws-alb/test.sh
         modules/k8s/external-dns/test.sh
         modules/k8s/external-secrets/test.sh &

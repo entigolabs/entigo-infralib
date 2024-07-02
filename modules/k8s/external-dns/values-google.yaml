@@ -1,4 +1,7 @@
 cloudProvider: google
+kubernetesNamespace: ""
+projectID: ""
+managedZone: ""
 
 external-dns:
   provider:
