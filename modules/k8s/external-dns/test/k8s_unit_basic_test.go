@@ -70,7 +70,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 		setValues["projectID"] = "entigo-infralib2"
 		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 		setValues["installProviders"] = "true"
-		setValues["createMembers"] = "false"
+		setValues["addMembers"] = "false"
 	}
 
 	releaseName := namespaceName
@@ -111,7 +111,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 		// _, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-dns", 60, 5*time.Second)
 		// require.NoError(t, err, "Providers crd error")
 
-		helmOptions.SetValues["createMembers"] = "true"
+		helmOptions.SetValues["addMembers"] = "true"
 		helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	}
 }
