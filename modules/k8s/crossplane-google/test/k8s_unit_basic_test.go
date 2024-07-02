@@ -52,6 +52,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	setValues["installControllerConfig"] = "false"
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
+	setValues["googleProjectID"] = googleProjectID
 	helmOptions := &helm.Options{
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
