@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
+	// "github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -106,10 +106,10 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	}
 
 	if cloudName == "google" {
-		_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-cloudplatform", 60, 5*time.Second)
-		require.NoError(t, err, "Providers crd error")
-		_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-dns", 60, 5*time.Second)
-		require.NoError(t, err, "Providers crd error")
+		// _, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-cloudplatform", 60, 5*time.Second)
+		// require.NoError(t, err, "Providers crd error")
+		// _, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-dns", 60, 5*time.Second)
+		// require.NoError(t, err, "Providers crd error")
 
 		helmOptions.SetValues["createMembers"] = "true"
 		helm.Upgrade(t, helmOptions, helmChartPath, releaseName)

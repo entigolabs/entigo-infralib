@@ -4,6 +4,7 @@ kubernetesNamespace: ""
 projectID: ""
 managedZone: ""
 installProvider: true
+addMembers: true
 
 external-dns:
   provider:
