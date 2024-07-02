@@ -96,6 +96,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err, "Providers crd error")
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-family-gcp", 60, 5*time.Second)
 	require.NoError(t, err, "Providers crd error")
+	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-cloudplatform", 60, 5*time.Second)
+	require.NoError(t, err, "Providers crd error")
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
