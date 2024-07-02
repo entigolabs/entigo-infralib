@@ -3,7 +3,7 @@
 apiVersion: cloudplatform.gcp.upbound.io/v1beta1
 kind: ProjectIAMMember
 metadata:
-  name: project-iam-member-dns-admin
+  name: {{ .Release.Name }}
 spec:
   forProvider:
     member: serviceAccount:{{ .Values.projectID }}.svc.id.goog[{{ .Release.Name }}/external-dns]

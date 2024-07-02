@@ -1,5 +1,4 @@
 cloudProvider: google
-kubernetesNamespace: ""
 projectID: ""
 managedZone: ""
 
