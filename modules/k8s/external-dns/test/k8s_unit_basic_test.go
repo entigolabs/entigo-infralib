@@ -79,6 +79,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 
 	helmOptions := &helm.Options{
 		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

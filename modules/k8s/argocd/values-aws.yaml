@@ -1,0 +1,11 @@
+argocd:
+  configs:
+    params:
+      server.insecure: false
+  server:
+    ingress:
+      annotations: 
+        alb.ingress.kubernetes.io/group.name: internal
+        alb.ingress.kubernetes.io/scheme: internal
+
+ 
