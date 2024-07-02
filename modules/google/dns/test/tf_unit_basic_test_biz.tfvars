@@ -1,3 +1,3 @@
-zone = "gcp-infralib-entigo-io"
-domain = "gcp.infralib.entigo.io."
-type = "public"
+create_public = true
+create_private = true
+parent_zone_id = "gcp-infralib-entigo-io"
