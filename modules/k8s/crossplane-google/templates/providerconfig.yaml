@@ -3,7 +3,7 @@
 apiVersion: gcp.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
-  name: workload-id-providerconfig
+  name: google-{{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -11,6 +11,6 @@ metadata:
 spec:
   credentials:
     source: InjectedIdentity
-  projectID: entigo-infralib2
+  projectID: {{ .Values.googleProjectID }}
 
 {{- end }}

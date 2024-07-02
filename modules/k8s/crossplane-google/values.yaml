@@ -1,6 +1,7 @@
 installProvider: true
 installProviderConfig: true
 installControllerConfig: true
+googleProjectID: ""
 
 controllerConfig:
   googleServiceAccount: ""
