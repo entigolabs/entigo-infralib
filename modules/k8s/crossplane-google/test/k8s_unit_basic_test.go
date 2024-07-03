@@ -49,7 +49,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
-	setValues["installControllerConfig"] = "false"
+	setValues["installDeploymentRuntimeConfig"] = "false"
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
 	setValues["googleProjectID"] = googleProjectID
