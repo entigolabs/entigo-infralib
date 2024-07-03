@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     helm.sh/resource-policy: keep
-    iam.gke.io/gcp-service-account: {{ .Values.controllerConfig.googleServiceAccount}}
+    iam.gke.io/gcp-service-account: "{{ .Values.controllerConfig.googleServiceAccount}}"
 spec:
   serviceAccountName: crossplane
   
