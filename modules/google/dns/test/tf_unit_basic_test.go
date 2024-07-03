@@ -24,7 +24,7 @@ func testTerraformDnsBiz(t *testing.T) {
 	projectID := commonGCP.GetProjectID
 	fmt.Printf("Project id is: %s \n", projectID)
 
-	network := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_id/versions/latest", projectID))
+	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_id/versions/latest", projectID))
 
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"vpc_id": network,

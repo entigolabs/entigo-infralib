@@ -25,10 +25,10 @@ func testTerraformGkeBiz(t *testing.T) {
 	projectID := commonGCP.GetProjectID
 	fmt.Printf("Project id is: %s \n", projectID)
 
-	network := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_name/versions/latest", projectID))
-	subnetwork := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets/versions/latest", projectID))
-	subnetworkPods := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets_pods/versions/latest", projectID))
-	subnetworkServices := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets_services/versions/latest", projectID))
+	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_name/versions/latest", projectID))
+	subnetwork := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets/versions/latest", projectID))
+	subnetworkPods := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets_pods/versions/latest", projectID))
+	subnetworkServices := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets_services/versions/latest", projectID))
 
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"network":           network,
@@ -43,10 +43,10 @@ func testTerraformGkePri(t *testing.T) {
 	projectID := commonGCP.GetProjectID
 	fmt.Printf("Project id is: %s \n", projectID)
 
-	network := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-vpc_name/versions/latest", projectID))
-	subnetwork := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets/versions/latest", projectID))
-	subnetworkPods := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets_pods/versions/latest", projectID))
-	subnetworkServices := commonGCP.GetSecret(fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets_services/versions/latest", projectID))
+	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-vpc_name/versions/latest", projectID))
+	subnetwork := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets/versions/latest", projectID))
+	subnetworkPods := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets_pods/versions/latest", projectID))
+	subnetworkServices := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets_services/versions/latest", projectID))
 
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
 		"network":           network,
