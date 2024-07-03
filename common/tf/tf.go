@@ -3,6 +3,10 @@ package tf
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/hashicorp/hcl/v2"
@@ -10,15 +14,14 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
-	"io/fs"
-	"os"
-	"testing"
 )
 
-const rootFolder = ".."
-const terraformFolderRelativeToRoot = "test"
-const providersPath = "/providers"
-const testProvidersPath = "./providers"
+const (
+	rootFolder                    = ".."
+	terraformFolderRelativeToRoot = "test"
+	providersPath                 = "/providers"
+	testProvidersPath             = "./providers"
+)
 
 type ProviderType string
 
@@ -67,13 +70,12 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 }
 
 func ApplyTerraform(t *testing.T, workspaceName string, terraformOptions *terraform.Options) (map[string]interface{}, func()) {
-
 	_, err := terraform.WorkspaceSelectOrNewE(t, terraformOptions, workspaceName)
 	if err != nil {
 		terraform.WorkspaceSelectOrNew(t, terraformOptions, workspaceName) // Retry once
 	}
 
-	var destroy = func() {
+	destroy := func() {
 		// Do nothing
 	}
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
@@ -152,8 +154,8 @@ func getRequiredProvidersBlock(t *testing.T, file *hclwrite.File) *hclwrite.Bloc
 }
 
 func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, variables []string,
-	outputBlocks []*hclwrite.Block, versionsAttributes map[string]*hclwrite.Attribute, providerType ProviderType) {
-
+	outputBlocks []*hclwrite.Block, versionsAttributes map[string]*hclwrite.Attribute, providerType ProviderType,
+) {
 	testFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", providersPath, "base.tf"))
 	testFileBody := testFile.Body()
 	modifyBackendType(t, testFileBody, providerType)
@@ -224,7 +226,7 @@ func addOutputs(outputBlocks []*hclwrite.Block, testFileBody *hclwrite.Body) {
 }
 
 func addOutputSensitiveAttribute(attr map[string]*hclwrite.Attribute, body *hclwrite.Body) {
-	for name, _ := range attr {
+	for name := range attr {
 		if name != "sensitive" {
 			continue
 		}

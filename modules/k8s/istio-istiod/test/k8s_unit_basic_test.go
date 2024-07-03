@@ -2,15 +2,16 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIstioIstiodAWSBiz(t *testing.T) {
@@ -59,7 +60,7 @@ func testIstioIstiod(t *testing.T, contextName string) {
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -76,5 +77,4 @@ func testIstioIstiod(t *testing.T, contextName string) {
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}
-
 }

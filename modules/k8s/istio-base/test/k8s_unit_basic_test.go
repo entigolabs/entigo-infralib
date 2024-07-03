@@ -2,16 +2,17 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIstioBaseAWSBiz(t *testing.T) {
@@ -54,7 +55,7 @@ func testIstioBase(t *testing.T, contextName string) {
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -71,5 +72,4 @@ func testIstioBase(t *testing.T, contextName string) {
 	require.NoError(t, err, "Istio Base no VirtualService CRD")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"gateways"}, 60, 1*time.Second)
 	require.NoError(t, err, "Istio Base no Gateway CRD")
-
 }

@@ -2,6 +2,12 @@ package test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
@@ -12,11 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestK8sCrossplaneBiz(t *testing.T) {
@@ -46,7 +47,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	setValues["awsRole"] = iamrole
 
 	if prefix != "runner-main" {
-		//releaseName = fmt.Sprintf("crossplane-%s", prefix)
+		// releaseName = fmt.Sprintf("crossplane-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 
@@ -65,7 +66,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -92,34 +93,34 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-	//aws community provider
+	// aws community provider
 	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, providerDeployment, "Provider aws currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
-	//k8s provider
+	// k8s provider
 	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, k8serr, "Provider k8s error")
 	assert.NotNil(t, k8sprovider, "Provider k8s is nil")
 	k8sproviderDeployment := k8s.GetStringValue(k8sprovider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, k8sproviderDeployment, "Provider k8s currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, k8sproviderDeployment, 60, 1*time.Second)
-	//aws-iam provider
-	//iamprovider, iamerr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-iam-%s", releaseName), 60, 1*time.Second)
-	//require.NoError(t, iamerr, "Provider aws-iam error")
-	//assert.NotNil(t, iamprovider, "Provider aws-iam is nil")
-	//iamproviderDeployment := k8s.GetStringValue(iamprovider.Object, "status", "currentRevision")
-	//assert.NotEmpty(t, iamproviderDeployment, "Provider aws-iam currentRevision is empty")
-	//terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, iamproviderDeployment, 60, 1*time.Second)
-	//aws-s3 provider
-	//s3provider, s3err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-s3-%s", releaseName), 60, 1*time.Second)
-	//require.NoError(t, s3err, "Provider aws-s3 error")
-	//assert.NotNil(t, s3provider, "Provider aws-s3 is nil")
-	//s3providerDeployment := k8s.GetStringValue(s3provider.Object, "status", "currentRevision")
-	//assert.NotEmpty(t, s3providerDeployment, "Provider aws-s3 currentRevision is empty")
-	//terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, s3providerDeployment, 60, 1*time.Second)
+	// aws-iam provider
+	// iamprovider, iamerr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-iam-%s", releaseName), 60, 1*time.Second)
+	// require.NoError(t, iamerr, "Provider aws-iam error")
+	// assert.NotNil(t, iamprovider, "Provider aws-iam is nil")
+	// iamproviderDeployment := k8s.GetStringValue(iamprovider.Object, "status", "currentRevision")
+	// assert.NotEmpty(t, iamproviderDeployment, "Provider aws-iam currentRevision is empty")
+	// terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, iamproviderDeployment, 60, 1*time.Second)
+	// aws-s3 provider
+	// s3provider, s3err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-s3-%s", releaseName), 60, 1*time.Second)
+	// require.NoError(t, s3err, "Provider aws-s3 error")
+	// assert.NotNil(t, s3provider, "Provider aws-s3 is nil")
+	// s3providerDeployment := k8s.GetStringValue(s3provider.Object, "status", "currentRevision")
+	// assert.NotEmpty(t, s3providerDeployment, "Provider aws-s3 currentRevision is empty")
+	// terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, s3providerDeployment, 60, 1*time.Second)
 
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues

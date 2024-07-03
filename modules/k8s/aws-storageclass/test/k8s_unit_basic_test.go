@@ -2,14 +2,15 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sAwsStorageclassBiz(t *testing.T) {
@@ -26,17 +27,17 @@ func testK8sAwsStorageclass(t *testing.T, contextName string, envName string) {
 
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
-	
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix")) 
+
+	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := fmt.Sprintf("aws-storageclass-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-	   namespaceName = fmt.Sprintf("aws-storageclass-%s-%s", envName, prefix)
-	   setValues["prefix"] = fmt.Sprintf("%s-", prefix)
-	   extraArgs["upgrade"] = []string{"--skip-crds"}
-	   extraArgs["install"] = []string{"--skip-crds"}
+		namespaceName = fmt.Sprintf("aws-storageclass-%s-%s", envName, prefix)
+		setValues["prefix"] = fmt.Sprintf("%s-", prefix)
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
 
@@ -51,7 +52,7 @@ func testK8sAwsStorageclass(t *testing.T, contextName string, envName string) {
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -64,5 +65,4 @@ func testK8sAwsStorageclass(t *testing.T, contextName string, envName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
 }
