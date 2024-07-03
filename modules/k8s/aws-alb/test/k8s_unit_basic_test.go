@@ -2,20 +2,21 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const domain = "infralib.entigo.io"
@@ -38,12 +39,12 @@ func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runne
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-	
+
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account",runnerName))
-	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/oidc_provider",runnerName))
-	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region",runnerName))
-	
+	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account", runnerName))
+	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/oidc_provider", runnerName))
+	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region", runnerName))
+
 	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region)
 	setValues["awsAccount"] = account
 	setValues["clusterOIDC"] = clusteroidc
@@ -71,7 +72,7 @@ func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runne
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)

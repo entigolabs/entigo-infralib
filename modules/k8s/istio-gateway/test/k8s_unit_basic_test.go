@@ -2,26 +2,27 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sIstioGatewayBiz(t *testing.T) {
-        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/pub_cert_arn")
 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", certificateArn)
 }
 
 func TestK8sIstioGatewayPri(t *testing.T) {
-        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/pub_cert_arn")
 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", certificateArn)
 }
@@ -37,7 +38,7 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ce
 	namespaceName := fmt.Sprintf("istio-gateway")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-	
+
 	setValues["certificateArn"] = certificateArn
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("istio-gateway-%s", prefix)
@@ -58,7 +59,7 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ce
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = k8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -75,5 +76,4 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ce
 	if err != nil {
 		t.Fatal("istio-gateway deployment error:", err)
 	}
-
 }

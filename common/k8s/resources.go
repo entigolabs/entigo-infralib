@@ -3,12 +3,13 @@ package k8s
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func GetResourcesByGroupVersion(t testing.TestingT, options *k8s.KubectlOptions, groupVersion string) (*metaV1.APIResourceList, error) {

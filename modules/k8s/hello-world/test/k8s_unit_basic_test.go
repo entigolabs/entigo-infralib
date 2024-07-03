@@ -2,15 +2,16 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sHelloWorldBiz(t *testing.T) {
@@ -52,7 +53,7 @@ func testK8sHelloWorld(t *testing.T, contextName string, valuesFile string, host
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
-		//terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
 	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
@@ -70,6 +71,4 @@ func testK8sHelloWorld(t *testing.T, contextName string, valuesFile string, host
 	if err != nil {
 		t.Fatal("hello-world deployment error:", err)
 	}
-	
-
 }

@@ -1,9 +1,10 @@
 package test
 
 import (
-	"testing"
-        "os"
 	"fmt"
+	"os"
+	"testing"
+
 	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -12,8 +13,10 @@ import (
 
 const bucketName = "infralib-modules-gcp-argocd-tf"
 
-var Region string
-var prefix string
+var (
+	Region string
+	prefix string
+)
 
 func TestTerraformArgocd(t *testing.T) {
 	Region = commonGCP.SetupBucket(t, bucketName)
@@ -25,15 +28,15 @@ func TestTerraformArgocd(t *testing.T) {
 func testTerraformArgocdBiz(t *testing.T) {
 	namespace := "argocd-gcp"
 	hostname := "argocd-gcp.runner-main-biz.gcp.infralib.entigo.io"
-        if prefix != "runner-main" {
-	  namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
-	  hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-biz.gcp.infralib.entigo.io", prefix)
+	if prefix != "runner-main" {
+		namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
+		hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-biz.gcp.infralib.entigo.io", prefix)
 	}
-	
+
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-		"hostname": hostname,
+		"hostname":  hostname,
 		"namespace": namespace,
-		"name": namespace,
+		"name":      namespace,
 	})
 	testTerraformArgocd(t, "biz", options)
 }
@@ -41,15 +44,15 @@ func testTerraformArgocdBiz(t *testing.T) {
 func testTerraformArgocdPri(t *testing.T) {
 	namespace := "argocd-gcp"
 	hostname := "argocd-gcp.runner-main-pri.gcp.infralib.entigo.io"
-        if prefix != "runner-main" {
-	  namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
-	  hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-pri.gcp.infralib.entigo.io", prefix)
+	if prefix != "runner-main" {
+		namespace = fmt.Sprintf("argocd-gcp-%s", prefix)
+		hostname = fmt.Sprintf("argocd-gcp-%s.runner-main-pri.gcp.infralib.entigo.io", prefix)
 	}
-	
+
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
-		"hostname": hostname,
+		"hostname":  hostname,
 		"namespace": namespace,
-		"name": namespace,
+		"name":      namespace,
 	})
 	testTerraformArgocd(t, "pri", options)
 }
