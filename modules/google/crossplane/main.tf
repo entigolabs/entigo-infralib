@@ -45,3 +45,10 @@ module "service_account_email" {
   key = "service_account_email"
   value = google_service_account.crossplane.email
 }
+
+module "project_id" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "project_id"
+  value = data.google_client_config.this.project
+}
