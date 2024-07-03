@@ -101,7 +101,7 @@ func GetProjectID(t testing.TestingT) string {
 	return projectID
 }
 
-func GetSecret(t testing.TestingT, projectID, secretName string) string {
+func GetSecret(t testing.TestingT, secretName string) string {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {

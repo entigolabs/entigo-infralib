@@ -22,7 +22,7 @@ func TestTerraformGke(t *testing.T) {
 }
 
 func testTerraformGkeBiz(t *testing.T) {
-	projectID := commonGCP.GetProjectID
+	projectID := commonGCP.GetProjectID(t)
 	fmt.Printf("Project id is: %s \n", projectID)
 
 	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_name/versions/latest", projectID))
@@ -40,7 +40,7 @@ func testTerraformGkeBiz(t *testing.T) {
 }
 
 func testTerraformGkePri(t *testing.T) {
-	projectID := commonGCP.GetProjectID
+	projectID := commonGCP.GetProjectID(t)
 	fmt.Printf("Project id is: %s \n", projectID)
 
 	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-vpc_name/versions/latest", projectID))
