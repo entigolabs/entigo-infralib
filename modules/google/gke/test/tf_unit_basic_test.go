@@ -3,20 +3,20 @@ package test
 import (
 	"fmt"
 	"os"
-	"testing"
 	"strings"
+	"testing"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
-	"github.com/gruntwork-io/terratest/modules/logger"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 const bucketName = "infralib-modules-gce-gke-tf"
@@ -51,9 +51,9 @@ func testTerraformGkeBiz(t *testing.T) {
 			projectID = projectList.Projects[0].ProjectId
 		}
 	}
-        
-        fmt.Printf("Project id is: %s \n", projectID)
-  
+
+	fmt.Printf("Project id is: %s \n", projectID)
+
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -71,8 +71,8 @@ func testTerraformGkeBiz(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	network := fmt.Sprintf("%s",result.Payload.Data)
-	
+	network := fmt.Sprintf("%s", result.Payload.Data)
+
 	// Build the request.
 	req = &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets/versions/latest", projectID),
@@ -83,7 +83,7 @@ func testTerraformGkeBiz(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
+	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
 
 	// Build the request.
 	req = &secretmanagerpb.AccessSecretVersionRequest{
@@ -95,8 +95,8 @@ func testTerraformGkeBiz(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	subnetworkpods := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
-	
+	subnetworkpods := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
+
 	// Build the request.
 	req = &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-private_subnets_services/versions/latest", projectID),
@@ -107,13 +107,13 @@ func testTerraformGkeBiz(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	subnetworkservices := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
-  
+	subnetworkservices := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
+
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-	        "network":                network,
-	        "subnetwork":             subnetwork,
-		"ip_range_pods":          subnetworkpods,
-		"ip_range_services":      subnetworkservices,
+		"network":           network,
+		"subnetwork":        subnetwork,
+		"ip_range_pods":     subnetworkpods,
+		"ip_range_services": subnetworkservices,
 	})
 	testTerraformGke(t, "biz", options)
 }
@@ -140,9 +140,9 @@ func testTerraformGkePri(t *testing.T) {
 			projectID = projectList.Projects[0].ProjectId
 		}
 	}
-        
-        fmt.Printf("Project id is: %s \n", projectID)
-  
+
+	fmt.Printf("Project id is: %s \n", projectID)
+
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -160,9 +160,9 @@ func testTerraformGkePri(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	network := fmt.Sprintf("%s",result.Payload.Data)
-	network = network[strings.LastIndex(network,"/")+1:]
-	
+	network := fmt.Sprintf("%s", result.Payload.Data)
+	network = network[strings.LastIndex(network, "/")+1:]
+
 	// Build the request.
 	req = &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-private_subnets/versions/latest", projectID),
@@ -173,14 +173,14 @@ func testTerraformGkePri(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s",result.Payload.Data), ",")[0], `"`)
-	subnetwork = subnetwork[strings.LastIndex(subnetwork,"/")+1:]
-	
+	subnetwork := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
+	subnetwork = subnetwork[strings.LastIndex(subnetwork, "/")+1:]
+
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
-	        "network":                network,
-	        "subnetwork":             subnetwork,
-		"ip_range_pods":          fmt.Sprintf("%s-pods",network),
-		"ip_range_services":      fmt.Sprintf("%s-services",network),
+		"network":           network,
+		"subnetwork":        subnetwork,
+		"ip_range_pods":     fmt.Sprintf("%s-pods", network),
+		"ip_range_services": fmt.Sprintf("%s-services", network),
 	})
 	testTerraformGke(t, "pri", options)
 }

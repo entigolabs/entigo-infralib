@@ -2,12 +2,13 @@ package test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 const bucketName = "infralib-modules-aws-vpc-tf"

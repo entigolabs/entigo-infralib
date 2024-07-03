@@ -2,13 +2,14 @@ package test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 const bucketName = "infralib-modules-aws-ec2-tf"
@@ -22,7 +23,7 @@ func TestTerraformEc2(t *testing.T) {
 }
 
 func testTerraformEc2Biz(t *testing.T) {
-	//vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
+	// vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
 	zone_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/int_zone_id")
 
@@ -34,7 +35,7 @@ func testTerraformEc2Biz(t *testing.T) {
 }
 
 func testTerraformEc2Pri(t *testing.T) {
-	//vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
+	// vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
 	zone_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/pub_zone_id")
 

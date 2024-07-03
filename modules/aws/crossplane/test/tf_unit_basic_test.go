@@ -1,12 +1,13 @@
 package test
 
 import (
+	"testing"
+
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 const bucketName = "infralib-modules-aws-crossplane-tf"

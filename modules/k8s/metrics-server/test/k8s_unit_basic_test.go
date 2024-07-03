@@ -2,15 +2,16 @@ package test
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gruntwork-io/terratest/modules/helm"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sMetricsServerBiz(t *testing.T) {
@@ -34,15 +35,15 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 
 	releaseName := "metrics-server"
 	namespaceName := "kube-system"
- 
-        if prefix != "runner-main" {
-                releaseName = fmt.Sprintf("metrics-server-%s", prefix)
-                namespaceName = fmt.Sprintf("metrics-server-%s", prefix)
-                setValues["metrics-server.apiService.create"] = "false"
-                setValues["metrics-server.nameOverride"] = releaseName
-                extraArgs["upgrade"] = []string{"--skip-crds"}
-                extraArgs["install"] = []string{"--skip-crds"}
-        } 
+
+	if prefix != "runner-main" {
+		releaseName = fmt.Sprintf("metrics-server-%s", prefix)
+		namespaceName = fmt.Sprintf("metrics-server-%s", prefix)
+		setValues["metrics-server.apiService.create"] = "false"
+		setValues["metrics-server.nameOverride"] = releaseName
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
+	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
@@ -54,14 +55,14 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 		ExtraArgs:         extraArgs,
 	}
 
-        err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-        if err != nil {
-                if strings.Contains(err.Error(), "already exists") {
-                        fmt.Println("Namespace already exists.")
-                } else {
-                        t.Fatal("Error:", err)
-                }
-        }
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Println("Namespace already exists.")
+		} else {
+			t.Fatal("Error:", err)
+		}
+	}
 
 	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
 		defer helm.Delete(t, helmOptions, releaseName, true)
@@ -69,11 +70,9 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-        // Wait up to 120 seconds for deployment to become available 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, releaseName, 20, 6*time.Second) 
+	// Wait up to 120 seconds for deployment to become available
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, releaseName, 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("metric-server deployment error:", err)
 	}
-	
-
 }
