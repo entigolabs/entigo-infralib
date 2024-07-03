@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
-	"github.com/gruntwork-io/terratest/modules/logger"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 const bucketName = "infralib-modules-gcp-dns-tf"
@@ -49,9 +49,9 @@ func testTerraformDnsBiz(t *testing.T) {
 			projectID = projectList.Projects[0].ProjectId
 		}
 	}
-        
-        fmt.Printf("Project id is: %s \n", projectID)
-  
+
+	fmt.Printf("Project id is: %s \n", projectID)
+
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -69,17 +69,15 @@ func testTerraformDnsBiz(t *testing.T) {
 		logger.Logf(t, "failed to access secret %v", err)
 	}
 	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-	network := fmt.Sprintf("%s",result.Payload.Data)
+	network := fmt.Sprintf("%s", result.Payload.Data)
 
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
-	        "vpc_id":                network,
+		"vpc_id": network,
 	})
 	testTerraformDnsBizAssert(t, "biz", options)
 }
 
 func testTerraformDnsPri(t *testing.T) {
-	
-  
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{})
 	testTerraformDnsBizAssert(t, "pri", options)
 }

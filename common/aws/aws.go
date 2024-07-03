@@ -3,15 +3,16 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"time"
 )
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
