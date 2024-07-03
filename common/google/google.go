@@ -16,8 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2/google"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
@@ -97,4 +99,26 @@ func GetProjectID(t testing.TestingT) string {
 		}
 	}
 	return projectID
+}
+
+func GetSecret(t testing.TestingT, projectID, secretName string) string {
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		logger.Logf(t, "failed to create secretmanager client: %v", err)
+	}
+	defer client.Close()
+
+	request := &secretmanagerpb.AccessSecretVersionRequest{Name: secretName}
+
+	result, err := client.AccessSecretVersion(ctx, request)
+	if err != nil {
+		logger.Logf(t, "failed to access secret %v", err)
+	}
+
+	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
+
+	secret := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
+
+	return secret
 }
