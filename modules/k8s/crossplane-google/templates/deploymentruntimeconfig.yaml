@@ -1,14 +1,14 @@
-{{- if .Values.installControllerConfig }} 
+{{- if .Values.installDeploymentRuntimeConfig }} 
 
-apiVersion: pkg.crossplane.io/v1alpha1
-kind: ControllerConfig
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
 metadata:
   name: google-{{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     helm.sh/resource-policy: keep
-    iam.gke.io/gcp-service-account: {{ .Values.controllerConfig.googleServiceAccount}}
+    # iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount}}
 spec:
   serviceAccountName: crossplane
   

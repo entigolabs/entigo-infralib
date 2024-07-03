@@ -1,9 +1,9 @@
 installProvider: true
 installProviderConfig: true
-installControllerConfig: true
+installDeploymentRuntimeConfig: true
 googleProjectID: ""
 
-controllerConfig:
+deploymentRuntimeConfig:
   googleServiceAccount: ""
 
 crossplane:
