@@ -9,7 +9,7 @@ spec:
     member: serviceAccount:{{ .Values.googleProjectID }}.svc.id.goog[{{ .Release.Name }}/external-dns]
     project: {{ .Values.googleProjectID }}
     role: roles/dns.admin
-  runtimeConfigRef:
+  providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 
 {{- end }}
