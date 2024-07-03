@@ -49,7 +49,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
-	setValues["installControllerConfig"] = "false"
+	setValues["installDeploymentRuntimeConfig"] = "false"
 	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
 	setValues["googleProjectID"] = googleProjectID
@@ -77,19 +77,16 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 5*time.Second)
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 5*time.Second)
 
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, "default", 60, 1*time.Second)
-	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-
 	googleServiceAccountID := fmt.Sprintf("%s-cp", runnerName)
 	if len(runnerName) > 25 {
 		googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
 	}
-	setValues["installControllerConfig"] = "true"
-	setValues["controllerConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
+	setValues["installDeploymentRuntimeConfig"] = "true"
+	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilControllerConfigAvailable(t, kubectlOptions, fmt.Sprintf("google-%s", releaseName), 60, 5*time.Second)
-	require.NoError(t, err, "ControllerConfig crd error")
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("google-%s", releaseName), 60, 1*time.Second)
+	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	setValues["installProvider"] = "true"
 	helmOptions.SetValues = setValues

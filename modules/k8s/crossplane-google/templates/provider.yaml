@@ -10,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-storage:v0.41.0
-  controllerConfigRef:
+  runtimeConfigRef:
     name: google-{{ .Release.Name }}
 ---
 apiVersion: pkg.crossplane.io/v1
@@ -23,7 +23,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v1.4.0
-  controllerConfigRef:
+  runtimeConfigRef:
     name: google-{{ .Release.Name }}
 
 {{- end }}

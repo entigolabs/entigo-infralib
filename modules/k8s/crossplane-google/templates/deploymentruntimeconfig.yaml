@@ -1,0 +1,46 @@
+{{- if .Values.installDeploymentRuntimeConfig }} 
+
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: google-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      strategy: {}
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: tools
+                    operator: In
+                    values:
+                    - "true"
+                weight: 90
+          containers:
+          - name: package-runtime
+            securityContext: {}
+          securityContext:
+            fsGroup: 2000
+          serviceAccountName: crossplane
+          tolerations:
+          - effect: NoSchedule
+            key: tools
+            operator: Equal
+            value: "true"
+  serviceTemplate: {}
+  serviceAccountTemplate:
+    metadata:
+      name: crossplane
+      annotations:
+        iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount }}
+  
+{{- end }}
