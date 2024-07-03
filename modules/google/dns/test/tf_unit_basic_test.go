@@ -11,9 +11,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/option"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
@@ -28,28 +25,7 @@ func TestTerraformDns(t *testing.T) {
 }
 
 func testTerraformDnsBiz(t *testing.T) {
-	ctxx := context.Background()
-	creds, err := google.FindDefaultCredentials(ctxx)
-	if err != nil {
-		logger.Logf(t, "Failed to find default credentials: %v", err)
-	}
-	crmService, err := cloudresourcemanager.NewService(ctxx, option.WithCredentials(creds))
-	if err != nil {
-		logger.Logf(t, "Failed to create cloudresourcemanager service: %v", err)
-	}
-	projectID := "entigo-infralib2"
-	if projectID == "" {
-		// If ProjectID is empty, fetch the list of projects
-		projectListCall := crmService.Projects.List()
-		projectList, err := projectListCall.Do()
-		if err != nil {
-			logger.Logf(t, "Failed to list projects: %v", err)
-		}
-		if len(projectList.Projects) > 0 {
-			projectID = projectList.Projects[0].ProjectId
-		}
-	}
-
+	projectID := commonGCP.GetProjectID
 	fmt.Printf("Project id is: %s \n", projectID)
 
 	ctx := context.Background()

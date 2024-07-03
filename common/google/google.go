@@ -1,6 +1,7 @@
 package google
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +14,10 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2/google"
+
+	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/option"
 )
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
@@ -67,4 +72,29 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 	}
 	logger.Log(t, message)
 	return nil
+}
+
+func GetProjectID(t testing.TestingT) string {
+	ctx := context.Background()
+	credentials, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		logger.Logf(t, "Failed to find default credentials: %v", err)
+	}
+	crmService, err := cloudresourcemanager.NewService(ctx, option.WithCredentials(credentials))
+	if err != nil {
+		logger.Logf(t, "Failed to create cloudresourcemanager service: %v", err)
+	}
+	projectID := credentials.ProjectID
+	if projectID == "" {
+		// If ProjectID is empty, fetch the list of projects
+		projectListCall := crmService.Projects.List()
+		projectList, err := projectListCall.Do()
+		if err != nil {
+			logger.Logf(t, "Failed to list projects: %v", err)
+		}
+		if len(projectList.Projects) > 0 {
+			projectID = projectList.Projects[0].ProjectId
+		}
+	}
+	return projectID
 }
