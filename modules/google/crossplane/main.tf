@@ -38,3 +38,17 @@ resource "google_service_account" "crossplane" {
   account_id   = "${substr(local.hname, 0, 25)}-cp"
   display_name = "${local.hname}-cp"
 }
+
+module "service_account_email" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "service_account_email"
+  value = google_service_account.crossplane.email
+}
+
+module "project_id" {
+  source                             = "./secret"
+  prefix = var.prefix
+  key = "project_id"
+  value = data.google_client_config.this.project
+}
