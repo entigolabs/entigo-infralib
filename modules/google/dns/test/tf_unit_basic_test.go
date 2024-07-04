@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
@@ -21,8 +22,7 @@ func TestTerraformDns(t *testing.T) {
 }
 
 func testTerraformDnsBiz(t *testing.T) {
-	projectID := commonGCP.GetProjectID
-	fmt.Printf("Project id is: %s \n", projectID)
+	projectID := os.Getenv("GOOGLE_PROJECT")
 
 	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_id/versions/latest", projectID))
 
