@@ -1,6 +1,7 @@
 package google
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +14,9 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
@@ -67,4 +71,26 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 	}
 	logger.Log(t, message)
 	return nil
+}
+
+func GetSecret(t testing.TestingT, secretName string) string {
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		logger.Logf(t, "failed to create secretmanager client: %v", err)
+	}
+	defer client.Close()
+
+	request := &secretmanagerpb.AccessSecretVersionRequest{Name: secretName}
+
+	result, err := client.AccessSecretVersion(ctx, request)
+	if err != nil {
+		logger.Logf(t, "failed to access secret %v", err)
+	}
+
+	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
+
+	secret := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
+
+	return secret
 }
