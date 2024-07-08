@@ -18,7 +18,7 @@ var Region string
 func TestTerraformDns(t *testing.T) {
 	Region = commonGCP.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformDnsBiz)
-	// t.Run("Pri", testTerraformDnsPri)
+	t.Run("Pri", testTerraformDnsPri)
 }
 
 func testTerraformDnsBiz(t *testing.T) {
