@@ -28,6 +28,20 @@ resource "google_dns_managed_zone" "pub" {
   }
 }
 
+resource "google_dns_managed_zone" "int-cert" {
+  count         = var.create_public ? 1 : 0
+  name          = "${trimsuffix(replace(local.int_domain, ".", "-"), "-")}-cert"
+  dns_name      = local.int_domain
+  description   = local.int_domain
+  labels        = {}
+  visibility    = "public"
+  force_destroy = true
+
+  cloud_logging_config {
+    enable_logging = false
+  }
+}
+
 resource "google_dns_managed_zone" "int" {
   count         = var.create_private ? 1 : 0
   name          = trimsuffix(replace(local.int_domain, ".", "-"), "-")
@@ -59,7 +73,8 @@ resource "google_dns_record_set" "int-ns" {
   type         = "NS"
   ttl          = 300
   managed_zone = var.parent_zone_id
-  rrdatas      = google_dns_managed_zone.int[0].name_servers
+  rrdatas      = concat(google_dns_managed_zone.int[0].name_servers, google_dns_managed_zone.int-cert[0].name_servers)
+
 }
 
 resource "google_dns_record_set" "pub_cert" {
@@ -74,7 +89,7 @@ resource "google_dns_record_set" "pub_cert" {
 resource "google_dns_record_set" "int_cert" {
   count        = var.create_private ? 1 : 0
   name         = google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].name
-  managed_zone = local.int_zone
+  managed_zone = "${trimsuffix(replace(local.int_domain, ".", "-"), "-")}-cert"
   type         = google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].type
   ttl          = 300
   rrdatas      = [google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].data]
@@ -82,33 +97,31 @@ resource "google_dns_record_set" "int_cert" {
 
 resource "google_certificate_manager_dns_authorization" "pub_cert" {
   count       = var.create_public ? 1 : 0
-  name        = trimsuffix(replace(local.pub_domain, ".", "-"), "-")
+  name        = local.pub_zone
   description = "DNS Authorization for ${local.pub_domain}"
   domain      = trimsuffix(local.pub_domain, ".")
 }
 
 resource "google_certificate_manager_dns_authorization" "int_cert" {
   count       = var.create_private ? 1 : 0
-  name        = trimsuffix(replace(local.int_domain, ".", "-"), "-")
+  name        = local.int_zone
   description = "DNS Authorization for ${local.int_domain}"
   domain      = trimsuffix(local.int_domain, ".")
 }
 
 resource "google_certificate_manager_certificate" "pub_cert" {
   count       = var.create_public ? 1 : 0
-  name        = trimsuffix(replace(local.pub_domain, ".", "-"), "-")
+  name        = local.pub_zone
   description = "Certificate for ${local.pub_domain}"
   managed {
     domains = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
-    dns_authorizations = [
-      google_certificate_manager_dns_authorization.pub_cert[0].id
-    ]
+    dns_authorizations = [google_certificate_manager_dns_authorization.pub_cert[0].id]
   }
 }
 
 resource "google_certificate_manager_certificate" "int_cert" {
   count       = var.create_private ? 1 : 0
-  name        = trimsuffix(replace(local.int_domain, ".", "-"), "-")
+  name        = local.int_zone
   description = "Certificate for ${local.int_domain}"
   managed {
     domains            = [trimsuffix(local.int_domain, "."), "*.${trimsuffix(local.int_domain, ".")}"]
