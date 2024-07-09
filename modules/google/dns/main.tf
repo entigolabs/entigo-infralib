@@ -28,20 +28,6 @@ resource "google_dns_managed_zone" "pub" {
   }
 }
 
-resource "google_dns_managed_zone" "int-cert" {
-  count         = var.create_private? 1 : 0
-  name          = "${trimsuffix(replace(local.int_domain, ".", "-"), "-")}-cert"
-  dns_name      = local.int_domain
-  description   = local.int_domain
-  labels        = {}
-  visibility    = "public"
-  force_destroy = true
-
-  cloud_logging_config {
-    enable_logging = false
-  }
-}
-
 resource "google_dns_managed_zone" "int" {
   count         = var.create_private ? 1 : 0
   name          = trimsuffix(replace(local.int_domain, ".", "-"), "-")
@@ -58,7 +44,21 @@ resource "google_dns_managed_zone" "int" {
   }
 }
 
-resource "google_dns_record_set" "pub-ns" {
+resource "google_dns_managed_zone" "int_cert" {
+  count         = var.create_private ? 1 : 0
+  name          = "${local.int_zone}-cert"
+  dns_name      = local.int_domain
+  description   = local.int_domain
+  labels        = {}
+  visibility    = "public"
+  force_destroy = true
+
+  cloud_logging_config {
+    enable_logging = false
+  }
+}
+
+resource "google_dns_record_set" "pub_ns" {
   count        = var.parent_zone_id != "" && var.create_public ? 1 : 0
   name         = local.pub_domain
   type         = "NS"
@@ -67,13 +67,13 @@ resource "google_dns_record_set" "pub-ns" {
   rrdatas      = google_dns_managed_zone.pub[0].name_servers
 }
 
-resource "google_dns_record_set" "int-ns" {
+resource "google_dns_record_set" "int_ns" {
   count        = var.parent_zone_id != "" && var.create_private ? 1 : 0
   name         = local.int_domain
   type         = "NS"
   ttl          = 300
   managed_zone = var.parent_zone_id
-  rrdatas      = concat(google_dns_managed_zone.int[0].name_servers, google_dns_managed_zone.int-cert[0].name_servers)
+  rrdatas      = concat(google_dns_managed_zone.int[0].name_servers, google_dns_managed_zone.int_cert[0].name_servers)
 
 }
 
@@ -89,7 +89,7 @@ resource "google_dns_record_set" "pub_cert" {
 resource "google_dns_record_set" "int_cert" {
   count        = var.create_private ? 1 : 0
   name         = google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].name
-  managed_zone = "${trimsuffix(replace(local.int_domain, ".", "-"), "-")}-cert"
+  managed_zone = "${local.int_zone}-cert"
   type         = google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].type
   ttl          = 300
   rrdatas      = [google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].data]
