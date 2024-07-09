@@ -114,6 +114,16 @@ do
   gcloud 'secrets' delete --project entigo-infralib2 -q $line
 done
 
+gcloud -q "certificate-manager" "certificates" list --uri | while read line
+do
+  gcloud 'certificate-manager' 'certificates' delete --project entigo-infralib2 -q $line
+done
+
+gcloud -q "certificate-manager" "dns-authorizations" list --uri | while read line
+do
+  gcloud 'certificate-manager' 'dns-authorizations' delete --project entigo-infralib2 -q $line
+done
+
 gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io" | while read -r ZONE_NAME
 do
   gcloud dns record-sets list --zone=$ZONE_NAME --format="get(name,type)" | while read -r RECORD_NAME TYPE

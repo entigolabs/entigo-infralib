@@ -26,3 +26,7 @@ resource "google_project_service" "dns" {
 resource "google_project_service" "clouddeploy" {
   service = "clouddeploy.googleapis.com"
 }
+
+resource "google_project_service" "certificatemanager" {
+  service = "certificatemanager.googleapis.com"
+}
