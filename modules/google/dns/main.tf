@@ -29,7 +29,7 @@ resource "google_dns_managed_zone" "pub" {
 }
 
 resource "google_dns_managed_zone" "int-cert" {
-  count         = var.create_public ? 1 : 0
+  count         = var.create_private? 1 : 0
   name          = "${trimsuffix(replace(local.int_domain, ".", "-"), "-")}-cert"
   dns_name      = local.int_domain
   description   = local.int_domain
@@ -114,7 +114,7 @@ resource "google_certificate_manager_certificate" "pub_cert" {
   name        = local.pub_zone
   description = "Certificate for ${local.pub_domain}"
   managed {
-    domains = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
+    domains            = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
     dns_authorizations = [google_certificate_manager_dns_authorization.pub_cert[0].id]
   }
 }
