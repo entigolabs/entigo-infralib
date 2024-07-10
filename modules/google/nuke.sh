@@ -114,6 +114,15 @@ do
   gcloud 'secrets' delete --project entigo-infralib2 -q $line
 done
 
+gcloud -q "certificate-manager" "maps" "list" --uri | while read -r MAP
+do
+  gcloud -q "certificate-manager" "maps" "entries" list --uri --map=$MAP | while read -r ENTRY
+  do
+    gcloud 'certificate-manager' 'maps' 'entries' delete --project entigo-infralib2 -q $ENTRY
+  done
+  gcloud 'certificate-manager' 'maps' 'delete' --project entigo-infralib2 -q $MAP
+done
+
 gcloud -q "certificate-manager" "certificates" list --uri | while read line
 do
   gcloud 'certificate-manager' 'certificates' delete --project entigo-infralib2 -q $line
