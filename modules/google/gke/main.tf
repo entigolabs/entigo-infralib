@@ -129,6 +129,7 @@ module "gke" {
   horizontal_pod_autoscaling      = true
   enable_vertical_pod_autoscaling = false
   deletion_protection             = false
+  gateway_api_channel             = "CHANNEL_STANDARD"
 
   node_pools                      = local.gke_managed_node_groups
   node_pools_labels = {
