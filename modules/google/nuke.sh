@@ -49,6 +49,22 @@ gcloud run jobs list --uri | while read line; do
   gcloud 'run' 'jobs' delete --project entigo-infralib2 --region europe-north1 -q $line
 done
 
+gcloud compute forwarding-rules list --uri | while read line; do
+  gcloud 'compute' 'forwarding-rules' delete --project entigo-infralib2 -q $line
+done
+
+gcloud compute target-http-proxies list --uri | while read line; do
+  gcloud 'compute' 'target-http-proxies' delete --project entigo-infralib2 -q $line
+done
+
+gcloud compute target-https-proxies list --uri | while read line; do
+  gcloud 'compute' 'target-https-proxies' delete --project entigo-infralib2 -q $line
+done
+
+gcloud compute url-maps list --uri | while read line; do
+  gcloud 'compute' 'url-maps' delete --project entigo-infralib2 -q $line
+done
+
 gcloud compute backend-services list --uri | while read line; do
   gcloud 'compute' 'backend-services' delete --project entigo-infralib2 -q $line
 done
