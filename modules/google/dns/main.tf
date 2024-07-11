@@ -18,7 +18,6 @@ resource "google_dns_managed_zone" "pub" {
   count         = var.create_public ? 1 : 0
   name          = trimsuffix(replace(local.pub_domain, ".", "-"), "-")
   dns_name      = local.pub_domain
-  description   = local.pub_domain
   labels        = {}
   visibility    = "public"
   force_destroy = true
@@ -32,7 +31,6 @@ resource "google_dns_managed_zone" "int" {
   count         = var.create_private ? 1 : 0
   name          = trimsuffix(replace(local.int_domain, ".", "-"), "-")
   dns_name      = local.int_domain
-  description   = local.int_domain
   labels        = {}
   visibility    = "private"
   force_destroy = true
@@ -48,7 +46,6 @@ resource "google_dns_managed_zone" "int_cert" {
   count         = var.create_private ? 1 : 0
   name          = "${local.int_zone}-cert"
   dns_name      = local.int_domain
-  description   = local.int_domain
   labels        = {}
   visibility    = "public"
   force_destroy = true
