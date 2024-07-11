@@ -21,7 +21,6 @@ external-dns:
     - istio-gateway
     - istio-virtualservice
     - gateway-httproute
-    - gateway-tlsroute
   extraArgs:
   - --metrics-address=:7979
 
