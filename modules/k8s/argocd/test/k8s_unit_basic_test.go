@@ -53,7 +53,7 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 
 	switch cloudName {
 	case "google":
-		setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
+		// setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
