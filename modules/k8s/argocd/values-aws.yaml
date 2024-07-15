@@ -1,11 +1,11 @@
+cloudProvider: aws
+
 argocd:
   configs:
     params:
       server.insecure: false
   server:
     ingress:
-      annotations: 
+      annotations:
         alb.ingress.kubernetes.io/group.name: internal
         alb.ingress.kubernetes.io/scheme: internal
-
- 

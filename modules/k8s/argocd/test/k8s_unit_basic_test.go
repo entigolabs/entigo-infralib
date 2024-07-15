@@ -31,7 +31,7 @@ func TestK8sArgocdGKEPri(t *testing.T) {
 	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName string, cloudName string) {
+func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -50,7 +50,14 @@ func testK8sArgocd(t *testing.T, contextName string, valuesFile string, hostName
 		setValues["argocd.crds.install"] = "false"
 		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
 	}
-	setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
+
+	switch cloudName {
+	case "aws":
+		setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
+	case "google":
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+	}
+
 	releaseName := namespaceName
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
