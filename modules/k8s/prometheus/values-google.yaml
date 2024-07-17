@@ -1,0 +1,9 @@
+cloudProvider: google
+
+google:
+  certificateMap: ""
+
+prometheus:
+  server:
+    ingress:
+      enabled: false
