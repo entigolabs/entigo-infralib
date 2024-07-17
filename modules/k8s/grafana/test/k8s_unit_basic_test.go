@@ -54,6 +54,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 		setValues["clusterOIDC"] = clusteroidc
 
 	case "google":
+		namespaceName = "grafana"
 		switch envName {
 		case "biz":
 			setValues["google.certificateMap"] = "runner-main-biz-int-gcp-infralib-entigo-io"
