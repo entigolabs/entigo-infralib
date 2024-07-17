@@ -14,13 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestK8sPrometheusAWSBiz(t *testing.T) {
-// 	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
-// }
+func TestK8sPrometheusAWSBiz(t *testing.T) {
+	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
+}
 
-// func TestK8sPrometheusAWSPri(t *testing.T) {
-// 	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
-// }
+func TestK8sPrometheusAWSPri(t *testing.T) {
+	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
+}
 
 func TestK8sPrometheusGKEBiz(t *testing.T) {
 	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
