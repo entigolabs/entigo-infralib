@@ -52,15 +52,9 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 		setValues["awsRegion"] = region
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
-
 	case "google":
 		namespaceName = "grafana"
-		switch envName {
-		case "biz":
-			setValues["google.certificateMap"] = "runner-main-biz-int-gcp-infralib-entigo-io"
-		case "pri":
-			setValues["google.certificateMap"] = "runner-main-pri-gcp-infralib-entigo-io"
-		}
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
 	if prefix != "runner-main" {
