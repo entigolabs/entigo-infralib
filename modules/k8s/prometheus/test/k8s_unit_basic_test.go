@@ -14,15 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sPrometheusBiz(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+// func TestK8sPrometheusAWSBiz(t *testing.T) {
+// 	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
+// }
+
+// func TestK8sPrometheusAWSPri(t *testing.T) {
+// 	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
+// }
+
+func TestK8sPrometheusGKEBiz(t *testing.T) {
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
 }
 
-func TestK8sPrometheusPri(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+func TestK8sPrometheusGKEPri(t *testing.T) {
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
 }
 
-func testK8sPrometheus(t *testing.T, contextName string, envName string) {
+func testK8sPrometheus(t *testing.T, contextName, envName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -41,11 +49,24 @@ func testK8sPrometheus(t *testing.T, contextName string, envName string) {
 	}
 	releaseName := namespaceName
 
-	setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
+	switch cloudName {
+	case "aws":
+		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
+	case "google":
+		switch envName {
+		case "biz":
+			setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-biz-int.gcp.infralib.entigo.io", releaseName)
+			setValues["google.certificateMap"] = "runner-main-biz-int-gcp-infralib-entigo-io"
+		case "pri":
+			setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-pri.gcp.infralib.entigo.io", releaseName)
+			setValues["google.certificateMap"] = "runner-main-pri-gcp-infralib-entigo-io"
+		}
+	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -71,6 +92,7 @@ func testK8sPrometheus(t *testing.T, contextName string, envName string) {
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-server deployment error:", releaseName), err)
 	}
+
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-kube-state-metrics", releaseName), 10, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-kube-state-metrics deployment error:", releaseName), err)

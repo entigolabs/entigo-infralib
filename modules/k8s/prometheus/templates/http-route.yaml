@@ -1,0 +1,18 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Name }}
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: {{ .Release.Name }}
+  hostnames: {{ .Values.prometheus.server.ingress.hosts }}
+  rules:
+    - backendRefs:
+        - name: {{ .Release.Name }}-server
+          port: 80
+
+{{- end }}

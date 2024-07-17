@@ -15,15 +15,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sGrafanaBiz(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io")
+// func TestK8sGrafanaAWSBiz(t *testing.T) {
+// 	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+// }
+
+// func TestK8sGrafanaAWSPri(t *testing.T) {
+// 	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+// }
+
+func TestK8sGrafanGKEBiz(t *testing.T) {
+	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sGrafanaPri(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io")
+func TestK8sGrafanaGKEPri(t *testing.T) {
+	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sGrafana(t *testing.T, contextName string, envName string, hostName string) {
+func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -35,20 +43,31 @@ func testK8sGrafana(t *testing.T, contextName string, envName string, hostName s
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
-	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
-	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
+	switch cloudName {
+	case "aws":
+		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
+		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
+		setValues["awsRegion"] = region
+		setValues["awsAccount"] = account
+		setValues["clusterOIDC"] = clusteroidc
 
-	setValues["awsRegion"] = region
-	setValues["awsAccount"] = account
-	setValues["clusterOIDC"] = clusteroidc
+	case "google":
+		switch envName {
+		case "biz":
+			setValues["google.certificateMap"] = "runner-main-biz-int-gcp-infralib-entigo-io"
+		case "pri":
+			setValues["google.certificateMap"] = "runner-main-pri-gcp-infralib-entigo-io"
+		}
+	}
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("grafana-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
+
 	releaseName := namespaceName
 	setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
@@ -56,6 +75,7 @@ func testK8sGrafana(t *testing.T, contextName string, envName string, hostName s
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

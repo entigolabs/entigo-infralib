@@ -1,0 +1,23 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Name }}
+  annotations:
+    networking.gke.io/certmap: {{ .Values.google.certificateMap }}
+    {{- with (index .Values.prometheus.server.ingress.hosts 0) }}
+    external-dns.alpha.kubernetes.io/hostname: {{ . }}
+    {{- end }}
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      {{- with (index .Values.prometheus.server.ingress.hosts 0) }}
+      hostname: {{ . }}
+      {{- end }}
+
+{{- end }}

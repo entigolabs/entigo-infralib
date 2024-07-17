@@ -1,0 +1,11 @@
+cloudProvider: "google"
+
+google:
+  certificateMap: ""
+
+grafana:
+  ingress:
+    enabled: false
+  persistence:
+    ## TODO: enable persistence
+    enabled: false
