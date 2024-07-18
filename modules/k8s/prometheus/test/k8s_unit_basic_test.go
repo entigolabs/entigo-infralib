@@ -15,22 +15,22 @@ import (
 )
 
 func TestK8sPrometheusAWSBiz(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
+	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sPrometheusAWSPri(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
+	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sPrometheusGKEBiz(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sPrometheusGKEPri(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sPrometheus(t *testing.T, contextName, envName, cloudName string) {
+func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -48,19 +48,11 @@ func testK8sPrometheus(t *testing.T, contextName, envName, cloudName string) {
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
-	case "aws":
-		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-%s-int.infralib.entigo.io", releaseName, envName)
 	case "google":
-		switch envName {
-		case "biz":
-			setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-biz-int.gcp.infralib.entigo.io", releaseName)
-			setValues["google.certificateMap"] = "runner-main-biz-int-gcp-infralib-entigo-io"
-		case "pri":
-			setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.runner-main-pri.gcp.infralib.entigo.io", releaseName)
-			setValues["google.certificateMap"] = "runner-main-pri-gcp-infralib-entigo-io"
-		}
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

@@ -6,7 +6,7 @@ google:
 argocd:
   configs:
     params:
-      server.insecure: true
+      server.insecure: false
   server:
     service:
       annotations:

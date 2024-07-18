@@ -14,9 +14,9 @@ spec:
     logConfig:
       enabled: true
     config:
-      type: HTTP
+      type: HTTPS
       httpHealthCheck:
-        requestPath: /-/healthy
+        requestPath: /healthz
   targetRef:
     group: ""
     kind: Service
