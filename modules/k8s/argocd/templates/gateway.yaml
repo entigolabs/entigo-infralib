@@ -14,6 +14,17 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: {{ .Values.argocd.global.domain }}
+      # hostname: {{ .Values.argocd.global.domain }}
+      namespaces:
+        from: All
+    - name: http
+      protocol: HTTP
+      port: 80
+      # hostname: {{ .Values.argocd.global.domain }}
+      allowedRoutes:
+        kinds:
+        - kind: HTTPRoute
+        namespaces:
+          from: Same
 
 {{- end }}
