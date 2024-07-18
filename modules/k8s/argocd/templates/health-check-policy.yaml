@@ -14,9 +14,8 @@ spec:
     logConfig:
       enabled: true
     config:
-      type: HTTP
+      type: HTTPS
       httpHealthCheck:
-        port: 8080
         requestPath: /healthz
   targetRef:
     group: ""

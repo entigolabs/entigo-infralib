@@ -16,7 +16,6 @@ spec:
     config:
       type: HTTP
       httpHealthCheck:
-        port: 3000
         requestPath: /api/health
   targetRef:
     group: ""

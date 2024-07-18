@@ -16,7 +16,6 @@ spec:
     config:
       type: HTTP
       httpHealthCheck:
-        port: 9090
         requestPath: /-/healthy
   targetRef:
     group: ""
