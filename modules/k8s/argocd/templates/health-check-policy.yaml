@@ -14,7 +14,7 @@ spec:
     logConfig:
       enabled: true
     config:
-      type: HTTPS
+      type: HTTP
       httpHealthCheck:
         requestPath: /healthz
   targetRef:
