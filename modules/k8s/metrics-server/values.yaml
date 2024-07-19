@@ -1,4 +1,4 @@
-createResourceQuota: false
+createResourceQuota: "false"
 
 metrics-server:
   deploymentAnnotations:
