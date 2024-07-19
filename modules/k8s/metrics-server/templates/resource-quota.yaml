@@ -1,4 +1,4 @@
-{{- if eq .Values.createResourceQuota "true" }}
+{{- if eq .Values.createResourceQuota true }}
 
 apiVersion: v1
 kind: ResourceQuota
