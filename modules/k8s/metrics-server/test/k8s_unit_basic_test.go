@@ -14,15 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sMetricsServerBiz(t *testing.T) {
-	testK8sMetricsServer(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", "runner-main-biz-int.infralib.entigo.io")
+func TestK8sMetricsServerAWSBiz(t *testing.T) {
+	testK8sMetricsServer(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
-func TestK8sMetricsServerPri(t *testing.T) {
-	testK8sMetricsServer(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", "runner-main-pri.infralib.entigo.io")
+func TestK8sMetricsServerAWSPri(t *testing.T) {
+	testK8sMetricsServer(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, hostName string) {
+func TestK8sMetricsServerGKEBiz(t *testing.T) {
+	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+}
+
+func TestK8sMetricsServerGKEPri(t *testing.T) {
+	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+}
+
+func testK8sMetricsServer(t *testing.T, contextName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -45,11 +53,18 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
+	switch cloudName {
+	case "google":
+		if prefix != "runner-main" {
+			setValues["createResourceQuota"] = "true"
+		}
+	}
+
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
 		SetValues:         setValues,
-		ValuesFiles:       []string{valuesFile},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs:         extraArgs,
@@ -70,7 +85,6 @@ func testK8sMetricsServer(t *testing.T, contextName string, valuesFile string, h
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	// Wait up to 120 seconds for deployment to become available
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, releaseName, 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("metric-server deployment error:", err)
