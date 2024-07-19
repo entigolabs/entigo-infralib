@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.createResourceQuota "true" }}
 
 apiVersion: v1
 kind: ResourceQuota

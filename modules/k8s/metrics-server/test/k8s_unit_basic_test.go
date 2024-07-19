@@ -53,6 +53,13 @@ func testK8sMetricsServer(t *testing.T, contextName, valuesFile, hostName, cloud
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
+	switch cloudName {
+	case "google":
+		if prefix != "runner-main" {
+			setValues["createResourceQuota"] = "true"
+		}
+	}
+
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
