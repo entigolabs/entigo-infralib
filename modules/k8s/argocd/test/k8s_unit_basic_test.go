@@ -39,7 +39,7 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("argocd")
+	namespaceName := "argocd"
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
@@ -53,7 +53,6 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 
 	switch cloudName {
 	case "google":
-		// setValues["argocd.server.service.annotations.\"cloud\\.google\\.com/backend-config\""] = fmt.Sprintf("\\{\"ports\": \\{\"http\":\"%s-server\"\\}\\}", namespaceName)
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
