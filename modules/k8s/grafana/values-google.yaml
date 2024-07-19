@@ -7,5 +7,6 @@ grafana:
   ingress:
     enabled: false
   persistence:
-    ## TODO: enable persistence
-    enabled: false
+    enabled: true
+    storageClassName: "standard"
+    size: 2Gi
