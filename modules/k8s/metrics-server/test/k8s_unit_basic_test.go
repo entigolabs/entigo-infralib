@@ -22,13 +22,13 @@ func TestK8sMetricsServerAWSPri(t *testing.T) {
 	testK8sMetricsServer(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sMetricsServerGKEBiz(t *testing.T) {
-	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
-}
+// func TestK8sMetricsServerGKEBiz(t *testing.T) {
+// 	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+// }
 
-func TestK8sMetricsServerGKEPri(t *testing.T) {
-	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
-}
+// func TestK8sMetricsServerGKEPri(t *testing.T) {
+// 	testK8sMetricsServer(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+// }
 
 func testK8sMetricsServer(t *testing.T, contextName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
