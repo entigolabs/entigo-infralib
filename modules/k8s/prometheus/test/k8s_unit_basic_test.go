@@ -43,7 +43,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("prometheus-%s-%s", envName, prefix)
+		namespaceName = fmt.Sprintf("prometheus-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -80,17 +80,17 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", releaseName), 10, 10*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-server deployment error:", releaseName), err)
 	}
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-kube-state-metrics", releaseName), 10, 10*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-kube-state-metrics", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-kube-state-metrics deployment error:", releaseName), err)
 	}
 
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-alertmanager-0", releaseName), 10, 10*time.Second)
+	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-alertmanager-0", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-alertmanager-0 pod error:", releaseName), err)
 	}

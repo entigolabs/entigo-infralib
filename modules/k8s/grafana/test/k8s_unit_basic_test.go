@@ -39,7 +39,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("grafana-%s", envName)
+	namespaceName := "grafana"
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
@@ -53,12 +53,11 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
 	case "google":
-		namespaceName = "grafana"
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("grafana-%s-%s", envName, prefix)
+		namespaceName = fmt.Sprintf("grafana-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -92,7 +91,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 10, 10*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("grafana deployment error:", err)
 	}
