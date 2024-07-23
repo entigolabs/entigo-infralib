@@ -1,0 +1,32 @@
+cloudProvider: google
+namespaceName: ""
+
+google:
+  projectID: ""
+  certificateMap: ""
+
+clusterOIDC: ""
+providerConfigRefName: google-crossplane-system
+region: "US"
+bucketName: ""
+
+loki:
+  loki:
+    storage:
+      type: gcs
+      bucketNames:
+        chunks: ""
+        ruler: ""
+        admin: ""
+    storage_config:
+      boltdb_shipper:
+        shared_store: gcs
+
+  read:
+    persistence:
+      size: 30Gi
+      storageClass: standard
+
+  gateway:
+    ingress:
+      enabled: false

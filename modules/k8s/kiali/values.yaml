@@ -16,8 +16,7 @@ kiali-server:
       override_yaml:
         metadata:
           annotations:
-            alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
-            { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+            alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
             alb.ingress.kubernetes.io/group.name: internal
             alb.ingress.kubernetes.io/healthcheck-path: /
             alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
@@ -27,29 +26,29 @@ kiali-server:
     affinity:
       node:
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 90
-          preference:
-            matchExpressions:
-            - key: tools
-              operator: In
-              values:
-              - "true"
-        - weight: 10
-          preference:
-            matchExpressions:
-            - key: mon
-              operator: In
-              values:
-              - "true"
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
     tolerations:
-       - key: "mon"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
-       - key: "tools"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
     resources:
       limits:
         cpu: 2000m
