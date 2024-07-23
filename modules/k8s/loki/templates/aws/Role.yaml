@@ -1,3 +1,5 @@
+{{- if eq .Values.cloudProvider "aws" }}
+
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Role
 metadata:
@@ -26,3 +28,4 @@ spec:
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 
+{{- end }}

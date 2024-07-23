@@ -1,15 +1,21 @@
+cloudProvider: ""
+
+google:
+  projectID: ""
+  certificateMap: ""
+
 awsAccount: ""
 clusterOIDC: ""
 providerConfigRefName: aws-crossplane-system
 region: ""
 bucketName: "loki"
+namespaceName: "loki"
 
 loki:
   fullnameOverride: loki
   serviceAccount:
     create: false
     name: loki
-  
 
   loki:
     auth_enabled: false
@@ -31,7 +37,7 @@ loki:
       boltdb_shipper:
         active_index_directory: /var/loki/boltdb-shipper-active
         cache_location: /var/loki/boltdb-shipper-cache
-        cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
+        cache_ttl: 24h # Can be increased for faster performance over longer query periods, uses more disk space
         shared_store: s3
       aws:
         s3forcepathstyle: false
@@ -40,7 +46,6 @@ loki:
         insecure: false
   test:
     enabled: false
-
 
   networkPolicy:
     enabled: true
@@ -79,12 +84,11 @@ loki:
         installOperator: false
         enableConfigReadAPI: false
 
-
     # The Loki canary pushes logs to and queries from this loki installation to test
     # that it's working correctly
     lokiCanary:
       enabled: true
-        
+
   write:
     replicas: 2 #3
     resources:
@@ -116,14 +120,14 @@ loki:
               values:
               - "true"
     tolerations:
-       - key: "mon"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
-       - key: "tools"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
   read:
     replicas: 1 #2
     resources:
@@ -153,14 +157,14 @@ loki:
               values:
               - "true"
     tolerations:
-       - key: "mon"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
-       - key: "tools"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
     autoscaling:
       enabled: true
       minReplicas: 2 #2
@@ -192,14 +196,14 @@ loki:
               values:
               - "true"
     tolerations:
-       - key: "mon"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
-       - key: "tools"
-         operator: "Equal"
-         value: "true"
-         effect: "NoSchedule"
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
     resources:
       limits:
         cpu: 1
@@ -208,7 +212,7 @@ loki:
       requests:
         cpu: 10m
         memory: 128Mi
-        ephemeral-storage: 1Gi    
+        ephemeral-storage: 1Gi
     autoscaling:
       enabled: true
       minReplicas: 2 #2
@@ -218,8 +222,7 @@ loki:
     ingress:
       enabled: true
       annotations:
-        alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
-        { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+        alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
         alb.ingress.kubernetes.io/group.name: internal
         alb.ingress.kubernetes.io/healthcheck-path: /
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
@@ -234,7 +237,6 @@ loki:
               pathType: Prefix
       tls: []
   monitoring:
-  
     selfMonitoring:
       enabled: false
       grafanaAgent:
@@ -253,7 +255,7 @@ promtail:
 
   deployment:
     enabled: false
-  
+
   configmap:
     enabled: true
   networkPolicy:
@@ -271,23 +273,21 @@ promtail:
     - effect: NoSchedule
       operator: Exists
   resources:
-      limits:
-        cpu: 2
-        memory: 1Gi
-        ephemeral-storage: 50Gi
-      requests:
-        cpu: 10m
-        memory: 32Mi
-        ephemeral-storage: 1Gi    
-
+    limits:
+      cpu: 2
+      memory: 1Gi
+      ephemeral-storage: 50Gi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+      ephemeral-storage: 1Gi
 
   config:
     logLevel: info
     serverPort: 3101
     clients:
-    - url: http://loki-gateway/loki/api/v1/push
+      - url: http://loki-gateway/loki/api/v1/push
 
-  
   # ServiceMonitor configuration
   serviceMonitor:
     # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
