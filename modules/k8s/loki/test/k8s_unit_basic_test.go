@@ -47,8 +47,8 @@ func testK8sLoki(t *testing.T, contextName, envName, hostName, cloudName string)
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("loki-%s-%s", envName, prefix)
-		// extraArgs["upgrade"] = []string{"--skip-crds"}
-		// extraArgs["install"] = []string{"--skip-crds"}
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
