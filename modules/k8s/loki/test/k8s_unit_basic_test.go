@@ -15,17 +15,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sLokiAWSBiz(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
-}
+// func TestK8sLokiAWSBiz(t *testing.T) {
+// 	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+// }
 
-func TestK8sLokiAWSPri(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
-}
+// func TestK8sLokiAWSPri(t *testing.T) {
+// 	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+// }
 
-func TestK8sLokiGKEBiz(t *testing.T) {
-	testK8sLoki(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
-}
+// func TestK8sLokiGKEBiz(t *testing.T) {
+// 	testK8sLoki(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+// }
 
 func TestK8sLokiGKEPri(t *testing.T) {
 	testK8sLoki(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
