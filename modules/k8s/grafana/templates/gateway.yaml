@@ -7,9 +7,7 @@ metadata:
   namespace: {{ .Release.Name }}
   annotations:
     networking.gke.io/certmap: {{ .Values.google.certificateMap }}
-    {{- with (index .Values.grafana.ingress.hosts 0) }}
-    external-dns.alpha.kubernetes.io/hostname: {{ . }}
-    {{- end }}
+    external-dns.alpha.kubernetes.io/hostname: {{ (index .Values.grafana.ingress.hosts 0).host }}
 spec:
   gatewayClassName: gke-l7-global-external-managed
   listeners:
