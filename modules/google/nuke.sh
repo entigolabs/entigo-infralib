@@ -148,10 +148,14 @@ gcloud compute ssl-certificates list --uri | while read line; do
   gcloud 'compute' 'ssl-certificates' delete --project entigo-infralib2 -q $line
 done
 
-gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
-  gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
-done
-
 gcloud compute health-checks list --uri | while read line; do
   gcloud 'compute' 'health-checks' delete --project entigo-infralib2 -q $line
+done
+
+gcloud compute disks list --uri | while read line; do
+  gcloud 'compute' 'disks' delete --project entigo-infralib2 -q $line
+done
+
+gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
+  gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
 done
