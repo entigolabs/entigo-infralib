@@ -6,11 +6,11 @@ metadata:
   name: {{ .Release.Name }}-workload-identity-user
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.namespaceName }}/{{ .Values.loki.serviceAccount.name }}]
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.global.namespaceName }}/{{ .Values.global.serviceAccountName }}]
     project: {{ .Values.google.projectID }}
     role: roles/iam.workloadIdentityUser
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
 apiVersion: cloudplatform.gcp.upbound.io/v1beta1
 kind: ProjectIAMMember
@@ -18,10 +18,10 @@ metadata:
   name: {{ .Release.Name }}-storage-admin
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.namespaceName }}/{{ .Values.loki.serviceAccount.name }}]
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.global.namespaceName }}/{{ .Values.global.serviceAccountName }}]
     project: {{ .Values.google.projectID }}
     role: roles/storage.admin
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
     
 {{- end }}
