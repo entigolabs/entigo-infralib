@@ -20,7 +20,7 @@ var Region string
 func TestTerraformGke(t *testing.T) {
 	Region = commonGCP.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformGkeBiz)
-	// t.Run("Pri", testTerraformGkePri)
+	t.Run("Pri", testTerraformGkePri)
 }
 
 func testTerraformGkeBiz(t *testing.T) {
