@@ -24,6 +24,7 @@ func TestTerraformGke(t *testing.T) {
 }
 
 func testTerraformGkeBiz(t *testing.T) {
+	prefix := os.Getenv("TF_VAR_prefix")
 	projectID := os.Getenv("GOOGLE_PROJECT")
 	fmt.Printf("Project id is: %s \n", projectID)
 
@@ -38,6 +39,12 @@ func testTerraformGkeBiz(t *testing.T) {
 		"ip_range_pods":     subnetworkPods,
 		"ip_range_services": subnetworkServices,
 	})
+
+	if prefix != "runner-main" {
+		masterIpv4CidrBlock := fmt.Sprintf("10.%d.0.0/28", getRandomNumber(2, 254))
+		options.Vars["master_ipv4_cidr_block"] = masterIpv4CidrBlock
+	}
+
 	testTerraformGke(t, "biz", options)
 }
 
