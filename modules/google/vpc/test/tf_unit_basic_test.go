@@ -48,9 +48,9 @@ func testTerraformVpcBizAssert(t *testing.T, workspaceName string, options *terr
 
 	assert.Equal(t, []interface{}{}, outputs["intra_subnet_cidrs"], "Wrong intra_subnet_cidrs returned")
 	assert.Equal(t, []interface{}{"10.149.16.0/22", "10.149.20.0/22"}, outputs["database_subnet_cidrs"], "Wrong database_subnet_cidrs returned")
-	assert.Equal(t, []interface{}{"10.149.32.0/23", "10.149.40.0/23"}, outputs["private_subnet_cidrs"], "Wrong private_subnet_cidrs returned")
-	assert.Equal(t, []interface{}{"10.149.36.0/22", "10.149.44.0/22"}, outputs["private_subnet_cidrs_pods"], "Wrong private_subnet_cidrs_pods returned")
-	assert.Equal(t, []interface{}{"10.149.34.0/23", "10.149.42.0/23"}, outputs["private_subnet_cidrs_services"], "Wrong private_subnet_cidrs_services returned")
+	assert.Equal(t, []interface{}{"10.149.32.0/22", "10.149.48.0/22"}, outputs["private_subnet_cidrs"], "Wrong private_subnet_cidrs returned")
+	assert.Equal(t, []interface{}{"10.149.40.0/21", "10.149.56.0/21"}, outputs["private_subnet_cidrs_pods"], "Wrong private_subnet_cidrs_pods returned")
+	assert.Equal(t, []interface{}{"10.149.36.0/22", "10.149.52.0/22"}, outputs["private_subnet_cidrs_services"], "Wrong private_subnet_cidrs_services returned")
 	assert.Equal(t, []interface{}{"10.149.4.0/24"}, outputs["public_subnet_cidrs"], "Wrong public_subnet_cidrs returned")
 }
 
