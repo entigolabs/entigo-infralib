@@ -22,10 +22,11 @@ gke_mainarm_instance_types   = "e2-medium"
 gke_managed_node_groups_extra = [
         {
             name               = "custom"
-            machine_type       = "e2-medium"
-            initial_node_count = 1
-            min_count          = 1
-            max_count          = 1
+            machine_type       = "e2-micro"
+            node_locations     = 
+            initial_node_count = 0
+            min_count          = 0
+            max_count          = 0
             max_pods_per_node  = 64
             disk_size_gb       = 10
             disk_type          = "pd-standard"
