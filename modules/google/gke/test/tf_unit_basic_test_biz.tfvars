@@ -22,7 +22,7 @@ gke_mainarm_instance_types   = "e2-medium"
 gke_managed_node_groups_extra = [
         {
             name               = "custom"
-            machine_type       = "e2-micro"
+            machine_type       = "e2-medium"
             node_locations     = "europe-north1-a"
             initial_node_count = 0
             min_count          = 0
