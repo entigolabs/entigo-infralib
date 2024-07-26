@@ -14,15 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sKeycloakBiz(t *testing.T) {
-	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io")
+func TestK8sKeycloakAWSBiz(t *testing.T) {
+	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
-func TestK8sKeycloakPri(t *testing.T) {
-	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io")
+func TestK8sKeycloakAWSPri(t *testing.T) {
+	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName string) {
+func TestK8sKeycloakGKEBiz(t *testing.T) {
+	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+}
+
+func TestK8sKeycloakGKEPri(t *testing.T) {
+	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+}
+
+func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -41,13 +49,22 @@ func testK8sKeycloak(t *testing.T, contextName string, envName string, hostName 
 	}
 	releaseName := namespaceName
 	setValues["keycloakx.fullnameOverride"] = namespaceName
-	setValues["keycloakx.ingress.rules[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-	setValues["keycloakx.ingress.rules[0].paths[0].path"] = "/"
-	setValues["keycloakx.ingress.rules[0].paths[0].pathType"] = "Prefix"
+
+	switch cloudName {
+	case "aws":
+		setValues["keycloakx.ingress.rules[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["keycloakx.ingress.rules[0].paths[0].path"] = "/"
+		setValues["keycloakx.ingress.rules[0].paths[0].pathType"] = "Prefix"
+
+	case "google":
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

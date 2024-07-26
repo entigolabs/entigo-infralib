@@ -1,0 +1,9 @@
+cloudProvider: "google"
+
+google:
+  certificateMap: ""
+  hostname: ""
+
+keycloakx:
+  ingress:
+    enabled: false
