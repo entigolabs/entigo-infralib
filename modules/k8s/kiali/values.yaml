@@ -1,3 +1,9 @@
+cloudProvider: ""
+
+google:
+  certificateMap: ""
+  hostname: ""
+
 kiali-server:
   fullnameOverride: "kiali"
   istio_namespace: "istio-system"

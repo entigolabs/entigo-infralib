@@ -14,15 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sKialiBiz(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io")
+func TestK8sKialiAWSBiz(t *testing.T) {
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
-func TestK8sKialiPri(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io")
+func TestK8sKialiAWSPri(t *testing.T) {
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func testK8sKiali(t *testing.T, contextName string, envName string, hostName string) {
+func TestK8sKialiGKEBiz(t *testing.T) {
+	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+}
+
+func TestK8sKialiGKEPri(t *testing.T) {
+	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+}
+
+func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -39,13 +47,21 @@ func testK8sKiali(t *testing.T, contextName string, envName string, hostName str
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
+
 	releaseName := namespaceName
 	setValues["kiali-server.fullnameOverride"] = namespaceName
 	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
+	switch cloudName {
+	case "google":
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+	}
+
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
