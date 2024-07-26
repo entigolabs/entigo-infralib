@@ -1,0 +1,5 @@
+cloudProvider: "aws"
+
+google:
+  certificateMap: ""
+  hostname: ""

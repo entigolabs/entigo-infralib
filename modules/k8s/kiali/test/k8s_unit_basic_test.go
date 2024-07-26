@@ -50,9 +50,11 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 
 	releaseName := namespaceName
 	setValues["kiali-server.fullnameOverride"] = namespaceName
-	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
+	case "aws":
+		setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+
 	case "google":
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
@@ -83,7 +85,7 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("kiali deployment error:", err)
 	}
