@@ -3,6 +3,7 @@ cloudProvider: ""
 google:
   projectID: ""
   certificateMap: ""
+  hostname: ""
 
 awsAccount: ""
 clusterOIDC: ""

@@ -10,7 +10,7 @@ spec:
     - kind: Gateway
       name: {{ .Release.Name }}
       sectionName: https
-  hostnames: [ {{ (index .Values.loki.gateway.ingress.hosts 0).host }} ]
+  hostnames: [ {{ .Values.google.hostname }} ]
   rules:
     - backendRefs:
         - name: loki-gateway

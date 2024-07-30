@@ -48,11 +48,13 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
+	case "aws":
+		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

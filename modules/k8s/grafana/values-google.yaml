@@ -2,6 +2,7 @@ cloudProvider: "google"
 
 google:
   certificateMap: ""
+  hostname: ""
 
 grafana:
   ingress:

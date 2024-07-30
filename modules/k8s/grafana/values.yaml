@@ -2,6 +2,7 @@ cloudProvider: ""
 
 google:
   certificateMap: ""
+  hostname: ""
 
 grafana:
   enabled: true

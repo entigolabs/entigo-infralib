@@ -4,6 +4,7 @@ namespaceName: ""
 google:
   projectID: ""
   certificateMap: ""
+  hostname: ""
 
 clusterOIDC: ""
 providerConfigRefName: google-crossplane-system
