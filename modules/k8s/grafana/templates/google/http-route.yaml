@@ -10,10 +10,10 @@ spec:
     - kind: Gateway
       name: {{ .Release.Name }}
       sectionName: https
-  hostnames: {{ .Values.prometheus.server.ingress.hosts }}
+  hostnames: [ {{ .Values.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: {{ .Release.Name }}-server
+        - name: grafana
           port: 80
 ---
 kind: HTTPRoute

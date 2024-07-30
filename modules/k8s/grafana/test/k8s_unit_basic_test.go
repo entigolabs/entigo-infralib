@@ -43,6 +43,16 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
+	if prefix != "runner-main" {
+		namespaceName = fmt.Sprintf("grafana-%s", prefix)
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
+	}
+
+	releaseName := namespaceName
+
+	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+
 	switch cloudName {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
@@ -52,19 +62,11 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 		setValues["awsRegion"] = region
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
+		setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 	}
-
-	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("grafana-%s", prefix)
-		extraArgs["upgrade"] = []string{"--skip-crds"}
-		extraArgs["install"] = []string{"--skip-crds"}
-	}
-
-	releaseName := namespaceName
-	setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 

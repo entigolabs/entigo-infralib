@@ -79,11 +79,11 @@ func testK8sLoki(t *testing.T, contextName, envName, hostName, cloudName string)
 		setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
 		setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
 		setValues["loki.loki.storage.bucketNames.admin"] = bucketName
-		setValues["loki.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 		setValues["bucketName"] = bucketName
 		setValues["namespaceName"] = namespaceName
 
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.projectID"] = googleProjectID
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
