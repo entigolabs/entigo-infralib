@@ -5,6 +5,7 @@ google:
   hostname: ""
 
 keycloakx:
+  fullnameOverride: ""
   image:
     repository: quay.io/phasetwo/phasetwo-keycloak
     tag: "23.0.7"
