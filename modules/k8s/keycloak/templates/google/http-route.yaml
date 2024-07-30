@@ -13,7 +13,7 @@ spec:
   hostnames: [{{ .Values.google.hostname }}]
   rules:
     - backendRefs:
-        - name: {{ .Release.Name }}-http
+        - name: {{ .Values.keycloakx.fullnameOverride }}-http
           port: 80
 ---
 kind: HTTPRoute

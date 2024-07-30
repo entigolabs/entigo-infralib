@@ -5,5 +5,6 @@ google:
   hostname: ""
 
 keycloakx:
+  fullnameOverride: "keycloak"
   ingress:
     enabled: false
