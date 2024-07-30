@@ -125,7 +125,13 @@ then
     export PROVIDER="aws"
   fi
   
-  export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  if [ "$PROVIDER" == "google" ]
+  then
+    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
+  else
+    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+  fi
+
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
     echo "Detecting ArgoCD modules."
@@ -146,7 +152,14 @@ then
       fi
     done
   fi
-  export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+
+  if [ "$PROVIDER" == "google" ]
+  then
+    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
+  else
+    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+  fi
+
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
     echo "Unable to get ArgoCD hostname."
@@ -205,10 +218,19 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+    export PROVIDER="google"
   else
     aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+    export PROVIDER="aws"
   fi
-  export ARGOCD_HOSTNAME=`kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server  -o jsonpath='{.items[*].spec.rules[*].host}'`
+  
+  if [ "$PROVIDER" == "google" ]
+  then
+    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
+  else
+    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+  fi
+
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
     echo "Unable to get ArgoCD hostname."
