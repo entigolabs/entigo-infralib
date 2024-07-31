@@ -4,6 +4,7 @@ metadata:
   name: change-me
 spec:
   forProvider:
-    location: US
+    location: EU
+    storageClass: REGIONAL
   providerConfigRef:
     name: google-crossplane-system
