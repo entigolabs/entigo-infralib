@@ -9,7 +9,6 @@ metadata:
 spec:
   forProvider:
     location: EU
-    storageClass: STANDARD
     uniformBucketLevelAccess: true
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
