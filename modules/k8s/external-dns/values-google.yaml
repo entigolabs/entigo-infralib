@@ -1,6 +1,8 @@
 cloudProvider: google
-googleProjectID: ""
 providerConfigRefName: google-crossplane-system
+
+google:
+  projectID: ""
 
 external-dns:
   provider:
