@@ -57,7 +57,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 
 	case "google":
 		namespaceName = "external-dns"
-		setValues["googleProjectID"] = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+		setValues["google.projectID"] = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 
 	default:

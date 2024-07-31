@@ -1,14 +1,12 @@
 cloudProvider: google
-namespaceName: ""
 
 google:
   projectID: ""
   certificateMap: ""
   hostname: ""
 
-clusterOIDC: ""
 providerConfigRefName: google-crossplane-system
-region: "US"
+region: "EU"
 bucketName: ""
 
 loki:

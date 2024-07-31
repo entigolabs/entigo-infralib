@@ -3,11 +3,10 @@ cloudProvider: google
 google:
   projectID: ""
   certificateMap: ""
-  host: ""
+  hostname: ""
 
 global:
   providerConfigRefName: google-crossplane-system
-  namespaceName: ""
 
 mimir-distributed:
   gateway:

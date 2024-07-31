@@ -1,7 +1,8 @@
 installProvider: true
 installProviderConfig: true
 installDeploymentRuntimeConfig: true
-googleProjectID: ""
+google:
+  projectID: ""
 
 deploymentRuntimeConfig:
   googleServiceAccount: ""
