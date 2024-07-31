@@ -5,6 +5,6 @@ metadata:
 spec:
   forProvider:
     location: EU
-    storageClass: REGIONAL
+    storageClass: STANDARD
   providerConfigRef:
     name: google-crossplane-system
