@@ -11,7 +11,7 @@ global:
   providerConfigRefName: aws-crossplane-system
   region: ""
   bucketName: "mimir"
-  namespaceName: ""
+  namespaceName: "mimir"
   serviceAccountName: "mimir"
 
 mimir-distributed:
