@@ -15,19 +15,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sIstioGatewayBiz(t *testing.T) {
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/pub_cert_arn")
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_biz.yaml", certificateArn)
+// func TestK8sIstioGatewayAWSBiz(t *testing.T) {
+// 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
+// }
+
+// func TestK8sIstioGatewayAWSPri(t *testing.T) {
+// 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
+// }
+
+// func TestK8sIstioGatewayGKEBiz(t *testing.T) {
+// 	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+// }
+
+func TestK8sIstioGatewayGKEPri(t *testing.T) {
+	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sIstioGatewayPri(t *testing.T) {
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	certificateArn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/pub_cert_arn")
-	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_pri.yaml", certificateArn)
-}
-
-func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, certificateArn string) {
+func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -35,11 +39,10 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ce
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("istio-gateway")
+	namespaceName := "istio-gateway"
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	setValues["certificateArn"] = certificateArn
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("istio-gateway-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
@@ -47,11 +50,22 @@ func testK8sIstioGateway(t *testing.T, contextName string, valuesFile string, ce
 	}
 	releaseName := namespaceName
 
+	switch cloudName {
+	case "aws":
+		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+		certificateArn := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_cert_arn", envName))
+		setValues["certificateArn"] = certificateArn
+
+	case "google":
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+	}
+
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{valuesFile, fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
-		ValuesFiles:       []string{valuesFile},
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
 		ExtraArgs:         extraArgs,

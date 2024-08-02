@@ -1,0 +1,24 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ .Values.gateway.name }}
+spec:
+  default:
+    checkIntervalSec: 5
+    timeoutSec: 5
+    healthyThreshold: 3
+    unhealthyThreshold: 3
+    logConfig:
+      enabled: true
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 15021
+        requestPath: /healthz/ready
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Values.gateway.name }}
+{{- end }}
