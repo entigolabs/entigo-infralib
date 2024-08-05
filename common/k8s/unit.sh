@@ -49,7 +49,18 @@ else
   gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
   gcloud config set project $GOOGLE_PROJECT
   gcloud auth list
-  gcloud config set account $(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+  gaccount=""
+  attempt=1
+  while [ -z "$gaccount" ] && [ "$attempt" -le "5" ]; do
+    gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+    if [ -z "$gaccount" ]
+    then
+      sleep 1
+      echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
+      attempt=$((attempt + 1))
+    fi
+  done
+  gcloud config set account $gaccount
 fi
 
 TIMEOUT_OPTS=""
