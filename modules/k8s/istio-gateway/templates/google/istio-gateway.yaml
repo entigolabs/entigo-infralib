@@ -1,0 +1,19 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  annotations:
+spec:
+  selector:
+    app: {{ .Values.gateway.name }}
+  servers:
+  - hosts:
+    - "*"
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+
+{{- end }}
