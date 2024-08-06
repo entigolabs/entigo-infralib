@@ -48,6 +48,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/eks/test.sh &
         PIDS="$PIDS $!"
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
+        PIDS="$PIDS $!"
         FAIL=0
         for p in $PIDS; do
             wait $p || let "FAIL+=1"
@@ -59,8 +61,6 @@ jobs:
           exit 1
         fi
         PIDS=""
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
-        PIDS="$PIDS $!"
         ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
         PIDS="$PIDS $!"
         modules/aws/crossplane/test.sh &

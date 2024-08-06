@@ -53,6 +53,7 @@ else
   attempt=1
   while [ -z "$gaccount" ] && [ "$attempt" -le "5" ]; do
     gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+    echo "Value for gaccount is '$gaccount'"
     if [ -z "$gaccount" ]
     then
       sleep 1
