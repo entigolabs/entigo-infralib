@@ -14,6 +14,17 @@ then
   cd /project
 else
   cd $CODEBUILD_SRC_DIR
+  
+  if [ ! -d "$TF_VAR_prefix/$WORKSPACE" ]
+  then
+   BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
+   echo "Need to copy project files from S3 bucket $BUCKET"
+   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix/$WORKSPACE ./$TF_VAR_prefix/$WORKSPACE --recursive
+   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix/backend.conf ./$TF_VAR_prefix/backend.conf
+   find .
+   #--no-progress --quiet
+  fi
+  
 fi
 
 if [ -d ".git" ]
