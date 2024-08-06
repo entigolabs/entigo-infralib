@@ -20,7 +20,6 @@ external-dns:
     - ingress
     - istio-gateway
     - istio-virtualservice
-    - gateway-httproute
   extraArgs:
   - --metrics-address=:7979
 
