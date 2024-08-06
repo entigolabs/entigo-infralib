@@ -7,38 +7,32 @@ on:
       - completed
   workflow_dispatch:
 
-jobs:
-  install_tfmain:
-    name: Stable to main (tfmain)
+jobs:       
+  install_main_aws:
+    name: Install main AWS
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v3
       with:
         ref: main
-    - name: Update resources based on main code (tfmain)
-      id: update_to_main_tfmain
+    - name: Create resources based on latest release
+      id: create_latest_release
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        echo "Current main release commit is $(git rev-parse HEAD)"
         PIDS=""
-        modules/google/vpc/test.sh
-        modules/aws/vpc/test.sh
-        modules/aws/route53/test.sh &
+        modules/aws/cost-alert/test.sh &
         PIDS="$PIDS $!"
-        modules/google/gke/test.sh &
+        modules/aws/hello-world/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/eks/test.sh &
+        modules/aws/vpc/test.sh &
         PIDS="$PIDS $!"
-        
         FAIL=0
         for p in $PIDS; do
             wait $p || let "FAIL+=1"
@@ -49,88 +43,156 @@ jobs:
           echo "FAILED JOBS $FAIL"
           exit 1
         fi
-        modules/google/dns/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (tfmain)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (tfmain) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-
-  install_standalone:
-    name: Stable to main (standalone)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (standalone)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (standalone)
-      id: update_to_main_standalone
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        profiles/test.sh
-        modules/google/services/test.sh
-        modules/aws/cost-alert/test.sh
-        modules/aws/hello-world/test.sh
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message  (standalone)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (standalone) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-
-  install_ekscp:
-    needs: [install_tfmain]
-    name: Stable to main (ekscp)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (ekscp)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (ekscp)
-      id: update_to_main_ekscp
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
         PIDS=""
-        modules/aws/crossplane/test.sh
-        modules/google/crossplane/test.sh
-        modules/k8s/crossplane/test.sh
-        modules/k8s/crossplane-google/test.sh
+        modules/aws/route53/test.sh &
+        PIDS="$PIDS $!"
+        modules/aws/eks/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+        PIDS=""
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
+        PIDS="$PIDS $!"
+        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
+        PIDS="$PIDS $!"
+        modules/aws/crossplane/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for AWS.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  install_main_google:
+    name: Install main Google
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (tfmain)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        echo "Current main release commit is $(git rev-parse HEAD)"
+        PIDS=""
+        modules/google/services/test.sh &
+        PIDS="$PIDS $!"
+        modules/google/vpc/test.sh
+        modules/google/gke/test.sh
+        modules/google/dns/test.sh &
+        PIDS="$PIDS $!"
+        modules/google/crossplane/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for Google.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+  
+  install_main_k8s:
+    needs: [install_main_google,install_main_aws]
+    name: Install main K8s
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code (tfmain)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        echo "Current main release commit is $(git rev-parse HEAD)"
+        PIDS=""
+        providers/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/hello-world/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/aws-storageclass/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/metrics-server/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/istio-base/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/istio-istiod/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/crossplane/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/crossplane-google/test.sh &
+        PIDS="$PIDS $!"
+        FAIL=0
+        for p in $PIDS; do
+            wait $p || let "FAIL+=1"
+            echo $p $FAIL
+        done
+        if [ "$FAIL" -ne 0 ]
+        then
+          echo "FAILED JOBS $FAIL"
+          exit 1
+        fi
+        PIDS=""
+        
         modules/k8s/aws-alb/test.sh
+        modules/k8s/istio-gateway/test.sh
         modules/k8s/external-dns/test.sh
         modules/k8s/external-secrets/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/istio-gateway/test.sh &
+        modules/k8s/argocd/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
         PIDS="$PIDS $!"
@@ -138,8 +200,6 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/grafana/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/argocd/test.sh &
-        PIDS="$PIDS $!"
         
         FAIL=0
         for p in $PIDS; do
@@ -151,115 +211,20 @@ jobs:
           echo "FAILED JOBS $FAIL"
           exit 1
         fi
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (ekscp)
+    - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (ekscp) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-
-  
-  install_eksb:
-    needs: [install_tfmain]
-    name: Stable to main (eksb)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (eksb)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (eksb)
-      id: update_to_main_eksb
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        modules/k8s/aws-storageclass/test.sh
-        modules/k8s/istio-base/test.sh
-        modules/k8s/istio-istiod/test.sh
-        modules/k8s/metrics-server/test.sh
-        modules/k8s/hello-world/test.sh
-        
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (tfsecondary)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (tfsecondary) failed.'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for K8S.'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
         
-  install_tfalt:
-    needs: [install_tfmain]
-    name: Stable to main (tfalt)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code (tfalt)
-      uses: actions/checkout@v3
-      with:
-        ref: main
-    - name: Update resources based on main code (tfalt)
-      id: update_to_main_tfalt
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-        PR_BRANCH: "main"
-        ENTIGO_INFRALIB_DESTROY: false
-      run: |
-        PIDS=""
-        
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
-        PIDS="$PIDS $!"
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/helm-git/test.sh &
-        PIDS="$PIDS $!"
-        providers/test.sh &
-        PIDS="$PIDS $!"
-        
-        FAIL=0
-        for p in $PIDS; do
-            wait $p || let "FAIL+=1"
-            echo $p $FAIL
-        done
-        if [ "$FAIL" -ne 0 ]
-        then
-          echo "FAILED JOBS $FAIL"
-          exit 1
-        fi
-        echo "Current main commit is $(git rev-parse HEAD)"
-    - name: Slack Failed To Update to Main Message (tfsecondary)
-      if: ${{ failure() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Updating from latest release to main (tfsecondary) failed.'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        SLACK_FOOTER: ""
-
   release:   
     runs-on: ubuntu-latest
-    needs: [install_standalone,install_tfmain,install_ekscp,install_eksb,install_tfalt]
+    needs: [install_main_aws,install_main_google,install_main_k8s]
     name: Release
     steps:
     - name: Checkout code
@@ -277,7 +242,7 @@ jobs:
           
           if (currentStable) {
             if (currentMain) {
-              core.info('Latest stable release commit: ' + currentStable.data.sha);
+              core.info('Latest main release commit: ' + currentStable.data.sha);
               core.info('Main branch commit: ' +  currentMain.data.commit.sha);
               if ( currentStable.data.sha != currentMain.data.commit.sha) {
                 
@@ -309,7 +274,7 @@ jobs:
                core.setFailed('No main branch found');
             }
           } else {
-            core.setFailed('No stable releases found');
+            core.setFailed('No main releases found');
           }
       
     - name: Authenticate with GitHub CLI

@@ -158,6 +158,7 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
+  
   install_stable_k8s:
     needs: [install_stable_google,install_stable_aws]
     name: Install stable K8s
