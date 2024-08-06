@@ -174,9 +174,12 @@ jobs:
         fi
         PIDS=""
         
-        modules/k8s/aws-alb/test.sh
-        modules/k8s/istio-gateway/test.sh
-        modules/k8s/external-dns/test.sh
+        modules/k8s/aws-alb/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/istio-gateway/test.sh &
+        PIDS="$PIDS $!"
+        modules/k8s/external-dns/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/external-secrets/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/argocd/test.sh &
