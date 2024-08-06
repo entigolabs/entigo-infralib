@@ -44,19 +44,18 @@ else
   DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
   #This is needed for terratest bucket creation
   mkdir -p $(echo ~)/.config/gcloud 
-  echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
-  ls -l 
-  gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
-  gcloud config set project $GOOGLE_PROJECT
-  gcloud auth list
   gaccount=""
   attempt=1
-  while [ -z "$gaccount" ] && [ "$attempt" -le "5" ]; do
+  while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
+    echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
+    gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
+    gcloud config set project $GOOGLE_PROJECT
+    gcloud auth list
     gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
     echo "Value for gaccount is '$gaccount'"
     if [ -z "$gaccount" ]
     then
-      sleep 1
+      sleep 1.$((RANDOM % 9))
       echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
       attempt=$((attempt + 1))
     fi

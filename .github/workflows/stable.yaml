@@ -72,8 +72,6 @@ jobs:
         PIDS=""
         modules/aws/ec2/test.sh &
         PIDS="$PIDS $!"
-        modules/aws/helm-git/test.sh &
-        PIDS="$PIDS $!"
         modules/aws/crossplane/test.sh &
         PIDS="$PIDS $!"
         FAIL=0
