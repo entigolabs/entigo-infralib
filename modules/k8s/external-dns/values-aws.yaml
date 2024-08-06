@@ -5,6 +5,11 @@ clusterOIDC: ""
 providerConfigRefName: aws-crossplane-system
 
 external-dns:
+  sources:
+    - service
+    - ingress
+    - istio-gateway
+    - istio-virtualservice
   env: 
   - name: AWS_DEFAULT_REGION
     value: ""
