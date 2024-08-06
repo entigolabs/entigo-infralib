@@ -9,7 +9,7 @@ spec:
     - kind: Gateway
       name: {{ .Values.gateway.name }}
       sectionName: https
-  hostnames: [ {{ .Values.google.hostname }} ]
+  hostnames: [ "*.{{ .Values.google.hostname }}", {{ .Values.google.hostname }} ]
   rules:
     - backendRefs:
         - name: {{ .Values.gateway.name }}

@@ -15,17 +15,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestK8sIstioGatewayAWSBiz(t *testing.T) {
-// 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
-// }
+func TestK8sIstioGatewayAWSBiz(t *testing.T) {
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
+}
 
-// func TestK8sIstioGatewayAWSPri(t *testing.T) {
-// 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
-// }
+func TestK8sIstioGatewayAWSPri(t *testing.T) {
+	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
+}
 
-// func TestK8sIstioGatewayGKEBiz(t *testing.T) {
-// 	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
-// }
+func TestK8sIstioGatewayGKEBiz(t *testing.T) {
+	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+}
 
 func TestK8sIstioGatewayGKEPri(t *testing.T) {
 	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
@@ -58,7 +58,7 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.hostname"] = hostName
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
