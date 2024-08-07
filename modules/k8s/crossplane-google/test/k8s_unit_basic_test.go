@@ -69,23 +69,19 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName string) {
 		googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
 	}
 
-	// Install DeploymentRuntimeConfig
+	// Install DeploymentRuntimeConfig and Provider
 	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("google-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
-	// Install Provider
-	setValues["installProvider"] = "true"
-	helmOptions.SetValues = setValues
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-storage", 60, 6*time.Second)
-	require.NoError(t, err, "Providers crd error")
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-family-gcp", 60, 6*time.Second)
-	require.NoError(t, err, "Providers crd error")
+	require.NoError(t, err, "upbound-provider-family-gcp error")
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-cloudplatform", 60, 6*time.Second)
-	require.NoError(t, err, "Providers crd error")
+	require.NoError(t, err, "provider-gcp-cloudplatform")
+	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "provider-gcp-storage", 60, 6*time.Second)
+	require.NoError(t, err, "provider-gcp-storage crd error")
 
 	// Install ProviderConfig
 	setValues["installProviderConfig"] = "true"

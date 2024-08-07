@@ -1,13 +1,11 @@
-{{- if .Values.installProvider }}
-
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-gcp-storage
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: '3'
     helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-storage:v0.41.0
   runtimeConfigRef:
@@ -18,12 +16,10 @@ kind: Provider
 metadata:
   name: provider-gcp-cloudplatform
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: '3'
     helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true  
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v1.4.0
   runtimeConfigRef:
     name: google-{{ .Release.Name }}
-
-{{- end }}

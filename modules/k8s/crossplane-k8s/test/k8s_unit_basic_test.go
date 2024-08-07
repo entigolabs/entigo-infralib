@@ -27,13 +27,13 @@ func TestK8sCrossplaneAWSPri(t *testing.T) {
 	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri", "aws")
 }
 
-// func TestK8sCrossplaneGKEBiz(t *testing.T) {
-// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz", "google")
-// }
+func TestK8sCrossplaneGKEBiz(t *testing.T) {
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz", "google")
+}
 
-// func TestK8sCrossplaneGKEPri(t *testing.T) {
-// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri", "google")
-// }
+func TestK8sCrossplaneGKEPri(t *testing.T) {
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri", "google")
+}
 
 func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) {
 	t.Parallel()
@@ -64,13 +64,19 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) 
 		setValues["awsRole"] = iamrole
 
 	case "google":
+		googleServiceAccountID := fmt.Sprintf("%s-cp", runnerName)
+		if len(runnerName) > 25 {
+			googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
+		}
 
+		googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+		setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -82,17 +88,12 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) 
 		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	}
 
-	// Install K8s DeploymentRuntimeConfig
+	// Install K8s DeploymentRuntimeConfig and K8s provider
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-
-	// Install K8s provider
-	setValues["installProvider"] = "true"
-	helmOptions.SetValues = setValues
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
 	require.NoError(t, k8serr, "Provider k8s error")

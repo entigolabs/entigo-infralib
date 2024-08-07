@@ -1,7 +1,12 @@
 cloudProvider: "aws"
 
-installProvider: true
 installProviderConfig: true
+
+google:
+  projectID: ""
+
+deploymentRuntimeConfig:
+  googleServiceAccount: ""
 
 awsRole: ""
 

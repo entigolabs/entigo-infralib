@@ -1,5 +1,5 @@
-installProvider: true
 installProviderConfig: true
+
 google:
   projectID: ""
 
