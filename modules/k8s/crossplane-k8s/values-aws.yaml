@@ -1,0 +1,3 @@
+cloudProvider: "aws"
+
+awsRole: ""

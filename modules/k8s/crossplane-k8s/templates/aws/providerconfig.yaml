@@ -1,0 +1,15 @@
+{{- if and (eq .Values.cloudProvider "aws") .Values.installProviderConfig }}
+
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: k8s-{{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep  
+spec:
+  credentials:
+    source: InjectedIdentity
+
+{{- end }}
