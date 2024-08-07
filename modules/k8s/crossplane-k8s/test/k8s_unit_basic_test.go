@@ -20,22 +20,22 @@ import (
 )
 
 func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz", "aws")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz", "aws")
 }
 
 func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri", "aws")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri", "aws")
 }
 
 // func TestK8sCrossplaneGKEBiz(t *testing.T) {
-// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz", "google")
+// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz", "google")
 // }
 
 // func TestK8sCrossplaneGKEPri(t *testing.T) {
-// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri", "google")
+// 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri", "google")
 // }
 
-func testK8sCrossplane(t *testing.T, contextName, valuesFile, runnerName, cloudName string) {
+func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 

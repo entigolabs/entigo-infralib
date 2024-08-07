@@ -16,22 +16,22 @@ import (
 )
 
 func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "aws")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "aws")
 }
 
 func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "aws")
+	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "aws")
 }
 
 func TestK8sCrossplaneGKEBiz(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "google")
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "google")
 }
 
 func TestK8sCrossplaneGKEPri(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "google")
+	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "google")
 }
 
-func testK8sCrossplane(t *testing.T, contextName, valuesFile, cloudName string) {
+func testK8sCrossplane(t *testing.T, contextName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -53,7 +53,7 @@ func testK8sCrossplane(t *testing.T, contextName, valuesFile, cloudName string) 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -77,12 +77,9 @@ func testK8sCrossplane(t *testing.T, contextName, valuesFile, cloudName string) 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 6*time.Second)
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 6*time.Second)
 
-	switch cloudName {
-	case "aws":
-		err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 6*time.Second)
-		require.NoError(t, err, "Providers crd error")
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 6*time.Second)
+	require.NoError(t, err, "Providers crd error")
 
-		err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 6*time.Second)
-		require.NoError(t, err, "DeploymentRuntimeConfig crd error")
-	}
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 6*time.Second)
+	require.NoError(t, err, "DeploymentRuntimeConfig crd error")
 }
