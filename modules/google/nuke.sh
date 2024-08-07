@@ -116,11 +116,30 @@ gcloud "secrets" list --uri | while read line; do
   gcloud 'secrets' delete --project entigo-infralib2 -q $line
 done
 
-gcloud -q "certificate-manager" "maps" "list" --uri | while read -r MAP; do
-  gcloud -q "certificate-manager" "maps" "entries" list --uri --map=$MAP | while read -r ENTRY; do
-    gcloud 'certificate-manager' 'maps' 'entries' delete --project entigo-infralib2 -q $ENTRY
+gcloud -q certificate-manager maps list --uri | while read -r MAP; do
+  gcloud -q certificate-manager maps entries list --uri --map=$MAP | while read -r ENTRY; do
+    gcloud certificate-manager maps entries delete --project entigo-infralib2 -q $ENTRY
   done
-  gcloud 'certificate-manager' 'maps' 'delete' --project entigo-infralib2 -q $MAP
+
+  MAX_RETRIES=5
+  RETRY_DELAY=10
+  SUCCESS=false
+
+  for ((i = 1; i <= MAX_RETRIES; i++)); do
+    echo "Attempt $i of $MAX_RETRIES to delete map $MAP..."
+    if gcloud certificate-manager maps delete --project entigo-infralib2 -q $MAP; then
+      SUCCESS=true
+      break
+    fi
+    echo "Retrying in $RETRY_DELAY seconds..."
+    sleep $RETRY_DELAY
+  done
+
+  if [ "$SUCCESS" = true ]; then
+    echo "Successfully deleted map $MAP."
+  else
+    echo "Failed to delete map $MAP after $MAX_RETRIES attempts."
+  fi
 done
 
 gcloud -q "certificate-manager" "certificates" list --uri | while read line; do
