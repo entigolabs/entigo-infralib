@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.cloudProvider "aws" }}
 
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
