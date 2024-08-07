@@ -1,6 +1,5 @@
 installProvider: true
 installProviderConfig: true
-installDeploymentRuntimeConfig: true
 google:
   projectID: ""
 
