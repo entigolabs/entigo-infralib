@@ -28,7 +28,7 @@ spec:
               securityContext: {}
           securityContext:
             fsGroup: 2000
-          serviceAccountName: aws-crossplane
+          serviceAccountName: crossplane-aws
           tolerations:
             - effect: NoSchedule
               key: tools
@@ -37,6 +37,6 @@ spec:
   serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: aws-crossplane
+      name: crossplane-aws
       annotations:
         eks.amazonaws.com/role-arn: {{ .Values.awsRole }}

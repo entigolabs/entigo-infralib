@@ -28,7 +28,7 @@ spec:
               securityContext: {}
           securityContext:
             fsGroup: 2000
-          serviceAccountName: crossplane
+          serviceAccountName: crossplane-google
           tolerations:
             - effect: NoSchedule
               key: tools
@@ -37,6 +37,6 @@ spec:
   serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: crossplane
+      name: crossplane-google
       annotations:
         iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount }}
