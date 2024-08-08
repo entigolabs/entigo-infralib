@@ -1,16 +1,16 @@
-name: PR modules/k8s/crossplane-google
+name: PR modules/k8s/crossplane-core
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'modules/k8s/crossplane-google/**'
+      - 'modules/k8s/crossplane-core/**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Test modules/k8s/crossplane-google
+    name: Test modules/k8s/crossplane-core
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,4 +26,4 @@ jobs:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           ENTIGO_INFRALIB_DESTROY: false
         run: |
-          modules/k8s/crossplane-google/test.sh
+          modules/k8s/crossplane-core/test.sh

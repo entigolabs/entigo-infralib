@@ -1,0 +1,7 @@
+cloudProvider: "google"
+
+google:
+  projectID: ""
+
+deploymentRuntimeConfig:
+  googleServiceAccount: ""

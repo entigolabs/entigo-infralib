@@ -1,11 +1,11 @@
 {{- if .Values.installProviderConfig }}
 
-apiVersion: gcp.upbound.io/v1beta1
+apiVersion: kubernetes.crossplane.io/v1alpha1
 kind: ProviderConfig
 metadata:
   name: {{ .Release.Name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: '5'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     helm.sh/resource-policy: keep
 spec:

@@ -1,10 +1,4 @@
-installProviderConfig: true
-
-google:
-  projectID: ""
-
-deploymentRuntimeConfig:
-  googleServiceAccount: ""
+cloudProvider: "aws"
 
 crossplane:
   # -- The number of replicas to run for the Crossplane pods.

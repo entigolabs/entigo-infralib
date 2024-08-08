@@ -6,4 +6,4 @@ spec:
   forProvider:
     location: EU
   providerConfigRef:
-    name: google-crossplane-system
+    name: crossplane-google

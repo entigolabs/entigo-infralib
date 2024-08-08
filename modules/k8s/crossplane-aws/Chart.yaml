@@ -1,6 +1,6 @@
 apiVersion: v2
-name: crossplane-google
-description: Crossplane google operator chart
+name: crossplane-aws
+description: Crossplane aws provider chart
 type: application
 version: 0.1.1
 appVersion: "1.1"

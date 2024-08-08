@@ -3,8 +3,8 @@ kind: DeploymentRuntimeConfig
 metadata:
   name: {{ .Release.Name }}
   annotations:
-    argocd.argoproj.io/sync-wave: '2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '1'
     helm.sh/resource-policy: keep
 spec:
   deploymentTemplate:
@@ -39,4 +39,4 @@ spec:
     metadata:
       name: {{ .Release.Name }}
       annotations:
-        iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount }}
+        eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
