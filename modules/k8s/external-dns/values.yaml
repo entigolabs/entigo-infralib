@@ -2,7 +2,7 @@ cloudProvider: aws
 
 awsAccount: ""
 clusterOIDC: ""
-providerConfigRefName: aws-crossplane-system
+providerConfigRefName: crossplane-aws
 
 external-dns:
   serviceAccount:

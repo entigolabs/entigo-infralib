@@ -85,7 +85,7 @@ external-secrets:
 awsAccount: ""
 awsRegion: ""
 clusterOIDC: ""
-providerConfigRefName: aws-crossplane-system
+providerConfigRefName: crossplane-aws
 
 
 gitlab_url: ""

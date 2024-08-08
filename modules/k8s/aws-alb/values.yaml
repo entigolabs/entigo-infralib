@@ -1,6 +1,6 @@
 awsAccount: ""
 clusterOIDC: ""
-providerConfigRefName: aws-crossplane-system
+providerConfigRefName: crossplane-aws
 
 aws-load-balancer-controller:
   serviceAccount:
