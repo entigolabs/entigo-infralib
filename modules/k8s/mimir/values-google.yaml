@@ -6,7 +6,7 @@ google:
   hostname: ""
 
 global:
-  providerConfigRefName: google-crossplane-system
+  providerConfigRefName: crossplane-google
 
 mimir-distributed:
   gateway:

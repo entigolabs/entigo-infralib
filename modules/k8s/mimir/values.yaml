@@ -8,7 +8,7 @@ google:
 global:
   awsAccount: ""
   clusterOIDC: ""
-  providerConfigRefName: aws-crossplane-system
+  providerConfigRefName: crossplane-aws
   region: ""
   bucketName: "mimir"
   namespaceName: "mimir"

@@ -2,7 +2,7 @@ cloudProvider: aws
 
 awsAccount: ""
 clusterOIDC: ""
-providerConfigRefName: aws-crossplane-system
+providerConfigRefName: crossplane-aws
 
 external-dns:
   sources:
@@ -10,8 +10,6 @@ external-dns:
     - ingress
     - istio-gateway
     - istio-virtualservice
-  env: 
-  - name: AWS_DEFAULT_REGION
-    value: ""
-
-    
+  env:
+    - name: AWS_DEFAULT_REGION
+      value: ""

@@ -7,7 +7,7 @@ google:
 
 awsAccount: ""
 clusterOIDC: ""
-providerConfigRefName: aws-crossplane-system
+providerConfigRefName: crossplane-aws
 region: ""
 bucketName: "loki"
 namespaceName: "loki"

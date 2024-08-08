@@ -1,5 +1,5 @@
 cloudProvider: google
-providerConfigRefName: google-crossplane-system
+providerConfigRefName: crossplane-google
 
 google:
   projectID: ""

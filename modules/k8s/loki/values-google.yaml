@@ -5,7 +5,7 @@ google:
   certificateMap: ""
   hostname: ""
 
-providerConfigRefName: google-crossplane-system
+providerConfigRefName: crossplane-google
 region: "EU"
 bucketName: ""
 
