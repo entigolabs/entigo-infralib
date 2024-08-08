@@ -152,8 +152,9 @@ done
 
 gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io" | while read -r ZONE_NAME; do
   gcloud dns record-sets list --zone=$ZONE_NAME --format="get(name,type)" | while read -r RECORD_NAME TYPE; do
-    if [[ "${RECORD_NAME//./-}" != "$ZONE_NAME-" || "$TYPE" != "NS" && "$TYPE" != "SOA" ]]; then
-      gcloud dns record-sets delete --zone=$ZONE_NAME --type=$TYPE --project=entigo-infralib2 -q $RECORD_NAME
+    OUTPUT=$(gcloud dns record-sets delete --zone=$ZONE_NAME --type=$TYPE --project=entigo-infralib2 -q $RECORD_NAME 2>&1)
+    if ! echo "$OUTPUT" | grep -q "HTTPError 400: The resource record set .* is invalid because a zone must contain exactly one resource record set of type .* at the apex."; then
+      echo "$OUTPUT"
     fi
   done
   gcloud dns managed-zones delete --project entigo-infralib2 -q $ZONE_NAME
