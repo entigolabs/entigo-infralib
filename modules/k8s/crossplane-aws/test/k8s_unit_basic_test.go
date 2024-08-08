@@ -71,11 +71,11 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	// Install AWS provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
@@ -90,7 +90,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
 	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, fmt.Sprintf("aws-%s", releaseName), 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	// Create S3 Bucket

@@ -73,7 +73,7 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName string) {
 	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("google-%s", releaseName), 60, 1*time.Second)
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-family-gcp", 60, 6*time.Second)
@@ -87,7 +87,7 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName string) {
 	setValues["installProviderConfig"] = "true"
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "gcp.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}, fmt.Sprintf("google-%s", releaseName), 60, 6*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "gcp.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}, releaseName, 60, 6*time.Second)
 	require.NoError(t, err, "ProviderConfig crd error")
 
 	// Create cloud storage bucket

@@ -92,10 +92,10 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) 
 	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
-	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, k8serr, "Provider k8s error")
 	assert.NotNil(t, k8sprovider, "Provider k8s is nil")
 	k8sproviderDeployment := k8s.GetStringValue(k8sprovider.Object, "status", "currentRevision")
@@ -110,7 +110,7 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "kubernetes.crossplane.io/v1alpha1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
 	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha1", Resource: "providerconfigs"}
-	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, fmt.Sprintf("k8s-%s", releaseName), 60, 1*time.Second)
+	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
 	// Create object
