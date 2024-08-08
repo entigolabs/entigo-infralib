@@ -40,7 +40,7 @@ resource "google_service_account" "crossplane" {
   display_name = "${local.hname}-cp"
 }
 
-module "service_account_email" {
+module "service_account_email_crossplane" {
   source                             = "./secret"
   prefix = var.prefix
   key = "service_account_email_crossplane"
@@ -89,7 +89,7 @@ resource "google_service_account" "crossplane_google" {
   display_name = "${local.hname}-cp-google"
 }
 
-module "service_account_email" {
+module "service_account_email_crossplane_google" {
   source                             = "./secret"
   prefix = var.prefix
   key = "service_account_email_crossplane_google"
