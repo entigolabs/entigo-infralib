@@ -1,7 +1,7 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: aws-{{ .Release.Name }}
+  name: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: '2'
     helm.sh/resource-policy: keep
@@ -9,4 +9,4 @@ metadata:
 spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.47.2
   runtimeConfigRef:
-    name: aws-{{ .Release.Name }}
+    name: {{ .Release.Name }}

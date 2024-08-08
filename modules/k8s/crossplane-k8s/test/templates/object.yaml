@@ -17,4 +17,4 @@ spec:
             port: 80
             targetPort: 8080
   providerConfigRef:
-    name: k8s-crossplane-system
+    name: crossplane-k8s

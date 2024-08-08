@@ -1,7 +1,7 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
-  name: k8s-{{ .Release.Name }}
+  name: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '1'
@@ -28,7 +28,7 @@ spec:
               securityContext: {}
           securityContext:
             fsGroup: 2000
-          serviceAccountName: k8s-crossplane
+          serviceAccountName: {{ .Release.Name }}
           tolerations:
             - effect: NoSchedule
               key: tools
@@ -37,6 +37,6 @@ spec:
   serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: k8s-crossplane
+      name: {{ .Release.Name }}
       annotations:
         iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount }}

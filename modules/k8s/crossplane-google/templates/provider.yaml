@@ -9,7 +9,7 @@ metadata:
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-storage:v0.41.0
   runtimeConfigRef:
-    name: google-{{ .Release.Name }}
+    name: {{ .Release.Name }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
@@ -22,4 +22,4 @@ metadata:
 spec:
   package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v1.4.0
   runtimeConfigRef:
-    name: google-{{ .Release.Name }}
+    name: {{ .Release.Name }}

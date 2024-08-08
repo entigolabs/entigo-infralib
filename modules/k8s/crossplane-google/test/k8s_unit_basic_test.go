@@ -37,7 +37,7 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName string) {
 	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := "crossplane-system"
-	releaseName := "crossplane-system"
+	releaseName := "crossplane-google"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)

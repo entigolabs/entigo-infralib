@@ -36,8 +36,8 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("crossplane-system")
-	releaseName := "crossplane-system"
+	namespaceName := "crossplane-system"
+	releaseName := "crossplane-aws"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
