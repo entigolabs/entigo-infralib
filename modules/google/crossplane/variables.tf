@@ -2,15 +2,9 @@ variable "prefix" {
   type = string
 }
 
-variable "kubernetes_service_account_crossplane" {
+variable "kubernetes_service_account" {
   type = string
-  description = "Kubernetes service account name for crossplane"
-  default = "crossplane"
-}
-
-variable "kubernetes_service_account_crossplane_google" {
-  type = string
-  description = "Kubernetes service account name for crossplane"
+  description = "Kubernetes service account name for google crossplane provider"
   default = "crossplane-google"
 }
 

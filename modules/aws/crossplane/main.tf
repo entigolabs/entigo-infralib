@@ -14,7 +14,7 @@ resource "aws_iam_role" "crossplane" {
             "Condition": {
                 "StringEquals": {
                     "${var.eks_oidc_provider}:aud": "sts.amazonaws.com",
-                    "${var.eks_oidc_provider}:sub": "system:serviceaccount:crossplane-system:crossplane-aws"
+                    "${var.eks_oidc_provider}:sub": "system:serviceaccount:${var.kubernetes_namespace}:${var.kubernetes_service_account}"
                 }
             }
         }
