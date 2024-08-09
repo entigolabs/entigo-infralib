@@ -40,10 +40,10 @@ resource "google_service_account" "crossplane" {
   display_name = "${local.hname}-cp"
 }
 
-module "service_account_email_crossplane_google" {
+module "service_account_email" {
   source                             = "./secret"
   prefix = var.prefix
-  key = "service_account_email_crossplane_google"
+  key = "service_account_email"
   value = google_service_account.crossplane.email
 }
 
