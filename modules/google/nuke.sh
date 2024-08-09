@@ -30,12 +30,34 @@ gcloud -q "compute" "firewall-rules" list --uri | while read line; do
   gcloud 'compute' 'firewall-rules' delete --project entigo-infralib2 -q $line
 done
 
+delete_cluster() {
+  local cluster_uri=$1
+  local max_retries=20
+  local sleep_time=60
+
+  for ((i = 1; i <= $max_retries; i++)); do
+    echo "Attempt $i to delete cluster: $cluster_uri"
+    gcloud container clusters delete --project entigo-infralib2 --region europe-north1 --timeout 3600 -q $cluster_uri
+    if [ $? -eq 0 ]; then
+      echo "Cluster $cluster_uri deleted successfully."
+      return 0
+    else
+      if [ $i -lt $max_retries ]; then
+        echo "Failed to delete cluster $cluster_uri. Retrying in $sleep_time seconds..."
+        sleep $sleep_time
+      else
+        echo "Failed to delete cluster $cluster_uri after $max_retries attempts."
+        return 1
+      fi
+    fi
+  done
+}
 PIDS=""
-for line in $(gcloud container clusters list --uri); do
-  gcloud 'container' 'clusters' delete --project entigo-infralib2 --region europe-north1 --timeout 3600 -q $line &
+FAIL=0
+for cluster_uri in $(gcloud container clusters list --uri); do
+  delete_cluster "$cluster_uri" &
   PIDS="$PIDS $!"
 done
-FAIL=0
 for p in $PIDS; do
   wait $p || let "FAIL+=1"
   echo $p $FAIL
