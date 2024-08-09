@@ -71,6 +71,14 @@ func testK8sCrossplaneK8s(t *testing.T, contextName, runnerName) {
 
 	// Install K8s DeploymentRuntimeConfig and K8s provider
 	helmOptions.SetValues = setValues
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Println("Namespace already exists.")
+		} else {
+			t.Fatal("Error:", err)
+		}
+	}
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)

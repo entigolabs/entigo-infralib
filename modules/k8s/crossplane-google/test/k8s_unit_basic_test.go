@@ -71,6 +71,14 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName, runnerName string) {
 	// Install DeploymentRuntimeConfig and Provider
 	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
+	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			fmt.Println("Namespace already exists.")
+		} else {
+			t.Fatal("Error:", err)
+		}
+	}
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
