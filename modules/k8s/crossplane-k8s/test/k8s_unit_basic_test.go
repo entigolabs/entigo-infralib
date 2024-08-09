@@ -42,7 +42,7 @@ func testK8sCrossplaneK8s(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("crossplane-k8s")
+	namespaceName := fmt.Sprintf("crossplane-system")
 	releaseName := "crossplane-k8s"
 
 	extraArgs := make(map[string][]string)

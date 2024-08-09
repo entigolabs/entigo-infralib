@@ -36,7 +36,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "crossplane-aws"
+	namespaceName := "crossplane-system"
 	releaseName := "crossplane-aws"
 
 	extraArgs := make(map[string][]string)
@@ -68,15 +68,6 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
 	}
 
 	helmOptions.SetValues = setValues
-	
-	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			fmt.Println("Namespace already exists.")
-		} else {
-			t.Fatal("Error:", err)
-		}
-	}
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)

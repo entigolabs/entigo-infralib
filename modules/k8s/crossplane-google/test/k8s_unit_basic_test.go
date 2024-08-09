@@ -36,7 +36,7 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string
 
 	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "crossplane-google"
+	namespaceName := "crossplane-system"
 	releaseName := "crossplane-google"
 
 	extraArgs := make(map[string][]string)
@@ -71,14 +71,6 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string
 	// Install DeploymentRuntimeConfig and Provider
 	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	helmOptions.SetValues = setValues
-	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			fmt.Println("Namespace already exists.")
-		} else {
-			t.Fatal("Error:", err)
-		}
-	}
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
