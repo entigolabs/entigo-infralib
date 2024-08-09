@@ -20,14 +20,14 @@ import (
 )
 
 func TestK8sCrossplaneBiz(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
 func TestK8sCrossplanePri(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
 }
 
-func testK8sCrossplane(t *testing.T, contextName, runnerName string) {
+func testK8sCrossplaneGoogle(t *testing.T, contextName, runnerName string) {
 	t.Parallel()
 	spew.Dump("")
 

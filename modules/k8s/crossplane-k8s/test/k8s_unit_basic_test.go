@@ -19,22 +19,22 @@ import (
 )
 
 func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
 func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
 func TestK8sCrossplaneGKEBiz(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
 func TestK8sCrossplaneGKEPri(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
 }
 
-func testK8sCrossplane(t *testing.T, contextName, runnerName) {
+func testK8sCrossplaneK8s(t *testing.T, contextName, runnerName) {
 	t.Parallel()
 	spew.Dump("")
 

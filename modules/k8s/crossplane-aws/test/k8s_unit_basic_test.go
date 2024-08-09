@@ -21,14 +21,14 @@ import (
 )
 
 func TestK8sCrossplaneBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
 func TestK8sCrossplanePri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
+func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
 	t.Parallel()
 	spew.Dump("")
 
