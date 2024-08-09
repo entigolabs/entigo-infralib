@@ -19,11 +19,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func TestK8sCrossplaneBiz(t *testing.T) {
+func TestK8sCrossplaneGoogleBiz(t *testing.T) {
 	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
-func TestK8sCrossplanePri(t *testing.T) {
+func TestK8sCrossplaneGooglePri(t *testing.T) {
 	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
 }
 

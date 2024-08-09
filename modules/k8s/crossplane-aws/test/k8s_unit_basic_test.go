@@ -20,11 +20,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func TestK8sCrossplaneBiz(t *testing.T) {
+func TestK8sCrossplaneAWSBiz(t *testing.T) {
 	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
 }
 
-func TestK8sCrossplanePri(t *testing.T) {
+func TestK8sCrossplaneAWSPri(t *testing.T) {
 	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
