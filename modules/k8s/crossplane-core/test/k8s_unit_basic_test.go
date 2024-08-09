@@ -31,7 +31,7 @@ func TestK8sCrossplaneGKEPri(t *testing.T) {
 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "google")
 }
 
-func testK8sCrossplane(t *testing.T, contextName, cloudName string) {
+func testK8sCrossplane(t *testing.T, contextName string, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
