@@ -43,34 +43,17 @@ func testK8sCrossplane(t *testing.T, contextName, runnerName, cloudName string) 
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("crossplane-system")
+	namespaceName := fmt.Sprintf("crossplane-k8s")
 	releaseName := "crossplane-k8s"
 
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
 
 	if prefix != "runner-main" {
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
-	}
-
-	switch cloudName {
-	case "aws":
-		awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-		iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role", runnerName))
-		setValues["awsRole"] = iamrole
-
-	case "google":
-		googleServiceAccountID := fmt.Sprintf("%s-cp", runnerName)
-		if len(runnerName) > 25 {
-			googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
-		}
-
-		googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
-		setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

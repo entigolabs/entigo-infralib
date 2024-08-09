@@ -11,6 +11,5 @@ metadata:
 spec:
   credentials:
     source: InjectedIdentity
-  projectID: {{ .Values.google.projectID }}
 
 {{- end }}

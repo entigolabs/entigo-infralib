@@ -36,7 +36,7 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "crossplane-system"
+	namespaceName := "crossplane-aws"
 	releaseName := "crossplane-aws"
 
 	extraArgs := make(map[string][]string)
@@ -46,7 +46,6 @@ func testK8sCrossplane(t *testing.T, contextName string, runnerName string) {
 	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role", runnerName))
 
 	setValues["awsRole"] = iamrole
-	setValues["installProvider"] = "false"
 	setValues["installProviderConfig"] = "false"
 
 	if prefix != "runner-main" {
