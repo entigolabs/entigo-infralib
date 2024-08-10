@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -108,5 +109,16 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
+	}
+
+	jobName := "argocd-health-check"
+	job, err := commonGCP.CreateK8sJob(t, jobName)
+	err = terrak8s.WaitUntilJobSucceedE(t, kubectlOptions, jobName, 20, 6*time.Second)
+	if err != nil {
+		t.Fatal("argocd-health-check job error:", err)
+	}
+	err = commonGCP.DeleteK8sJob(t, jobName)
+	if err != nil {
+		t.Fatal("argocd-health-check job error:", err)
 	}
 }

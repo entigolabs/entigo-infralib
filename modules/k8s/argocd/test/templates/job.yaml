@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: argocd-health-check
+spec:
+  template:
+    spec:
+      containers:
+        - name: argocd-health-check
+          image: curlimages/curl:latest
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              success_response_code=200
+              max_retries=60
+              sleep_time=10
+              for i in $(seq 1 $max_retries); do
+                if curl -s -o /dev/null -w "%{http_code}" https://argocd.runner-main-pri.gcp.infralib.entigo.io/healthz | grep -q $success_response_code; then
+                  echo "Success: Response code $success_response_code";
+                  exit 0;
+                else
+                  echo "Attempt $i failed: Did not receive response code $success_response_code";
+                fi
+                if [ $i -lt $max_retries ]; then
+                  echo "Retrying in $sleep_time seconds...";
+                  sleep $sleep_time;
+                fi
+              done
+              echo "Failed after $max_retries attempts";
+              exit 1;
+      restartPolicy: Never

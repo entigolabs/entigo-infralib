@@ -354,3 +354,13 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	}
 	return AWS
 }
+
+func CreateK8SJob(t testing.TestingT, options *k8s.KubectlOptions, job *unstructured.Unstructured) error {
+	logger.Log(t, "Creating K8S job %s", job.GetName())
+	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return err
+	}
+	_, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).Namespace(job.GetNamespace()).Create(context.Background(), job, metaV1.CreateOptions{})
+	return err
+}
