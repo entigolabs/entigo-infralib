@@ -32,5 +32,6 @@ spec:
     - type: RequestRedirect
       requestRedirect:
         scheme: https
-
+        statusCode: 301
+        
 {{- end }}

@@ -1,3 +1,0 @@
-argocd:
-  global:
-    domain: argocd.runner-main-biz.gcp.infralib.entigo.io

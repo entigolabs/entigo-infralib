@@ -269,7 +269,13 @@ func deleteObject(t testing.TestingT, options *k8s.KubectlOptions, name string, 
 	if err != nil {
 		return err
 	}
-	return dynamicClient.Resource(resource).Namespace(namespace).Delete(context.Background(), name, metaV1.DeleteOptions{})
+
+	propagationPolicy := metaV1.DeletePropagationBackground
+	deleteOptions := metaV1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	}
+
+	return dynamicClient.Resource(resource).Namespace(namespace).Delete(context.Background(), name, deleteOptions)
 }
 
 func ReadObjectFromFile(t testing.TestingT, templateFile string) (*unstructured.Unstructured, error) {
@@ -355,12 +361,58 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	return AWS
 }
 
-func CreateK8SJob(t testing.TestingT, options *k8s.KubectlOptions, job *unstructured.Unstructured) error {
-	logger.Log(t, "Creating K8S job %s", job.GetName())
-	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
+func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, targetURL string, successCode string, retries int, sleepBetweenRetries time.Duration) error {
+	jobName := "health-check"
+	templateFile := "./../../common/k8s/templates/job.yaml"
+
+	logger.Log(t, fmt.Sprintf("Creating K8s job %s", jobName))
+
+	jobObject, err := ReadObjectFromFile(t, templateFile)
 	if err != nil {
 		return err
 	}
-	_, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).Namespace(job.GetNamespace()).Create(context.Background(), job, metaV1.CreateOptions{})
-	return err
+
+	jobObject.SetName(jobName)
+
+	envVars := []interface{}{
+		map[string]interface{}{
+			"name":  "TARGET_URL",
+			"value": targetURL,
+		},
+		map[string]interface{}{
+			"name":  "SUCCESS_CODE",
+			"value": successCode,
+		},
+	}
+
+	containers, _, err := unstructured.NestedSlice(jobObject.Object, "spec", "template", "spec", "containers")
+	if err != nil {
+		return fmt.Errorf("failed to get containers from job spec: %w", err)
+	}
+
+	err = unstructured.SetNestedSlice(containers[0].(map[string]interface{}), envVars, "env")
+	if err != nil {
+		return fmt.Errorf("failed to set environment variables: %w", err)
+	}
+
+	err = unstructured.SetNestedSlice(jobObject.Object, containers, "spec", "template", "spec", "containers")
+	if err != nil {
+		return fmt.Errorf("failed to set containers: %w", err)
+	}
+
+	resource := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+
+	defer deleteObject(t, options, jobName, options.Namespace, resource)
+
+	_, err = createObject(t, options, jobObject, options.Namespace, resource)
+	if err != nil {
+		return fmt.Errorf("failed to create job: %w", err)
+	}
+
+	err = k8s.WaitUntilJobSucceedE(t, options, jobName, retries, sleepBetweenRetries)
+	if err != nil {
+		return fmt.Errorf("failed to wait for job to succeed: %w", err)
+	}
+
+	return nil
 }
