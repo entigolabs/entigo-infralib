@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -50,6 +51,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	}
 
 	releaseName := namespaceName
+	gatewayName := namespaceName
 
 	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
 
@@ -97,4 +99,12 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	if err != nil {
 		t.Fatal("grafana deployment error:", err)
 	}
+
+	targetURL := fmt.Sprintf("http://%s", setValues["argocd.global.domain"])
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
+	require.NoError(t, err, "argocd-server hostname not available error")
+
+	targetURL = fmt.Sprintf("https://%s", setValues["argocd.global.domain"])
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
+	require.NoError(t, err, "argocd-server hostname not available error")
 }
