@@ -101,11 +101,11 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 		t.Fatal("grafana deployment error:", err)
 	}
 
-	targetURL := fmt.Sprintf("%s.%s", releaseName, hostname)
-
+	targetURL := fmt.Sprintf("http//%s.%s", releaseName, hostname)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
 	require.NoError(t, err, "grafana hostname not available error")
 
+	targetURL = fmt.Sprintf("https://%s.%s/login", releaseName, hostname)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
 	require.NoError(t, err, "grafana hostname not available error")
 }
