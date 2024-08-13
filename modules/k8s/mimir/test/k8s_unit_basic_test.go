@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -51,6 +52,7 @@ func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	gatewayName := namespaceName
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 	setValues["global.bucketName"] = bucketName
 
@@ -68,6 +70,8 @@ func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string
 		setValues["mimir-distributed.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].path"] = "/"
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
+
+		gatewayName = "mimir-gateway"
 
 	case "google":
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
@@ -134,4 +138,17 @@ func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string
 	if err != nil {
 		t.Fatal("mimir-store-gateway-0 pod error:", err)
 	}
+
+	successResponseCode := "301"
+	if cloudName == "aws" {
+		successResponseCode = "200"
+	}
+	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "mimir hostname not available error")
+
+	successResponseCode = "200"
+	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "mimir hostname not available error")
 }
