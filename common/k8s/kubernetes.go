@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -361,9 +362,30 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	return AWS
 }
 
-func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, targetURL string, successCode string, retries int, sleepBetweenRetries time.Duration) error {
-	jobName := "health-check"
+func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
+	targetDomain := regexp.MustCompile(`^https?://`).ReplaceAllString(targetURL, "")
+	jobName := fmt.Sprintf("%s-health-check", namespaceName)
+
+	targetPort := "80"
+	if strings.HasPrefix(targetURL, "https://") {
+		targetPort = "443"
+	}
+
+	var targetIP string
+	var err error
+
+	for i := 0; i < retries; i++ {
+		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName)
+		if err != nil {
+			return err
+		}
+		if targetIP != "" {
+			break
+		}
+		logger.Log(t, "Waiting for target IP to be available")
+		time.Sleep(sleepBetweenRetries)
+	}
 
 	logger.Log(t, fmt.Sprintf("Creating K8s job %s", jobName))
 
@@ -378,6 +400,18 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 		map[string]interface{}{
 			"name":  "TARGET_URL",
 			"value": targetURL,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_DOMAIN",
+			"value": targetDomain,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_PORT",
+			"value": targetPort,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_IP",
+			"value": targetIP,
 		},
 		map[string]interface{}{
 			"name":  "SUCCESS_CODE",
@@ -415,4 +449,22 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	}
 
 	return nil
+}
+
+func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider string, ingressName string) (string, error) {
+	switch cloudProvider {
+	case "aws":
+		ingress, err := k8s.GetIngressE(t, options, ingressName)
+		if err != nil {
+			return "", err
+		}
+		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
+	case "google":
+		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", ingressName, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
+		if err != nil {
+			return "", err
+		}
+		return strings.Trim(gatewayIP, "'"), nil
+	}
+	return "", errors.New("error getting target IP")
 }

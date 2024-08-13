@@ -14,7 +14,7 @@ spec:
               max_retries=100
               sleep_time=6
               for i in $(seq 1 $max_retries); do
-                if curl -s -o /dev/null -w "%{http_code}" $TARGET_URL | grep -q $SUCCESS_CODE; then
+                if curl -s -o /dev/null -w "%{http_code}" curl --connect-to $TARGET_IP:$TARGET_PORT $TARGET_URL | grep $SUCCESS_CODE; then
                   echo "Success: Response code $SUCCESS_CODE";
                   exit 0;
                 else

@@ -53,9 +53,14 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
 	}
 
+	gatewayName := ""
+
 	switch cloudName {
+	case "aws":
+		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		gatewayName = namespaceName
 	}
 
 	releaseName := namespaceName
@@ -112,9 +117,11 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
 
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, fmt.Sprintf("http://%s", setValues["argocd.global.domain"]), "301", 100, 6*time.Second)
+	targetURL := fmt.Sprintf("http://%s", setValues["argocd.global.domain"])
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
 	require.NoError(t, err, "argocd-server hostname not available error")
 
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, fmt.Sprintf("https://%s", setValues["argocd.global.domain"]), "200", 100, 6*time.Second)
+	targetURL = fmt.Sprintf("https://%s", setValues["argocd.global.domain"])
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
 	require.NoError(t, err, "argocd-server hostname not available error")
 }
