@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -364,7 +363,6 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 
 func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
-	targetDomain := regexp.MustCompile(`^https?://`).ReplaceAllString(targetURL, "")
 	jobName := fmt.Sprintf("%s-health-check", namespaceName)
 
 	targetPort := "80"
