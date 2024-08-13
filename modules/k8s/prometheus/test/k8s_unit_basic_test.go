@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
@@ -47,11 +48,14 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
+	gatewayName := namespaceName
 	releaseName := namespaceName
 
 	switch cloudName {
 	case "aws":
 		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		gatewayName = fmt.Sprintf("%s-server", namespaceName)
+
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
@@ -96,4 +100,17 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-alertmanager-0 pod error:", releaseName), err)
 	}
+
+	successResponseCode := "301"
+	if cloudName == "aws" {
+		successResponseCode = "200"
+	}
+	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "prometheus hostname not available error")
+
+	successResponseCode = "200"
+	targetURL = fmt.Sprintf("https://%s.%s/graph", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "prometheus hostname not available error")
 }
