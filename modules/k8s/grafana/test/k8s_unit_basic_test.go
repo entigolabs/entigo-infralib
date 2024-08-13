@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -31,7 +32,7 @@ func TestK8sGrafanaGKEPri(t *testing.T) {
 	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName string) {
+func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -50,8 +51,9 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	}
 
 	releaseName := namespaceName
+	gatewayName := namespaceName
 
-	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostname)
 
 	switch cloudName {
 	case "aws":
@@ -62,10 +64,11 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 		setValues["awsRegion"] = region
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
-		setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostname)
+		gatewayName = "grafana"
 	case "google":
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.certificateMap"] = strings.ReplaceAll(hostname, ".", "-")
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -97,4 +100,12 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostName, cloudName stri
 	if err != nil {
 		t.Fatal("grafana deployment error:", err)
 	}
+
+	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostname)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
+	require.NoError(t, err, "grafana hostname not available error")
+
+	targetURL = fmt.Sprintf("https://%s.%s/login", releaseName, hostname)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
+	require.NoError(t, err, "grafana hostname not available error")
 }
