@@ -65,6 +65,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
 		setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostname)
+		gatewayName = "grafana"
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostname, ".", "-")
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
@@ -103,8 +104,8 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 	targetURL := fmt.Sprintf("%s.%s", releaseName, hostname)
 
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
-	require.NoError(t, err, "argocd-server hostname not available error")
+	require.NoError(t, err, "grafana hostname not available error")
 
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
-	require.NoError(t, err, "argocd-server hostname not available error")
+	require.NoError(t, err, "grafana hostname not available error")
 }

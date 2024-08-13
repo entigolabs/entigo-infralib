@@ -117,9 +117,9 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 
 	targetURL := fmt.Sprintf("http://%s", setValues["argocd.global.domain"])
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "301", cloudName)
-	require.NoError(t, err, "argocd-server hostname not available error")
+	require.NoError(t, err, "argocd hostname not available error")
 
 	targetURL = fmt.Sprintf("https://%s", setValues["argocd.global.domain"])
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, "200", cloudName)
-	require.NoError(t, err, "argocd-server hostname not available error")
+	require.NoError(t, err, "argocd hostname not available error")
 }
