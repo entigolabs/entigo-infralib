@@ -451,16 +451,16 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	return nil
 }
 
-func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider string, ingressName string) (string, error) {
+func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider string, gatewayName string) (string, error) {
 	switch cloudProvider {
 	case "aws":
-		ingress, err := k8s.GetIngressE(t, options, ingressName)
+		ingress, err := k8s.GetIngressE(t, options, gatewayName)
 		if err != nil {
 			return "", err
 		}
 		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
 	case "google":
-		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", ingressName, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
+		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
 		if err != nil {
 			return "", err
 		}
