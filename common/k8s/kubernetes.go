@@ -402,10 +402,6 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 			"value": targetURL,
 		},
 		map[string]interface{}{
-			"name":  "TARGET_DOMAIN",
-			"value": targetDomain,
-		},
-		map[string]interface{}{
 			"name":  "TARGET_PORT",
 			"value": targetPort,
 		},

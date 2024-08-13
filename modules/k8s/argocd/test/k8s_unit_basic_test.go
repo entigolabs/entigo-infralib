@@ -53,17 +53,15 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
 	}
 
-	gatewayName := ""
+	gatewayName := namespaceName
+	releaseName := namespaceName
 
 	switch cloudName {
 	case "aws":
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 	case "google":
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
-		gatewayName = namespaceName
 	}
-
-	releaseName := namespaceName
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
