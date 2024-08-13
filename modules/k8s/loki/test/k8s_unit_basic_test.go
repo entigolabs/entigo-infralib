@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -51,6 +52,7 @@ func testK8sLoki(t *testing.T, contextName, envName, hostName, cloudName string)
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	gatewayName := namespaceName
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 
 	switch cloudName {
@@ -74,6 +76,8 @@ func testK8sLoki(t *testing.T, contextName, envName, hostName, cloudName string)
 		setValues["loki.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["loki.gateway.ingress.hosts[0].paths[0].path"] = "/"
 		setValues["loki.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
+
+		gatewayName = "loki-gateway"
 
 	case "google":
 		setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
@@ -127,4 +131,17 @@ func testK8sLoki(t *testing.T, contextName, envName, hostName, cloudName string)
 	if err != nil {
 		t.Fatal("loki-read-0 pod error:", err)
 	}
+
+	successResponseCode := "301"
+	if cloudName == "aws" {
+		successResponseCode = "200"
+	}
+	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "loki hostname not available error")
+
+	successResponseCode = "200"
+	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "loki hostname not available error")
 }
