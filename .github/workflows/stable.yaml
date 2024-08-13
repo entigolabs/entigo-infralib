@@ -249,6 +249,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/grafana/test.sh &
         PIDS="$PIDS $!"
+        modules/k8s/prometheus/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/crossplane-k8s/test.sh &
         PIDS="$PIDS $!"
         
