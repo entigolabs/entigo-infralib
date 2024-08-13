@@ -1,9 +1,6 @@
- 
 argocd:
-  global:
-    domain: argocd.runner-main-pri.infralib.entigo.io
   server:
     ingress:
-      annotations: 
+      annotations:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing

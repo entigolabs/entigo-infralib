@@ -269,7 +269,13 @@ func deleteObject(t testing.TestingT, options *k8s.KubectlOptions, name string, 
 	if err != nil {
 		return err
 	}
-	return dynamicClient.Resource(resource).Namespace(namespace).Delete(context.Background(), name, metaV1.DeleteOptions{})
+
+	propagationPolicy := metaV1.DeletePropagationBackground
+	deleteOptions := metaV1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	}
+
+	return dynamicClient.Resource(resource).Namespace(namespace).Delete(context.Background(), name, deleteOptions)
 }
 
 func ReadObjectFromFile(t testing.TestingT, templateFile string) (*unstructured.Unstructured, error) {
@@ -353,4 +359,106 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 		return GCloud
 	}
 	return AWS
+}
+
+func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, namespaceName, targetURL, successCode, cloudProvider string) error {
+	templateFile := "./../../common/k8s/templates/job.yaml"
+	jobName := fmt.Sprintf("%s-health-check", namespaceName)
+
+	targetPort := "80"
+	if strings.HasPrefix(targetURL, "https://") {
+		targetPort = "443"
+	}
+
+	var targetIP string
+	var err error
+
+	for i := 0; i < retries; i++ {
+		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName)
+		if err != nil {
+			return err
+		}
+		if targetIP != "" {
+			break
+		}
+		logger.Log(t, "Waiting for target IP to be available")
+		time.Sleep(sleepBetweenRetries)
+	}
+
+	logger.Log(t, fmt.Sprintf("Creating K8s job %s", jobName))
+
+	jobObject, err := ReadObjectFromFile(t, templateFile)
+	if err != nil {
+		return err
+	}
+
+	jobObject.SetName(jobName)
+
+	envVars := []interface{}{
+		map[string]interface{}{
+			"name":  "TARGET_URL",
+			"value": targetURL,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_PORT",
+			"value": targetPort,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_IP",
+			"value": targetIP,
+		},
+		map[string]interface{}{
+			"name":  "SUCCESS_CODE",
+			"value": successCode,
+		},
+	}
+
+	containers, _, err := unstructured.NestedSlice(jobObject.Object, "spec", "template", "spec", "containers")
+	if err != nil {
+		return fmt.Errorf("failed to get containers from job spec: %w", err)
+	}
+
+	err = unstructured.SetNestedSlice(containers[0].(map[string]interface{}), envVars, "env")
+	if err != nil {
+		return fmt.Errorf("failed to set environment variables: %w", err)
+	}
+
+	err = unstructured.SetNestedSlice(jobObject.Object, containers, "spec", "template", "spec", "containers")
+	if err != nil {
+		return fmt.Errorf("failed to set containers: %w", err)
+	}
+
+	resource := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+
+	defer deleteObject(t, options, jobName, options.Namespace, resource)
+
+	_, err = createObject(t, options, jobObject, options.Namespace, resource)
+	if err != nil {
+		return fmt.Errorf("failed to create job: %w", err)
+	}
+
+	err = k8s.WaitUntilJobSucceedE(t, options, jobName, retries, sleepBetweenRetries)
+	if err != nil {
+		return fmt.Errorf("failed to wait for job to succeed: %w", err)
+	}
+
+	return nil
+}
+
+func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider string, gatewayName string) (string, error) {
+	switch cloudProvider {
+	case "aws":
+		ingress, err := k8s.GetIngressE(t, options, gatewayName)
+		if err != nil {
+			return "", err
+		}
+		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
+	case "google":
+		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
+		if err != nil {
+			return "", err
+		}
+		return strings.Trim(gatewayIP, "'"), nil
+	}
+	return "", errors.New("error getting target IP")
 }
