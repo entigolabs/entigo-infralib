@@ -103,7 +103,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, hostName, cloudName s
 
 	successResponseCode := "301"
 	if cloudName == "aws" {
-		successResponseCode = "200"
+		successResponseCode = "302"
 	}
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
