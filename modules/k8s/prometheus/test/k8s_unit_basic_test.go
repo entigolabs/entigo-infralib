@@ -102,7 +102,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	}
 
 	successResponseCode := "301"
-	if cloudName == "aws" {
+	if cloudName == "aws" && envName == "biz" {
 		successResponseCode = "302"
 	}
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
