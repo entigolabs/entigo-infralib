@@ -20,7 +20,7 @@ done
 
 PIDS=""
 for line in $(gcloud -q deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri); do
-  gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 -q $line &
+  gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 --force -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
