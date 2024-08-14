@@ -9,28 +9,29 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 )
 
 func TestK8sKialiAWSBiz(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sKialiAWSPri(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sKialiGKEBiz(t *testing.T) {
-	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sKialiGKEPri(t *testing.T) {
-	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string) {
+func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -48,13 +49,12 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
+	gatewayName := namespaceName
 	releaseName := namespaceName
 	setValues["kiali-server.fullnameOverride"] = namespaceName
+	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
-	case "aws":
-		setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-
 	case "google":
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
@@ -63,7 +63,7 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -89,4 +89,17 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 	if err != nil {
 		t.Fatal("kiali deployment error:", err)
 	}
+
+	successResponseCode := "301"
+	if cloudName == "aws" && envName == "biz" {
+		successResponseCode = "200"
+	}
+	targetURL := fmt.Sprintf("http://%s.%s/kiali", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "kiali hostname not available error")
+
+	successResponseCode = "200"
+	targetURL = fmt.Sprintf("https://%s.%s/kiali", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "kiali hostname not available error")
 }

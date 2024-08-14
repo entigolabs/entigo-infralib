@@ -17,22 +17,22 @@ import (
 )
 
 func TestK8sMimirAWSBiz(t *testing.T) {
-	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sMimirAWSPri(t *testing.T) {
-	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sMimirGKEBiz(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sMimirGKEPri(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string) {
+func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -84,7 +84,7 @@ func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -140,7 +140,7 @@ func testK8sMimir(t *testing.T, contextName, envName, hostName, cloudName string
 	}
 
 	successResponseCode := "301"
-	if cloudName == "aws" {
+	if cloudName == "aws" && envName == "biz" {
 		successResponseCode = "200"
 	}
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
