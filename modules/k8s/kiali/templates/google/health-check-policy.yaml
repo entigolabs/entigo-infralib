@@ -16,7 +16,7 @@ spec:
     config:
       type: HTTP
       httpHealthCheck:
-        requestPath: /
+        requestPath: /kiali
   targetRef:
     group: ""
     kind: Service
