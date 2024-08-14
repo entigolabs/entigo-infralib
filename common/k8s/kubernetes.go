@@ -387,6 +387,9 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 		logger.Log(t, "Waiting for target IP to be available")
 		time.Sleep(sleepBetweenRetries)
 	}
+	if targetIP == "" {
+		return fmt.Errorf("target IP not available")
+	}
 
 	logger.Log(t, fmt.Sprintf("Creating K8s job %s", jobName))
 
