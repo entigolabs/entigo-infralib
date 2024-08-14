@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
@@ -48,6 +49,7 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
+	gatewayName := namespaceName
 	releaseName := namespaceName
 	setValues["kiali-server.fullnameOverride"] = namespaceName
 
@@ -89,4 +91,17 @@ func testK8sKiali(t *testing.T, contextName, envName, hostName, cloudName string
 	if err != nil {
 		t.Fatal("kiali deployment error:", err)
 	}
+
+	successResponseCode := "301"
+	if cloudName == "aws" {
+		successResponseCode = "200"
+	}
+	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "kiali hostname not available error")
+
+	successResponseCode = "200"
+	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, "kiali hostname not available error")
 }
