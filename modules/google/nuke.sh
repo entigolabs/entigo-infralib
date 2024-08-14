@@ -15,7 +15,7 @@ gcloud -q config set project "entigo-infralib2" || exit 1
 gcloud -q config set compute/region "europe-north1" || exit 1
 
 gsutil ls | while read line; do
-  gsutil rm -r $line
+  gsutil -m rm -r $line
 done
 
 gcloud deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri | while read line; do
