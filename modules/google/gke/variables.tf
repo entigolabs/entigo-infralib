@@ -35,7 +35,7 @@ variable "enable_private_endpoint" {
   default = false
 }
 
-variable "kubernetes_version_prefix" {
+variable "kubernetes_version" {
   type = string
   default = "1.29.6-"
 }
