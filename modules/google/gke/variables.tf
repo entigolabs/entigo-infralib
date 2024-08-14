@@ -35,9 +35,9 @@ variable "enable_private_endpoint" {
   default = false
 }
 
-variable "kubernetes_version" {
+variable "kubernetes_version_prefix" {
   type = string
-  default = "1.29.5-gke.1091002"
+  default = "1.29.6-"
 }
 
 variable "master_authorized_networks" {
