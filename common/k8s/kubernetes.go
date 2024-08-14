@@ -365,6 +365,9 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	templateFile := "./../../common/k8s/templates/job.yaml"
 	jobName := fmt.Sprintf("%s-health-check", namespaceName)
 
+	targetDomain := strings.Split(targetURL, "://")[1]
+	targetDomain = strings.Split(targetDomain, "/")[0]
+
 	targetPort := "80"
 	if strings.HasPrefix(targetURL, "https://") {
 		targetPort = "443"
@@ -398,6 +401,10 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 		map[string]interface{}{
 			"name":  "TARGET_URL",
 			"value": targetURL,
+		},
+		map[string]interface{}{
+			"name":  "TARGET_DOMAIN",
+			"value": targetDomain,
 		},
 		map[string]interface{}{
 			"name":  "TARGET_PORT",
