@@ -15,20 +15,53 @@ gcloud -q config set project "entigo-infralib2" || exit 1
 gcloud -q config set compute/region "europe-north1" || exit 1
 
 gsutil ls | while read line; do
-  gsutil rm -r $line
+  gsutil -m rm -r $line
 done
 
-gcloud deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri | while read line; do
-  gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 --force -q $line
+PIDS=""
+for line in $(gcloud -q deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri); do
+  gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 --force -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete delivery pipelines. $FAIL"
+  exit 1
+fi
 
-gcloud deploy targets list --project entigo-infralib2 --region europe-north1 --uri | while read line; do
-  gcloud deploy targets delete --project entigo-infralib2 --region europe-north1 --force -q $line
+PIDS=""
+for line in $(gcloud -q deploy targets list --project entigo-infralib2 --region europe-north1 --uri); do
+  gcloud deploy targets delete --project entigo-infralib2 --region europe-north1 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete deploy targets. $FAIL"
+  exit 1
+fi
 
-gcloud -q "compute" "firewall-rules" list --uri | while read line; do
-  gcloud 'compute' 'firewall-rules' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "firewall-rules" list --uri); do
+  gcloud 'compute' "firewall-rules" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete firewall-rules. $FAIL"
+  exit 1
+fi
 
 delete_cluster() {
   local cluster_uri=$1
@@ -67,37 +100,125 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-gcloud run jobs list --uri | while read line; do
-  gcloud 'run' 'jobs' delete --project entigo-infralib2 --region europe-north1 -q $line
+PIDS=""
+for line in $(gcloud -q run jobs list --uri); do
+  gcloud run jobs delete --project entigo-infralib2 --region europe-north1 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete run jobs. $FAIL"
+  exit 1
+fi
 
-gcloud compute forwarding-rules list --uri | while read line; do
-  gcloud 'compute' 'forwarding-rules' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "forwarding-rules" list --uri); do
+  gcloud "compute" "forwarding-rules" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete forwarding-rules. $FAIL"
+  exit 1
+fi
 
-gcloud compute target-http-proxies list --uri | while read line; do
-  gcloud 'compute' 'target-http-proxies' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "target-http-proxies" list --uri); do
+  gcloud "compute" "target-http-proxies" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete target-http-proxies. $FAIL"
+  exit 1
+fi
 
-gcloud compute target-https-proxies list --uri | while read line; do
-  gcloud 'compute' 'target-https-proxies' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "target-https-proxies" list --uri); do
+  gcloud "compute" "target-https-proxies" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete target-https-proxies. $FAIL"
+  exit 1
+fi
 
-gcloud compute url-maps list --uri | while read line; do
-  gcloud 'compute' 'url-maps' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "url-maps" list --uri); do
+  gcloud "compute" "url-maps" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete url-maps. $FAIL"
+  exit 1
+fi
 
-gcloud compute backend-services list --uri | while read line; do
-  gcloud 'compute' 'backend-services' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "backend-services" list --uri); do
+  gcloud "compute" "backend-services" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete backend-services. $FAIL"
+  exit 1
+fi
 
-gcloud compute network-endpoint-groups list --uri | while read line; do
-  gcloud 'compute' 'network-endpoint-groups' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "network-endpoint-groups" list --uri); do
+  gcloud "compute" "network-endpoint-groups" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete network-endpoint-groups. $FAIL"
+  exit 1
+fi
 
-gcloud compute routers list --uri | while read line; do
-  gcloud 'compute' 'routers' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "routers" list --uri); do
+  gcloud "compute" "routers" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete routers. $FAIL"
+  exit 1
+fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "networks" "subnets" list --uri); do
@@ -114,16 +235,26 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-gcloud -q "compute" "routes" list --uri | while read line; do
-  gcloud 'compute' 'routes' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "routes" list --uri); do
+  gcloud "compute" "routes" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete routes. $FAIL"
+  exit 1
+fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "networks" list --uri); do
   gcloud 'compute' 'networks' delete --project entigo-infralib2 -q $line &
   PIDS="$PIDS $!"
 done
-
 FAIL=0
 for p in $PIDS; do
   wait $p || let "FAIL+=1"
@@ -134,9 +265,20 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-gcloud "secrets" list --uri | while read line; do
-  gcloud 'secrets' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q secrets list --uri); do
+  gcloud secrets delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete secrets. $FAIL"
+  exit 1
+fi
 
 gcloud -q certificate-manager maps list --uri | while read -r MAP; do
   gcloud -q certificate-manager maps entries list --uri --map=$MAP | while read -r ENTRY; do
@@ -164,13 +306,35 @@ gcloud -q certificate-manager maps list --uri | while read -r MAP; do
   fi
 done
 
-gcloud -q "certificate-manager" "certificates" list --uri | while read line; do
-  gcloud 'certificate-manager' 'certificates' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "certificate-manager" "certificates" list --uri); do
+  gcloud "certificate-manager" "certificates" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete certificates. $FAIL"
+  exit 1
+fi
 
-gcloud -q "certificate-manager" "dns-authorizations" list --uri | while read line; do
-  gcloud 'certificate-manager' 'dns-authorizations' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --uri); do
+  gcloud "certificate-manager" "dns-authorizations" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete dns-authorizations. $FAIL"
+  exit 1
+fi
 
 gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io" | while read -r ZONE_NAME; do
   gcloud dns record-sets list --zone=$ZONE_NAME --format="get(name,type)" | while read -r RECORD_NAME TYPE; do
@@ -186,21 +350,65 @@ gcloud dns record-sets list --zone=gcp-infralib-entigo-io --format="get(name)" |
   gcloud dns record-sets delete --type=NS --zone=gcp-infralib-entigo-io --project entigo-infralib2 -q $RECORD_NAME
 done
 
-gcloud compute ssl-certificates list --uri | while read line; do
-  gcloud 'compute' 'ssl-certificates' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "ssl-certificates" list --uri); do
+  gcloud 'compute' "ssl-certificates" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete ssl-certificates. $FAIL"
+  exit 1
+fi
 
-gcloud compute health-checks list --uri | while read line; do
-  gcloud 'compute' 'health-checks' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "health-checks" list --uri); do
+  gcloud 'compute' "health-checks" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete health-checks. $FAIL"
+  exit 1
+fi
 
-gcloud compute disks list --uri | while read line; do
-  gcloud 'compute' 'disks' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "disks" list --uri); do
+  gcloud 'compute' "disks" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete disks. $FAIL"
+  exit 1
+fi
 
-gcloud compute addresses list --uri | while read line; do
-  gcloud 'compute' 'addresses' delete --project entigo-infralib2 -q $line
+PIDS=""
+for line in $(gcloud -q "compute" "addresses" list --uri); do
+  gcloud 'compute' "addresses" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
 done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete addresses. $FAIL"
+  exit 1
+fi
 
 gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
   gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
