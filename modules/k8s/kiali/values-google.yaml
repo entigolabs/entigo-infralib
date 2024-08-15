@@ -1,8 +1,10 @@
 cloudProvider: "google"
 
 google:
-  certificateMap: ""
   hostname: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 kiali-server:
   deployment:

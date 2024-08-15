@@ -1,7 +1,9 @@
 cloudProvider: google
 
 google:
-  certificateMap: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 argocd:
   configs:

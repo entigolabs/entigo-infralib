@@ -16,7 +16,7 @@ gcloud -q config set compute/region "europe-north1" || exit 1
 
 PIDS=""
 for line in $(gsutil ls); do
-  gcloud storage buckets delete -q $line &
+  gsutil -m rm -r $line &
   PIDS="$PIDS $!"
 done
 FAIL=0

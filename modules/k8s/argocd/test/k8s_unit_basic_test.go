@@ -16,22 +16,22 @@ import (
 )
 
 func TestK8sArgocdAWSBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sArgocdAWSPri(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sArgocdGKEBiz(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_gke_biz.yaml", "biz", "runner-main-biz.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sArgocdGKEPri(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_gke_pri.yaml", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName string) {
+func testK8sArgocd(t *testing.T, contextName, valuesFile, envName, hostName, cloudName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -53,14 +53,23 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 		setValues["argocd.global.domain"] = fmt.Sprintf("%s.%s", namespaceName, hostName)
 	}
 
-	gatewayName := namespaceName
 	releaseName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
 
 	switch cloudName {
 	case "aws":
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 	case "google":
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		gatewayNamespace = "gcp-gateway"
+		setValues["google.gateway.namespace"] = gatewayNamespace
+		switch envName {
+		case "biz":
+			gatewayName = "gcp-gateway-internal"
+		case "pri":
+			gatewayName = "gcp-gateway-external"
+		}
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -117,11 +126,11 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, hostName, cloudName st
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s", setValues["argocd.global.domain"])
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s", setValues["argocd.global.domain"])
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 }

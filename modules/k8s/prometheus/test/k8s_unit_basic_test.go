@@ -48,8 +48,10 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
-	gatewayName := namespaceName
+
 	releaseName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
 
 	switch cloudName {
 	case "aws":
@@ -57,8 +59,18 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 
 	case "google":
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		gatewayNamespace = "gcp-gateway"
+
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.gateway.namespace"] = gatewayNamespace
+
+		switch envName {
+		case "biz":
+			gatewayName = "gcp-gateway-internal"
+		case "pri":
+			gatewayName = "gcp-gateway-external"
+		}
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -103,11 +115,11 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, namespaceName, gatewayNamespace, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/graph", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 }

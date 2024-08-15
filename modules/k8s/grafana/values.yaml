@@ -1,8 +1,10 @@
 cloudProvider: ""
 
 google:
-  certificateMap: ""
   hostname: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 grafana:
   enabled: true

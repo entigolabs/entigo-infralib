@@ -52,7 +52,8 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	gatewayName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 
 	switch cloudName {
@@ -80,6 +81,8 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		gatewayName = "loki-gateway"
 
 	case "google":
+		gatewayNamespace = "gcp-gateway"
+
 		setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
 		setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
 		setValues["loki.loki.storage.bucketNames.admin"] = bucketName
@@ -89,7 +92,15 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.projectID"] = googleProjectID
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["google.gateway.namespace"] = gatewayNamespace
+
+		switch envName {
+		case "biz":
+			gatewayName = "gcp-gateway-internal"
+		case "pri":
+			gatewayName = "gcp-gateway-external"
+		}
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	// setValues["promtail.config.clients[0].url"] = fmt.Sprintf("https://%s.runner-main-%s-int.infralib.entigo.io/loki/api/v1/push", releaseName, envName)
@@ -134,11 +145,11 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "loki ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "loki ingress/gateway test error")
 }
