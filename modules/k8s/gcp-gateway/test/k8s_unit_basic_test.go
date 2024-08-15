@@ -86,12 +86,12 @@ func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
-	require.NoError(t, err, "gcp-gateway is not available error")
+	_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
+	require.NoError(t, err, "gcp-gateway not available error")
 
 	switch envName {
 	case "biz":
-		_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", releaseName), 50, 6*time.Second)
-		require.NoError(t, err, "gcp-gateway is not available error")
+		_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", releaseName), 50, 6*time.Second)
+		require.NoError(t, err, "gcp-gateway not available error")
 	}
 }

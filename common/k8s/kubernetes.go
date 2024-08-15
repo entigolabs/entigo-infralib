@@ -130,6 +130,15 @@ func DeleteK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	return deleteObject(t, options, name, "", resource)
 }
 
+func WaitUntilK8SGatewayAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1beta1", Resource: "gateways"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.namespacedObject.namespace = options.Namespace
+	availability.isAvailable = isGatewayAvailable
+	availability.objectError = NewGatewayNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
 func WaitUntilK8SIngressAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
 	availability := defaultObjectAvailability(name, resource)
@@ -309,6 +318,16 @@ func isCrossplaneObjectAvailable(object *unstructured.Unstructured) bool {
 	return status["Ready"] == "True" && status["Synced"] == "True"
 }
 
+func isGatewayAvailable(gateway *unstructured.Unstructured) bool {
+	gateways, found, err := unstructured.NestedSlice(gateway.Object, "status", "addresses")
+	if !found || err != nil || len(gateways) == 0 {
+		return false
+	}
+	gatewayMap := gateways[0].(map[string]interface{})
+	gatewayIPAddress := gatewayMap["value"]
+	return gatewayIPAddress != ""
+}
+
 func isIngressAvailable(ingress *unstructured.Unstructured) bool {
 	ingresses, found, err := unstructured.NestedSlice(ingress.Object, "status", "loadBalancer", "ingress")
 	if !found || err != nil || len(ingresses) == 0 {
@@ -471,9 +490,4 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider 
 		return strings.Trim(gatewayIP, "'"), nil
 	}
 	return "", errors.New("error getting target IP")
-}
-
-func WaitUntilGatewayAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
-	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1beta1", Resource: "gateways"}
-	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }

@@ -46,6 +46,14 @@ func (err IngressNotAvailable) Error() string {
 	return fmt.Sprintf("Ingress %s hostname has not been set", err.ingress.GetName())
 }
 
+type GatewayNotAvailable struct {
+	gateway *unstructured.Unstructured
+}
+
+func (err GatewayNotAvailable) Error() string {
+	return fmt.Sprintf("Gateway %s IP address has not been set", err.gateway.GetName())
+}
+
 type NewObjectError func(object *unstructured.Unstructured) error
 
 func DefaultObjectError(object *unstructured.Unstructured) error {
@@ -62,4 +70,8 @@ func NewCrossplaneObjectNotAvailable(object *unstructured.Unstructured) error {
 
 func NewIngressNotAvailable(ingress *unstructured.Unstructured) error {
 	return IngressNotAvailable{ingress}
+}
+
+func NewGatewayNotAvailable(gateway *unstructured.Unstructured) error {
+	return GatewayNotAvailable{gateway}
 }
