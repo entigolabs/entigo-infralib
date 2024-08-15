@@ -65,7 +65,7 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, envName, hostName, clo
 		setValues["google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
-			gatewayName = "gcp-gateway-internal"
+			gatewayName = "gcp-gateway-external"
 		case "pri":
 			gatewayName = "gcp-gateway-external"
 		}

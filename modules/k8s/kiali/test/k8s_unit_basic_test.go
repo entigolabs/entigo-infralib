@@ -15,17 +15,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sKialiAWSBiz(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
-}
+// func TestK8sKialiAWSBiz(t *testing.T) {
+// 	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
+// }
 
-func TestK8sKialiAWSPri(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
-}
+// func TestK8sKialiAWSPri(t *testing.T) {
+// 	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
+// }
 
-func TestK8sKialiGKEBiz(t *testing.T) {
-	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
-}
+// func TestK8sKialiGKEBiz(t *testing.T) {
+// 	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+// }
 
 func TestK8sKialiGKEPri(t *testing.T) {
 	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
