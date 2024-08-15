@@ -1,0 +1,6 @@
+gcp:
+  externalCertificateMap: ""
+  internalCertificateMap: ""
+
+createExternal: false
+createInternal: false

@@ -472,3 +472,8 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider 
 	}
 	return "", errors.New("error getting target IP")
 }
+
+func WaitUntilGatewayAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1beta1", Resource: "gateways"}
+	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
+}
