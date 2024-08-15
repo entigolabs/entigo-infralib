@@ -115,7 +115,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, namespaceName, gatewayNamespace, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 
 	successResponseCode = "200"
