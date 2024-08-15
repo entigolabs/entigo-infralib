@@ -20,9 +20,9 @@ func TestK8sGCPGatewayBiz(t *testing.T) {
 	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
 }
 
-// func TestK8sGCPGatewayPri(t *testing.T) {
-// 	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
-// }
+func TestK8sGCPGatewayPri(t *testing.T) {
+	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
+}
 
 func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 	t.Parallel()
@@ -85,15 +85,12 @@ func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 		}
 	}
 
+	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
+	_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
+	require.NoError(t, err, "gcp-gateway is not available error")
+
 	switch envName {
-	case "pri":
-		helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-		_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
-		require.NoError(t, err, "gcp-gateway is not available error")
 	case "biz":
-		helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-		_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
-		require.NoError(t, err, "gcp-gateway is not available error")
 		_, err = k8s.WaitUntilGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", releaseName), 50, 6*time.Second)
 		require.NoError(t, err, "gcp-gateway is not available error")
 	}
