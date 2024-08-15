@@ -1,8 +1,10 @@
 cloudProvider: ""
 
 google:
-  certificateMap: ""
   hostname: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 #All except test should use 0.0.0.0/0
 ingressInboundAllow: "0.0.0.0/0"

@@ -49,6 +49,8 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
 
 	switch cloudName {
 	case "aws":
@@ -57,8 +59,11 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 		setValues["certificateArn"] = certificateArn
 
 	case "google":
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		gatewayNamespace = "gcp-gateway"
+		gatewayName = "gcp-gateway-external"
 		setValues["google.hostname"] = hostName
+		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)

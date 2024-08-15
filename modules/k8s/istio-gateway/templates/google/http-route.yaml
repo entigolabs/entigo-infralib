@@ -7,27 +7,13 @@ metadata:
 spec:
   parentRefs:
     - kind: Gateway
-      name: {{ .Values.gateway.name }}
+      name: {{ .Values.google.gateway.name }}
       sectionName: https
+      namespace: {{ .Values.google.gateway.namespace }}
   hostnames: [ "*.{{ .Values.google.hostname }}", {{ .Values.google.hostname }} ]
   rules:
     - backendRefs:
         - name: {{ .Values.gateway.name }}
           port: 80
----
-kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
-metadata:
-  name: {{ .Values.gateway.name }}-redirect
-spec:
-  parentRefs:
-  - kind: Gateway
-    name: {{ .Values.gateway.name }}
-    sectionName: http
-  rules:
-  - filters:
-    - type: RequestRedirect
-      requestRedirect:
-        scheme: https
 
 {{- end }}
