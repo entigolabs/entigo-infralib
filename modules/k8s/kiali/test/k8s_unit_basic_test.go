@@ -57,6 +57,8 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
+	case "aws":
+		gatewayName = namespaceName
 	case "google":
 		gatewayNamespace = "gcp-gateway"
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
