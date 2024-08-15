@@ -380,7 +380,7 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	return AWS
 }
 
-func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, namespaceName, targetURL, successCode, cloudProvider string) error {
+func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 	jobName := fmt.Sprintf("%s-health-check", namespaceName)
 
@@ -396,7 +396,7 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	var err error
 
 	for i := 0; i < retries; i++ {
-		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName)
+		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName, gatewayNamespace)
 		if err != nil {
 			return err
 		}
@@ -474,7 +474,7 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	return nil
 }
 
-func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider string, gatewayName string) (string, error) {
+func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider, gatewayName, gatewayNamespace string) (string, error) {
 	switch cloudProvider {
 	case "aws":
 		ingress, err := k8s.GetIngressE(t, options, gatewayName)
@@ -483,7 +483,7 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider 
 		}
 		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
 	case "google":
-		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
+		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
 		if err != nil {
 			return "", err
 		}

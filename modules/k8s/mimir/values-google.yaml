@@ -2,8 +2,10 @@ cloudProvider: google
 
 google:
   projectID: ""
-  certificateMap: ""
   hostname: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 global:
   providerConfigRefName: crossplane-google

@@ -52,7 +52,8 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	gatewayName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 	setValues["global.bucketName"] = bucketName
 
@@ -74,11 +75,20 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		gatewayName = "mimir-gateway"
 
 	case "google":
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.projectID"] = googleProjectID
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		gatewayNamespace = "gcp-gateway"
 
 		setValues["global.namespaceName"] = namespaceName
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["google.projectID"] = googleProjectID
+		setValues["google.gateway.namespace"] = gatewayNamespace
+
+		switch envName {
+		case "biz":
+			gatewayName = "gcp-gateway-internal"
+		case "pri":
+			gatewayName = "gcp-gateway-external"
+		}
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -141,11 +151,11 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 }

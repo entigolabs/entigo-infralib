@@ -1,6 +1,8 @@
 cloudProvider: ""
 google:
-  certificateMap: ""
+  gateway:
+    name: gcp-gateway-external
+    namespace: gcp-gateway
 
 argocd:
   crds:
@@ -61,7 +63,7 @@ argocd:
       controller: aws
       ingressClassName: "alb"
       annotations:
-        alb.ingress.kubernetes.io/ssl-redirect: '443'
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
         alb.ingress.kubernetes.io/backend-protocol: HTTPS
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
         alb.ingress.kubernetes.io/group.name: internal

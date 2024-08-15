@@ -49,15 +49,25 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
-	gatewayName := namespaceName
 	releaseName := namespaceName
+	gatewayName := ""
+	gatewayNamespace := ""
+
 	setValues["kiali-server.fullnameOverride"] = namespaceName
 	setValues["kiali-server.server.web_fqdn"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	switch cloudName {
 	case "google":
+		gatewayNamespace = "gcp-gateway"
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["google.gateway.namespace"] = gatewayNamespace
+		switch envName {
+		case "biz":
+			gatewayName = "gcp-gateway-internal"
+		case "pri":
+			gatewayName = "gcp-gateway-external"
+		}
+		setValues["google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -92,11 +102,11 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s/kiali", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "kiali ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/kiali", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "kiali ingress/gateway test error")
 }
