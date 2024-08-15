@@ -140,9 +140,6 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	}
 
 	successResponseCode := "301"
-	if cloudName == "aws" && envName == "biz" {
-		successResponseCode = "200"
-	}
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "mimir hostname not available error")
