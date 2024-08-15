@@ -398,7 +398,7 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	for i := 0; i < retries; i++ {
 		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName, gatewayNamespace)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get target IP: %v", err)
 		}
 		if targetIP != "" {
 			break
