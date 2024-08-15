@@ -1,0 +1,41 @@
+{{- if .Values.createExternal }} 
+
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .Release.Name }}-external-redirect
+  namespace: {{ .Release.Name }}
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: {{ .Release.Name }}-external
+    sectionName: http
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+
+{{- end }}
+---
+{{- if .Values.createInternal }} 
+
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .Release.Name }}-internal-redirect
+  namespace: {{ .Release.Name }}
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: {{ .Release.Name }}-internal
+    sectionName: http
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+
+{{- end }}
