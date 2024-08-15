@@ -135,10 +135,10 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "loki hostname not available error")
+	require.NoError(t, err, "loki ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "loki hostname not available error")
+	require.NoError(t, err, "loki ingress/gateway test error")
 }

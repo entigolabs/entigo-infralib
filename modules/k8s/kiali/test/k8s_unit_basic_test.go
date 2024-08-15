@@ -93,10 +93,10 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s/kiali", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "kiali hostname not available error")
+	require.NoError(t, err, "kiali ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/kiali", releaseName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "kiali hostname not available error")
+	require.NoError(t, err, "kiali ingress/gateway test error")
 }
