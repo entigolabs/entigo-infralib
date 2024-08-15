@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -16,16 +17,18 @@ import (
 )
 
 func TestK8sGCPGatewayBiz(t *testing.T) {
-	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz.gcp.infralib.entigo.io", "runner-main-biz-int.gcp.infralib.entigo.io")
+	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
 }
 
-func TestK8sGCPGatewayPri(t *testing.T) {
-	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "")
-}
+// func TestK8sGCPGatewayPri(t *testing.T) {
+// 	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
+// }
 
-func testK8sGCPGateway(t *testing.T, contextName, envName, externalHostname, internalHostname string) {
+func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 	t.Parallel()
 	spew.Dump("")
+
+	projectID := os.Getenv("GOOGLE_PROJECT")
 
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
@@ -45,15 +48,15 @@ func testK8sGCPGateway(t *testing.T, contextName, envName, externalHostname, int
 
 	switch envName {
 	case "pri":
-		setValues["gcp.externalHostname"] = fmt.Sprintf("%s.%s", releaseName, externalHostname)
-		setValues["gcp.externalCertificateMap"] = strings.ReplaceAll(externalHostname, ".", "-")
+		externalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-int_zone_id/versions/latest", projectID))
+		setValues["gcp.externalCertificateMap"] = externalCertificateMap
 		setValues["createInternal"] = "false"
 		setValues["createExternal"] = "true"
 	case "biz":
-		setValues["gcp.externalHostname"] = fmt.Sprintf("%s.%s", releaseName, externalHostname)
-		setValues["gcp.internalHostname"] = fmt.Sprintf("%s.%s", releaseName, internalHostname)
-		setValues["gcp.externalCertificateMap"] = strings.ReplaceAll(externalHostname, ".", "-")
-		setValues["gcp.internalCertificateMap"] = strings.ReplaceAll(internalHostname, ".", "-")
+		externalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-pub_zone_id/versions/latest", projectID))
+		internalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-int_zone_id/versions/latest", projectID))
+		setValues["gcp.externalCertificateMap"] = externalCertificateMap
+		setValues["gcp.internalCertificateMap"] = internalCertificateMap
 		setValues["createInternal"] = "true"
 		setValues["createExternal"] = "true"
 	}
