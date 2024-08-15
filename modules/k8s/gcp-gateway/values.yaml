@@ -2,5 +2,5 @@ gcp:
   externalCertificateMap: ""
   internalCertificateMap: ""
 
-createExternal: false
-createInternal: false
+createExternal: true
+createInternal: true
