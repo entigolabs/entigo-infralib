@@ -10,9 +10,9 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"golang.org/x/exp/rand"
 
 	kubernetesErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -385,7 +385,7 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 
-	jobName := fmt.Sprintf("%s-health-check-%v", namespaceName, random.UniqueId()[0:4])
+	jobName := fmt.Sprintf("%s-health-check-%s", namespaceName, createRandomString(4))
 
 	targetDomain := strings.Split(targetURL, "://")[1]
 	targetDomain = strings.Split(targetDomain, "/")[0]
@@ -496,4 +496,13 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 		return strings.Trim(gatewayIP, "'"), nil
 	}
 	return "", errors.New("error getting target IP")
+}
+
+func createRandomString(length int) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
