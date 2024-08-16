@@ -1,5 +1,3 @@
-createResourceQuota: false
-
 metrics-server:
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes

@@ -1,4 +1,4 @@
-gcp:
+google:
   externalCertificateMap: ""
   internalCertificateMap: ""
   externalGatewayClassName: gke-l7-global-external-managed

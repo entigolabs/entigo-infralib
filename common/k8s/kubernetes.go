@@ -10,8 +10,10 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+
 	kubernetesErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -382,7 +384,8 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 
 func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
-	jobName := fmt.Sprintf("%s-health-check", namespaceName)
+
+	jobName := fmt.Sprintf("%s-health-check-%v", namespaceName, random.UniqueId()[0:4])
 
 	targetDomain := strings.Split(targetURL, "://")[1]
 	targetDomain = strings.Split(targetDomain, "/")[0]
@@ -459,8 +462,6 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 
 	resource := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
 
-	defer deleteObject(t, options, jobName, options.Namespace, resource)
-
 	_, err = createObject(t, options, jobObject, options.Namespace, resource)
 	if err != nil {
 		return fmt.Errorf("failed to create job: %w", err)
@@ -469,6 +470,11 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	err = k8s.WaitUntilJobSucceedE(t, options, jobName, retries, sleepBetweenRetries)
 	if err != nil {
 		return fmt.Errorf("failed to wait for job to succeed: %w", err)
+	}
+
+	err = deleteObject(t, options, jobName, options.Namespace, resource)
+	if err != nil {
+		return fmt.Errorf("failed to delete job: %w", err)
 	}
 
 	return nil

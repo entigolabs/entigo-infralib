@@ -23,15 +23,15 @@ func TestK8sIstioGatewayAWSPri(t *testing.T) {
 	testK8sIstioGateway(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "./k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sIstioGatewayGKEBiz(t *testing.T) {
-	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "./k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+func TestK8sIstioGatewayGoogleBiz(t *testing.T) {
+	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "./k8s_unit_basic_test_google_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sIstioGatewayGKEPri(t *testing.T) {
-	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "./k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+func TestK8sIstioGatewayGooglePri(t *testing.T) {
+	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "./k8s_unit_basic_test_google_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
+func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostName, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -52,15 +52,15 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 	gatewayName := ""
 	gatewayNamespace := ""
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		certificateArn := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_cert_arn", envName))
 		setValues["certificateArn"] = certificateArn
 
 	case "google":
-		gatewayNamespace = "gcp-gateway"
-		gatewayName = "gcp-gateway-external"
+		gatewayNamespace = "google-gateway"
+		gatewayName = "google-gateway-external"
 		setValues["google.hostname"] = hostName
 		setValues["google.gateway.namespace"] = gatewayNamespace
 		setValues["google.gateway.name"] = gatewayName
@@ -69,7 +69,7 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{valuesFile, fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{valuesFile, fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

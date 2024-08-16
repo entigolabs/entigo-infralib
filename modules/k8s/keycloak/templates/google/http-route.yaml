@@ -8,9 +8,9 @@ metadata:
 spec:
   parentRefs:
     - kind: Gateway
-      name: gcp-gateway
+      name: {{ .Values.google.gateway.name }}
       sectionName: https
-      namespace: gcp-gateway
+      namespace: {{ .Values.google.gateway.namespace }}
   hostnames: [{{ .Values.google.hostname }}]
   rules:
     - backendRefs:

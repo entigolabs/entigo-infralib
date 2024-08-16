@@ -23,15 +23,15 @@ func TestK8sPrometheusAWSPri(t *testing.T) {
 	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sPrometheusGKEBiz(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+func TestK8sPrometheusGoogleBiz(t *testing.T) {
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_google_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sPrometheusGKEPri(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+func TestK8sPrometheusGooglePri(t *testing.T) {
+	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_google_biz.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
+func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -53,22 +53,22 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	gatewayName := ""
 	gatewayNamespace := ""
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 
 	case "google":
-		gatewayNamespace = "gcp-gateway"
+		gatewayNamespace = "google-gateway"
 
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.gateway.namespace"] = gatewayNamespace
 
 		switch envName {
 		case "biz":
-			gatewayName = "gcp-gateway-internal"
+			gatewayName = "google-gateway-internal"
 		case "pri":
-			gatewayName = "gcp-gateway-external"
+			gatewayName = "google-gateway-external"
 		}
 		setValues["google.gateway.name"] = gatewayName
 	}
@@ -76,7 +76,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -115,11 +115,11 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/graph", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 50, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 }

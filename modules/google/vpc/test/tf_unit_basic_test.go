@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ const bucketName = "infralib-modules-gce-vpc-tf"
 var Region string
 
 func TestTerraformVpc(t *testing.T) {
-	Region = commonGCP.SetupBucket(t, bucketName)
+	Region = commonGoogle.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformVpcBiz)
 	t.Run("Pri", testTerraformVpcPri)
 }

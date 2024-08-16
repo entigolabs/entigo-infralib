@@ -23,15 +23,15 @@ func TestK8sCrossplaneAWSPri(t *testing.T) {
 	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "aws")
 }
 
-func TestK8sCrossplaneGKEBiz(t *testing.T) {
+func TestK8sCrossplaneGoogleBiz(t *testing.T) {
 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "google")
 }
 
-func TestK8sCrossplaneGKEPri(t *testing.T) {
+func TestK8sCrossplaneGooglePri(t *testing.T) {
 	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "google")
 }
 
-func testK8sCrossplane(t *testing.T, contextName string, cloudName string) {
+func testK8sCrossplane(t *testing.T, contextName string, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -53,7 +53,7 @@ func testK8sCrossplane(t *testing.T, contextName string, cloudName string) {
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
