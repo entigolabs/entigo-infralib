@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ var (
 )
 
 func TestTerraformArgocd(t *testing.T) {
-	Region = commonGCP.SetupBucket(t, bucketName)
+	Region = commonGoogle.SetupBucket(t, bucketName)
 	prefix = os.Getenv("TF_VAR_prefix")
 	t.Run("Biz", testTerraformArgocdBiz)
 	t.Run("Pri", testTerraformArgocdPri)

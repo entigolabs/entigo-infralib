@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ const bucketName = "infralib-modules-gcp-dns-tf"
 var Region string
 
 func TestTerraformDns(t *testing.T) {
-	Region = commonGCP.SetupBucket(t, bucketName)
+	Region = commonGoogle.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformDnsBiz)
 	t.Run("Pri", testTerraformDnsPri)
 }
@@ -24,7 +24,7 @@ func TestTerraformDns(t *testing.T) {
 func testTerraformDnsBiz(t *testing.T) {
 	projectID := os.Getenv("GOOGLE_PROJECT")
 
-	network := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_id/versions/latest", projectID))
+	network := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-vpc_id/versions/latest", projectID))
 
 	options := tf.InitGCloudTerraform(t, bucketName, Region, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"vpc_id": network,

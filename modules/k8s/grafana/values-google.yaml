@@ -3,8 +3,8 @@ cloudProvider: "google"
 google:
   hostname: ""
   gateway:
-    name: gcp-gateway-external
-    namespace: gcp-gateway
+    name: google-gateway-external
+    namespace: google-gateway
 
 grafana:
   ingress:

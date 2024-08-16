@@ -2,8 +2,8 @@ cloudProvider: google
 
 google:
   gateway:
-    name: gcp-gateway-external
-    namespace: gcp-gateway
+    name: google-gateway-external
+    namespace: google-gateway
 
 argocd:
   configs:

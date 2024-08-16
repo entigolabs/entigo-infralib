@@ -26,11 +26,11 @@ func TestK8sCrossplaneK8sAWSPri(t *testing.T) {
 	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
 }
 
-func TestK8sCrossplaneK8sGKEBiz(t *testing.T) {
+func TestK8sCrossplaneK8sGoogleBiz(t *testing.T) {
 	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
 }
 
-func TestK8sCrossplaneK8sGKEPri(t *testing.T) {
+func TestK8sCrossplaneK8sGooglePri(t *testing.T) {
 	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
 }
 

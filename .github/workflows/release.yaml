@@ -160,7 +160,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/crossplane-core/test.sh &
         PIDS="$PIDS $!"
-        modules/k8s/gcp-gateway/test.sh &
+        modules/k8s/google-gateway/test.sh &
         PIDS="$PIDS $!"
         FAIL=0
         for p in $PIDS; do

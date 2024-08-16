@@ -23,15 +23,15 @@ func TestK8sExternalDnsAWSPri(t *testing.T) {
 	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
 }
 
-func TestK8sExternalDnsGKEBiz(t *testing.T) {
+func TestK8sExternalDnsGoogleBiz(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
 }
 
-func TestK8sExternalDnsGKEPri(t *testing.T) {
+func TestK8sExternalDnsGooglePri(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
 }
 
-func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudName string) {
+func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -43,7 +43,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
@@ -61,7 +61,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
 
 	default:
-		t.Fatalf("invalid cloud name: %s", cloudName)
+		t.Fatalf("invalid cloud name: %s", cloudProvider)
 	}
 
 	if prefix != "runner-main" {
@@ -75,7 +75,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudN
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

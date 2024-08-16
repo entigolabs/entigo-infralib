@@ -1,5 +1,5 @@
 apiVersion: v2
-name: gcp-gateway
-description: gcp-gateway
+name: google-gateway
+description: google-gateway
 version: 0.1.0
 appVersion: "0.1.0"

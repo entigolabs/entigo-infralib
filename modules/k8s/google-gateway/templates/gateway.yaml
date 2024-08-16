@@ -6,9 +6,9 @@ metadata:
   name: {{ .Release.Name }}-external
   namespace: {{ .Release.Name }}
   annotations:
-    networking.gke.io/certmap: {{ .Values.gcp.externalCertificateMap }}
+    networking.gke.io/certmap: {{ .Values.google.externalCertificateMap }}
 spec:
-  gatewayClassName: {{ .Values.gcp.externalGatewayClassName }}
+  gatewayClassName: {{ .Values.google.externalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS
@@ -35,9 +35,9 @@ metadata:
   name: {{ .Release.Name }}-internal
   namespace: {{ .Release.Name }}
   annotations:
-    networking.gke.io/certmap: {{ .Values.gcp.internalCertificateMap }}
+    networking.gke.io/certmap: {{ .Values.google.internalCertificateMap }}
 spec:
-  gatewayClassName: {{ .Values.gcp.internalGatewayClassName }}
+  gatewayClassName: {{ .Values.google.internalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS

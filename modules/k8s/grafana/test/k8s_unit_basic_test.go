@@ -24,15 +24,15 @@ func TestK8sGrafanaAWSPri(t *testing.T) {
 	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sGrafanaGKEBiz(t *testing.T) {
+func TestK8sGrafanaGoogleBiz(t *testing.T) {
 	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sGrafanaGKEPri(t *testing.T) {
+func TestK8sGrafanaGooglePri(t *testing.T) {
 	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName string) {
+func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -56,7 +56,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 
 	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostname)
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
@@ -69,14 +69,14 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 		gatewayName = "grafana"
 
 	case "google":
-		gatewayNamespace = "gcp-gateway"
+		gatewayNamespace = "google-gateway"
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
 		setValues["google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
-			gatewayName = "gcp-gateway-internal"
+			gatewayName = "google-gateway-internal"
 		case "pri":
-			gatewayName = "gcp-gateway-external"
+			gatewayName = "google-gateway-external"
 		}
 		setValues["google.gateway.name"] = gatewayName
 	}
@@ -84,7 +84,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -113,11 +113,11 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudName stri
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "grafana ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/login", releaseName, hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "grafana ingress/gateway test error")
 }

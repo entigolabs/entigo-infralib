@@ -22,11 +22,11 @@ func TestIstioIstiodAWSPri(t *testing.T) {
 	testIstioIstiod(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri")
 }
 
-func TestIstioIstiodGKEBiz(t *testing.T) {
+func TestIstioIstiodGoogleBiz(t *testing.T) {
 	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_runner-main-biz")
 }
 
-func TestIstioIstiodGKEPri(t *testing.T) {
+func TestIstioIstiodGooglePri(t *testing.T) {
 	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_runner-main-pri")
 }
 

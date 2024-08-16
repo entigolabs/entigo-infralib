@@ -1,8 +1,10 @@
 cloudProvider: ""
 
 google:
-  certificateMap: ""
   hostname: ""
+  gateway:
+    name: google-gateway-external
+    namespace: google-gateway
 
 keycloakx:
   fullnameOverride: ""

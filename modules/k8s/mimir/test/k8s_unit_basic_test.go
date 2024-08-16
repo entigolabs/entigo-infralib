@@ -24,15 +24,15 @@ func TestK8sMimirAWSPri(t *testing.T) {
 	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sMimirGKEBiz(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_gke_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+func TestK8sMimirGoogleBiz(t *testing.T) {
+	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_google_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sMimirGKEPri(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_gke_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+func TestK8sMimirGooglePri(t *testing.T) {
+	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_google_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, cloudName string) {
+func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -57,7 +57,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
 	setValues["global.bucketName"] = bucketName
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
@@ -75,7 +75,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		gatewayName = "mimir-gateway"
 
 	case "google":
-		gatewayNamespace = "gcp-gateway"
+		gatewayNamespace = "google-gateway"
 
 		setValues["global.namespaceName"] = namespaceName
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
@@ -84,9 +84,9 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 
 		switch envName {
 		case "biz":
-			gatewayName = "gcp-gateway-internal"
+			gatewayName = "google-gateway-internal"
 		case "pri":
-			gatewayName = "gcp-gateway-external"
+			gatewayName = "google-gateway-external"
 		}
 		setValues["google.gateway.name"] = gatewayName
 	}
@@ -94,7 +94,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName), valuesFile},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
@@ -151,11 +151,11 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 }

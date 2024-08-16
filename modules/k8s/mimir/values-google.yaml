@@ -4,8 +4,8 @@ google:
   projectID: ""
   hostname: ""
   gateway:
-    name: gcp-gateway-external
-    namespace: gcp-gateway
+    name: google-gateway-external
+    namespace: google-gateway
 
 global:
   providerConfigRefName: crossplane-google

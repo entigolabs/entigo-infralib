@@ -1,16 +1,16 @@
-name: PR modules/k8s/gcp-gateway
+name: PR modules/k8s/google-gateway
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'modules/k8s/gcp-gateway/**'
+      - 'modules/k8s/google-gateway/**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Test modules/k8s/gcp-gateway
+    name: Test modules/k8s/google-gateway
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,4 +26,4 @@ jobs:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           ENTIGO_INFRALIB_DESTROY: false
         run: |
-          modules/k8s/gcp-gateway/test.sh
+          modules/k8s/google-gateway/test.sh

@@ -22,15 +22,15 @@ func TestK8sKeycloakAWSPri(t *testing.T) {
 	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sKeycloakGKEBiz(t *testing.T) {
+func TestK8sKeycloakGoogleBiz(t *testing.T) {
 	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
-func TestK8sKeycloakGKEPri(t *testing.T) {
+func TestK8sKeycloakGooglePri(t *testing.T) {
 	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudName string) {
+func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -50,7 +50,7 @@ func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudName str
 	releaseName := namespaceName
 	setValues["keycloakx.fullnameOverride"] = namespaceName
 
-	switch cloudName {
+	switch cloudProvider {
 	case "aws":
 		setValues["keycloakx.ingress.rules[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["keycloakx.ingress.rules[0].paths[0].path"] = "/"
@@ -64,7 +64,7 @@ func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudName str
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudName)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

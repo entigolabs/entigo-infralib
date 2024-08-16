@@ -9,22 +9,22 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	commonGCP "github.com/entigolabs/entigo-infralib-common/google"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sGCPGatewayBiz(t *testing.T) {
-	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
+func TestK8sGoogleGatewayBiz(t *testing.T) {
+	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
 }
 
-func TestK8sGCPGatewayPri(t *testing.T) {
-	testK8sGCPGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
+func TestK8sGoogleGatewayPri(t *testing.T) {
+	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
 }
 
-func testK8sGCPGateway(t *testing.T, contextName, envName string) {
+func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -34,12 +34,12 @@ func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("gcp-gateway")
+	namespaceName := fmt.Sprintf("google-gateway")
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("gcp-gateway-%s", prefix)
+		namespaceName = fmt.Sprintf("google-gateway-%s", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -48,15 +48,15 @@ func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 
 	switch envName {
 	case "pri":
-		externalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-int_zone_id/versions/latest", projectID))
-		setValues["gcp.externalCertificateMap"] = externalCertificateMap
+		externalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-int_zone_id/versions/latest", projectID))
+		setValues["google.externalCertificateMap"] = externalCertificateMap
 		setValues["createInternal"] = "false"
 		setValues["createExternal"] = "true"
 	case "biz":
-		externalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-pub_zone_id/versions/latest", projectID))
-		internalCertificateMap := commonGCP.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-int_zone_id/versions/latest", projectID))
-		setValues["gcp.externalCertificateMap"] = externalCertificateMap
-		setValues["gcp.internalCertificateMap"] = internalCertificateMap
+		externalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-pub_zone_id/versions/latest", projectID))
+		internalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-int_zone_id/versions/latest", projectID))
+		setValues["google.externalCertificateMap"] = externalCertificateMap
+		setValues["google.internalCertificateMap"] = internalCertificateMap
 		setValues["createInternal"] = "true"
 		setValues["createExternal"] = "true"
 	}
@@ -87,11 +87,11 @@ func testK8sGCPGateway(t *testing.T, contextName, envName string) {
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", releaseName), 50, 6*time.Second)
-	require.NoError(t, err, "gcp-gateway not available error")
+	require.NoError(t, err, "google-gateway not available error")
 
 	switch envName {
 	case "biz":
 		_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", releaseName), 50, 6*time.Second)
-		require.NoError(t, err, "gcp-gateway not available error")
+		require.NoError(t, err, "google-gateway not available error")
 	}
 }
