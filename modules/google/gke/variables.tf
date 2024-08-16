@@ -71,7 +71,7 @@ variable "gke_main_max_size" {
 
 variable "gke_main_instance_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_main_volume_size" {
@@ -103,7 +103,7 @@ variable "gke_mainarm_max_size" {
 
 variable "gke_mainarm_instance_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_mainarm_volume_size" {
@@ -136,7 +136,7 @@ variable "gke_spot_max_size" {
 variable "gke_spot_instance_type" {
   type = string
   nullable = false
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_spot_volume_size" {
@@ -168,7 +168,7 @@ variable "gke_mon_max_size" {
 
 variable "gke_mon_instance_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_mon_volume_size" {
@@ -200,7 +200,7 @@ variable "gke_tools_max_size" {
 
 variable "gke_tools_instance_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_tools_volume_size" {
@@ -233,7 +233,7 @@ variable "gke_db_max_size" {
 variable "gke_db_instance_type" {
   type    = string
   nullable = false
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "gke_db_volume_size" {

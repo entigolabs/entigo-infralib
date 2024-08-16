@@ -24,7 +24,7 @@ func TestK8sGrafanaAWSPri(t *testing.T) {
 	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
-func TestK8sGrafanGKEBiz(t *testing.T) {
+func TestK8sGrafanaGKEBiz(t *testing.T) {
 	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
