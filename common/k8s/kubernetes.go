@@ -385,7 +385,7 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 
-	jobName := fmt.Sprintf("%s-health-check-%v", namespaceName, createRandomString(4))
+	jobName := fmt.Sprintf("%s-health-check-%s", namespaceName, createRandomString(4))
 
 	targetDomain := strings.Split(targetURL, "://")[1]
 	targetDomain = strings.Split(targetDomain, "/")[0]
