@@ -8,7 +8,7 @@ metadata:
   annotations:
     networking.gke.io/certmap: {{ .Values.gcp.externalCertificateMap }}
 spec:
-  gatewayClassName: gke-l7-global-external-managed
+  gatewayClassName: {{ .Values.gcp.externalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS
@@ -37,7 +37,7 @@ metadata:
   annotations:
     networking.gke.io/certmap: {{ .Values.gcp.internalCertificateMap }}
 spec:
-  gatewayClassName: gke-l7-global-external-managed
+  gatewayClassName: {{ .Values.gcp.internalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS
