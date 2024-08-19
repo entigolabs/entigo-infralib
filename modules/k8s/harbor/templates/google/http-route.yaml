@@ -1,0 +1,59 @@
+{{- if eq .Values.cloudProvider "google" }}
+
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Name }}
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: {{ .Values.google.gateway.name }}
+      sectionName: https
+      namespace: {{ .Values.google.gateway.namespace }}
+  hostnames: [ {{ .Values.google.hostname }} ]
+  rules:
+    - backendRefs:
+        - name: {{ .Release.Name }}-core
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /api/
+    - backendRefs:
+        - name: {{ .Release.Name }}-core
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /service/
+    - backendRefs:
+        - name: {{ .Release.Name }}-core
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /v2/
+    - backendRefs:
+        - name: {{ .Release.Name }}-core
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /chartrepo/
+    - backendRefs:
+        - name: {{ .Release.Name }}-core
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /c/
+    - backendRefs:
+        - name: {{ .Release.Name }}-portal
+          port: 80
+      matches:
+      - path:
+          type: PathPrefix
+          value: /
+
+{{- end }}
