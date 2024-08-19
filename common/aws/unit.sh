@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ "$TESTING_VERSION" == "" ]
 then
-  TESTING_VERSION="v0.12.1-rc11"
+  TESTING_VERSION="v0.13.7-rc13"
 fi
 
 if [ "$PR_BRANCH" != "" ]
