@@ -15,21 +15,6 @@ gcloud -q config set project "entigo-infralib2" || exit 1
 gcloud -q config set compute/region "europe-north1" || exit 1
 
 PIDS=""
-for line in $(gsutil ls); do
-  gsutil -m rm -r $line &
-  PIDS="$PIDS $!"
-done
-FAIL=0
-for p in $PIDS; do
-  wait $p || let "FAIL+=1"
-  echo $p $FAIL
-done
-if [ "$FAIL" -ne 0 ]; then
-  echo "FAILED to delete storage buckets. $FAIL"
-  exit 1
-fi
-
-PIDS=""
 for line in $(gcloud -q deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri); do
   gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 --force -q $line &
   PIDS="$PIDS $!"
@@ -424,3 +409,18 @@ fi
 gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
   gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
 done
+
+PIDS=""
+for line in $(gsutil ls); do
+  gsutil -m rm -r $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete storage buckets. $FAIL"
+  exit 1
+fi
