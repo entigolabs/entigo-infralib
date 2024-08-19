@@ -9,9 +9,9 @@ external-dns:
     create: false
     name: "external-dns"
 
-  env: 
-  - name: AWS_DEFAULT_REGION
-    value: ""
+  env:
+    - name: AWS_DEFAULT_REGION
+      value: ""
 
   registry: txt
   policy: upsert-only
@@ -21,29 +21,29 @@ external-dns:
     - istio-gateway
     - istio-virtualservice
   extraArgs:
-  - --metrics-address=:7979
+    - --metrics-address=:7979
 
   serviceMonitor:
     enabled: false
     scrapeTimeout: 20s
-    additionalLabels: 
+    additionalLabels:
       kubernetes.io/metadata.name: monitoring
       release: prometheus
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 90
-        preference:
-          matchExpressions:
-          - key: tools
-            operator: In
-            values:
-            - "true"
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
   tolerations:
-      - key: "tools"
-        operator: "Equal"
-        value: "true"
-        effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   resources:
     limits:
       cpu: 1000m
@@ -53,6 +53,6 @@ external-dns:
       cpu: 50m
       memory: 64Mi
       ephemeral-storage: 1Gi
-      
+
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
