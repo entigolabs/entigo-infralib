@@ -191,3 +191,10 @@ module "int_domain" {
   key    = "int_domain"
   value  = trimsuffix(local.int_domain, ".")
 }
+
+module "parent_zone_id" {
+  source = "./secret"
+  prefix = var.prefix
+  key    = "parent_zone_id"
+  value  = var.parent_zone_id
+}

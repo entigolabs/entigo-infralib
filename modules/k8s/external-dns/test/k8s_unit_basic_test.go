@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -55,13 +56,20 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
 
+		parentZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/parent_zone_id", envName))
+		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/ext_zone_id", envName))
+		internalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/int_zone_id", envName))
+		setValues["external-dns.extraArgs"] = fmt.Sprintf("{--metrics-address=:7979, --zone-id-filter=%s, --zone-id-filter=%s, --zone-id-filter=%s}", parentZoneID, externalZoneID, internalZoneID)
+
 	case "google":
 		namespaceName = "external-dns"
-		setValues["google.projectID"] = strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
-		setValues["managedZone"] = fmt.Sprintf("runner-main-%s-gcp-infralib-entigo-io", envName)
+		projectID := os.Getenv("GOOGLE_PROJECT")
+		setValues["google.projectID"] = projectID
 
-	default:
-		t.Fatalf("invalid cloud name: %s", cloudProvider)
+		parentZoneID := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-parent_zone_id/versions/latest", projectID, envName))
+		externalZoneID := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-pub_zone_id/versions/latest", projectID, envName))
+		internalZoneID := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-int_zone_id/versions/latest", projectID, envName))
+		setValues["external-dns.extraArgs"] = fmt.Sprintf("{--metrics-address=:7979, --zone-id-filter=%s, --zone-id-filter=%s, --zone-id-filter=%s}", parentZoneID, externalZoneID, internalZoneID)
 	}
 
 	if prefix != "runner-main" {
