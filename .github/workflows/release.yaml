@@ -196,6 +196,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/external-dns/test.sh &
         PIDS="$PIDS $!"
+        modules/k8s/harbor/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/external-secrets/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/argocd/test.sh &
