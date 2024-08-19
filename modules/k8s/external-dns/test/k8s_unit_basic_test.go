@@ -56,7 +56,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 		setValues["awsAccount"] = account
 		setValues["clusterOIDC"] = clusteroidc
 
-		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/ext_zone_id", envName))
+		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_zone_id", envName))
 		internalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/int_zone_id", envName))
 		setValues["external-dns.extraArgs"] = fmt.Sprintf("{--metrics-address=:7979, --zone-id-filter=%s, --zone-id-filter=%s}", externalZoneID, internalZoneID)
 
