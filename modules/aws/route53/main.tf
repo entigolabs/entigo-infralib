@@ -180,15 +180,3 @@ resource "aws_ssm_parameter" "int-domain" {
     Workspace = terraform.workspace
   }
 }
-
-resource "aws_ssm_parameter" "parent" {
-  count = var.parent_zone_id != "" ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/parent_zone_id"
-  type  = "String"
-  value = var.parent_zone_id
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
