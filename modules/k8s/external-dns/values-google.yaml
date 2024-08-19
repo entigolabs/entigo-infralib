@@ -13,9 +13,7 @@ external-dns:
     - gateway-httproute
   extraArgs:
     - --metrics-address=:7979
-    - --zone-id-filter=""
-    - --zone-id-filter=""
-    - --zone-id-filter=""
+
   provider:
     name: google
   serviceAccount:

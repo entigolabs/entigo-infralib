@@ -22,9 +22,6 @@ external-dns:
     - istio-virtualservice
   extraArgs:
     - --metrics-address=:7979
-    - --zone-id-filter=""
-    - --zone-id-filter=""
-    - --zone-id-filter=""
 
   serviceMonitor:
     enabled: false
