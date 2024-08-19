@@ -10,6 +10,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/google"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -20,21 +21,21 @@ import (
 )
 
 func TestK8sCrossplaneGoogleBiz(t *testing.T) {
-	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
 }
 
 func TestK8sCrossplaneGooglePri(t *testing.T) {
-	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneGoogle(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
 }
 
-func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string) {
+func testK8sCrossplaneGoogle(t *testing.T, contextName, envName string) {
 	t.Parallel()
 	spew.Dump("")
 
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 
-	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+	projectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := "crossplane-system"
 	releaseName := "crossplane-google"
@@ -42,8 +43,11 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
+	googleServiceAccount := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-service_account_email/versions/latest", projectID, envName))
+
+	setValues["deploymentRuntimeConfig.googleServiceAccount"] = googleServiceAccount
 	setValues["installProviderConfig"] = "false"
-	setValues["google.projectID"] = googleProjectID
+	setValues["google.projectID"] = projectID
 
 	if prefix != "runner-main" {
 		extraArgs["upgrade"] = []string{"--skip-crds"}
@@ -63,14 +67,7 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string
 		defer helm.Delete(t, helmOptions, releaseName, true)
 	}
 
-	googleServiceAccountID := fmt.Sprintf("%s-cp", runnerName)
-	if len(runnerName) > 25 {
-		googleServiceAccountID = fmt.Sprintf("%s-cp", runnerName[:26])
-	}
-
 	// Install DeploymentRuntimeConfig and Provider
-	setValues["deploymentRuntimeConfig.googleServiceAccount"] = fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountID, googleProjectID)
-	helmOptions.SetValues = setValues
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
@@ -90,7 +87,7 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName string, runnerName string
 	require.NoError(t, err, "ProviderConfig crd error")
 
 	// Create cloud storage bucket
-	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-%s", strings.ToLower(random.UniqueId()), runnerName)
+	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-runner-main-%s", strings.ToLower(random.UniqueId()), envName)
 	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
 	assert.NotNil(t, bucket, "Bucket is nil")
