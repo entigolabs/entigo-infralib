@@ -1,0 +1,22 @@
+cloudProvider: google
+harbor:
+  expose:
+    type: clusterIP
+    tls:
+      enabled: false
+#TODO
+#  persistence:
+#    imageChartStorage:
+#      type: s3
+#    gcs:
+#      bucket: ""
+#      encodedkey: base64-encoded-json-key-file
+#      useWorkloadIdentity: true
+      
+      
+google:
+  hostname: ""
+  gateway:
+    name: google-gateway-external
+    namespace: google-gateway
+
