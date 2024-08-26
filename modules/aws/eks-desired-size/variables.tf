@@ -4,15 +4,18 @@ variable "prefix" {
 
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
-  
-  eks_min_size_map = {
-    main = var.eks_main_min_size
-    mainarm = var.eks_mainarm_min_size
-    tools = var.eks_tools_min_size
-    mon = var.eks_mon_min_size
-    spot = var.eks_spot_min_size
-    db = var.eks_db_min_size
-  }
+
+  eks_min_size_map = merge(
+    {
+      eks_main_min_size     = var.eks_main_min_size
+      eks_mainarm_min_size  = var.eks_mainarm_min_size
+      eks_tools_min_size    = var.eks_tools_min_size
+      eks_mon_min_size      = var.eks_mon_min_size
+      eks_spot_min_size     = var.eks_spot_min_size
+      eks_db_min_size       = var.eks_db_min_size
+    },
+    var.eks_extra_min_sizes
+  )
 }
 
 variable "cluster_name" {
@@ -53,5 +56,10 @@ variable "eks_db_min_size" {
   type    = number
   nullable = false
   default = 0
-} 
+}
 
+variable "eks_extra_min_sizes" {
+  type    = map(number)
+  nullable = false
+  default = {}
+}

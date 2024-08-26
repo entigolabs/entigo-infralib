@@ -67,26 +67,13 @@ resource "aws_ssm_parameter" "eks_db_min_size" {
 resource "null_resource" "update_desired_size" {
 
   triggers = {
-    main = var.eks_main_min_size
-    mainarm = var.eks_mainarm_min_size
-    tools = var.eks_tools_min_size
-    mon = var.eks_mon_min_size
-    spot = var.eks_spot_min_size
-    db = var.eks_db_min_size
     always_run = timestamp() # causes Terraform to always run this module, even if nothing changes. Needed for testing.
   }
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
 
-    environment = {
-      eks_main_min_size = local.eks_min_size_map["main"]
-      eks_mainarm_min_size  = local.eks_min_size_map["mainarm"]
-      eks_tools_min_size = local.eks_min_size_map["tools"]
-      eks_mon_min_size = local.eks_min_size_map["mon"]
-      eks_spot_min_size = local.eks_min_size_map["spot"]
-      eks_db_min_size = local.eks_min_size_map["db"]
-    }
+    environment = local.eks_min_size_map
 
     command = <<-EOT
 
@@ -121,25 +108,14 @@ resource "null_resource" "update_desired_size" {
         
         new_min_size=0
 
-        # Set the new minimum size based on the short name
-        if [ "$node_group_short_name" == "main" ]; then
-          new_min_size=$eks_main_min_size
-        elif [ "$node_group_short_name" == "mainarm" ]; then
-          new_min_size=$eks_mainarm_min_size
-        elif [ "$node_group_short_name" == "tools" ]; then
-          new_min_size=$eks_tools_min_size
-        elif [ "$node_group_short_name" == "mon" ]; then
-          new_min_size=$eks_mon_min_size
-        elif [ "$node_group_short_name" == "spot" ]; then
-          new_min_size=$eks_spot_min_size
-        elif [ "$node_group_short_name" == "db" ]; then
-          new_min_size=$eks_db_min_size
-        else
-          echo "Unknown node group short name: $node_group_short_name"
-          continue
-        fi
+
+        tempvar="eks_$${node_group_short_name}_min_size"
+        echo "Tempvar: $tempvar"
+
+        new_min_size=$${!tempvar}
 
         current_desired_size=$(printf "%d" "$current_desired_size")
+        new_min_size=$(printf "%d" "$new_min_size")
 
         echo "New min size: $new_min_size"
         echo "Current desired size: $current_desired_size"
