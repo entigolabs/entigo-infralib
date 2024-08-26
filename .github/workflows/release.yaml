@@ -33,6 +33,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/vpc/test.sh &
         PIDS="$PIDS $!"
+        modules/aws/eks-desired-size/test.sh &
+        PIDS="$PIDS $!"
         FAIL=0
         for p in $PIDS; do
             wait $p || let "FAIL+=1"
