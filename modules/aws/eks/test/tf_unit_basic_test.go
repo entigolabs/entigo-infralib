@@ -32,6 +32,7 @@ func testTerraformEksBiz(t *testing.T) {
 	eks_mainarm_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_mainarm_min_size")
 	eks_db_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_db_min_size")
 	eks_spot_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_spot_min_size")
+	eks_altarm_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_altarm_min_size")
 
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"vpc_id":               vpc_id,
@@ -42,6 +43,11 @@ func testTerraformEksBiz(t *testing.T) {
 		"eks_mainarm_min_size": eks_mainarm_min_size,
 		"eks_db_min_size":      eks_db_min_size,
 		"eks_spot_min_size":    eks_spot_min_size,
+		"eks_managed_node_groups_extra": map[string]interface{}{
+			"altarm": map[string]interface{}{
+				"min_size": eks_altarm_min_size,
+			},
+		},
 	})
 	testTerraformEks(t, "biz", options)
 }

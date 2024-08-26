@@ -4,7 +4,6 @@ variable "prefix" {
 
 locals {
   hname = "${var.prefix}-${terraform.workspace}"
-
   eks_min_size_map = merge(
     {
       eks_main_min_size     = var.eks_main_min_size

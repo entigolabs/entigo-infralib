@@ -1,62 +1,10 @@
-resource "aws_ssm_parameter" "eks_main_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_main_min_size"
-  type  = "String"
-  value = var.eks_main_min_size
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
+resource "aws_ssm_parameter" "eks_min_size" {
+  for_each = local.eks_min_size_map
 
-resource "aws_ssm_parameter" "eks_mainarm_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_mainarm_min_size"
+  name  = "/entigo-infralib/${local.hname}/${each.key}"
   type  = "String"
-  value = var.eks_mainarm_min_size
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
+  value = each.value
 
-resource "aws_ssm_parameter" "eks_tools_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_tools_min_size"
-  type  = "String"
-  value = var.eks_tools_min_size
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
-
-resource "aws_ssm_parameter" "eks_mon_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_mon_min_size"
-  type  = "String"
-  value = var.eks_mon_min_size
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
-
-resource "aws_ssm_parameter" "eks_spot_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_spot_min_size"
-  type  = "String"
-  value = var.eks_spot_min_size
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    Workspace = terraform.workspace
-  }
-}
-
-resource "aws_ssm_parameter" "eks_db_min_size" {
-  name  = "/entigo-infralib/${local.hname}/eks_db_min_size"
-  type  = "String"
-  value = var.eks_db_min_size
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
@@ -67,7 +15,12 @@ resource "aws_ssm_parameter" "eks_db_min_size" {
 resource "null_resource" "update_desired_size" {
 
   triggers = {
-    always_run = timestamp() # causes Terraform to always run this module, even if nothing changes. Needed for testing.
+    eks_min_size_map = jsonencode([
+      for key in sort(keys(local.eks_min_size_map)) : {
+        key   = key
+        value = local.eks_min_size_map[key]
+      }
+    ])
   }
 
   provisioner "local-exec" {
@@ -108,11 +61,10 @@ resource "null_resource" "update_desired_size" {
         
         new_min_size=0
 
+        min_size_variable_name="eks_$${node_group_short_name}_min_size"
+        echo "min_size_variable_name: $min_size_variable_name"
 
-        tempvar="eks_$${node_group_short_name}_min_size"
-        echo "Tempvar: $tempvar"
-
-        new_min_size=$${!tempvar}
+        new_min_size=$${!min_size_variable_name}
 
         current_desired_size=$(printf "%d" "$current_desired_size")
         new_min_size=$(printf "%d" "$new_min_size")
@@ -125,7 +77,7 @@ resource "null_resource" "update_desired_size" {
           aws eks update-nodegroup-config --cluster-name ${var.cluster_name} --nodegroup-name $nodegroup --scaling-config desiredSize=$new_min_size
           echo "Updated node group $nodegroup to new min size: $new_min_size"
         else
-          echo "Node group $nodegroup already at min size: $new_min_size". No update needed
+          echo "Node group $nodegroup already at min size: $new_min_size". No update needed.
         fi
 
         # Check if node group is in ACTIVE state, if not then sleep for 5 seconds and check again
