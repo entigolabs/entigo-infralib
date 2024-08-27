@@ -1,8 +1,11 @@
 eks_cluster_public           = true
 eks_mon_single_subnet = false
 cluster_enabled_log_types    = [] #Temporarily disabled, see https://entigo.atlassian.net/browse/RD-8
+eks_spot_desired_size        = 0
 eks_spot_max_size            = 0
+eks_db_desired_size          = 0
 eks_db_max_size              = 0
+eks_main_desired_size        = 4
 eks_main_max_size            = 6
 eks_main_instance_types   = ["t3.small"]
 eks_mainarm_max_size         = 2

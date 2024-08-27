@@ -46,6 +46,12 @@ variable "eks_cluster_public" {
 variable "eks_main_min_size" {
   type    = number
   nullable = false
+  default = 1
+}
+
+variable "eks_main_desired_size" {
+  type    = number
+  nullable = false
   default = 2
 }
 
@@ -78,6 +84,12 @@ variable "eks_main_volume_type" {
 variable "eks_mainarm_min_size" {
   type    = number
   nullable = false
+  default = 1
+}
+
+variable "eks_mainarm_desired_size" {
+  type    = number
+  nullable = false
   default = 0
 }
 
@@ -108,6 +120,12 @@ variable "eks_mainarm_volume_type" {
 }
 
 variable "eks_spot_min_size" {
+  type    = number
+  nullable = false
+  default = 1
+}
+
+variable "eks_spot_desired_size" {
   type    = number
   nullable = false
   default = 0
@@ -149,6 +167,12 @@ variable "eks_mon_min_size" {
   default = 1
 }
 
+variable "eks_mon_desired_size" {
+  type    = number
+  nullable = false
+  default = 1
+}
+
 variable "eks_mon_max_size" {
   type    = number
   nullable = false
@@ -182,6 +206,12 @@ variable "eks_mon_single_subnet" {
 }
 
 variable "eks_tools_min_size" {
+  type    = number
+  nullable = false
+  default = 1
+}
+
+variable "eks_tools_desired_size" {
   type    = number
   nullable = false
   default = 2
@@ -220,6 +250,12 @@ variable "eks_tools_single_subnet" {
 }
 
 variable "eks_db_min_size" {
+  type    = number
+  nullable = false
+  default = 1
+}
+
+variable "eks_db_desired_size" {
   type    = number
   nullable = false
   default = 0
