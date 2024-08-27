@@ -39,16 +39,18 @@ DOCKER_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
 then
   DOCKER_OPTS="-it"
+  export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
 else
   #This is needed for terratest terraform execution
   DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+  export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 6; echo)"
   #This is needed for terratest bucket creation
-  mkdir -p $(echo ~)/.config/gcloud 
+  mkdir -p $CLOUDSDK_CONFIG
   gaccount=""
   attempt=1
   while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
-    echo ${GOOGLE_CREDENTIALS} > $(echo ~)/.config/gcloud/application_default_credentials.json
-    gcloud auth activate-service-account --key-file=$(echo ~)/.config/gcloud/application_default_credentials.json
+    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+    gcloud auth activate-service-account --key-file=$CLOUDSDK_CONFIG/application_default_credentials.json
     gcloud config set project $GOOGLE_PROJECT
     gcloud auth list
     gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
@@ -80,6 +82,6 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
 	-e ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="true" \
 	-e ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS="true" \
-  -v $(echo ~)/.config/gcloud:/root/.config/gcloud \
+  -v $CLOUDSDK_CONFIG:/root/.config/gcloud \
 	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
  
