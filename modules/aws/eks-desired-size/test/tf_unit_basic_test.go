@@ -23,6 +23,7 @@ func TestTerraformEksDesiredSize(t *testing.T) {
 
 func testTerraformEksDesiredSizeBiz(t *testing.T) {
 	t.Parallel()
+
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"cluster_name": "runner-main-biz",
 	})
@@ -52,14 +53,14 @@ func testTerraformEksDesiredSizeBiz(t *testing.T) {
 func testTerraformEksDesiredSizePri(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("TF_VAR_prefix")
-	workspaceName := "pri"
-
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
 		"cluster_name": "runner-main-pri",
 	})
 	_, destroyFunc := tf.ApplyTerraform(t, "pri", options)
 	defer destroyFunc()
+
+	prefix := os.Getenv("TF_VAR_prefix")
+	workspaceName := "pri"
 
 	eks_main_min_size := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s-%s/eks_main_min_size", prefix, workspaceName))
 	eks_mainarm_min_size := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s-%s/eks_mainarm_min_size", prefix, workspaceName))
