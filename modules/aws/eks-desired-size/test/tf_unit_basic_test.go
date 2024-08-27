@@ -9,7 +9,6 @@ import (
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
-	"gotest.tools/assert"
 )
 
 const bucketName = "infralib-modules-aws-eks-desired-size-tf"
