@@ -10,7 +10,7 @@ locals {
   eks_managed_node_groups_all = {
     main = {
       min_size        = var.eks_main_min_size
-      desired_size    = var.eks_main_min_size
+      desired_size    = var.eks_main_desired_size != 0 ? var.eks_main_desired_size : var.eks_main_min_size
       max_size        = var.eks_main_max_size
       instance_types  = var.eks_main_instance_types
       capacity_type   = "ON_DEMAND"
@@ -35,7 +35,7 @@ locals {
     },
     mainarm = {
       min_size        = var.eks_mainarm_min_size
-      desired_size    = var.eks_mainarm_min_size
+      desired_size    = var.eks_mainarm_desired_size != 0 ? var.eks_mainarm_desired_size : var.eks_mainarm_min_size
       max_size        = var.eks_mainarm_max_size
       instance_types  = var.eks_mainarm_instance_types
       capacity_type   = "ON_DEMAND"
@@ -60,7 +60,7 @@ locals {
     },
     spot = {
       min_size        = var.eks_spot_min_size
-      desired_size    = var.eks_spot_min_size
+      desired_size    = var.eks_spot_desired_size != 0 ? var.eks_spot_desired_size : var.eks_spot_min_size
       max_size        = var.eks_spot_max_size
       instance_types  = var.eks_spot_instance_types
       capacity_type   = "SPOT"
@@ -95,7 +95,7 @@ locals {
     },
     mon = {
       min_size        = var.eks_mon_min_size
-      desired_size    = var.eks_mon_min_size
+      desired_size    = var.eks_mon_desired_size != 0 ? var.eks_mon_desired_size : var.eks_mon_min_size
       max_size        = var.eks_mon_max_size
       instance_types  = var.eks_mon_instance_types
       subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
@@ -131,7 +131,7 @@ locals {
     },
     tools = {
       min_size        = var.eks_tools_min_size
-      desired_size    = var.eks_tools_min_size
+      desired_size    = var.eks_tools_desired_size != 0 ? var.eks_tools_desired_size : var.eks_tools_min_size
       max_size        = var.eks_tools_max_size
       instance_types  = var.eks_tools_instance_types
       subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
@@ -167,7 +167,7 @@ locals {
     },
     db = {
       min_size        = var.eks_db_min_size
-      desired_size    = var.eks_db_min_size
+      desired_size    = var.eks_db_desired_size != 0 ? var.eks_db_desired_size : var.eks_db_min_size
       max_size        = var.eks_db_max_size
       instance_types  = var.eks_db_instance_types
       capacity_type   = "ON_DEMAND"
@@ -207,7 +207,66 @@ locals {
     for key, value in local.eks_managed_node_groups_all :
     "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
   }
-  eks_managed_node_groups = merge(local.eks_managed_node_groups_default,var.eks_managed_node_groups_extra)
+
+  # Set desired_size to min_size if desired_size is 0 for extra node groups
+  eks_managed_node_groups_extra = {
+    for k, v in var.eks_managed_node_groups_extra :
+    k => merge(
+      v,
+      { 
+        desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
+      }
+    )
+  }
+
+  eks_managed_node_groups = merge(local.eks_managed_node_groups_default,local.eks_managed_node_groups_extra)
+
+  extra_min_sizes = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_min_size" => lookup(node_group_config, "min_size", 1) }
+  extra_desired_sizes = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_desired_size" => lookup(node_group_config, "desired_size", 0) }
+
+  // Contains desired sizes with values more than 0
+  eks_desired_size_map = {
+    for k, v in merge(
+      {
+        eks_main_desired_size    = var.eks_main_desired_size
+        eks_mainarm_desired_size = var.eks_mainarm_desired_size
+        eks_tools_desired_size   = var.eks_tools_desired_size
+        eks_mon_desired_size     = var.eks_mon_desired_size
+        eks_spot_desired_size    = var.eks_spot_desired_size
+        eks_db_desired_size      = var.eks_db_desired_size
+      },
+      local.extra_desired_sizes
+    ) : k => v if v > 0
+  }
+
+  // Contains min sizes for node pools that have desired size value more than 0
+  eks_min_size_map = { 
+    for k, v in merge(
+      {
+        eks_main_min_size     = var.eks_main_min_size
+        eks_mainarm_min_size  = var.eks_mainarm_min_size
+        eks_tools_min_size    = var.eks_tools_min_size
+        eks_mon_min_size      = var.eks_mon_min_size
+        eks_spot_min_size     = var.eks_spot_min_size
+        eks_db_min_size       = var.eks_db_min_size
+      },
+      local.extra_min_sizes
+    ) : k => v if contains(keys(local.eks_desired_size_map), replace(k, "min_size", "desired_size"))
+  }
+
+  # eks_min_and_desired_size_map = merge(local.eks_desired_size_map, local.eks_min_size_map)
+
+  temp_map_1 = {
+    for k, v in local.eks_min_size_map : k => v if local.eks_desired_size_map[replace(k, "min_size", "desired_size")] >= v
+  }
+
+  temp_map_2 = {
+    for k, v in local.eks_desired_size_map : k => v if local.eks_min_size_map[replace(k, "desired_size", "min_size")] <= v
+  }
+
+  // Contains min_size and desired_size for node groups that have desired_size >= min_size
+  eks_min_and_desired_size_map = merge(local.temp_map_1, local.temp_map_2)
+  
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
@@ -550,3 +609,101 @@ resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
 #  }
 #}
 
+resource "null_resource" "update_desired_size" {
+  count = length(local.eks_desired_size_map) > 0 ? 1 : 0
+  depends_on = [module.eks]
+
+  triggers = {
+    eks_desired_size_map = jsonencode([
+      for key in sort(keys(local.eks_desired_size_map)) : {
+        key   = key
+        value = local.eks_desired_size_map[key]
+      }
+    ])
+    # always = timestamp()
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    environment = local.eks_min_and_desired_size_map
+
+    command = <<-EOT
+
+      # Get list of node groups
+      nodegroups=$(aws eks list-nodegroups --cluster-name ${module.eks.cluster_name} --query "nodegroups" --output text)
+      
+      # Loop through each node group
+      for nodegroup in $nodegroups; do
+        echo ""
+        echo "Nodegroup: $nodegroup"
+
+        # Get the short name of the node group (Example: main, mainarm, tools, mon, spot, db)
+        node_group_short_name=$(echo "$nodegroup" | awk -F'-' '{print $(NF-1)}')
+        echo "Node group short name: $node_group_short_name"
+
+        # Get desired size variable name (Example: eks_main_desired_size)
+        desired_size_variable_name="eks_$${node_group_short_name}_desired_size"
+        echo "desired_size_variable_name: $desired_size_variable_name"
+
+        # If desired_size_variable_name is not set as an environment variable (Does not exist in eks_min_and_desired_size_map), skip this node group
+        if [ -z "$${!desired_size_variable_name}" ]; then
+          echo "Skipping node group $nodegroup because desired_size variable is not set"
+          continue
+        fi
+
+        # Get new desired size value from environment variable
+        new_desired_size=$${!desired_size_variable_name}
+
+        # Convert new desired size value to an integer
+        new_desired_size=$(printf "%d" "$new_desired_size")
+        echo "New desired size: $new_desired_size"
+        
+        # Get the current desired size of the node group
+        current_desired_size=$(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.scalingConfig.desiredSize" --output text)
+
+        # Convert current desired size value to an integer
+        current_desired_size=$(printf "%d" "$current_desired_size")
+        echo "Current desired size: $current_desired_size"
+
+        if [ $current_desired_size -eq $new_desired_size ]; then
+           echo "Node group $nodegroup already at desired size: $new_desired_size". No update needed.
+           continue
+        fi
+
+        # Get min size variable name (Example: eks_main_min_size)
+        min_size_variable_name="eks_$${node_group_short_name}_min_size"
+        echo "min_size_variable_name: $min_size_variable_name"
+
+        # Get new min size value from environment variable
+        new_min_size=$${!min_size_variable_name}
+
+        # Convert new min size value to an integer
+        new_min_size=$(printf "%d" "$new_min_size")
+        echo "New min size: $new_min_size"
+
+        # Get the current min size of the node group
+        current_min_size=$(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.scalingConfig.minSize" --output text)
+
+        # Convert current min size value to an integer
+        current_min_size=$(printf "%d" "$current_min_size")
+        echo "Current min size: $current_min_size"
+
+        # Check if node group is in ACTIVE state, if not then sleep for 5 seconds and check again
+        while [ $(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.status" --output text) != "ACTIVE" ]; do
+          sleep 5
+        done
+
+        # Update node group desired size
+        aws eks update-nodegroup-config --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --scaling-config desiredSize=$new_desired_size
+        echo "Updated node group $nodegroup to new desired size: $new_desired_size"
+
+        # Check if node group is in ACTIVE state, if not then sleep for 5 seconds and check again
+        while [ $(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.status" --output text) != "ACTIVE" ]; do
+          sleep 5
+        done
+
+      done
+
+    EOT
+  }
+}

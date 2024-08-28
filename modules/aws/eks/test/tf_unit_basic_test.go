@@ -28,26 +28,11 @@ func testTerraformEksBiz(t *testing.T) {
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
 	private_subnet_cidrs := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/private_subnet_cidrs")
 
-	eks_main_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_main_min_size")
-	eks_mainarm_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_mainarm_min_size")
-	eks_db_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_db_min_size")
-	eks_spot_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_spot_min_size")
-	eks_altarm_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/eks_altarm_min_size")
-
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"vpc_id":               vpc_id,
 		"private_subnets":      fmt.Sprintf("[%s]", private_subnets),
 		"public_subnets":       fmt.Sprintf("[%s]", public_subnets),
 		"eks_api_access_cidrs": fmt.Sprintf("[%s]", private_subnet_cidrs),
-		"eks_main_min_size":    eks_main_min_size,
-		"eks_mainarm_min_size": eks_mainarm_min_size,
-		"eks_db_min_size":      eks_db_min_size,
-		"eks_spot_min_size":    eks_spot_min_size,
-		"eks_managed_node_groups_extra": map[string]interface{}{
-			"altarm": map[string]interface{}{
-				"min_size": eks_altarm_min_size,
-			},
-		},
 	})
 	testTerraformEks(t, "biz", options)
 }
@@ -58,18 +43,11 @@ func testTerraformEksPri(t *testing.T) {
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/public_subnets")
 	private_subnet_cidrs := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/private_subnet_cidrs")
 
-	eks_main_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/eks_main_min_size")
-	eks_tools_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/eks_tools_min_size")
-	eks_mon_min_size := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-pri/eks_mon_min_size")
-
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_pri.tfvars", map[string]interface{}{
 		"vpc_id":               vpc_id,
 		"private_subnets":      fmt.Sprintf("[%s]", private_subnets),
 		"public_subnets":       fmt.Sprintf("[%s]", public_subnets),
 		"eks_api_access_cidrs": fmt.Sprintf("[%s]", private_subnet_cidrs),
-		"eks_main_min_size":    eks_main_min_size,
-		"eks_tools_min_size":   eks_tools_min_size,
-		"eks_mon_min_size":     eks_mon_min_size,
 	})
 	testTerraformEks(t, "pri", options)
 }
