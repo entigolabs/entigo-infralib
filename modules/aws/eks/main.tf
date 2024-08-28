@@ -256,7 +256,6 @@ locals {
 
   # eks_min_and_desired_size_map = merge(local.eks_desired_size_map, local.eks_min_size_map)
 
-  // Contains min_size and desired_size for node groups that have desired_size >= min_size
   temp_map_1 = {
     for k, v in local.eks_min_size_map : k => v if local.eks_desired_size_map[replace(k, "min_size", "desired_size")] >= v
   }
@@ -265,6 +264,7 @@ locals {
     for k, v in local.eks_desired_size_map : k => v if local.eks_min_size_map[replace(k, "desired_size", "min_size")] <= v
   }
 
+  // Contains min_size and desired_size for node groups that have desired_size >= min_size
   eks_min_and_desired_size_map = merge(local.temp_map_1, local.temp_map_2)
   
 }
