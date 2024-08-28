@@ -19,7 +19,7 @@ var awsRegion string
 func TestTerraformEks(t *testing.T) {
 	awsRegion = commonAWS.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformEksBiz)
-	// t.Run("Pri", testTerraformEksPri)
+	t.Run("Pri", testTerraformEksPri)
 }
 
 func testTerraformEksBiz(t *testing.T) {
