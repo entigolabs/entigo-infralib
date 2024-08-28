@@ -27,3 +27,14 @@ output "oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
 }
 
+# output "eks_desired_size_map" {
+#   value = local.eks_desired_size_map
+# }
+
+# output "eks_min_size_map" {
+#   value = local.eks_min_size_map
+# }
+
+# output "eks_min_and_desired_size_map" {
+#   value = local.eks_min_and_desired_size_map
+# }

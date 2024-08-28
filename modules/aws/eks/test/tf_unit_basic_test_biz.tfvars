@@ -8,6 +8,7 @@ eks_db_max_size              = 0
 eks_main_desired_size        = 4
 eks_main_max_size            = 6
 eks_main_instance_types   = ["t3.small"]
+eks_mainarm_desired_size     = 1
 eks_mainarm_max_size         = 2
 eks_mainarm_instance_types   = ["t4g.micro"]
 eks_managed_node_groups_extra = {
