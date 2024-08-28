@@ -38,3 +38,19 @@ output "oidc_provider_arn" {
 # output "eks_min_and_desired_size_map" {
 #   value = local.eks_min_and_desired_size_map
 # }
+
+# output "extra_desired_sizes" {  
+#   value = local.extra_desired_sizes
+# }
+
+# output "extra_min_sizes" {  
+#   value = local.extra_min_sizes
+# }
+
+# output "temp_map_1" {
+#   value = local.temp_map_1
+# }
+
+# output "temp_map_2" {
+#   value = local.temp_map_2
+# } 
