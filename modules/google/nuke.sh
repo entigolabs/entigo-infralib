@@ -342,8 +342,8 @@ gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-ent
   gcloud dns managed-zones delete --project entigo-infralib2 -q $ZONE_NAME
 done
 
-gcloud dns record-sets list --zone=gcp-infralib-entigo-io --format="get(name)" | grep -ve "^gcp.infralib.entigo.io.\|^agent.gcp.infralib.entigo.io." | while read -r RECORD_NAME; do
-  gcloud dns record-sets delete --type=NS --zone=gcp-infralib-entigo-io --project entigo-infralib2 -q $RECORD_NAME
+gcloud dns record-sets list --zone=gcp-infralib-entigo-io --format="get(name,type)" | grep -ve "^gcp.infralib.entigo.io.\|^agent.gcp.infralib.entigo.io." | while read -r RECORD_NAME TYPE; do
+  gcloud dns record-sets delete --type=$TYPE --zone=gcp-infralib-entigo-io --project entigo-infralib2 -q $RECORD_NAME
 done
 
 PIDS=""
