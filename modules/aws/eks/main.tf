@@ -213,15 +213,15 @@ locals {
     for k, v in var.eks_managed_node_groups_extra :
     k => merge(
       v,
-      { 
+      {
         desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
       }
     )
   }
 
-  eks_managed_node_groups = merge(local.eks_managed_node_groups_default,local.eks_managed_node_groups_extra)
+  eks_managed_node_groups = merge(local.eks_managed_node_groups_default, local.eks_managed_node_groups_extra)
 
-  extra_min_sizes = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_min_size" => lookup(node_group_config, "min_size", 1) }
+  extra_min_sizes     = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_min_size" => lookup(node_group_config, "min_size", 1) }
   extra_desired_sizes = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_desired_size" => lookup(node_group_config, "desired_size", 0) }
 
   // Contains desired sizes with values more than 0
@@ -240,21 +240,19 @@ locals {
   }
 
   // Contains min sizes for node pools that have desired size value more than 0
-  eks_min_size_map = { 
+  eks_min_size_map = {
     for k, v in merge(
       {
-        eks_main_min_size     = var.eks_main_min_size
-        eks_mainarm_min_size  = var.eks_mainarm_min_size
-        eks_tools_min_size    = var.eks_tools_min_size
-        eks_mon_min_size      = var.eks_mon_min_size
-        eks_spot_min_size     = var.eks_spot_min_size
-        eks_db_min_size       = var.eks_db_min_size
+        eks_main_min_size    = var.eks_main_min_size
+        eks_mainarm_min_size = var.eks_mainarm_min_size
+        eks_tools_min_size   = var.eks_tools_min_size
+        eks_mon_min_size     = var.eks_mon_min_size
+        eks_spot_min_size    = var.eks_spot_min_size
+        eks_db_min_size      = var.eks_db_min_size
       },
       local.extra_min_sizes
     ) : k => v if contains(keys(local.eks_desired_size_map), replace(k, "min_size", "desired_size"))
   }
-
-  # eks_min_and_desired_size_map = merge(local.eks_desired_size_map, local.eks_min_size_map)
 
   temp_map_1 = {
     for k, v in local.eks_min_size_map : k => v if local.eks_desired_size_map[replace(k, "min_size", "desired_size")] >= v
@@ -266,7 +264,6 @@ locals {
 
   // Contains min_size and desired_size for node groups that have desired_size >= min_size
   eks_min_and_desired_size_map = merge(local.temp_map_1, local.temp_map_2)
-  
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
@@ -338,47 +335,47 @@ module "eks" {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.10.1-eksbuild.7"
+      addon_version               = "v1.10.1-eksbuild.7"
       configuration_values = jsonencode({
-          tolerations: [
-            {
-            key: "tools",
-            operator: "Equal",
-            value: "true",
-            effect: "NoSchedule"
-            }
-          ],
-          affinity: {
-              nodeAffinity: {
-                preferredDuringSchedulingIgnoredDuringExecution: [
-                  {
-                    preference: {
-                      matchExpressions: [
-                       {
-                          "key": "tools",
-                          "operator": "In",
-                          "values": [
-                            "true"
-                          ]
-                        }
-                      ]
-                    },
-                    "weight": 5
-                  }
-                ]
-              }
+        tolerations : [
+          {
+            key : "tools",
+            operator : "Equal",
+            value : "true",
+            effect : "NoSchedule"
           }
+        ],
+        affinity : {
+          nodeAffinity : {
+            preferredDuringSchedulingIgnoredDuringExecution : [
+              {
+                preference : {
+                  matchExpressions : [
+                    {
+                      "key" : "tools",
+                      "operator" : "In",
+                      "values" : [
+                        "true"
+                      ]
+                    }
+                  ]
+                },
+                "weight" : 5
+              }
+            ]
+          }
+        }
       })
     }
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.28.8-eksbuild.2"
+      addon_version               = "v1.28.8-eksbuild.2"
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.18.0-eksbuild.1"
+      addon_version               = "v1.18.0-eksbuild.1"
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
@@ -393,52 +390,52 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version = "v1.30.0-eksbuild.1"
+      addon_version               = "v1.30.0-eksbuild.1"
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({
-        controller: {
-          tolerations: [
+        controller : {
+          tolerations : [
             {
-            key: "tools",
-            operator: "Equal",
-            value: "true",
-            effect: "NoSchedule"
+              key : "tools",
+              operator : "Equal",
+              value : "true",
+              effect : "NoSchedule"
             }
           ],
-          affinity: {
-              nodeAffinity: {
-                preferredDuringSchedulingIgnoredDuringExecution: [
-                  {
-                    preference: {
-                      matchExpressions: [
-                       {
-                          "key": "eks.amazonaws.com/compute-type",
-                          "operator": "NotIn",
-                          "values": [
-                            "fargate"
-                          ]
-                        }
-                      ]
-                    },
-                    "weight": 1
+          affinity : {
+            nodeAffinity : {
+              preferredDuringSchedulingIgnoredDuringExecution : [
+                {
+                  preference : {
+                    matchExpressions : [
+                      {
+                        "key" : "eks.amazonaws.com/compute-type",
+                        "operator" : "NotIn",
+                        "values" : [
+                          "fargate"
+                        ]
+                      }
+                    ]
                   },
-                  {
-                    preference: {
-                      matchExpressions: [
-                       {
-                          "key": "tools",
-                          "operator": "In",
-                          "values": [
-                            "true"
-                          ]
-                        }
-                      ]
-                    },
-                    "weight": 5
-                  }
-                ]
-              }
+                  "weight" : 1
+                },
+                {
+                  preference : {
+                    matchExpressions : [
+                      {
+                        "key" : "tools",
+                        "operator" : "In",
+                        "values" : [
+                          "true"
+                        ]
+                      }
+                    ]
+                  },
+                  "weight" : 5
+                }
+              ]
+            }
           }
         }
       })
@@ -500,7 +497,7 @@ module "eks" {
       type        = "egress"
       cidr_blocks = ["0.0.0.0/0"]
     }
-    
+
     ingress_allow_nodeport = {
       description = "Allow NodePort"
       protocol    = "-1"
@@ -509,7 +506,7 @@ module "eks" {
       type        = "ingress"
       cidr_blocks = var.eks_nodeport_access_cidrs
     }
-    
+
   }
 
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
@@ -610,7 +607,7 @@ resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
 #}
 
 resource "null_resource" "update_desired_size" {
-  count = length(local.eks_desired_size_map) > 0 ? 1 : 0
+  count      = length(local.eks_desired_size_map) > 0 ? 1 : 0
   depends_on = [module.eks]
 
   triggers = {
@@ -620,7 +617,6 @@ resource "null_resource" "update_desired_size" {
         value = local.eks_desired_size_map[key]
       }
     ])
-    # always = timestamp()
   }
 
   provisioner "local-exec" {
