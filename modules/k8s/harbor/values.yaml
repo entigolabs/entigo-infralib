@@ -114,7 +114,6 @@ harbor:
         effect: "NoSchedule"
 
   registry:
-    serviceAccountName: harbor-registry
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     registry:
