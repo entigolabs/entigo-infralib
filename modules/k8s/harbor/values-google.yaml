@@ -23,27 +23,3 @@ harbor:
   registry:
     serviceAccountName: harbor
     automountServiceAccountToken: true
-  # portal:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # core:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # trivy:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # jobservice:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # exporter:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # redis:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # nginx:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
-  # database:
-  #   serviceAccountName: harbor
-  #   automountServiceAccountToken: true
