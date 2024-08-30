@@ -24,9 +24,6 @@ harbor:
         size: 5Gi
       trivy:
         size: 10Gi
-    imageChartStorage:
-      gcs:
-        bucket: ""
 
   portal:
     replicas: 2
