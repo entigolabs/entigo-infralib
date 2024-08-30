@@ -1,12 +1,12 @@
 cloudProvider: aws
 harbor:
   expose:
-    type: ingress 
+    type: ingress
     tls:
       certSource: none
     ingress:
       annotations:
-        alb.ingress.kubernetes.io/ssl-redirect: '443'
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
         alb.ingress.kubernetes.io/backend-protocol: HTTP
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'

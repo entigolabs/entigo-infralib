@@ -1,22 +1,25 @@
 cloudProvider: google
+providerConfigRefName: crossplane-google
+namespaceName: harbor
+
+google:
+  hostname: ""
+  projectID: ""
+  gateway:
+    name: google-gateway-external
+    namespace: google-gateway
+
 harbor:
   expose:
     type: clusterIP
     tls:
       enabled: false
-#TODO
-#  persistence:
-#    imageChartStorage:
-#      type: s3
-#    gcs:
-#      bucket: ""
-#      encodedkey: base64-encoded-json-key-file
-#      useWorkloadIdentity: true
-      
-      
-google:
-  hostname: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
-
+  persistence:
+    imageChartStorage:
+      type: gcs
+      gcs:
+        useWorkloadIdentity: true
+        bucket: ""
+  registry:
+    serviceAccountName: harbor
+    automountServiceAccountToken: true

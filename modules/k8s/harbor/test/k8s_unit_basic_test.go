@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/helm"
@@ -27,7 +28,7 @@ func TestK8sHarborGoogleBiz(t *testing.T) {
 }
 
 func TestK8sHarborGooglePri(t *testing.T) {
-	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_google_biz.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_google_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
 func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, cloudProvider string) {
@@ -37,6 +38,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 
+	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := "harbor"
 	extraArgs := make(map[string][]string)
@@ -60,8 +62,11 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	case "google":
 		gatewayNamespace = "google-gateway"
 
+		setValues["namespaceName"] = namespaceName
+		setValues["google.projectID"] = googleProjectID
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["harbor.persistence.imageChartStorage.gcs.bucket"] = fmt.Sprintf("%s-%s", releaseName, envName)
 
 		switch envName {
 		case "biz":
@@ -71,7 +76,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 		}
 		setValues["google.gateway.name"] = gatewayName
 	}
-	
+
 	setValues["harbor.expose.clusterIP.name"] = releaseName
 	setValues["harbor.externalURL"] = fmt.Sprintf("https://%s.%s", releaseName, hostName)
 	setValues["harbor.harborAdminPassword"] = "Harbor12345"
@@ -100,23 +105,22 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 		}
 	}
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-	
+
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-database-0", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-database-0 pod error:", releaseName), err)
 	}
-	
+
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-redis-0", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-redis-0 pod error:", releaseName), err)
 	}
-	
+
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-trivy-0", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-trivy-0 pod error:", releaseName), err)
 	}
 
-	
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-core", releaseName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-core deployment error:", releaseName), err)
@@ -131,7 +135,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-registry deployment error:", releaseName), err)
 	}
-	
+
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-jobservice", releaseName), 30, 10*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-jobservice deployment error:", releaseName), err)
