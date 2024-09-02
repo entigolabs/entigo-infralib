@@ -8,7 +8,7 @@ metadata:
     crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.gcs.bucket }}
 spec:
   forProvider:
-    location: EU
+    location: {{ .Values.google.region}}
     uniformBucketLevelAccess: true
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}

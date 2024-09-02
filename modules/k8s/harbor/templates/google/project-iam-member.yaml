@@ -6,7 +6,7 @@ metadata:
   name: {{ .Release.Name }}-workload-identity-user
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.namespaceName }}/{{ .Values.harbor.registry.serviceAccountName }}]
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.harbor.registry.serviceAccountName }}]
     project: {{ .Values.google.projectID }}
     role: roles/iam.workloadIdentityUser
   providerConfigRef:
@@ -18,7 +18,7 @@ metadata:
   name: {{ .Release.Name }}-storage-admin
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Values.namespaceName }}/{{ .Values.harbor.registry.serviceAccountName }}]
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.harbor.registry.serviceAccountName }}]
     project: {{ .Values.google.projectID }}
     role: roles/storage.admin
   providerConfigRef:
