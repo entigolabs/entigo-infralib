@@ -126,6 +126,8 @@ harbor:
         effect: "NoSchedule"
 
   registry:
+    serviceAccountName: harbor
+    automountServiceAccountToken: true
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     registry:

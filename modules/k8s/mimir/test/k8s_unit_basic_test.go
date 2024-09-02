@@ -77,7 +77,6 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	case "google":
 		gatewayNamespace = "google-gateway"
 
-		setValues["global.namespaceName"] = namespaceName
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.projectID"] = googleProjectID
 		setValues["google.gateway.namespace"] = gatewayNamespace

@@ -27,6 +27,3 @@ harbor:
         region: ""
         regionendpoint: ""
         bucket: ""
-  registry:
-    serviceAccountName: harbor
-    automountServiceAccountToken: true
