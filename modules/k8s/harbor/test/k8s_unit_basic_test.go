@@ -46,7 +46,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("harbor-%s", prefix)
+		namespaceName = fmt.Sprintf("harbor-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
