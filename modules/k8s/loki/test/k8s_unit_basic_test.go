@@ -88,7 +88,6 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		setValues["loki.loki.storage.bucketNames.admin"] = bucketName
 
 		setValues["bucketName"] = bucketName
-		setValues["namespaceName"] = namespaceName
 
 		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.projectID"] = googleProjectID
