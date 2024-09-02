@@ -41,7 +41,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 
 	googleProjectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "harbor"
+	namespaceName := fmt.Sprintf("harbor-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
@@ -54,7 +54,7 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
-	bucketName := fmt.Sprintf("%s-%s", releaseName, envName)
+	bucketName := namespaceName
 
 	switch cloudProvider {
 	case "aws":
