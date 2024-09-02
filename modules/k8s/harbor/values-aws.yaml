@@ -1,4 +1,10 @@
 cloudProvider: aws
+providerConfigRefName: crossplane-aws
+
+aws:
+  account: ""
+  clusterOIDC: ""
+
 harbor:
   expose:
     type: ingress
@@ -14,10 +20,13 @@ harbor:
         alb.ingress.kubernetes.io/target-type: ip
         kubernetes.io/ingress.class: alb
       controller: alb
-#TODO
-#  persistence:
-#    imageChartStorage:
-#      type: s3
-#    s3:
-#      region: "eu-north-1"
-#      bucket: ""
+  persistence:
+    imageChartStorage:
+      type: s3
+      s3:
+        region: ""
+        regionendpoint: ""
+        bucket: ""
+  registry:
+    serviceAccountName: harbor
+    automountServiceAccountToken: true

@@ -10,6 +10,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
@@ -53,20 +54,26 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
+	bucketName := fmt.Sprintf("%s-%s", releaseName, envName)
 
 	switch cloudProvider {
 	case "aws":
-		setValues["harbor.expose.ingress.hosts.core"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		gatewayName = fmt.Sprintf("%s-ingress", namespaceName)
+
+		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		clusterOIDC := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
+		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
+
+		setValues["aws.account"] = awsAccount
+		setValues["aws.clusterOIDC"] = clusterOIDC
+		setValues["harbor.persistence.imageChartStorage.s3.region"] = region
+		setValues["harbor.persistence.imageChartStorage.s3.regionendpoint"] = fmt.Sprintf("s3.%s.amazonaws.com", region)
+		setValues["harbor.persistence.imageChartStorage.s3.bucket"] = bucketName
+		setValues["harbor.expose.ingress.hosts.core"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 
 	case "google":
 		gatewayNamespace = "google-gateway"
-
-		setValues["namespaceName"] = namespaceName
-		setValues["google.projectID"] = googleProjectID
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.gateway.namespace"] = gatewayNamespace
-		setValues["harbor.persistence.imageChartStorage.gcs.bucket"] = fmt.Sprintf("%s-%s", releaseName, envName)
 
 		switch envName {
 		case "biz":
@@ -74,7 +81,12 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
+
 		setValues["google.gateway.name"] = gatewayName
+		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["google.projectID"] = googleProjectID
+		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["harbor.persistence.imageChartStorage.gcs.bucket"] = bucketName
 	}
 
 	setValues["harbor.expose.clusterIP.name"] = releaseName
