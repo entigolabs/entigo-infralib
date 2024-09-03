@@ -281,8 +281,8 @@ gcloud -q certificate-manager maps list --uri | while read -r MAP; do
     gcloud certificate-manager maps entries delete --project entigo-infralib2 -q $ENTRY
   done
 
-  MAX_RETRIES=5
-  RETRY_DELAY=10
+  MAX_RETRIES=20
+  RETRY_DELAY=60
   SUCCESS=false
 
   for ((i = 1; i <= MAX_RETRIES; i++)); do
