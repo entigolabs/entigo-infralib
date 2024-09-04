@@ -1,0 +1,17 @@
+spec:
+  ignoreDifferences:
+  - jsonPointers:
+    - /data/REGISTRY_HTPASSWD
+    - /data/CSRF_KEY
+    - /data/secret
+    - /data/tls.crt
+    - /data/tls.key
+    - /data/JOBSERVICE_SECRET
+    - /data/REGISTRY_HTTP_SECRET
+    kind: Secret
+  - jsonPointers:
+    - '/spec/template/metadata/annotations/checksum~1secret'
+    - '/spec/template/metadata/annotations/checksum~1secret-core'
+    - '/spec/template/metadata/annotations/checksum~1secret-jobservice'
+    kind: Deployment
+    group: apps
