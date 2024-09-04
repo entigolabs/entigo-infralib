@@ -14,8 +14,6 @@ google:
     namespace: google-gateway
 
 harbor:
-  updateStrategy:
-    type: Recreate
   ipFamily:
     ipv6:
       enabled: false
