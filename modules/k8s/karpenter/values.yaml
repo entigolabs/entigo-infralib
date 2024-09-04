@@ -1,0 +1,25 @@
+providerConfigRefName: crossplane-aws
+
+aws:
+  account: ""
+  clusterOIDC: ""
+  region: ""
+
+# https://github.com/aws/karpenter-provider-aws/blob/main/charts/karpenter/values.yaml
+
+karpenter:
+  replicas: 1
+  controller:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+        ephemeral-storage: 1Gi
+      limits:
+        cpu: 1
+        memory: 1Gi
+        ephemeral-storage: 2Gi
+
+  settings:
+    clusterName: ""
+    isolatedVPC: true

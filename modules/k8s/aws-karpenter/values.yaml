@@ -1,6 +1,0 @@
-providerConfigRefName: ""
-
-aws:
-  account: ""
-  clusterOIDC: ""
-  region: ""
