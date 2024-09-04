@@ -1,3 +1,4 @@
+cloudProvider: aws
 providerConfigRefName: crossplane-aws
 
 aws:
@@ -8,6 +9,9 @@ aws:
 # https://github.com/aws/karpenter-provider-aws/blob/main/charts/karpenter/values.yaml
 
 karpenter:
+  serviceAccount:
+    create: false
+    name: karpenter
   replicas: 1
   controller:
     resources:
@@ -19,6 +23,16 @@ karpenter:
         cpu: 1
         memory: 1Gi
         ephemeral-storage: 2Gi
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: karpenter.sh/nodepool
+                operator: DoesNotExist
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: "kubernetes.io/hostname"
 
   settings:
     clusterName: ""
