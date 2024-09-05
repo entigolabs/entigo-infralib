@@ -21,7 +21,7 @@ spec:
               "s3:DeleteObject"
             ],
             "Resource": [
-              "arn:aws:s3:::{{ .Values.global.bucketName }}/*"
+              "arn:aws:s3:::{{ .Values.bucketName }}/*"
             ]
           },
           {
@@ -30,13 +30,13 @@ spec:
               "s3:ListBucket"
             ],
             "Resource": [
-              "arn:aws:s3:::{{ .Values.global.bucketName }}"
+              "arn:aws:s3:::{{ .Values.bucketName }}"
             ]
           }
         ]
       }
 
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
 
 {{- end }}

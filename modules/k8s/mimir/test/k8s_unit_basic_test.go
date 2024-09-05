@@ -55,18 +55,18 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	gatewayName := ""
 	gatewayNamespace := ""
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
-	setValues["global.bucketName"] = bucketName
+	setValues["bucketName"] = bucketName
 
 	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 
-		setValues["global.region"] = region
-		setValues["global.awsAccount"] = account
-		setValues["global.clusterOIDC"] = clusteroidc
+		setValues["aws.region"] = region
+		setValues["aws.account"] = awsAccount
+		setValues["aws.clusterOIDC"] = clusteroidc
 
 		setValues["mimir-distributed.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].path"] = "/"

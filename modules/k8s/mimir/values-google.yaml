@@ -1,4 +1,5 @@
 cloudProvider: google
+providerConfigRefName: crossplane-google
 
 google:
   projectID: ""
@@ -6,9 +7,6 @@ google:
   gateway:
     name: google-gateway-external
     namespace: google-gateway
-
-global:
-  providerConfigRefName: crossplane-google
 
 mimir-distributed:
   gateway:
@@ -58,7 +56,7 @@ mimir-distributed:
           sync_dir: /data/tsdb-sync
 
         gcs:
-          bucket_name: {{ .Values.global.bucketName }}
+          bucket_name: {{ .Values.bucketName }}
 
         tsdb:
           dir: /data/tsdb
@@ -158,7 +156,7 @@ mimir-distributed:
       ruler_storage:
         backend: gcs
         gcs:
-          bucket_name: {{ .Values.global.bucketName }}
+          bucket_name: {{ .Values.bucketName }}
           
         cache:
           backend: memcached

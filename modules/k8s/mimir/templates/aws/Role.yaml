@@ -13,19 +13,19 @@ spec:
           {
             "Effect": "Allow",
             "Principal": {
-              "Federated": "arn:aws:iam::{{ .Values.global.awsAccount }}:oidc-provider/{{ .Values.global.clusterOIDC }}"
+              "Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.aws.clusterOIDC }}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
               "StringEquals": {
-                "{{ .Values.global.clusterOIDC }}:aud": "sts.amazonaws.com",
-                "{{ .Values.global.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:mimir"
+                "{{ .Values.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:mimir"
               }
             }
           }
         ]
       }
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
 
 {{- end }}

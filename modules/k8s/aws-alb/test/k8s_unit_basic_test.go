@@ -41,13 +41,13 @@ func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runne
 	setValues := make(map[string]string)
 
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account", runnerName))
+	awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account", runnerName))
 	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/oidc_provider", runnerName))
 	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region", runnerName))
 
 	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region)
-	setValues["awsAccount"] = account
-	setValues["clusterOIDC"] = clusteroidc
+	setValues["aws.account"] = awsAccount
+	setValues["aws.clusterOIDC"] = clusteroidc
 	setValues["aws-load-balancer-controller.clusterName"] = runnerName
 
 	ingressClass := "alb"

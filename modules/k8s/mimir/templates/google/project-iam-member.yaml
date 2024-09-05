@@ -6,10 +6,10 @@ metadata:
   name: {{ .Release.Name }}-workload-identity-user
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.global.serviceAccountName }}]
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/mimir]
     project: {{ .Values.google.projectID }}
     role: roles/iam.workloadIdentityUser
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
     
 {{- end }}

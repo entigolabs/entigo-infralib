@@ -11,13 +11,13 @@ spec:
           {
             "Effect": "Allow",
             "Principal": {
-              "Federated": "arn:aws:iam::{{ .Values.awsAccount }}:oidc-provider/{{ .Values.clusterOIDC }}"
+              "Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.aws.clusterOIDC }}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
               "StringEquals": {
-                "{{ .Values.clusterOIDC }}:aud": "sts.amazonaws.com",
-                "{{ .Values.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:aws-load-balancer-controller"
+                "{{ .Values.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:aws-load-balancer-controller"
               }
             }
           }

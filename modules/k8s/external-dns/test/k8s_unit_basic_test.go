@@ -47,14 +47,14 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 
 		setValues["external-dns.env[0].value"] = region
 		setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-		setValues["awsAccount"] = account
-		setValues["clusterOIDC"] = clusteroidc
+		setValues["aws.account"] = awsAccount
+		setValues["aws.clusterOIDC"] = clusteroidc
 
 		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_zone_id", envName))
 		internalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/int_zone_id", envName))

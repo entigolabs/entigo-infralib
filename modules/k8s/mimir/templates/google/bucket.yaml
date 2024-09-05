@@ -3,14 +3,14 @@
 apiVersion: storage.gcp.upbound.io/v1beta1
 kind: Bucket
 metadata:
-  name: {{ .Values.global.bucketName }}
+  name: {{ .Values.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    crossplane.io/external-name: {{ .Values.bucketName }}
 spec:
   forProvider:
     location: EU
     uniformBucketLevelAccess: true
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
 
 {{- end }}
