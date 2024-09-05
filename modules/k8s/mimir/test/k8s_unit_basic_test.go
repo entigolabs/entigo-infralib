@@ -16,17 +16,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestK8sMimirAWSBiz(t *testing.T) {
-// 	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
-// }
+func TestK8sMimirAWSBiz(t *testing.T) {
+	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "runner-main-biz-int.infralib.entigo.io", "aws")
+}
 
-// func TestK8sMimirAWSPri(t *testing.T) {
-// 	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
-// }
+func TestK8sMimirAWSPri(t *testing.T) {
+	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "runner-main-pri.infralib.entigo.io", "aws")
+}
 
-// func TestK8sMimirGoogleBiz(t *testing.T) {
-// 	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_google_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
-// }
+func TestK8sMimirGoogleBiz(t *testing.T) {
+	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "k8s_unit_basic_test_google_biz.yaml", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+}
 
 func TestK8sMimirGooglePri(t *testing.T) {
 	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "k8s_unit_basic_test_google_pri.yaml", "runner-main-pri.gcp.infralib.entigo.io", "google")
