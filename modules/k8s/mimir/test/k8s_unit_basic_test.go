@@ -64,9 +64,9 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 
-		setValues["aws.region"] = region
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusteroidc
+		setValues["global.aws.region"] = region
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusteroidc
 
 		setValues["mimir-distributed.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].path"] = "/"
@@ -77,9 +77,9 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	case "google":
 		gatewayNamespace = "google-gateway"
 
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.projectID"] = googleProjectID
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.projectID"] = googleProjectID
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 
 		switch envName {
 		case "biz":
@@ -87,7 +87,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
