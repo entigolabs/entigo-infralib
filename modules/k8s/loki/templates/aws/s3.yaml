@@ -9,7 +9,7 @@ metadata:
 spec:
   forProvider:
     acl: private
-    locationConstraint: {{ .Values.region }}
+    locationConstraint: {{ .Values.aws.region }}
     objectOwnership: BucketOwnerPreferred
     publicAccessBlockConfiguration:
       blockPublicPolicy: true

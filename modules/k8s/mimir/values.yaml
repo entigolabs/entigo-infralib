@@ -716,7 +716,7 @@ mimir-distributed:
 
         s3:
           bucket_name: {{ .Values.bucketName }}
-          region: {{ .Values..aws.region }}
+          region: {{ .Values.aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
           signature_version: v4
@@ -820,7 +820,7 @@ mimir-distributed:
         backend: s3
         s3:
           bucket_name: {{ .Values.bucketName }}
-          region: {{ .Values..aws.region }}
+          region: {{ .Values.aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
           signature_version: v4
