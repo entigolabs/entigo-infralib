@@ -1,0 +1,13 @@
+{{- if eq .Values.cloudProvider "aws" }}
+
+apiVersion: iam.aws.crossplane.io/v1alpha1
+kind: InstanceProfile
+metadata:
+  name: {{ .Release.Name }}-karpenter-node-instance-profile
+spec:
+  forProvider:
+    role: {{ .Release.Name }}-karpenter-node-role
+  providerConfigRef:
+    name: {{ .Values.providerConfigRefName }}
+
+{{- end }}
