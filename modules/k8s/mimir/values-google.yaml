@@ -57,7 +57,7 @@ mimir-distributed:
           sync_dir: /data/tsdb-sync
 
         gcs:
-          bucket_name: {{ .Values.bucketName }}
+          bucket_name: {{ .Values.global.bucketName }}
 
         tsdb:
           dir: /data/tsdb
@@ -157,7 +157,7 @@ mimir-distributed:
       ruler_storage:
         backend: gcs
         gcs:
-          bucket_name: {{ .Values.bucketName }}
+          bucket_name: {{ .Values.global.bucketName }}
           
         cache:
           backend: memcached

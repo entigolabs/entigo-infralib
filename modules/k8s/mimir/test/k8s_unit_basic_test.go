@@ -55,7 +55,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	gatewayName := ""
 	gatewayNamespace := ""
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
-	setValues["bucketName"] = bucketName
+	setValues["global.bucketName"] = bucketName
 
 	switch cloudProvider {
 	case "aws":
