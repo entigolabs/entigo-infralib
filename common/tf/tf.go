@@ -158,7 +158,7 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 ) {
 	testFile := ReadTerraformFile(t, fmt.Sprintf("%s/%s", providersPath, "base.tf"))
 	testFileBody := testFile.Body()
-	modifyBackendType(t, testFileBody, providerType)
+	ModifyBackendType(t, testFileBody, providerType)
 	providersBlock := getRequiredProvidersBlock(t, testFile)
 	for name, attribute := range versionsAttributes {
 		providersBlock.Body().SetAttributeRaw(name, attribute.Expr().BuildTokens(nil))
@@ -176,7 +176,7 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 	WriteTerraformFile(t, tempTestFolder, fileName, testFile.Bytes())
 }
 
-func modifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderType) {
+func ModifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderType) {
 
 	terraformBlock := body.FirstMatchingBlock("terraform", []string{})
 	require.NotNil(t, terraformBlock, "terraform block not found")
