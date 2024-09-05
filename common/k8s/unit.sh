@@ -35,6 +35,18 @@ then
   export GOOGLE_PROJECT="entigo-infralib2"
 fi
 
+if [ "$ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS" == "" ]
+then
+  echo "Defaulting ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS to true"
+  export ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="true"
+fi
+
+if [ "$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" == "" ]
+then
+  echo "Defaulting ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS to true"
+  export ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS="true"
+fi
+
 DOCKER_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
 then
@@ -80,8 +92,8 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e TF_VAR_prefix="$prefix" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
-	-e ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="true" \
-	-e ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS="true" \
+	-e ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS="$ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS" \
+	-e ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS="$ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS" \
   -v $CLOUDSDK_CONFIG:/root/.config/gcloud \
 	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
  
