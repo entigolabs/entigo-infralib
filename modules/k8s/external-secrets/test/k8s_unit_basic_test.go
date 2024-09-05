@@ -36,14 +36,14 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 	setValues := make(map[string]string)
 
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+	awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 
 	setValues["external-secrets.env[0].value"] = region
 	setValues["external-secrets.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["awsAccount"] = account
-	setValues["clusterOIDC"] = clusteroidc
+	setValues["aws.account"] = awsAccount
+	setValues["aws.clusterOIDC"] = clusteroidc
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("external-secrets-%s-%s", envName, prefix)

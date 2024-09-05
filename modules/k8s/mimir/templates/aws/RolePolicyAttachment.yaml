@@ -6,10 +6,10 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   forProvider:
-    policyArn: arn:aws:iam::{{ .Values.global.awsAccount }}:policy/{{ .Release.Name }}
+    policyArn: arn:aws:iam::{{ .Values.aws.account }}:policy/{{ .Release.Name }}
     roleNameRef:
       name: {{ .Release.Name }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
 
 {{- end }}

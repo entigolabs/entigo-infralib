@@ -1,4 +1,6 @@
 cloudProvider: ""
+providerConfigRefName: crossplane-aws
+bucketName: "mimir"
 
 google:
   projectID: ""
@@ -7,13 +9,10 @@ google:
     name: google-gateway-external
     namespace: google-gateway
 
-global:
-  awsAccount: ""
+aws:
+  account: ""
   clusterOIDC: ""
-  providerConfigRefName: crossplane-aws
   region: ""
-  bucketName: "mimir"
-  serviceAccountName: "mimir"
 
 mimir-distributed:
   fullnameOverride: mimir
@@ -716,8 +715,8 @@ mimir-distributed:
           sync_dir: /data/tsdb-sync
 
         s3:
-          bucket_name: {{ .Values.global.bucketName }}
-          region: {{ .Values.global.region }}
+          bucket_name: {{ .Values.bucketName }}
+          region: {{ .Values..aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
           signature_version: v4
@@ -820,8 +819,8 @@ mimir-distributed:
       ruler_storage:
         backend: s3
         s3:
-          bucket_name: {{ .Values.global.bucketName }}
-          region: {{ .Values.global.region }}
+          bucket_name: {{ .Values.bucketName }}
+          region: {{ .Values..aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
           signature_version: v4

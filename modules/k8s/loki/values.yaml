@@ -1,4 +1,5 @@
 cloudProvider: ""
+providerConfigRefName: crossplane-aws
 
 google:
   projectID: ""
@@ -7,10 +8,11 @@ google:
     name: google-gateway-external
     namespace: google-gateway
 
-awsAccount: ""
-clusterOIDC: ""
-providerConfigRefName: crossplane-aws
-region: ""
+aws:
+  account: ""
+  clusterOIDC: ""
+  region: ""
+
 bucketName: "loki"
 namespaceName: "loki"
 

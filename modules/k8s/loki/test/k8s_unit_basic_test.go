@@ -59,12 +59,12 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 	switch cloudProvider {
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-		account := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
-		setValues["region"] = region
-		setValues["awsAccount"] = account
-		setValues["clusterOIDC"] = clusteroidc
+		setValues["aws.region"] = region
+		setValues["aws.account"] = awsAccount
+		setValues["aws.clusterOIDC"] = clusteroidc
 		setValues["bucketName"] = bucketName
 
 		setValues["loki.loki.storage.s3.region"] = region

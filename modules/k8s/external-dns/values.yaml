@@ -1,8 +1,9 @@
 cloudProvider: aws
-
-awsAccount: ""
-clusterOIDC: ""
 providerConfigRefName: crossplane-aws
+
+aws:
+  account: ""
+  clusterOIDC: ""
 
 external-dns:
   serviceAccount:

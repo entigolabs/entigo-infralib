@@ -111,8 +111,8 @@ steps:
         source: aws-alb
         version: stable
         inputs:
-          awsAccount: "{{ .ssm.infra.eks.account }}"
-          clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
+          aws.account: "{{ .ssm.infra.eks.account }}"
+          aws.clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
           aws-load-balancer-controller:
             clusterName: "{{ .ssm.infra.eks.cluster_name }}"
       - name: crossplane-system
@@ -124,8 +124,8 @@ steps:
         source: external-dns
         version: stable
         inputs:
-          awsAccount: "{{ .ssm.infra.eks.account }}"
-          clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
+          aws.account: "{{ .ssm.infra.eks.account }}"
+          aws.clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
       - name: aws-storageclass
         source: aws-storageclass
         version: stable

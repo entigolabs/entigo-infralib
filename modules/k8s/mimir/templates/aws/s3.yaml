@@ -3,13 +3,13 @@
 apiVersion: s3.aws.crossplane.io/v1beta1
 kind: Bucket
 metadata:
-  name: {{ .Values.global.bucketName }}
+  name: {{ .Values.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    crossplane.io/external-name: {{ .Values.bucketName }}
 spec:
   forProvider:
     acl: private
-    locationConstraint: {{ .Values.global.region }}
+    locationConstraint: {{ .Values.aws.region }}
     objectOwnership: BucketOwnerPreferred
     publicAccessBlockConfiguration:
       blockPublicPolicy: true
@@ -25,6 +25,6 @@ spec:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
 
 {{- end }}

@@ -7,10 +7,10 @@ metadata:
 spec:
   forProvider:
     bucketRef:
-        name: {{ .Values.global.bucketName }}
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.global.serviceAccountName }}]
+        name: {{ .Values.bucketName }}
+    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/mimir]
     role: roles/storage.objectAdmin
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ .Values.providerConfigRefName }}
     
 {{- end }}
