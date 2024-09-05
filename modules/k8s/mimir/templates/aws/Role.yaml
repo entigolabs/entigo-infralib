@@ -13,7 +13,7 @@ spec:
           {
             "Effect": "Allow",
             "Principal": {
-              "Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
+              "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
