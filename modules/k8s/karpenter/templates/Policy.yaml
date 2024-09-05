@@ -3,10 +3,10 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
 metadata:
-  name: karpenter-controller-policy-{{ .Values.karpenter.settings.clusterName }}
+  name: {{ .Release.Name }}-karpenter-controller-policy
 spec:
   forProvider:
-    name: karpenter-controller-policy-{{ .Values.karpenter.settings.clusterName }}
+    name: {{ .Release.Name }}-karpenter-controller-policy
     document: |
       {
           "Statement": [
@@ -47,7 +47,7 @@ spec:
               {
                   "Effect": "Allow",
                   "Action": "iam:PassRole",
-                  "Resource": "arn:aws:iam::{{ .Values.aws.account }}:role/karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}",
+                  "Resource": "arn:aws:iam::{{ .Values.aws.account }}:role/{{ .Release.Name }}-karpenter-node-role",
                   "Sid": "PassNodeIAMRole"
               },
               {

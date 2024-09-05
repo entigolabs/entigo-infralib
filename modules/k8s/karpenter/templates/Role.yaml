@@ -3,7 +3,7 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Role
 metadata:
-  name: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+  name: {{ .Release.Name }}-karpenter-node-role
 spec:
   forProvider:
     assumeRolePolicyDocument: |
@@ -25,7 +25,7 @@ spec:
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Role
 metadata:
-  name: karpenter-controller-role-{{ .Values.karpenter.settings.clusterName }}
+  name: {{ .Release.Name }}-karpenter-controller-role
 spec:
   forProvider:
     assumeRolePolicyDocument: |

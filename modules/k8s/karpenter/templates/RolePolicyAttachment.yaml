@@ -3,60 +3,60 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: karpenter-node-role-amazon-eks-worker-node-policy
+  name: {{ .Release.Name }}-karpenter-node-role-amazon-eks-worker-node-policy
 spec:
   forProvider:
     policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
     roleNameRef:
-      name: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+      name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: karpenter-node-role-amazon-eks-cni-policy
+  name: {{ .Release.Name }}-karpenter-node-role-amazon-eks-cni-policy
 spec:
   forProvider:
     policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
     roleNameRef:
-      name: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+      name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: karpenter-node-role-amazon-ec2-container-registry-read-only
+  name: {{ .Release.Name }}-karpenter-node-role-amazon-ec2-container-registry-read-only
 spec:
   forProvider:
     policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
     roleNameRef:
-      name: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+      name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: karpenter-node-role-amazon-ssm-managed-instance-core
+  name: {{ .Release.Name }}-karpenter-node-role-amazon-ssm-managed-instance-core
 spec:
   forProvider:
     policyArn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
     roleNameRef:
-      name: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+      name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: karpenter-controller-role-karpenter-controller-policy
+  name: {{ .Release.Name }}-karpenter-controller-role-karpenter-controller-policy
 spec:
   forProvider:
-    policyArn: arn:aws:iam::{{ .Values.aws.account }}:policy/karpenter-controller-policy-{{ .Values.karpenter.settings.clusterName }}
+    policyArn: arn:aws:iam::{{ .Values.aws.account }}:policy/{{ .Release.Name }}-karpenter-controller-policy
     roleNameRef:
-      name: karpenter-controller-role-{{ .Values.karpenter.settings.clusterName }}
+      name: {{ .Release.Name }}-karpenter-controller-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 

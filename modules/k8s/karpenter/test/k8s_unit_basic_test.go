@@ -36,9 +36,9 @@ func testK8sKarpenter(t *testing.T, contextName, envName, valuesFile, cloudProvi
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		// namespaceName = fmt.Sprintf("karpenter-%s", prefix)
-		// extraArgs["upgrade"] = []string{"--skip-crds"}
-		// extraArgs["install"] = []string{"--skip-crds"}
+		namespaceName = fmt.Sprintf("karpenter-%s", prefix)
+		extraArgs["upgrade"] = []string{"--skip-crds"}
+		extraArgs["install"] = []string{"--skip-crds"}
 	}
 
 	releaseName := namespaceName

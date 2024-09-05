@@ -1,5 +1,5 @@
-cloudProvider: aws
-providerConfigRefName: crossplane-aws
+cloudProvider: ""
+providerConfigRefName: ""
 
 aws:
   account: ""

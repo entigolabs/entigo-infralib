@@ -3,10 +3,10 @@
 apiVersion: iam.aws.crossplane.io/v1alpha1
 kind: InstanceProfile
 metadata:
-  name: karpenter-node-instance-profile-{{ .Values.karpenter.settings.clusterName }}
+  name: {{ .Release.Name }}-karpenter-node-instance-profile
 spec:
   forProvider:
-    role: karpenter-node-role-{{ .Values.karpenter.settings.clusterName }}
+    role: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
     name: {{ .Values.providerConfigRefName }}
 
