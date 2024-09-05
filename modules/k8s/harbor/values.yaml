@@ -123,6 +123,7 @@ harbor:
         value: "true"
         effect: "NoSchedule"
 
+  registry:
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     registry:
