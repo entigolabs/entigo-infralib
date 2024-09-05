@@ -177,14 +177,16 @@ func createTestTfFile(t *testing.T, fileName string, tempTestFolder string, vari
 }
 
 func modifyBackendType(t *testing.T, body *hclwrite.Body, providerType ProviderType) {
-	if providerType != GCloud {
-		return
-	}
+
 	terraformBlock := body.FirstMatchingBlock("terraform", []string{})
 	require.NotNil(t, terraformBlock, "terraform block not found")
-	backendBlock := terraformBlock.Body().FirstMatchingBlock("backend", []string{"s3"})
+	backendBlock := terraformBlock.Body().FirstMatchingBlock("backend", []string{"TYPE"})
 	require.NotNil(t, backendBlock, "backend block not found")
-	backendBlock.SetLabels([]string{"gcs"})
+	if providerType == GCloud {
+		backendBlock.SetLabels([]string{"gcs"})
+	} else {
+		backendBlock.SetLabels([]string{"s3"})
+	}
 }
 
 func getProviderBlocks(t *testing.T, providerName string, providerType ProviderType) []*hclwrite.Block {
