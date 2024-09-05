@@ -3,7 +3,7 @@
 apiVersion: networking.gke.io/v1
 kind: HealthCheckPolicy
 metadata:
-  name: {{ .Values.global.gateway.name }}
+  name: {{ .Values.gateway.name }}
 spec:
   default:
     checkIntervalSec: 5
@@ -20,5 +20,5 @@ spec:
   targetRef:
     group: ""
     kind: Service
-    name: {{ .Values.global.gateway.name }}
+    name: {{ .Values.gateway.name }}
 {{- end }}
