@@ -1,4 +1,4 @@
-{{- if .Values.createExternal }} 
+{{- if .Values.global.createExternal }} 
 
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1beta1
@@ -6,9 +6,9 @@ metadata:
   name: {{ .Release.Name }}-external
   namespace: {{ .Release.Name }}
   annotations:
-    networking.gke.io/certmap: {{ .Values.google.externalCertificateMap }}
+    networking.gke.io/certmap: {{ .Values.global.google.externalCertificateMap }}
 spec:
-  gatewayClassName: {{ .Values.google.externalGatewayClassName }}
+  gatewayClassName: {{ .Values.global.google.externalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS
@@ -27,7 +27,7 @@ spec:
 
 {{- end }}
 ---
-{{- if .Values.createInternal }} 
+{{- if .Values.global.createInternal }} 
 
 kind: Gateway
 apiVersion: gateway.networking.k8s.io/v1beta1
@@ -35,9 +35,9 @@ metadata:
   name: {{ .Release.Name }}-internal
   namespace: {{ .Release.Name }}
   annotations:
-    networking.gke.io/certmap: {{ .Values.google.internalCertificateMap }}
+    networking.gke.io/certmap: {{ .Values.global.google.internalCertificateMap }}
 spec:
-  gatewayClassName: {{ .Values.google.internalGatewayClassName }}
+  gatewayClassName: {{ .Values.global.google.internalGatewayClassName }}
   listeners:
     - name: https
       protocol: HTTPS

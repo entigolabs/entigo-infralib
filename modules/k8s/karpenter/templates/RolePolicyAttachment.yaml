@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "aws" }}
+{{- if eq .Values.global.cloudProvider "aws" }}
 
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
@@ -10,7 +10,7 @@ spec:
     roleNameRef:
       name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
@@ -22,7 +22,7 @@ spec:
     roleNameRef:
       name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
@@ -34,7 +34,7 @@ spec:
     roleNameRef:
       name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
@@ -46,7 +46,7 @@ spec:
     roleNameRef:
       name: {{ .Release.Name }}-karpenter-node-role
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
@@ -54,10 +54,10 @@ metadata:
   name: {{ .Release.Name }}-karpenter-controller-role-karpenter-controller-policy
 spec:
   forProvider:
-    policyArn: arn:aws:iam::{{ .Values.aws.account }}:policy/{{ .Release.Name }}-karpenter-controller-policy
+    policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}-karpenter-controller-policy
     roleNameRef:
       name: {{ .Release.Name }}-karpenter-controller-role
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}

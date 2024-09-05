@@ -57,8 +57,8 @@ func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudProvider
 		setValues["keycloakx.ingress.rules[0].paths[0].pathType"] = "Prefix"
 
 	case "google":
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.certificateMap"] = strings.ReplaceAll(hostName, ".", "-")
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

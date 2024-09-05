@@ -1,1 +1,2 @@
-cloudProvider: aws
+global:
+  cloudProvider: aws

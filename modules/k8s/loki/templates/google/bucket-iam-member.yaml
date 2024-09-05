@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 apiVersion: storage.gcp.upbound.io/v1beta1
 kind: BucketIAMMember
@@ -7,10 +7,10 @@ metadata:
 spec:
   forProvider:
     bucketRef:
-        name: {{ .Values.bucketName }}
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.loki.serviceAccount.name }}]
+        name: {{ .Values.global.bucketName }}
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.loki.serviceAccount.name }}]
     role: roles/storage.objectAdmin
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
     
 {{- end }}

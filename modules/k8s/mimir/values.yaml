@@ -1,14 +1,14 @@
 global:
   cloudProvider: ""
-  providerConfigRefName: crossplane-aws
+  providerConfigRefName: ""
   bucketName: "mimir"
 
   google:
     projectID: ""
     hostname: ""
     gateway:
-      name: google-gateway-external
-      namespace: google-gateway
+      name: ""
+      namespace: ""
 
   aws:
     account: ""

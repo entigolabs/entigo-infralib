@@ -62,14 +62,14 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, envName, hostName, clo
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 	case "google":
 		gatewayNamespace = "google-gateway"
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
 			gatewayName = "google-gateway-external"
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

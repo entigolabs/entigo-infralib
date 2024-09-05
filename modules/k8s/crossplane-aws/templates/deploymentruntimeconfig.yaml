@@ -39,4 +39,4 @@ spec:
     metadata:
       name: {{ .Release.Name }}
       annotations:
-        eks.amazonaws.com/role-arn: {{ .Values.awsRole }}
+        eks.amazonaws.com/role-arn: {{ .Values.global.aws.role }}

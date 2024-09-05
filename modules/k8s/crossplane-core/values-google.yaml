@@ -1,1 +1,2 @@
-cloudProvider: "google"
+global:
+  cloudProvider: "google"

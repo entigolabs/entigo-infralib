@@ -1,10 +1,11 @@
-cloudProvider: ""
-providerConfigRefName: ""
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
 
-aws:
-  account: ""
-  clusterOIDC: ""
-  region: ""
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
 
 # https://github.com/aws/karpenter-provider-aws/blob/main/charts/karpenter/values.yaml
 

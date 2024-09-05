@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 apiVersion: cloudplatform.gcp.upbound.io/v1beta1
 kind: ProjectIAMMember
@@ -6,10 +6,10 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.google.projectID }}.svc.id.goog[{{ .Release.Name }}/external-dns]
-    project: {{ .Values.google.projectID }}
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Name }}/external-dns]
+    project: {{ .Values.global.google.projectID }}
     role: roles/dns.admin
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}

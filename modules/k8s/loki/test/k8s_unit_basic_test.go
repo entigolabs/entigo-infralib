@@ -62,10 +62,10 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
-		setValues["aws.region"] = region
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusteroidc
-		setValues["bucketName"] = bucketName
+		setValues["global.aws.region"] = region
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusteroidc
+		setValues["global.bucketName"] = bucketName
 
 		setValues["loki.loki.storage.s3.region"] = region
 		setValues["loki.loki.storage.bucketNames.chunks"] = bucketName
@@ -87,11 +87,11 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		setValues["loki.loki.storage.bucketNames.ruler"] = bucketName
 		setValues["loki.loki.storage.bucketNames.admin"] = bucketName
 
-		setValues["bucketName"] = bucketName
+		setValues["global.bucketName"] = bucketName
 
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.projectID"] = googleProjectID
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.projectID"] = googleProjectID
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 
 		switch envName {
 		case "biz":
@@ -99,7 +99,7 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	// setValues["promtail.config.clients[0].url"] = fmt.Sprintf("https://%s.runner-main-%s-int.infralib.entigo.io/loki/api/v1/push", releaseName, envName)

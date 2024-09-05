@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "aws" }}
+{{- if eq .Values.global.cloudProvider "aws" }}
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -12,17 +12,17 @@ metadata:
     alb.ingress.kubernetes.io/auth-session-timeout: "1800"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/success-codes: '200,301,302,404'
-    alb.ingress.kubernetes.io/inbound-cidrs: '{{ .Values.ingressInboundAllow }}'
-    alb.ingress.kubernetes.io/scheme: '{{ .Values.scheme }}'
-    alb.ingress.kubernetes.io/group.name: '{{ .Values.groupName }}'
+    alb.ingress.kubernetes.io/inbound-cidrs: '{{ .Values.global.aws.ingressInboundAllow }}'
+    alb.ingress.kubernetes.io/scheme: '{{ .Values.global.aws.scheme }}'
+    alb.ingress.kubernetes.io/group.name: '{{ .Values.global.aws.groupName }}'
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/tags: "{{ .Values.tags }}"
+    alb.ingress.kubernetes.io/tags: "{{ .Values.global.aws.tags }}"
     kube-score/ignore: ingress-targets-service
-    alb.ingress.kubernetes.io/group.order: "{{ .Values.groupOrder }}"
-    {{- if .Values.certificateArn }}
-    alb.ingress.kubernetes.io/certificate-arn: "{{ .Values.certificateArn }}"
+    alb.ingress.kubernetes.io/group.order: "{{ .Values.global.aws.groupOrder }}"
+    {{- if .Values.global.aws.certificateArn }}
+    alb.ingress.kubernetes.io/certificate-arn: "{{ .Values.global.aws.certificateArn }}"
     {{- end }}   
-    {{- with .Values.additionalIngressAnnotations }}
+    {{- with .Values.global.aws.additionalIngressAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:

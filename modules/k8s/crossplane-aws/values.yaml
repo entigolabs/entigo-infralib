@@ -1,2 +1,5 @@
 installProviderConfig: true
-awsRole: ""
+
+global:
+  aws:
+    role: ""

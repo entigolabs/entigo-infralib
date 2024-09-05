@@ -61,8 +61,8 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	case "google":
 		gatewayNamespace = "google-gateway"
 
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 
 		switch envName {
 		case "biz":
@@ -70,7 +70,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

@@ -1,4 +1,4 @@
-{{- if .Values.createExternal }} 
+{{- if .Values.global.createExternal }} 
 
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1beta1
@@ -19,7 +19,7 @@ spec:
 
 {{- end }}
 ---
-{{- if .Values.createInternal }} 
+{{- if .Values.global.createInternal }} 
 
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1beta1

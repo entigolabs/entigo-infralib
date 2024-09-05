@@ -1,15 +1,15 @@
-cloudProvider: google
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
+  region: "EU"
+  bucketName: ""
 
-google:
-  projectID: ""
-  hostname: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
-
-providerConfigRefName: crossplane-google
-region: "EU"
-bucketName: ""
+  google:
+    projectID: ""
+    hostname: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
 loki:
   loki:

@@ -35,7 +35,7 @@ func testK8sAwsStorageclass(t *testing.T, contextName string, envName string) {
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("aws-storageclass-%s-%s", envName, prefix)
-		setValues["prefix"] = fmt.Sprintf("%s-", prefix)
+		setValues["global.prefix"] = fmt.Sprintf("%s-", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}

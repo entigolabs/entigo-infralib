@@ -1,4 +1,5 @@
-cloudProvider: aws
+global:
+  cloudProvider: aws
 
 argocd:
   configs:

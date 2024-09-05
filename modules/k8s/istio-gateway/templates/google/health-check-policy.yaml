@@ -1,9 +1,9 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 apiVersion: networking.gke.io/v1
 kind: HealthCheckPolicy
 metadata:
-  name: {{ .Values.gateway.name }}
+  name: {{ .Values.global.gateway.name }}
 spec:
   default:
     checkIntervalSec: 5
@@ -20,5 +20,5 @@ spec:
   targetRef:
     group: ""
     kind: Service
-    name: {{ .Values.gateway.name }}
+    name: {{ .Values.global.gateway.name }}
 {{- end }}

@@ -45,7 +45,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	iamrole := terraaws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/iam_role", runnerName))
 
-	setValues["awsRole"] = iamrole
+	setValues["global.aws.role"] = iamrole
 	setValues["installProviderConfig"] = "false"
 
 	if prefix != "runner-main" {

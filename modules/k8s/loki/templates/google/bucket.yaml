@@ -1,16 +1,16 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 apiVersion: storage.gcp.upbound.io/v1beta1
 kind: Bucket
 metadata:
-  name: {{ .Values.bucketName }}
+  name: {{ .Values.global.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Values.bucketName }}
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
 spec:
   forProvider:
     location: EU
     uniformBucketLevelAccess: true
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}

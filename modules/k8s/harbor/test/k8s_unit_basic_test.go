@@ -65,8 +65,8 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 		clusterOIDC := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusterOIDC
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusterOIDC
 		setValues["harbor.persistence.imageChartStorage.s3.region"] = region
 		setValues["harbor.persistence.imageChartStorage.s3.regionendpoint"] = fmt.Sprintf("s3.%s.amazonaws.com", region)
 		setValues["harbor.persistence.imageChartStorage.s3.bucket"] = bucketName
@@ -82,10 +82,10 @@ func testK8sHarbor(t *testing.T, contextName, envName, valuesFile, hostName, clo
 			gatewayName = "google-gateway-external"
 		}
 
-		setValues["google.gateway.name"] = gatewayName
-		setValues["google.gateway.namespace"] = gatewayNamespace
-		setValues["google.projectID"] = googleProjectID
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.projectID"] = googleProjectID
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["harbor.persistence.imageChartStorage.gcs.bucket"] = bucketName
 	}
 

@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 apiVersion: storage.gcp.upbound.io/v1beta1
 kind: Bucket
@@ -8,9 +8,9 @@ metadata:
     crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.gcs.bucket }}
 spec:
   forProvider:
-    location: {{ .Values.google.region}}
+    location: {{ .Values.global.google.region}}
     uniformBucketLevelAccess: true
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}

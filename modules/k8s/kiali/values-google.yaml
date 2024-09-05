@@ -1,10 +1,11 @@
-cloudProvider: "google"
+global:
+  cloudProvider: "google"
 
-google:
-  hostname: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
+  google:
+    hostname: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
 kiali-server:
   deployment:

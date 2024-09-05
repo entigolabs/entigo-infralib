@@ -56,14 +56,14 @@ func testK8sIstioGateway(t *testing.T, contextName, envName, valuesFile, hostNam
 	case "aws":
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		certificateArn := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_cert_arn", envName))
-		setValues["certificateArn"] = certificateArn
+		setValues["global.aws.certificateArn"] = certificateArn
 
 	case "google":
 		gatewayNamespace = "google-gateway"
 		gatewayName = "google-gateway-external"
-		setValues["google.hostname"] = hostName
-		setValues["google.gateway.namespace"] = gatewayNamespace
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.hostname"] = hostName
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)

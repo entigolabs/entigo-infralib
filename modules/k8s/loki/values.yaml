@@ -1,20 +1,19 @@
-cloudProvider: ""
-providerConfigRefName: crossplane-aws
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
+  bucketName: "loki"
 
-google:
-  projectID: ""
-  hostname: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
+  google:
+    projectID: ""
+    hostname: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
-aws:
-  account: ""
-  clusterOIDC: ""
-  region: ""
-
-bucketName: "loki"
-namespaceName: "loki"
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
 
 loki:
   fullnameOverride: loki
