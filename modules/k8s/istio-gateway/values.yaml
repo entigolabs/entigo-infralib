@@ -1,20 +1,22 @@
-cloudProvider: ""
+global:
+  cloudProvider: ""
 
-google:
-  hostname: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
+  google:
+    hostname: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
-#All except test should use 0.0.0.0/0
-ingressInboundAllow: "0.0.0.0/0"
-tags: ""
-certificateArn: ""
-additionalIngressAnnotations: ""
+  aws:
+    #All except test should use 0.0.0.0/0
+    ingressInboundAllow: "0.0.0.0/0"
+    tags: ""
+    certificateArn: ""
+    additionalIngressAnnotations: ""
 
-scheme: internet-facing
-groupName: external
-groupOrder: 800
+    scheme: internet-facing
+    groupName: external
+    groupOrder: 800
 
 gateway:
   name: "istio-gateway"

@@ -1,9 +1,10 @@
-cloudProvider: aws
-providerConfigRefName: crossplane-aws
+global:
+  cloudProvider: aws
+  providerConfigRefName: crossplane-aws
 
-aws:
-  account: ""
-  clusterOIDC: ""
+  aws:
+    account: ""
+    clusterOIDC: ""
 
 harbor:
   expose:

@@ -11,17 +11,17 @@ spec:
           {
             "Effect": "Allow",
             "Principal": {
-              "Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.aws.clusterOIDC }}"
+              "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
             },
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
               "StringEquals": {
-                "{{ .Values.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
-                "{{ .Values.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:secret-manager-operator"
+                "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:secret-manager-operator"
               }
             }
           }
         ]
       }
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}

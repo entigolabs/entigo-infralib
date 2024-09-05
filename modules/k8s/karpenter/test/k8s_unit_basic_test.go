@@ -51,9 +51,9 @@ func testK8sKarpenter(t *testing.T, contextName, envName, valuesFile, cloudProvi
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
 		clusterName := fmt.Sprintf("runner-main-%s", envName)
 
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusterOIDC
-		setValues["aws.region"] = region
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusterOIDC
+		setValues["global.aws.region"] = region
 		setValues["karpenter.fullnameOverride"] = "karpenter"
 		setValues["karpenter.settings.clusterName"] = clusterName
 	}

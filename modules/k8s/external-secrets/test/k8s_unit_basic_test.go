@@ -42,8 +42,8 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 
 	setValues["external-secrets.env[0].value"] = region
 	setValues["external-secrets.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["aws.account"] = awsAccount
-	setValues["aws.clusterOIDC"] = clusteroidc
+	setValues["global.aws.account"] = awsAccount
+	setValues["global.aws.clusterOIDC"] = clusteroidc
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("external-secrets-%s-%s", envName, prefix)

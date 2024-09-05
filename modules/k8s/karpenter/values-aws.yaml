@@ -1,7 +1,8 @@
-cloudProvider: "aws"
-providerConfigRefName: "crossplane-aws"
+global:
+  cloudProvider: "aws"
+  providerConfigRefName: "crossplane-aws"
 
-aws:
-  account: ""
-  clusterOIDC: ""
-  region: ""
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""

@@ -45,9 +45,9 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName, envName string) {
 
 	googleServiceAccount := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-service_account_email/versions/latest", projectID, envName))
 
-	setValues["deploymentRuntimeConfig.googleServiceAccount"] = googleServiceAccount
+	setValues["global.deploymentRuntimeConfig.googleServiceAccount"] = googleServiceAccount
 	setValues["installProviderConfig"] = "false"
-	setValues["google.projectID"] = projectID
+	setValues["global.google.projectID"] = projectID
 
 	if prefix != "runner-main" {
 		extraArgs["upgrade"] = []string{"--skip-crds"}

@@ -49,16 +49,16 @@ func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
 	switch envName {
 	case "pri":
 		externalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-pri-int_zone_id/versions/latest", projectID))
-		setValues["google.externalCertificateMap"] = externalCertificateMap
-		setValues["createInternal"] = "false"
-		setValues["createExternal"] = "true"
+		setValues["global.google.externalCertificateMap"] = externalCertificateMap
+		setValues["global.createInternal"] = "false"
+		setValues["global.createExternal"] = "true"
 	case "biz":
 		externalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-pub_zone_id/versions/latest", projectID))
 		internalCertificateMap := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-biz-int_zone_id/versions/latest", projectID))
-		setValues["google.externalCertificateMap"] = externalCertificateMap
-		setValues["google.internalCertificateMap"] = internalCertificateMap
-		setValues["createInternal"] = "true"
-		setValues["createExternal"] = "true"
+		setValues["global.google.externalCertificateMap"] = externalCertificateMap
+		setValues["global.google.internalCertificateMap"] = internalCertificateMap
+		setValues["global.createInternal"] = "true"
+		setValues["global.createExternal"] = "true"
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

@@ -53,8 +53,8 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 
 		setValues["external-dns.env[0].value"] = region
 		setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusteroidc
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusteroidc
 
 		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_zone_id", envName))
 		internalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/int_zone_id", envName))
@@ -63,7 +63,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 	case "google":
 		namespaceName = "external-dns"
 		projectID := os.Getenv("GOOGLE_PROJECT")
-		setValues["google.projectID"] = projectID
+		setValues["global.google.projectID"] = projectID
 
 		parentZoneID := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-parent_zone_id/versions/latest", projectID, envName))
 		externalZoneID := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-pub_zone_id/versions/latest", projectID, envName))

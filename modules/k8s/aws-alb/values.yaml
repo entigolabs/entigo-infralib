@@ -1,7 +1,8 @@
-providerConfigRefName: crossplane-aws
-aws:
-  account: ""
-  clusterOIDC: ""
+global:
+  providerConfigRefName: crossplane-aws
+  aws:
+    account: ""
+    clusterOIDC: ""
 
 aws-load-balancer-controller:
   serviceAccount:

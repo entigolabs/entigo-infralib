@@ -1,14 +1,15 @@
-providerConfigRefName: crossplane-aws
+global:
+  providerConfigRefName: crossplane-aws
 
-gitlab_url: ""
-gitlab_project: ""
-gitlab_secet: ""
+  gitlab:
+    url: ""
+    project: ""
+    secret: ""
 
-aws:
-  account: ""
-  region: ""
-  clusterOIDC: ""
-
+  aws:
+    account: ""
+    region: ""
+    clusterOIDC: ""
 
 external-secrets:
   installCRDs: true

@@ -62,23 +62,23 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider 
 		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
 		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
-		setValues["aws.region"] = region
-		setValues["aws.account"] = awsAccount
-		setValues["aws.clusterOIDC"] = clusteroidc
+		setValues["global.aws.region"] = region
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusteroidc
 		setValues["grafana.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostname)
 		gatewayName = "grafana"
 
 	case "google":
 		gatewayNamespace = "google-gateway"
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
 			gatewayName = "google-gateway-internal"
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

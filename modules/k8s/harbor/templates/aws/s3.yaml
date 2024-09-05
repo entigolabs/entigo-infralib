@@ -1,4 +1,4 @@
-#{{- if eq .Values.cloudProvider "aws" }}
+#{{- if eq .Values.global.cloudProvider "aws" }}
 
 #apiVersion: s3.aws.crossplane.io/v1beta1
 #kind: Bucket
@@ -25,6 +25,6 @@
       #- applyServerSideEncryptionByDefault:
           #sseAlgorithm: AES256
   #providerConfigRef:
-    #name: {{ .Values.providerConfigRefName }}
+    #name: {{ .Values.global.providerConfigRefName }}
 
 #{{- end }}

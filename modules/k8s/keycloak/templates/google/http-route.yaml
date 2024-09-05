@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "google" }}
+{{- if eq .Values.global.cloudProvider "google" }}
 
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1beta1
@@ -8,10 +8,10 @@ metadata:
 spec:
   parentRefs:
     - kind: Gateway
-      name: {{ .Values.google.gateway.name }}
+      name: {{ .Values.global.google.gateway.name }}
       sectionName: https
-      namespace: {{ .Values.google.gateway.namespace }}
-  hostnames: [{{ .Values.google.hostname }}]
+      namespace: {{ .Values.global.google.gateway.namespace }}
+  hostnames: [{{ .Values.global.google.hostname }}]
   rules:
     - backendRefs:
         - name: {{ .Values.keycloakx.fullnameOverride }}-http

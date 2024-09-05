@@ -1,17 +1,18 @@
-cloudProvider: ""
-providerConfigRefName: ""
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
 
-aws:
-  account: ""
-  clusterOIDC: ""
+  aws:
+    account: ""
+    clusterOIDC: ""
 
-google:
-  hostname: ""
-  projectID: ""
-  region: ""
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
+  google:
+    hostname: ""
+    projectID: ""
+    region: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
 harbor:
   ipFamily:

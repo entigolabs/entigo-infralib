@@ -39,4 +39,4 @@ spec:
     metadata:
       name: {{ .Release.Name }}
       annotations:
-        iam.gke.io/gcp-service-account: {{ .Values.deploymentRuntimeConfig.googleServiceAccount }}
+        iam.gke.io/gcp-service-account: {{ .Values.global.deploymentRuntimeConfig.googleServiceAccount }}

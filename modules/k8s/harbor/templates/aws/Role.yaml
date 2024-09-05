@@ -1,4 +1,4 @@
-#{{- if eq .Values.cloudProvider "aws" }}
+#{{- if eq .Values.global.cloudProvider "aws" }}
 
 #apiVersion: iam.aws.crossplane.io/v1beta1
 #kind: Role
@@ -13,19 +13,19 @@
           #{
             #"Effect": "Allow",
             #"Principal": {
-              #"Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.aws.clusterOIDC }}"
+              #"Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
             #},
             #"Action": "sts:AssumeRoleWithWebIdentity",
             #"Condition": {
               #"StringEquals": {
-                #"{{ .Values.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
-                #"{{ .Values.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:harbor"
+                #"{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                #"{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:harbor"
               #}
             #}
           #}
         #]
       #}
   #providerConfigRef:
-    #name: {{ .Values.providerConfigRefName }}
+    #name: {{ .Values.global.providerConfigRefName }}
 
 #{{- end }}

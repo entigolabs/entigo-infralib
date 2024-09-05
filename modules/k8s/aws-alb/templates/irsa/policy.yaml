@@ -249,4 +249,4 @@ spec:
       ]
       }
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}

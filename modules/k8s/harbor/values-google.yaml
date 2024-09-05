@@ -1,13 +1,14 @@
-cloudProvider: google
-providerConfigRefName: crossplane-google
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
 
-google:
-  hostname: ""
-  projectID: ""
-  region: EU
-  gateway:
-    name: google-gateway-external
-    namespace: google-gateway
+  google:
+    hostname: ""
+    projectID: ""
+    region: EU
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
 
 harbor:
   expose:

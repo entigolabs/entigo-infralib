@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "aws" }}
+{{- if eq .Values.global.cloudProvider "aws" }}
 
 apiVersion: karpenter.sh/v1
 kind: NodePool

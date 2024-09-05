@@ -1,4 +1,4 @@
-{{- if eq .Values.cloudProvider "aws" }}
+{{- if eq .Values.global.cloudProvider "aws" }}
 
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
@@ -21,7 +21,7 @@ spec:
               "s3:DeleteObject"
             ],
             "Resource": [
-              "arn:aws:s3:::{{ .Values.bucketName }}/*"
+              "arn:aws:s3:::{{ .Values.global.bucketName }}/*"
             ]
           },
           {
@@ -30,13 +30,13 @@ spec:
               "s3:ListBucket"
             ],
             "Resource": [
-              "arn:aws:s3:::{{ .Values.bucketName }}"
+              "arn:aws:s3:::{{ .Values.global.bucketName }}"
             ]
           }
         ]
       }
 
   providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}

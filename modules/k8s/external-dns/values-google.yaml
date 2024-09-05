@@ -1,8 +1,9 @@
-cloudProvider: google
-providerConfigRefName: crossplane-google
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
 
-google:
-  projectID: ""
+  google:
+    projectID: ""
 
 external-dns:
   sources:
@@ -13,7 +14,6 @@ external-dns:
     - gateway-httproute
   extraArgs:
     - --metrics-address=:7979
-
   provider:
     name: google
   serviceAccount:
