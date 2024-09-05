@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestK8sKarpenterAWSBiz(t *testing.T) {
-// 	testK8sKarpenter(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "aws")
-// }
+func TestK8sKarpenterAWSBiz(t *testing.T) {
+	testK8sKarpenter(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "k8s_unit_basic_test_aws_biz.yaml", "aws")
+}
 
 func TestK8sKarpenterAWSPri(t *testing.T) {
 	testK8sKarpenter(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "k8s_unit_basic_test_aws_pri.yaml", "aws")

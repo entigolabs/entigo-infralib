@@ -11,13 +11,13 @@ MODULETYPE=$(basename $(dirname $1))
 echo "Module type is $MODULETYPE"
 SCRIPTPATH=$(dirname "$0")
 
-# $SCRIPTPATH/$MODULETYPE/static.sh
-# if [ $? -ne 0 ]
-# then 
-#         echo "Static tests failed."
-#         exit 1
-# fi
-# echo "Static tests PASS."
+$SCRIPTPATH/$MODULETYPE/static.sh
+if [ $? -ne 0 ]
+then 
+        echo "Static tests failed."
+        exit 1
+fi
+echo "Static tests PASS."
 
 if ls ./test/*_test.go 1>/dev/null 2>&1
 then

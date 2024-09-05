@@ -59,7 +59,7 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-test
 spec:
-  replicas: 2
+  replicas: 0
   selector:
     matchLabels:
       app: {{ .Release.Name }}-test
@@ -75,4 +75,5 @@ spec:
           resources:
             requests:
               cpu: 1
+              
 {{- end }}

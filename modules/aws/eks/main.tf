@@ -4,12 +4,7 @@ locals {
       rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles.arns), 0), "//aws-reserved.*/AWSReservedSSO/", "/AWSReservedSSO")
       username = "aws-admin"
       groups   = ["system:masters"]
-    },
-    # {
-    #   rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles.arns), 0), "//aws-reserved.*", "${local.hname}-karpenter-node-role")
-    #   username = "system:node:{{EC2PrivateDNSName}}"
-    #   groups   = ["system:nodes", "system:bootstrappers"]
-    # },
+    }
   ]
 
   eks_managed_node_groups_all = {
