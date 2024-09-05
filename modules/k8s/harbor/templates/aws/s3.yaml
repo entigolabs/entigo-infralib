@@ -1,30 +1,30 @@
-{{- if eq .Values.cloudProvider "aws" }}
+#{{- if eq .Values.cloudProvider "aws" }}
 
-apiVersion: s3.aws.crossplane.io/v1beta1
-kind: Bucket
-metadata:
-  name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
-  annotations:
-    crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
-spec:
-  forProvider:
-    acl: private
-    locationConstraint: {{ .Values.harbor.persistence.imageChartStorage.s3.region }}
-    objectOwnership: BucketOwnerPreferred
-    publicAccessBlockConfiguration:
-      blockPublicPolicy: true
-      blockPublicAcls: true
-      ignorePublicAcls: true
-      restrictPublicBuckets: true
-    accelerateConfiguration:
-      status: Enabled
-    versioningConfiguration:
-      status: Suspended
-    serverSideEncryptionConfiguration:
-      rules:
-      - applyServerSideEncryptionByDefault:
-          sseAlgorithm: AES256
-  providerConfigRef:
-    name: {{ .Values.providerConfigRefName }}
+#apiVersion: s3.aws.crossplane.io/v1beta1
+#kind: Bucket
+#metadata:
+  #name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
+  #annotations:
+    #crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
+#spec:
+  #forProvider:
+    #acl: private
+    #locationConstraint: {{ .Values.harbor.persistence.imageChartStorage.s3.region }}
+    #objectOwnership: BucketOwnerPreferred
+    #publicAccessBlockConfiguration:
+      #blockPublicPolicy: true
+      #blockPublicAcls: true
+      #ignorePublicAcls: true
+      #restrictPublicBuckets: true
+    #accelerateConfiguration:
+      #status: Enabled
+    #versioningConfiguration:
+      #status: Suspended
+    #serverSideEncryptionConfiguration:
+      #rules:
+      #- applyServerSideEncryptionByDefault:
+          #sseAlgorithm: AES256
+  #providerConfigRef:
+    #name: {{ .Values.providerConfigRefName }}
 
-{{- end }}
+#{{- end }}
