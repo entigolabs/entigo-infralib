@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
-	"golang.org/x/exp/rand"
 
 	kubernetesErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -385,7 +385,12 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 
-	jobName := fmt.Sprintf("%s-health-check-%s", namespaceName, createRandomString(4))
+	randomString, err := generateRandomString(4)
+	if err != nil {
+		return fmt.Errorf("failed to generate random string: %v", err)
+	}
+
+	jobName := fmt.Sprintf("%s-health-check-%s", namespaceName, randomString)
 
 	targetDomain := strings.Split(targetURL, "://")[1]
 	targetDomain = strings.Split(targetDomain, "/")[0]
@@ -396,7 +401,6 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	}
 
 	var targetIP string
-	var err error
 
 	for i := 0; i < retries; i++ {
 		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName, gatewayNamespace)
@@ -498,11 +502,18 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 	return "", errors.New("error getting target IP")
 }
 
-func createRandomString(length int) string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyz"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+func generateRandomString(n int) (string, error) {
+	const letters = "abcdefghijklmnopqrstuvwxyz"
+
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
 	}
-	return string(b)
+
+	for i := 0; i < n; i++ {
+		b[i] = letters[int(b[i])%len(letters)]
+	}
+
+	return string(b), nil
 }

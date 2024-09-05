@@ -512,6 +512,7 @@ module "eks" {
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
   node_security_group_tags = {
     "kubernetes.io/cluster/${local.hname}" = null
+    "karpenter.sh/discovery" = local.hname
   }
 
   cluster_encryption_config = []

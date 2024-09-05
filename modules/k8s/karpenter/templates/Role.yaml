@@ -1,0 +1,53 @@
+{{- if eq .Values.cloudProvider "aws" }}
+
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-karpenter-node-role
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Service": "ec2.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRole"
+              }
+          ]
+      }
+  providerConfigRef:
+    name: {{ .Values.providerConfigRefName }}
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-karpenter-controller-role
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Federated": "arn:aws:iam::{{ .Values.aws.account }}:oidc-provider/{{ .Values.aws.clusterOIDC }}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                      "StringEquals": {
+                        "{{ .Values.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                        "{{ .Values.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:{{ .Values.karpenter.serviceAccount.name }}"
+                      }
+                  }
+              }
+          ]
+      }
+  providerConfigRef:
+    name: {{ .Values.providerConfigRefName }}
+
+{{- end }}
