@@ -20,3 +20,6 @@ harbor:
       gcs:
         useWorkloadIdentity: true
         bucket: ""
+  registry:
+    serviceAccountName: harbor
+    automountServiceAccountToken: true
