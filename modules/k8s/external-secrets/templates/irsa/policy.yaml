@@ -1,10 +1,10 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Policy
 metadata:
-  name: { { .Release.Name } }
+  name: {{ .Release.Name }}  
 spec:
   forProvider:
-    name: { { .Release.Name } }
+    name: {{ .Release.Name }}
     document: |
       {
         "Version": "2012-10-17",
@@ -25,4 +25,4 @@ spec:
       }
 
   providerConfigRef:
-    name: { { .Values.global.providerConfigRefName } }
+    name: {{ .Values.global.providerConfigRefName }}
