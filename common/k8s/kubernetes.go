@@ -491,7 +491,11 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 		if err != nil {
 			return "", err
 		}
+		if len(ingress.Status.LoadBalancer.Ingress) == 0 {
+			return "", fmt.Errorf("Ingress.Status.LoadBalancer.Ingress[0].Hostname not available")
+		}
 		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
+
 	case "google":
 		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
 		if err != nil {
