@@ -46,9 +46,10 @@ func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runne
 	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region", runnerName))
 
 	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region)
-	setValues["aws.account"] = awsAccount
-	setValues["aws.clusterOIDC"] = clusteroidc
 	setValues["aws-load-balancer-controller.clusterName"] = runnerName
+	setValues["global.aws.account"] = awsAccount
+	setValues["global.aws.clusterOIDC"] = clusteroidc
+
 
 	ingressClass := "alb"
 	if prefix != "runner-main" {
