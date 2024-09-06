@@ -61,7 +61,7 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		gatewayName = namespaceName
 	case "google":
 		gatewayNamespace = "google-gateway"
-		setValues["google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
