@@ -62,14 +62,14 @@ func testK8sKiali(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	case "google":
 		gatewayNamespace = "google-gateway"
 		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostName)
-		setValues["google.gateway.namespace"] = gatewayNamespace
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 		switch envName {
 		case "biz":
 			gatewayName = "google-gateway-internal"
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
-		setValues["google.gateway.name"] = gatewayName
+		setValues["global.google.gateway.name"] = gatewayName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
