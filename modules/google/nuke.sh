@@ -318,7 +318,37 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
+for line in $(gcloud -q "certificate-manager" "certificates" list --location europe-north1 --uri); do
+  gcloud "certificate-manager" "certificates" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete certificates. $FAIL"
+  exit 1
+fi
+
+PIDS=""
 for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --uri); do
+  gcloud "certificate-manager" "dns-authorizations" delete --project entigo-infralib2 -q $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete dns-authorizations. $FAIL"
+  exit 1
+fi
+
+PIDS=""
+for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --location europe-north1 --uri); do
   gcloud "certificate-manager" "dns-authorizations" delete --project entigo-infralib2 -q $line &
   PIDS="$PIDS $!"
 done
