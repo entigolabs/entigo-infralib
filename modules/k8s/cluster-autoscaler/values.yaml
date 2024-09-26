@@ -1,0 +1,29 @@
+
+cluster-autoscaler:
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 300Mi
+      ephemeral-storage: 1Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 10Mi
+  deployment:
+    annotations:
+      kube-score/ignore: pod-probes,pod-networkpolicy

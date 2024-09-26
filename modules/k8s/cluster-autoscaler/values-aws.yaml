@@ -1,0 +1,14 @@
+global:
+  cloudProvider: aws
+  providerConfigRefName: crossplane-aws
+  aws:
+    account: ""
+    clusterOIDC: ""
+
+cluster-autoscaler:
+  autoDiscovery:
+    cloudProviders: aws
+  rbac:
+    serviceAccount:
+      create: false
+      name: "aws-cluster-autoscaler"

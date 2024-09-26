@@ -245,6 +245,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/external-secrets/test.sh &
         PIDS="$PIDS $!"
+        modules/k8s/cluster-autoscaler/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/argocd/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
