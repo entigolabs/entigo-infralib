@@ -1,0 +1,6 @@
+global:
+  cloudProvider: google
+
+cluster-autoscaler:
+  autoDiscovery:
+    cloudProviders: gce

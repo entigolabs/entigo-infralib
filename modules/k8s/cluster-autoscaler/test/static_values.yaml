@@ -1,0 +1,9 @@
+cluster-autoscaler:
+  autoDiscovery:
+    clusterName: "static"
+global:
+  cloudProvider: aws
+  providerConfigRefName: crossplane-aws
+  aws:
+    account: ""
+    clusterOIDC: ""
