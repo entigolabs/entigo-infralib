@@ -1,5 +1,6 @@
 global:
   cloudProvider: ""
+  addPrometheusAnnotations: true
   google:
     gateway:
       name: google-gateway-external
