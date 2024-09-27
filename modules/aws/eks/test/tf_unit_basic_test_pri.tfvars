@@ -1,4 +1,5 @@
 eks_cluster_public           = true
+cluster_enabled_log_types    = [] #Temporarily disabled, see https://entigo.atlassian.net/browse/RD-8
 eks_mon_single_subnet = true
 eks_tools_desired_size        = 0
 eks_tools_max_size            = 0

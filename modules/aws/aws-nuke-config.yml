@@ -2,7 +2,7 @@ regions:
 - eu-north-1
 - global
 
-account-blocklist:
+blocklist:
 - 738582102279
 - 046792967279
 - 324427516708
@@ -28,6 +28,36 @@ resource-types:
   - MediaConvertQueue
   - CloudWatchEventsTarget
   - CloudWatchEventsRule
+  - QuickSightUser
+  - QuickSightSubscription
+  - XRaySamplingRule
+  - XRayGroup
+  - SageMakerApp
+  - SageMakerDomain
+  - SageMakerEndpointConfig
+  - SageMakerEndpoint
+  - SageMakerModel
+  - SageMakerNotebookInstanceLifecycleConfig
+  - SageMakerNotebookInstance
+  - SageMakerNotebookInstanceState
+  - SageMakerSpace
+  - SageMakerUserProfiles
+  - RoboMakerSimulationJob
+  - RoboMakerSimulationApplication
+  - RoboMakerRobotApplication
+  - LightsailStaticIP
+  - LightsailLoadBalancer
+  - LightsailKeyPair
+  - LightsailInstance
+  - LightsailDomain
+  - LightsailDisk
+  - LexSlotType
+  - LexModelBuildingServiceBotAlias
+  - LexIntent
+  - LexBot
+  - CodeStarProject
+  - CodeStarNotificationRule
+  - CodeStarConnection
 
 accounts:
   "877483565445":
