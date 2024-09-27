@@ -1,5 +1,4 @@
 eks_cluster_public           = true
-cluster_enabled_log_types    = []
 eks_mon_single_subnet = true
 eks_tools_desired_size        = 0
 eks_tools_max_size            = 0
