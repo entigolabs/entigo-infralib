@@ -17,11 +17,6 @@ variable "create_private" {
   default = true
 }
 
-variable "pub_zone_id" {
-  type    = string
-  default = ""
-}
-
 variable "parent_zone_id" {
   type    = string
   default = ""
