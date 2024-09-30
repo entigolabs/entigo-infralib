@@ -17,7 +17,6 @@ variable "create_private" {
   default = true
 }
 
-
 variable "parent_zone_id" {
   type    = string
   default = ""
