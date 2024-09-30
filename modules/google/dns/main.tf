@@ -167,7 +167,7 @@ resource "google_certificate_manager_certificate_map_entry" "pub_cert_2" {
 # }
 
 module "pub_zone_id" {
-  count  = var.pub_zone_id != "" ? 1 : 0
+  count  = local.pub_zone != "" ? 1 : 0
   source = "./secret"
   prefix = var.prefix
   key    = "pub_zone_id"
