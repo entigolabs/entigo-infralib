@@ -85,6 +85,11 @@ variable "gke_main_node_locations" {
   default = ""
 }
 
+variable "gke_main_location_policy" {
+  type    = string
+  default = "BALANCED"
+}
+
 variable "gke_main_volume_size" {
   type    = number
   default = 100
@@ -120,6 +125,11 @@ variable "gke_mainarm_instance_type" {
 variable "gke_mainarm_node_locations" {
   type    = string
   default = ""
+}
+
+variable "gke_mainarm_location_policy" {
+  type    = string
+  default = "BALANCED"
 }
 
 variable "gke_mainarm_volume_size" {
@@ -160,6 +170,11 @@ variable "gke_spot_node_locations" {
   default = ""
 }
 
+variable "gke_spot_location_policy" {
+  type    = string
+  default = "BALANCED"
+}
+
 variable "gke_spot_volume_size" {
   type    = number
   default = 100
@@ -195,6 +210,11 @@ variable "gke_mon_instance_type" {
 variable "gke_mon_node_locations" {
   type    = string
   default = ""
+}
+
+variable "gke_mon_location_policy" {
+  type    = string
+  default = "BALANCED"
 }
 
 variable "gke_mon_volume_size" {
@@ -234,6 +254,11 @@ variable "gke_tools_node_locations" {
   default = ""
 }
 
+variable "gke_tools_location_policy" {
+  type    = string
+  default = "BALANCED"
+}
+
 variable "gke_tools_volume_size" {
   type    = number
   default = 50
@@ -270,6 +295,11 @@ variable "gke_db_instance_type" {
 variable "gke_db_node_locations" {
   type    = string
   default = ""
+}
+
+variable "gke_db_location_policy" {
+  type    = string
+  default = "BALANCED"
 }
 
 variable "gke_db_volume_size" {
