@@ -7,18 +7,24 @@ master_authorized_networks = [
 
 gke_spot_min_size            = 0
 gke_spot_max_size            = 0
+
 gke_db_min_size              = 0
 gke_db_max_size              = 0
+
 gke_tools_min_size            = 1
-gke_tools_max_size            = 8
+gke_tools_max_size            = 2
+
 gke_mon_min_size            = 1
-gke_mon_max_size            = 4
-gke_main_min_size            = 1
-gke_main_max_size            = 8
-gke_main_instance_type       = "e2-standard-2"
+gke_mon_max_size            = 3
+gke_mon_node_locations      = "europe-north1-a"
+
+gke_main_min_size            = 2
+gke_main_max_size            = 4
+gke_main_node_locations      = "europe-north1-a"
+
 gke_mainarm_min_size         = 0
 gke_mainarm_max_size         = 0
-gke_mainarm_instance_types   = "e2-standard-2"
+
 gke_managed_node_groups_extra = [
         {
             name               = "custom"

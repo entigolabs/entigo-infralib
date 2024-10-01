@@ -18,6 +18,7 @@ locals {
       name               = "main"
       machine_type       = var.gke_main_instance_type
       node_locations     = local.gke_main_node_locations
+      location_policy    = var.gke_main_location_policy
       initial_node_count = var.gke_main_min_size
       min_count          = var.gke_main_min_size
       max_count          = var.gke_main_max_size
@@ -33,6 +34,7 @@ locals {
       name               = "mainarm"
       machine_type       = var.gke_mainarm_instance_type
       node_locations     = local.gke_mainarm_node_locations
+      location_policy    = var.gke_mainarm_location_policy
       initial_node_count = var.gke_mainarm_min_size
       min_count          = var.gke_mainarm_min_size
       max_count          = var.gke_mainarm_max_size
@@ -48,6 +50,7 @@ locals {
       name               = "spot"
       machine_type       = var.gke_spot_instance_type
       node_locations     = local.gke_spot_node_locations
+      location_policy    = var.gke_spot_location_policy
       initial_node_count = var.gke_spot_min_size
       min_count          = var.gke_spot_min_size
       max_count          = var.gke_spot_max_size
@@ -63,6 +66,7 @@ locals {
       name               = "mon"
       machine_type       = var.gke_mon_instance_type
       node_locations     = local.gke_mon_node_locations
+      location_policy    = var.gke_mon_location_policy
       initial_node_count = var.gke_mon_min_size
       min_count          = var.gke_mon_min_size
       max_count          = var.gke_mon_max_size
@@ -78,6 +82,7 @@ locals {
       name               = "tools"
       machine_type       = var.gke_tools_instance_type
       node_locations     = local.gke_tools_node_locations
+      location_policy    = var.gke_tools_location_policy
       initial_node_count = var.gke_tools_min_size
       min_count          = var.gke_tools_min_size
       max_count          = var.gke_tools_max_size
@@ -93,6 +98,7 @@ locals {
       name               = "db"
       machine_type       = var.gke_db_instance_type
       node_locations     = local.gke_db_node_locations
+      location_policy    = var.gke_db_location_policy
       initial_node_count = var.gke_db_min_size
       min_count          = var.gke_db_min_size
       max_count          = var.gke_db_max_size
