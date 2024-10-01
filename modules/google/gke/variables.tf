@@ -35,7 +35,7 @@ variable "enable_private_endpoint" {
   default  = false
 }
 
-variable "var.enable_l4_ilb_subsetting" {
+variable "enable_l4_ilb_subsetting" {
   type     = bool
   nullable = false
   default  = false
