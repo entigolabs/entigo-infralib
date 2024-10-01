@@ -127,6 +127,7 @@ module "gke" {
   service_account              = google_service_account.service_account.email
   master_global_access_enabled = var.master_global_access_enabled
   #istio                           = false //only in beta module
+  enable_l4_ilb_subsetting        = var.enable_l4_ilb_subsetting
   issue_client_certificate        = false
   enable_private_endpoint         = var.enable_private_endpoint
   enable_private_nodes            = true

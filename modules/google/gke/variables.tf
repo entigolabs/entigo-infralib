@@ -35,6 +35,12 @@ variable "enable_private_endpoint" {
   default  = false
 }
 
+variable "var.enable_l4_ilb_subsetting" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "kubernetes_version" {
   type    = string
   default = "1.29."
