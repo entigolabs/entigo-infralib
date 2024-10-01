@@ -3,7 +3,7 @@ variable "prefix" {
 }
 
 variable "master_ipv4_cidr_block" {
-  type = string
+  type    = string
   default = "10.1.0.0/28"
 }
 
@@ -24,25 +24,31 @@ variable "ip_range_services" {
 }
 
 variable "master_global_access_enabled" {
-  type    = bool
+  type     = bool
   nullable = false
-  default = false
+  default  = false
 }
 
 variable "enable_private_endpoint" {
-  type    = bool
+  type     = bool
   nullable = false
-  default = false
+  default  = false
+}
+
+variable "enable_l4_ilb_subsetting" {
+  type     = bool
+  nullable = false
+  default  = false
 }
 
 variable "kubernetes_version" {
-  type = string
+  type    = string
   default = "1.29."
 }
 
 variable "master_authorized_networks" {
   type = list(object({
-    cidr_block = string
+    cidr_block   = string
     display_name = string
   }))
   default = [
@@ -58,20 +64,25 @@ variable "master_authorized_networks" {
 }
 
 variable "gke_main_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 2
+  default  = 2
 }
 
 variable "gke_main_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 4
+  default  = 4
 }
 
 variable "gke_main_instance_type" {
   type    = string
   default = "e2-standard-2"
+}
+
+variable "gke_main_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_main_volume_size" {
@@ -90,20 +101,25 @@ variable "gke_main_volume_type" {
 }
 
 variable "gke_mainarm_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_mainarm_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_mainarm_instance_type" {
   type    = string
   default = "e2-standard-2"
+}
+
+variable "gke_mainarm_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_mainarm_volume_size" {
@@ -122,21 +138,26 @@ variable "gke_mainarm_volume_type" {
 }
 
 variable "gke_spot_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_spot_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_spot_instance_type" {
-  type = string
+  type     = string
   nullable = false
-  default = "e2-standard-2"
+  default  = "e2-standard-2"
+}
+
+variable "gke_spot_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_spot_volume_size" {
@@ -155,20 +176,25 @@ variable "gke_spot_volume_type" {
 }
 
 variable "gke_mon_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 1
+  default  = 1
 }
 
 variable "gke_mon_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 3
+  default  = 3
 }
 
 variable "gke_mon_instance_type" {
   type    = string
   default = "e2-standard-2"
+}
+
+variable "gke_mon_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_mon_volume_size" {
@@ -187,20 +213,25 @@ variable "gke_mon_volume_type" {
 }
 
 variable "gke_tools_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 2
+  default  = 2
 }
 
 variable "gke_tools_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 3
+  default  = 3
 }
 
 variable "gke_tools_instance_type" {
   type    = string
   default = "e2-standard-2"
+}
+
+variable "gke_tools_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_tools_volume_size" {
@@ -219,21 +250,26 @@ variable "gke_tools_volume_type" {
 }
 
 variable "gke_db_min_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_db_max_size" {
-  type    = number
+  type     = number
   nullable = false
-  default = 0
+  default  = 0
 }
 
 variable "gke_db_instance_type" {
-  type    = string
+  type     = string
   nullable = false
-  default = "e2-standard-2"
+  default  = "e2-standard-2"
+}
+
+variable "gke_db_node_locations" {
+  type    = string
+  default = ""
 }
 
 variable "gke_db_volume_size" {
@@ -252,9 +288,9 @@ variable "gke_db_volume_type" {
 }
 
 variable "gke_managed_node_groups_extra" {
-  type    = list
+  type     = list(any)
   nullable = false
-  default = []
+  default  = []
 }
 
 
