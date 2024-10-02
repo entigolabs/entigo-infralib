@@ -130,9 +130,10 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
 
-  service_account              = google_service_account.service_account.email
-  master_global_access_enabled = var.master_global_access_enabled
-  #istio                           = false //only in beta module
+  service_account                 = google_service_account.service_account.email
+  master_global_access_enabled    = var.master_global_access_enabled
+  gcp_public_cidrs_access_enabled = var.gcp_public_cidrs_access_enabled
+  # istio                          = false //only in beta module
   enable_l4_ilb_subsetting        = var.enable_l4_ilb_subsetting
   issue_client_certificate        = false
   enable_private_endpoint         = var.enable_private_endpoint

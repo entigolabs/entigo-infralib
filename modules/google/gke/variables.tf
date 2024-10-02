@@ -35,6 +35,11 @@ variable "enable_private_endpoint" {
   default  = false
 }
 
+variable "gcp_public_cidrs_access_enabled" {
+  type    = bool
+  default = null
+}
+
 variable "enable_l4_ilb_subsetting" {
   type     = bool
   nullable = false
