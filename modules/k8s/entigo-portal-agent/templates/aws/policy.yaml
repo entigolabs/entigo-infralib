@@ -1,0 +1,52 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  forProvider:
+    name: {{ .Release.Name }}
+    document: |
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Action": [
+                    "ecr:GetRegistryPolicy",
+                    "ecr:DescribeImageScanFindings",
+                    "ecr:GetLifecyclePolicyPreview",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:DescribeRegistry",
+                    "ecr:DescribeImageReplicationStatus",
+                    "ecr:GetAuthorizationToken",
+                    "ecr:ListTagsForResource",
+                    "ecr:BatchGetRepositoryScanningConfiguration",
+                    "ecr:GetRegistryScanningConfiguration",
+                    "ecr:BatchGetImage",
+                    "ecr:DescribeImages",
+                    "ecr:DescribeRepositories",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetRepositoryPolicy",
+                    "ecr:GetLifecyclePolicy"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+              },
+              {
+                  "Action": [
+                      "sqs:DeleteMessage",
+                      "sqs:ReceiveMessage"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:sqs:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:*"
+              },
+              {
+                  "Action": "sts:AssumeRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/developer-portal-back-group"
+              }
+          ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

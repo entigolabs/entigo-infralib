@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Release.Name }}
+    category: application
+  annotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
+  name: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/cm.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: {{ .Release.Name }}
+        image: entigolabs/developer-portal-agent:syncer-50
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      serviceAccountName: {{ .Release.Name }}
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+

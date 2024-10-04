@@ -1,0 +1,6 @@
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
+
+  google:
+    region: EU
