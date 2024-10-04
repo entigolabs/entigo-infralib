@@ -67,6 +67,8 @@ resource-types:
 accounts:
   "877483565445":
     filters:
+      ECRRepository:
+      - "Repository: entigo-portal-agent"
       Route53HostedZone:
       - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
       Route53ResourceRecordSet:
