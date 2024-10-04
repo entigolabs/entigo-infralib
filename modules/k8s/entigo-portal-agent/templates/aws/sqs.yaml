@@ -1,0 +1,47 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: sqs.aws.crossplane.io/v1beta1
+kind: Queue
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    delaySeconds: 0
+    messageRetentionPeriod: 7200
+    MaximumMessageSize: 8192
+    ReceiveMessageWaitTimeSeconds: 20
+    visibilityTimeout: 60
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Id": "__default_policy_ID",
+        "Statement": [
+          {
+            "Sid": "__owner_statement",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::{{ .Values.global.aws.account }}:root"
+            },
+            "Action": "sqs:*",
+            "Resource": "arn:aws:sqs:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:{{ .Release.Name }}"
+          },
+          {
+            "Sid": "AllowEventsToPush",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "events.amazonaws.com"
+            },
+            "Action": "sqs:SendMessage",
+            "Resource": "arn:aws:sqs:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:{{ .Release.Name }}",
+            "Condition": {
+              "ArnEquals": {
+                "aws:SourceArn": "arn:aws:events:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:rule/{{ .Release.Name }}"
+              }
+            }
+          }
+        ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

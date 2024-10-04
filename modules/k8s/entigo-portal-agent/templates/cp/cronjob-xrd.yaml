@@ -1,0 +1,267 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: compositecronjobs.flow.entigo.io
+spec:
+  group: flow.entigo.io
+  names:
+    kind: CompositeCronJob
+    plural: compositecronjobs
+  claimNames:
+    kind: CronJob
+    plural: cronjobs
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              properties:
+                annotations:
+                  additionalProperties:
+                    type: string
+                  type: object
+                labels:
+                  additionalProperties:
+                    type: string
+                  type: object
+                name:
+                  type: string
+                namespace:
+                  type: string
+              required:
+                - name
+              type: object
+            spec:
+              properties:
+                concurrencyPolicy:
+                  default: Allow
+                  enum:
+                    - Allow
+                    - Forbid
+                    - Replace
+                  type: string
+                initContainers:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - registry
+                      - repository
+                    properties:
+                      name:
+                        type: string
+                      registry:
+                        type: string
+                      repository:
+                        type: string
+                      tag:
+                        type: string
+                      command:
+                        type: array
+                        items:
+                          type: string
+                      resources:
+                        type: object
+                        properties:
+                          limits:
+                            type: object
+                            properties:
+                              cpu:
+                                type: number
+                              ram:
+                                type: number
+                      environment:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            secret:
+                              type: boolean
+                              default: false
+                      livenessProbe:
+                        type: object
+                        properties:
+                          path:
+                            type: string
+                          port:
+                            type: string
+                          initialDelaySeconds:
+                            type: integer
+                            format: int32
+                            min: 0
+                            default: 0
+                          periodSeconds:
+                            type: integer
+                            format: int32
+                            min: 1
+                            default: 10
+                          timeoutSeconds:
+                            type: integer
+                            format: int32
+                            min: 1
+                            default: 1
+                          successThreshold:
+                            type: integer
+                            format: int32
+                            min: 1
+                            default: 1
+                          failureThreshold:
+                            type: integer
+                            format: int32
+                            min: 1
+                            default: 3
+                          terminationGracePeriodSeconds:
+                            type: integer
+                            format: int32
+                            min: 1
+                            default: 30
+                containers:
+                  items:
+                    properties:
+                      command:
+                        type: array
+                        items:
+                          type: string
+                      environment:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            secret:
+                              default: false
+                              type: boolean
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      exposedPort:
+                        type: string
+                      livenessProbe:
+                        properties: &id001
+                          failureThreshold:
+                            default: 3
+                            format: int32
+                            min: 1
+                            type: integer
+                          initialDelaySeconds:
+                            default: 0
+                            format: int32
+                            min: 0
+                            type: integer
+                          path:
+                            type: string
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            min: 1
+                            type: integer
+                          port:
+                            type: string
+                          successThreshold:
+                            default: 1
+                            format: int32
+                            min: 1
+                            type: integer
+                          terminationGracePeriodSeconds:
+                            default: 30
+                            format: int32
+                            min: 1
+                            type: integer
+                          timeoutSeconds:
+                            default: 1
+                            format: int32
+                            min: 1
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      readinessProbe:
+                        properties: *id001
+                        type: object
+                      registry:
+                        type: string
+                      repository:
+                        type: string
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                type: string
+                              ram:
+                                type: string
+                            title: ResourceLimits
+                            type: object
+                        title: ContainerResources
+                        type: object
+                      services:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            port:
+                              format: int32
+                              max: 65535
+                              min: 1
+                              type: integer
+                            protocol:
+                              default: TCP
+                              enum:
+                                - TCP
+                                - SCTP
+                                - UDP
+                                - GRPC
+                              type: string
+                          type: object
+                        type: array
+                      startupProbe:
+                        properties: *id001
+                        type: object
+                      tag:
+                        type: string
+                    title: Container
+                    type: object
+                    required:
+                      - name
+                      - registry
+                      - repository
+                  type: array
+                imagePullSecrets:
+                  items:
+                    type: string
+                  type: array
+                kind:
+                  type: string
+                replicas:
+                  default: 1
+                  format: int32
+                  min: 1
+                  type: integer
+                restartPolicy:
+                  default: Always
+                  type: string
+                schedule:
+                  type: string
+              required:
+                - kind
+              type: object
+          required:
+            - apiVersion
+            - kind
+            - metadata
+            - spec
+          type: object
+{{- end }}

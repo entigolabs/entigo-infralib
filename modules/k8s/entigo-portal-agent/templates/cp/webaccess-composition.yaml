@@ -1,0 +1,18 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: compositewebaccesses.flow.entigo.io
+spec:
+  compositeTypeRef:
+    apiVersion: flow.entigo.io/v1alpha1
+    kind: CompositeWebAccess
+  mode: Pipeline
+  pipeline:
+    - step: web-access
+      functionRef:
+        name: developer-portal-function
+      input:
+        apiVersion: template.fn.crossplane.io/v1beta1
+        kind: Input
+{{- end }}

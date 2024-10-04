@@ -1,0 +1,12 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: developer-portal-function
+spec:
+  runtimeConfigRef:
+    name: developer-portal-function
+  package: index.docker.io/entigolabs/function-flow-web-access:v0.0.0-20240807123315-1be423dde9fe
+  packagePullSecrets:
+    - name: developer-portal-regcred
+{{- end }}

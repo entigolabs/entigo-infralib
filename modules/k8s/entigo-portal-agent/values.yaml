@@ -1,0 +1,24 @@
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
+
+  aws:
+    account: ""
+    clusterOIDC: ""
+
+  google:
+    hostname: ""
+    projectID: ""
+    region: ""
+resources:
+  limits:
+    cpu: 1
+    memory: 1204Mi
+    ephemeral-storage: 1Gi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+    ephemeral-storage: 10Mi
+
+installCompositeResources: true
+config: {}

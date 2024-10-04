@@ -1,0 +1,23 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: developer-portal-function
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          containers:
+            - name: package-runtime
+              env:
+                - name: ISTIO_GATEWAY
+                  value: "istio-gateway/istio-gateway"
+                - name: KUBERNETES_PROVIDER
+                  value: "crossplane-k8s"
+                - name: AWS_PROVIDER
+                  value: "{{ .Values.global.providerConfigRefName }}"
+                - name: IMAGE_PULL_SECRETS
+                  value: ""
+{{- end }}

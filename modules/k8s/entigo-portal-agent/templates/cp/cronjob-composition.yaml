@@ -1,0 +1,18 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: compositecronjobs.flow.entigo.io
+spec:
+  compositeTypeRef:
+    apiVersion: flow.entigo.io/v1alpha1
+    kind: CompositeCronJob
+  mode: Pipeline
+  pipeline:
+    - step: cron-job
+      functionRef:
+        name: developer-portal-function
+      input:
+        apiVersion: template.fn.crossplane.io/v1beta1
+        kind: Input
+{{- end }}

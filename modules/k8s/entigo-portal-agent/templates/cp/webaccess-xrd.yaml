@@ -1,0 +1,80 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: compositewebaccesses.flow.entigo.io
+spec:
+  group: flow.entigo.io
+  names:
+    kind: CompositeWebAccess
+    plural: compositewebaccesses
+  claimNames:
+    kind: WebAccess
+    plural: webaccesses
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - apiVersion
+            - kind
+            - metadata
+            - spec
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+              enum: ['WebAccess']
+            metadata:
+              type: object
+              required:
+                - name
+                - namespace
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            spec:
+              type: object
+              required:
+                - domain
+                - paths
+              properties:
+                domain:
+                  type: string
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                paths:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - path
+                      - host
+                      - port
+                      - pathType
+                    properties:
+                      path:
+                        type: string
+                      host:
+                        type: string
+                      namespace:
+                        type: string
+                      port:
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
+                      pathType:
+                        name: type
+                        type: string
+                        enum: ['Prefix', 'Exact']
+                      targetPath:
+                        type: string
+{{- end }}

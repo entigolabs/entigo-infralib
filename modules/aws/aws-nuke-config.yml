@@ -58,6 +58,11 @@ resource-types:
   - CodeStarProject
   - CodeStarNotificationRule
   - CodeStarConnection
+  - GameLiftFleet
+  - GameLiftBuild
+  - GameLiftQueue
+  - GameLiftMatchmakingConfiguration
+  - GameLiftMatchmakingRuleSet
 
 accounts:
   "877483565445":

@@ -1,0 +1,62 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: compositerepositories.flow.entigo.io
+spec:
+  group: flow.entigo.io
+  names:
+    kind: CompositeRepository
+    plural: compositerepositories
+  claimNames:
+    kind: FlowRepository
+    plural: flowrepositories
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - apiVersion
+            - kind
+            - metadata
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+            spec:
+              type: object
+              properties:
+                imageScanningConfiguration:
+                  type: object
+                  properties:
+                    scanOnPush:
+                      type: boolean
+                imageTagMutability:
+                  type: string
+                  enum: ['IMMUTABLE', 'MUTABLE']
+                tags:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                      value:
+                        type: string
+            status:
+              type: object
+              properties:
+                repositoryUri:
+                  type: string
+{{- end }}
