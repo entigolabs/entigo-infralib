@@ -1,4 +1,4 @@
-{{- if (default .Values.installCompositeResources true) }}
+{{- if .Values.installCompositeResources }}
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:

@@ -1,4 +1,4 @@
-{{- if (default .Values.installCompositeResources true) }}
+{{- if .Values.installCompositeResources }}
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
