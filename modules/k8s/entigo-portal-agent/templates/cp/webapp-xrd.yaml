@@ -1,3 +1,4 @@
+{{- if (default .Values.installCompositeResources true) }}
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
@@ -246,3 +247,4 @@ spec:
                             format: int32
                             min: 1
                             default: 30
+{{- end }}

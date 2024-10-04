@@ -1,3 +1,4 @@
+{{- if (default .Values.installCompositeResources true) }}
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
@@ -76,3 +77,4 @@ spec:
                         enum: ['Prefix', 'Exact']
                       targetPath:
                         type: string
+{{- end }}

@@ -1,3 +1,4 @@
+{{- if (default .Values.installCompositeResources true) }}
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
@@ -58,3 +59,4 @@ spec:
               properties:
                 repositoryUri:
                   type: string
+{{- end }}

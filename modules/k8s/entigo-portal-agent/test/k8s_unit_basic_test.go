@@ -48,6 +48,7 @@ func testK8sEntigoPortalAgent(t *testing.T, contextName, envName, cloudProvider 
 		namespaceName = fmt.Sprintf("portal-agent-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
+		setValues["installCompositeResources"] = "false"
 	}
 
 	releaseName := namespaceName
