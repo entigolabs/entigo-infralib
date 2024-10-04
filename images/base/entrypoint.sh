@@ -254,8 +254,8 @@ then
     app=`yq -r '.metadata.name' $line`
     if [ "$ARGO_TOKEN" != "" ]
     then
-      argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app sync $app
-      argocd --server ${ARGOCD_HOSTNAME} --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
+      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app sync $app
+      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
     else
       echo "No ArgoCD Token, falling back to kubectl patch and auto sync."
       kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
