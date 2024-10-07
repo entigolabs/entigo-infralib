@@ -117,7 +117,7 @@ locals {
 
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "31.0.0"
+  version = "33.0.4"
 
   project_id             = data.google_client_config.this.project
   name                   = local.hname
