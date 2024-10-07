@@ -29,8 +29,8 @@ func TestTerraformCrossplane(t *testing.T) {
 
 func testTerraformCrossplaneBiz(t *testing.T) {
 	if prefix != "runner-main" {
-		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-biz", prefix)
-		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-biz", prefix)
+		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-biz", prefix)
+		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-biz", prefix)
 	}
 	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_biz.tfvars", vars)
 	testTerraformCrossplane(t, "biz", options)
@@ -38,8 +38,8 @@ func testTerraformCrossplaneBiz(t *testing.T) {
 
 func testTerraformCrossplanePri(t *testing.T) {
 	if prefix != "runner-main" {
-		vars["ksa_name"] = fmt.Sprintf("crossplane-%s-pri", prefix)
-		vars["kns_name"] = fmt.Sprintf("crossplane-system-%s-pri", prefix)
+		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-pri", prefix)
+		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-pri", prefix)
 	}
 	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_pri.tfvars", vars)
 	testTerraformCrossplane(t, "pri", options)
