@@ -14,11 +14,11 @@ then
 else
   cd $CODEBUILD_SRC_DIR
   
-  if [ ! -d "$TF_VAR_prefix" ]
+  if [ ! -d "steps/$TF_VAR_prefix" ]
   then
    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
    echo "Need to copy project files from S3 bucket $BUCKET"
-   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix ./$TF_VAR_prefix --recursive
+   aws s3 cp s3://${BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive
    find .
    #--no-progress --quiet
   fi
@@ -33,13 +33,13 @@ fi
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
 
-  if [ ! -d "$TF_VAR_prefix" ]
+  if [ ! -d "steps/$TF_VAR_prefix" ]
   then
     find .
-    echo "Unable to find path "$TF_VAR_prefix""
+    echo "Unable to find path "steps/$TF_VAR_prefix""
     exit 5
   fi
-  cd "$TF_VAR_prefix"
+  cd "steps/$TF_VAR_prefix"
 
 elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
@@ -59,7 +59,7 @@ then
     fi
     tar -xzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
   fi
-  cd "$TF_VAR_prefix"
+  cd "steps/$TF_VAR_prefix"
 fi
 
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
@@ -85,7 +85,7 @@ then
     exit 6
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix"
+  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
@@ -109,11 +109,11 @@ then
     exit 6
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix"
+  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/steps/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
@@ -216,7 +216,7 @@ then
     exit 20
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix"
+  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
