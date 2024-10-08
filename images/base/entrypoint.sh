@@ -19,7 +19,6 @@ else
    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
    echo "Need to copy project files from S3 bucket $BUCKET"
    aws s3 cp s3://${BUCKET}/$TF_VAR_prefix ./$TF_VAR_prefix --recursive
-   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix/backend.conf ./$TF_VAR_prefix/backend.conf
    find .
    #--no-progress --quiet
   fi
@@ -66,8 +65,8 @@ fi
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   /usr/bin/gitlogin.sh
-  cat ../backend.conf
-  terraform init -input=false -backend-config=../backend.conf
+  cat backend.conf
+  terraform init -input=false -backend-config=backend.conf
   if [ $? -ne 0 ]
   then
     echo "Terraform init failed."
