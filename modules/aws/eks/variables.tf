@@ -28,7 +28,7 @@ variable "eks_nodeport_access_cidrs" {
 variable "eks_cluster_version" {
   type     = string
   nullable = false
-  default  = "1.28"
+  default  = "1.29"
 }
 
 variable "iam_admin_role" {
