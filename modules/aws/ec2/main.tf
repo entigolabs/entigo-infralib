@@ -21,11 +21,11 @@ data "aws_subnet" "ec2" {
 }
 
 resource "aws_security_group" "ec2" {
-  name = local.hname
-  description = local.hname
+  name = var.prefix
+  description = var.prefix
   vpc_id = data.aws_subnet.ec2.vpc_id
   tags = {
-    "Name" = local.hname
+    "Name" = var.prefix
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_instance" "ec2" {
   }
 
   tags = {
-    "Name" = local.hname
+    "Name" = var.prefix
   }
   lifecycle {
      ignore_changes = [ user_data, ami ]
@@ -76,7 +76,7 @@ resource "aws_instance" "ec2" {
 resource "aws_route53_record" "ec2" {
   count = var.route53_zone_id != "" ? 1 : 0 
   zone_id = var.route53_zone_id
-  name = var.route53_name == "thisisundefined" ? local.hname : var.route53_name
+  name = var.route53_name == "thisisundefined" ? var.prefix : var.route53_name
   type = "A"
   ttl = 60
   records = var.eip ? [aws_eip.ec2[0].public_ip] : [aws_instance.ec2.public_ip]

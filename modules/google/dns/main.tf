@@ -2,8 +2,8 @@
 locals {
   domain = var.parent_zone_id != "" ? data.google_dns_managed_zone.parent_zone[0].dns_name : var.parent_domain
 
-  public_subdomain_name  = var.public_subdomain_name != "" ? var.public_subdomain_name : local.hname
-  private_subdomain_name = var.private_subdomain_name != "" ? var.private_subdomain_name : "${local.hname}-int"
+  public_subdomain_name  = var.public_subdomain_name != "" ? var.public_subdomain_name : var.prefix
+  private_subdomain_name = var.private_subdomain_name != "" ? var.private_subdomain_name : "${var.prefix}-int"
 
   pub_domain = var.create_public ? "${local.public_subdomain_name}.${local.domain}" : local.domain
   int_domain = var.create_private ? "${local.private_subdomain_name}.${local.domain}" : local.pub_domain
