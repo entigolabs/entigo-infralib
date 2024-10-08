@@ -7,7 +7,6 @@ resource "aws_ssm_parameter" "public_ip" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 

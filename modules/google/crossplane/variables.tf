@@ -15,5 +15,5 @@ variable "kubernetes_namespace" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }

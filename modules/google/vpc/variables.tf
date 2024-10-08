@@ -61,6 +61,6 @@ variable "enable_nat_gateway" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }
 

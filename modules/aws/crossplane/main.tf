@@ -35,6 +35,5 @@ resource "aws_ssm_parameter" "iam_role" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }

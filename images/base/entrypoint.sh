@@ -4,7 +4,6 @@ set -x
 [ -z $TF_VAR_prefix ] && echo "TF_VAR_prefix must be set" && exit 1
 [ -z "$AWS_REGION" -a -z "$GOOGLE_REGION" ] && echo "AWS_REGION or GOOGLE_REGION must be set" && exit 1
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
-[ -z $WORKSPACE ] && echo "WORKSPACE must be set" && exit 1
 export TF_IN_AUTOMATION=1
 
 if [ ! -z "$GOOGLE_REGION" ]
@@ -15,11 +14,11 @@ then
 else
   cd $CODEBUILD_SRC_DIR
   
-  if [ ! -d "$TF_VAR_prefix/$WORKSPACE" ]
+  if [ ! -d "$TF_VAR_prefix" ]
   then
    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
    echo "Need to copy project files from S3 bucket $BUCKET"
-   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix/$WORKSPACE ./$TF_VAR_prefix/$WORKSPACE --recursive
+   aws s3 cp s3://${BUCKET}/$TF_VAR_prefix ./$TF_VAR_prefix --recursive
    aws s3 cp s3://${BUCKET}/$TF_VAR_prefix/backend.conf ./$TF_VAR_prefix/backend.conf
    find .
    #--no-progress --quiet
@@ -35,24 +34,24 @@ fi
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
 
-  if [ ! -d "$TF_VAR_prefix/$WORKSPACE" ]
+  if [ ! -d "$TF_VAR_prefix" ]
   then
     find .
-    echo "Unable to find path "$TF_VAR_prefix/$WORKSPACE""
+    echo "Unable to find path "$TF_VAR_prefix""
     exit 5
   fi
-  cd "$TF_VAR_prefix/$WORKSPACE"
+  cd "$TF_VAR_prefix"
 
 elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    if [ ! -f $TF_VAR_prefix-$WORKSPACE-tf.tar.gz ]
+    if [ ! -f $TF_VAR_prefix-tf.tar.gz ]
     then
-      echo "Unable to find artifacts from plan stage! $TF_VAR_prefix-$WORKSPACE-tf.tar.gz"
+      echo "Unable to find artifacts from plan stage! $TF_VAR_prefix-tf.tar.gz"
       exit 4
     fi
-    tar -xzf $TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+    tar -xzf $TF_VAR_prefix-tf.tar.gz
   else
     if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
     then
@@ -61,7 +60,7 @@ then
     fi
     tar -xzf $CODEBUILD_SRC_DIR_Plan/tf.tar.gz
   fi
-  cd "$TF_VAR_prefix/$WORKSPACE"
+  cd "$TF_VAR_prefix"
 fi
 
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
@@ -74,29 +73,29 @@ then
     echo "Terraform init failed."
     exit 14
   fi
-  terraform workspace select $WORKSPACE -no-color || terraform workspace new $WORKSPACE -no-color && terraform workspace select $WORKSPACE -no-color && terraform init -input=false || exit 2
+  terraform init -input=false || exit 2
 fi
 
 
 if [ "$COMMAND" == "plan" ]
 then
-  terraform plan -no-color -out $WORKSPACE.tf-plan -input=false
+  terraform plan -no-color -out ${TF_VAR_prefix}.tf-plan -input=false
   if [ $? -ne 0 ]
   then
     echo "Failed to create TF plan!"
     exit 6
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  tar -czf tf.tar.gz "$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
     env
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply" ]
 then
-  terraform apply -no-color -input=false $WORKSPACE.tf-plan
+  terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
   if [ $? -ne 0 ]
   then
     echo "Apply failed!"
@@ -104,22 +103,22 @@ then
   fi
 elif [ "$COMMAND" == "plan-destroy" ]
 then
-  terraform plan -destroy -no-color -out $WORKSPACE.tf-plan -input=false
+  terraform plan -destroy -no-color -out ${TF_VAR_prefix}.tf-plan -input=false
   if [ $? -ne 0 ]
   then
     echo "Failed to create TF destroy plan!"
     exit 6
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  tar -czf tf.tar.gz "$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
-  terraform apply -no-color -input=false $WORKSPACE.tf-plan
+  terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
   if [ $? -ne 0 ]
   then
     echo "Apply destroy failed!"
@@ -218,11 +217,11 @@ then
     exit 20
   fi
   cd ../..
-  tar -czf tf.tar.gz "$TF_VAR_prefix/$WORKSPACE"
+  tar -czf tf.tar.gz "$TF_VAR_prefix"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-$WORKSPACE-tf.tar.gz
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "argocd-apply" ]
 then

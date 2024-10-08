@@ -10,7 +10,7 @@ variable "value" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }
 
 
@@ -20,7 +20,6 @@ resource "google_secret_manager_secret" "secret" {
   annotations = {
     product = "entigo-infralib"
     hname = local.hname
-    workspace = terraform.workspace
     prefix = var.prefix
     parameter = "secret"
   }

@@ -119,7 +119,6 @@ resource "aws_ssm_parameter" "pub-cert-arn" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -131,7 +130,6 @@ resource "aws_ssm_parameter" "pub" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -142,7 +140,6 @@ resource "aws_ssm_parameter" "pub-domain" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -154,7 +151,6 @@ resource "aws_ssm_parameter" "int-cert-arn" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -166,7 +162,6 @@ resource "aws_ssm_parameter" "int" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -177,6 +172,5 @@ resource "aws_ssm_parameter" "int-domain" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }

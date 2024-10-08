@@ -43,5 +43,5 @@ variable "private_subdomain_name" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }

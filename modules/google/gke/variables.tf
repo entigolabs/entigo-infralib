@@ -326,6 +326,6 @@ variable "gke_managed_node_groups_extra" {
 
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }
 

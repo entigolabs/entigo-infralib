@@ -1,5 +1,5 @@
 locals {
-  hname  = "${var.prefix}-${terraform.workspace}"
+  hname  = var.prefix
   alarms = var.create_sns_topic ? concat([aws_sns_topic.this[0].arn], var.sns_topic_arns) : var.sns_topic_arns
 }
 

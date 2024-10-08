@@ -101,5 +101,5 @@ variable "security_group_ingress" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }

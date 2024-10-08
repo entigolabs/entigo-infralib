@@ -3,5 +3,5 @@ variable "prefix" {
 }
 
 locals {
-  hname = "${var.prefix}-${terraform.workspace}"
+  hname = var.prefix
 }

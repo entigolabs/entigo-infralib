@@ -67,7 +67,6 @@ module "vpc" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -96,7 +95,6 @@ resource "aws_ssm_parameter" "pipeline_security_group" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -107,7 +105,6 @@ resource "aws_ssm_parameter" "vpc_id" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -118,7 +115,6 @@ resource "aws_ssm_parameter" "private_subnets" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -129,7 +125,6 @@ resource "aws_ssm_parameter" "public_subnets" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -141,7 +136,6 @@ resource "aws_ssm_parameter" "intra_subnets" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -153,7 +147,6 @@ resource "aws_ssm_parameter" "database_subnets" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -165,7 +158,6 @@ resource "aws_ssm_parameter" "database_subnet_group" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -177,7 +169,6 @@ resource "aws_ssm_parameter" "elasticache_subnets" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -189,7 +180,6 @@ resource "aws_ssm_parameter" "elasticache_subnet_group" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -200,7 +190,6 @@ resource "aws_ssm_parameter" "private_subnet_cidrs" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -212,7 +201,6 @@ resource "aws_ssm_parameter" "public_subnet_cidrs" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -225,7 +213,6 @@ resource "aws_ssm_parameter" "database_subnet_cidrs" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -237,7 +224,6 @@ resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -249,7 +235,6 @@ resource "aws_ssm_parameter" "intra_subnet_cidrs" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -260,7 +245,6 @@ resource "aws_ssm_parameter" "private_subnet_names" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -271,7 +255,6 @@ resource "aws_ssm_parameter" "public_subnet_names" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -282,7 +265,6 @@ resource "aws_ssm_parameter" "database_subnet_names" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -293,7 +275,6 @@ resource "aws_ssm_parameter" "elasticache_subnet_names" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -304,7 +285,6 @@ resource "aws_ssm_parameter" "intra_subnet_names" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -317,7 +297,6 @@ resource "aws_ssm_parameter" "intra_route_table_ids" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -329,7 +308,6 @@ resource "aws_ssm_parameter" "private_route_table_ids" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -341,7 +319,6 @@ resource "aws_ssm_parameter" "public_route_table_ids" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -353,7 +330,6 @@ resource "aws_ssm_parameter" "database_route_table_ids" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -365,7 +341,6 @@ resource "aws_ssm_parameter" "elasticache_route_table_ids" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 

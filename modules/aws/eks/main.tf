@@ -19,7 +19,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -44,7 +43,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -79,7 +77,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -114,7 +111,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -150,7 +146,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -185,7 +180,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -294,7 +288,6 @@ module "ebs_csi_irsa_role" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -315,7 +308,6 @@ module "vpc_cni_irsa_role" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -537,7 +529,6 @@ module "eks" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -548,7 +539,6 @@ resource "aws_ssm_parameter" "cluster_name" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -559,7 +549,6 @@ resource "aws_ssm_parameter" "account" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -570,7 +559,6 @@ resource "aws_ssm_parameter" "region" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -581,7 +569,6 @@ resource "aws_ssm_parameter" "eks_oidc_provider" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -592,7 +579,6 @@ resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
