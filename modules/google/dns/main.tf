@@ -36,8 +36,11 @@ resource "google_dns_managed_zone" "int" {
   force_destroy = true
 
   private_visibility_config {
-    networks {
-      network_url = var.vpc_id
+    dynamic "networks" {
+      for_each = var.vpc_ids
+      content {
+        network_url = networks.value
+      }
     }
   }
 }
