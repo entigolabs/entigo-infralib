@@ -2,9 +2,9 @@ variable "prefix" {
   type = string
 }
 
-variable "vpc_id" {
-  type    = string
-  default = ""
+variable "vpc_ids" {
+  type    = list(string)
+  default = []
 }
 
 variable "create_public" {
