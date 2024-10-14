@@ -6,32 +6,21 @@ set -x
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
 export TF_IN_AUTOMATION=1
 
-if [ ! -z "$GOOGLE_REGION" ]
-then
-  sleep 1
-  cp -r $CODEBUILD_SRC_DIR/* /project/
-  cd /project
-else
-  cd $CODEBUILD_SRC_DIR
-  
-  if [ ! -d "steps/$TF_VAR_prefix" ]
-  then
-   BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
-   echo "Need to copy project files from S3 bucket $BUCKET"
-   aws s3 cp s3://${BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive
-   find .
-   #--no-progress --quiet
-  fi
-  
-fi
-
-if [ -d ".git" ]
-then
-rm -rf .git
-fi
 
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    sleep 1
+    cp -r $CODEBUILD_SRC_DIR/* /project/
+    cd /project
+  else
+    cd $CODEBUILD_SRC_DIR
+
+    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
+    echo "Need to copy project files from S3 bucket $BUCKET"
+    aws s3 cp s3://${BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive --no-progress --quiet
+  fi
 
   if [ ! -d "steps/$TF_VAR_prefix" ]
   then
@@ -45,12 +34,12 @@ elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    if [ ! -f $TF_VAR_prefix-tf.tar.gz ]
+    if [ ! -f $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz ]
     then
-      echo "Unable to find artifacts from plan stage! $TF_VAR_prefix-tf.tar.gz"
+      echo "Unable to find artifacts from plan stage! $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz"
       exit 4
     fi
-    tar -xzf $TF_VAR_prefix-tf.tar.gz
+    cd /project/ && tar -xzf $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
   else
     if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
     then
@@ -72,7 +61,6 @@ then
     echo "Terraform init failed."
     exit 14
   fi
-  terraform init -input=false || exit 2
 fi
 
 
@@ -94,6 +82,15 @@ then
   fi
 elif [ "$COMMAND" == "apply" ]
 then
+  echo "Syncing .terraform back to bucket"
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    
+    cp -r .terraform $CODEBUILD_SRC_DIR/.terraform
+  else
+    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
+    aws s3 sync .terraform s3://${BUCKET}/steps/$TF_VAR_prefix/.terraform --no-progress --quiet --delete
+  fi
   terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
   if [ $? -ne 0 ]
   then
