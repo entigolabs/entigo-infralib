@@ -251,6 +251,8 @@ jobs:
         PIDS="$PIDS $!"
         modules/k8s/loki/test.sh &
         PIDS="$PIDS $!"
+        modules/k8s/promtail/test.sh &
+        PIDS="$PIDS $!"
         modules/k8s/mimir/test.sh &
         PIDS="$PIDS $!"
         modules/k8s/grafana/test.sh &

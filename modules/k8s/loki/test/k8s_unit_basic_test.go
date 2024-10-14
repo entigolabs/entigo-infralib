@@ -102,7 +102,6 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		setValues["global.google.gateway.name"] = gatewayName
 	}
 
-	// setValues["promtail.config.clients[0].url"] = fmt.Sprintf("https://%s.runner-main-%s-int.infralib.entigo.io/loki/api/v1/push", releaseName, envName)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 

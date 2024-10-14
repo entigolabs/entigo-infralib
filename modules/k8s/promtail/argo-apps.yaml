@@ -1,0 +1,7 @@
+spec:
+  ignoreDifferences:
+  - group: apps
+    kind: StatefulSet
+    name: loki-read
+    jqPathExpressions:
+      - .spec.persistentVolumeClaimRetentionPolicy
