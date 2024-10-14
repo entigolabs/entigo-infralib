@@ -1,0 +1,45 @@
+promtail:
+  daemonset:
+    enabled: true
+
+  deployment:
+    enabled: false
+
+  configmap:
+    enabled: true
+  networkPolicy:
+    enabled: true
+  tolerations:
+    - key: "node-group"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - effect: NoSchedule
+      operator: Exists
+  resources:
+    limits:
+      cpu: 2
+      memory: 1Gi
+      ephemeral-storage: 50Gi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+      ephemeral-storage: 1Gi
+
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+      - url: http://loki-gateway.loki/loki/api/v1/push
+
+  # ServiceMonitor configuration
+  serviceMonitor:
+    # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+    enabled: false
+    # -- Alternative namespace for ServiceMonitor resources
+    #         name: client_secret
