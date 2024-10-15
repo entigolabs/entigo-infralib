@@ -55,6 +55,11 @@ if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "appl
 then
   /usr/bin/gitlogin.sh
   cat backend.conf
+  if [ $? -ne 0 ]
+  then
+    echo "Unable to find backend.conf file"
+    exit 100
+  fi
   terraform init -input=false -backend-config=backend.conf
   if [ $? -ne 0 ]
   then
