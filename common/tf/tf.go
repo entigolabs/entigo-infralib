@@ -70,6 +70,7 @@ func InitTerraform(t *testing.T, bucketName string, awsRegion string, varFile st
 }
 
 func ApplyTerraform(t *testing.T, workspaceName string, terraformOptions *terraform.Options) (map[string]interface{}, func()) {
+       terraformOptions.Vars["prefix"] = fmt.Sprintf("%s-%s", os.Getenv("TF_VAR_prefix"), workspaceName)
 	_, err := terraform.WorkspaceSelectOrNewE(t, terraformOptions, workspaceName)
 	if err != nil {
 		terraform.WorkspaceSelectOrNew(t, terraformOptions, workspaceName) // Retry once

@@ -1,4 +1,0 @@
-#This is the most minimal profile possible, everything has to be configured in the client configuration.
-#This is meant for learning purposes or very custom setups that do not follow any specific profile.
-
-version: stable

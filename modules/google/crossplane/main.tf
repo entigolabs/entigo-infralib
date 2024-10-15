@@ -36,8 +36,8 @@ resource "google_project_iam_member" "crossplane_security_admin" {
 }
 
 resource "google_service_account" "crossplane" {
-  account_id   = "${substr(local.hname, 0, 25)}-cp"
-  display_name = "${local.hname}-cp"
+  account_id   = "${substr(var.prefix, 0, 25)}-cp"
+  display_name = "${var.prefix}-cp"
 }
 
 module "service_account_email" {

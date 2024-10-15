@@ -1,5 +1,4 @@
 locals {
-  hname  = "${var.prefix}-${terraform.workspace}"
   alarms = var.create_sns_topic ? concat([aws_sns_topic.this[0].arn], var.sns_topic_arns) : var.sns_topic_arns
 }
 
@@ -23,7 +22,7 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   }
   tags = {
     Terraform   = "true"
-    Environment = local.hname
+    Environment = var.prefix
   }
 }
 
@@ -34,7 +33,7 @@ resource "aws_sns_topic" "this" {
   name = var.aws_account_id == null ? "global-billing-alarm-notification-${lower(var.currency)}" : "billing-alarm-notification-${lower(var.currency)}-${var.aws_account_id}"
   tags = {
     Terraform   = "true"
-    Environment = local.hname
+    Environment = var.prefix
   }
 }
 

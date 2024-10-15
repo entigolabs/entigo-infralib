@@ -9,8 +9,8 @@ spec:
     region: {{ .Values.global.aws.region }}
     delaySeconds: 0
     messageRetentionPeriod: 7200
-    MaximumMessageSize: 8192
-    ReceiveMessageWaitTimeSeconds: 20
+    maximumMessageSize: 8192
+    receiveMessageWaitTimeSeconds: 20
     visibilityTimeout: 60
     policy: |
       {

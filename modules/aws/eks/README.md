@@ -3,7 +3,7 @@
 
 Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 
-__vpc_prefix__ look for subnets based on this SSM parameter prefix ("/entigo-infralib/${var.vpc_prefix}-${terraform.workspace}/vpc/vpc_id")
+__vpc_prefix__ look for subnets based on this SSM parameter prefix ("/entigo-infralib/${var.vpc_prefix}/vpc/vpc_id")
 
 
 __vpc_id__ the VPC id where eks is installed.
@@ -68,11 +68,11 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
 
 ### SSM parameters ###
 ```
-"/entigo-infralib/${local.hname}/cluster_name"
-"/entigo-infralib/${local.hname}/account"
-"/entigo-infralib/${local.hname}/region"
-"/entigo-infralib/${local.hname}/oidc_provider_arn"
-"/entigo-infralib/${local.hname}/oidc_provider
+"/entigo-infralib/${var.prefix}/cluster_name"
+"/entigo-infralib/${var.prefix}/account"
+"/entigo-infralib/${var.prefix}/region"
+"/entigo-infralib/${var.prefix}/oidc_provider_arn"
+"/entigo-infralib/${var.prefix}/oidc_provider
 
 ```
 
@@ -95,4 +95,4 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
 ```
 
 ### Limitations ###
-If you want multiple eks clusters then they have to be under different workspaces. The module name has to be "eks" - otherwise the terraform provider for kubernets and helm will be misconfigured.
+The module name has to be "eks" - otherwise the terraform provider for kubernets will be misconfigured.

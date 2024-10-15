@@ -19,7 +19,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -44,7 +43,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -79,7 +77,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
       block_device_mappings = {
         xvda = {
@@ -114,7 +111,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -150,7 +146,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -185,7 +180,6 @@ locals {
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
-        Workspace = terraform.workspace
       }
 
       block_device_mappings = {
@@ -205,7 +199,7 @@ locals {
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups_default = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(local.hname, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(var.prefix, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
   }
 
   # Set desired_size to min_size if desired_size is 0 for extra node groups
@@ -269,21 +263,21 @@ locals {
 resource "aws_ec2_tag" "privatesubnets" {
   for_each    = toset(var.private_subnets)
   resource_id = each.key
-  key         = "kubernetes.io/cluster/${local.hname}"
+  key         = "kubernetes.io/cluster/${var.prefix}"
   value       = "shared"
 }
 
 resource "aws_ec2_tag" "publicsubnets" {
   for_each    = toset(var.public_subnets)
   resource_id = each.key
-  key         = "kubernetes.io/cluster/${local.hname}"
+  key         = "kubernetes.io/cluster/${var.prefix}"
   value       = "shared"
 }
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version               = "5.39.0"
-  role_name             = "${local.hname}-ebs-csi"
+  role_name             = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   oidc_providers = {
     ex = {
@@ -294,7 +288,6 @@ module "ebs_csi_irsa_role" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -315,7 +308,6 @@ module "vpc_cni_irsa_role" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
@@ -324,7 +316,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.21.0"
 
-  cluster_name                    = local.hname
+  cluster_name                    = var.prefix
   cluster_version                 = var.eks_cluster_version
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = var.eks_cluster_public
@@ -511,8 +503,8 @@ module "eks" {
 
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
   node_security_group_tags = {
-    "kubernetes.io/cluster/${local.hname}" = null
-    "karpenter.sh/discovery" = local.hname
+    "kubernetes.io/cluster/${var.prefix}" = null
+    "karpenter.sh/discovery" = var.prefix
   }
 
   cluster_encryption_config = []
@@ -537,62 +529,56 @@ module "eks" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "cluster_name" {
-  name  = "/entigo-infralib/${local.hname}/cluster_name"
+  name  = "/entigo-infralib/${var.prefix}/cluster_name"
   type  = "String"
-  value = local.hname
+  value = var.prefix
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "account" {
-  name  = "/entigo-infralib/${local.hname}/account"
+  name  = "/entigo-infralib/${var.prefix}/account"
   type  = "String"
   value = data.aws_caller_identity.current.account_id
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "region" {
-  name  = "/entigo-infralib/${local.hname}/region"
+  name  = "/entigo-infralib/${var.prefix}/region"
   type  = "String"
   value = data.aws_region.current.name
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "eks_oidc_provider" {
-  name  = "/entigo-infralib/${local.hname}/oidc_provider"
+  name  = "/entigo-infralib/${var.prefix}/oidc_provider"
   type  = "String"
   value = module.eks.oidc_provider
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
-  name  = "/entigo-infralib/${local.hname}/oidc_provider_arn"
+  name  = "/entigo-infralib/${var.prefix}/oidc_provider_arn"
   type  = "String"
   value = module.eks.oidc_provider_arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 

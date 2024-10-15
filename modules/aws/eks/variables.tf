@@ -301,7 +301,3 @@ variable "eks_managed_node_groups_extra" {
   nullable = false
   default  = {}
 }
-
-locals {
-  hname = "${var.prefix}-${terraform.workspace}"
-}

@@ -1,5 +1,5 @@
 output "hello_world" {
-  value = "Hello, ${local.hname}!"
+  value = "Hello, ${var.prefix}!"
 }
 
 

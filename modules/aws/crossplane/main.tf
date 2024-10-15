@@ -1,5 +1,5 @@
 resource "aws_iam_role" "crossplane" {
-  name = "crossplane-${local.hname}"
+  name = "crossplane-${var.prefix}"
 
   assume_role_policy = <<POLICY
 {
@@ -29,12 +29,11 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
 }
 
 resource "aws_ssm_parameter" "iam_role" {
-  name  = "/entigo-infralib/${local.hname}/iam_role"
+  name  = "/entigo-infralib/${var.prefix}/iam_role"
   type  = "String"
   value = aws_iam_role.crossplane.arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }

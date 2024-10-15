@@ -10,20 +10,20 @@ Oppinionated version of this https://registry.terraform.io/modules/terraform-aws
 
 ### SSM parameters ###
 ```
-"/entigo-infralib/${local.hname}/pipeline_security_group"
-"/entigo-infralib/${local.hname}/vpc_id"
-"/entigo-infralib/${local.hname}/private_subnets"
-"/entigo-infralib/${local.hname}/public_subnets"
-"/entigo-infralib/${local.hname}/intra_subnets"
-"/entigo-infralib/${local.hname}/database_subnets"
-"/entigo-infralib/${local.hname}/database_subnet_group"
-"/entigo-infralib/${local.hname}/elasticache_subnets"
-"/entigo-infralib/${local.hname}/elasticache_subnet_group"
-"/entigo-infralib/${local.hname}/private_subnet_cidrs"
-"/entigo-infralib/${local.hname}/public_subnet_cidrs"
-"/entigo-infralib/${local.hname}/database_subnet_cidrs"
-"/entigo-infralib/${local.hname}/elasticache_subnet_cidrs"
-"/entigo-infralib/${local.hname}/intra_subnet_cidrs"
+"/entigo-infralib/${var.prefix}/pipeline_security_group"
+"/entigo-infralib/${var.prefix}/vpc_id"
+"/entigo-infralib/${var.prefix}/private_subnets"
+"/entigo-infralib/${var.prefix}/public_subnets"
+"/entigo-infralib/${var.prefix}/intra_subnets"
+"/entigo-infralib/${var.prefix}/database_subnets"
+"/entigo-infralib/${var.prefix}/database_subnet_group"
+"/entigo-infralib/${var.prefix}/elasticache_subnets"
+"/entigo-infralib/${var.prefix}/elasticache_subnet_group"
+"/entigo-infralib/${var.prefix}/private_subnet_cidrs"
+"/entigo-infralib/${var.prefix}/public_subnet_cidrs"
+"/entigo-infralib/${var.prefix}/database_subnet_cidrs"
+"/entigo-infralib/${var.prefix}/elasticache_subnet_cidrs"
+"/entigo-infralib/${var.prefix}/intra_subnet_cidrs"
 
 ```
 

@@ -1,8 +1,8 @@
 locals {
   domain = var.parent_zone_id != "" ? data.aws_route53_zone.parent_zone[0].name : var.parent_domain
   
-  public_subdomain_name = var.public_subdomain_name != "" ? var.public_subdomain_name : local.hname
-  private_subdomain_name =  var.private_subdomain_name != "" ? var.private_subdomain_name : "${local.hname}-int"
+  public_subdomain_name = var.public_subdomain_name != "" ? var.public_subdomain_name : var.prefix
+  private_subdomain_name =  var.private_subdomain_name != "" ? var.private_subdomain_name : "${var.prefix}-int"
   
   pub_domain = var.create_public ? "${local.public_subdomain_name}.${local.domain}" : local.domain
   int_domain = var.create_private ? "${local.private_subdomain_name}.${local.domain}" : local.pub_domain
@@ -113,70 +113,64 @@ locals {
 
 resource "aws_ssm_parameter" "pub-cert-arn" {
   count = var.create_cert && ( var.create_public || var.parent_zone_id != "" ) ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/pub_cert_arn"
+  name  = "/entigo-infralib/${var.prefix}/pub_cert_arn"
   type  = "String"
   value = aws_acm_certificate.pub[0].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "pub" {
   count = var.create_public || var.parent_zone_id != "" ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/pub_zone_id"
+  name  = "/entigo-infralib/${var.prefix}/pub_zone_id"
   type  = "String"
   value = local.pub_zone
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "pub-domain" {
-  name  = "/entigo-infralib/${local.hname}/pub_domain"
+  name  = "/entigo-infralib/${var.prefix}/pub_domain"
   type  = "String"
   value = local.pub_domain
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "int-cert-arn" {
   count = var.create_cert && var.create_private ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/int_cert_arn"
+  name  = "/entigo-infralib/${var.prefix}/int_cert_arn"
   type  = "String"
   value = aws_acm_certificate.int[0].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "int" {
   count = var.create_private || var.create_public || var.parent_zone_id != "" ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/int_zone_id"
+  name  = "/entigo-infralib/${var.prefix}/int_zone_id"
   type  = "String"
   value = local.int_zone
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "int-domain" {
-  name  = "/entigo-infralib/${local.hname}/int_domain"
+  name  = "/entigo-infralib/${var.prefix}/int_domain"
   type  = "String"
   value = local.int_domain
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }

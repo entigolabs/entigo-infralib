@@ -9,18 +9,12 @@ variable "key" {
 variable "value" {
 }
 
-locals {
-  hname = "${var.prefix}-${terraform.workspace}"
-}
-
 
 resource "google_secret_manager_secret" "secret" {
-  secret_id = "entigo-infralib-${local.hname}-${var.key}"
+  secret_id = "entigo-infralib-${var.prefix}-${var.key}"
 
   annotations = {
     product = "entigo-infralib"
-    hname = local.hname
-    workspace = terraform.workspace
     prefix = var.prefix
     parameter = "secret"
   }

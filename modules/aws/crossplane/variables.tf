@@ -22,7 +22,3 @@ variable "kubernetes_namespace" {
   description = "Kubernetes namespace name for crossplane"
   default = "crossplane-system"
 }
-
-locals {
-  hname = "${var.prefix}-${terraform.workspace}"
-}

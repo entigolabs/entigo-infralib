@@ -352,7 +352,6 @@ jobs:
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' profiles entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         cd entigo-infralib-release
         
@@ -361,7 +360,7 @@ jobs:
             echo "$(echo $dir | sed 's/^..//'): $(find "$dir" -type f -exec sha256sum {} + | awk '{print $1}' | sort | sha256sum | awk '{print $1}')"
         fi
         done > checksums.sha256
-        find ./providers ./profiles -maxdepth 1 -mindepth 1 -type f -not -name 'go.*' -not -name 'README.*' -not -name 'test*' | while read -r dir; do
+        find ./providers -maxdepth 1 -mindepth 1 -type f -not -name 'go.*' -not -name 'README.*' -not -name 'test*' | while read -r dir; do
             echo "$(echo $dir | sed 's/^..//'): $(sha256sum $dir | awk '{print $1}')"
         done | sort >> checksums.sha256
         git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"

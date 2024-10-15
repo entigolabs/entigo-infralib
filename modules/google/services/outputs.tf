@@ -1,3 +1,3 @@
 output "services" {
-  value = "Services for ${local.hname}!"
+  value = "Services for ${var.prefix}!"
 }

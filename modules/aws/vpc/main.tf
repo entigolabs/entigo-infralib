@@ -21,7 +21,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.0"
 
-  name = local.hname
+  name = var.prefix
   cidr = var.vpc_cidr
 
   azs                 = [for i in range(local.azs) : data.aws_availability_zones.available.names[i]]
@@ -56,27 +56,26 @@ module "vpc" {
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"
-    "karpenter.sh/discovery" = local.hname
+    "karpenter.sh/discovery" = var.prefix
   }
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
-    "karpenter.sh/discovery" = local.hname
+    "karpenter.sh/discovery" = var.prefix
   }
 
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_security_group" "pipeline_security_group" {
-  name        = "${local.hname}-pipeline"
-  description = "${local.hname} Security group used by pipelines that run terraform"
+  name        = "${var.prefix}-pipeline"
+  description = "${var.prefix} Security group used by pipelines that run terraform"
   vpc_id      = module.vpc.vpc_id
   tags = {
-    Name = "Allow pipeline access to ${local.hname}"
+    Name = "Allow pipeline access to ${var.prefix}"
   }
 }
 
@@ -90,282 +89,258 @@ resource "aws_security_group_rule" "pipeline_security_group" {
 }
 
 resource "aws_ssm_parameter" "pipeline_security_group" {
-  name  = "/entigo-infralib/${local.hname}/pipeline_security_group"
+  name  = "/entigo-infralib/${var.prefix}/pipeline_security_group"
   type  = "String"
   value = aws_security_group.pipeline_security_group.id
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "vpc_id" {
-  name  = "/entigo-infralib/${local.hname}/vpc_id"
+  name  = "/entigo-infralib/${var.prefix}/vpc_id"
   type  = "String"
   value = module.vpc.vpc_id
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "private_subnets" {
-  name  = "/entigo-infralib/${local.hname}/private_subnets"
+  name  = "/entigo-infralib/${var.prefix}/private_subnets"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.private_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "public_subnets" {
-  name  = "/entigo-infralib/${local.hname}/public_subnets"
+  name  = "/entigo-infralib/${var.prefix}/public_subnets"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.public_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "intra_subnets" {
   count = length(module.vpc.intra_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/intra_subnets"
+  name  = "/entigo-infralib/${var.prefix}/intra_subnets"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.intra_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "database_subnets" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/database_subnets"
+  name  = "/entigo-infralib/${var.prefix}/database_subnets"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.database_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "database_subnet_group" {
   count          = length(local.database_subnets) > 0 ? 1 : 0
-  name           = "/entigo-infralib/${local.hname}/database_subnet_group"
+  name           = "/entigo-infralib/${var.prefix}/database_subnet_group"
   type           = "String"
   insecure_value = module.vpc.database_subnet_group
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "elasticache_subnets" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/elasticache_subnets"
+  name  = "/entigo-infralib/${var.prefix}/elasticache_subnets"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.elasticache_subnets)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "elasticache_subnet_group" {
   count          = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name           = "/entigo-infralib/${local.hname}/elasticache_subnet_group"
+  name           = "/entigo-infralib/${var.prefix}/elasticache_subnet_group"
   type           = "String"
   insecure_value = module.vpc.elasticache_subnet_group
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "private_subnet_cidrs" {
-  name  = "/entigo-infralib/${local.hname}/private_subnet_cidrs"
+  name  = "/entigo-infralib/${var.prefix}/private_subnet_cidrs"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.private_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 
 resource "aws_ssm_parameter" "public_subnet_cidrs" {
-  name  = "/entigo-infralib/${local.hname}/public_subnet_cidrs"
+  name  = "/entigo-infralib/${var.prefix}/public_subnet_cidrs"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.public_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 
 resource "aws_ssm_parameter" "database_subnet_cidrs" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/database_subnet_cidrs"
+  name  = "/entigo-infralib/${var.prefix}/database_subnet_cidrs"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.database_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "elasticache_subnet_cidrs" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/elasticache_subnet_cidrs"
+  name  = "/entigo-infralib/${var.prefix}/elasticache_subnet_cidrs"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.elasticache_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "intra_subnet_cidrs" {
   count = length(local.intra_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/intra_subnet_cidrs"
+  name  = "/entigo-infralib/${var.prefix}/intra_subnet_cidrs"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.intra_subnets_cidr_blocks)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "private_subnet_names" {
-  name  = "/entigo-infralib/${local.hname}/private_subnet_names"
+  name  = "/entigo-infralib/${var.prefix}/private_subnet_names"
   type  = "StringList"
   value = "\"${join("\",\"", var.private_subnet_names)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "public_subnet_names" {
-  name  = "/entigo-infralib/${local.hname}/public_subnet_names"
+  name  = "/entigo-infralib/${var.prefix}/public_subnet_names"
   type  = "StringList"
   value = "\"${join("\",\"", var.public_subnet_names)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "database_subnet_names" {
-  name  = "/entigo-infralib/${local.hname}/database_subnet_names"
+  name  = "/entigo-infralib/${var.prefix}/database_subnet_names"
   type  = "StringList"
   value = "\"${join("\",\"", var.database_subnet_names)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "elasticache_subnet_names" {
-  name  = "/entigo-infralib/${local.hname}/elasticache_subnet_names"
+  name  = "/entigo-infralib/${var.prefix}/elasticache_subnet_names"
   type  = "StringList"
   value = "\"${join("\",\"", var.elasticache_subnet_names)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "intra_subnet_names" {
-  name  = "/entigo-infralib/${local.hname}/intra_subnet_names"
+  name  = "/entigo-infralib/${var.prefix}/intra_subnet_names"
   type  = "StringList"
   value = "\"${join("\",\"", var.intra_subnet_names)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 
 resource "aws_ssm_parameter" "intra_route_table_ids" {
   count = length(local.intra_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/intra_route_table_ids"
+  name  = "/entigo-infralib/${var.prefix}/intra_route_table_ids"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.intra_route_table_ids)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "private_route_table_ids" {
   count = length(local.private_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/private_route_table_ids"
+  name  = "/entigo-infralib/${var.prefix}/private_route_table_ids"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.private_route_table_ids)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "public_route_table_ids" {
   count = length(local.public_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/public_route_table_ids"
+  name  = "/entigo-infralib/${var.prefix}/public_route_table_ids"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.public_route_table_ids)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "database_route_table_ids" {
   count = length(local.database_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/database_route_table_ids"
+  name  = "/entigo-infralib/${var.prefix}/database_route_table_ids"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.database_route_table_ids)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
 resource "aws_ssm_parameter" "elasticache_route_table_ids" {
   count = length(local.elasticache_subnets) > 0 ? 1 : 0
-  name  = "/entigo-infralib/${local.hname}/elasticache_route_table_ids"
+  name  = "/entigo-infralib/${var.prefix}/elasticache_route_table_ids"
   type  = "StringList"
   value = "\"${join("\",\"", module.vpc.elasticache_route_table_ids)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
-    Workspace = terraform.workspace
   }
 }
 
