@@ -33,19 +33,13 @@ spec:
                   "Resource": "*"
               },
               {
-                      "Version": "2012-10-17",
-                      "Statement": [
-                              {
-                                      "Sid": "Statement1",
-                                      "Effect": "Allow",
-                                      "Action": [
-                                              "events:DescribeRule",
-                                              "events:PutRule",
-                                              "events:PutTargets"
-                                      ],
-                                      "Resource": "*"
-                              }
-                      ]
+                      "Action": [
+                              "events:DescribeRule",
+                              "events:PutRule",
+                              "events:PutTargets"
+                      ],
+                      "Effect": "Allow",
+                      "Resource": "*"
               },
               {
                   "Action": [
