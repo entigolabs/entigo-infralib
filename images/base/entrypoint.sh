@@ -110,7 +110,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/steps/$TF_VAR_prefix-tf.tar.gz
+    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
