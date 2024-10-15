@@ -36,7 +36,8 @@ spec:
                       "Action": [
                               "events:DescribeRule",
                               "events:PutRule",
-                              "events:PutTargets"
+                              "events:PutTargets",
+                              "events:ListTargetsByRule"
                       ],
                       "Effect": "Allow",
                       "Resource": "*"
