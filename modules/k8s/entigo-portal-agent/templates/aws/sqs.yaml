@@ -36,7 +36,7 @@ spec:
             "Resource": "arn:aws:sqs:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:{{ .Release.Name }}",
             "Condition": {
               "ArnEquals": {
-                "aws:SourceArn": "arn:aws:events:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:rule/{{ .Release.Name }}"
+                "aws:SourceArn": "arn:aws:events:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:rule/entigo-portal-agent"
               }
             }
           }
