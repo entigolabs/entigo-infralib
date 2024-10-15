@@ -22,7 +22,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: {{ .Release.Name }}
-        image: entigolabs/developer-portal-agent:main-53
+        image: entigolabs/developer-portal-agent:main-54
         envFrom:
         - configMapRef:
             name: {{ .Release.Name }}
