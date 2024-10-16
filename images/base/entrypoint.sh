@@ -4,22 +4,22 @@ set -x
 [ -z $TF_VAR_prefix ] && echo "TF_VAR_prefix must be set" && exit 1
 [ -z "$AWS_REGION" -a -z "$GOOGLE_REGION" ] && echo "AWS_REGION or GOOGLE_REGION must be set" && exit 1
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
+[ -z $INFRALIB_BUCKET ] && echo "INFRALIB_BUCKET must be set" && exit 1
+
 export TF_IN_AUTOMATION=1
 
 
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
+  echo "Need to copy project files from bucket $INFRALIB_BUCKET"
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    sleep 1
-    cp -r $CODEBUILD_SRC_DIR/* /project/
+    mkdir /project/steps/
+    gsutil -q cp -r gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/
     cd /project
   else
     cd $CODEBUILD_SRC_DIR
-
-    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
-    echo "Need to copy project files from S3 bucket $BUCKET"
-    aws s3 cp s3://${BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive --no-progress --quiet
+    aws s3 cp s3://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive --no-progress --quiet
   fi
 
   if [ ! -d "steps/$TF_VAR_prefix" ]
@@ -34,12 +34,13 @@ elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    if [ ! -f $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz ]
+    gsutil -q cp gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz /project/tf.tar.gz 
+    if [ $? -ne 0 ]
     then
-      echo "Unable to find artifacts from plan stage! $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz"
+      echo "Unable to find artifacts from plan stage! gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz"
       exit 4
     fi
-    cd /project/ && tar -xzf $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
+    cd /project/ && tar -xzf tf.tar.gz
   else
     if [ ! -f $CODEBUILD_SRC_DIR_Plan/tf.tar.gz ]
     then
@@ -82,19 +83,16 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    env
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
+    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply" ]
 then
   echo "Syncing .terraform back to bucket"
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    
-    cp -r .terraform $CODEBUILD_SRC_DIR/.terraform
+    gsutil -q rsync -d -r .terraform gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform
   else
-    BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|^arn:aws:s3:::\([^/]*\).*|\1|')
-    aws s3 sync .terraform s3://${BUCKET}/steps/$TF_VAR_prefix/.terraform --no-progress --quiet --delete
+    aws s3 sync .terraform s3://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform --no-progress --quiet --delete
   fi
   terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
   if [ $? -ne 0 ]
@@ -115,7 +113,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
+    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
@@ -222,7 +220,8 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    cp tf.tar.gz $CODEBUILD_SRC_DIR/$TF_VAR_prefix-tf.tar.gz
+    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
+    
   fi
 elif [ "$COMMAND" == "argocd-apply" ]
 then
@@ -285,5 +284,3 @@ then
 else
   echo "Unknown command: $COMMAND"
 fi 
-
- 
