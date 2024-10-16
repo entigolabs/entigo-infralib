@@ -19,6 +19,9 @@ argocd:
       server.insecure: false
     cm:
       accounts.infralib: apiKey
+      server.rbac.log.enforce.enable: "true"
+      admin.enabled: "true"
+      exec.enabled: "true"
     rbac:
       policy.csv: |
         p, infralib, applications, get, */*, allow
@@ -52,11 +55,6 @@ argocd:
     autoscaling:
       enabled: true
       minReplicas: 2
-    config:
-      server.rbac.log.enforce.enable: "true"
-      admin.enabled: "true"
-      exec.enabled: "true"
-      url: https://argocd.${domain}
     ingress:
       enabled: true
       controller: aws
