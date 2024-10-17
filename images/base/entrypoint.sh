@@ -15,7 +15,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     mkdir /project/steps/
-    gsutil -q cp -r gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/
+    gsutil -m -q cp -r gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/
     cd /project
   else
     cd $CODEBUILD_SRC_DIR
@@ -34,7 +34,7 @@ elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    gsutil -q cp gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz /project/tf.tar.gz 
+    gsutil -m -q cp gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz /project/tf.tar.gz 
     if [ $? -ne 0 ]
     then
       echo "Unable to find artifacts from plan stage! gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz"
@@ -83,14 +83,14 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
+    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply" ]
 then
   echo "Syncing .terraform back to bucket"
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    gsutil -q rsync -d -r .terraform gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform
+    gsutil -m -q rsync -d -r .terraform gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform
   else
     aws s3 sync .terraform s3://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform --no-progress --quiet --delete
   fi
@@ -113,7 +113,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
+    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply-destroy" ]
 then
@@ -220,7 +220,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     echo "Copy plan to Google S3"
-    gsutil -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
+    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
     
   fi
 elif [ "$COMMAND" == "argocd-apply" ]
