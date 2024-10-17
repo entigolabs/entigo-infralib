@@ -173,17 +173,6 @@ module "gke" {
     }]
   }
 
-  node_pools_oauth_scopes = {
-    all = [
-      "https://www.googleapis.com/auth/monitoring",
-      "https://www.googleapis.com/auth/compute",
-      "https://www.googleapis.com/auth/devstorage.full_control",
-      "https://www.googleapis.com/auth/logging.write",
-      "https://www.googleapis.com/auth/service.management",
-      "https://www.googleapis.com/auth/servicecontrol",
-    ]
-  }
-
   node_pools_tags = {
     all = ["k8s-nodes"]
   }
