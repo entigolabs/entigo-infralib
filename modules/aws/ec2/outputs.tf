@@ -1,4 +1,3 @@
-
 resource "aws_ssm_parameter" "public_ip" {
   count = var.eip ? 1 : 0
   name  = "/entigo-infralib/${var.prefix}/public_ip"
