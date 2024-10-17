@@ -1,13 +1,3 @@
-resource "google_service_account" "service_account" {
-  account_id   = var.prefix
-  display_name = var.prefix
-}
-
-resource "google_project_iam_member" "service_account_artifact_registry_reader" {
-  project = data.google_client_config.this.project
-  role    = "roles/artifactregistry.reader"
-  member  = "serviceAccount:${google_service_account.service_account.email}"
-}
 
 locals {
   google_compute_zones = join(",", data.google_compute_zones.this.names)
@@ -136,9 +126,10 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
 
-  service_account              = google_service_account.service_account.email
-  master_global_access_enabled = var.master_global_access_enabled
-  #istio                           = false //only in beta module
+  # istio                          = false //only in beta module
+  grant_registry_access           = var.grant_registry_access
+  registry_project_ids            = var.registry_project_ids
+  master_global_access_enabled    = var.master_global_access_enabled
   enable_l4_ilb_subsetting        = var.enable_l4_ilb_subsetting
   issue_client_certificate        = false
   enable_private_endpoint         = var.enable_private_endpoint

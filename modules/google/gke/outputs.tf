@@ -17,3 +17,7 @@ output "region" {
   description = "GKE region"
   value       = module.gke.region
 }
+
+output "service_account" {
+  value = module.gke.service_account
+}
