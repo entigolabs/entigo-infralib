@@ -47,8 +47,8 @@ then
   if [ "$STATUS" != "Synced" ]
   then
     touch $app_file.sync
+    argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
   fi
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
 fi
 echo "Finish $app_name"
 echo "###############"
