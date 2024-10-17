@@ -8,8 +8,8 @@ set -x
 
 export TF_IN_AUTOMATION=1
 
-
-if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
+#Prepare project filesystems for plan stages. When we plan then we need to get the current S3 bucket content
+if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
 then
   echo "Need to copy project files from bucket $INFRALIB_BUCKET"
   if [ ! -z "$GOOGLE_REGION" ]
@@ -29,8 +29,8 @@ then
     exit 5
   fi
   cd "steps/$TF_VAR_prefix"
-
-elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
+#Prepare project filesystems for apply stages. When we apply then we need to get the tar artifact.
+elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
   if [ ! -z "$GOOGLE_REGION" ]
   then
@@ -52,6 +52,7 @@ then
   cd "steps/$TF_VAR_prefix"
 fi
 
+#Prepare and check the environment for terraform (common for plan and apply)
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
   /usr/bin/gitlogin.sh
@@ -67,9 +68,24 @@ then
     echo "Terraform init failed."
     exit 14
   fi
+  
+#Prepare and check the environment for Kubernetes (common for plan and apply)
+elif [ "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
+then
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+    export PROVIDER="google"
+    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
+  else
+    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+    export PROVIDER="aws"
+    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+  fi
 fi
 
-
+#ALL SPECIFIC COMMANDS HERE
+#Plan terraform
 if [ "$COMMAND" == "plan" ]
 then
   terraform plan -no-color -out ${TF_VAR_prefix}.tf-plan -input=false
@@ -77,13 +93,6 @@ then
   then
     echo "Failed to create TF plan!"
     exit 6
-  fi
-  cd ../..
-  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    echo "Copy plan to Google S3"
-    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
   fi
 elif [ "$COMMAND" == "apply" ]
 then
@@ -102,22 +111,16 @@ then
   fi
 elif [ "$COMMAND" == "plan-destroy" ]
 then
-  terraform plan -destroy -no-color -out ${TF_VAR_prefix}.tf-plan -input=false
+  terraform plan -destroy -no-color -out ${TF_VAR_prefix}.tf-plan-destroy -input=false
   if [ $? -ne 0 ]
   then
     echo "Failed to create TF destroy plan!"
     exit 6
   fi
-  cd ../..
-  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    echo "Copy plan to Google S3"
-    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
-  fi
+
 elif [ "$COMMAND" == "apply-destroy" ]
 then
-  terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
+  terraform apply -no-color -input=false ${TF_VAR_prefix}.tf-plan-destroy
   if [ $? -ne 0 ]
   then
     echo "Apply destroy failed!"
@@ -125,146 +128,120 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
-    export PROVIDER="google"
-  else
-    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
-    export PROVIDER="aws"
-  fi
-  
-  if [ "$PROVIDER" == "google" ]
-  then
-    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
-  else
-    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
-  fi
-
+  #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
     echo "Detecting ArgoCD modules."
-    find . -type f -name '*.yaml' | while read line
+    for app_file in ./*.yaml
     do
-      if yq -r '.spec.sources[0].path' $line | grep -q "modules/k8s/argocd"
+      if yq -r '.spec.sources[0].path' $app_file | grep -q "modules/k8s/argocd"
       then
-        echo "Found $line, installing using helm."
-        app=`yq -r '.metadata.name' $line`
-        yq -r '.spec.sources[0].helm.values' $line > values-$app.yaml
-        namespace=`yq -r '.spec.destination.namespace' $line`
-        version=`yq -r '.spec.sources[0].targetRevision' $line`
-        repo=`yq -r '.spec.sources[0].repoURL' $line`
-        path=`yq -r '.spec.sources[0].path' $line`
+        echo "Found $app_file, installing using helm."
+        app=`yq -r '.metadata.name' $app_file`
+        yq -r '.spec.sources[0].helm.values' $app_file > values-$app.yaml
+        namespace=`yq -r '.spec.destination.namespace' $app_file`
+        version=`yq -r '.spec.sources[0].targetRevision' $app_file`
+        repo=`yq -r '.spec.sources[0].repoURL' $app_file`
+        path=`yq -r '.spec.sources[0].path' $app_file`
         git clone --depth 1 --single-branch --branch $version $repo git-$app
         helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml $app git-$app/$path
         rm -rf values-$app.yaml git-$app
       fi
     done
-  fi
-
-  if [ "$PROVIDER" == "google" ]
-  then
-    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
-  else
-    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+    if [ "$PROVIDER" == "google" ]
+    then
+      export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
+    else
+      export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
+    fi
   fi
 
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
-    echo "Unable to get ArgoCD hostname."
+    echo "Unable to get ArgoCD hostname. Check ArgoCD installation."
     exit 25
   fi
-  echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
-  export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
+  export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
   
-  if [ "$ARGO_TOKEN" == "" ]
+  if [ "$ARGOCD_AUTH_TOKEN" == "" ]
   then
-    echo "No infralib argocd token found, probably it is first run. Trying to create token using admin credentials."
+    echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
     ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
     argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
-    export ARGO_TOKEN=`argocd account generate-token --account infralib`
+    export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
     argocd logout ${ARGOCD_HOSTNAME}
-    if [ "$ARGO_TOKEN" != "" ]
+    if [ "$ARGOCD_AUTH_TOKEN" != "" ]
     then
-      kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGO_TOKEN
+      kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
     else
-      echo "Failed to create ARGO_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+      echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
     fi
   fi
-  
-  find . -type f -name '*.yaml' | while read line
+  rm -f *.sync
+  rm -f *.log
+  PIDS=""
+  for app_file in ./*.yaml
   do
-    app=`yq -r '.metadata.name' $line`
-    kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]"
-    kubectl apply -n ${ARGOCD_NAMESPACE} -f $line
-    if [ $? -ne 0 ]
-    then
-      echo "Failed to apply ArgoCD Application file $line to Kubernetes cluster!"
-      exit 24
-    fi
-
-    
-    if [ "$ARGO_TOKEN" != "" ]
-    then
-      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app get --refresh $app
-      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app diff --exit-code=false $app
-    fi
+      argocd-apps-plan.sh $app_file > $app_file.log 2>&1 &
+      PIDS="$PIDS $!"
   done
-  if [ $? -ne 0 ]
+
+  FAIL=0
+  for p in $PIDS; do
+      wait $p || let "FAIL+=1"
+  done
+
+  for app_log_file in ./*.log
+  do
+    echo "Logs for $app_log_file"
+    cat $app_log_file
+    rm $app_log_file
+  done
+
+  if [ "$FAIL" -ne 0 ]
   then
+    echo "FAILED to plan $FAIL applications."
     echo "Plan ArgoCD failed!"
     exit 20
   fi
-  cd ../..
-  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    echo "Copy plan to Google S3"
-    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
-    
-  fi
+  
 elif [ "$COMMAND" == "argocd-apply" ]
 then
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
-    export PROVIDER="google"
-  else
-    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
-    export PROVIDER="aws"
-  fi
-  
-  if [ "$PROVIDER" == "google" ]
-  then
-    export ARGOCD_HOSTNAME=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}')
-  else
-    export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
-  fi
 
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
     echo "Unable to get ArgoCD hostname."
     exit 25
   fi
-  echo "ArgoCD hostname is $ARGOCD_HOSTNAME"
-  export ARGO_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-  find . -type f -name '*.yaml' | while read line
+  export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
+
+  
+  PIDS=""
+  for app_file in ./*.yaml
   do
-    app=`yq -r '.metadata.name' $line`
-    if [ "$ARGO_TOKEN" != "" ]
-    then
-      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app sync $app
-      argocd --server ${ARGOCD_HOSTNAME} --grpc-web --auth-token=${ARGO_TOKEN} app wait --timeout 300 --health --sync --operation $app
-    else
-      echo "No ArgoCD Token, falling back to kubectl patch and auto sync."
-      kubectl patch -n ${ARGOCD_NAMESPACE} app $app --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
-    fi
+      argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
+      PIDS="$PIDS $!"
   done
-    if [ $? -ne 0 ]
-    then
-      echo "Apply ArgoCD failed!"
-      exit 21
-    fi
+
+  FAIL=0
+  for p in $PIDS; do
+      wait $p || let "FAIL+=1"
+  done
+
+  for app_log_file in ./*.log
+  do
+    echo "Logs for $app_log_file"
+    cat $app_log_file
+    rm $app_log_file
+  done
+
+  if [ "$FAIL" -ne 0 ]
+  then
+    echo "FAILED to plan $FAIL applications."
+    echo "Apply ArgoCD failed!"
+    exit 21
+  fi
+
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then
   false
@@ -283,4 +260,19 @@ then
   fi
 else
   echo "Unknown command: $COMMAND"
+  exit 1
 fi 
+
+
+#Compress artifacts created in plan stage that will be used in apply stage.
+if [ "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "plan" ]
+then
+  cd ../..
+  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    echo "Copy plan to Google S3"
+    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
+  fi
+
+fi
