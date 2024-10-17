@@ -127,7 +127,7 @@ module "gke" {
   ip_range_services      = var.ip_range_services
 
   # istio                          = false //only in beta module
-  service_account_name            = "${var.prefix}-gke"
+  service_account_name            = var.prefix
   grant_registry_access           = var.grant_registry_access
   registry_project_ids            = var.registry_project_ids
   master_global_access_enabled    = var.master_global_access_enabled
