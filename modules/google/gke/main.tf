@@ -3,6 +3,12 @@ resource "google_service_account" "service_account" {
   display_name = var.prefix
 }
 
+resource "google_project_iam_member" "service_account_artifact_registry_reader" {
+  project = data.google_client_config.this.project
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${google_service_account.service_account.email}"
+}
+
 locals {
   google_compute_zones = join(",", data.google_compute_zones.this.names)
 
