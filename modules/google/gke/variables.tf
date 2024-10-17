@@ -46,6 +46,16 @@ variable "kubernetes_version" {
   default = "1.29."
 }
 
+variable "grant_registry_access" {
+  type     = bool
+  default  = false
+}
+
+variable "registry_project_ids" {
+  type = list(string)
+  default = []
+}
+
 variable "master_authorized_networks" {
   type = list(object({
     cidr_block   = string
