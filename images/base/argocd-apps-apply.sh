@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [ "$ARGOCD_NAMESPACE" == "" ]
 then
   echo "Unable to get ArgoCD namespace."
@@ -14,7 +13,6 @@ fi
 
 app_file=$1
 app_name=`yq -r '.metadata.name' $app_file`
-
 
 if [ "$app_name" == "" ]
 then
@@ -48,6 +46,4 @@ else #Fall back to Application auto sync when we can not get argo token.
   kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
 fi
 
-
-echo "Finish $app_name"
 echo "###############"

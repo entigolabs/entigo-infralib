@@ -239,7 +239,6 @@ then
 
   for app_log_file in ./*.log
   do
-    echo "Logs for $app_log_file"
     cat $app_log_file
     rm $app_log_file
   done
