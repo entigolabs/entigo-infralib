@@ -1,0 +1,4 @@
+private_subnets: |
+  [{{ .toutput.vpc.private_subnets }}]
+public_subnets: |
+  [{{ .toutput.vpc.public_subnets }}]
