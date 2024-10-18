@@ -355,6 +355,7 @@ jobs:
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release
         
         find ./modules -not -path '*/.*' -maxdepth 2 -mindepth 2 -type d | while read -r dir; do

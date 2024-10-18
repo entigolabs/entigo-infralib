@@ -31,7 +31,7 @@ then
     exit 0
   fi
 
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app sync $app_name
+  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app sync --prune $app_name
   if [ $? -ne 0 ]
   then
     echo "Failed $app_name sync"
