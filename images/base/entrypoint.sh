@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 [ -z $TF_VAR_prefix ] && echo "TF_VAR_prefix must be set" && exit 1
 [ -z "$AWS_REGION" -a -z "$GOOGLE_REGION" ] && echo "AWS_REGION or GOOGLE_REGION must be set" && exit 1
@@ -177,8 +177,7 @@ then
       echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
     fi
   fi
-  rm -f *.sync
-  rm -f *.log
+  rm -f *.sync *.log
   PIDS=""
   for app_file in ./*.yaml
   do
@@ -193,11 +192,21 @@ then
 
   for app_log_file in ./*.log
   do
-    echo "Logs for $app_log_file"
     cat $app_log_file
-    rm $app_log_file
   done
 
+  if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+  then
+    CHANGED=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep "RequiredPruning: 0$" | wc -l`
+    DESTROY=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning: 0$" | wc -l`
+  else
+    CHANGED=`cat ./*.log | grep '^application\.argoproj\.io/.*' | wc -l`
+    DESTROY="0"
+  fi
+  echo "ArgoCD Applications: ${CHANGED} has changed objects, ${DESTROY} has RequiredPruning objects."
+
+  rm -f *.log
+  
   if [ "$FAIL" -ne 0 ]
   then
     echo "FAILED to plan $FAIL applications."
@@ -237,7 +246,7 @@ then
 
   if [ "$FAIL" -ne 0 ]
   then
-    echo "FAILED to plan $FAIL applications."
+    echo "FAILED to apply $FAIL applications."
     echo "Apply ArgoCD failed!"
     exit 21
   fi
