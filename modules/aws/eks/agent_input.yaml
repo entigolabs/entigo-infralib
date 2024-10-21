@@ -1,4 +1,7 @@
+vpc_id: "{{ .toutput.vpc.vpc_id }}"
 private_subnets: |
   [{{ .toutput.vpc.private_subnets }}]
 public_subnets: |
   [{{ .toutput.vpc.public_subnets }}]
+eks_api_access_cidrs: |
+  [{{ .toutput.vpc.private_subnet_cidrs }}]
