@@ -1,0 +1,11 @@
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
+
+  google:
+    projectID: ""
+
+external-secrets:
+  serviceAccount:
+    create: true
+    name: secret-manager-operator
