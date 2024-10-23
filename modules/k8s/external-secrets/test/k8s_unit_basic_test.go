@@ -15,15 +15,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sExternalSecretsBiz(t *testing.T) {
-	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
+func TestK8sExternalSecretsAWSBiz(t *testing.T) {
+	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "aws")
 }
 
-func TestK8sExternalSecretsPri(t *testing.T) {
-	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri")
+func TestK8sExternalSecretsAWSPri(t *testing.T) {
+	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
 }
 
-func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
+func TestK8sExternalSecretsGoogleBiz(t *testing.T) {
+	testK8sExternalSecrets(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
+}
+
+func TestK8sExternalSecretsGooglePri(t *testing.T) {
+	testK8sExternalSecrets(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
+}
+
+func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -35,16 +43,6 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
-	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
-	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
-
-	setValues["external-secrets.env[0].value"] = region
-	setValues["external-secrets.env[0].name"] = "AWS_DEFAULT_REGION"
-	setValues["global.aws.account"] = awsAccount
-	setValues["global.aws.clusterOIDC"] = clusteroidc
-
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("external-secrets-%s-%s", envName, prefix)
 		setValues["external-secrets.installCRDs"] = "false"
@@ -54,6 +52,24 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
+
+	switch cloudProvider {
+	case "aws":
+		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
+		clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
+		region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/region", envName))
+
+		setValues["external-secrets.env[0].value"] = region
+		setValues["external-secrets.env[0].name"] = "AWS_DEFAULT_REGION"
+		setValues["global.aws.account"] = awsAccount
+		setValues["global.aws.clusterOIDC"] = clusteroidc
+
+	case "google":
+		projectID := os.Getenv("GOOGLE_PROJECT")
+		setValues["global.google.projectID"] = projectID
+
+	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
