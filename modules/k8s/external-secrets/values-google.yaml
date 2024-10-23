@@ -4,8 +4,6 @@ global:
 
   google:
     projectID: ""
-
-external-secrets:
-  serviceAccount:
-    create: true
-    name: secret-manager-operator
+    region: ""
+    cluster:
+      name: ""

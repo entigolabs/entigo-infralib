@@ -6,8 +6,3 @@ global:
     account: ""
     region: ""
     clusterOIDC: ""
-
-external-secrets:
-  serviceAccount:
-    create: false
-    name: secret-manager-operator
