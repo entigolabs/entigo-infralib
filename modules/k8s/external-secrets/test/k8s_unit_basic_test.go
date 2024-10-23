@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -51,7 +52,9 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cl
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
+
 	releaseName := namespaceName
+	setValues["global.createClusterSecretStore"] = "true"
 
 	switch cloudProvider {
 	case "aws":
@@ -64,11 +67,16 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cl
 		setValues["external-secrets.env[0].name"] = "AWS_DEFAULT_REGION"
 		setValues["global.aws.account"] = awsAccount
 		setValues["global.aws.clusterOIDC"] = clusteroidc
+		setValues["global.aws.region"] = awsRegion
 
 	case "google":
 		projectID := os.Getenv("GOOGLE_PROJECT")
-		setValues["global.google.projectID"] = projectID
+		region := os.Getenv("GOOGLE_REGION")
+		clusterName := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-cluster_name/versions/latest", projectID, envName))
 
+		setValues["global.google.projectID"] = projectID
+		setValues["global.google.region"] = region
+		setValues["global.google.cluster.name"] = clusterName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
