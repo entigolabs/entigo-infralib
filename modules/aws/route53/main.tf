@@ -97,7 +97,7 @@ resource "aws_route53_record" "pub-ns" {
 }
 
 resource "aws_route53_record" "int-cert-ns" {
-  count = var.parent_zone_id != "" && var.create_private ? 1 : 0
+  count = var.parent_zone_id != "" && var.create_private && var.create_cert ? 1 : 0
   zone_id = data.aws_route53_zone.parent_zone[0].zone_id
   name = local.int_domain
   type    = "NS"
