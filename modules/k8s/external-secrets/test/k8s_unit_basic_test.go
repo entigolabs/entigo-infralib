@@ -74,6 +74,7 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cl
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,
