@@ -10,5 +10,17 @@ spec:
       name: {{ .Release.Name }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}-ecr-push
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}-ecr-push
+    roleNameRef:
+      name: {{ .Release.Name }}-ecr-push
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}
