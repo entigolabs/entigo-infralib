@@ -53,7 +53,7 @@ spec:
               {
                   "Action": "sts:AssumeRole",
                   "Effect": "Allow",
-                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/developer-portal-back-group"
+                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-ecr-push"
               }
           ]
       }
