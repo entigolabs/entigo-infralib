@@ -28,6 +28,12 @@ const (
 	GCloud ProviderType = "gcloud"
 )
 
+func WaitUntilClusterSecretStoreAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1beta1", Resource: "clustersecretstores"}
+	availability := defaultObjectAvailability(name, resource)
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
 func WaitUntilProviderAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"}
 	availability := defaultObjectAvailability(name, resource)

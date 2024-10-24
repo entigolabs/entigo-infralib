@@ -10,6 +10,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -54,7 +55,6 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cl
 	}
 
 	releaseName := namespaceName
-	setValues["global.createClusterSecretStore"] = "true"
 
 	switch cloudProvider {
 	case "aws":
@@ -119,4 +119,11 @@ func testK8sExternalSecrets(t *testing.T, contextName string, envName string, cl
 			t.Fatal("external-secrets-cert-controller deployment error:", err)
 		}
 	}
+
+	setValues["global.createClusterSecretStore"] = "true"
+	helmOptions.SetValues = setValues
+	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
+
+	_, err = k8s.WaitUntilClusterSecretStoreAvailable(t, kubectlOptions, releaseName, 10, 6*time.Second)
+	require.NoError(t, err, "ClusterSecretStore not available error")
 }
