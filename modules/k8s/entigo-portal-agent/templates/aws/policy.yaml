@@ -53,7 +53,43 @@ spec:
               {
                   "Action": "sts:AssumeRole",
                   "Effect": "Allow",
-                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/developer-portal-back-group"
+                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-ecr-push"
+              }
+          ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-ecr-push
+spec:
+  forProvider:
+    name: {{ .Release.Name }}
+    document: |
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Action": [
+                      "ecr:BatchGetImage",
+                      "ecr:GetDownloadUrlForLayer",
+                      "ecr:CompleteLayerUpload",
+                      "ecr:UploadLayerPart",
+                      "ecr:InitiateLayerUpload",
+                      "ecr:BatchCheckLayerAvailability",
+                      "ecr:PutImage"
+                  ],
+                  "Resource": "arn:aws:ecr:{{ .Values.global.aws.region }}:{{ .Values.global.aws.account }}:repository/*"
+              },
+              {
+                  "Effect": "Allow",
+                  "Action": [
+                      "ecr:GetAuthorizationToken"
+                  ],
+                  "Resource": "*"
               }
           ]
       }

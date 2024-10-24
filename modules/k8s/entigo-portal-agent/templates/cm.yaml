@@ -7,7 +7,7 @@ metadata:
 data:
   REGISTRIES: "{{ .Values.global.aws.account }}.dkr.ecr.{{ .Values.global.aws.region }}.amazonaws.com"
   EVENTS_SQS_URL: "https://sqs.{{ .Values.global.aws.region }}.amazonaws.com/{{ .Values.global.aws.account }}/{{ .Release.Name }}"
-  ASSUME_ROLE_ARN: "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}"
+  ASSUME_ROLE_ARN: "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-ecr-push"
 {{- with .Values.config }}
   {{- toYaml . | nindent 2 }}
 {{- end }}
