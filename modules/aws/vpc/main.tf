@@ -162,7 +162,6 @@ resource "aws_ssm_parameter" "database_subnet_group" {
     Terraform = "true"
     Prefix    = var.prefix
   }
-  value = ""
 }
 
 resource "aws_ssm_parameter" "elasticache_subnets" {
@@ -185,7 +184,6 @@ resource "aws_ssm_parameter" "elasticache_subnet_group" {
     Terraform = "true"
     Prefix    = var.prefix
   }
-  value = ""
 }
 
 resource "aws_ssm_parameter" "private_subnet_cidrs" {
