@@ -71,6 +71,9 @@ accounts:
       - "Repository: entigo-portal-agent"
       Route53HostedZone:
       - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
+      SSMParameter:
+      - "/entigo-portal/agent-biz/CLIENT_SECRET"
+      - "/entigo-portal/agent-pri/CLIENT_SECRET"
       Route53ResourceRecordSet:
       - "gcp.infralib.entigo.io." 
       IAMUser:
