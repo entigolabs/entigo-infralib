@@ -2,7 +2,7 @@
 
 This module depends on: modules/k8s/crossplane-core
 
-This will initialize the [provider-kubernetes](https://github.com/crossplane-contrib/provider-kubernetes).
+This will initialize the [provider-gcp](https://github.com/crossplane-contrib/provider-gcp).
 
 The Helm package is made up of 2 ArgoCD sync waves.
 

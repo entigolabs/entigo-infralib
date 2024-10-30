@@ -1,6 +1,6 @@
-## Opinionated helm package for external-dns ##
+## Opinionated helm package for grafana ##
 
-In addition to installing external-dns with helm it also created the needed IRSA with crossplane.
+In addition to installing grafana with Helm it also created the needed IRSA with crossplane.
 
 
 
@@ -8,7 +8,7 @@ In addition to installing external-dns with helm it also created the needed IRSA
 
 ```
     modules:
-      - name: external-dns
-        source: external-dns
+      - name: grafana
+        source: grafana
 
 ```

@@ -34,7 +34,6 @@ The use of the private zone only makes sense if we have LAN access to that netwo
     modules:
       - name: dns
         inputs:
-          vpc_prefix: "ep-network-vpc"
           parent_zone_id: "Z0798XXXXXXXXXXXXXXXX"
 
 ```

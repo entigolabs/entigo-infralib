@@ -60,9 +60,9 @@ __security_group_ingress__ at the moment only support CIDR blocks
           inputs:
             instance_type: "t3.medium"
             subnet_id: |
-              [{{ .ssm.net.main.public_subnets }}][0]
+              [{{ .toutput.vpc.public_subnets }}][0]
             key_name: "martivo_x220"
             eip: true
-            route53_zone_id: "{{ .ssm.net.dns.pub_zone_id }}"
+            route53_zone_id: "{{ .toutput.route53.pub_zone_id }}"
 
 ```

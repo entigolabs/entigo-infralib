@@ -84,7 +84,6 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
       - name: eks
         source: aws/eks
         inputs:
-          vpc_prefix: "ep-network-vpc"
           eks_main_min_size: 3
           eks_main_max_size: 6
           eks_spot_max_size: 0

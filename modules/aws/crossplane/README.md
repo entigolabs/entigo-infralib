@@ -14,8 +14,7 @@ __eks_account__ - account number where EKS is installed
     modules:
       - name: crossplane
         source: aws/crossplane
-        inputs:
-          eks_prefix: ep-infrastructure-eks
+
 
 ```
 
