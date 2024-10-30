@@ -17,9 +17,10 @@ locals {
 
 
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.0"
+  version = "5.8.1"
 
   name = var.prefix
   cidr = var.vpc_cidr
@@ -47,6 +48,8 @@ module "vpc" {
   reuse_nat_ips        = false
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  map_public_ip_on_launch = var.map_public_ip_on_launch
 
   enable_flow_log                                 = false
   create_flow_log_cloudwatch_log_group            = false
