@@ -54,8 +54,7 @@ func testK8sEntigoPortalAgent(t *testing.T, contextName, envName, cloudProvider 
 	releaseName := namespaceName
 
 	switch cloudProvider {
-	case "aws":
-	  
+	case "aws":  
 		awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 		awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/account", envName))
 		clusterOIDC := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/oidc_provider", envName))
@@ -63,6 +62,8 @@ func testK8sEntigoPortalAgent(t *testing.T, contextName, envName, cloudProvider 
 		setValues["global.aws.account"] = awsAccount
 		setValues["global.aws.clusterOIDC"] = clusterOIDC
 		setValues["global.aws.region"] = region
+		clientSecret := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-portal/agent-%s/CLIENT_SECRET", envName))
+		setValues["config.CLIENT_SECRET"] = clientSecret
 
 	case "google":
 		setValues["global.google.projectID"] = googleProjectID
