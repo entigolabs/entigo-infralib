@@ -6,6 +6,14 @@ locals {
       groups   = ["system:masters"]
     }
   ]
+  
+  auth_users = var.aws_auth_user != "" ? [
+    {
+      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${var.aws_auth_user}"
+      username = var.aws_auth_user
+      groups   = ["system:masters"]
+    }
+  ] : []
 
   eks_managed_node_groups_all = {
     main = {
@@ -523,8 +531,7 @@ module "eks" {
   create_aws_auth_configmap = false
   aws_auth_roles            = local.auth_roles
 
-  aws_auth_users = [
-  ]
+  aws_auth_users = local.auth_users
 
   tags = {
     Terraform = "true"

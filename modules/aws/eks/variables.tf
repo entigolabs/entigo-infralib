@@ -37,6 +37,12 @@ variable "iam_admin_role" {
   default  = "AWSReservedSSO_AdministratorAccess_.*" #Sometimes "AWSReservedSSO_AWSAdministratorAccess_.*" ?
 }
 
+variable "aws_auth_user" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "eks_cluster_public" {
   type     = bool
   nullable = false
