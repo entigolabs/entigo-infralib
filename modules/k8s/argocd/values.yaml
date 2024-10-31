@@ -54,7 +54,10 @@ argocd:
         ephemeral-storage: 1Gi
     autoscaling:
       enabled: true
-      minReplicas: 2
+      minReplicas: 1
+      maxReplicas: 3
+      targetMemoryUtilizationPercentage: 80
+      targetCPUUtilizationPercentage: 90
     ingress:
       enabled: true
       controller: aws
@@ -234,7 +237,11 @@ argocd:
   repoServer:
     autoscaling:
       enabled: true
-      minReplicas: 2
+      minReplicas: 1
+      maxReplicas: 3
+      targetMemoryUtilizationPercentage: 80
+      targetCPUUtilizationPercentage: 90
+
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
