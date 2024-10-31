@@ -10,5 +10,5 @@ dependencies:
   repository: https://argoproj.github.io/argo-helm
   alias: argocd
 - name: argocd-apps
-  version: 1.4.1
+  version: 2.0.2
   repository: https://argoproj.github.io/argo-helm
