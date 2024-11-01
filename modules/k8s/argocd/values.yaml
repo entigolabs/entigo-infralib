@@ -20,6 +20,11 @@ argocd:
     cm:
       accounts.infralib: apiKey
       application.resourceTrackingMethod: annotation
+      resource.exclusions: |
+            - apiGroups:
+              - "*"
+              kinds:
+              - ProviderConfigUsage
       server.rbac.log.enforce.enable: "true"
       admin.enabled: "true"
       exec.enabled: "true"
@@ -326,6 +331,9 @@ argocd:
         ephemeral-storage: 1Gi
 
   controller:
+    env: 
+    - name: ARGOCD_K8S_CLIENT_QPS
+      value: "300"
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
