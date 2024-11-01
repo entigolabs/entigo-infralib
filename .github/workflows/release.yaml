@@ -48,7 +48,7 @@ jobs:
         PIDS="$PIDS $!"
         modules/aws/eks/test.sh &
         PIDS="$PIDS $!"
-        ENTIGO_INFRALIB_DESTROY=true modules/aws/ec2/test.sh &
+        modules/aws/ec2/test.sh &
         PIDS="$PIDS $!"
         modules/aws/crossplane/test.sh &
         PIDS="$PIDS $!"
