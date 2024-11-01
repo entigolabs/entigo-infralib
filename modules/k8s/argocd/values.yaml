@@ -19,6 +19,7 @@ argocd:
       server.insecure: false
     cm:
       accounts.infralib: apiKey
+      application.resourceTrackingMethod: annotation
       server.rbac.log.enforce.enable: "true"
       admin.enabled: "true"
       exec.enabled: "true"
