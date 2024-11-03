@@ -35,7 +35,7 @@ then
     echo "Failed $app_name sync"
     exit 24
   fi
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app wait --timeout 300 --health --sync --operation $app_name
+  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app wait --timeout 600 --health --sync --operation $app_name
   if [ $? -ne 0 ]
   then
     echo "Failed $app_name wait"
