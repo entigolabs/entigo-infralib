@@ -31,7 +31,7 @@ gateway:
     minReplicas: 2
     maxReplicas: 6
   topologySpreadConstraints:
-    - maxSkew: 1
+    - maxSkew: 2
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
