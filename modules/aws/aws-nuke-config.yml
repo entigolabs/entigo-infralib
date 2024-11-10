@@ -63,6 +63,7 @@ resource-types:
   - GameLiftQueue
   - GameLiftMatchmakingConfiguration
   - GameLiftMatchmakingRuleSet
+  - OSPackage
 
 accounts:
   "877483565445":
