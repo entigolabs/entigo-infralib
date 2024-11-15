@@ -4,6 +4,6 @@ metadata:
   name: change-me
 spec:
   forProvider:
-    location: EU
+    location: EUROPE-NORTH1
   providerConfigRef:
     name: crossplane-google

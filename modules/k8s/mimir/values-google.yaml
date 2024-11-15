@@ -8,6 +8,8 @@ global:
     gateway:
       name: google-gateway-external
       namespace: google-gateway
+    bucket:
+      location: "EUROPE-NORTH1"
 
 mimir-distributed:
   gateway:

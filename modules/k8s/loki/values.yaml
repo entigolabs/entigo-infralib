@@ -9,6 +9,8 @@ global:
     gateway:
       name: google-gateway-external
       namespace: google-gateway
+    bucket:
+      location: ""
 
   aws:
     account: ""

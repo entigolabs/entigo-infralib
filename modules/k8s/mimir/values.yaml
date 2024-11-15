@@ -9,6 +9,8 @@ global:
     gateway:
       name: ""
       namespace: ""
+    bucket:
+      location: ""
 
   aws:
     account: ""

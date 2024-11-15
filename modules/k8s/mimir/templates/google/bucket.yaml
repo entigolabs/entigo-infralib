@@ -8,7 +8,7 @@ metadata:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
 spec:
   forProvider:
-    location: EU
+    location: {{ .Values.global.google.bucket.location }}
     uniformBucketLevelAccess: true
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
