@@ -113,7 +113,7 @@ locals {
 
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "33.0.4"
+  version = "34.0.0"
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
@@ -126,23 +126,26 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
 
-  # istio                          = false //only in beta module
-  service_account_name            = var.prefix
-  grant_registry_access           = var.grant_registry_access
-  registry_project_ids            = var.registry_project_ids
-  master_global_access_enabled    = var.master_global_access_enabled
-  enable_l4_ilb_subsetting        = var.enable_l4_ilb_subsetting
-  issue_client_certificate        = false
-  enable_private_endpoint         = var.enable_private_endpoint
-  enable_private_nodes            = true
-  remove_default_node_pool        = true
-  enable_shielded_nodes           = false
-  identity_namespace              = "enabled"
-  node_metadata                   = "GKE_METADATA"
-  horizontal_pod_autoscaling      = true
-  enable_vertical_pod_autoscaling = false
-  deletion_protection             = false
-  gateway_api_channel             = "CHANNEL_STANDARD"
+  # istio                              = false //only in beta module
+  service_account_name                 = var.prefix
+  grant_registry_access                = var.grant_registry_access
+  registry_project_ids                 = var.registry_project_ids
+  master_global_access_enabled         = var.master_global_access_enabled
+  enable_l4_ilb_subsetting             = var.enable_l4_ilb_subsetting
+  issue_client_certificate             = false
+  enable_private_endpoint              = var.enable_private_endpoint
+  enable_private_nodes                 = true
+  remove_default_node_pool             = true
+  enable_shielded_nodes                = false
+  identity_namespace                   = "enabled"
+  node_metadata                        = "GKE_METADATA"
+  horizontal_pod_autoscaling           = true
+  enable_vertical_pod_autoscaling      = false
+  deletion_protection                  = false
+  gateway_api_channel                  = "CHANNEL_STANDARD"
+  monitoring_enable_managed_prometheus = var.monitoring_enable_managed_prometheus
+  monitoring_enabled_components        = var.monitoring_enabled_components
+  logging_enabled_components           = var.logging_enabled_components
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {

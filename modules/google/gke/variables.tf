@@ -47,12 +47,12 @@ variable "kubernetes_version" {
 }
 
 variable "grant_registry_access" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "registry_project_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -71,6 +71,21 @@ variable "master_authorized_networks" {
       cidr_block   = "13.53.208.166/32"
     }
   ]
+}
+
+variable "monitoring_enable_managed_prometheus" {
+  type    = bool
+  default = false
+}
+
+variable "monitoring_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
+}
+
+variable "logging_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
 }
 
 variable "gke_main_min_size" {
