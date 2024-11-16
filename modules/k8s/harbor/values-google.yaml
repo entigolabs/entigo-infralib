@@ -5,10 +5,11 @@ global:
   google:
     hostname: ""
     projectID: ""
-    region: EU
     gateway:
       name: google-gateway-external
       namespace: google-gateway
+    bucket:
+      location: europe-north1
 
 harbor:
   expose:

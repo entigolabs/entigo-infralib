@@ -9,10 +9,11 @@ global:
   google:
     hostname: ""
     projectID: ""
-    region: ""
     gateway:
       name: google-gateway-external
       namespace: google-gateway
+    bucket:
+      location: ""
 
 harbor:
   ipFamily:
