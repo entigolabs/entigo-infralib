@@ -34,8 +34,6 @@ apiVersion: gateway.networking.k8s.io/v1beta1
 metadata:
   name: {{ .Release.Name }}-internal
   namespace: {{ .Release.Name }}
-  annotations:
-    # networking.gke.io/certmap: {{ .Values.global.google.internalCertificateMap }}
 spec:
   gatewayClassName: {{ .Values.global.google.internalGatewayClassName }}
   listeners:
