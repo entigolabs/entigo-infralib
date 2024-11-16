@@ -29,6 +29,11 @@ variable "master_global_access_enabled" {
   default  = false
 }
 
+variable "deploy_using_private_endpoint" {
+  type     = bool
+  default  = false
+}
+
 variable "enable_private_endpoint" {
   type     = bool
   nullable = false

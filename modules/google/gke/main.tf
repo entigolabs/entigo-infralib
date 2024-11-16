@@ -133,6 +133,7 @@ module "gke" {
   master_global_access_enabled         = var.master_global_access_enabled
   enable_l4_ilb_subsetting             = var.enable_l4_ilb_subsetting
   issue_client_certificate             = false
+  deploy_using_private_endpoint        = var.deploy_using_private_endpoint
   enable_private_endpoint              = var.enable_private_endpoint
   enable_private_nodes                 = true
   remove_default_node_pool             = true
