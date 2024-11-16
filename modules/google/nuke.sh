@@ -441,8 +441,8 @@ gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@dev
 done
 
 PIDS=""
-for line in $(gsutil ls); do
-  gsutil -m rm -r $line &
+for line in $(gcloud storage ls); do
+  gcloud storage rm --recursive $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
