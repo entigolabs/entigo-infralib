@@ -132,11 +132,6 @@ resource "google_certificate_manager_certificate_map" "pub_cert" {
   name        = local.pub_zone
 }
 
-# resource "google_certificate_manager_certificate_map" "int_cert" {
-#   count       = var.create_private ? 1 : 0
-#   name        = local.int_zone
-# }
-
 resource "google_certificate_manager_certificate_map_entry" "pub_cert_1" {
   count        = var.create_public ? 1 : 0
   name         = "${local.pub_zone}-1"
@@ -152,22 +147,6 @@ resource "google_certificate_manager_certificate_map_entry" "pub_cert_2" {
   certificates = [google_certificate_manager_certificate.pub_cert[0].id]
   hostname     = "*.${trimsuffix(local.pub_domain, ".")}"
 }
-
-# resource "google_certificate_manager_certificate_map_entry" "int_cert_1" {
-#   count        = var.create_private ? 1 : 0
-#   name         = "${local.int_zone}-1"
-#   map          = google_certificate_manager_certificate_map.int_cert[0].name
-#   certificates = [google_certificate_manager_certificate.int_cert[0].id]
-#   hostname     = trimsuffix(local.int_domain, ".")
-# }
-
-# resource "google_certificate_manager_certificate_map_entry" "int_cert_2" {
-#   count        = var.create_private ? 1 : 0
-#   name         = "${local.int_zone}-2"
-#   map          = google_certificate_manager_certificate_map.int_cert[0].name
-#   certificates = [google_certificate_manager_certificate.int_cert[0].id]
-#   hostname     = "*.${trimsuffix(local.int_domain, ".")}"
-# }
 
 module "pub_zone_id" {
   count  = local.pub_zone != "" ? 1 : 0
