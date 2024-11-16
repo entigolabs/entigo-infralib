@@ -33,13 +33,13 @@ variable "intra_subnets" {
 }
 
 variable "private_subnet_names" {
-  type     = list(string)
-  default  = []
+  type    = list(string)
+  default = []
 }
 
 variable "public_subnet_names" {
-  type     = list(string)
-  default  = []
+  type    = list(string)
+  default = []
 }
 
 variable "database_subnet_names" {

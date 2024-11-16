@@ -7,22 +7,21 @@ locals {
   private_subnets = var.private_subnets == null ? [cidrsubnet(var.vpc_cidr, 1, 0)] : var.private_subnets
 
   #third range
-  database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1),2,2)] : var.database_subnets
+  database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 2)] : var.database_subnets
 
 }
 
- 
 resource "google_compute_network" "vpc" {
-  name = var.prefix
+  name                    = var.prefix
   auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "private" {
-  count = length(local.private_subnets)
-  network       = google_compute_network.vpc.name
-  name          = try(var.private_subnet_names[count.index], "${var.prefix}-private-${count.index}")
+  count   = length(local.private_subnets)
+  network = google_compute_network.vpc.name
+  name    = try(var.private_subnet_names[count.index], "${var.prefix}-private-${count.index}")
 
-  ip_cidr_range =  cidrsubnet(local.private_subnets[count.index], 2, 0)
+  ip_cidr_range = cidrsubnet(local.private_subnets[count.index], 2, 0)
 
   secondary_ip_range {
     range_name    = format("%s-pods", var.prefix)
@@ -38,7 +37,7 @@ resource "google_compute_subnetwork" "private" {
 }
 
 resource "google_compute_subnetwork" "public" {
-  count = length(local.public_subnets)
+  count         = length(local.public_subnets)
   network       = google_compute_network.vpc.name
   name          = try(var.public_subnet_names[count.index], "${var.prefix}-public-${count.index}")
   ip_cidr_range = local.public_subnets[count.index]
@@ -49,21 +48,21 @@ resource "google_compute_subnetwork" "public" {
 }
 
 resource "google_compute_subnetwork" "intra" {
-  count = length(local.intra_subnets)
+  count         = length(local.intra_subnets)
   network       = google_compute_network.vpc.name
   name          = try(var.intra_subnet_names[count.index], "${var.prefix}-intra-${count.index}")
-  ip_cidr_range    = local.intra_subnets[count.index]
+  ip_cidr_range = local.intra_subnets[count.index]
 }
 
 resource "google_compute_subnetwork" "database" {
-  count = length(local.database_subnets)
+  count         = length(local.database_subnets)
   network       = google_compute_network.vpc.name
   name          = try(var.database_subnet_names[count.index], "${var.prefix}-database-${count.index}")
-  ip_cidr_range    = local.database_subnets[count.index]
+  ip_cidr_range = local.database_subnets[count.index]
 }
 
 module "cloud_nat" {
-  count                    = var.enable_nat_gateway ? 1 : 0
+  count                              = var.enable_nat_gateway ? 1 : 0
   source                             = "terraform-google-modules/cloud-nat/google"
   version                            = "5.3.0"
   project_id                         = data.google_client_config.this.project
@@ -81,115 +80,115 @@ resource "google_compute_router" "router" {
 # Secrets
 
 module "vpc_id" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "vpc_id"
-  value = google_compute_network.vpc.id
+  key    = "vpc_id"
+  value  = google_compute_network.vpc.id
 }
 
 module "vpc_name" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "vpc_name"
-  value = google_compute_network.vpc.name
+  key    = "vpc_name"
+  value  = google_compute_network.vpc.name
 }
 
 module "private_subnets" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnets"
-  value = google_compute_subnetwork.private[*].name
+  key    = "private_subnets"
+  value  = google_compute_subnetwork.private[*].name
 }
 
 module "private_subnets_pods" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnets_pods"
-  value = google_compute_subnetwork.private[*].secondary_ip_range[0].range_name
+  key    = "private_subnets_pods"
+  value  = google_compute_subnetwork.private[*].secondary_ip_range[0].range_name
 }
 
 module "private_subnets_services" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnets_services"
-  value = google_compute_subnetwork.private[*].secondary_ip_range[1].range_name
+  key    = "private_subnets_services"
+  value  = google_compute_subnetwork.private[*].secondary_ip_range[1].range_name
 }
 
 module "public_subnets" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "public_subnets"
-  value = google_compute_subnetwork.public[*].name
+  key    = "public_subnets"
+  value  = google_compute_subnetwork.public[*].name
 }
 
 module "intra_subnets" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "intra_subnets"
-  value = google_compute_subnetwork.intra[*].name
+  key    = "intra_subnets"
+  value  = google_compute_subnetwork.intra[*].name
 }
 
 module "database_subnets" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "database_subnets"
-  value = google_compute_subnetwork.database[*].name
+  key    = "database_subnets"
+  value  = google_compute_subnetwork.database[*].name
 }
 
 module "private_subnet_cidrs" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnet_cidrs"
-  value = google_compute_subnetwork.private[*].ip_cidr_range
+  key    = "private_subnet_cidrs"
+  value  = google_compute_subnetwork.private[*].ip_cidr_range
 }
 
 module "private_subnet_cidrs_pods" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnet_cidrs_pods"
-  value = google_compute_subnetwork.private[*].secondary_ip_range[0].ip_cidr_range
+  key    = "private_subnet_cidrs_pods"
+  value  = google_compute_subnetwork.private[*].secondary_ip_range[0].ip_cidr_range
 }
 
 module "private_subnet_cidrs_services" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "private_subnet_cidrs_services"
-  value = google_compute_subnetwork.private[*].secondary_ip_range[1].ip_cidr_range
+  key    = "private_subnet_cidrs_services"
+  value  = google_compute_subnetwork.private[*].secondary_ip_range[1].ip_cidr_range
 }
 
 module "public_subnet_cidrs" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "public_subnet_cidrs"
-  value = google_compute_subnetwork.public[*].ip_cidr_range
+  key    = "public_subnet_cidrs"
+  value  = google_compute_subnetwork.public[*].ip_cidr_range
 }
 
 module "intra_subnet_cidrs" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "intra_subnet_cidrs"
-  value = google_compute_subnetwork.intra[*].ip_cidr_range
+  key    = "intra_subnet_cidrs"
+  value  = google_compute_subnetwork.intra[*].ip_cidr_range
 }
 
 module "database_subnet_cidrs" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "database_subnet_cidrs"
-  value = google_compute_subnetwork.database[*].ip_cidr_range
+  key    = "database_subnet_cidrs"
+  value  = google_compute_subnetwork.database[*].ip_cidr_range
 }
 
 
 module "router_id" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "router_id"
-  value = google_compute_router.router.id
+  key    = "router_id"
+  value  = google_compute_router.router.id
 }
 
 module "nat_name" {
-  count                    = var.enable_nat_gateway ? 1 : 0
-  source                             = "./secret"
+  count  = var.enable_nat_gateway ? 1 : 0
+  source = "./secret"
   prefix = var.prefix
-  key = "nat_name"
-  value = module.cloud_nat[0].name
+  key    = "nat_name"
+  value  = module.cloud_nat[0].name
 }
