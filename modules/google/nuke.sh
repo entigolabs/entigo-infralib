@@ -11,12 +11,15 @@ if [ "$GITHUB_ACTION" != "" ]; then
   gcloud -q auth activate-service-account --key-file $(echo ~)/credentials.json || exit 1
 fi
 
-gcloud -q config set project "entigo-infralib2" || exit 1
-gcloud -q config set compute/region "europe-north1" || exit 1
+export GOOGLE_PROJECT="entigo-infralib2"
+export GOOGLE_REGION="europe-north1"
+
+gcloud -q config set project $GOOGLE_PROJECT || exit 1
+gcloud -q config set compute/region $GOOGLE_REGION || exit 1
 
 PIDS=""
-for line in $(gcloud -q deploy delivery-pipelines list --project entigo-infralib2 --region europe-north1 --uri); do
-  gcloud deploy delivery-pipelines delete --project entigo-infralib2 --region europe-north1 --force -q $line &
+for line in $(gcloud -q deploy delivery-pipelines list --project $GOOGLE_PROJECT --region $GOOGLE_REGION --uri); do
+  gcloud deploy delivery-pipelines delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION --force -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -30,8 +33,8 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud -q deploy targets list --project entigo-infralib2 --region europe-north1 --uri); do
-  gcloud deploy targets delete --project entigo-infralib2 --region europe-north1 -q $line &
+for line in $(gcloud deploy targets list --project entigo-infralib-agent --region europe-north1 | grep "name:" | awk '{print $2}'); do
+  gcloud deploy targets delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -46,7 +49,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "firewall-rules" list --uri); do
-  gcloud 'compute' "firewall-rules" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "firewall-rules" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -66,7 +69,7 @@ delete_cluster() {
 
   for ((i = 1; i <= $max_retries; i++)); do
     echo "Attempt $i to delete cluster: $cluster_uri"
-    gcloud container clusters delete --project entigo-infralib2 --region europe-north1 --timeout 3600 -q $cluster_uri
+    gcloud container clusters delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION --timeout 3600 -q $cluster_uri
     if [ $? -eq 0 ]; then
       echo "Cluster $cluster_uri deleted successfully."
       return 0
@@ -98,7 +101,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q run jobs list --uri); do
-  gcloud run jobs delete --project entigo-infralib2 --region europe-north1 -q $line &
+  gcloud run jobs delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -113,7 +116,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "forwarding-rules" list --uri); do
-  gcloud "compute" "forwarding-rules" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "forwarding-rules" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -128,7 +131,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "target-http-proxies" list --uri); do
-  gcloud "compute" "target-http-proxies" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "target-http-proxies" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -143,7 +146,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "target-https-proxies" list --uri); do
-  gcloud "compute" "target-https-proxies" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "target-https-proxies" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -158,7 +161,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "url-maps" list --uri); do
-  gcloud "compute" "url-maps" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "url-maps" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -173,7 +176,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "backend-services" list --uri); do
-  gcloud "compute" "backend-services" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "backend-services" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -188,7 +191,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "network-endpoint-groups" list --uri); do
-  gcloud "compute" "network-endpoint-groups" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "network-endpoint-groups" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -203,7 +206,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "routers" list --uri); do
-  gcloud "compute" "routers" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "routers" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -218,7 +221,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "networks" "subnets" list --uri); do
-  gcloud 'compute' "networks" "subnets" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "networks" "subnets" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -227,13 +230,13 @@ for p in $PIDS; do
   echo $p $FAIL
 done
 if [ "$FAIL" -ne 0 ]; then
-  echo "FAILED to delete container clusters. $FAIL"
+  echo "FAILED to delete subnets. $FAIL"
   exit 1
 fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "routes" list --uri); do
-  gcloud "compute" "routes" delete --project entigo-infralib2 -q $line &
+  gcloud "compute" "routes" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -248,7 +251,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "networks" list --uri); do
-  gcloud 'compute' 'networks' delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' 'networks' delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -263,7 +266,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q secrets list --uri); do
-  gcloud secrets delete --project entigo-infralib2 -q $line &
+  gcloud secrets delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -278,7 +281,7 @@ fi
 
 gcloud -q certificate-manager maps list --uri | while read -r MAP; do
   gcloud -q certificate-manager maps entries list --uri --map=$MAP | while read -r ENTRY; do
-    gcloud certificate-manager maps entries delete --project entigo-infralib2 -q $ENTRY
+    gcloud certificate-manager maps entries delete --project $GOOGLE_PROJECT -q $ENTRY
   done
 
   MAX_RETRIES=20
@@ -287,7 +290,7 @@ gcloud -q certificate-manager maps list --uri | while read -r MAP; do
 
   for ((i = 1; i <= MAX_RETRIES; i++)); do
     echo "Attempt $i of $MAX_RETRIES to delete map $MAP..."
-    if gcloud certificate-manager maps delete --project entigo-infralib2 -q $MAP; then
+    if gcloud certificate-manager maps delete --project $GOOGLE_PROJECT -q $MAP; then
       SUCCESS=true
       break
     fi
@@ -304,7 +307,7 @@ done
 
 PIDS=""
 for line in $(gcloud -q "certificate-manager" "certificates" list --uri); do
-  gcloud "certificate-manager" "certificates" delete --project entigo-infralib2 -q $line &
+  gcloud "certificate-manager" "certificates" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -318,8 +321,8 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud -q "certificate-manager" "certificates" list --location europe-north1 --uri); do
-  gcloud "certificate-manager" "certificates" delete --project entigo-infralib2 -q $line &
+for line in $(gcloud -q "certificate-manager" "certificates" list --location $GOOGLE_REGION --uri); do
+  gcloud "certificate-manager" "certificates" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -334,7 +337,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --uri); do
-  gcloud "certificate-manager" "dns-authorizations" delete --project entigo-infralib2 -q $line &
+  gcloud "certificate-manager" "dns-authorizations" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -348,8 +351,8 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --location europe-north1 --uri); do
-  gcloud "certificate-manager" "dns-authorizations" delete --project entigo-infralib2 -q $line &
+for line in $(gcloud -q "certificate-manager" "dns-authorizations" list --location $GOOGLE_REGION --uri); do
+  gcloud "certificate-manager" "dns-authorizations" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -364,21 +367,21 @@ fi
 
 gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io" | while read -r ZONE_NAME; do
   gcloud dns record-sets list --zone=$ZONE_NAME --format="get(name,type)" | while read -r RECORD_NAME TYPE; do
-    OUTPUT=$(gcloud dns record-sets delete --zone=$ZONE_NAME --type=$TYPE --project=entigo-infralib2 -q $RECORD_NAME 2>&1)
+    OUTPUT=$(gcloud dns record-sets delete --zone=$ZONE_NAME --type=$TYPE --project=$GOOGLE_PROJECT -q $RECORD_NAME 2>&1)
     if ! echo "$OUTPUT" | grep -q "HTTPError 400: The resource record set .* is invalid because a zone must contain exactly one resource record set of type .* at the apex."; then
       echo "$OUTPUT"
     fi
   done
-  gcloud dns managed-zones delete --project entigo-infralib2 -q $ZONE_NAME
+  gcloud dns managed-zones delete --project $GOOGLE_PROJECT -q $ZONE_NAME
 done
 
 gcloud dns record-sets list --zone=gcp-infralib-entigo-io --format="get(name,type)" | grep -ve "^gcp.infralib.entigo.io.\|^agent.gcp.infralib.entigo.io." | while read -r RECORD_NAME TYPE; do
-  gcloud dns record-sets delete --type=$TYPE --zone=gcp-infralib-entigo-io --project entigo-infralib2 -q $RECORD_NAME
+  gcloud dns record-sets delete --type=$TYPE --zone=gcp-infralib-entigo-io --project $GOOGLE_PROJECT -q $RECORD_NAME
 done
 
 PIDS=""
 for line in $(gcloud -q "compute" "ssl-certificates" list --uri); do
-  gcloud 'compute' "ssl-certificates" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "ssl-certificates" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -393,7 +396,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "health-checks" list --uri); do
-  gcloud 'compute' "health-checks" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "health-checks" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -408,7 +411,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "disks" list --uri); do
-  gcloud 'compute' "disks" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "disks" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -423,7 +426,7 @@ fi
 
 PIDS=""
 for line in $(gcloud -q "compute" "addresses" list --uri); do
-  gcloud 'compute' "addresses" delete --project entigo-infralib2 -q $line &
+  gcloud 'compute' "addresses" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
 FAIL=0
@@ -437,7 +440,7 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
-  gcloud 'iam' 'service-accounts' delete --project entigo-infralib2 -q $line
+  gcloud 'iam' 'service-accounts' delete --project $GOOGLE_PROJECT -q $line
 done
 
 PIDS=""
