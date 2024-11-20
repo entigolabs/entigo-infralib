@@ -33,7 +33,7 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud deploy targets list --project entigo-infralib-agent --region europe-north1 | grep "name:" | awk '{print $2}'); do
+for line in $(gcloud deploy targets list --project $GOOGLE_PROJECT --region $GOOGLE_REGION | grep "name:" | awk '{print $2}'); do
   gcloud deploy targets delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION -q $line &
   PIDS="$PIDS $!"
 done
