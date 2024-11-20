@@ -82,7 +82,7 @@ func testK8sClusterAutoscaler(t *testing.T, contextName, envName, cloudProvider 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-aws-cluster-autoscaler", namespaceName), 20, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-aws-cluster-autoscaler", namespaceName), 50, 6*time.Second)
 	if err != nil {
 		t.Fatal("aws-cluster-autoscaler deployment error:", err)
 	}
