@@ -109,6 +109,18 @@ then
     echo "Apply failed!"
     exit 11
   fi
+  terraform output -json > terraform-output.json
+  if [ $? -ne 0 ]
+  then
+    echo "Output failed!"
+    exit 12
+  fi
+  if [ ! -z "$GOOGLE_REGION" ]
+  then
+    gsutil -m -q cp terraform-output.json gs://${INFRALIB_BUCKET}/$TF_VAR_prefix/terraform-output.json
+  else
+    aws s3 cp terraform-output.json s3://${INFRALIB_BUCKET}/$TF_VAR_prefix/terraform-output.json --no-progress --quiet
+  fi
 elif [ "$COMMAND" == "plan-destroy" ]
 then
   terraform plan -destroy -no-color -out ${TF_VAR_prefix}.tf-plan-destroy -input=false
