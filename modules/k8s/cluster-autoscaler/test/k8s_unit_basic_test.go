@@ -20,7 +20,7 @@ func TestK8sClusterAutoscalerAWSBiz(t *testing.T) {
 }
 
 func TestK8sClusterAutoscalerAWSPri(t *testing.T) {
-	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws", "runner-main-biz")
+	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws", "runner-main-pri")
 }
 
 
