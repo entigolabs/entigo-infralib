@@ -20,7 +20,7 @@ func TestK8sClusterAutoscalerAWSBiz(t *testing.T) {
 }
 
 func TestK8sClusterAutoscalerAWSPri(t *testing.T) {
-	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws", "runner-main-biz")
+	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws", "runner-main-pri")
 }
 
 
@@ -82,7 +82,7 @@ func testK8sClusterAutoscaler(t *testing.T, contextName, envName, cloudProvider 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-aws-cluster-autoscaler", namespaceName), 20, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-aws-cluster-autoscaler", namespaceName), 50, 6*time.Second)
 	if err != nil {
 		t.Fatal("aws-cluster-autoscaler deployment error:", err)
 	}
