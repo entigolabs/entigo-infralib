@@ -11,7 +11,7 @@ if [ "$GITHUB_ACTION" != "" ]; then
   gcloud -q auth activate-service-account --key-file $(echo ~)/credentials.json || exit 1
 fi
 
-export GOOGLE_PROJECT="entigo-infralib"
+export GOOGLE_PROJECT="entigo-infralib2"
 export GOOGLE_REGION="europe-north1"
 
 gcloud -q config set project $GOOGLE_PROJECT || exit 1
