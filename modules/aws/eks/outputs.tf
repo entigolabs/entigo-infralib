@@ -46,10 +46,18 @@ output "extra_min_sizes" {
   value = local.extra_min_sizes
 }
 
-output "temp_map_1" {
-  value = local.temp_map_1
+output "account" {
+  value = data.aws_caller_identity.current.account_id
 }
 
-output "temp_map_2" {
-  value = local.temp_map_2
+output "region" {
+  value = data.aws_region.current.name
+}
+
+output "eks_oidc_provider" {
+  value = module.eks.oidc_provider
+}
+
+output "eks_oidc_provider_arn" {
+  value = module.eks.oidc_provider_arn
 }

@@ -69,3 +69,7 @@ output "database_route_table_ids" {
 output "elasticache_route_table_ids" {
   value = module.vpc.elasticache_route_table_ids
 }
+
+output "pipeline_security_group" {
+  value = aws_security_group.pipeline_security_group.id
+}
