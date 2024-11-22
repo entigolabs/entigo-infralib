@@ -1,0 +1,5 @@
+prometheus:
+  server:
+    ingress:
+      hosts:
+      - prometheus.{{ .toutput.route53.int_domain }}

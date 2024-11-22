@@ -1,0 +1,3 @@
+kiali-server:
+  server:
+    web_fqdn: kiali.{{ .toutput.route53.int_domain }}
