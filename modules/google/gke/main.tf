@@ -219,3 +219,10 @@ module "region" {
   key    = "region"
   value  = module.gke.region
 }
+
+module "service_account" {
+  source = "./secret"
+  prefix = var.prefix
+  key    = "service_account"
+  value  = module.gke.service_account
+}

@@ -111,7 +111,7 @@ locals {
   int_zone = var.create_private ? aws_route53_zone.int[0].zone_id : local.pub_zone
 }
 
-resource "aws_ssm_parameter" "pub-cert-arn" {
+resource "aws_ssm_parameter" "pub_cert_arn" {
   count = var.create_cert && ( var.create_public || var.parent_zone_id != "" ) ? 1 : 0
   name  = "/entigo-infralib/${var.prefix}/pub_cert_arn"
   type  = "String"
@@ -122,7 +122,7 @@ resource "aws_ssm_parameter" "pub-cert-arn" {
   }
 }
 
-resource "aws_ssm_parameter" "pub" {
+resource "aws_ssm_parameter" "pub_zone_id" {
   count = var.create_public || var.parent_zone_id != "" ? 1 : 0
   name  = "/entigo-infralib/${var.prefix}/pub_zone_id"
   type  = "String"
@@ -133,7 +133,7 @@ resource "aws_ssm_parameter" "pub" {
   }
 }
 
-resource "aws_ssm_parameter" "pub-domain" {
+resource "aws_ssm_parameter" "pub_domain" {
   name  = "/entigo-infralib/${var.prefix}/pub_domain"
   type  = "String"
   value = local.pub_domain
@@ -143,7 +143,7 @@ resource "aws_ssm_parameter" "pub-domain" {
   }
 }
 
-resource "aws_ssm_parameter" "int-cert-arn" {
+resource "aws_ssm_parameter" "int_cert_arn" {
   count = var.create_cert && var.create_private ? 1 : 0
   name  = "/entigo-infralib/${var.prefix}/int_cert_arn"
   type  = "String"
@@ -154,7 +154,7 @@ resource "aws_ssm_parameter" "int-cert-arn" {
   }
 }
 
-resource "aws_ssm_parameter" "int" {
+resource "aws_ssm_parameter" "int_zone_id" {
   count = var.create_private || var.create_public || var.parent_zone_id != "" ? 1 : 0
   name  = "/entigo-infralib/${var.prefix}/int_zone_id"
   type  = "String"
@@ -165,7 +165,7 @@ resource "aws_ssm_parameter" "int" {
   }
 }
 
-resource "aws_ssm_parameter" "int-domain" {
+resource "aws_ssm_parameter" "int_domain" {
   name  = "/entigo-infralib/${var.prefix}/int_domain"
   type  = "String"
   value = local.int_domain

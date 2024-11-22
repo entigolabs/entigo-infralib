@@ -45,3 +45,13 @@ resource "aws_sns_topic_subscription" "this" {
   protocol  = "email"
   endpoint  = each.key
 }
+
+resource "aws_ssm_parameter" "sns_topic_arns" {
+  name  = "/entigo-infralib/${var.prefix}/sns_topic_arns"
+  type  = "String"
+  value = local.alarms
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}

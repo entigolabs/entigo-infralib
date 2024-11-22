@@ -542,12 +542,53 @@ module "eks" {
 resource "aws_ssm_parameter" "cluster_name" {
   name  = "/entigo-infralib/${var.prefix}/cluster_name"
   type  = "String"
-  value = var.prefix
+  value = module.eks.cluster_name
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
   }
 }
+
+resource "aws_ssm_parameter" "cluster_oidc_issuer_url" {
+  name  = "/entigo-infralib/${var.prefix}/cluster_oidc_issuer_url"
+  type  = "String"
+  value = module.eks.cluster_oidc_issuer_url
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}
+
+resource "aws_ssm_parameter" "cluster_endpoint" {
+  name  = "/entigo-infralib/${var.prefix}/cluster_endpoint"
+  type  = "String"
+  value = module.eks.cluster_endpoint
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}
+
+resource "aws_ssm_parameter" "cluster_certificate_authority_data" {
+  name  = "/entigo-infralib/${var.prefix}/cluster_certificate_authority_data"
+  type  = "String"
+  value = module.eks.cluster_certificate_authority_data
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}
+
+resource "aws_ssm_parameter" "cluster_version" {
+  name  = "/entigo-infralib/${var.prefix}/cluster_version"
+  type  = "String"
+  value = module.eks.cluster_version
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}
+
 
 resource "aws_ssm_parameter" "account" {
   name  = "/entigo-infralib/${var.prefix}/account"
@@ -569,7 +610,7 @@ resource "aws_ssm_parameter" "region" {
   }
 }
 
-resource "aws_ssm_parameter" "eks_oidc_provider" {
+resource "aws_ssm_parameter" "oidc_provider" {
   name  = "/entigo-infralib/${var.prefix}/oidc_provider"
   type  = "String"
   value = module.eks.oidc_provider
@@ -579,7 +620,7 @@ resource "aws_ssm_parameter" "eks_oidc_provider" {
   }
 }
 
-resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
+resource "aws_ssm_parameter" "oidc_provider_arn" {
   name  = "/entigo-infralib/${var.prefix}/oidc_provider_arn"
   type  = "String"
   value = module.eks.oidc_provider_arn
@@ -592,9 +633,9 @@ resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
 #resource "aws_eks_identity_provider_config" "aad" {
 #  cluster_name = module.eks.cluster_name
 #  oidc {
-#    client_id                     = "9995b0f0-1d59-48a7-8feb-7a58f6879833"
+#    client_id                     = "..."
 #    identity_provider_config_name = "AAD"
-#    issuer_url                    = "https://sts.windows.net/cee3f45d-55bb-4dd1-b79b-111c9738f9df/"
+#    issuer_url                    = "https://sts.windows.net/.../"
 #    username_claim                = "upn"
 #    groups_claim                  = "groups"
 #  }
