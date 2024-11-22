@@ -81,3 +81,24 @@ resource "aws_route53_record" "ec2" {
   ttl = 60
   records = var.eip ? [aws_eip.ec2[0].public_ip] : [aws_instance.ec2.public_ip]
 }
+
+resource "aws_ssm_parameter" "private_dns" {
+  name  = "/entigo-infralib/${var.prefix}/private_dns"
+  type  = "String"
+  value = aws_instance.ec2.private_dns
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}
+
+resource "aws_ssm_parameter" "public_ip" {
+  count = var.eip ? 1 : 0
+  name  = "/entigo-infralib/${var.prefix}/public_ip"
+  type  = "String"
+  value = aws_eip.ec2[0].public_ip
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+  }
+}

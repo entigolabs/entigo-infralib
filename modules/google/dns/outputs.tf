@@ -13,3 +13,7 @@ output "int_zone_id" {
 output "int_domain" {
   value = trimsuffix(local.int_domain, ".")
 }
+
+output "parent_zone_id" {
+  value = var.parent_zone_id != "" ? var.parent_zone_id : null
+}

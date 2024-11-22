@@ -50,6 +50,26 @@ output "intra_subnet_cidrs" {
   value = module.vpc.intra_subnets_cidr_blocks
 }
 
+output "private_subnet_names" {
+  value = var.private_subnet_names
+}
+
+output "public_subnet_names" {
+  value = var.public_subnet_names
+}
+
+output "database_subnet_names" {
+  value = var.database_subnet_names
+}
+
+output "elasticache_subnet_names" {
+  value = var.elasticache_subnet_names
+}
+
+output "intra_subnet_names" {
+  value = var.intra_subnet_names
+}
+
 output "intra_route_table_ids" {
   value = module.vpc.intra_route_table_ids
 }
