@@ -49,7 +49,7 @@ resource "aws_sns_topic_subscription" "this" {
 resource "aws_ssm_parameter" "sns_topic_arns" {
   name  = "/entigo-infralib/${var.prefix}/sns_topic_arns"
   type  = "StringList"
-  value = local.alarms
+  value = "\"${join("\",\"", local.alarms)}\""
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
