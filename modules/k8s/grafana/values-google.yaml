@@ -60,16 +60,6 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/loki
-        - name: "google"
-          orgId: 1
-          folder: "Google"
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/google
 
   dashboardsConfigMaps:
-    kubernetes: "grafana-dashboards-kubernetes"
     loki: "grafana-dashboards-loki"
-    google: "grafana-dashboards-google"
