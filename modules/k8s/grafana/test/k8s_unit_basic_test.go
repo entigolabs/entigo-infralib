@@ -17,22 +17,22 @@ import (
 )
 
 func TestK8sGrafanaAWSBiz(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "./k8s_unit_basic_test_aws_biz.yaml", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
 }
 
 func TestK8sGrafanaAWSPri(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "./k8s_unit_basic_test_aws_pri.yaml", "pri", "runner-main-pri.infralib.entigo.io", "aws")
 }
 
 func TestK8sGrafanaGoogleBiz(t *testing.T) {
-	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "./k8s_unit_basic_test_google_biz.yaml", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sGrafanaGooglePri(t *testing.T) {
-	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "./k8s_unit_basic_test_google_pri.yaml", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider string) {
+func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
 
@@ -69,6 +69,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider 
 		gatewayName = "grafana"
 
 	case "google":
+		projectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 		gatewayNamespace = "google-gateway"
 		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
 		setValues["global.google.gateway.namespace"] = gatewayNamespace
@@ -79,13 +80,13 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider 
 			gatewayName = "google-gateway-external"
 		}
 		setValues["global.google.gateway.name"] = gatewayName
-		setValues["global.google.projectID"] = googleProjectID
+		setValues["global.google.projectID"] = projectID
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
-		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider)},
+		ValuesFiles:       []string{fmt.Sprintf("../values-%s.yaml", cloudProvider), valuesFile},
 		SetValues:         setValues,
 		KubectlOptions:    kubectlOptions,
 		BuildDependencies: false,

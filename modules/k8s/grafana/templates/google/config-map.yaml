@@ -1,0 +1,24 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-kubernetes
+data:
+{{ (.Files.Glob "dashboards/kubernetes/*.json").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-loki
+data:
+{{ (.Files.Glob "dashboards/loki/*.json").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-google
+data:
+{{ (.Files.Glob "dashboards/google/*.json").AsConfig | indent 2 }}
+
+{{- end }}
