@@ -79,6 +79,7 @@ func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider 
 			gatewayName = "google-gateway-external"
 		}
 		setValues["global.google.gateway.name"] = gatewayName
+		setValues["global.google.projectID"] = googleProjectID
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)

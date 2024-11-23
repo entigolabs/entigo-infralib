@@ -1,7 +1,9 @@
 global:
   cloudProvider: ""
+  providerConfigRefName: ""
 
   google:
+    projectID: ""
     hostname: ""
     gateway:
       name: google-gateway-external
@@ -96,6 +98,7 @@ grafana:
 
   serviceAccount:
     create: true
+    name: grafana
 
   persistence:
     enabled: true

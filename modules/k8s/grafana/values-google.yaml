@@ -1,7 +1,9 @@
 global:
   cloudProvider: "google"
+  providerConfigRefName: "crossplane-google"
 
   google:
+    projectID: ""
     hostname: ""
     gateway:
       name: google-gateway-external
@@ -14,3 +16,5 @@ grafana:
     enabled: true
     storageClassName: "standard"
     size: 2Gi
+  serviceAccount:
+    create: false
