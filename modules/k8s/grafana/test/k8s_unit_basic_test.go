@@ -84,7 +84,10 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 
 		grafanaServiceAccountName := fmt.Sprintf("grafana-%s", envName)
 		if prefix != "runner-main" {
-			grafanaServiceAccountName = fmt.Sprintf("grafana-%s-%s", prefix[:16], envName)
+			if len(prefix) > 16 {
+				prefix = prefix[:16]
+			}
+			grafanaServiceAccountName = fmt.Sprintf("grafana-%s-%s", prefix, envName)
 		}
 		setValues["grafana.serviceAccount.name"] = grafanaServiceAccountName
 	}
