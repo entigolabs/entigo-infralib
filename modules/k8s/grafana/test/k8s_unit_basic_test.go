@@ -81,6 +81,12 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 		}
 		setValues["global.google.gateway.name"] = gatewayName
 		setValues["global.google.projectID"] = projectID
+
+		grafanaServiceAccountName := fmt.Sprintf("grafana-%s", envName)
+		if prefix != "runner-main" {
+			grafanaServiceAccountName = fmt.Sprintf("grafana-%s-%s", prefix[:16], envName)
+		}
+		setValues["grafana.serviceAccount.name"] = grafanaServiceAccountName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
