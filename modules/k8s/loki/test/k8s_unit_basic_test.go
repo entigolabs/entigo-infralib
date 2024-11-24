@@ -50,7 +50,9 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		namespaceName = fmt.Sprintf("loki-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
+		setValues["loki.rbac.namespaced"] = "true"
 	}
+
 	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
