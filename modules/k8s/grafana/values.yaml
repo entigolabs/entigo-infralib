@@ -1,7 +1,9 @@
 global:
   cloudProvider: ""
+  providerConfigRefName: ""
 
   google:
+    projectID: ""
     hostname: ""
     gateway:
       name: google-gateway-external
@@ -20,44 +22,40 @@ grafana:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-        - name: "default"
+        - name: "kubernetes"
           orgId: 1
-          folder: ""
+          folder: "Kubernetes"
           type: file
           disableDeletion: false
           editable: true
           options:
-            path: /var/lib/grafana/dashboards/default
+            path: /var/lib/grafana/dashboards/kubernetes
 
   dashboards:
-    default:
+    kubernetes:
       global:
         gnetId: 15757
-        revision: 31
-        datasource: Prometheus
-      nodes:
-        gnetId: 13824
-        revision: 2
+        revision: 42
         datasource: Prometheus
       namespaces:
         gnetId: 15758
-        revision: 27
+        revision: 40
+        datasource: Prometheus
+      nodes:
+        gnetId: 15759
+        revision: 32
         datasource: Prometheus
       pods:
         gnetId: 15760
-        revision: 22
+        revision: 32
         datasource: Prometheus
-      pvc:
-        gnetId: 13646
-        revision: 2
+      apiserver:
+        gnetId: 15761
+        revision: 18
         datasource: Prometheus
-      cluster:
-        gnetId: 7249
-        revision: 1
-        datasource: Prometheus
-      nodejs:
-        gnetId: 18575
-        revision: 3
+      prometheus:
+        gnetId: 19105
+        revision: 5
         datasource: Prometheus
 
   deploymentStrategy:
@@ -96,6 +94,7 @@ grafana:
 
   serviceAccount:
     create: true
+    name: grafana
 
   persistence:
     enabled: true

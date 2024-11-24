@@ -1,0 +1,10 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-loki
+data:
+{{ (.Files.Glob "dashboards/loki/*.json").AsConfig | indent 2 }}
+
+{{- end }}

@@ -1,0 +1,15 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ProjectIAMMember
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  forProvider:
+    member: "serviceAccount:{{ .Values.grafana.serviceAccount.name }}@{{ .Values.global.google.projectID }}.iam.gserviceaccount.com"
+    project: {{ .Values.global.google.projectID }}
+    role: roles/monitoring.viewer
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}
