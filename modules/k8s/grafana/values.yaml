@@ -53,10 +53,6 @@ grafana:
         gnetId: 15761
         revision: 18
         datasource: Prometheus
-      coredns:
-        gnetId: 15762
-        revision: 1
-        datasource: Prometheus
       prometheus:
         gnetId: 19105
         revision: 5

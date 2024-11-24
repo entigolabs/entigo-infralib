@@ -62,4 +62,4 @@ grafana:
             path: /var/lib/grafana/dashboards/loki
 
   dashboardsConfigMaps:
-    loki: "grafana-dashboards-loki"
+    loki: grafana-dashboards-loki
