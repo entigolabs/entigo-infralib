@@ -50,7 +50,9 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		namespaceName = fmt.Sprintf("loki-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
+		setValues["loki.rbac.namespaced"] = "true"
 	}
+
 	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
@@ -102,7 +104,6 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		setValues["global.google.gateway.name"] = gatewayName
 	}
 
-
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	helmOptions := &helm.Options{
@@ -132,13 +133,13 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 	if err != nil {
 		t.Fatal("loki-gateway deployment error:", err)
 	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "loki-read-0", 20, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "loki-read", 20, 6*time.Second)
 	if err != nil {
-		t.Fatal("loki-read-0 pod error:", err)
+		t.Fatal("loki-read deployment error:", err)
 	}
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "loki-write-0", 20, 6*time.Second)
 	if err != nil {
-		t.Fatal("loki-read-0 pod error:", err)
+		t.Fatal("loki-write-0 pod error:", err)
 	}
 
 	successResponseCode := "301"
