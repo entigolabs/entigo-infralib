@@ -1,12 +1,12 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: {{ .Release.Name }}
+  name: {{.Release.Name}}
   annotations:
-    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-wave: "2"
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.13.0
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.15.0
   runtimeConfigRef:
-    name: {{ .Release.Name }}
+    name: {{.Release.Name}}
