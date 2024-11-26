@@ -10,11 +10,11 @@ parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
   #tagSpecification_1: "Environment={{ .Values.environment }}"
-  {{- if and .Values.kmsKeyId (ne .Values.kmsKeyId "") }}
-  kmsKeyId: "{{ .Values.kmsKeyId }}"
-  encrypted: true
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
   {{- else }}
-  encrypted: false
+  encrypted: "false"
   {{- end }}
   
 provisioner: ebs.csi.aws.com
@@ -34,11 +34,11 @@ metadata:
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
-  {{- if and .Values.kmsKeyId (ne .Values.kmsKeyId "") }}
-  kmsKeyId: "{{ .Values.kmsKeyId }}"
-  encrypted: true
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
   {{- else }}
-  encrypted: false
+  encrypted: "false"
   {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
@@ -58,11 +58,11 @@ metadata:
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
-  {{- if and .Values.kmsKeyId (ne .Values.kmsKeyId "") }}
-  kmsKeyId: "{{ .Values.kmsKeyId }}"
-  encrypted: true
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
   {{- else }}
-  encrypted: false
+  encrypted: "false"
   {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
@@ -81,11 +81,11 @@ metadata:
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
-  {{- if and .Values.kmsKeyId (ne .Values.kmsKeyId "") }}
-  kmsKeyId: "{{ .Values.kmsKeyId }}"
-  encrypted: true
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
   {{- else }}
-  encrypted: false
+  encrypted: "false"
   {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete

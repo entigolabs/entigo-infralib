@@ -35,9 +35,9 @@ func testTerraformKmsBizAssert(t *testing.T, workspaceName string, options *terr
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
 
-	assert.NotEmpty(t, outputs["mode"], "mode was not returned")
-
-
+	assert.NotEmpty(t, outputs["telemetry_alias_arn"], "telemetry_alias_arn was not returned")
+	assert.NotEmpty(t, outputs["config_alias_arn"], "config_alias_arn was not returned")
+	assert.NotEmpty(t, outputs["data_alias_arn"], "data_alias_arn was not returned")
 
 }
 
@@ -46,8 +46,8 @@ func testTerraformKmsPriAssert(t *testing.T, workspaceName string, options *terr
 	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
 	defer destroyFunc()
 
-	assert.NotEmpty(t, outputs["mode"], "mode was not returned")
-
-
+	assert.Empty(t, outputs["telemetry_alias_arn"], "telemetry_alias_arn was not returned")
+	assert.Empty(t, outputs["config_alias_arn"], "config_alias_arn was not returned")
+	assert.Empty(t, outputs["data_alias_arn"], "data_alias_arn was not returned")
 
 }
