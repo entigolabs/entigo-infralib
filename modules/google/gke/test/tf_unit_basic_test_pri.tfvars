@@ -7,12 +7,14 @@ master_authorized_networks = [
 
 
 
-gke_main_min_size            = 2
-gke_main_max_size            = 4
+gke_main_min_size            = 1
+gke_main_max_size            = 2
+gke_main_instance_type      = "e2-standard-4"
 gke_main_node_locations     = "europe-north1-a"
 
-gke_tools_min_size            = 3
-gke_tools_max_size            = 6
+gke_tools_min_size            = 1
+gke_tools_max_size            = 3
+gke_tools_instance_type      = "e2-standard-4"
 gke_tools_node_locations     = "europe-north1-a"
 
 gke_mon_min_size            = 1

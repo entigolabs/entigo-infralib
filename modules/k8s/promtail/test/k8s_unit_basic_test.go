@@ -76,5 +76,4 @@ func testK8sPromtail(t *testing.T, contextName, envName, hostName, cloudProvider
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
 }

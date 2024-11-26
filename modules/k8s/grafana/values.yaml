@@ -1,6 +1,12 @@
 global:
   cloudProvider: ""
   providerConfigRefName: ""
+  prefix: ""
+  datasources:
+    loki:
+      hostname: ""
+    prometheus:
+      hostname: ""
 
   google:
     projectID: ""
