@@ -6,8 +6,6 @@ metadata:
   name: {{ .Release.Name }}-storage-object-admin
 spec:
   forProvider:
-    labels:
-      crossplane: "true"
     bucketRef:
         name: {{ .Values.global.bucketName }}
     member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.loki.serviceAccount.name }}]
