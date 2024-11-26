@@ -26,10 +26,12 @@ func testTerraformEc2Biz(t *testing.T) {
 	// vpc_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/vpc_id")
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
 	zone_id := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/int_zone_id")
+	data_key_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/data_key_arn")
 
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"subnet_id":       fmt.Sprintf("%s", strings.Trim(strings.Split(public_subnets, ",")[0], "\"")),
 		"route53_zone_id": zone_id,
+		"kms_key_id":      data_key_arn,
 	})
 	testTerraformEc2(t, "biz", options)
 }
