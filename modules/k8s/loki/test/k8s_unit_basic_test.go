@@ -57,6 +57,7 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 	gatewayName := ""
 	gatewayNamespace := ""
 	bucketName := fmt.Sprintf("%s-logs", namespaceName)
+	setValues["global.prefix"] = fmt.Sprintf("%s-%s", prefix, envName)
 
 	switch cloudProvider {
 	case "aws":
