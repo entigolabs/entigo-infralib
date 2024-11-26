@@ -27,12 +27,16 @@ func testTerraformEksBiz(t *testing.T) {
 	private_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/private_subnets")
 	public_subnets := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/public_subnets")
 	private_subnet_cidrs := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/private_subnet_cidrs")
+	telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn")
+	data_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/data_alias_arn")
 
 	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
 		"vpc_id":               vpc_id,
 		"private_subnets":      fmt.Sprintf("[%s]", private_subnets),
 		"public_subnets":       fmt.Sprintf("[%s]", public_subnets),
 		"eks_api_access_cidrs": fmt.Sprintf("[%s]", private_subnet_cidrs),
+		"cloudwatch_log_group_kms_key_id": telemetry_alias_arn,
+		"node_encryption_kms_key_arn": data_alias_arn,
 	})
 	testTerraformEks(t, "biz", options)
 }

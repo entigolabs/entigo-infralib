@@ -59,10 +59,12 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
   key_name = var.key_name
+
   root_block_device {
     volume_size = var.volume_size
     volume_type = var.volume_type
-    encrypted = true
+    encrypted = var.kms_key_id != null ? true : false
+    kms_key_id = var.kms_key_id
   }
 
   tags = {
