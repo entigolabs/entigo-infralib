@@ -51,11 +51,13 @@ module "vpc" {
 
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
-  enable_flow_log                                 = false
-  create_flow_log_cloudwatch_log_group            = false
-  create_flow_log_cloudwatch_iam_role             = false
-  flow_log_max_aggregation_interval               = 60
-  flow_log_cloudwatch_log_group_retention_in_days = 7
+  enable_flow_log                                 = var.enable_flow_log
+  create_flow_log_cloudwatch_log_group            = var.enable_flow_log
+  create_flow_log_cloudwatch_iam_role             = var.enable_flow_log
+  flow_log_cloudwatch_log_group_name_prefix       = "${var.prefix}/vpc-flow-log/"
+  flow_log_max_aggregation_interval               = var.flow_log_max_aggregation_interval
+  flow_log_cloudwatch_log_group_retention_in_days = var.flow_log_cloudwatch_log_group_retention_in_days
+  flow_log_cloudwatch_log_group_kms_key_id = var.flow_log_cloudwatch_log_group_kms_key_id
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"

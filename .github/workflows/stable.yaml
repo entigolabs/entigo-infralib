@@ -37,6 +37,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         echo "Current stable release commit is $(git rev-parse HEAD)"
+        modules/aws/kms/test.sh
         PIDS=""
         modules/aws/cost-alert/test.sh &
         PIDS="$PIDS $!"

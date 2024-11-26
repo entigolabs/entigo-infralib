@@ -13,14 +13,43 @@ module "kms_telemetry" {
   multi_region            = var.multi_region
   enable_default_policy                  = true
   key_owners                             = [data.aws_caller_identity.current.arn]
-  key_administrators                     = [data.aws_caller_identity.current.arn]
-  key_users                              = [data.aws_caller_identity.current.arn]
-  key_service_users                      = [data.aws_caller_identity.current.arn]
-  key_service_roles_for_autoscaling      = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
-  key_symmetric_encryption_users         = [data.aws_caller_identity.current.arn]
-  key_hmac_users                         = [data.aws_caller_identity.current.arn]
-  key_asymmetric_public_encryption_users = [data.aws_caller_identity.current.arn]
-  key_asymmetric_sign_verify_users       = [data.aws_caller_identity.current.arn]
+  
+  key_statements = [
+    {
+      principals = [
+        {
+          type        = "Service"
+          identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
+        }
+      ]
+    
+      actions = [      
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "ArnLike"
+          variable = "kms:EncryptionContext:aws:logs:arn"
+          values = [
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.prefix}/*",
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/eks/${var.prefix}/*",
+          ]
+        }
+      ]
+      
+    }
+  ]
+  
+  
   aliases = ["${var.prefix}/telemetry"]
 
   tags = {
@@ -41,14 +70,6 @@ module "kms_config" {
   multi_region            = var.multi_region
   enable_default_policy                  = true
   key_owners                             = [data.aws_caller_identity.current.arn]
-  key_administrators                     = [data.aws_caller_identity.current.arn]
-  key_users                              = [data.aws_caller_identity.current.arn]
-  key_service_users                      = [data.aws_caller_identity.current.arn]
-  key_service_roles_for_autoscaling      = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
-  key_symmetric_encryption_users         = [data.aws_caller_identity.current.arn]
-  key_hmac_users                         = [data.aws_caller_identity.current.arn]
-  key_asymmetric_public_encryption_users = [data.aws_caller_identity.current.arn]
-  key_asymmetric_sign_verify_users       = [data.aws_caller_identity.current.arn]
   aliases = ["${var.prefix}/config"]
 
   tags = {
@@ -69,14 +90,7 @@ module "kms_data" {
   multi_region            = var.multi_region
   enable_default_policy                  = true
   key_owners                             = [data.aws_caller_identity.current.arn]
-  key_administrators                     = [data.aws_caller_identity.current.arn]
-  key_users                              = [data.aws_caller_identity.current.arn]
-  key_service_users                      = [data.aws_caller_identity.current.arn]
   key_service_roles_for_autoscaling      = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
-  key_symmetric_encryption_users         = [data.aws_caller_identity.current.arn]
-  key_hmac_users                         = [data.aws_caller_identity.current.arn]
-  key_asymmetric_public_encryption_users = [data.aws_caller_identity.current.arn]
-  key_asymmetric_sign_verify_users       = [data.aws_caller_identity.current.arn]
   aliases = ["${var.prefix}/data"]
 
   tags = {
@@ -86,33 +100,33 @@ module "kms_data" {
 }
 
 
-resource "aws_ssm_parameter" "telemetry_key_arn" {
+resource "aws_ssm_parameter" "telemetry_alias_arn" {
   count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/telemetry_key_arn"
+  name  = "/entigo-infralib/${var.prefix}/telemetry_alias_arn"
   type  = "String"
-  value = module.kms_telemetry[0].key_arn
+  value = module.kms_telemetry[0].aliases["${var.prefix}/telemetry"].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
   }
 }
 
-resource "aws_ssm_parameter" "config_key_arn" {
+resource "aws_ssm_parameter" "config_alias_arn" {
   count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/config_key_arn"
+  name  = "/entigo-infralib/${var.prefix}/config_alias_arn"
   type  = "String"
-  value = module.kms_config[0].key_arn
+  value = module.kms_config[0].aliases["${var.prefix}/config"].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
   }
 }
 
-resource "aws_ssm_parameter" "data_key_arn" {
+resource "aws_ssm_parameter" "data_alias_arn" {
   count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/data_key_arn"
+  name  = "/entigo-infralib/${var.prefix}/data_alias_arn"
   type  = "String"
-  value = module.kms_data[0].key_arn
+  value = module.kms_data[0].aliases["${var.prefix}/data"].arn
   tags = {
     Terraform = "true"
     Prefix    = var.prefix

@@ -100,12 +100,7 @@ variable "security_group_ingress" {
   }
 }
 
-variable "encrypted" {
-  type = bool
-  default = true
-}
-
 variable "kms_key_id" {
   type = string
-  default = ""
+  default = null
 }

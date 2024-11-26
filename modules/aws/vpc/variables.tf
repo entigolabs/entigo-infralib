@@ -89,3 +89,24 @@ variable "map_public_ip_on_launch" {
   nullable = false
   default  = false
 }
+
+variable "enable_flow_log" {
+  type     = bool
+  nullable = false
+  default  = true
+}
+
+variable "flow_log_max_aggregation_interval" {
+  type = number
+  default = 60
+}
+
+variable "flow_log_cloudwatch_log_group_retention_in_days" {
+  type = number
+  default = 7
+}
+
+variable "flow_log_cloudwatch_log_group_kms_key_id" {
+  type = string
+  default = null
+}
