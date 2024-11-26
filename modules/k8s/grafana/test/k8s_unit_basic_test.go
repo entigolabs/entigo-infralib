@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/helm"
@@ -40,12 +41,12 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "grafana"
+	namespaceName := fmt.Sprintf("grafana-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("grafana-%s", prefix)
+		namespaceName = fmt.Sprintf("grafana-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -55,6 +56,7 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 	gatewayNamespace := ""
 
 	setValues["grafana.\"grafana\\.ini\".server.root_url"] = fmt.Sprintf("https://%s.%s", releaseName, hostname)
+	setValues["global.prefix"] = fmt.Sprintf("%s-%s", prefix, envName)
 
 	switch cloudProvider {
 	case "aws":
@@ -70,26 +72,26 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 
 	case "google":
 		projectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+		prometheusHostname := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-prometheus_hostname/versions/latest", projectID, envName))
+		lokiHostname := commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-loki_hostname/versions/latest", projectID, envName))
 		gatewayNamespace = "google-gateway"
-		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
-		setValues["global.google.gateway.namespace"] = gatewayNamespace
+
 		switch envName {
 		case "biz":
 			gatewayName = "google-gateway-internal"
 		case "pri":
 			gatewayName = "google-gateway-external"
 		}
+
+		grafanaServiceAccountName := truncateString(namespaceName, 28)
+
+		setValues["global.loki.hostname"] = lokiHostname
+		setValues["global.prometheus.hostname"] = prometheusHostname
+		setValues["grafana.serviceAccount.name"] = grafanaServiceAccountName
+		setValues["global.google.hostname"] = fmt.Sprintf("%s.%s", releaseName, hostname)
+		setValues["global.google.gateway.namespace"] = gatewayNamespace
 		setValues["global.google.gateway.name"] = gatewayName
 		setValues["global.google.projectID"] = projectID
-
-		grafanaServiceAccountName := fmt.Sprintf("grafana-%s", envName)
-		if prefix != "runner-main" {
-			if len(prefix) > 16 {
-				prefix = prefix[:16]
-			}
-			grafanaServiceAccountName = fmt.Sprintf("grafana-%s-%s", prefix, envName)
-		}
-		setValues["grafana.serviceAccount.name"] = grafanaServiceAccountName
 	}
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -131,4 +133,11 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 	targetURL = fmt.Sprintf("https://%s.%s/login", releaseName, hostname)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "grafana ingress/gateway test error")
+}
+
+func truncateString(input string, maxLength int) string {
+	if len(input) > maxLength {
+		return input[:maxLength]
+	}
+	return input
 }

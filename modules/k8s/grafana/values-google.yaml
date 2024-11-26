@@ -19,27 +19,6 @@ grafana:
   serviceAccount:
     create: false
 
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Prometheus-{{ .Values.global.google.projectID }}
-          type: prometheus
-          url: http://prometheus-server.prometheus
-          access: proxy
-          isDefault: true
-        - name: Loki-{{ .Values.global.google.projectID }}
-          type: loki
-          access: proxy
-          url: http://loki-gateway.loki
-          jsonData:
-            maxLines: 1000
-        - name: Google Cloud Monitoring
-          type: stackdriver
-          access: proxy
-          jsonData:
-            authenticationType: gce
-
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1

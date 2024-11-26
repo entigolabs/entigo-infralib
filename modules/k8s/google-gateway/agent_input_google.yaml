@@ -1,0 +1,4 @@
+global:
+  prefix: "{{ .config.prefix }}"
+  google:
+    internalCertificateMap: "{{ .gcsm.infra.dns.int_zone_id }}"

@@ -30,8 +30,8 @@ variable "master_global_access_enabled" {
 }
 
 variable "deploy_using_private_endpoint" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "enable_private_endpoint" {

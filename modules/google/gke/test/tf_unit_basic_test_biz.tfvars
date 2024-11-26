@@ -18,8 +18,9 @@ gke_mon_min_size            = 1
 gke_mon_max_size            = 3
 gke_mon_node_locations      = "europe-north1-a"
 
-gke_main_min_size            = 2
-gke_main_max_size            = 4
+gke_main_min_size            = 1
+gke_main_max_size            = 2
+gke_main_instance_type       = "e2-standard-4"
 gke_main_node_locations      = "europe-north1-a"
 
 gke_mainarm_min_size         = 0

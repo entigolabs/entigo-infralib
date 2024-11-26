@@ -39,12 +39,12 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	require.NoError(t, err)
 
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := "prometheus"
+	namespaceName := fmt.Sprintf("prometheus-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("prometheus-%s", prefix)
+		namespaceName = fmt.Sprintf("prometheus-%s-%s", envName, prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}

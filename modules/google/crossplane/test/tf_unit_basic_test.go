@@ -28,31 +28,46 @@ func TestTerraformCrossplane(t *testing.T) {
 }
 
 func testTerraformCrossplaneBiz(t *testing.T) {
+	envName := "biz"
+	vars["crossplane_service_account_id"] = fmt.Sprintf("crossplane-%s", envName)
+
 	if prefix != "runner-main" {
-		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-biz", prefix)
-		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-biz", prefix)
+		vars["crossplane_service_account_id"] = fmt.Sprintf("crossplane-%s-%s", envName, prefix)
+		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-%s", prefix, envName)
+		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-%s", prefix, envName)
 	}
-	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_biz.tfvars", vars)
-	testTerraformCrossplane(t, "biz", options)
+
+	options, envName := tf.InitGCloudTerraform(t, bucketName, googleRegion, fmt.Sprintf("tf_unit_basic_test_%s.tfvars", envName), vars)
+	testTerraformCrossplane(t, envName, options)
 }
 
 func testTerraformCrossplanePri(t *testing.T) {
+	envName := "pri"
+	vars["crossplane_service_account_id"] = fmt.Sprintf("crossplane-%s", envName)
+
 	if prefix != "runner-main" {
-		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-pri", prefix)
-		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-pri", prefix)
+		vars["crossplane_service_account_id"] = fmt.Sprintf("crossplane-%s-%s", envName, prefix)
+		vars["kubernetes_service_account"] = fmt.Sprintf("crossplane-%s-%s", prefix, envName)
+		vars["kubernetes_namespace"] = fmt.Sprintf("crossplane-system-%s-%s", prefix, envName)
 	}
-	options := tf.InitGCloudTerraform(t, bucketName, googleRegion, "tf_unit_basic_test_pri.tfvars", vars)
-	testTerraformCrossplane(t, "pri", options)
+
+	options, envName := tf.InitGCloudTerraform(t, bucketName, googleRegion, fmt.Sprintf("tf_unit_basic_test_%s.tfvars", envName), vars)
+	testTerraformCrossplane(t, envName, options)
 }
 
-func testTerraformCrossplane(t *testing.T, workspaceName string, options *terraform.Options) {
+func testTerraformCrossplane(t *testing.T, envName string, options *terraform.Options) {
 	t.Parallel()
-	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
-	runnerName := fmt.Sprintf("%s-%s", prefix, workspaceName)
-	googleServiceAccountId := fmt.Sprintf("%s-cp", runnerName)
-	if len(runnerName) > 25 {
-		googleServiceAccountId = fmt.Sprintf("%s-cp", runnerName[:26])
-	}
+	outputs, destroyFunc := tf.ApplyTerraform(t, envName, options)
+
+	googleServiceAccountId := truncateString(fmt.Sprintf("crossplane-%s-%s", envName, prefix), 28)
+
 	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject), "Wrong service_account_email returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
+}
+
+func truncateString(input string, maxLength int) string {
+	if len(input) > maxLength {
+		return input[:maxLength]
+	}
+	return input
 }

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
+	commonGoogle "github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
@@ -36,7 +37,6 @@ func testK8sPromtail(t *testing.T, contextName, envName, hostName, cloudProvider
 	helmChartPath, err := filepath.Abs("..")
 	require.NoError(t, err)
 
-
 	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
 	namespaceName := fmt.Sprintf("promtail-%s", envName)
 	extraArgs := make(map[string][]string)
@@ -48,8 +48,19 @@ func testK8sPromtail(t *testing.T, contextName, envName, hostName, cloudProvider
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
 	releaseName := namespaceName
-	
-	setValues["promtail.config.clients[0].url"] = fmt.Sprintf("http://loki-gateway.loki-%s/loki/api/v1/push", envName)
+	lokiHostname := ""
+
+	switch cloudProvider {
+	case "aws":
+		lokiHostname = fmt.Sprintf("http://loki-gateway.loki-%s", envName)
+
+	case "google":
+		projectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
+		lokiHostname = commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-loki_hostname/versions/latest", projectID, envName))
+
+	}
+
+	setValues["promtail.config.clients[0].url"] = fmt.Sprintf("%s/loki/api/v1/push", lokiHostname)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
@@ -76,5 +87,4 @@ func testK8sPromtail(t *testing.T, contextName, envName, hostName, cloudProvider
 	}
 
 	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
 }

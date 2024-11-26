@@ -1,21 +1,21 @@
 // crossplane-core service account
-resource "google_service_account_iam_member" "crossplane_editor" {
-  service_account_id = google_service_account.crossplane.id
-  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-  role    = "roles/editor"
-}
+# resource "google_service_account_iam_member" "crossplane_editor" {
+#   service_account_id = google_service_account.crossplane.id
+#   member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
+#   role    = "roles/editor"
+# }
 
 resource "google_service_account_iam_member" "crossplane_workload_identity_user" {
   service_account_id = google_service_account.crossplane.id
-  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-  role    = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
+  role               = "roles/iam.workloadIdentityUser"
 }
 
-resource "google_service_account_iam_member" "crossplane_security_admin" {
-  service_account_id = google_service_account.crossplane.id
-  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-  role    = "roles/iam.securityAdmin"
-}
+# resource "google_service_account_iam_member" "crossplane_security_admin" {
+#   service_account_id = google_service_account.crossplane.id
+#   member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
+#   role    = "roles/iam.securityAdmin"
+# }
 
 resource "google_project_iam_member" "crossplane_editor" {
   project = data.google_client_config.this.project
@@ -36,20 +36,20 @@ resource "google_project_iam_member" "crossplane_security_admin" {
 }
 
 resource "google_service_account" "crossplane" {
-  account_id   = "${substr(var.prefix, 0, 25)}-cp"
+  account_id   = substr(var.crossplane_service_account_id, 0, 28)
   display_name = "Crossplane service account"
 }
 
 module "service_account_email" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "service_account_email"
-  value = google_service_account.crossplane.email
+  key    = "service_account_email"
+  value  = google_service_account.crossplane.email
 }
 
 module "project_id" {
-  source                             = "./secret"
+  source = "./secret"
   prefix = var.prefix
-  key = "project_id"
-  value = data.google_client_config.this.project
+  key    = "project_id"
+  value  = data.google_client_config.this.project
 }

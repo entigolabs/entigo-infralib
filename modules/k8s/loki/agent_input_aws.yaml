@@ -3,25 +3,24 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
-  bucketName: '{{ .config.prefix }}-loki-logs'
+  bucketName: "{{ .config.prefix }}-loki-logs"
 loki:
   gateway:
     ingress:
       hosts:
-      - host: loki.{{ .toutput.route53.int_domain }}
-        paths:
-        - path: "/"
-          pathType: "Prefix"
+        - host: loki.{{ .toutput.route53.int_domain }}
+          paths:
+            - path: "/"
+              pathType: "Prefix"
   loki:
     storage:
       s3:
         region: "{{ .toutput.eks.region }}"
       bucketNames:
-        chunks: '{{ .config.prefix }}-loki-logs'
-        ruler: '{{ .config.prefix }}-loki-logs'
-        admin: '{{ .config.prefix }}-loki-logs'
+        chunks: "{{ .config.prefix }}-loki-logs"
+        ruler: "{{ .config.prefix }}-loki-logs"
+        admin: "{{ .config.prefix }}-loki-logs"
     storage_config:
       aws:
         region: "{{ .toutput.eks.region }}"
-        bucketnames: '{{ .config.prefix }}-loki-logs'
-
+        bucketnames: "{{ .config.prefix }}-loki-logs"
