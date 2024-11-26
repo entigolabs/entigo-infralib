@@ -1,3 +1,4 @@
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" "{{ .Values.global.prefix }}gp2-retain") }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -21,8 +22,9 @@ provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" "{{ .Values.global.prefix }}gp2-no-retain") }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -44,9 +46,9 @@ provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
-
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" "{{ .Values.global.prefix }}gp3") }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -68,8 +70,9 @@ provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" "{{ .Values.global.prefix }}gp3-no-retain") }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -91,3 +94,4 @@ provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
