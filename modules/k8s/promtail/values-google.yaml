@@ -1,33 +1,3 @@
 global:
   cloudProvider: google
   providerConfigRefName: crossplane-google
-  region: "EU"
-  bucketName: ""
-
-  google:
-    projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
-
-loki:
-  loki:
-    storage:
-      type: gcs
-      bucketNames:
-        chunks: ""
-        ruler: ""
-        admin: ""
-    storage_config:
-      boltdb_shipper:
-        shared_store: gcs
-
-  read:
-    persistence:
-      size: 30Gi
-      storageClass: standard
-
-  gateway:
-    ingress:
-      enabled: false

@@ -1,0 +1,5 @@
+google:
+  projectID: "{{ .gcsm.infra.crossplane.project_id }}"
+  region: "{{ .gcsm.infra.gke.region }}"
+  cluster:
+    name: "{{ .gcsm.infra.gke.cluster_name }}"

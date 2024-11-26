@@ -1,0 +1,4 @@
+ip_range_pods: "{{ .gcsm.net.main.private_subnets_pods[0] }}"
+ip_range_services: "{{ .gcsm.net.main.private_subnets_services[0] }}"
+subnetwork: "{{ .gcsm.net.main.private_subnets[0] }}"
+network: "{{ .gcsm.net.main.vpc_name }}"

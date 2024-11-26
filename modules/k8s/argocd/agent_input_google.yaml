@@ -1,0 +1,9 @@
+global:
+  google:
+    gateway:
+      name: google-gateway-internal
+      namespace: google-gateway
+argocd:
+  global:
+    domain: |
+      argocd.{{ .gcsm.infra.dns.int_domain }}

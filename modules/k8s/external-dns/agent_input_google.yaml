@@ -1,0 +1,3 @@
+global:
+  google:
+    projectID: "{{ .gcsm.infra.crossplane.project_id }}"
