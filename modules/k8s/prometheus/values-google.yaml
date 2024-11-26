@@ -1,5 +1,6 @@
 global:
   cloudProvider: google
+  providerConfigRefName: crossplane-google
 
   google:
     hostname: ""

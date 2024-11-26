@@ -1,5 +1,7 @@
 global:
   cloudProvider: ""
+  providerConfigRefName: ""
+  prefix: ""
 
   google:
     hostname: ""

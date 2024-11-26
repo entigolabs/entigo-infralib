@@ -53,6 +53,8 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	gatewayName := ""
 	gatewayNamespace := ""
 
+	setValues["global.prefix"] = fmt.Sprintf("%s-%s", prefix, envName)
+
 	switch cloudProvider {
 	case "aws":
 		setValues["prometheus.server.ingress.hosts[0]"] = fmt.Sprintf("%s.%s", releaseName, hostName)
