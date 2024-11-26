@@ -307,3 +307,13 @@ variable "eks_managed_node_groups_extra" {
   nullable = false
   default  = {}
 }
+
+variable "cloudwatch_log_group_kms_key_id" {
+  type = string
+  default = null
+}
+
+variable "node_encryption_kms_key_arn" {
+  type = string
+  default = null
+}

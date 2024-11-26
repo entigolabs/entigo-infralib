@@ -7,6 +7,7 @@ import (
 
 	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,12 @@ func TestTerraformVpc(t *testing.T) {
 }
 
 func testTerraformVpcBiz(t *testing.T) {
-	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
+  
+        telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn")
+  
+	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{
+		"flow_log_cloudwatch_log_group_kms_key_id":      telemetry_alias_arn,
+	})
 	testTerraformVpcBizAssert(t, "biz", options)
 }
 

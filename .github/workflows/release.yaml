@@ -27,6 +27,8 @@ jobs:
       run: |
         echo "Current main release commit is $(git rev-parse HEAD)"
         PIDS=""
+        modules/aws/kms/test.sh &
+        PIDS="$PIDS $!"
         modules/aws/cost-alert/test.sh &
         PIDS="$PIDS $!"
         modules/aws/hello-world/test.sh &

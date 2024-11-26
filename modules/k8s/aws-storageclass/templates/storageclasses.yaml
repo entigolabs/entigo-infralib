@@ -1,64 +1,97 @@
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp2-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
     helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
   name: {{ .Values.global.prefix }}gp2-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
   #tagSpecification_1: "Environment={{ .Values.environment }}"
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
+  {{- else }}
+  encrypted: "false"
+  {{- end }}
+  
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp2-no-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
     helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
   name: {{ .Values.global.prefix }}gp2-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
+  {{- else }}
+  encrypted: "false"
+  {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
-
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp3")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
     helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "true"
   name: {{ .Values.global.prefix }}gp3
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
+  {{- else }}
+  encrypted: "false"
+  {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
 ---
-
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp3-no-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   annotations:
     helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
   name: {{ .Values.global.prefix }}gp3-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
+  {{- if .Values.global.kmsKeyId }}
+  kmsKeyId: {{ .Values.global.kmsKeyId }}
+  encrypted: "true"
+  {{- else }}
+  encrypted: "false"
+  {{- end }}
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
+{{- end }}
