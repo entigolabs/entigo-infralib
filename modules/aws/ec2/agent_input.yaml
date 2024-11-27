@@ -1,0 +1,4 @@
+subnet_id: |
+  [{{ .toutput.vpc.private_subnets }}][0]
+route53_zone_id: "{{ .toutput.route53.pub_zone_id }}"
+kms_key_id: "{{ .toutput.kms.data_alias_arn }}"
