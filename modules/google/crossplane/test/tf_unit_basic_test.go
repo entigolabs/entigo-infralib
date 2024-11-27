@@ -59,9 +59,14 @@ func testTerraformCrossplane(t *testing.T, envName string, options *terraform.Op
 	t.Parallel()
 	outputs, destroyFunc := tf.ApplyTerraform(t, envName, options)
 
-	googleServiceAccountId := truncateString(fmt.Sprintf("crossplane-%s-%s", envName, prefix), 28)
+	googleServiceAccountId := truncateString(fmt.Sprintf("crossplane-%s", envName), 28)
+	if prefix != "runner-main" {
+		googleServiceAccountId = truncateString(fmt.Sprintf("crossplane-%s-%s", envName, prefix), 28)
+	}
 
-	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject), "Wrong service_account_email returned")
+	googleServiceAccountEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject)
+
+	assert.Equal(t, outputs["service_account_email"], googleServiceAccountEmail, "Wrong service_account_email returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
 }
 
