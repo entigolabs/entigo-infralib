@@ -2,8 +2,8 @@ global:
   prefix: "{{ .config.prefix }}"
   bucketName: "{{ .config.prefix }}-loki-logs"
   google:
-    hostname: loki.{{ .gcsm.infra.dns.int_domain }}
-    projectID: "{{ .gcsm.infra.crossplane.project_id }}"
+    hostname: loki.{{ .toutput.dns.int_domain }}
+    projectID: "{{ .toutput.crossplane.project_id }}"
     gateway:
       name: google-gateway-internal
       namespace: google-gateway

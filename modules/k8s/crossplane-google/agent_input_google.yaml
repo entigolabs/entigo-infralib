@@ -1,5 +1,5 @@
 global:
   google:
-    projectID: "{{ .gcsm.infra.crossplane.project_id }}"
+    projectID: "{{ .toutput.crossplane.project_id }}"
   deploymentRuntimeConfig:
-    googleServiceAccount: "{{ .gcsm.infra.crossplane.service_account_email }}"
+    googleServiceAccount: "{{ .toutput.crossplane.service_account_email }}"
