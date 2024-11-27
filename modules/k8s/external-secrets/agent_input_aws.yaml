@@ -1,5 +1,5 @@
 global:
   aws:
-    region: "{{ .ssm.infra.eks.region }}"
-    account: "{{ .ssm.infra.eks.account }}"
-    clusterOIDC: "{{ .ssm.infra.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
