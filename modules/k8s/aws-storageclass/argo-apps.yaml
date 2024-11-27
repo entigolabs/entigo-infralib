@@ -1,0 +1,6 @@
+spec:
+  ignoreDifferences:
+  - group: "storage.k8s.io"
+    kind: StorageClass
+    jsonPointers:
+    - /parameters

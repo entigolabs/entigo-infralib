@@ -10,7 +10,6 @@ blocklist:
 resource-types:
   excludes:
   - EC2KeyPair
-  - KMSAlias
   - IAMSAMLProvider
   - ElasticacheCacheParameterGroup
   - Route53ResolverRule
