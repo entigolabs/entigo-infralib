@@ -39,7 +39,7 @@ module "kms_telemetry" {
         {
           test     = "ArnLike"
           variable = "kms:EncryptionContext:aws:logs:arn"
-          values = join([
+          values = concat([
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.prefix}/*",
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/eks/${var.prefix}/*",
           ], var.telemetry_extra_encryption_context)
