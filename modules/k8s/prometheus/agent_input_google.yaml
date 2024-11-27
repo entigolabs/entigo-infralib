@@ -1,7 +1,7 @@
 global:
   prefix: "{{ .config.prefix }}"
   google:
-    hostname: prometheus.{{ .gcsm.infra.dns.int_domain }}
+    hostname: prometheus.{{ .toutput.dns.int_domain }}
     gateway:
       name: google-gateway-internal
       namespace: google-gateway

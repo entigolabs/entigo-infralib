@@ -6,4 +6,5 @@ global:
 argocd:
   global:
     domain: |
-      argocd.{{ .gcsm.infra.dns.int_domain }}
+      argocd.{{ .toutput.dns.int_domain }}
+

@@ -1,4 +1,4 @@
 promtail:
   config:
     clients:
-      - url: http://{{ .gcsm.applications.loki.loki_hostname }}/loki/api/v1/push
+      - url: http://{{ .toutput.loki.loki_hostname }}/loki/api/v1/push

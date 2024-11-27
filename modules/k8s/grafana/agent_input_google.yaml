@@ -1,13 +1,13 @@
 global:
   prefix: "{{ .config.prefix }}"
   google:
-    projectID: "{{ .gcsm.infra.crossplane.project_id }}"
-    hostname: grafana.{{ .gcsm.infra.dns.int_domain }}
+    projectID: "{{ .toutput.crossplane.project_id }}"
+    hostname: grafana.{{ .toutput.dns.int_domain }}
     gateway:
       name: google-gateway-internal
       namespace: google-gateway
   datasources:
     loki:
-      hostname: "{{ .gcsm.applications.loki.loki_hostname }}"
+      hostname: "{{ .toutput.loki.loki_hostname }}"
     prometheus:
-      hostname: "{{ .gcsm.applications.prometheus.prometheus_hostname }}"
+      hostname: "{{ .toutput.prometheus.prometheus_hostname }}"
