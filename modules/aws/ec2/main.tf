@@ -63,8 +63,8 @@ resource "aws_instance" "ec2" {
   root_block_device {
     volume_size = var.volume_size
     volume_type = var.volume_type
-    encrypted = var.kms_key_id != null ? true : false
-    kms_key_id = var.kms_key_id
+    encrypted = var.kms_key_id != "" ? true : false
+    kms_key_id = var.kms_key_id != "" ? var.kms_key_id : null
   }
 
   tags = {

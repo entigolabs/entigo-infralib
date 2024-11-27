@@ -29,3 +29,9 @@ variable "multi_region" {
   nullable = true
   default  = true
 }
+
+variable "telemetry_extra_encryption_context" {
+  type     = list(string)
+  nullable = false
+  default  = []
+}

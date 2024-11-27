@@ -42,8 +42,8 @@ locals {
             volume_size           = var.eks_main_volume_size
             volume_iops           = var.eks_main_volume_iops
             volume_type           = var.eks_main_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -68,8 +68,8 @@ locals {
             volume_size           = var.eks_mainarm_volume_size
             volume_iops           = var.eks_mainarm_volume_iops
             volume_type           = var.eks_mainarm_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -104,8 +104,8 @@ locals {
             volume_size           = var.eks_spot_volume_size
             volume_iops           = var.eks_spot_volume_iops
             volume_type           = var.eks_spot_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -141,8 +141,8 @@ locals {
             volume_size           = var.eks_mon_volume_size
             volume_iops           = var.eks_mon_volume_iops
             volume_type           = var.eks_mon_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -178,8 +178,8 @@ locals {
             volume_size           = var.eks_tools_volume_size
             volume_iops           = var.eks_tools_volume_iops
             volume_type           = var.eks_tools_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -214,8 +214,8 @@ locals {
             volume_size           = var.eks_db_volume_size
             volume_iops           = var.eks_db_volume_iops
             volume_type           = var.eks_db_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -348,7 +348,7 @@ module "eks" {
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = var.eks_cluster_public
   cluster_enabled_log_types       = var.cluster_enabled_log_types
-  cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id
+  cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
