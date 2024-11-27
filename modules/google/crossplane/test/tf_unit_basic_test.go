@@ -64,7 +64,9 @@ func testTerraformCrossplane(t *testing.T, envName string, options *terraform.Op
 		googleServiceAccountId = truncateString(fmt.Sprintf("crossplane-%s-%s", envName, prefix), 28)
 	}
 
-	assert.Equal(t, outputs["service_account_email"], fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject), "Wrong service_account_email returned")
+	googleServiceAccountEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, googleProject)
+
+	assert.Equal(t, outputs["service_account_email"], googleServiceAccountEmail, "Wrong service_account_email returned")
 	defer destroyFunc() // Defer needs to be called in outermost function
 }
 
