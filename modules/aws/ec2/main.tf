@@ -64,7 +64,7 @@ resource "aws_instance" "ec2" {
     volume_size = var.volume_size
     volume_type = var.volume_type
     encrypted = var.kms_key_id != "" ? true : false
-    kms_key_id = var.kms_key_id != "" ? var.kms_key_id : null
+    kms_key_id = var.kms_key_id != "" ? data.aws_kms_key.alias[0].arn : null
   }
 
   tags = {
