@@ -45,7 +45,6 @@ module "kms_telemetry" {
           ], var.telemetry_extra_encryption_context)
         }
       ]
-      
     }
   ]
   
@@ -91,6 +90,76 @@ module "kms_data" {
   enable_default_policy                  = true
   key_owners                             = [data.aws_iam_session_context.current.issuer_arn]
   key_service_roles_for_autoscaling      = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+  
+  key_statements = [
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringLike"
+          variable = "aws:PrincipalArn"
+          values = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+          ]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringLike"
+          variable = "aws:PrincipalArn"
+          values = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+          ]
+        },
+        {
+          test     = "Bool"
+          variable = "kms:GrantIsForAWSResource"
+          values = [
+            "true"
+          ]
+        }
+      ]
+    }
+  ]
+  
+  
   aliases = ["${var.prefix}/data"]
 
   tags = {
