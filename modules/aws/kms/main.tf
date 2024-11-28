@@ -117,7 +117,40 @@ module "kms_data" {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
           values = [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-*-ebs-csi"
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+          ]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+        }
+      ]
+    
+      actions = [      
+        "kms:CreateGrant"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringLike"
+          variable = "aws:PrincipalArn"
+          values = [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+          ]
+        },
+        {
+          test     = "Bool"
+          variable = "kms:GrantIsForAWSResource"
+          values = [
+            "true"
           ]
         }
       ]
