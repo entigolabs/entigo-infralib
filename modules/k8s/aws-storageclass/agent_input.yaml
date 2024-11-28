@@ -1,0 +1,2 @@
+global:
+  kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
