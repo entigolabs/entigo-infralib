@@ -1,2 +1,1 @@
-policy_prefix: |
-  {{ config.prefix }}-*
+policy_prefix: "{{ config.prefix }}-*"
