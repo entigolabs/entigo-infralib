@@ -420,6 +420,9 @@ module "eks" {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({
         controller : {
+          volumeModificationFeature: {
+                enabled: true
+          },
           tolerations : [
             {
               key : "tools",

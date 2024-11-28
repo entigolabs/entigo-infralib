@@ -131,7 +131,9 @@ module "kms_data" {
       ]
     
       actions = [      
-        "kms:CreateGrant"
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
       ]
 
       resources = [
