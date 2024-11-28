@@ -96,7 +96,7 @@ module "kms_data" {
       principals = [
         {
           type        = "AWS"
-          identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+          identifiers = ["*"]
         }
       ]
     
@@ -126,7 +126,7 @@ module "kms_data" {
       principals = [
         {
           type        = "AWS"
-          identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+          identifiers = ["*"]
         }
       ]
     
