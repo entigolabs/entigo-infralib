@@ -1,1 +1,1 @@
-policy_prefix: "{{ .toutput.vpc.vpc_id }}-*"
+policy_prefix: "{{ config.prefix }}-*"
