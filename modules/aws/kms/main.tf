@@ -12,7 +12,7 @@ module "kms_telemetry" {
   key_usage               = "ENCRYPT_DECRYPT"
   multi_region            = var.multi_region
   enable_default_policy                  = true
-  key_owners                             = [data.aws_caller_identity.current.arn]
+  key_owners                             = [data.aws_iam_session_context.current.issuer_arn]
   
   key_statements = [
     {
@@ -69,7 +69,7 @@ module "kms_config" {
   key_usage               = "ENCRYPT_DECRYPT"
   multi_region            = var.multi_region
   enable_default_policy                  = true
-  key_owners                             = [data.aws_caller_identity.current.arn]
+  key_owners                             = [data.aws_iam_session_context.current.issuer_arn]
   aliases = ["${var.prefix}/config"]
 
   tags = {
@@ -89,7 +89,7 @@ module "kms_data" {
   key_usage               = "ENCRYPT_DECRYPT"
   multi_region            = var.multi_region
   enable_default_policy                  = true
-  key_owners                             = [data.aws_caller_identity.current.arn]
+  key_owners                             = [data.aws_iam_session_context.current.issuer_arn]
   key_service_roles_for_autoscaling      = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
   aliases = ["${var.prefix}/data"]
 
