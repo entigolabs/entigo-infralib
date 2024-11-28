@@ -12,6 +12,12 @@ variable "mode" {
   default  = "kms"
 }
 
+variable "policy_prefix" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "deletion_window_in_days" {
   type     = number
   nullable = true
