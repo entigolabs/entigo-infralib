@@ -5,7 +5,5 @@ public_subnets: |
   [{{ .toutput.vpc.public_subnets }}]
 eks_api_access_cidrs: |
   [{{ .toutput.vpc.private_subnet_cidrs }}]
-cloudwatch_log_group_kms_key_id: |
-  {{ .toptout.kms.telemetry_alias_arn }}
-node_encryption_kms_key_arn: |
-  {{ .toptout.kms.data_alias_arn }}
+cloudwatch_log_group_kms_key_id: "{{ .toptout.kms.telemetry_alias_arn }}"
+node_encryption_kms_key_arn: "{{ .toptout.kms.data_alias_arn }}"
