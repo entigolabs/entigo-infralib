@@ -16,6 +16,7 @@ global:
     account: ""
     clusterOIDC: ""
     region: ""
+    kmsKeyId: ""
 
 mimir-distributed:
   fullnameOverride: mimir

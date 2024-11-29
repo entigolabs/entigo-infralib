@@ -41,3 +41,9 @@ variable "telemetry_extra_encryption_context" {
   nullable = false
   default  = []
 }
+
+variable "telemetry_extra_bucket_roles" {
+  type     = list(string)
+  nullable = false
+  default  = ["mimir", "loki"]
+}

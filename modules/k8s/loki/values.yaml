@@ -17,6 +17,7 @@ global:
     account: ""
     clusterOIDC: ""
     region: ""
+    kmsKeyId: ""
 
 loki:
   fullnameOverride: loki
