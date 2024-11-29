@@ -54,7 +54,7 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
-	bucketName := fmt.Sprintf("%s-logs", namespaceName)
+	bucketName := fmt.Sprintf("%s-metrics", namespaceName)
 	setValues["global.bucketName"] = bucketName
 
 	switch cloudProvider {
@@ -71,7 +71,11 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		setValues["mimir-distributed.gateway.ingress.hosts[0].host"] = fmt.Sprintf("%s.%s", releaseName, hostName)
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].path"] = "/"
 		setValues["mimir-distributed.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
-
+		
+		if envName == "biz" {
+			telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn") 
+			setValues["global.aws.kmsKeyId"] = telemetry_alias_arn
+		}
 		gatewayName = "mimir-gateway"
 
 	case "google":

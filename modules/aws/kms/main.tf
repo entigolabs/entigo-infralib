@@ -45,6 +45,67 @@ module "kms_telemetry" {
           ], var.telemetry_extra_encryption_context)
         }
       ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringLike"
+          variable = "aws:PrincipalArn"
+          values = [for role in var.telemetry_extra_bucket_roles : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${role}"]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringLike"
+          variable = "aws:PrincipalArn"
+          values = [for role in var.telemetry_extra_bucket_roles : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${role}"]
+        },
+        {
+          test     = "Bool"
+          variable = "kms:GrantIsForAWSResource"
+          values = [
+            "true"
+          ]
+        }
+      ]
     }
   ]
   
