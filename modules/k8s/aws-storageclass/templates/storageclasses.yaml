@@ -1,4 +1,4 @@
-{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp2-retain")) }}
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.sc_prefix "gp2-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -6,7 +6,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
-  name: {{ .Values.global.prefix }}gp2-retain
+  name: {{ .Values.global.sc_prefix }}gp2-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
@@ -24,7 +24,7 @@ allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 {{- end }}
 ---
-{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp2-no-retain")) }}
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.sc_prefix "gp2-no-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -32,7 +32,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
-  name: {{ .Values.global.prefix }}gp2-no-retain
+  name: {{ .Values.global.sc_prefix }}gp2-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp2
@@ -48,7 +48,7 @@ allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 {{- end }}
 ---
-{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp3")) }}
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.sc_prefix "gp3")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -56,7 +56,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "true"
-  name: {{ .Values.global.prefix }}gp3
+  name: {{ .Values.global.sc_prefix }}gp3
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3
@@ -72,7 +72,7 @@ allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 {{- end }}
 ---
-{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.prefix "gp3-no-retain")) }}
+{{- if not (lookup "storage.k8s.io/v1" "StorageClass" "" (printf "%s%s" .Values.global.sc_prefix "gp3-no-retain")) }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -80,7 +80,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: Prune=false
     storageclass.kubernetes.io/is-default-class: "false"
-  name: {{ .Values.global.prefix }}gp3-no-retain
+  name: {{ .Values.global.sc_prefix }}gp3-no-retain
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: gp3

@@ -42,8 +42,8 @@ locals {
             volume_size           = var.eks_main_volume_size
             volume_iops           = var.eks_main_volume_iops
             volume_type           = var.eks_main_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -68,8 +68,8 @@ locals {
             volume_size           = var.eks_mainarm_volume_size
             volume_iops           = var.eks_mainarm_volume_iops
             volume_type           = var.eks_mainarm_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -104,8 +104,8 @@ locals {
             volume_size           = var.eks_spot_volume_size
             volume_iops           = var.eks_spot_volume_iops
             volume_type           = var.eks_spot_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -141,8 +141,8 @@ locals {
             volume_size           = var.eks_mon_volume_size
             volume_iops           = var.eks_mon_volume_iops
             volume_type           = var.eks_mon_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -178,8 +178,8 @@ locals {
             volume_size           = var.eks_tools_volume_size
             volume_iops           = var.eks_tools_volume_iops
             volume_type           = var.eks_tools_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -214,8 +214,8 @@ locals {
             volume_size           = var.eks_db_volume_size
             volume_iops           = var.eks_db_volume_iops
             volume_type           = var.eks_db_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != null ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn
+            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
         }
@@ -303,9 +303,10 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.39.0"
+  version               = "5.48.0"
   role_name             = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
+  ebs_csi_kms_cmk_ids = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
   oidc_providers = {
     ex = {
       provider_arn               = module.eks.oidc_provider_arn
@@ -320,7 +321,7 @@ module "ebs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.39.0"
+  version               = "5.48.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -348,7 +349,7 @@ module "eks" {
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = var.eks_cluster_public
   cluster_enabled_log_types       = var.cluster_enabled_log_types
-  cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id
+  cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
@@ -420,6 +421,9 @@ module "eks" {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({
         controller : {
+          volumeModificationFeature: {
+                enabled: true
+          },
           tolerations : [
             {
               key : "tools",

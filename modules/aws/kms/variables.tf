@@ -12,6 +12,12 @@ variable "mode" {
   default  = "kms"
 }
 
+variable "policy_prefix" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "deletion_window_in_days" {
   type     = number
   nullable = true
@@ -28,4 +34,10 @@ variable "multi_region" {
   type     = bool
   nullable = true
   default  = true
+}
+
+variable "telemetry_extra_encryption_context" {
+  type     = list(string)
+  nullable = false
+  default  = []
 }

@@ -108,5 +108,5 @@ variable "flow_log_cloudwatch_log_group_retention_in_days" {
 
 variable "flow_log_cloudwatch_log_group_kms_key_id" {
   type = string
-  default = null
+  default = ""
 }
