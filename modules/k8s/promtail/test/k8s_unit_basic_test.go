@@ -57,10 +57,9 @@ func testK8sPromtail(t *testing.T, contextName, envName, hostName, cloudProvider
 	case "google":
 		projectID := strings.ToLower(os.Getenv("GOOGLE_PROJECT"))
 		lokiHostname = commonGoogle.GetSecret(t, fmt.Sprintf("projects/%s/secrets/entigo-infralib-runner-main-%s-loki_hostname/versions/latest", projectID, envName))
-
 	}
 
-	setValues["promtail.config.clients[0].url"] = fmt.Sprintf("%s/loki/api/v1/push", lokiHostname)
+	setValues["promtail.config.clients[0].url"] = fmt.Sprintf("http://%s/loki/api/v1/push", lokiHostname)
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 

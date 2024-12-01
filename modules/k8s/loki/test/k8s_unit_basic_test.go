@@ -45,8 +45,6 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 	namespaceName := fmt.Sprintf("loki-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
-	
-
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("loki-%s-%s", envName, prefix)
@@ -84,9 +82,9 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 		setValues["loki.gateway.ingress.hosts[0].paths[0].pathType"] = "Prefix"
 
 		gatewayName = "loki-gateway"
-		
+
 		if envName == "biz" {
-			telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn") 
+			telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn")
 			setValues["global.aws.kmsKeyId"] = telemetry_alias_arn
 		}
 
