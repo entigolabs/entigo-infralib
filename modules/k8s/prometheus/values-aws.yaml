@@ -1,3 +1,20 @@
 global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
+
+prometheus:
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: "alb"
+      annotations:
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
+        alb.ingress.kubernetes.io/group.name: internal
+        alb.ingress.kubernetes.io/healthcheck-path: /
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+        alb.ingress.kubernetes.io/scheme: internal
+        alb.ingress.kubernetes.io/success-codes: 200-499
+        alb.ingress.kubernetes.io/target-type: ip
+      hosts:
+        - prometheus
+      tls: []
