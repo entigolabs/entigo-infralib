@@ -24,7 +24,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = false
+      spot               = var.gke_main_spot_nodes
     },
     {
       name               = "mainarm"
@@ -40,7 +40,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = false
+      spot               = var.gke_mainarm_spot_nodes
     },
     {
       name               = "spot"
@@ -72,7 +72,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = false
+      spot               = var.gke_mon_spot_nodes
     },
     {
       name               = "tools"
@@ -88,7 +88,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = false
+      spot               = var.gke_tools_spot_nodes
     },
     {
       name               = "db"
@@ -104,7 +104,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = false
+      spot               = var.gke_db_spot_nodes
     }
   ]
 

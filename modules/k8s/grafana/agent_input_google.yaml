@@ -1,5 +1,4 @@
 global:
-  prefix: "{{ .config.prefix }}"
   google:
     projectID: "{{ .toutput.crossplane.project_id }}"
     hostname: grafana.{{ .toutput.dns.int_domain }}

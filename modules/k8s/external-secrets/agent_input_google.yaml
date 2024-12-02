@@ -1,5 +1,6 @@
-google:
-  projectID: "{{ .toutput.crossplane.project_id }}"
-  region: "{{ .toutput.gke.region }}"
-  cluster:
-    name: "{{ .toutput.gke.cluster_name }}"
+global:
+  google:
+    projectID: "{{ .toutput.crossplane.project_id }}"
+    region: "{{ .toutput.gke.region }}"
+    cluster:
+      name: "{{ .toutput.gke.cluster_name }}"

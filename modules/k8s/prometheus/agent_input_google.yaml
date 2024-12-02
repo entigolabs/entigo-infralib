@@ -1,5 +1,4 @@
 global:
-  prefix: "{{ .config.prefix }}"
   google:
     hostname: prometheus.{{ .toutput.dns.int_domain }}
     gateway:
