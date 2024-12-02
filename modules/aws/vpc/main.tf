@@ -57,7 +57,7 @@ module "vpc" {
   flow_log_cloudwatch_log_group_name_prefix       = "${var.prefix}/vpc-flow-log/"
   flow_log_max_aggregation_interval               = var.flow_log_max_aggregation_interval
   flow_log_cloudwatch_log_group_retention_in_days = var.flow_log_cloudwatch_log_group_retention_in_days
-  flow_log_cloudwatch_log_group_kms_key_id = var.flow_log_cloudwatch_log_group_kms_key_id
+  flow_log_cloudwatch_log_group_kms_key_id = var.flow_log_cloudwatch_log_group_kms_key_id != "" ? var.flow_log_cloudwatch_log_group_kms_key_id : null
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"

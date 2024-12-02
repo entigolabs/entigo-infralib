@@ -23,7 +23,13 @@ spec:
     serverSideEncryptionConfiguration:
       rules:
       - applyServerSideEncryptionByDefault:
+          {{- if .Values.global.aws.kmsKeyId }}
+          kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
+          sseAlgorithm: aws:kms
+          {{- else }}
           sseAlgorithm: AES256
+          {{- end }}
+        bucketKeyEnabled: true
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 

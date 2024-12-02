@@ -1,0 +1,1 @@
+policy_prefix: "{{ config.prefix }}-*"

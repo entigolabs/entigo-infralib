@@ -83,6 +83,11 @@ func testK8sLoki(t *testing.T, contextName, envName, valuesFile, hostName, cloud
 
 		gatewayName = "loki-gateway"
 
+		if envName == "biz" {
+			telemetry_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/telemetry_alias_arn")
+			setValues["global.aws.kmsKeyId"] = telemetry_alias_arn
+		}
+
 	case "google":
 		gatewayNamespace = "google-gateway"
 

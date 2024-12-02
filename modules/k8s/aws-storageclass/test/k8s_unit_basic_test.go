@@ -6,12 +6,15 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
+  
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/gruntwork-io/terratest/modules/aws"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 )
+
+const bucketName = "infralib-modules-aws-kms-tf"
 
 func TestK8sAwsStorageclassBiz(t *testing.T) {
 	testK8sAwsStorageclass(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "biz")
@@ -32,10 +35,16 @@ func testK8sAwsStorageclass(t *testing.T, contextName string, envName string) {
 	namespaceName := fmt.Sprintf("aws-storageclass-%s", envName)
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
+	
+	if envName == "biz" {
+	 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+		data_alias_arn := aws.GetParameter(t, awsRegion, "/entigo-infralib/runner-main-biz/data_alias_arn") 
+		setValues["global.kmsKeyId"] = data_alias_arn
+	}
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("aws-storageclass-%s-%s", envName, prefix)
-		setValues["global.prefix"] = fmt.Sprintf("%s-", prefix)
+		setValues["global.sc_prefix"] = fmt.Sprintf("%s-", prefix)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}

@@ -11,6 +11,37 @@ spec:
       {
         "Version": "2012-10-17",
         "Statement": [
+          {{- if .Values.global.aws.kmsKeyId }}
+          {
+              "Action": [
+                  "kms:RevokeGrant",
+                  "kms:ListGrants",
+                  "kms:CreateGrant"
+              ],
+              "Condition": {
+                  "Bool": {
+                      "kms:GrantIsForAWSResource": "true"
+                  }
+              },
+              "Effect": "Allow",
+              "Resource": [
+                "{{ .Values.global.aws.kmsKeyId }}"
+              ]
+          },
+          {
+              "Action": [
+                  "kms:ReEncrypt*",
+                  "kms:GenerateDataKey*",
+                  "kms:Encrypt",
+                  "kms:DescribeKey",
+                  "kms:Decrypt"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "{{ .Values.global.aws.kmsKeyId }}"
+              ]
+          },
+          {{- end }}
           {
             "Effect": "Allow",
             "Action": [
