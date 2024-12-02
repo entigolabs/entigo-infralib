@@ -88,7 +88,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = var.gke_mon_spot_nodes
+      spot               = var.gke_tools_spot_nodes
     },
     {
       name               = "db"
