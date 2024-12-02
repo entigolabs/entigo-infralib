@@ -1,5 +1,4 @@
 global:
-  prefix: "{{ .config.prefix }}"
   bucketName: "{{ .config.prefix }}-loki-logs"
   google:
     hostname: loki.{{ .toutput.dns.int_domain }}
