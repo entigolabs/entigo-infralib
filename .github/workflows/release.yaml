@@ -379,11 +379,9 @@ jobs:
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
-        ./checksums.sh
-        cp checksums.sha256 entigo-infralib-release/checksums.sha256
         cd entigo-infralib-release
-        
-        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }} ${{ steps.get_release_notes.outputs.notes }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
+        ../checksums.sh
+        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }} \n${{ steps.get_release_notes.outputs.notes }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }} \n${{ steps.get_release_notes.outputs.notes }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
 
