@@ -7,3 +7,4 @@ done | sort > checksums.sha256
 find ./providers -maxdepth 1 -mindepth 1 -type f -not -name 'go.*' -not -name 'README.*' -not -name 'test*' | while read -r dir; do
   echo "$(echo $dir | sed 's/^..//'): $(sha256sum $dir | awk '{print $1}')"
 done | sort >> checksums.sha256
+
