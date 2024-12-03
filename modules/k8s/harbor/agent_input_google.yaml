@@ -1,0 +1,14 @@
+global:
+  google:
+    hostname: harbor.{{ .toutput.dns.int_domain }}
+    projectID: "{{ .toutput.crossplane.project_id }}"
+    gateway:
+      name: google-gateway-internal
+      namespace: google-gateway
+    bucket:
+      location: europe-north1
+harbor:
+  persistence:
+    imageChartStorage:
+      gcs:
+        bucket: "{{ .config.prefix }}-harbor"
