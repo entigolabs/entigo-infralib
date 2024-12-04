@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:stable-slim
+FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim
 WORKDIR /app
 ENV KUBECTL_VERSION=v1.29.8 TERRAFORM_VERSION=1.7.5-1 HELM_VERSION=v3.15.4 AWSCLI_VERSION=latest ARGOCD_CLI=v2.11.3
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
