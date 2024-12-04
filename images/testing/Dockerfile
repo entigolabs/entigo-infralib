@@ -9,7 +9,7 @@ ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_
 RUN cd /cache && mkdir /plugin-cache && terraform init && rm -rf /cache 
 
 #RUN apt update && apt -y install golang-go
-RUN wget  --no-verbose https://go.dev/dl/go1.23.4.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz && rm go1.23.4.linux-amd64.tar.gz 
+RUN wget  --no-verbose https://go.dev/dl/go1.23.4.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz && rm go1.23.4.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
@@ -17,4 +17,4 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 COPY *.sh /usr/bin/
 COPY test /app/test
 COPY common /common
-RUN BUILD=1 /usr/bin/entrypoint.sh
+RUN /usr/bin/entrypoint.sh
