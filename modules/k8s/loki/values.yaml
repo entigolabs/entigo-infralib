@@ -258,6 +258,7 @@ loki:
         grafana_dashboard: "1"
 
   backend:
+    replicas: 2
     affinity: |
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
