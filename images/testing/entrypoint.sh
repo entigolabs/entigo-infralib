@@ -4,17 +4,10 @@ then
 
   if [ ! -f go.mod ]
   then
-          go mod init github.com/entigolabs/entigo-infralib
-          if [ "$BUILD" != "1" ]
-          then
-              go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
-          fi
-          # testify and spew must use version used by terratest
-          go get github.com/davecgh/go-spew@v1.1.1
-          go get github.com/gruntwork-io/terratest@v0.47.2
-          go get github.com/stretchr/testify/assert@v1.9.0
-          go get github.com/sergi/go-diff@v1.3.1
-          go mod tidy
+    go mod init github.com/entigolabs/entigo-infralib
+    go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
+    go mod download -x
+    go mod tidy
   fi
   if [ "$ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS" == "true" ]
   then
