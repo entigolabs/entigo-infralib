@@ -18,6 +18,11 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/zclconf/go-cty v1.15.1
 	google.golang.org/genproto v0.0.0-20241202173237-19429a94021a
+	cloud.google.com/go/secretmanager v1.14.2
+	github.com/gorilla/mux v1.7.3
+	github.com/onsi/ginkgo v1.12.1
+	github.com/nxadm/tail v1.4.4
+	github.com/fsnotify/fsnotify v1.4.9
 )
 
 require (
