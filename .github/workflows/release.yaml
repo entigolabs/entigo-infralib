@@ -390,7 +390,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released ${{ steps.get_latest_release.outputs.new_version }} ${{ env.RELEASE_URL }}'
+        SLACK_MESSAGE: 'Released ${{ steps.get_latest_release.outputs.new_version }} ${{ env.RELEASE_URL }} ${{ steps.get_release_notes.outputs.notes }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
