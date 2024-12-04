@@ -1,7 +1,7 @@
 global:
   bucketName: "{{ .config.prefix }}-mimir-metrics"
   google:
-    hostname: loki.{{ .toutput.dns.int_domain }}
+    hostname: mimir.{{ .toutput.dns.int_domain }}
     projectID: "{{ .toutput.crossplane.project_id }}"
     gateway:
       name: google-gateway-internal
