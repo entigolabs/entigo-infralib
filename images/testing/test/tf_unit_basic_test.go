@@ -1,18 +1,18 @@
 package test
 
 import (
-	"os"
-	"strings"
-	"testing"
+	 "os"
+	 "strings"
+	 "testing"
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/gcp"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
-	"github.com/stretchr/testify/assert"
+	 "github.com/davecgh/go-spew/spew"
+	 "github.com/gruntwork-io/terratest/modules/aws"
+	 "github.com/gruntwork-io/terratest/modules/gcp"
+	 "github.com/gruntwork-io/terratest/modules/helm"
+	 "github.com/gruntwork-io/terratest/modules/k8s"
+	 "github.com/gruntwork-io/terratest/modules/terraform"
+	 "github.com/gruntwork-io/terratest/modules/test-structure"
+	 "github.com/stretchr/testify/assert"
 )
 
 func TestTerraformBasicOne(t *testing.T) {

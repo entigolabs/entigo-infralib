@@ -11,9 +11,9 @@ then
           fi
           # testify and spew must use version used by terratest
           go get github.com/davecgh/go-spew@v1.1.1
-          go get github.com/gruntwork-io/terratest@v0.43.12
-          go get github.com/stretchr/testify/assert@v1.8.1
-          go get github.com/sergi/go-diff@v1.0.0
+          go get github.com/gruntwork-io/terratest@v0.47.2
+          go get github.com/stretchr/testify/assert@v1.9.0
+          go get github.com/sergi/go-diff@v1.3.1
           go mod tidy
   fi
   if [ "$ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS" == "true" ]
