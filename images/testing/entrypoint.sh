@@ -4,9 +4,9 @@ then
 
   if [ ! -f go.mod ]
   then
+    cd /common && go mod download -x && cd /app
     go mod init github.com/entigolabs/entigo-infralib
     go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
-    go mod download -x
     go mod tidy
   fi
   if [ "$ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS" == "true" ]
