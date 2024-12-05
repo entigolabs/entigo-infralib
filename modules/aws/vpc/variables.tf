@@ -8,6 +8,12 @@ variable "vpc_cidr" {
   default  = "10.156.0.0/16"
 }
 
+variable "secondary_cidr_blocks" {
+  type     = list(string)
+  nullable = false
+  default  = []
+}
+
 variable "azs" {
   type     = number
   nullable = false

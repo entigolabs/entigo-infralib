@@ -17,13 +17,14 @@ locals {
 
 
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
-
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
 
   name = var.prefix
   cidr = var.vpc_cidr
+
+  secondary_cidr_blocks = var.secondary_cidr_blocks
 
   azs                 = [for i in range(local.azs) : data.aws_availability_zones.available.names[i]]
   private_subnets     = local.private_subnets
