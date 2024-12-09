@@ -1,4 +1,5 @@
 global:
   prefix: "{{ .config.prefix }}"
   google:
+    externalCertificateMap: "{{ .toutput.dns.pub_zone_id }}"
     internalCertificateMap: "{{ .toutput.dns.int_zone_id }}"

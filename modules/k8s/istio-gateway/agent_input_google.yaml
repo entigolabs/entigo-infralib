@@ -1,0 +1,4 @@
+global:
+  global:
+    google:
+      hostname: "{{ .toutput.dns.pub_domain }}"
