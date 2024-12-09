@@ -62,6 +62,21 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
+PIDS=""
+for line in $(gcloud -q run jobs list --uri); do
+  gcloud run jobs delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION -q $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete run jobs. $FAIL"
+  exit 1
+fi
+
 delete_cluster() {
   local cluster_uri=$1
   local max_retries=20
@@ -96,21 +111,6 @@ for p in $PIDS; do
 done
 if [ "$FAIL" -ne 0 ]; then
   echo "FAILED to delete container clusters. $FAIL"
-  exit 1
-fi
-
-PIDS=""
-for line in $(gcloud -q run jobs list --uri); do
-  gcloud run jobs delete --project $GOOGLE_PROJECT --region $GOOGLE_REGION -q $line &
-  PIDS="$PIDS $!"
-done
-FAIL=0
-for p in $PIDS; do
-  wait $p || let "FAIL+=1"
-  echo $p $FAIL
-done
-if [ "$FAIL" -ne 0 ]; then
-  echo "FAILED to delete run jobs. $FAIL"
   exit 1
 fi
 
@@ -365,7 +365,7 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io" | while read -r ZONE_NAME; do
+gcloud dns managed-zones list --format="get(name)" | grep -vEx "gcp-infralib-entigo-io|agent-gcp-infralib-entigo-io" | while read -r ZONE_NAME; do
   gcloud dns record-sets list --zone=$ZONE_NAME --format="get(name,type)" | while read -r RECORD_NAME TYPE; do
     OUTPUT=$(gcloud dns record-sets delete --zone=$ZONE_NAME --type=$TYPE --project=$GOOGLE_PROJECT -q $RECORD_NAME 2>&1)
     if ! echo "$OUTPUT" | grep -q "HTTPError 400: The resource record set .* is invalid because a zone must contain exactly one resource record set of type .* at the apex."; then
