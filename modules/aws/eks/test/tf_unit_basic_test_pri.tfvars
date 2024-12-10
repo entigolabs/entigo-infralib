@@ -9,3 +9,4 @@ eks_main_min_size        = 4
 eks_main_desired_size    = 0
 eks_main_max_size            = 8
 eks_nodeport_access_cidrs   = ["10.10.10.10/32"]
+iam_admin_role = "AWSReservedSSO_AdministratorAccess_.*"

@@ -13,6 +13,7 @@ eks_mainarm_desired_size     = 1
 eks_mainarm_max_size         = 2
 eks_tools_max_size           = 4
 eks_mainarm_instance_types   = ["t4g.micro"]
+iam_admin_role = "AWSReservedSSO_AdministratorAccess_.*"
 eks_managed_node_groups_extra = {
   altarm = {
         desired_size    = 1
