@@ -5,7 +5,7 @@ variable "prefix" {
 variable "crossplane_service_account_id" {
   type        = string
   description = "Google service account ID for Crossplane"
-  default     = "crossplane"
+  default     = ""
 }
 
 variable "kubernetes_service_account" {
