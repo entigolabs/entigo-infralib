@@ -34,7 +34,7 @@ variable "eks_cluster_version" {
 variable "iam_admin_role" {
   type     = string
   nullable = false
-  default  = "AWSReservedSSO_AdministratorAccess_.*" #Sometimes "AWSReservedSSO_AWSAdministratorAccess_.*" ?
+  default  = "" #Usually "AWSReservedSSO_AWSAdministratorAccess_.*" or "AWSReservedSSO_AdministratorAccess_.*"
 }
 
 variable "aws_auth_user" {

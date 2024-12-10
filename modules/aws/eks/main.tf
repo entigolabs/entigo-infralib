@@ -1,11 +1,11 @@
 locals {
-  auth_roles = [
+  auth_roles = var.iam_admin_role != "" ? [
     {
-      rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles.arns), 0), "//aws-reserved.*/AWSReservedSSO/", "/AWSReservedSSO")
+      rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles[0].arns), 0), "//aws-reserved.*/AWSReservedSSO/", "/AWSReservedSSO")
       username = "aws-admin"
       groups   = ["system:masters"]
     }
-  ]
+  ] : []
   
   auth_users = var.aws_auth_user != "" ? [
     {
