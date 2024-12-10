@@ -1,21 +1,13 @@
 // crossplane-core service account
-# resource "google_service_account_iam_member" "crossplane_editor" {
-#   service_account_id = google_service_account.crossplane.id
-#   member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-#   role    = "roles/editor"
-# }
+locals {
+  crossplane_service_account_id = var.crossplane_service_account_id != "" ? substr(var.crossplane_service_account_id, 0, 28) : substr(var.prefix, 0, 28)
+}
 
 resource "google_service_account_iam_member" "crossplane_workload_identity_user" {
   service_account_id = google_service_account.crossplane.id
   member             = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
   role               = "roles/iam.workloadIdentityUser"
 }
-
-# resource "google_service_account_iam_member" "crossplane_security_admin" {
-#   service_account_id = google_service_account.crossplane.id
-#   member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-#   role    = "roles/iam.securityAdmin"
-# }
 
 resource "google_project_iam_member" "crossplane_editor" {
   project = data.google_client_config.this.project
@@ -36,7 +28,7 @@ resource "google_project_iam_member" "crossplane_security_admin" {
 }
 
 resource "google_service_account" "crossplane" {
-  account_id   = substr(var.crossplane_service_account_id, 0, 28)
+  account_id   = local.crossplane_service_account_id
   display_name = "Crossplane service account"
 }
 

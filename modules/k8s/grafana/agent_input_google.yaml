@@ -10,3 +10,7 @@ global:
       hostname: "{{ .toutput.loki.loki_hostname }}"
     prometheus:
       hostname: "{{ .toutput.prometheus.prometheus_hostname }}"
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://grafana.{{ .toutput.dns.int_domain }}
