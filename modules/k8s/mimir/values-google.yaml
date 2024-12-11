@@ -29,6 +29,7 @@ mimir-distributed:
       # This configures how the store-gateway synchronizes blocks stored in the bucket. It uses Minio by default for getting started (configured via flags) but this should be changed for production deployments.
       blocks_storage:
         backend: gcs
+        storage_prefix: blocks
         bucket_store:
           {{- if index .Values "chunks-cache" "enabled" }}
           chunks_cache:
@@ -158,6 +159,7 @@ mimir-distributed:
       {{- if index .Values "metadata-cache" "enabled" }}
       ruler_storage:
         backend: gcs
+        storage_prefix: ruler
         gcs:
           bucket_name: {{ .Values.global.bucketName }}
           
@@ -170,6 +172,17 @@ mimir-distributed:
 
       runtime_config:
         file: /var/{{ include "mimir.name" . }}/runtime.yaml
+
+      alertmanager:
+        data_dir: /data
+        enable_api: true
+        external_url: /alertmanager
+
+      alertmanager_storage:
+        backend: gcs
+        storage_prefix: alertmanager
+        gcs:
+          bucket_name: {{ .Values.global.bucketName }}
 
       server:
         grpc_server_max_concurrent_streams: 1000 
