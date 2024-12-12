@@ -1,5 +1,6 @@
 # entigo-infralib
 
+A guide to get started with Infralib and Infralib Agent can be found [here](https://infralib-quickstart.dev.entigo.dev/).
 
 Usually we release once per day. During the evening the entigo-infralib AWS and Google Cloud accounts are nuked(Nuke action). In the morning latest release is installed and tests executed(Stable action) and after that it is upgraded to "main" branch and tests are executed. If the tests are passed and main is not the same state as last release, then a new release is created.
 
