@@ -162,6 +162,44 @@ module "kms_data" {
       ]
     
       actions = [      
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:CreateGrant",
+                "kms:DescribeKey"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringEquals"
+          variable = "kms:ViaService"
+          values = [
+             "ec2.eu-west-1.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
         "kms:Encrypt*",
         "kms:Decrypt*",
         "kms:ReEncrypt*",
