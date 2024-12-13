@@ -106,6 +106,45 @@ module "kms_telemetry" {
           ]
         }
       ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:CreateGrant",
+                "kms:ListGrants",
+                "kms:DescribeKey"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringEquals"
+          variable = "kms:ViaService"
+          values = [
+             "rds.us-east-1.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        }
+      ]
     }
   ]
   
@@ -252,6 +291,45 @@ module "kms_data" {
           variable = "kms:GrantIsForAWSResource"
           values = [
             "true"
+          ]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+    
+      actions = [      
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:CreateGrant",
+                "kms:ListGrants",
+                "kms:DescribeKey"
+      ]
+
+      resources = [
+        "*",
+      ]
+      
+      conditions = [
+        {
+          test     = "StringEquals"
+          variable = "kms:ViaService"
+          values = [
+             "rds.us-east-1.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
           ]
         }
       ]
