@@ -37,7 +37,9 @@ RUN ARCH=`arch` && CLOUD_SDK_VERSION="499.0.0" && cd / && curl -O https://dl.goo
     rm -rf google-cloud-sdk/bin/anthoscli && \
     git config --system credential.'https://source.developers.google.com'.helper gcloud.sh && \
     gcloud --version
-    
+
+COPY --from=entigolabs/entigo-infralib-agent /usr/bin/ei-agent /usr/bin/ei-agent
+
 #SEE https://entigo.atlassian.net/browse/RD-76
 COPY *.sh /usr/bin/
 
