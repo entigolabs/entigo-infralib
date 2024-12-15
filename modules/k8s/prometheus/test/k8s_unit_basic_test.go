@@ -45,6 +45,7 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("prometheus-%s-%s", envName, prefix)
+		setValues["global.installPrometheusOperatorCRDs"] = "false"
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
