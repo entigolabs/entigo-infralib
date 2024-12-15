@@ -1,13 +1,19 @@
 global:
+  prefix: ""
   cloudProvider: ""
   providerConfigRefName: ""
-  prefix: ""
+  installPrometheusOperatorCRDs: true
 
   google:
     hostname: ""
     gateway:
       name: google-gateway-external
       namespace: google-gateway
+
+prometheus-operator-crds:
+  crds:
+    annotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=true
 
 prometheus:
   fullnameOverride: prometheus
