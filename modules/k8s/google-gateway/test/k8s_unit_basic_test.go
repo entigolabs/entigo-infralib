@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestK8sGoogleGatewayBiz(t *testing.T) {
-// 	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
-// }
+func TestK8sGoogleGatewayBiz(t *testing.T) {
+	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
+}
 
 func TestK8sGoogleGatewayPri(t *testing.T) {
-	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "priabc")
+	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
 }
 
 func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
