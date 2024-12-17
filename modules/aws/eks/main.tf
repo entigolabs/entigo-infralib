@@ -361,7 +361,7 @@ module "eks" {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.11.3-eksbuild.2"
+      addon_version               = var.coredns_addon_version
       configuration_values = jsonencode({
         tolerations : [
           {
@@ -396,12 +396,12 @@ module "eks" {
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.30.6-eksbuild.3"
+      addon_version               = var.kube_proxy_addon_version
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.19.0-eksbuild.1"
+      addon_version               = var.vpc_cni_addon_version
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
@@ -416,7 +416,7 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.37.0-eksbuild.1"
+      addon_version               = var.ebs_csi_addon_version
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({

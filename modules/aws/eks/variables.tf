@@ -317,3 +317,23 @@ variable "node_encryption_kms_key_arn" {
   type = string
   default = ""
 }
+
+variable "coredns_addon_version" {
+  type = string
+  default = "v1.11.3-eksbuild.2"
+}
+
+variable "kube_proxy_addon_version" {
+  type = string
+  default = "v1.30.6-eksbuild.3"
+}
+
+variable "vpc_cni_addon_version" {
+  type = string
+  default = "v1.19.0-eksbuild.1"
+}
+
+variable "ebs_csi_addon_version" {
+  type = string
+  default = "v1.37.0-eksbuild.1"
+}
