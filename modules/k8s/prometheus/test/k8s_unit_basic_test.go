@@ -43,6 +43,8 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
+	setValues["global.installPrometheusOperatorCRDs"] = "true"
+
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("prometheus-%s-%s", envName, prefix)
 		setValues["global.installPrometheusOperatorCRDs"] = "false"

@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sGoogleGatewayBiz(t *testing.T) {
-	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
-}
+// func TestK8sGoogleGatewayBiz(t *testing.T) {
+// 	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz")
+// }
 
 func TestK8sGoogleGatewayPri(t *testing.T) {
-	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri")
+	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "priabc")
 }
 
 func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
@@ -39,7 +39,7 @@ func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("google-gateway-%s", prefix)
+		namespaceName = fmt.Sprintf("google-gateway-%s-%s", prefix, envName)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}

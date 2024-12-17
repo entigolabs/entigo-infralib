@@ -2,7 +2,7 @@ global:
   prefix: ""
   cloudProvider: ""
   providerConfigRefName: ""
-  installPrometheusOperatorCRDs: true
+  installPrometheusOperatorCRDs: false
 
   google:
     hostname: ""
