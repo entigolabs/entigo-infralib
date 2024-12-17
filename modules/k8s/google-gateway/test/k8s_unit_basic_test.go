@@ -39,7 +39,7 @@ func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
 	setValues := make(map[string]string)
 
 	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("google-gateway-%s", prefix)
+		namespaceName = fmt.Sprintf("google-gateway-%s-%s", prefix, envName)
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
