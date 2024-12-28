@@ -318,6 +318,12 @@ variable "node_encryption_kms_key_arn" {
   default = ""
 }
 
+variable "node_ssh_key_pair_name" {
+  type = string
+  nullable = true
+  default = null
+}
+
 variable "coredns_addon_version" {
   type = string
   default = "v1.11.3-eksbuild.2"
