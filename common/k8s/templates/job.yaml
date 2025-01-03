@@ -8,10 +8,10 @@ spec:
       containers:
         - name: health-check
           image: curlimages/curl:latest
-          command: ['/bin/sh', '-c']
+          command: ["/bin/sh", "-c"]
           args:
             - |
-              max_retries=100
+              max_retries=300
               sleep_time=6
               for i in $(seq 1 $max_retries); do
                 if curl -s -o /dev/null -w "%{http_code}" --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL | grep $SUCCESS_CODE; then

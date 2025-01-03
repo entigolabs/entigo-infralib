@@ -153,13 +153,18 @@ func testK8sMimir(t *testing.T, contextName, envName, valuesFile, hostName, clou
 		t.Fatal("mimir-store-gateway-0 pod error:", err)
 	}
 
+	retries := 100
+	if cloudProvider == "google" && prefix == "runner-main" {
+		retries = 300
+	}
+
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 }

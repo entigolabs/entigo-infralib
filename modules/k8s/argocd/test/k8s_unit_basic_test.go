@@ -124,13 +124,18 @@ func testK8sArgocd(t *testing.T, contextName, valuesFile, envName, hostName, clo
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
 
+	retries := 100
+	if cloudProvider == "google" && prefix == "runner-main" {
+		retries = 300
+	}
+
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s", setValues["argocd.global.domain"])
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s", setValues["argocd.global.domain"])
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 }
