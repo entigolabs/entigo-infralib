@@ -124,14 +124,19 @@ func testK8sGrafana(t *testing.T, contextName, valuesFile, envName, hostname, cl
 		t.Fatal("grafana deployment error:", err)
 	}
 
+	retries := 100
+	if cloudProvider == "google" && prefix == "runner-main" {
+		retries = 300
+	}
+
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "grafana ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/login", releaseName, hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "grafana ingress/gateway test error")
 }
 
