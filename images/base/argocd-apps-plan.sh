@@ -30,7 +30,7 @@ fi
 
 if [ "$ARGOCD_AUTH_TOKEN" != "" ]
 then
-  STATUS=`argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status: \(.status.sync.status) RequiredPruning: \(.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length)"'`
+  STATUS=`argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status: \(.status.sync.status) RequiredPruning: \(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
   if [ $? -ne 0 ]
   then
     echo "Failed to refresh ArgoCD Application $app_name!"
