@@ -28,6 +28,7 @@ variable "subnet_id" {
 
 variable "key_name" {
   type = string
+  default = ""
 }
 
 variable "volume_size" {
