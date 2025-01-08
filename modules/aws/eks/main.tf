@@ -29,6 +29,7 @@ locals {
       max_size        = var.eks_main_max_size
       instance_types  = var.eks_main_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
 
       launch_template_tags = {
@@ -55,6 +56,7 @@ locals {
       max_size        = var.eks_mainarm_max_size
       instance_types  = var.eks_mainarm_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = "AL2_ARM_64"
       launch_template_tags = {
@@ -81,6 +83,7 @@ locals {
       max_size        = var.eks_spot_max_size
       instance_types  = var.eks_spot_instance_types
       capacity_type   = "SPOT"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
 
       taints = [
@@ -118,6 +121,7 @@ locals {
       instance_types  = var.eks_mon_instance_types
       subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
@@ -155,6 +159,7 @@ locals {
       instance_types  = var.eks_tools_instance_types
       subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
@@ -191,6 +196,7 @@ locals {
       max_size        = var.eks_db_max_size
       instance_types  = var.eks_db_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
