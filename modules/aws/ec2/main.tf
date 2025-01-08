@@ -81,7 +81,7 @@ resource "aws_route53_record" "ec2" {
   name = var.route53_name == "thisisundefined" ? var.prefix : var.route53_name
   type = "A"
   ttl = 60
-  records = var.eip ? [aws_eip.ec2[0].public_ip] : [aws_instance.ec2.public_ip]
+  records = var.eip ? [aws_eip.ec2[0].public_ip] : (var.route53_record_private_ip ? [aws_instance.ec2.private_ip] : [aws_instance.ec2.public_ip])
 }
 
 resource "aws_ssm_parameter" "private_dns" {

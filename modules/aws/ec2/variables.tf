@@ -61,6 +61,11 @@ variable "route53_name" {
   default = "thisisundefined"
 }
 
+variable "route53_record_private_ip" {
+  type = bool
+  default = false
+}
+
 variable "user_data" {
   type = string
   default = ""
