@@ -104,3 +104,8 @@ variable "kms_key_id" {
   type = string
   default = ""
 }
+
+variable "iam_instance_profile" {
+  type = string
+  default = ""
+}

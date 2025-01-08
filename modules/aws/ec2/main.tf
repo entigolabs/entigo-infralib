@@ -59,6 +59,7 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
   key_name = var.key_name
+  iam_instance_profile = var.iam_instance_profile
 
   root_block_device {
     volume_size = var.volume_size
