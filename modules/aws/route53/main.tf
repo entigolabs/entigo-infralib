@@ -19,6 +19,10 @@ resource "aws_acm_certificate" "pub" {
   domain_name       = "*.${local.pub_domain}"
   subject_alternative_names = [local.pub_domain]
   validation_method = "DNS"
+  
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_route53_record" "pub-cert" {
@@ -64,6 +68,10 @@ resource "aws_acm_certificate" "int" {
   domain_name       = "*.${local.int_domain}"
   subject_alternative_names = [local.int_domain]
   validation_method = "DNS"
+  
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_route53_record" "int-cert" {
