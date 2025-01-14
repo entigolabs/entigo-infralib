@@ -17,6 +17,7 @@ resource "aws_route53_zone" "pub" {
 resource "aws_acm_certificate" "pub" {
   count = var.create_cert ? 1 : 0
   domain_name       = "*.${local.pub_domain}"
+  subject_alternative_names = [local.pub_domain]
   validation_method = "DNS"
 }
 
@@ -61,6 +62,7 @@ resource "aws_route53_zone" "int-cert" {
 resource "aws_acm_certificate" "int" {
   count = var.create_cert && var.create_private ? 1 : 0
   domain_name       = "*.${local.int_domain}"
+  subject_alternative_names = [local.int_domain]
   validation_method = "DNS"
 }
 
