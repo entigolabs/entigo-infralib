@@ -83,7 +83,7 @@ jobs:
         
   release:   
     runs-on: ubuntu-latest
-    needs: [install_main_aws,install_main_google,install_main_k8s]
+    needs: [install_main_aws,install_main_google]
     name: Release
     steps:
     - name: Checkout code
