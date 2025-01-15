@@ -2,32 +2,24 @@ package test
 
 import (
 	"testing"
-
-	commonAWS "github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/tf"
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-const bucketName = "infralib-modules-cost-alert-root-us-tf-a"
-
-var awsRegion string
-
 func TestCostAlert(t *testing.T) {
-	awsRegion = commonAWS.SetupBucket(t, bucketName)
 	t.Run("Biz", testTerraformCostAlertBiz)
+	t.Run("Pri", testTerraformCostAlertPri)
 }
 
 func testTerraformCostAlertBiz(t *testing.T) {
-	options := tf.InitAWSTerraform(t, bucketName, awsRegion, "tf_unit_basic_test_biz.tfvars", map[string]interface{}{})
-	testTerraformCostAlert(t, "biz", options)
+	t.Parallel()
+	outputs := aws.GetTFOutputs(t, "biz", "net")
+	sns_topic_arns := aws.GetStringListValue(t, outputs, "cost-alert__sns_topic_arns")
+	assert.NotEmpty(t, sns_topic_arns[0], "sns_topic_arns must not be empty")
 }
 
-func testTerraformCostAlert(t *testing.T, workspaceName string, options *terraform.Options) {
+func testTerraformCostAlertPri(t *testing.T) {
 	t.Parallel()
-	outputs, destroyFunc := tf.ApplyTerraform(t, workspaceName, options)
-	defer destroyFunc()
-
-	sns_topics := outputs["sns_topic_arns"]
-	assert.NotEmpty(t, sns_topics, "sns_topic_arns was not returned")
+	outputs := aws.GetTFOutputs(t, "pri", "net")
+	assert.False(t, aws.HasKeyWithPrefix(t, outputs, "cost-alert__"), "Must not contain any cost-alert__ outputs.")
 }

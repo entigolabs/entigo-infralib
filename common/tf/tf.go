@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"testing"
+	"github.com/gruntwork-io/terratest/modules/testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
@@ -29,6 +29,7 @@ const (
 	AWS    ProviderType = "aws"
 	GCloud ProviderType = "gcloud"
 )
+
 
 func InitAWSTerraform(t *testing.T, bucketName string, awsRegion string, varFile string, vars map[string]interface{}) *terraform.Options {
 	return InitTerraform(t, bucketName, awsRegion, varFile, vars, AWS)

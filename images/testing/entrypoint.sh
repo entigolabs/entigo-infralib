@@ -4,10 +4,21 @@
 [ -z $TF_VAR_prefix ] && echo "TF_VAR_prefix must be set" && exit 1
 [ -z "$AWS_REGION" -a -z "$GOOGLE_REGION" ] && echo "AWS_REGION or GOOGLE_REGION must be set" && exit 1
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
-[ -z $INFRALIB_BUCKET ] && echo "INFRALIB_BUCKET must be set" && exit 1
+
+if [ "$COMMAND" == "test" ]
+then
+  if [ ! -f go.mod ]
+  then
+    cd /common && go mod download -x && cd /app
+    go mod init github.com/entigolabs/entigo-infralib
+    go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
+    go mod tidy
+  fi
+  cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
+  exit $?
 
 #Prepare project filesystems for plan stages. When we plan then we need to get the current S3 bucket content
-if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
+elif [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
 then
   echo "Need to copy project files from bucket $INFRALIB_BUCKET"
   mkdir -p /tmp/plans/$TF_VAR_prefix/
