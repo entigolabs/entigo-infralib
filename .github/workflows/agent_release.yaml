@@ -30,6 +30,7 @@ jobs:
       run: |
         common/stable.sh
         exit 1
+        
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -48,7 +49,7 @@ jobs:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v3
       with:
-        ref: main
+        ref: RD-419
     - name: Create resources based on latest release
       id: create_latest_release
       env:
