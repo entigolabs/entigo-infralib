@@ -28,6 +28,7 @@ jobs:
         PR_BRANCH: "RD-419"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
+        docker pull entigolabs/entigo-infralib-testing
         common/stable.sh
         exit 1
         
