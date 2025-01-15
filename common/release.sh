@@ -1,5 +1,7 @@
 #!/bin/bash
 echo "Assemble configuration for main"
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+cd $SCRIPTPATH
 source generate_config.sh
 
 prepare_agent

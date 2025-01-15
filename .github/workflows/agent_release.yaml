@@ -29,6 +29,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         common/stable.sh
+        exit 1
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -59,6 +60,7 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: false
       run: |
         common/stable.sh
+        exit 1
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
