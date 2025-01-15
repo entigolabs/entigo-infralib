@@ -24,22 +24,26 @@ fi
 run_agents
 
 PIDS=""
-../modules/aws/kms/test.sh &
-PIDS="$PIDS $!=kms"
-../modules/aws/cost-alert/test.sh &
-PIDS="$PIDS $!=cost-alert"
-../modules/aws/hello-world/test.sh &
-PIDS="$PIDS $!=hello-world"
-../modules/aws/vpc/test.sh &
-PIDS="$PIDS $!=vpc"
-../modules/aws/route53/test.sh &
-PIDS="$PIDS $!=route53"
-../modules/aws/eks/test.sh &
-PIDS="$PIDS $!=eks"
-../modules/aws/crossplane/test.sh &
-PIDS="$PIDS $!=crossplane"
-../modules/aws/ec2/test.sh &
-PIDS="$PIDS $!=ec2"
+
+if [ "$AWS_ACCESS_KEY_ID" != "" ]
+then
+  ../modules/aws/kms/test.sh &
+  PIDS="$PIDS $!=kms"
+  ../modules/aws/cost-alert/test.sh &
+  PIDS="$PIDS $!=cost-alert"
+  ../modules/aws/hello-world/test.sh &
+  PIDS="$PIDS $!=hello-world"
+  ../modules/aws/vpc/test.sh &
+  PIDS="$PIDS $!=vpc"
+  ../modules/aws/route53/test.sh &
+  PIDS="$PIDS $!=route53"
+  ../modules/aws/eks/test.sh &
+  PIDS="$PIDS $!=eks"
+  ../modules/aws/crossplane/test.sh &
+  PIDS="$PIDS $!=crossplane"
+  ../modules/aws/ec2/test.sh &
+  PIDS="$PIDS $!=ec2"
+fi
 
 FAIL=0
 for p in $PIDS; do
