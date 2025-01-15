@@ -24,10 +24,12 @@ steps:" > agents/config.yaml
 
 default_aws_conf $SCRIPTPATH/../../modules
 
+echo $prefix
 
-
-
-run_agents $1
+if [ $prefix != "runner-RD-419" ]
+then
+  run_agents $1
+fi
 
 TIMEOUT_OPTS=""
 if [ "$ENTIGO_INFRALIB_TEST_TIMEOUT" != "" ]
