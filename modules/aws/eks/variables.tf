@@ -34,7 +34,7 @@ variable "eks_cluster_version" {
 variable "authentication_mode" {
   type     = string
   nullable = false
-  default  = "API" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
+  default  = "API_AND_CONFIG_MAP" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
 }
 
 variable "enable_cluster_creator_admin_permissions" {
