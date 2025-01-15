@@ -24,9 +24,8 @@ steps:" > agents/config.yaml
 
 default_aws_conf $SCRIPTPATH/../../modules
 
-echo $prefix
 
-if [ $prefix != "runner-RD-419" ]
+if [ $prefix != "runner-rd-419" ]
 then
   run_agents $1
 fi
