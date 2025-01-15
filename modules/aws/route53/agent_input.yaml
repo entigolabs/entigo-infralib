@@ -1,0 +1,2 @@
+vpc_id: |
+  {{ .toptout.vpc.vpc_id }}
