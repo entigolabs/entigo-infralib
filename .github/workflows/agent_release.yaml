@@ -1,6 +1,9 @@
 name: Agent Release
 
 on:
+  push:
+    branches:
+      - "RD-419"
   workflow_run:
     workflows: ["Stable"]
     types:
