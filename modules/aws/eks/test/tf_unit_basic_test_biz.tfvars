@@ -14,28 +14,6 @@ eks_mainarm_max_size         = 2
 eks_tools_max_size           = 4
 eks_mainarm_instance_types   = ["t4g.micro"]
 iam_admin_role = "AWSReservedSSO_AdministratorAccess_.*"
-additional_access_entries = {
-  roleEntry = {
-    principal_arn = "arn:aws:iam::877483565445:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS"
-    user_name = "someRole"
-    kubernetes_groups = []
-    policy_associations = {
-      kubectl-jump = {
-        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-        access_scope = {
-          type = "cluster"
-        }
-      }
-    }
-  },
-  userEntry = {
-    principal_arn = "arn:aws:iam::877483565445:user/github"
-    user_name = "some_user"
-    kubernetes_groups = [ "test:group" ]
-    policy_associations = {
-    }
-  }
-}
 eks_managed_node_groups_extra = {
   altarm = {
         desired_size    = 1

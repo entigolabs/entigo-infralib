@@ -56,9 +56,19 @@ variable "aws_auth_user" {
 }
 
 variable "additional_access_entries" {
-  type     = map(any)
-  nullable = false
-  default  = {}
+  type = map(object({
+    principal_arn       = string
+    user_name = optional(string)
+    kubernetes_groups   = optional(list(string))
+    policy_associations = map(object({
+      policy_arn = string
+      access_scope = object({
+        type       = string
+        namespaces = optional(list(string))
+      })
+    }))
+  }))
+  default = {}
 }
 
 variable "eks_cluster_public" {
