@@ -134,7 +134,7 @@ module "kms_telemetry" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "rds.us-east-1.amazonaws.com"
+             "rds.${data.aws_region.current.name}.amazonaws.com"
           ]
         },
         {
@@ -218,7 +218,7 @@ module "kms_data" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "ec2.eu-west-1.amazonaws.com"
+             "ec2.${data.aws_region.current.name}.amazonaws.com"
           ]
         },
         {
@@ -322,7 +322,7 @@ module "kms_data" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "rds.us-east-1.amazonaws.com"
+             "rds.${data.aws_region.current.name}.amazonaws.com"
           ]
         },
         {
