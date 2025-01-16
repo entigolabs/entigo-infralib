@@ -79,6 +79,7 @@ accounts:
       IAMUser:
       - "github"
       - "eks-test"
+      - "eks-test2"
       IAMUserPolicyAttachment:
       - "github -> AdministratorAccess"
       IAMUserAccessKey:
