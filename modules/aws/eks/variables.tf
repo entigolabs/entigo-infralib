@@ -31,6 +31,18 @@ variable "eks_cluster_version" {
   default  = "1.30"
 }
 
+variable "authentication_mode" {
+  type     = string
+  nullable = false
+  default  = "API_AND_CONFIG_MAP" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
+}
+
+variable "enable_cluster_creator_admin_permissions" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "iam_admin_role" {
   type     = string
   nullable = false
@@ -41,6 +53,22 @@ variable "aws_auth_user" {
   type     = string
   nullable = false
   default  = ""
+}
+
+variable "additional_access_entries" {
+  type = map(object({
+    principal_arn       = string
+    user_name = optional(string)
+    kubernetes_groups   = optional(list(string))
+    policy_associations = map(object({
+      policy_arn = string
+      access_scope = object({
+        type       = string
+        namespaces = optional(list(string))
+      })
+    }))
+  }))
+  default = {}
 }
 
 variable "eks_cluster_public" {

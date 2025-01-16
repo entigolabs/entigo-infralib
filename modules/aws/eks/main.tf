@@ -1,19 +1,4 @@
 locals {
-  auth_roles = var.iam_admin_role != "" ? [
-    {
-      rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles[0].arns), 0), "//aws-reserved.*/AWSReservedSSO/", "/AWSReservedSSO")
-      username = "aws-admin"
-      groups   = ["system:masters"]
-    }
-  ] : []
-  
-  auth_users = var.aws_auth_user != "" ? [
-    {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${var.aws_auth_user}"
-      username = var.aws_auth_user
-      groups   = ["system:masters"]
-    }
-  ] : []
   #Cant do yet...
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3036 
   #cluster_encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
@@ -348,7 +333,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.21.0"
+  version = "20.31.6"
 
   cluster_name                    = var.prefix
   cluster_version                 = var.eks_cluster_version
@@ -360,7 +345,6 @@ module "eks" {
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
 
-  
   enable_irsa                     = true
 
   cluster_addons = {
@@ -559,12 +543,41 @@ module "eks" {
 
   eks_managed_node_groups = local.eks_managed_node_groups
 
-  # aws-auth configmap
-  manage_aws_auth_configmap = true
-  create_aws_auth_configmap = false
-  aws_auth_roles            = local.auth_roles
+  # EKS access entries
+  authentication_mode = var.authentication_mode
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
 
-  aws_auth_users = local.auth_users
+  access_entries = merge({},
+    var.iam_admin_role != "" ? {
+      aws-admin = {
+        principal_arn = element(tolist(data.aws_iam_roles.aws-admin-roles[0].arns), 0)
+        user_name = "aws-admin"
+        policy_associations = {
+          aws-admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    } : {},
+    var.aws_auth_user != ""? {
+      aws-auth-user = {
+        principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${var.aws_auth_user}"
+        user_name = var.aws_auth_user
+        policy_associations = {
+          aws-auth-user = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    } : {},
+    var.additional_access_entries
+  )
 
   tags = {
     Terraform = "true"

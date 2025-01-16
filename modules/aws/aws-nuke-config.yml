@@ -78,6 +78,7 @@ accounts:
       - "gcp.infralib.entigo.io." 
       IAMUser:
       - "github"
+      - "eks-test"
       IAMUserPolicyAttachment:
       - "github -> AdministratorAccess"
       IAMUserAccessKey:
