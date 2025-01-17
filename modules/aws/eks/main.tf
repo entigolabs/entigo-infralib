@@ -345,6 +345,9 @@ module "eks" {
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
 
+  create_iam_role = var.cluster_iam_role_arn != null ? false : true
+  iam_role_arn = var.cluster_iam_role_arn
+
   enable_irsa                     = true
 
   cluster_addons = {
