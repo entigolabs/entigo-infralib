@@ -61,8 +61,25 @@ run_agents() {
   do
     if [[ $agent == google_* ]]
     then
-      echo "skip google for now"
-      #docker run -it --rm -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE --entrypoint ei-agent entigolabs/entigo-infralib-testing run -c /conf/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local  
+      if [ "$LOCATION" == "" ]
+      then
+        echo "Defaulting GOOGLE_REGION to europe-north1"
+        export LOCATION="europe-north1"
+      fi
+
+      if [ "$ZONE" == "" ]
+      then
+        echo "Defaulting GOOGLE_ZONE to europe-north1-a"
+        export ZONE="europe-north1-a"
+      fi
+
+      if [ "$PROJECT_ID" == "" ]
+      then
+        echo "Defaulting PROJECT_ID to entigo-infralib2"
+        export PROJECT_ID="entigo-infralib2"
+      fi
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
         if [ "$(echo $agent | cut -d"_" -f2)" == "us" ]
@@ -74,7 +91,7 @@ run_agents() {
           export AWS_REGION="eu-north-1"
         fi
     
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run  -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
@@ -118,6 +135,19 @@ test_all() {
     ./modules/aws/ec2/test.sh testonly &
     PIDS="$PIDS $!=ec2"
   fi
+  if [ "$CLOUDSDK_CONFIG" != "" ]
+  then
+    ./modules/google/services/test.sh testonly &
+    PIDS="$PIDS $!=services"
+    ./modules/google/vpc/test.sh testonly &
+    PIDS="$PIDS $!=vpc"
+    ./modules/google/dns/test.sh testonly &
+    PIDS="$PIDS $!=dns"
+    ./modules/google/gke/test.sh testonly &
+    PIDS="$PIDS $!=gke"
+    ./modules/google/crossplane/test.sh testonly &
+    PIDS="$PIDS $!=crossplane"
+  fi
 
   FAIL=0
   for p in $PIDS; do
@@ -142,6 +172,6 @@ default_aws_conf() {
 }
 
 default_google_conf() {
-  generate_config "./modules/google" "net" "services" "vpc" 
-  generate_config "./modules/google" "infra" "gke" "dns" "crossplane"
+  generate_config "./modules/google" "net" "services" "vpc" "dns"
+  generate_config "./modules/google" "infra" "gke" "crossplane"
 }

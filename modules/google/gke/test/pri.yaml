@@ -1,9 +1,9 @@
 master_authorized_networks: |
   [
-  {
-    display_name = "Allow all"
-    cidr_block   = "0.0.0.0/0"
-  }
+    {
+      display_name = "Allow all"
+      cidr_block   = "0.0.0.0/0"
+    }
   ]
 
 gke_main_min_size: 1

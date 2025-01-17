@@ -14,7 +14,7 @@ if [ "$AWS_ACCESS_KEY_ID" != "" ]
 then
   default_aws_conf
 fi
-if [ "$GOOGLE_CREDENTIALS" != "" ]
+if [ "$CLOUDSDK_CONFIG" != "" ]
 then
   default_google_conf
 fi

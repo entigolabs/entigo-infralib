@@ -4,15 +4,15 @@ then
   TESTING_VERSION="latest" 
 fi
 
-MODULE_PATH="$(pwd)"
-MODULETYPE=$(basename $(dirname $(pwd)))
-MODULENAME=$(basename $(pwd))
-
 if [ "$AWS_REGION" == "" ]
 then
   echo "Defaulting AWS_REGION to eu-north-1"
   export AWS_REGION="eu-north-1"
 fi
+
+MODULE_PATH="$(pwd)"
+MODULETYPE=$(basename $(dirname $(pwd)))
+MODULENAME=$(basename $(pwd))
 
 if [ "$PR_BRANCH" != "" ]
 then
@@ -29,7 +29,7 @@ then
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
-        if [[ $STEP_NAME == *-rd-419-* ]]  #Change to runner-main- later
+        if [[ $STEP_NAME == *-rd-419-* ]]  #Change to *-main-* later
         then
           STEP_NAME=$(cat "agents/${MODULETYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULETYPE/$MODULENAME\") | .name")
           break
@@ -56,7 +56,7 @@ steps:" > agents/config.yaml
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         
-        if [[ $STEP_NAME == runner-rd-419-* ]]  #Change to runner-main- later
+        if [[ $STEP_NAME == *-rd-419-* ]]  #Change to *-main-* later
         then
           STEP_NAME=$(cat "agents/${MODULETYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULETYPE/$MODULENAME\") | .name")
         fi
