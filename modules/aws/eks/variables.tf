@@ -361,7 +361,7 @@ variable "node_ssh_key_pair_name" {
 variable "bootstrap_self_managed_addons" {
   type    = bool
   nullable = true
-  default = null
+  default = true
 }
 
 variable "coredns_addon_version" {
