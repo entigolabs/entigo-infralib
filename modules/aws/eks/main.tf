@@ -350,6 +350,8 @@ module "eks" {
 
   enable_irsa                     = true
 
+  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
+
   cluster_addons = {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
