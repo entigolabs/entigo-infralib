@@ -28,6 +28,7 @@ variable "subnet_id" {
 
 variable "key_name" {
   type = string
+  default = ""
 }
 
 variable "volume_size" {
@@ -59,6 +60,11 @@ variable "route53_name" {
   type = string
   nullable = false
   default = "thisisundefined"
+}
+
+variable "route53_record_private_ip" {
+  type = bool
+  default = false
 }
 
 variable "user_data" {
@@ -101,6 +107,11 @@ variable "security_group_ingress" {
 }
 
 variable "kms_key_id" {
+  type = string
+  default = ""
+}
+
+variable "iam_instance_profile" {
   type = string
   default = ""
 }

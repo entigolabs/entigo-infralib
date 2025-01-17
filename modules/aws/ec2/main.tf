@@ -59,6 +59,7 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
   key_name = var.key_name
+  iam_instance_profile = var.iam_instance_profile
 
   root_block_device {
     volume_size = var.volume_size
@@ -81,7 +82,7 @@ resource "aws_route53_record" "ec2" {
   name = var.route53_name == "thisisundefined" ? var.prefix : var.route53_name
   type = "A"
   ttl = 60
-  records = var.eip ? [aws_eip.ec2[0].public_ip] : [aws_instance.ec2.public_ip]
+  records = var.eip ? [aws_eip.ec2[0].public_ip] : (var.route53_record_private_ip ? [aws_instance.ec2.private_ip] : [aws_instance.ec2.public_ip])
 }
 
 resource "aws_ssm_parameter" "private_dns" {

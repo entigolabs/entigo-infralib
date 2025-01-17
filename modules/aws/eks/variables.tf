@@ -31,6 +31,18 @@ variable "eks_cluster_version" {
   default  = "1.30"
 }
 
+variable "authentication_mode" {
+  type     = string
+  nullable = false
+  default  = "API_AND_CONFIG_MAP" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
+}
+
+variable "enable_cluster_creator_admin_permissions" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "iam_admin_role" {
   type     = string
   nullable = false
@@ -41,6 +53,22 @@ variable "aws_auth_user" {
   type     = string
   nullable = false
   default  = ""
+}
+
+variable "additional_access_entries" {
+  type = map(object({
+    principal_arn       = string
+    user_name = optional(string)
+    kubernetes_groups   = optional(list(string))
+    policy_associations = map(object({
+      policy_arn = string
+      access_scope = object({
+        type       = string
+        namespaces = optional(list(string))
+      })
+    }))
+  }))
+  default = {}
 }
 
 variable "eks_cluster_public" {
@@ -316,4 +344,30 @@ variable "cloudwatch_log_group_kms_key_id" {
 variable "node_encryption_kms_key_arn" {
   type = string
   default = ""
+}
+
+variable "node_ssh_key_pair_name" {
+  type = string
+  nullable = true
+  default = null
+}
+
+variable "coredns_addon_version" {
+  type = string
+  default = "v1.11.3-eksbuild.2"
+}
+
+variable "kube_proxy_addon_version" {
+  type = string
+  default = "v1.30.6-eksbuild.3"
+}
+
+variable "vpc_cni_addon_version" {
+  type = string
+  default = "v1.19.0-eksbuild.1"
+}
+
+variable "ebs_csi_addon_version" {
+  type = string
+  default = "v1.37.0-eksbuild.1"
 }

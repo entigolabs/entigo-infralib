@@ -1,19 +1,4 @@
 locals {
-  auth_roles = var.iam_admin_role != "" ? [
-    {
-      rolearn  = replace(element(tolist(data.aws_iam_roles.aws-admin-roles[0].arns), 0), "//aws-reserved.*/AWSReservedSSO/", "/AWSReservedSSO")
-      username = "aws-admin"
-      groups   = ["system:masters"]
-    }
-  ] : []
-  
-  auth_users = var.aws_auth_user != "" ? [
-    {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${var.aws_auth_user}"
-      username = var.aws_auth_user
-      groups   = ["system:masters"]
-    }
-  ] : []
   #Cant do yet...
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3036 
   #cluster_encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
@@ -29,6 +14,7 @@ locals {
       max_size        = var.eks_main_max_size
       instance_types  = var.eks_main_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
 
       launch_template_tags = {
@@ -55,6 +41,7 @@ locals {
       max_size        = var.eks_mainarm_max_size
       instance_types  = var.eks_mainarm_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = "AL2_ARM_64"
       launch_template_tags = {
@@ -81,6 +68,7 @@ locals {
       max_size        = var.eks_spot_max_size
       instance_types  = var.eks_spot_instance_types
       capacity_type   = "SPOT"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
 
       taints = [
@@ -118,6 +106,7 @@ locals {
       instance_types  = var.eks_mon_instance_types
       subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
@@ -155,6 +144,7 @@ locals {
       instance_types  = var.eks_tools_instance_types
       subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
@@ -191,6 +181,7 @@ locals {
       max_size        = var.eks_db_max_size
       instance_types  = var.eks_db_instance_types
       capacity_type   = "ON_DEMAND"
+      key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
         {
@@ -342,7 +333,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.21.0"
+  version = "20.31.6"
 
   cluster_name                    = var.prefix
   cluster_version                 = var.eks_cluster_version
@@ -354,14 +345,13 @@ module "eks" {
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
 
-  
   enable_irsa                     = true
 
   cluster_addons = {
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.11.3-eksbuild.2"
+      addon_version               = var.coredns_addon_version
       configuration_values = jsonencode({
         tolerations : [
           {
@@ -396,12 +386,12 @@ module "eks" {
     kube-proxy = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.30.6-eksbuild.3"
+      addon_version               = var.kube_proxy_addon_version
     }
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.19.0-eksbuild.1"
+      addon_version               = var.vpc_cni_addon_version
       most_recent                 = true
       before_compute              = true
       service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
@@ -416,7 +406,7 @@ module "eks" {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = "v1.37.0-eksbuild.1"
+      addon_version               = var.ebs_csi_addon_version
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
       configuration_values = jsonencode({
@@ -553,12 +543,41 @@ module "eks" {
 
   eks_managed_node_groups = local.eks_managed_node_groups
 
-  # aws-auth configmap
-  manage_aws_auth_configmap = true
-  create_aws_auth_configmap = false
-  aws_auth_roles            = local.auth_roles
+  # EKS access entries
+  authentication_mode = var.authentication_mode
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
 
-  aws_auth_users = local.auth_users
+  access_entries = merge({},
+    var.iam_admin_role != "" ? {
+      aws-admin = {
+        principal_arn = element(tolist(data.aws_iam_roles.aws-admin-roles[0].arns), 0)
+        user_name = "aws-admin"
+        policy_associations = {
+          aws-admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    } : {},
+    var.aws_auth_user != ""? {
+      aws-auth-user = {
+        principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${var.aws_auth_user}"
+        user_name = var.aws_auth_user
+        policy_associations = {
+          aws-auth-user = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    } : {},
+    var.additional_access_entries
+  )
 
   tags = {
     Terraform = "true"

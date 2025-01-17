@@ -43,8 +43,11 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 	extraArgs := make(map[string][]string)
 	setValues := make(map[string]string)
 
+	setValues["global.installPrometheusOperatorCRDs"] = "true"
+
 	if prefix != "runner-main" {
 		namespaceName = fmt.Sprintf("prometheus-%s-%s", envName, prefix)
+		setValues["global.installPrometheusOperatorCRDs"] = "false"
 		extraArgs["upgrade"] = []string{"--skip-crds"}
 		extraArgs["install"] = []string{"--skip-crds"}
 	}
@@ -115,13 +118,18 @@ func testK8sPrometheus(t *testing.T, contextName, envName, valuesFile, hostName,
 		t.Fatal(fmt.Sprintf("%s-alertmanager-0 pod error:", releaseName), err)
 	}
 
+	retries := 100
+	if cloudProvider == "google" && prefix == "runner-main" {
+		retries = 300
+	}
+
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s.%s/graph", releaseName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "prometheus ingress/gateway test error")
 }
