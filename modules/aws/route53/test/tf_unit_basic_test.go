@@ -15,7 +15,7 @@ func TestTerraformRoute53(t *testing.T) {
 }
 
 func testTerraformRoute53Biz(t *testing.T) {
-        //t.Parallel()
+        t.Parallel()
         outputs := aws.GetTFOutputs(t, "biz", "net")
 	pub_zone_id := aws.GetStringValue(t, outputs, "route53__pub_zone_id")
 	pub_domain  := aws.GetStringValue(t, outputs, "route53__pub_domain")
@@ -33,7 +33,7 @@ func testTerraformRoute53Biz(t *testing.T) {
 }
 
 func testTerraformRoute53Pri(t *testing.T) {
-        //t.Parallel()
+        t.Parallel()
         outputs := aws.GetTFOutputs(t, "pri", "net")
 	pub_zone_id := aws.GetStringValue(t, outputs, "route53__pub_zone_id")
 	pub_domain  := aws.GetStringValue(t, outputs, "route53__pub_domain")

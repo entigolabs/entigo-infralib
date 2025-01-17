@@ -12,4 +12,4 @@ providers/test_base.tf
 .idea
 .DS_Store
 providers/tmp_tf/
-common/agents
+agents

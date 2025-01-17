@@ -18,8 +18,15 @@ import (
 
 func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]interface{} {
         awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	bucket := fmt.Sprintf("%s-877483565445-eu-north-1", prefix)
+	bucket := fmt.Sprintf("%s-877483565445-%s", prefix, awsRegion)
+	
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, step)
+	if !strings.HasSuffix(strings.ToLower(os.Getenv("STEP_NAME")), "-rd-419") { //Change to -main later
+	  
+	  logger.Logf(t, "prefix is %s", strings.ToLower(os.Getenv("STEP_NAME")))
+	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, strings.ToLower(os.Getenv("STEP_NAME")))
+	}
+	logger.Logf(t, "File %s", file)
         outputs, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
 
 	require.NoError(t, err, "Failed to get module outputs region %s bucket %s prefix %s Error: %s", awsRegion, bucket, file, err)

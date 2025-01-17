@@ -14,7 +14,7 @@ func TestTerraformEc2(t *testing.T) {
 }
 
 func testTerraformEc2Biz(t *testing.T) {
-	//t.Parallel()
+	t.Parallel()
 	outputs := aws.GetTFOutputs(t, "biz", "infra")
 	
 	private_dns := aws.GetStringValue(t, outputs, "ec2__private_dns")
@@ -24,7 +24,7 @@ func testTerraformEc2Biz(t *testing.T) {
 }
 
 func testTerraformEc2Pri(t *testing.T) {
-	//t.Parallel()
+	t.Parallel()
 	outputs := aws.GetTFOutputs(t, "pri", "infra")
 	private_dns := aws.GetStringValue(t, outputs, "ec2__private_dns")
 	public_ip := aws.GetStringValue(t, outputs, "ec2__public_ip")

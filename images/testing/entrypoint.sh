@@ -1,8 +1,5 @@
 #!/bin/bash
 #set -x
-
-[ -z $TF_VAR_prefix ] && echo "TF_VAR_prefix must be set" && exit 1
-[ -z "$AWS_REGION" -a -z "$GOOGLE_REGION" ] && echo "AWS_REGION or GOOGLE_REGION must be set" && exit 1
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
 
 if [ "$COMMAND" == "test" ]

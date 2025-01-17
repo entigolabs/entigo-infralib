@@ -6,12 +6,6 @@ prepare_agent() {
     rm -rf agents
   fi
   mkdir agents
-  
-  if [ "$AWS_REGION" == "" ]
-  then
-    echo "Defaulting AWS_REGION to eu-north-1"
-    export AWS_REGION="eu-north-1"
-  fi
 }
 
 generate_config() {
@@ -63,34 +57,28 @@ generate_config() {
 run_agents() {
   local module="$1"
   PIDS=""
-  cd agents
-  for agent in $(find . -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+  for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
   do
-    cd $agent
     if [[ $agent == google_* ]]
     then
       echo "skip google for now"
       #docker run -it --rm -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE --entrypoint ei-agent entigolabs/entigo-infralib-testing run -c /conf/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local  
     elif [[ $agent == aws_* ]]
     then
-      if [ "$module" != "" ]
-      then
-        step=$(cat config.yaml| yq -r ".steps[] | select(.modules[].name == \"$module\") | .name")
-        if [ "$step" != "" ]
+        if [ "$(echo $agent | cut -d"_" -f2)" == "us" ]
         then
-          echo "Module $module found in step $step"
-          docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN --entrypoint ei-agent entigolabs/entigo-infralib-testing run -c /conf/config.yaml --steps $step --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
-          PIDS="$PIDS $!=$agent"
+          echo "Defaulting AWS_REGION to us-east-1"
+          export AWS_REGION="us-east-1"
+        else
+          echo "Defaulting AWS_REGION to eu-north-1"
+          export AWS_REGION="eu-north-1"
         fi
-      else
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN --entrypoint ei-agent entigolabs/entigo-infralib-testing run -c /conf/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+    
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing run  -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
         PIDS="$PIDS $!=$agent"
-      fi
-      
     else
       echo "Unknown cloud provider type $agent"
     fi
-    cd ..
   done
 
   FAIL=0
@@ -105,17 +93,55 @@ run_agents() {
     echo "FAILED AGENT RUN $FAIL"
     exit 1
   fi
-  cd ..
+
+}
+
+
+test_all() {
+  PIDS=""
+  if [ "$AWS_ACCESS_KEY_ID" != "" ]
+  then
+    ./modules/aws/kms/test.sh testonly &
+    PIDS="$PIDS $!=kms"
+    ./modules/aws/cost-alert/test.sh testonly &
+    PIDS="$PIDS $!=cost-alert"
+    ./modules/aws/hello-world/test.sh testonly &
+    PIDS="$PIDS $!=hello-world"
+    ./modules/aws/vpc/test.sh testonly &
+    PIDS="$PIDS $!=vpc"
+    ./modules/aws/route53/test.sh testonly &
+    PIDS="$PIDS $!=route53"
+    ./modules/aws/eks/test.sh testonly &
+    PIDS="$PIDS $!=eks"
+    ./modules/aws/crossplane/test.sh testonly &
+    PIDS="$PIDS $!=crossplane"
+    ./modules/aws/ec2/test.sh testonly &
+    PIDS="$PIDS $!=ec2"
+  fi
+
+  FAIL=0
+  for p in $PIDS; do
+      pid=$(echo $p | cut -d"=" -f1)
+      name=$(echo $p | cut -d"=" -f2)
+      wait $pid || let "FAIL+=1"
+      echo $p $FAIL
+  done
+  if [ "$FAIL" -ne 0 ]
+  then
+    echo "FAILED GOLANG TEST $FAIL"
+    exit 1
+  fi
+
 
 }
 
 
 default_aws_conf() {
-  generate_config "$1/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
-  generate_config "$1/aws" "infra" "eks" "crossplane" "ec2"
+  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
+  generate_config "./modules/aws" "infra" "eks" "crossplane" "ec2"
 }
 
 default_google_conf() {
-  generate_config "$1/google" "net" "services" "vpc" 
-  generate_config "$1/google" "infra" "gke" "dns" "crossplane"
+  generate_config "./modules/google" "net" "services" "vpc" 
+  generate_config "./modules/google" "infra" "gke" "dns" "crossplane"
 }

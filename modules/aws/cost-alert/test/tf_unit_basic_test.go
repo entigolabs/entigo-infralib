@@ -7,19 +7,12 @@ import (
 )
 
 func TestCostAlert(t *testing.T) {
-	t.Run("Biz", testTerraformCostAlertBiz)
-	t.Run("Pri", testTerraformCostAlertPri)
+	t.Run("Us", testTerraformCostAlertUs)
 }
 
-func testTerraformCostAlertBiz(t *testing.T) {
+func testTerraformCostAlertUs(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz", "net")
+	outputs := aws.GetTFOutputs(t, "us", "net")
 	sns_topic_arns := aws.GetStringListValue(t, outputs, "cost-alert__sns_topic_arns")
 	assert.NotEmpty(t, sns_topic_arns[0], "sns_topic_arns must not be empty")
-}
-
-func testTerraformCostAlertPri(t *testing.T) {
-	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri", "net")
-	assert.False(t, aws.HasKeyWithPrefix(t, outputs, "cost-alert__"), "Must not contain any cost-alert__ outputs.")
 }

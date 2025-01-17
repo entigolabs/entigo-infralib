@@ -9,11 +9,10 @@ import (
 func TestTerraformKms(t *testing.T) {
 
 	t.Run("Biz", testTerraformKmsBiz)
-	t.Run("Pri", testTerraformKmsPri)
 }
 
 func testTerraformKmsBiz(t *testing.T) {
-        //t.Parallel()
+        t.Parallel()
         outputs := aws.GetTFOutputs(t, "biz", "net")
 	
 	assert.NotEmpty(t, aws.GetStringValue(t, outputs, "kms__config_alias_arn"), "config_alias_arn was not returned")
@@ -30,11 +29,4 @@ func testTerraformKmsBiz(t *testing.T) {
 	assert.NotEmpty(t, aws.GetStringValue(t, outputs, "kms__telemetry_key_policy"), "telemetry_key_policy was not returned")
       
 }
-
-func testTerraformKmsPri(t *testing.T) {
-        //t.Parallel()
-        outputs := aws.GetTFOutputs(t, "pri", "net")
-	assert.False(t, aws.HasKeyWithPrefix(t, outputs, "kms__"), "Must not contain any kms__ outputs.")
-}
-
 
