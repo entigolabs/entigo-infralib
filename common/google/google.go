@@ -25,15 +25,14 @@ func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]in
         Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-%s-%s", prefix, os.Getenv("GOOGLE_PROJECT"), Region)
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, step)
-	if !strings.HasSuffix(strings.ToLower(os.Getenv("STEP_NAME")), "-rd-419") { //Change to -main later
-	  
-	  logger.Logf(t, "prefix is %s", strings.ToLower(os.Getenv("STEP_NAME")))
-	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, strings.ToLower(os.Getenv("STEP_NAME")))
+	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
+	
+	if !strings.Contains(stepName, "-rd-419") { //Change to -main later
+	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 	}
-	logger.Logf(t, "File %s", file)
 	
 	reader, err := gcp.ReadBucketObjectE(t, bucket, file)
-	require.NoError(t, err, "Failed to get module outputs region %s bucket %s prefix %s Error: %s", Region, bucket, file, err)
+	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", Region, bucket, file, err)
 
 	outputs, err := io.ReadAll(reader)
 	require.NoError(t, err, "Failed to read object contents: %v", err)
@@ -43,7 +42,7 @@ func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]in
 	    defer closer.Close()
 	}
 
-	fmt.Printf("OUTPUT %s %s", prefix, string(outputs))
+	fmt.Printf("OUTPUT %s %s", file, string(outputs))
 	var result map[string]interface{}
 	err = json.Unmarshal(outputs, &result)
 	require.NoError(t, err, "Error parsing JSON: %s Error: %s", string(outputs), err)

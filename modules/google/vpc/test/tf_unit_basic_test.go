@@ -14,7 +14,9 @@ func TestTerraformVpc(t *testing.T) {
 }
 
 func testTerraformVpcBiz(t *testing.T) {
+        t.Parallel()
         outputs := google.GetTFOutputs(t, "biz", "net")
+	
 	vpcId := tf.GetStringValue(t, outputs, "vpc__vpc_id")
 	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 	
@@ -60,7 +62,9 @@ func testTerraformVpcBiz(t *testing.T) {
 }
 
 func testTerraformVpcPri(t *testing.T) {
+        t.Parallel()
 	outputs := google.GetTFOutputs(t, "pri", "net")
+	
 	vpcId := tf.GetStringValue(t, outputs, "vpc__vpc_id")
 	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
 	
@@ -96,7 +100,6 @@ func testTerraformVpcPri(t *testing.T) {
 	
 	privateSubnetServicesCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnet_cidrs_services")
 	assert.Equal(t, "10.29.8.0/21", privateSubnetServicesCidrs[0], "Wrong value for private_subnet_cidrs_services returned")
-
 
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnet_cidrs")
 	assert.Equal(t, "10.29.40.0/22", intraSubnetCidrs[0], "Wrong value for intra_subnet_cidrs returned")
