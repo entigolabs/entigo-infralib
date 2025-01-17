@@ -31,6 +31,12 @@ variable "eks_cluster_version" {
   default  = "1.30"
 }
 
+variable "cluster_iam_role_arn" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
 variable "authentication_mode" {
   type     = string
   nullable = false
