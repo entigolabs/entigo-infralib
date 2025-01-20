@@ -69,8 +69,6 @@ run_agents() {
     echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
     mkdir -p $CLOUDSDK_CONFIG
     echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
-    DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-    
   fi
   
   local module="$1"
