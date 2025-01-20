@@ -28,7 +28,6 @@ jobs:
         PR_BRANCH: "RD-419"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        docker pull entigolabs/entigo-infralib-testing
         ./release.sh
         exit 1
         
@@ -61,7 +60,6 @@ jobs:
         PR_BRANCH: "RD-419"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        docker pull entigolabs/entigo-infralib-testing
         ./release.sh
         exit 1
     - name: Slack Failed To Install Latest Release Message

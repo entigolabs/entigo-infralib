@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:agent-alpha1"
+
 prepare_agent() {
   if [ -d agents ]
   then
@@ -55,6 +57,7 @@ generate_config() {
 
 
 run_agents() {
+  docker pull $ENTIGO_INFRALIB_IMAGE
   local module="$1"
   PIDS=""
   for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
@@ -88,7 +91,7 @@ run_agents() {
         mkdir -p $CLOUDSDK_CONFIG
         echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
       fi
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
@@ -101,7 +104,7 @@ run_agents() {
           export AWS_REGION="eu-north-1"
         fi
     
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
