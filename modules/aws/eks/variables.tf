@@ -46,7 +46,7 @@ variable "authentication_mode" {
 variable "enable_cluster_creator_admin_permissions" {
   type     = bool
   nullable = false
-  default  = false
+  default  = true
 }
 
 variable "iam_admin_role" {
