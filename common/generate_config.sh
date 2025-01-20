@@ -83,16 +83,12 @@ run_agents() {
         export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
       fi
       
-      DOCKER_OPTS=""
-      if [ "$GITHUB_ACTION" != "" ]
+      if [ "$GOOGLE_CREDENTIALS" != "" ]
       then
-        #This is needed for terratest terraform execution
-        DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-        #This is needed for terratest bucket creation
         mkdir -p $CLOUDSDK_CONFIG
         echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
       fi
-      docker run --rm -v $DOCKER_OPTS $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
