@@ -10,11 +10,11 @@ echo "sources:
     - url: /conf
 steps:" > agents/config.yaml
 
-if [ "$AWS_ACCESS_KEY_ID" != "" ]
+if [ "$AWS_REGION" != "" ]
 then
   default_aws_conf
 fi
-if [ "$CLOUDSDK_CONFIG" != "" ]
+if [ "$GOOGLE_REGION" != "" ]
 then
   default_google_conf
 fi

@@ -78,7 +78,21 @@ run_agents() {
         echo "Defaulting PROJECT_ID to entigo-infralib2"
         export PROJECT_ID="entigo-infralib2"
       fi
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      if [ "$CLOUDSDK_CONFIG" == "" ]
+      then
+        export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
+      fi
+      
+      DOCKER_OPTS=""
+      if [ "$GITHUB_ACTION" != "" ]
+      then
+        #This is needed for terratest terraform execution
+        DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+        #This is needed for terratest bucket creation
+        mkdir -p $CLOUDSDK_CONFIG
+        echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+      fi
+      docker run --rm -v $DOCKER_OPTS $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
@@ -116,7 +130,7 @@ run_agents() {
 
 test_all() {
   PIDS=""
-  if [ "$AWS_ACCESS_KEY_ID" != "" ]
+  if [ "$AWS_REGION" != "" ]
   then
     ./modules/aws/kms/test.sh testonly &
     PIDS="$PIDS $!=kms"
@@ -135,7 +149,7 @@ test_all() {
     ./modules/aws/ec2/test.sh testonly &
     PIDS="$PIDS $!=ec2"
   fi
-  if [ "$CLOUDSDK_CONFIG" != "" ]
+  if [ "$GOOGLE_REGION" != "" ]
   then
     ./modules/google/services/test.sh testonly &
     PIDS="$PIDS $!=services"
