@@ -36,9 +36,10 @@ spec:
   package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v1.10.0
   runtimeConfigRef:
     name: {{.Release.Name}}
----
+
 {{- if .Values.extraProviders }}
 {{- range .Values.extraProviders }}
+---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
@@ -51,6 +52,5 @@ spec:
   package: {{ .package }}
   runtimeConfigRef:
     name: {{ .Release.Name }}
----
 {{- end }}
 {{- end }}
