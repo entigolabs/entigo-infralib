@@ -83,15 +83,18 @@ run_agents() {
       fi
       if [ "$CLOUDSDK_CONFIG" == "" ]
       then
+        echo "Defaulting PROJECT_ID to $(echo ~)/.config/gcloud"
         export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
       fi
-      
+      DOCKER_OPTS=""
       if [ "$GOOGLE_CREDENTIALS" != "" ]
       then
+        echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
         mkdir -p $CLOUDSDK_CONFIG
         echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+        DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
       fi
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
