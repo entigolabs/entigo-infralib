@@ -9,6 +9,7 @@ eks_main_desired_size        = 4
 aws_auth_user = "eks-test2"
 eks_main_max_size            = 6
 eks_main_instance_types   = ["t3.small"]
+eks_main_capacity_type    = "SPOT"
 eks_mainarm_desired_size     = 1
 eks_mainarm_max_size         = 2
 eks_tools_max_size           = 4
