@@ -22,14 +22,17 @@ then
   export GOOGLE_PROJECT="entigo-infralib2"
 fi
 
-DOCKER_OPTS=""
-if [ "$GITHUB_ACTION" == "" ]
+if [ "$CLOUDSDK_CONFIG" == "" ]
 then
+  echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
   export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
-else
+fi
+
+DOCKER_OPTS=""
+  if [ "$GOOGLE_CREDENTIALS" != "" ]
+  then
   #This is needed for terratest terraform execution
   DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-  export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 6; echo)"
   #This is needed for terratest bucket creation
   mkdir -p $CLOUDSDK_CONFIG
   echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
