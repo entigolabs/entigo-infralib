@@ -87,6 +87,8 @@ run_agents() {
       fi
     done
     gcloud config set account $gaccount
+    find $CLOUDSDK_CONFIG
+    ls -l $CLOUDSDK_CONFIG
   fi
   
   local module="$1"
@@ -113,7 +115,7 @@ run_agents() {
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
 
-      docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
