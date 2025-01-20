@@ -69,6 +69,24 @@ run_agents() {
     echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
     mkdir -p $CLOUDSDK_CONFIG
     echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+    gaccount=""
+    attempt=1
+    while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
+      gcloud auth activate-service-account --key-file=$CLOUDSDK_CONFIG/application_default_credentials.json
+      gcloud config set project $GOOGLE_PROJECT
+      gcloud auth list
+      gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+      echo "Value for gaccount is '$gaccount'"
+      if [ -z "$gaccount" ]
+      then
+        sleep 1.$((RANDOM % 9))
+        echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
+        attempt=$((attempt + 1))
+      fi
+    done
+    gcloud config set account $gaccount
+    find $CLOUDSDK_CONFIG
+    ls -l $CLOUDSDK_CONFIG
   fi
   
   local module="$1"
