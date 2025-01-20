@@ -23,6 +23,7 @@ fi
 
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
+source common/generate_config.sh
 
 if [ "$1" == "testonly" ]
 then
@@ -36,7 +37,7 @@ then
         fi
   done
 else
-  source common/generate_config.sh
+
   prepare_agent
   echo "sources:
  - url: /conf
@@ -71,7 +72,7 @@ steps:" > agents/config.yaml
         fi
         mkdir -p "agents/${MODULETYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULETYPE}_${testname}/config/$STEP_NAME/$MODULENAME.yaml"
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/${MODULETYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULETYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
   done
   FAIL=0
@@ -101,5 +102,5 @@ docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e COMMAND="test" \
 	-e STEP_NAME="$STEP_NAME" \
-        $TIMEOUT_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
+        $TIMEOUT_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
  

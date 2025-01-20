@@ -64,22 +64,22 @@ run_agents() {
   do
     if [[ $agent == google_* ]]
     then
-      if [ "$LOCATION" == "" ]
+      if [ "$GOOGLE_REGION" == "" ]
       then
         echo "Defaulting GOOGLE_REGION to europe-north1"
-        export LOCATION="europe-north1"
+        export GOOGLE_REGION="europe-north1"
       fi
 
-      if [ "$ZONE" == "" ]
+      if [ "$GOOGLE_ZONE" == "" ]
       then
         echo "Defaulting GOOGLE_ZONE to europe-north1-a"
-        export ZONE="europe-north1-a"
+        export GOOGLE_ZONE="europe-north1-a"
       fi
 
-      if [ "$PROJECT_ID" == "" ]
+      if [ "$GOOGLE_PROJECT" == "" ]
       then
-        echo "Defaulting PROJECT_ID to entigo-infralib2"
-        export PROJECT_ID="entigo-infralib2"
+        echo "Defaulting GOOGLE_PROJECT to entigo-infralib2"
+        export GOOGLE_PROJECT="entigo-infralib2"
       fi
       if [ "$CLOUDSDK_CONFIG" == "" ]
       then
@@ -94,7 +94,7 @@ run_agents() {
         echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
         DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
       fi
-      docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e PROJECT_ID -e LOCATION -e ZONE -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
+      docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then

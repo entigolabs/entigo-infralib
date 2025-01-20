@@ -8,21 +8,18 @@ if [ "$GOOGLE_REGION" == "" ]
 then
   echo "Defaulting GOOGLE_REGION to europe-north1"
   export GOOGLE_REGION="europe-north1"
-  export LOCATION="$GOOGLE_REGION"
 fi
 
 if [ "$GOOGLE_ZONE" == "" ]
 then
   echo "Defaulting GOOGLE_ZONE to europe-north1-a"
   export GOOGLE_ZONE="europe-north1-a"
-  export ZONE="$GOOGLE_ZONE"
 fi
 
 if [ "$GOOGLE_PROJECT" == "" ]
 then
   echo "Defaulting GOOGLE_PROJECT to entigo-infralib2"
   export GOOGLE_PROJECT="entigo-infralib2"
-  export PROJECT_ID="$GOOGLE_PROJECT"
 fi
 
 DOCKER_OPTS=""
@@ -52,6 +49,7 @@ fi
 
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
+source common/generate_config.sh
 
 if [ "$1" == "testonly" ]
 then
@@ -65,7 +63,6 @@ then
         fi
   done
 else
-  source common/generate_config.sh
   prepare_agent
   echo "sources:
  - url: /conf
@@ -100,7 +97,7 @@ steps:" > agents/config.yaml
         fi
         mkdir -p "agents/${MODULETYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULETYPE}_${testname}/config/$STEP_NAME/$MODULENAME.yaml"
-        docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent entigolabs/entigo-infralib-testing:agent-alpha1 run -c /conf/agents/${MODULETYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
+        docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULETYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
   done
   FAIL=0
@@ -135,5 +132,5 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e COMMAND="test" \
 	-e STEP_NAME="$STEP_NAME" \
 	-v $CLOUDSDK_CONFIG:/root/.config/gcloud \
-        $TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app entigolabs/entigo-infralib-testing:$TESTING_VERSION
+        $TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
  
