@@ -58,6 +58,37 @@ generate_config() {
 
 run_agents() {
   docker pull $ENTIGO_INFRALIB_IMAGE
+  if [ "$CLOUDSDK_CONFIG" == "" ]
+  then
+    echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
+    export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
+  fi
+  DOCKER_OPTS=""
+  if [ "$GOOGLE_CREDENTIALS" != "" ]
+  then
+    echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
+    mkdir -p $CLOUDSDK_CONFIG
+    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+    DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+    
+    gaccount=""
+    attempt=1
+    while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
+      gcloud auth activate-service-account --key-file=$CLOUDSDK_CONFIG/application_default_credentials.json
+      gcloud config set project $GOOGLE_PROJECT
+      gcloud auth list
+      gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+      echo "Value for gaccount is '$gaccount'"
+      if [ -z "$gaccount" ]
+      then
+        sleep 1.$((RANDOM % 9))
+        echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
+        attempt=$((attempt + 1))
+      fi
+    done
+    gcloud config set account $gaccount
+  fi
+  
   local module="$1"
   PIDS=""
   for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
@@ -81,19 +112,7 @@ run_agents() {
         echo "Defaulting GOOGLE_PROJECT to entigo-infralib2"
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
-      if [ "$CLOUDSDK_CONFIG" == "" ]
-      then
-        echo "Defaulting PROJECT_ID to $(echo ~)/.config/gcloud"
-        export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
-      fi
-      DOCKER_OPTS=""
-      if [ "$GOOGLE_CREDENTIALS" != "" ]
-      then
-        echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
-        mkdir -p $CLOUDSDK_CONFIG
-        echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
-        DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-      fi
+
       docker run --rm $DOCKER_OPTS -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
