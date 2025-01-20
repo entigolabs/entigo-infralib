@@ -554,6 +554,26 @@ output "name" {
 }
 # Additional outputs
 
+output "private_subnet_cidrs" {
+  value = module.vpc.private_subnets_cidr_blocks
+}
+
+output "public_subnet_cidrs" {
+  value = module.vpc.public_subnets_cidr_blocks
+}
+
+output "database_subnet_cidrs" {
+  value = module.vpc.database_subnets_cidr_blocks
+}
+
+output "elasticache_subnet_cidrs" {
+  value = module.vpc.elasticache_subnets_cidr_blocks
+}
+
+output "intra_subnet_cidrs" {
+  value = module.vpc.intra_subnets_cidr_blocks
+}
+
 output "private_subnet_names" {
   value = var.private_subnet_names
 }
