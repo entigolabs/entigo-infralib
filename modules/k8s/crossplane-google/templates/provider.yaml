@@ -51,6 +51,6 @@ metadata:
 spec:
   package: {{ .package }}
   runtimeConfigRef:
-    name: {{ .Release.Name }}
+    name: {{ $.Release.Name }}
 {{- end }}
 {{- end }}

@@ -1,4 +1,4 @@
-{{- if and .Values.global.createInternal .Values.google.internalGatewayAllowGlobalAccess }}
+{{- if and .Values.global.createInternal .Values.global.google.internalGatewayAllowGlobalAccess }}
 
 apiVersion: networking.gke.io/v1
 kind: GCPGatewayPolicy
