@@ -19,6 +19,8 @@ then
   default_google_conf
 fi
 
+default_k8s_conf
+
 run_agents
 
 test_all

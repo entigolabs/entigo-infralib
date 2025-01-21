@@ -29,13 +29,14 @@ then
 fi
 
 DOCKER_OPTS=""
-  if [ "$GOOGLE_CREDENTIALS" != "" ]
-  then
-  #This is needed for terratest terraform execution
-  DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-  #This is needed for terratest bucket creation
-  mkdir -p $CLOUDSDK_CONFIG
-  echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+if [ "$GOOGLE_CREDENTIALS" != "" -a ! -f "$CLOUDSDK_CONFIG/application_default_credentials.json" ]
+then
+    echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
+    #This is needed for terratest terraform execution
+    DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+    #This is needed for terratest bucket creation
+    mkdir -p $CLOUDSDK_CONFIG
+    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
 fi
 
 
