@@ -2,7 +2,7 @@ global:
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
-    region: "{{ .toutput.eks.region" }}"
+    region: "{{ .toutput.eks.region }}"
 karpenter:
   settings:
     clusterName: "{{ .toutput.eks.cluster_name }}"
