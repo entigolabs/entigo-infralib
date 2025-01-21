@@ -1,0 +1,6 @@
+argocd:
+  server:
+    ingress:
+      annotations:
+        alb.ingress.kubernetes.io/group.name: external
+        alb.ingress.kubernetes.io/scheme: internet-facing

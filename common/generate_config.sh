@@ -55,6 +55,37 @@ generate_config() {
     done
 }
 
+generate_config_k8s() {
+    local modulepath=$1
+    local step=$2
+    local existing_step=""
+    for test in $(find $modulepath  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
+    do 
+      module=`basename $test`
+      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+      do
+        if [ -f "$modulepath/$module/test/${cloud}.yaml" ]
+        then
+          echo "$test found $modulepath/$module/test/${cloud}.yaml "  
+          if [[ "$existing_step" != *"${cloud}"* ]];
+          then
+            mkdir -p agents/${cloud}/config/apps
+            local existing_step="$existing_step ${cloud}"
+            echo "    - name: apps
+        type: argocd-apps
+        approve: force
+        modules:" >> agents/${cloud}/config.yaml
+          fi
+
+          echo "        - name: $module
+          source: k8s/$module" >> agents/${cloud}/config.yaml
+          mkdir -p agents/${cloud}/config/apps
+          cp "$modulepath/$module/test/${cloud}.yaml" "agents/${cloud}/config/apps/${module}.yaml"
+        fi
+      done
+    done
+}
+
 
 run_agents() {
   docker pull $ENTIGO_INFRALIB_IMAGE
@@ -206,4 +237,9 @@ default_aws_conf() {
 default_google_conf() {
   generate_config "./modules/google" "net" "services" "vpc" "dns"
   generate_config "./modules/google" "infra" "gke" "crossplane"
+}
+
+
+default_k8s_conf() {
+  generate_config_k8s "./modules/k8s" "apps"
 }
