@@ -37,8 +37,8 @@ spec:
   runtimeConfigRef:
     name: {{.Release.Name}}
 
-{{- if .Values.extraProviders }}
-{{- range .Values.extraProviders }}
+{{- if .Values.global.extraProviders }}
+{{- range .Values.global.extraProviders }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
