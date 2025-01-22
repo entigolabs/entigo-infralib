@@ -6,3 +6,5 @@ global:
 
   deploymentRuntimeConfig:
     googleServiceAccount: ""
+
+  extraProviders: []

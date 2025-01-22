@@ -1,0 +1,15 @@
+{{- if and .Values.global.createInternal .Values.global.google.internalGatewayAllowGlobalAccess }}
+
+apiVersion: networking.gke.io/v1
+kind: GCPGatewayPolicy
+metadata:
+  name: {{ .Release.Name }}-internal
+spec:
+  default:
+    allowGlobalAccess: true
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ .Release.Name }}-internal
+
+{{- end }}

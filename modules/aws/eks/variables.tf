@@ -31,6 +31,12 @@ variable "eks_cluster_version" {
   default  = "1.30"
 }
 
+variable "cluster_iam_role_arn" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
 variable "authentication_mode" {
   type     = string
   nullable = false
@@ -40,7 +46,7 @@ variable "authentication_mode" {
 variable "enable_cluster_creator_admin_permissions" {
   type     = bool
   nullable = false
-  default  = false
+  default  = true
 }
 
 variable "iam_admin_role" {
@@ -100,6 +106,11 @@ variable "eks_main_instance_types" {
   default = ["t3.large"]
 }
 
+variable "eks_main_capacity_type" {
+  type    = string
+  default = "ON_DEMAND"
+}
+
 variable "eks_main_volume_size" {
   type    = number
   default = 100
@@ -136,6 +147,11 @@ variable "eks_mainarm_max_size" {
 variable "eks_mainarm_instance_types" {
   type    = list(string)
   default = ["t4g.large"]
+}
+
+variable "eks_mainarm_capacity_type" {
+  type    = string
+  default = "ON_DEMAND"
 }
 
 variable "eks_mainarm_volume_size" {
@@ -218,6 +234,11 @@ variable "eks_mon_instance_types" {
   default = ["t3.large"]
 }
 
+variable "eks_mon_capacity_type" {
+  type    = string
+  default = "ON_DEMAND"
+}
+
 variable "eks_mon_volume_size" {
   type    = number
   default = 50
@@ -260,6 +281,11 @@ variable "eks_tools_max_size" {
 variable "eks_tools_instance_types" {
   type    = list(string)
   default = ["t3.large"]
+}
+
+variable "eks_tools_capacity_type" {
+  type    = string
+  default = "ON_DEMAND"
 }
 
 variable "eks_tools_volume_size" {
@@ -307,6 +333,11 @@ variable "eks_db_instance_types" {
   default  = ["t3.large"]
 }
 
+variable "eks_db_capacity_type" {
+  type    = string
+  default = "ON_DEMAND"
+}
+
 variable "eks_db_volume_size" {
   type    = number
   default = 50
@@ -350,6 +381,12 @@ variable "node_ssh_key_pair_name" {
   type = string
   nullable = true
   default = null
+}
+
+variable "bootstrap_self_managed_addons" {
+  type    = bool
+  nullable = true
+  default = true
 }
 
 variable "coredns_addon_version" {
