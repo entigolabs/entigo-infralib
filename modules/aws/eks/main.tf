@@ -13,7 +13,7 @@ locals {
       desired_size    = var.eks_main_desired_size != 0 ? var.eks_main_desired_size : var.eks_main_min_size
       max_size        = var.eks_main_max_size
       instance_types  = var.eks_main_instance_types
-      capacity_type   = "ON_DEMAND"
+      capacity_type   = var.eks_main_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
 
@@ -40,7 +40,7 @@ locals {
       desired_size    = var.eks_mainarm_desired_size != 0 ? var.eks_mainarm_desired_size : var.eks_mainarm_min_size
       max_size        = var.eks_mainarm_max_size
       instance_types  = var.eks_mainarm_instance_types
-      capacity_type   = "ON_DEMAND"
+      capacity_type   = var.eks_mainarm_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = "AL2_ARM_64"
@@ -105,7 +105,7 @@ locals {
       max_size        = var.eks_mon_max_size
       instance_types  = var.eks_mon_instance_types
       subnet_ids      = var.eks_mon_single_subnet ? [var.private_subnets[0]] : var.private_subnets
-      capacity_type   = "ON_DEMAND"
+      capacity_type   =  var.eks_mon_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
@@ -143,7 +143,7 @@ locals {
       max_size        = var.eks_tools_max_size
       instance_types  = var.eks_tools_instance_types
       subnet_ids      = var.eks_tools_single_subnet ? [var.private_subnets[0]] : var.private_subnets
-      capacity_type   = "ON_DEMAND"
+      capacity_type   = var.eks_tools_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
@@ -180,7 +180,7 @@ locals {
       desired_size    = var.eks_db_desired_size != 0 ? var.eks_db_desired_size : var.eks_db_min_size
       max_size        = var.eks_db_max_size
       instance_types  = var.eks_db_instance_types
-      capacity_type   = "ON_DEMAND"
+      capacity_type   = var.eks_db_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       taints = [
@@ -345,7 +345,12 @@ module "eks" {
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
 
+  create_iam_role = var.cluster_iam_role_arn != null ? false : true
+  iam_role_arn = var.cluster_iam_role_arn
+
   enable_irsa                     = true
+
+  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
 
   cluster_addons = {
     coredns = {
