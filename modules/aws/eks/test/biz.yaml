@@ -1,4 +1,5 @@
 eks_cluster_public: true
+enable_cluster_creator_admin_permissions: false
 eks_mon_single_subnet: false
 eks_mon_capacity_type: "SPOT"
 cluster_enabled_log_types: |
@@ -21,7 +22,7 @@ eks_mainarm_instance_types: |
   ["t4g.micro"]
 eks_tools_max_size: 4
 eks_tools_capacity_type: "SPOT"
-aws_auth_user: "eks-test2"
+aws_auth_user: "github"
 iam_admin_role: "AWSReservedSSO_AdministratorAccess_.*"
 additional_access_entries: |
   {

@@ -29,7 +29,7 @@ func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]in
         outputs, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
 
 	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", awsRegion, bucket, file, err)
-	fmt.Printf("OUTPUT %s %s", file, outputs)
+	//fmt.Printf("OUTPUT %s %s", file, outputs)
 	var result map[string]interface{}
 	err = json.Unmarshal([]byte(outputs), &result)
 	require.NoError(t, err, "Error parsing JSON: %s Error: %s", outputs, err)

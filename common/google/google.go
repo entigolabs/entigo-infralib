@@ -42,7 +42,7 @@ func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]in
 	    defer closer.Close()
 	}
 
-	fmt.Printf("OUTPUT %s %s", file, string(outputs))
+	//fmt.Printf("OUTPUT %s %s", file, string(outputs))
 	var result map[string]interface{}
 	err = json.Unmarshal(outputs, &result)
 	require.NoError(t, err, "Error parsing JSON: %s Error: %s", string(outputs), err)
