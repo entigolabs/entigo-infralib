@@ -39,9 +39,9 @@ then
 #Prepare project filesystems for apply stages. When we apply then we need to get the tar artifact.
 elif [ "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
-  if [ ! -f /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan ]
+  if [ ! -d /tmp/project/steps/$TF_VAR_prefix ]
   then
-    echo "Unable to find plan! /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan"
+    echo "Unable to find plan! /tmp/project/steps/$TF_VAR_prefix"
     exit 4
   fi
   cd "/tmp/project/steps/$TF_VAR_prefix"

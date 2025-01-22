@@ -1,0 +1,7 @@
+grafana:
+  "grafana\.ini":
+    server:
+      root_url: grafana-pri.runner-main-pri.infralib.entigo.io
+  ingress:
+    hosts:
+    - grafana-pri.runner-main-pri.infralib.entigo.io
