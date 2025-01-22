@@ -1,5 +1,5 @@
 grafana:
-  "grafana\.ini":
+  'grafana.ini':
     server:
       root_url: grafana-biz.runner-main-biz-int.infralib.entigo.io
   ingress:

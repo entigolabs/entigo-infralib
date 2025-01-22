@@ -1,0 +1,6 @@
+global:
+  google:
+    hostname: mimir-biz.runner-main-biz-int.gcp.infralib.entigo.io
+    projectID: entigo-infralib2
+    gateway:
+      namespace: google-gateway
