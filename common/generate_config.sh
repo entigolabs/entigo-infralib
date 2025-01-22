@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:agent-alpha1"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:a124"
 
 prepare_agent() {
   if [ -d agents ]
@@ -66,19 +66,19 @@ generate_config_k8s() {
       do
         if [ -f "$modulepath/$module/test/${cloud}.yaml" ]
         then
-          echo "$test found $modulepath/$module/test/${cloud}.yaml "  
           if [[ "$existing_step" != *"${cloud}"* ]];
           then
             mkdir -p agents/${cloud}/config/apps
             local existing_step="$existing_step ${cloud}"
             echo "    - name: apps
-        type: argocd-apps
-        approve: force
-        modules:" >> agents/${cloud}/config.yaml
+      type: argocd-apps
+      approve: force
+      kubernetes_cluster_name: '{{ .ssm.infra.eks.cluster_name }}'
+      modules:" >> agents/${cloud}/config.yaml
           fi
 
-          echo "        - name: $module
-          source: k8s/$module" >> agents/${cloud}/config.yaml
+          echo "      - name: $module
+        source: $module" >> agents/${cloud}/config.yaml
           mkdir -p agents/${cloud}/config/apps
           cp "$modulepath/$module/test/${cloud}.yaml" "agents/${cloud}/config/apps/${module}.yaml"
         fi
@@ -88,7 +88,7 @@ generate_config_k8s() {
 
 
 run_agents() {
-  docker pull $ENTIGO_INFRALIB_IMAGE
+  #docker pull $ENTIGO_INFRALIB_IMAGE
   if [ "$CLOUDSDK_CONFIG" == "" ]
   then
     echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
@@ -141,8 +141,8 @@ run_agents() {
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
 
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
-      PIDS="$PIDS $!=$agent"
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local 
+      #PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
         if [ "$(echo $agent | cut -d"_" -f2)" == "us" ]
@@ -154,8 +154,8 @@ run_agents() {
           export AWS_REGION="eu-north-1"
         fi
     
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local &
-        PIDS="$PIDS $!=$agent"
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local 
+        #PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
     fi

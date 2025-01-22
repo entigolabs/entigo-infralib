@@ -7,7 +7,9 @@ source common/generate_config.sh
 prepare_agent
 
 echo "sources:
-    - url: /conf
+    - url: https://github.com/entigolabs/entigo-infralib
+      version: RD-419
+      force_version: true
 steps:" > agents/config.yaml
 
 if [ "$AWS_REGION" != "" ]

@@ -66,6 +66,7 @@ then
 #Prepare and check the environment for Kubernetes (common for plan and apply)
 elif [ "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
+  echo "COMMAND $COMMAND, cluster $KUBERNETES_CLUSTER_NAME region $AWS_REGION"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
@@ -134,6 +135,7 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
+
   #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
@@ -168,11 +170,11 @@ then
     exit 25
   fi
   export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-
+  
   if [ "$ARGOCD_AUTH_TOKEN" == "" ]
   then
     echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
-    ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
+    ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
     argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
     export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
     argocd logout ${ARGOCD_HOSTNAME}
@@ -212,7 +214,7 @@ then
   echo "ArgoCD Applications: ${CHANGED} has changed objects, ${DESTROY} has RequiredPruning objects."
 
   rm -f *.log
-
+  
   if [ "$FAIL" -ne 0 ]
   then
     echo "FAILED to plan $FAIL applications."
@@ -230,7 +232,7 @@ then
   fi
   export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
 
-
+  
   PIDS=""
   for app_file in ./*.yaml
   do
