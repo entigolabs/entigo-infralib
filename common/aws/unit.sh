@@ -1,8 +1,4 @@
 #!/bin/bash
-if [ "$TESTING_VERSION" == "" ]
-then
-  TESTING_VERSION="latest" 
-fi
 
 if [ "$AWS_REGION" == "" ]
 then

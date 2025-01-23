@@ -28,6 +28,14 @@ const (
 	GCloud ProviderType = "gcloud"
 )
 
+func CheckKubectlConnection(t testing.TestingT, contextName string, namespaceName string) (*k8s.KubectlOptions) {
+      kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+      output, err := k8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+      require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+      require.Equal(t, output, "yes")
+      return kubectlOptions
+}
+
 func WaitUntilClusterSecretStoreAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1beta1", Resource: "clustersecretstores"}
 	availability := defaultObjectAvailability(name, resource)

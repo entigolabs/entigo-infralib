@@ -1,9 +1,4 @@
 #!/bin/bash
-if [ "$TESTING_VERSION" == "" ]
-then
-  TESTING_VERSION="latest" 
-fi
-
 if [ "$GOOGLE_REGION" == "" ]
 then
   echo "Defaulting GOOGLE_REGION to europe-north1"
