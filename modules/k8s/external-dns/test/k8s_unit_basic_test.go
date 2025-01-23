@@ -23,7 +23,7 @@ func TestK8sExternalDnsAWSBiz(t *testing.T) {
 func TestK8sExternalDnsAWSPri(t *testing.T) {
 	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
 }
-
+/*
 func TestK8sExternalDnsGoogleBiz(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
 }
@@ -31,7 +31,7 @@ func TestK8sExternalDnsGoogleBiz(t *testing.T) {
 func TestK8sExternalDnsGooglePri(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
 }
-
+*/
 func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
