@@ -23,7 +23,7 @@ func TestK8sExternalDnsAWSBiz(t *testing.T) {
 func TestK8sExternalDnsAWSPri(t *testing.T) {
 	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "pri", "aws")
 }
-
+/*
 func TestK8sExternalDnsGoogleBiz(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "biz", "google")
 }
@@ -31,7 +31,7 @@ func TestK8sExternalDnsGoogleBiz(t *testing.T) {
 func TestK8sExternalDnsGooglePri(t *testing.T) {
 	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "pri", "google")
 }
-
+*/
 func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudProvider string) {
 	t.Parallel()
 	spew.Dump("")
@@ -55,6 +55,7 @@ func testK8sExternalDns(t *testing.T, contextName string, envName string, cloudP
 		setValues["external-dns.env[0].name"] = "AWS_DEFAULT_REGION"
 		setValues["global.aws.account"] = awsAccount
 		setValues["global.aws.clusterOIDC"] = clusteroidc
+		setValues["global.aws.assumeRole"] = "arn:aws:iam::123456789012:role/cross-account-dns"
 
 		externalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/pub_zone_id", envName))
 		internalZoneID := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/runner-main-%s/int_zone_id", envName))

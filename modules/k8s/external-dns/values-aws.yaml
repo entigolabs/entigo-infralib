@@ -5,6 +5,7 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    assumeRole: ""
 
 external-dns:
   sources:
