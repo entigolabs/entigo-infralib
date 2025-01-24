@@ -25,4 +25,4 @@ default_k8s_conf
 
 run_agents
 
-#test_all
+test_all

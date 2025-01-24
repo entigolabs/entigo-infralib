@@ -244,18 +244,17 @@ then
   for app_file in ./*.yaml
   do
       argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
-      PIDS="$PIDS $!"
+      PIDS="$PIDS $!=$app_file"
   done
 
   FAIL=0
   for p in $PIDS; do
-      wait $p || let "FAIL+=1"
-  done
-
-  for app_log_file in ./*.log
-  do
-    cat $app_log_file
-    rm $app_log_file
+      pid=$(echo $p | cut -d"=" -f1)
+      name=$(echo $p | cut -d"=" -f2)
+      wait $pid || let "FAIL+=1"
+      echo "$name finished (Failed apps: $FAIL)"
+      cat ${name}.log
+      rm ${name}.log
   done
 
   if [ "$FAIL" -ne 0 ]
@@ -286,16 +285,3 @@ else
   exit 1
 fi
 
-
-#Compress artifacts created in plan stage that will be used in apply stage.
-if [ "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "plan" ]
-then
-  cd ../..
-  tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
-  if [ ! -z "$GOOGLE_REGION" ]
-  then
-    echo "Copy plan to Google S3"
-    gsutil -m -q cp tf.tar.gz gs://${INFRALIB_BUCKET}/$TF_VAR_prefix-tf.tar.gz
-  fi
-
-fi
