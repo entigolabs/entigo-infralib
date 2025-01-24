@@ -175,14 +175,19 @@ then
   then
     echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
     ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
-    argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
-    export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
-    argocd logout ${ARGOCD_HOSTNAME}
-    if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+    if [ $ARGO_PASS != "" ]
     then
-      kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
+      argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
+      export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
+      argocd logout ${ARGOCD_HOSTNAME}
+      if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+      then
+        kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
+      else
+        echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+      fi
     else
-      echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+      echo "Unable to get argocd Admin token to create the account token for infralib."
     fi
   fi
   rm -f *.sync *.log
@@ -231,7 +236,10 @@ then
     exit 25
   fi
   export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-
+  if [ "$ARGOCD_AUTH_TOKEN" == "" ]
+  then
+    echo "Did not get the infralib account token, falling back to kubectl sync and check."
+  fi
   
   PIDS=""
   for app_file in ./*.yaml

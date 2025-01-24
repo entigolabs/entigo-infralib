@@ -4,8 +4,3 @@ mimir-distributed:
       annotations:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing
-      hosts:
-      - host: "mimir-pri.runner-main-pri.infralib.entigo.io"
-        paths:
-        - path: "/"
-          pathType: "Prefix"

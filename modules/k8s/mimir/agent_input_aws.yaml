@@ -5,3 +5,11 @@ global:
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
   bucketName: "{{ .config.prefix }}-mimir-metrics"
+mimir-distributed:
+  gateway:
+    ingress:
+      hosts:
+      - host: "mimir.{{ .toutput.route53.int_domain }}"
+        paths:
+        - path: "/"
+          pathType: "Prefix"
