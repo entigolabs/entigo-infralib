@@ -5,4 +5,4 @@ global:
 argocd:
   global:
     domain: |
-      argocd.{{ .toutput.dns.ext_domain }}
+      argocd.{{ .toutput.dns.pub_domain }}
