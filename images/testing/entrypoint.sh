@@ -195,17 +195,16 @@ then
   for app_file in ./*.yaml
   do
       argocd-apps-plan.sh $app_file > $app_file.log 2>&1 &
-      PIDS="$PIDS $!"
+      PIDS="$PIDS $!=$app_file"
   done
 
   FAIL=0
   for p in $PIDS; do
-      wait $p || let "FAIL+=1"
-  done
-
-  for app_log_file in ./*.log
-  do
-    cat $app_log_file
+      pid=$(echo $p | cut -d"=" -f1)
+      name=$(echo $p | cut -d"=" -f2)
+      wait $pid || let "FAIL+=1"
+      echo "$name finished (Failed apps: $FAIL)"
+      cat ${name}.log
   done
 
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
