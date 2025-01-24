@@ -20,11 +20,11 @@ func TestK8sArgocdAWSPri(t *testing.T) {
 }
 
 func TestK8sArgocdGoogleBiz(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-route53-int.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sArgocdGooglePri(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-route53.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
 }
 
 func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider string) {

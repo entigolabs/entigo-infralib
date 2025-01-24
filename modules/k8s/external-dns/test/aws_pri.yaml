@@ -1,0 +1,11 @@
+global:
+  aws:
+    assumeRole: "arn:aws:iam::123456789012:role/cross-account-dns"
+
+external-dns:
+  env:
+  - value: "{{ .toutput.eks.region }}"
+    name: "AWS_DEFAULT_REGION"
+  extraArgs:
+  - "--metrics-address=:7979"
+  - "--zone-id-filter={{ .toutput.route53.pub_zone_id }}"  

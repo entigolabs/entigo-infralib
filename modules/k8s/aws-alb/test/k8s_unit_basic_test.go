@@ -2,110 +2,53 @@ package test
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
+	"strings"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const domain = "infralib.entigo.io"
 
 func TestK8sAwsAlbBiz(t *testing.T) {
-	testK8sAwsAlb(t, "aws-alb-biz", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io")
 }
 
 func TestK8sAwsAlbPri(t *testing.T) {
-	testK8sAwsAlb(t, "aws-alb-pri", "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io")
 }
 
-func testK8sAwsAlb(t *testing.T, namespaceName string, contextName string, runnerName string) {
+func testK8sAwsAlb(t *testing.T, contextName string, envName string, hostName string) {
+  
 	t.Parallel()
-	spew.Dump("")
+	namespaceName := fmt.Sprintf("aws-alb-%s", envName)
+        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
-	helmChartPath, err := filepath.Abs("..")
-	require.NoError(t, err)
-
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	extraArgs := make(map[string][]string)
-	setValues := make(map[string]string)
-
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	awsAccount := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/account", runnerName))
-	clusteroidc := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/oidc_provider", runnerName))
-	region := aws.GetParameter(t, awsRegion, fmt.Sprintf("/entigo-infralib/%s/region", runnerName))
-
-	setValues["aws-load-balancer-controller.image.repository"] = fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region)
-	setValues["aws-load-balancer-controller.clusterName"] = runnerName
-	setValues["global.aws.account"] = awsAccount
-	setValues["global.aws.clusterOIDC"] = clusteroidc
-
-
-	ingressClass := "alb"
-	if prefix != "runner-main" {
-		namespaceName = fmt.Sprintf("%s-%s", namespaceName, prefix)
-		extraArgs["upgrade"] = []string{"--skip-crds"}
-		extraArgs["install"] = []string{"--skip-crds"}
-		setValues["aws-load-balancer-controller.ingressClass"] = namespaceName
-		ingressClass = namespaceName
-	}
-	setValues["aws-load-balancer-controller.nameOverride"] = namespaceName
-	releaseName := namespaceName
-
-	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
-
-	helmOptions := &helm.Options{
-		SetValues:         setValues,
-		KubectlOptions:    kubectlOptions,
-		BuildDependencies: false,
-		ExtraArgs:         extraArgs,
-	}
-
-	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-		defer helm.Delete(t, helmOptions, releaseName, true)
-		// k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
-	}
-
-	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			fmt.Println("Namespace already exists.")
-		} else {
-			t.Fatal("Error:", err)
-		}
-	}
-
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, releaseName, 10, 6*time.Second)
-	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, fmt.Sprintf("%s-webhook-service", releaseName), 60, 1*time.Second)
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
+	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, "aws-load-balancer-webhook-service", 60, 1*time.Second)
 	time.Sleep(5 * time.Second)
 
 	ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
 	require.NoError(t, err)
-	ingress.SetName(releaseName)
+	ingress.SetName("aws-load-balancer")
+	ingressClass := "alb"
 	err = unstructured.SetNestedField(ingress.Object, ingressClass, "spec", "ingressClassName")
 	require.NoError(t, err, "Setting ingressClassName error")
 	annotations := ingress.GetAnnotations()
-	annotations["alb.ingress.kubernetes.io/group.name"] = releaseName
+	annotations["alb.ingress.kubernetes.io/group.name"] = "aws-load-balancer"
 	ingress.SetAnnotations(annotations)
-	host := fmt.Sprintf("%s.%s.%s", strings.ToLower(random.UniqueId()), runnerName, domain)
+	host := fmt.Sprintf("%s.%s", strings.ToLower(random.UniqueId()), hostName)
 	err = k8s.SetNestedSliceString(ingress.Object, 0, "host", host, "spec", "rules")
 	require.NoError(t, err, "Setting host error")
 	createdIngress, err := k8s.CreateK8SIngress(t, kubectlOptions, ingress)
 	require.NoError(t, err, "Creating ingress error")
 	assert.NotNil(t, createdIngress, "Ingress is nil")
-	assert.Equal(t, releaseName, createdIngress.GetName(), "Ingress name is not equal")
+	assert.Equal(t, "aws-load-balancer", createdIngress.GetName(), "Ingress name is not equal")
 
 	_, err = k8s.WaitUntilK8SIngressAvailable(t, kubectlOptions, createdIngress.GetName(), 40, 2*time.Second)
 	if err != nil {

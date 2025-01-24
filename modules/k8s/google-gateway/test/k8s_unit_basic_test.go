@@ -20,7 +20,7 @@ func TestK8sGoogleGatewayPri(t *testing.T) {
 func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
 	t.Parallel()
 
-	namespaceName := fmt.Sprintf("google-gateway-%s", envName)
+	namespaceName := "google-gateway"
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 	
 	//appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
