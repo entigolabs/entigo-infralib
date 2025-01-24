@@ -5,4 +5,4 @@ global:
 aws-load-balancer-controller:
   clusterName: "{{ .toutput.eks.cluster_name }}"
   image:
-    repository: "{{ .toutput.eks.account }}.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
+    repository: "602401143452.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
