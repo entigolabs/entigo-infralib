@@ -26,7 +26,7 @@ func TestK8sGrafanaGooglePri(t *testing.T) {
 	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
 }
 
-func testK8sGrafana(t *testing.T, contextName, envName, hostname, cloudProvider string) {
+func testK8sGrafana(t *testing.T, contextName string, envName string, hostname string, cloudProvider string) {
   	t.Parallel()
 	namespaceName := fmt.Sprintf("grafana-%s", envName)
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
