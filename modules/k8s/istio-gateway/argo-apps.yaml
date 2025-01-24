@@ -1,0 +1,4 @@
+spec:
+  syncPolicy:
+    syncOptions:
+    - Retry=10
