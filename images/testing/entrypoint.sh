@@ -91,7 +91,7 @@ then
   fi
 elif [ "$COMMAND" == "apply" ]
 then
-  echo "Syncing .terraform back to bucket"
+#  echo "Syncing .terraform back to bucket"
 #  if [ ! -z "$GOOGLE_REGION" ]
 #  then
 #    gsutil -m -q rsync -d -r .terraform gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix/.terraform
