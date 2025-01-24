@@ -1,9 +1,3 @@
-global:
-  datasources:
-    loki:
-      hostname: "{{ .toptout.loki.hostname }}"
-    prometheus:
-      hostname: "{{ .toptout.prometheus.hostname }}"
 grafana:
   grafana.ini:
     server:
