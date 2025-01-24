@@ -1,0 +1,8 @@
+global:
+  google:
+    gateway:
+      name: "google-gateway-external"
+argocd:
+  global:
+    domain: |
+      argocd.{{ .toutput.dns.ext_domain }}

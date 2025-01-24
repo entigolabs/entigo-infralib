@@ -42,13 +42,7 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
 	case "google":
 		gatewayNamespace = "google-gateway"
-
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-external"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
+		gatewayName = "google-gateway-external"
 	}
 
 
