@@ -14,7 +14,7 @@ spec:
   hostnames: [{{ .Values.global.google.hostname }}]
   rules:
     - backendRefs:
-        - name: {{ .Release.Name }}
+        - name: "kiali"
           port: 20001
 
 {{- end }}

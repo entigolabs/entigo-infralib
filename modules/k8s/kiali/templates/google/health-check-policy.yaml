@@ -20,6 +20,6 @@ spec:
   targetRef:
     group: ""
     kind: Service
-    name: {{ .Release.Name }}
+    name: "kiali"
 
 {{- end }}
