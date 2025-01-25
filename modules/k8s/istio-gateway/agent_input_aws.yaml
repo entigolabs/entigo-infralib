@@ -1,0 +1,3 @@
+global:
+  aws:
+    certificateArn: "{{ .toutput.route53.pub_cert_arn }}"
