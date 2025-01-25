@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
@@ -31,7 +30,7 @@ func testIstioIstiod(t *testing.T, contextName string) {
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}

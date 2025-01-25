@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
@@ -25,12 +24,12 @@ func TestK8sIstioGatewayGooglePri(t *testing.T) {
 	testK8sIstioGateway(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io")
 }
 
-func testK8sIstioGateway(t *testing.T, contextName, envName, hostName) {
+func testK8sIstioGateway(t *testing.T, contextName string, envName string, hostName string) {
   	t.Parallel()
 	namespaceName := "istio-gateway"
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 10, 5*time.Second)
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istio-gateway", 10, 5*time.Second)
 	if err != nil {
 		t.Fatal("istio-gateway deployment error:", err)
 	}

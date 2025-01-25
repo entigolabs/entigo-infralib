@@ -29,7 +29,7 @@ func testIstioBase(t *testing.T, contextName string) {
 	namespaceName := "istio-system"
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices"}, 60, 1*time.Second)
+	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices"}, 60, 1*time.Second)
 	require.NoError(t, err, "Istio Base no VirtualService CRD")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"gateways"}, 60, 1*time.Second)
 	require.NoError(t, err, "Istio Base no Gateway CRD")

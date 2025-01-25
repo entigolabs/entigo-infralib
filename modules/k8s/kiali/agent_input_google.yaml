@@ -1,6 +1,6 @@
 global:
   google:
-    hostname: loki.{{ .toutput.dns.int_domain }}
+    hostname: kiali.{{ .toutput.dns.int_domain }}
     gateway:
       name: google-gateway-internal
       namespace: google-gateway
