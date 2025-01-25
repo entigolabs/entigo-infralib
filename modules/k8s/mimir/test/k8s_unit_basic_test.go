@@ -32,7 +32,6 @@ func testK8sMimir(t *testing.T, contextName string, envName string, hostName str
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
 	
-	releaseName := namespaceName
 	gatewayName := ""
 	gatewayNamespace := ""
 
@@ -87,12 +86,12 @@ func testK8sMimir(t *testing.T, contextName string, envName string, hostName str
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s.%s", releaseName, hostName)
+	targetURL := fmt.Sprintf("http://mimir.%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s.%s", releaseName, hostName)
+	targetURL = fmt.Sprintf("https://mimir.%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "mimir ingress/gateway test error")
 }
