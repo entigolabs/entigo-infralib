@@ -3,6 +3,9 @@ global:
     gateway:
       name: "google-gateway-external"
 argocd:
+  repoServer:
+    autoscaling:
+      maxReplicas: 1
   global:
     domain: |
       argocd.{{ .toutput.dns.pub_domain }}
