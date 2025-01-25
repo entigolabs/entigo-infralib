@@ -19,7 +19,7 @@ func TestK8sHarborAWSPri(t *testing.T) {
 }
 
 func TestK8sHarborGoogleBiz(t *testing.T) {
-	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sHarborGooglePri(t *testing.T) {
@@ -85,12 +85,12 @@ func testK8sHarbor(t *testing.T, contextName string, envName string, hostName st
         retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://registry.%s", hostName)
+	targetURL := fmt.Sprintf("http://harbor.%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "harbor ingress/gateway test error")
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://registry.%s/api/v2.0/ping", hostName)
+	targetURL = fmt.Sprintf("https://harbor.%s/api/v2.0/ping", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "harbor ingress/gateway test error")
 }

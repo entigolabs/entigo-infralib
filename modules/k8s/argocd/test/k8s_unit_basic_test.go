@@ -12,7 +12,7 @@ import (
 )
 
 func TestK8sArgocdAWSBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53.infralib.entigo.io", "aws")
 }
 
 func TestK8sArgocdAWSPri(t *testing.T) {
