@@ -15,3 +15,6 @@ spec:
     name: aws-load-balancer-webhook
     jqPathExpressions:
     - '.webhooks[]?.clientConfig.caBundle'
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
