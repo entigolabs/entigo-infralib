@@ -1,3 +1,0 @@
-create_public = true
-create_private = false
-parent_zone_id = "Z07983041XRLSLZUTHHDY"

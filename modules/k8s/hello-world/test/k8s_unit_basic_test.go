@@ -9,12 +9,20 @@ import (
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
-func TestK8sHelloWorldBiz(t *testing.T) {
+func TestK8sHelloWorldAWSBiz(t *testing.T) {
 	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
 }
 
-func TestK8sHelloWorldPri(t *testing.T) {
+func TestK8sHelloWorldAWSPri(t *testing.T) {
 	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+}
+
+func TestK8sHelloWorldGoogleBiz(t *testing.T) {
+	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+}
+
+func TestK8sHelloWorldGooglePri(t *testing.T) {
+	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
 }
 
 func testK8sHelloWorld(t *testing.T, contextName string, envName string) {

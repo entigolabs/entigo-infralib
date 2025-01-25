@@ -1,8 +1,0 @@
-kiali-server:
-  deployment:
-    ingress:
-      override_yaml:
-        metadata:
-          annotations:
-            alb.ingress.kubernetes.io/group.name: external
-            alb.ingress.kubernetes.io/scheme: internet-facing

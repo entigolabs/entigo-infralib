@@ -17,14 +17,14 @@ import (
 )
 
 func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "runner-main-biz")
+	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
 }
 
 func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "runner-main-pri")
+	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
 }
 
-func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
+func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	t.Parallel()
 
 	namespaceName := "crossplane-system"
@@ -52,7 +52,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, runnerName string) {
 	require.NoError(t, err, "Provider config error")
 
 	// Create S3 Bucket
-	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-%s", strings.ToLower(random.UniqueId()), runnerName)
+	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-%s", strings.ToLower(random.UniqueId()), envName)
 	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/s3bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
 	assert.NotNil(t, bucket, "Bucket is nil")
