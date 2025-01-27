@@ -1,9 +1,6 @@
 name: Agent Release
 
 on:
-  push:
-    branches:
-      - "main"
   workflow_run:
     workflows: ["Stable"]
     types:
