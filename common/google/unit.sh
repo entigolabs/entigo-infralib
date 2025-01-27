@@ -54,6 +54,11 @@ then
         fi
   done
 else
+  if [ "`whoami`" == "runner" ]
+  then
+    docker pull $ENTIGO_INFRALIB_IMAGE
+  fi
+
   prepare_agent
   echo "sources:
  - url: /conf

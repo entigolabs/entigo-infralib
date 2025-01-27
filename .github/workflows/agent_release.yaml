@@ -103,7 +103,6 @@ jobs:
         PR_BRANCH: "main"
       run: |
         ./release.sh k8s
-        exit 1
     - name: Get latest release
       id: get_latest_release
       uses: actions/github-script@v6

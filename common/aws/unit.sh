@@ -21,6 +21,8 @@ SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
 
+
+
 if [ "$1" == "testonly" ]
 then
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
@@ -33,7 +35,10 @@ then
         fi
   done
 else
-
+  if [ "`whoami`" == "runner" ]
+  then
+    docker pull $ENTIGO_INFRALIB_IMAGE
+  fi
   prepare_agent
   echo "sources:
  - url: /conf
