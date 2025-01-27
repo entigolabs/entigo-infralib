@@ -103,8 +103,6 @@ jobs:
         PR_BRANCH: "main"
       run: |
         export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
-        echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
-        echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
         mkdir -p $CLOUDSDK_CONFIG
         echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
         gaccount=""
