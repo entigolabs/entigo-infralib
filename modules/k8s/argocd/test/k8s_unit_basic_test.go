@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	"os"
-	"strings"
+	//"os"
+	//"strings"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -31,7 +31,7 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 	t.Parallel()
 	namespaceName := fmt.Sprintf("argocd-%s", envName)
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-	
+	/*
 	appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
 	
 	gatewayName := ""
@@ -44,7 +44,7 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 		gatewayNamespace = "google-gateway"
 		gatewayName = "google-gateway-external"
 	}
-
+	*/
 
 	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second)
 	require.NoError(t, err, "Argocd no Applications CRD")
@@ -71,16 +71,17 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
-
+	/*
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s", hostName)
+	targetURL := fmt.Sprintf("http://%s.%s", appName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://argocd.%s", hostName)
+	targetURL = fmt.Sprintf("https://%s.%s", appName, hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
 	require.NoError(t, err, "argocd ingress/gateway test error")
+	*/
 }

@@ -46,6 +46,9 @@ echo "sources:
       version: main
       force_version: true
 steps:" > agents/config.yaml
+STEP_NAME="apps"
+
+
 else
   echo "sources:
  - url: /conf
@@ -65,14 +68,19 @@ fi
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
-        if [ $STEP_NAME == "runn-main" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]  #Change to *-main-* later
+        prefix="$(echo $testname | cut -d"_" -f2)"
+        if [ "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ] 
         then
           STEP_NAME="apps"
           APP_NAME=$MODULENAME
+        elif [[ $STEP_NAME == runn-main-* ]]
+        then
+          STEP_NAME="apps"
+          APP_NAME=${MODULENAME}-$prefix
         fi
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$(echo $testname | cut -d"_" -f2)"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
+          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
@@ -98,11 +106,11 @@ fi
             export GOOGLE_PROJECT="entigo-infralib2"
           fi
 
-          docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $(echo $testname | cut -d"_" -f2) --pipeline-type=local --steps "$STEP_NAME" & #--steps apps
+          docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
         elif [[ $testname == aws_* ]]
         then
-            if [ "$(echo $testname | cut -d"_" -f2)" == "us" ]
+            if [ "$prefix" == "us" ]
             then
               echo "Defaulting AWS_REGION to us-east-1"
               export AWS_REGION="us-east-1"
@@ -111,7 +119,7 @@ fi
               export AWS_REGION="eu-north-1"
             fi
         
-            docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $(echo $testname | cut -d"_" -f2) --pipeline-type=local --steps "$STEP_NAME" & #--steps apps
+            docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
         else
           echo "Unknown cloud provider type $testname"
