@@ -15,6 +15,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+    - name: Set up Docker cache
+      uses: actions/cache@v3
+      with:
+        path: /var/lib/docker
+        key: ${{ runner.os }}-docker-${{ hashFiles('common/generate_config.sh') }}
+        restore-keys: |
+          ${{ runner.os }}-docker-
     - name: Run tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
