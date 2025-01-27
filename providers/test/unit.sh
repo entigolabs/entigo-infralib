@@ -55,6 +55,7 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e TF_VAR_prefix="$prefix" \
+        -e COMMAND="test" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
 	-e ENTIGO_INFRALIB_TEST_TIMEOUT="60m" \
 	-v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json \
