@@ -26,12 +26,14 @@ default_k8s_conf
 #In GitHub "Agent Release" we run google and aws in separate processes (the tf argument is supplied).
 if [ "$1" == "tf" -o "$1" == "" ]
 then
+docker pull $ENTIGO_INFRALIB_IMAGE
 run_agents
-
+docker pull $TFLINT_IMAGE
 test_tf
 fi
 #In GitHub "Agent Release" we run k8s tests in separate processes (the k8s argument is supplied). This will test k8s modules in aws and goole.
 if [ "$1" == "k8s" -o "$1" == ""  ]
 then
+docker pull $KUBESCORE_IMAGE
 test_k8s
 fi

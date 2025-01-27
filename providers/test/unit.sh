@@ -56,4 +56,4 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e ENTIGO_INFRALIB_DESTROY="$ENTIGO_INFRALIB_DESTROY" \
 	-e ENTIGO_INFRALIB_TEST_TIMEOUT="60m" \
 	-v $(echo ~)/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json \
-       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../common":"/common" -w /app entigolabs/entigo-infralib-testing:v1.2.8-rc27
+       	 $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE

@@ -74,7 +74,11 @@ steps:" > agents/config.yaml
   then
     default_google_conf
   fi
-  
+  if [ "$AWS_ACCESS_KEY_ID" == "" -a "$CLOUDSDK_CONFIG" == "" ]
+  then
+    echo "ERROR: AWS_ACCESS_KEY_ID or CLOUDSDK_CONFIG should be set."
+    exit 5
+  fi
   
   PIDS=""
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)

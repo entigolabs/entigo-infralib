@@ -46,7 +46,7 @@ else #Fall back to Application auto sync when we can not get argo token.
   kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type merge --patch '{"spec": {"syncPolicy": {"automated": {"selfHeal": true}}}}'
   success="false"
   for i in {1..80}; do
-      kubectl get applications -n ${ARGOCD_NAMESPACE} $app_name -o json | jq -e 'select(.status.health.status == "Healthy" and .status.sync.status == "Synced")'
+      kubectl get applications -n ${ARGOCD_NAMESPACE} $app_name -o json | jq -e 'select(.status.health.status == "Healthy" and .status.sync.status == "Synced")' > /dev/null
       if [ $? -eq 0 ]
       then
         success="true"

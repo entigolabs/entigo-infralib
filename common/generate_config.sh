@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:latest"
+export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
+export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
 prepare_agent() {
   if [ -d agents ]

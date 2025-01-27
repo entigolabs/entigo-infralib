@@ -36,7 +36,7 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        ./stable.sh
+        ./stable.sh tf
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -79,7 +79,7 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        ./stable.sh
+        ./stable.sh tf
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2
@@ -112,7 +112,11 @@ jobs:
         GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
       run: |
-        ./release.sh k8s
+        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        ./stable.sh k8s
     - name: Slack Failed To Install Latest Release Message
       if: ${{ failure() }}
       uses: rtCamp/action-slack-notify@v2

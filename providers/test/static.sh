@@ -53,4 +53,4 @@ cp *.tf tmp_tf/
 rm tmp_tf/base.tf
 
 
-docker run --rm -v "$(pwd)/tmp_tf":"/data" ghcr.io/terraform-linters/tflint:v0.50.3
+docker run --rm -v "$(pwd)/tmp_tf":"/data" $TFLINT_IMAGE

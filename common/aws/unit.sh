@@ -42,9 +42,14 @@ steps:" > agents/config.yaml
   then
     default_aws_conf
   fi
-  if [ "$GOOGLE_CREDENTIALS" != "" ]
+  if [ "$CLOUDSDK_CONFIG" != "" ]
   then
     default_google_conf
+  fi
+  if [ "$AWS_ACCESS_KEY_ID" == "" -a "$CLOUDSDK_CONFIG" == "" ]
+  then
+    echo "ERROR: AWS_ACCESS_KEY_ID or CLOUDSDK_CONFIG should be set."
+    exit 5
   fi
   
   
