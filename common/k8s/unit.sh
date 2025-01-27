@@ -73,7 +73,7 @@ steps:" > agents/config.yaml
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
           yq --version
-          yq -y -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$(echo $testname | cut -d"_" -f2)"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
+          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$(echo $testname | cut -d"_" -f2)"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"

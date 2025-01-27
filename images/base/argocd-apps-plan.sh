@@ -30,8 +30,8 @@ then
   repopod=`kubectl get pod -n $ARGOCD_NAMESPACE -l app.kubernetes.io/component=repo-server -o jsonpath='{.items[0].metadata.name}'`
   kubectl exec -c repo-server -n $ARGOCD_NAMESPACE $repopod -- bash -c "mkdir -p /tmp/conf/modules/k8s && rm -rf /tmp/conf/$path"
   kubectl cp /conf/$path ${ARGOCD_NAMESPACE}/${repopod}:/tmp/conf/modules/k8s
-  kubectl exec -it -c repo-server -n argocd-pri $repopod -- bash -c "cd /tmp/conf/ && git init; git add . && git config user.email 'agent@entigo.com' && git config user.name 'agent' && git commit -a -m'updates'"
-  yq -y -i 'del(.spec.sources[0].targetRevision) | .spec.sources[0].repoURL = "file:///tmp/conf"' $app_file
+  kubectl exec -it -c repo-server -n ${ARGOCD_NAMESPACE} $repopod -- bash -c "cd /tmp/conf/ && git init; git add . && git config user.email 'agent@entigo.com' && git config user.name 'agent' && git commit -a -m'updates'"
+  yq -y -i 'del(.spec.sources[0].targetRevision)' $app_file
 fi
 
 kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1 

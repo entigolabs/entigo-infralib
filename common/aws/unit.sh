@@ -12,9 +12,9 @@ MODULENAME=$(basename $(pwd))
 
 if [ "$PR_BRANCH" != "" ]
 then
-STEP_NAME="`whoami`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2`-$MODULENAME"
+STEP_NAME="`whoami | cut -c1-4`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-4`-$MODULENAME"
 else
-STEP_NAME="`whoami`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2`-$MODULENAME"
+STEP_NAME="`whoami | cut -c1-4`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-4`-$MODULENAME"
 fi
 
 SCRIPTPATH=$(dirname "$0")
@@ -66,9 +66,9 @@ steps:" > agents/config.yaml
         then
             if [ "$MODULENAME" == "vpc" -o "$MODULENAME" == "cost-alert" ]
             then
-              yq -y -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
+              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
             else
-              yq -y -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
+              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
             fi
         fi
         mkdir -p "agents/${MODULETYPE}_${testname}/config/$STEP_NAME"
