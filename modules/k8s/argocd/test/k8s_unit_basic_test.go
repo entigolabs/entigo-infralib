@@ -73,9 +73,6 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 	}
 
 	retries := 100
-	if cloudProvider == "google" && strings.Contains(appName, "runner-main") {
-		retries = 300
-	}
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s", hostName)

@@ -34,7 +34,7 @@ func testTerraformCrossplane(t *testing.T, envName string) {
 	assert.NotEmpty(t, projectId, "project_id was not returned")
 
 	googleServiceAccountId := truncateString(fmt.Sprintf("%s-crossplane", envName), 28)
-	if os.Getenv("STEP_NAME") != "runner-main" {
+	if os.Getenv("STEP_NAME") != "runn-main" {
 		googleServiceAccountId = truncateString(fmt.Sprintf("%s-%s-crossplane", envName, os.Getenv("STEP_NAME")), 28)
 	}
 	googleServiceAccountEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, projectId)

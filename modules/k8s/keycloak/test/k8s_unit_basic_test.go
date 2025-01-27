@@ -10,19 +10,19 @@ import (
 )
 
 func TestK8sKeycloakAWSBiz(t *testing.T) {
-	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "runner-main-biz-int.infralib.entigo.io", "aws")
+	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53.infralib.entigo.io", "aws")
 }
 
 func TestK8sKeycloakAWSPri(t *testing.T) {
-	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "runner-main-pri.infralib.entigo.io", "aws")
+	testK8sKeycloak(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
 }
 
 func TestK8sKeycloakGoogleBiz(t *testing.T) {
-	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "runner-main-biz-int.gcp.infralib.entigo.io", "google")
+	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns.gcp.infralib.entigo.io", "google")
 }
 
 func TestK8sKeycloakGooglePri(t *testing.T) {
-	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "runner-main-pri.gcp.infralib.entigo.io", "google")
+	testK8sKeycloak(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
 }
 
 func testK8sKeycloak(t *testing.T, contextName, envName, hostName, cloudProvider string) {

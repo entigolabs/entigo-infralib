@@ -58,7 +58,7 @@ steps:" > agents/config.yaml
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         
-        if [[ $STEP_NAME == runner-main-* ]]  #Change to *-main-* later
+        if [[ $STEP_NAME == runn-main-* ]]  #Change to *-main-* later
         then
           STEP_NAME=$(cat "agents/${MODULETYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULETYPE/$MODULENAME\") | .name")
         fi

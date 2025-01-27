@@ -41,7 +41,7 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName, envName string) {
 	require.NoError(t, err, "ProviderConfig crd error")
 
 	// Create cloud storage bucket
-	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-runner-main-%s", strings.ToLower(random.UniqueId()), envName)
+	bucketName := fmt.Sprintf("entigo-infralib-test-%s-crossplane-runn-main-%s", strings.ToLower(random.UniqueId()), envName)
 	bucket, err := k8s.CreateK8SBucket(t, kubectlOptions, bucketName, "./templates/bucket.yaml")
 	require.NoError(t, err, "Creating bucket error")
 	assert.NotNil(t, bucket, "Bucket is nil")
