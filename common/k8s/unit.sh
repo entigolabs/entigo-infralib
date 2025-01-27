@@ -39,9 +39,18 @@ if [ "$1" != "testonly" ]
 then
 
   prepare_agent
+if [ "$STEP_NAME" == "runn-main" ]
+then
+echo "sources:
+    - url: https://github.com/entigolabs/entigo-infralib
+      version: main
+      force_version: true
+steps:" > agents/config.yaml
+else
   echo "sources:
  - url: /conf
 steps:" > agents/config.yaml
+fi
   if [ "$AWS_ACCESS_KEY_ID" != "" ]
   then
     default_aws_conf
@@ -63,7 +72,6 @@ steps:" > agents/config.yaml
         fi
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-          yq --version
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$(echo $testname | cut -d"_" -f2)"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
