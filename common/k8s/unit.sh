@@ -37,6 +37,10 @@ fi
 
 if [ "$1" != "testonly" ]
 then
+  if [ "`whoami`" == "runner" ]
+  then
+    docker pull $ENTIGO_INFRALIB_IMAGE
+  fi
 
   prepare_agent
 if [ "$STEP_NAME" == "runn-main" ]
@@ -47,7 +51,6 @@ echo "sources:
       force_version: true
 steps:" > agents/config.yaml
 STEP_NAME="apps"
-
 
 else
   echo "sources:
