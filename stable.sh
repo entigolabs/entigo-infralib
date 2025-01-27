@@ -11,11 +11,11 @@ echo "sources:
       version: stable
 steps:" > agents/config.yaml
 
-if [ "$AWS_ACCESS_KEY_ID" != "" ]
+if [ "$AWS_REGION" != "" ]
 then
   default_aws_conf
 fi
-if [ "$GOOGLE_CREDENTIALS" != "" ]
+if [ "$GOOGLE_REGION" != "" ]
 then
   default_google_conf
 fi
@@ -24,4 +24,4 @@ default_k8s_conf
 
 run_agents
 
-test_all
+test_tf

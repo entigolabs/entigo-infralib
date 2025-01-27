@@ -65,7 +65,7 @@ steps:" > agents/config.yaml
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
-        if [ $STEP_NAME == "runner-rd-419" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]  #Change to *-main-* later
+        if [ $STEP_NAME == "runner-main" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]  #Change to *-main-* later
         then
           STEP_NAME="apps"
           APP_NAME=$MODULENAME

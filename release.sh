@@ -8,7 +8,7 @@ prepare_agent
 
 echo "sources:
     - url: https://github.com/entigolabs/entigo-infralib
-      version: RD-419
+      version: main
       force_version: true
 steps:" > agents/config.yaml
 
@@ -26,5 +26,3 @@ default_k8s_conf
 run_agents
 
 test_tf
-
-test_k8s

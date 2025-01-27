@@ -27,7 +27,7 @@ func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]in
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, step)
 	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
 	
-	if !strings.Contains(stepName, "-rd-419") { //Change to -main later
+	if !strings.Contains(stepName, "-main") { //Change to -main later
 	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 	}
 	
