@@ -18,7 +18,7 @@ jobs:
     - name: Set up Docker cache
       uses: actions/cache@v3
       with:
-        path: /var/lib/docker
+        path: /home/runner/.docker/cache
         key: ${{ runner.os }}-docker-${{ hashFiles('common/generate_config.sh') }}
         restore-keys: |
           ${{ runner.os }}-docker-
