@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:a124"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:latest"
 
 prepare_agent() {
   if [ -d agents ]
