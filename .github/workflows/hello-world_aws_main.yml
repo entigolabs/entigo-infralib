@@ -26,7 +26,6 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        find / -size 100M
         modules/aws/hello-world/test.sh
     - name: Get latest release
       id: get_latest_release
