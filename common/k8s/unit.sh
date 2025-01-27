@@ -27,21 +27,7 @@ fi
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
-google_auth_login
 
-if [ "`whoami`" == "runner" ]
-then
-  if [ "$GOOGLE_CREDENTIALS" != "" ]
-  then
-    gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-    gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-  fi
-  if [ "$AWS_ACCESS_KEY_ID" != "" ]
-  then
-    aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-    aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-  fi
-fi
 
 
 DOCKER_OPTS=""
@@ -52,6 +38,45 @@ fi
 
 if [ "$1" != "testonly" ]
 then
+  google_auth_login
+  if [ "`whoami`" == "runner" ]
+  then
+    if [ "$GOOGLE_CREDENTIALS" != "" ]
+    then
+      gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for Google pri-infra-gke"
+        exit 1
+      fi
+      gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for Google biz-infra-gke"
+        exit 1
+      fi
+
+    fi
+    if [ "$AWS_ACCESS_KEY_ID" != "" ]
+    then
+      aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for AWS pri-infra-gke"
+        exit 1
+      fi
+      aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for AWS biz-infra-gke"
+        exit 1
+      fi
+    fi
+  fi
+
+
+
+
   if [ "`whoami`" == "runner" ]
   then
     docker pull $ENTIGO_INFRALIB_IMAGE
