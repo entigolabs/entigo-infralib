@@ -225,3 +225,4 @@ crossplane:
         cpu: 100m
         # -- Memory resource requests for RBAC Manager.
         memory: 128Mi
+
