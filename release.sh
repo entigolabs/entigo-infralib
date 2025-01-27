@@ -37,6 +37,7 @@ fi
 #In GitHub "Agent Release" we run k8s tests in separate processes (the k8s argument is supplied). This will test k8s modules in aws and goole.
 if [ "$1" == "k8s" -o "$1" == ""  ]
 then
+docker pull $ENTIGO_INFRALIB_IMAGE
 docker pull $KUBESCORE_IMAGE
 test_k8s
 fi
