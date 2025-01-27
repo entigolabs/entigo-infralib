@@ -29,6 +29,10 @@ const (
 	GCloud ProviderType = "gcloud"
 )
 
+func GetNamespaceName(t testing.TestingT) (string) {
+      return strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
+}
+
 func CheckKubectlConnection(t testing.TestingT, contextName string, namespaceName string) (*k8s.KubectlOptions) {
       kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
       output, err := k8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")

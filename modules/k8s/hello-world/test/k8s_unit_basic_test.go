@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
@@ -10,27 +9,27 @@ import (
 )
 
 func TestK8sHelloWorldAWSBiz(t *testing.T) {
-	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks")
 }
 
 func TestK8sHelloWorldAWSPri(t *testing.T) {
-	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks")
 }
 
 func TestK8sHelloWorldGoogleBiz(t *testing.T) {
-	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke")
 }
 
 func TestK8sHelloWorldGooglePri(t *testing.T) {
-	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
+	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
-func testK8sHelloWorld(t *testing.T, contextName string, envName string) {
+func testK8sHelloWorld(t *testing.T, contextName string) {
 	t.Parallel()
-	namespaceName := fmt.Sprintf("hello-world-%s", envName)
+	namespaceName := k8s.GetNamespaceName(t)
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s", namespaceName), 10, 6*time.Second)
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
 	require.NoError(t, err, "%s deployment %s error: %s",namespaceName, namespaceName, err)
 
 }
