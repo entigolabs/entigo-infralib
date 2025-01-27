@@ -17,24 +17,6 @@ then
   export GOOGLE_PROJECT="entigo-infralib2"
 fi
 
-if [ "$CLOUDSDK_CONFIG" == "" ]
-then
-  echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
-  export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
-fi
-
-DOCKER_OPTS=""
-if [ "$GOOGLE_CREDENTIALS" != "" -a ! -f "$CLOUDSDK_CONFIG/application_default_credentials.json" ]
-then
-    echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
-    #This is needed for terratest terraform execution
-    DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
-    #This is needed for terratest bucket creation
-    mkdir -p $CLOUDSDK_CONFIG
-    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
-fi
-
-
 MODULE_PATH="$(pwd)"
 MODULETYPE=$(basename $(dirname $(pwd)))
 MODULENAME=$(basename $(pwd))
@@ -49,6 +31,16 @@ fi
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
+
+google_auth_login
+
+
+DOCKER_OPTS=""
+if [ "$GOOGLE_CREDENTIALS" != "" ]
+then
+    DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
+fi
+
 
 if [ "$1" == "testonly" ]
 then

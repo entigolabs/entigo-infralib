@@ -12,6 +12,37 @@ prepare_agent() {
   mkdir agents
 }
 
+google_auth_login() {
+  if [ "$CLOUDSDK_CONFIG" == "" ]
+  then
+    echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
+    export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
+  fi
+  if [ "$GOOGLE_CREDENTIALS" != "" -a ! -f $CLOUDSDK_CONFIG/application_default_credentials.json ]
+  then
+    echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
+    mkdir -p $CLOUDSDK_CONFIG
+    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
+    gaccount=""
+    attempt=1
+    while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
+      gcloud auth activate-service-account --key-file=$CLOUDSDK_CONFIG/application_default_credentials.json
+      gcloud config set project $GOOGLE_PROJECT
+      gcloud auth list
+      gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+      echo "Value for gaccount is '$gaccount'"
+      if [ -z "$gaccount" ]
+      then
+        sleep 1.$((RANDOM % 9))
+        echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
+        attempt=$((attempt + 1))
+      fi
+    done
+    gcloud config set account $gaccount
+  fi
+
+}
+
 generate_config() {
     local cloud=$(basename $1)
     local modulepath=$1
@@ -102,34 +133,7 @@ generate_config_k8s() {
 
 
 run_agents() {
-  #docker pull $ENTIGO_INFRALIB_IMAGE
-  if [ "$CLOUDSDK_CONFIG" == "" ]
-  then
-    echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
-    export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
-  fi
-  if [ "$GOOGLE_CREDENTIALS" != "" ]
-  then
-    echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
-    mkdir -p $CLOUDSDK_CONFIG
-    echo ${GOOGLE_CREDENTIALS} > $CLOUDSDK_CONFIG/application_default_credentials.json
-    gaccount=""
-    attempt=1
-    while [ -z "$gaccount" ] && [ "$attempt" -le "7" ]; do
-      gcloud auth activate-service-account --key-file=$CLOUDSDK_CONFIG/application_default_credentials.json
-      gcloud config set project $GOOGLE_PROJECT
-      gcloud auth list
-      gaccount=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
-      echo "Value for gaccount is '$gaccount'"
-      if [ -z "$gaccount" ]
-      then
-        sleep 1.$((RANDOM % 9))
-        echo "WARNING $attempt: Failed to retrieve expected result for: gcloud auth list --filter=status:ACTIVE"
-        attempt=$((attempt + 1))
-      fi
-    done
-    gcloud config set account $gaccount
-  fi
+  google_auth_login
   
   local module="$1"
   PIDS=""
@@ -252,6 +256,13 @@ test_tf() {
 }
 
 test_k8s() {
+  google_auth_login
+  
+  gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+  gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+  aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+  aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+  
   PIDS=""
   #common
   ./modules/k8s/hello-world/test.sh testonly &
