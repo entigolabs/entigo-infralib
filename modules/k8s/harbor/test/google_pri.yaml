@@ -1,3 +1,8 @@
+global:
+  google:
+    gateway:
+      name: "google-gateway-external"
+
 harbor:
   persistence:
     imageChartStorage:
