@@ -32,6 +32,10 @@ google_auth_login
 DOCKER_OPTS=""
 if [ "$GOOGLE_CREDENTIALS" != "" ]
 then
+    gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+    gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+    aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+    aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
 
@@ -151,7 +155,7 @@ if [ "$ENTIGO_INFRALIB_TEST_TIMEOUT" != "" ]
 then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
-pwd
+
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \
