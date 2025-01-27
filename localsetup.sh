@@ -21,7 +21,7 @@ if [ $? -eq 0 ]
 then
         echo "---"
         echo "Logged into AWS PRI"
-        echo "https://argocd.pri-net-dns.infralib.entigo.io/"
+        echo "https://argocd.pri-net-route53.infralib.entigo.io/"
 	kubectl -n $(kubectl get namespaces -o custom-columns=':metadata.name' | grep ^argocd) get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 	echo ""
 fi
@@ -30,7 +30,7 @@ if [ $? -eq 0 ]
 then
         echo "---"
         echo "Logged into AWS BIZ"
-        echo "https://argocd.biz-net-dns.infralib.entigo.io/"
+        echo "https://argocd.biz-net-route53.infralib.entigo.io/"
 	kubectl -n $(kubectl get namespaces -o custom-columns=':metadata.name' | grep ^argocd) get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 	echo ""
 fi
