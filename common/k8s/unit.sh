@@ -111,7 +111,11 @@ fi
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         prefix="$(echo $testname | cut -d"_" -f2)"
-        if [ "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ] 
+        if [ "$MODULENAME" == "crossplane-core" ]
+        then
+          STEP_NAME="apps"
+          APP_NAME="crossplane-system"
+        elif [ "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ] 
         then
           STEP_NAME="apps"
           APP_NAME=$MODULENAME

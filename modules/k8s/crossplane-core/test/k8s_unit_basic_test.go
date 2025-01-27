@@ -26,7 +26,7 @@ func TestK8sCrossplaneGooglePri(t *testing.T) {
 
 func testK8sCrossplane(t *testing.T, contextName string) {
 	t.Parallel()
-	namespaceName := "crossplane-system"
+	namespaceName := k8s.GetNamespaceName(t)
         kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
 

@@ -70,3 +70,4 @@ func testK8sCrossplaneK8s(t *testing.T, contextName string) {
 	err = k8s.WaitUntilK8SObjectDeleted(t, kubectlOptions, serviceName, 10, 6*time.Second)
 	require.NoError(t, err, "Object didn't get deleted")
 }
+
