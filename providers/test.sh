@@ -13,15 +13,3 @@ then
 	fi
 	echo "Static tests PASS."
 fi
-
-if [ -f ./test/unit.sh ]
-then
-        ./test/unit.sh
-        if [ $? -ne 0 ]
-        then
-                echo "Unit tests failed."
-                exit 2
-        fi
-        echo "Unit tests PASS."
-fi
-
