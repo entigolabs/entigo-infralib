@@ -32,10 +32,16 @@ google_auth_login
 DOCKER_OPTS=""
 if [ "$GOOGLE_CREDENTIALS" != "" ]
 then
-    gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-    gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-    aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-    aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+    if [ "$GOOGLE_CREDENTIALS" != "" ]
+    then
+      gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+      gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+    fi
+    if [ "$AWS_ACCESS_KEY_ID" != "" ]
+    then
+      aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+      aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+    fi
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
 
