@@ -1,0 +1,104 @@
+name: Agent Stable
+
+on:
+  schedule:
+    - cron: "0 5 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  install_stable_aws:
+    name: Install stable AWS
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        ./stable.sh
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Fresh installation of latest release failed for AWS.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  install_stable_google:
+    name: Install stable Google
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        ./stable.sh
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Fresh installation of latest release failed for Google.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+  
+
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Fresh installation of latest release failed after Nuke for K8S.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""

@@ -1,3 +1,0 @@
-instance_type = "t3.micro"
-public_ip_address = true
-key_name = "martivo_x220"

@@ -1,6 +1,0 @@
-config:
-  SOURCE_HOST: "https://portal.dev.entigo.dev/clusters/root:infralib:biz"
-  BACKEND_URI: "https://portal.dev.entigo.dev/api"
-  CLIENT_ID: "agent-infralib-biz"
-  TOKEN_URL: "https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/token"
-  SCOPES: "openid,profile,urn:zitadel:iam:org:project:id:260101262517842642@developer-portal:aud,urn:zitadel:iam:org:project:id:258956464989732349:aud,urn:zitadel:iam:org:projects:roles,urn:zitadel:iam:user:metadata"

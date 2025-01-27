@@ -1,33 +1,24 @@
 #!/bin/bash
-if [ "$1" == "" ]
-then
-  echo "Specify the module path as first parameter"
-  exit 2
-fi
-echo "Source code path is $1"
-cd $1 || exit 1
-
-MODULETYPE=$(basename $(dirname $1))
-echo "Module type is $MODULETYPE"
+MODULETYPE=$(basename $(dirname $(pwd)))
+MODULENAME=$(basename $(pwd))
 SCRIPTPATH=$(dirname "$0")
-
-$SCRIPTPATH/$MODULETYPE/static.sh
+$SCRIPTPATH/$MODULETYPE/static.sh "$@"
 if [ $? -ne 0 ]
 then 
-        echo "Static tests failed."
+        echo "$MODULETYPE/$MODULENAME Static tests failed."
         exit 1
 fi
-echo "Static tests PASS."
+echo "$MODULETYPE/$MODULENAME Static tests PASS."
 
 if ls ./test/*_test.go 1>/dev/null 2>&1
 then
-  $SCRIPTPATH/$MODULETYPE/unit.sh
+  $SCRIPTPATH/$MODULETYPE/unit.sh "$@"
   if [ $? -ne 0 ]
   then
-          echo "Unit tests failed."
+          echo "$MODULETYPE/$MODULENAME Unit tests failed."
           exit 2
   fi
-  echo "Unit tests PASS."
+  echo "$MODULETYPE/$MODULENAME Unit tests PASS."
 else
-  echo "No unit test files found in test folder, skipping unit tests."
+  echo "$MODULETYPE/$MODULENAME No unit test files found in test folder, skipping unit tests."
 fi

@@ -5,11 +5,10 @@ global:
     gateway:
       name: google-gateway-internal
       namespace: google-gateway
-  datasources:
-    loki:
-      hostname: "{{ .toutput.loki.loki_hostname }}"
-    prometheus:
-      hostname: "{{ .toutput.prometheus.prometheus_hostname }}"
+  loki:
+    hostname: "{{ .toptout.loki.loki_hostname }}"
+  prometheus:
+    hostname: "{{ .toptout.prometheus.prometheus_hostname }}"
 grafana:
   grafana.ini:
     server:

@@ -3,11 +3,11 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
 harbor:
-  externalURL: https://registry.{{ .toutput.route53.int_domain }}
+  externalURL: https://harbor.{{ .toutput.route53.int_domain }}
   expose:
     ingress:
       hosts:
-        core: registry.{{ .toutput.route53.int_domain }}
+        core: harbor.{{ .toutput.route53.int_domain }}
   persistence:
     imageChartStorage:
       s3:

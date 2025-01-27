@@ -1,0 +1,5 @@
+external-dns:
+  extraArgs:
+  - "--metrics-address=:7979"
+  - "--zone-id-filter={{ .toutput.dns.pub_zone_id }}"
+

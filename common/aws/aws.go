@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 	"time"
-
+	"encoding/json"
+	
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -14,6 +15,27 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
+
+func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]interface{} {
+        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	bucket := fmt.Sprintf("%s-877483565445-%s", prefix, awsRegion)
+	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
+	
+	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, step)
+	if !strings.Contains(stepName, "-main") { //Change to -main later
+	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
+	}
+	logger.Logf(t, "File %s", file)
+        outputs, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
+
+	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", awsRegion, bucket, file, err)
+	//fmt.Printf("OUTPUT %s %s", file, outputs)
+	var result map[string]interface{}
+	err = json.Unmarshal([]byte(outputs), &result)
+	require.NoError(t, err, "Error parsing JSON: %s Error: %s", outputs, err)
+	return result
+}
+
 
 func SetupBucket(t testing.TestingT, bucketName string) string {
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)

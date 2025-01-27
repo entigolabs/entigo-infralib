@@ -9,8 +9,6 @@ aws-load-balancer-controller:
     name: aws-load-balancer-controller
     create: false
 
-  image:
-    repository: 602401143452.dkr.ecr.eu-north-1.amazonaws.com/amazon/aws-load-balancer-controller
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:

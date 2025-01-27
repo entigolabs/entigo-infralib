@@ -1,2 +1,1 @@
-flow_log_cloudwatch_log_group_kms_key_id: |
-  {{ .toptout.kms.telemetry_alias_arn }}
+flow_log_cloudwatch_log_group_kms_key_id: "{{ .toptout.kms.telemetry_alias_arn }}"
