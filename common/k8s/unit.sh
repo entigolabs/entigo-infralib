@@ -115,7 +115,7 @@ fi
         then
           STEP_NAME="apps"
           APP_NAME=$MODULENAME
-        elif [ "$STEP_NAME" == "runn-main" ]
+        elif [ "$STEP_NAME" == "runn-main" -o "$STEP_NAME" == "apps" ]
         then
           STEP_NAME="apps"
           APP_NAME=${MODULENAME}-$prefix

@@ -31,3 +31,4 @@ func testTerraformHelloWorldPri(t *testing.T) {
 	hello_world := tf.GetStringValue(t, outputs, "hello-world__hello_world")
 	assert.Equal(t, hello_world, fmt.Sprintf("Hello, pri-%s-hello-world!", strings.ToLower(os.Getenv("STEP_NAME"))))
 }
+
