@@ -90,7 +90,6 @@ echo "sources:
       version: main
       force_version: true
 steps:" > agents/config.yaml
-STEP_NAME="apps"
 
 else
   echo "sources:
@@ -116,7 +115,7 @@ fi
         then
           STEP_NAME="apps"
           APP_NAME=$MODULENAME
-        elif [[ $STEP_NAME == runn-main-* ]]
+        elif [ "$STEP_NAME" == "runn-main" ]
         then
           STEP_NAME="apps"
           APP_NAME=${MODULENAME}-$prefix
