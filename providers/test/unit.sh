@@ -2,7 +2,7 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/.."
 cd $SCRIPTPATH || exit 1
 
-source ../../common/generate_config.sh
+source ../common/generate_config.sh
 
 if [ "$PR_BRANCH" != "" ]
 then
