@@ -1,10 +1,4 @@
 spec:
-  ignoreDifferences:
-  - group: ""
-    kind: Secret
-    name: grafana
-    jsonPointers:
-    - /data/admin-password
   syncPolicy:
     syncOptions:
     - Retry=true

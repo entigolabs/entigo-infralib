@@ -175,7 +175,7 @@ then
   then
     echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
     ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
-    if [ $ARGO_PASS != "" ]
+    if [ "$ARGO_PASS" != "" ]
     then
       argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
       export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
