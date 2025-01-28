@@ -7,30 +7,26 @@ then
 fi
 
 MODULE_PATH="$(pwd)"
-MODULETYPE=$(basename $(dirname $(pwd)))
-MODULENAME=$(basename $(pwd))
-
-if [ "$PR_BRANCH" != "" ]
-then
-STEP_NAME="`whoami | cut -c1-4`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-4`-$MODULENAME"
-else
-STEP_NAME="`whoami | cut -c1-4`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-4`-$MODULENAME"
-fi
+MODULE_TYPE=$(basename $(dirname $(pwd)))
+MODULE_NAME=$(basename $(pwd))
 
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
 
-
+get_branch_name
+get_step_name_tf
+echo "BRANCH: $BRANCH"
+echo "STEP: $STEP_NAME"
 
 if [ "$1" == "testonly" ]
 then
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
-        if [[ $STEP_NAME == *-main-* ]]  #Change to *-main-* later
+        if [ "$BRANCH" == "main" ] 
         then
-          STEP_NAME=$(cat "agents/${MODULETYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULETYPE/$MODULENAME\") | .name")
+          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE/$MODULE_NAME\") | .name")
           break
         fi
   done
@@ -63,36 +59,39 @@ steps:" > agents/config.yaml
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         
-        if [[ $STEP_NAME == runn-main-* ]]
+        if [ "$BRANCH" == "main" ] 
         then
-          STEP_NAME=$(cat "agents/${MODULETYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULETYPE/$MODULENAME\") | .name")
+          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE/$MODULE_NAME\") | .name")
         fi
-        if ! yq '.steps[].name' "agents/${MODULETYPE}_${testname}/config.yaml" | grep -q "$STEP_NAME"
+        if ! yq '.steps[].name' "agents/${MODULE_TYPE}_${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-            if [ "$MODULENAME" == "vpc" -o "$MODULENAME" == "cost-alert" ]
-            then
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
-            else
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULENAME"'", "source": "'"$MODULETYPE"'/'"$MODULENAME"'"}]}]' "agents/${MODULETYPE}_${testname}/config.yaml"
-            fi
+           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
         fi
-        mkdir -p "agents/${MODULETYPE}_${testname}/config/$STEP_NAME"
-        cp "$test" "agents/${MODULETYPE}_${testname}/config/$STEP_NAME/$MODULENAME.yaml"
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULETYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
+        mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
+        cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
-  done
-  FAIL=0
+  done 
+  
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo $p $FAIL
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
-    echo "FAILED AGENT RUN $FAIL"
+    echo "FAILED AGENT RUNS $FAIL"
     exit 1
   fi
+  
+  
 fi
 
 cd $MODULE_PATH

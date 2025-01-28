@@ -12,23 +12,11 @@ fi
 
 
 MODULE_PATH="$(pwd)"
-MODULETYPE=$(basename $(dirname $(pwd)))
-MODULENAME=$(basename $(pwd))
 
-if [ "$PR_BRANCH" != "" ]
-then
-APP_NAME="`whoami | cut -c1-4`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`-$MODULENAME"
-STEP_NAME="`whoami | cut -c1-4`-`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`"
-else
-APP_NAME="`whoami | cut -c1-4`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`-$MODULENAME"
-STEP_NAME="`whoami | cut -c1-4`-`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`"
-fi
 
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
-
-
 
 DOCKER_OPTS=""
 if [ "$GOOGLE_CREDENTIALS" != "" ]
@@ -55,7 +43,6 @@ then
         echo "Failed to get context for Google biz-infra-gke"
         exit 1
       fi
-
     fi
     if [ "$AWS_ACCESS_KEY_ID" != "" ]
     then
@@ -72,18 +59,11 @@ then
         exit 1
       fi
     fi
-  fi
-
-
-
-
-  if [ "`whoami`" == "runner" ]
-  then
     docker pull $ENTIGO_INFRALIB_IMAGE
   fi
 
   prepare_agent
-if [ "$STEP_NAME" == "runn-main" ]
+if [ "$BRANCH" == "main" ]
 then
 echo "sources:
     - url: https://github.com/entigolabs/entigo-infralib
@@ -106,27 +86,18 @@ fi
   fi
   default_k8s_conf
   
+  MODULE_NAME=$(basename $MODULE_PATH)
+  get_branch_name
   PIDS=""
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         prefix="$(echo $testname | cut -d"_" -f2)"
-        if [ "$MODULENAME" == "crossplane-core" ]
-        then
-          STEP_NAME="apps"
-          APP_NAME="crossplane-system"
-        elif [ "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ] 
-        then
-          STEP_NAME="apps"
-          APP_NAME=$MODULENAME
-        elif [ "$STEP_NAME" == "runn-main" -o "$STEP_NAME" == "apps" ]
-        then
-          STEP_NAME="apps"
-          APP_NAME=${MODULENAME}-$prefix
-        fi
+        get_app_name
+        get_step_name_k8s
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULENAME"'"}]}]' "agents/${testname}/config.yaml"
+          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
@@ -174,16 +145,21 @@ fi
   done
 
   
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo $p $FAIL
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
-    echo "FAILED AGENT RUN $FAIL"
+    echo "FAILED AGENT RUNS $FAIL"
     exit 1
   fi
 fi
@@ -194,7 +170,11 @@ if [ "$ENTIGO_INFRALIB_TEST_TIMEOUT" != "" ]
 then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
-
+prefix=""
+MODULE_NAME=$(basename $MODULE_PATH)
+get_branch_name
+get_app_name
+echo "TEST APP NAME: $APP_NAME"
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \

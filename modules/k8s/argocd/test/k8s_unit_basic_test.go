@@ -12,39 +12,30 @@ import (
 )
 
 func TestK8sArgocdAWSBiz(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53.infralib.entigo.io", "aws")
+	testK8sArgocd(t, "aws", "biz")
 }
 
 func TestK8sArgocdAWSPri(t *testing.T) {
-	testK8sArgocd(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sArgocd(t, "aws", "pri")
 }
 
 func TestK8sArgocdGoogleBiz(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "google", "biz")
 }
 
 func TestK8sArgocdGooglePri(t *testing.T) {
-	testK8sArgocd(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sArgocd(t, "google", "pri")
 }
 
-func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider string) {
+func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	t.Parallel()
-	namespaceName := fmt.Sprintf("argocd-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-	/*
-	appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
-	gatewayName := ""
-	gatewayNamespace := ""
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "external")
 
-	switch cloudProvider {
-	case "aws":
+	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
-	case "google":
-		gatewayNamespace = "google-gateway"
-		gatewayName = "google-gateway-external"
 	}
-	*/
 
 	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second)
 	require.NoError(t, err, "Argocd no Applications CRD")
@@ -71,17 +62,17 @@ func testK8sArgocd(t *testing.T, contextName, envName, hostName, cloudProvider s
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
-	/*
+	
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s.%s", appName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "argocd ingress/gateway test error")
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s.%s", appName, hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	targetURL = fmt.Sprintf("https://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "argocd ingress/gateway test error")
-	*/
+	
 }

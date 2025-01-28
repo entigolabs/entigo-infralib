@@ -9,25 +9,24 @@ import (
 )
 
 func TestK8sHelloWorldAWSBiz(t *testing.T) {
-	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks")
+	testK8sHelloWorld(t, "aws", "biz")
 }
 
 func TestK8sHelloWorldAWSPri(t *testing.T) {
-	testK8sHelloWorld(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks")
+	testK8sHelloWorld(t, "aws", "pri")
 }
 
 func TestK8sHelloWorldGoogleBiz(t *testing.T) {
-	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke")
+	testK8sHelloWorld(t, "google", "biz")
 }
 
 func TestK8sHelloWorldGooglePri(t *testing.T) {
-	testK8sHelloWorld(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
+	testK8sHelloWorld(t, "google", "pri")
 }
 
-func testK8sHelloWorld(t *testing.T, contextName string) {
+func testK8sHelloWorld(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
-	namespaceName := k8s.GetNamespaceName(t)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+        kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
 	require.NoError(t, err, "%s deployment %s error: %s",namespaceName, namespaceName, err)

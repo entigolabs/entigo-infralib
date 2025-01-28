@@ -14,7 +14,7 @@ func TestTerraformVpc(t *testing.T) {
 
 func testTerraformVpcBiz(t *testing.T) {
         t.Parallel()
-        outputs := aws.GetTFOutputs(t, "biz", "net")
+        outputs := aws.GetTFOutputs(t, "biz")
 
 	vpcId := tf.GetStringValue(t, outputs, "vpc__vpc_id")
 	assert.NotEmpty(t, vpcId, "vpc_id was not returned")
@@ -62,7 +62,7 @@ func testTerraformVpcBiz(t *testing.T) {
 
 func testTerraformVpcPri(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri", "net")
+	outputs := aws.GetTFOutputs(t, "pri")
 
 	vpcId := tf.GetStringValue(t, outputs, "vpc__vpc_id")
 	assert.NotEmpty(t, vpcId, "vpc_id was not returned")

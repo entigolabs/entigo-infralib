@@ -24,7 +24,7 @@ func testTerraformGkePri(t *testing.T) {
 }
 
 func testTerraformGke(t *testing.T, envName string) {
-	outputs := google.GetTFOutputs(t, envName, "infra")
+	outputs := google.GetTFOutputs(t, envName)
 	
 	clusterId := tf.GetStringValue(t, outputs, "gke__cluster_id")
 	assert.NotEmpty(t, clusterId, "cluster_id was not returned")

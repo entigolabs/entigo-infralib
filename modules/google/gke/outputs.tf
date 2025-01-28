@@ -21,3 +21,8 @@ output "region" {
 output "service_account" {
   value = module.gke.service_account
 }
+
+output "master_ipv4_cidr_block" {
+  description = "Kubernetes API ipv4 cidr block"
+  value = module.gke.master_ipv4_cidr_block
+}

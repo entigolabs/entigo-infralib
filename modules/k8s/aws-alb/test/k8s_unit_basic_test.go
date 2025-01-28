@@ -16,18 +16,19 @@ import (
 const domain = "infralib.entigo.io"
 
 func TestK8sAwsAlbBiz(t *testing.T) {
-	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io")
+	testK8sAwsAlb(t, "aws", "biz")
 }
 
 func TestK8sAwsAlbPri(t *testing.T) {
-	testK8sAwsAlb(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io")
+	testK8sAwsAlb(t, "aws", "pri")
 }
 
-func testK8sAwsAlb(t *testing.T, contextName string, envName string, hostName string) {
+func testK8sAwsAlb(t *testing.T, cloudName string, envName string) {
   
 	t.Parallel()
-	namespaceName := fmt.Sprintf("aws-alb-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	_, _, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
 	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, "aws-load-balancer-webhook-service", 60, 1*time.Second)
@@ -42,7 +43,7 @@ func testK8sAwsAlb(t *testing.T, contextName string, envName string, hostName st
 	annotations := ingress.GetAnnotations()
 	annotations["alb.ingress.kubernetes.io/group.name"] = "aws-load-balancer"
 	ingress.SetAnnotations(annotations)
-	host := fmt.Sprintf("%s.%s", strings.ToLower(random.UniqueId()), hostName)
+	host := fmt.Sprintf("%s-%s", strings.ToLower(random.UniqueId()), hostName)
 	err = k8s.SetNestedSliceString(ingress.Object, 0, "host", host, "spec", "rules")
 	require.NoError(t, err, "Setting host error")
 	createdIngress, err := k8s.CreateK8SIngress(t, kubectlOptions, ingress)

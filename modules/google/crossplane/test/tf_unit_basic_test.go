@@ -26,7 +26,7 @@ func testTerraformCrossplanePri(t *testing.T) {
 }
 
 func testTerraformCrossplane(t *testing.T, envName string) {
-	outputs := google.GetTFOutputs(t, envName, "infra")
+	outputs := google.GetTFOutputs(t, envName)
 	
 	serviceAccountEmail := tf.GetStringValue(t, outputs, "crossplane__service_account_email")
 	projectId := tf.GetStringValue(t, outputs, "crossplane__project_id")

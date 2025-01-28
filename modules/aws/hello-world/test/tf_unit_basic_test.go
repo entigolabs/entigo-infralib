@@ -19,7 +19,7 @@ func TestTerraformHelloWorld(t *testing.T) {
 
 func testTerraformHelloWorldBiz(t *testing.T) {
         t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz", "net")
+	outputs := aws.GetTFOutputs(t, "biz")
 	hello_world := tf.GetStringValue(t, outputs, "hello-world__hello_world")
 	assert.Equal(t, hello_world, fmt.Sprintf("Hello, biz-%s-hello-world!", strings.ToLower(os.Getenv("STEP_NAME"))))
   
@@ -27,7 +27,7 @@ func testTerraformHelloWorldBiz(t *testing.T) {
 
 func testTerraformHelloWorldPri(t *testing.T) {
         t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri", "net")
+	outputs := aws.GetTFOutputs(t, "pri")
 	hello_world := tf.GetStringValue(t, outputs, "hello-world__hello_world")
 	assert.Equal(t, hello_world, fmt.Sprintf("Hello, pri-%s-hello-world!", strings.ToLower(os.Getenv("STEP_NAME"))))
 }

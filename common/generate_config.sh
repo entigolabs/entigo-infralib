@@ -43,16 +43,66 @@ google_auth_login() {
 
 }
 
+#main means it runs in github and is applying the main branch
+get_branch_name() {
+  if [ "$PR_BRANCH" != "" ]
+  then
+    BRANCH=`echo $PR_BRANCH | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`
+  else
+    BRANCH=`git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' | cut -d"-" -f1-2 | cut -c1-7`
+  fi
+  if [ "`whoami`" == "runner" -a "$BRANCH" == "main" ]
+  then
+    BRANCH="main"
+  else
+    BRANCH="`whoami | cut -c1-4`-$BRANCH"
+  fi
+}
+
+get_step_name_tf() {
+  STEP_NAME="${BRANCH}-${MODULE_NAME}"
+}
+
+get_step_name_k8s() {
+  if [ "$BRANCH" == "main" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "istio-istiod" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]
+  then
+    STEP_NAME="apps"
+  else
+    STEP_NAME=$APP_NAME
+  fi
+}
+
+get_app_name() {
+        if [ "$MODULE_NAME" == "crossplane-core" ]
+        then
+          APP_NAME="crossplane-system"
+        elif [ "$MODULE_NAME" == "istio-istiod" ]
+        then
+          APP_NAME="istio-system"  
+        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" ] 
+        then
+          APP_NAME=$MODULE_NAME
+        elif [ "$MODULE_NAME" == "aws-alb" ] 
+        then
+          APP_NAME="${MODULE_NAME}-$prefix"
+        elif [ "$BRANCH" == "main" ]
+        then
+          APP_NAME="${MODULE_NAME}-$prefix"
+        else
+          APP_NAME="$BRANCH-$MODULE_NAME-$prefix"
+        fi
+}
+
 generate_config() {
     local cloud=$(basename $1)
-    local modulepath=$1
+    local MODULE_PATHS=$1
     local step=$2
     shift 2
     local modules=("$@")
     local existing_step=""
     for module in "${modules[@]}"
     do
-      for test in $(ls -1 ${modulepath}/$module/test/*.yaml)
+      for test in $(ls -1 ${MODULE_PATHS}/$module/test/*.yaml)
       do 
         testname=`basename $test | sed 's/\.yaml$//'`
         if [ ! -f agents/${cloud}_$testname/config.yaml ]
@@ -89,28 +139,19 @@ generate_config() {
 }
 
 generate_config_k8s() {
-    local modulepath=$1
+    local MODULE_PATHS=$1
     local step=$2
     local existing_step=""
-    for test in $(find $modulepath  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
+    BRANCH="main"
+    for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
     do 
-      module=`basename $test`
+      MODULE_NAME=`basename $test`
       for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
       do
-        if [ -f "$modulepath/$module/test/${cloud}.yaml" ]
+        prefix="$(echo ${cloud} | cut -d'_' -f2)"
+        if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
         then
-          if [ "$module" == "crossplane-core" ]
-          then
-            module_name="crossplane-system"
-          elif [ "$module" == "crossplane-aws" -o "$module" == "crossplane-k8s" -o "$module" == "crossplane-google" -o "$module" == "google-gateway" -o "$module" == "istio-gateway" ]
-          then
-            module_name=$module
-          elif [ "$module" == "istio-istiod" ]
-          then
-            module_name="istio-system"
-          else
-            module_name="$module-$(echo ${cloud} | cut -d'_' -f2)"
-          fi
+          get_app_name
           if [[ "$existing_step" != *"${cloud}"* ]];
           then
             mkdir -p agents/${cloud}/config/apps
@@ -118,14 +159,14 @@ generate_config_k8s() {
             echo "    - name: apps
       type: argocd-apps
       approve: force
-      argocd_namespace: $module_name
+      argocd_namespace: argocd-$prefix
       modules:" >> agents/${cloud}/config.yaml
           fi
 
-          echo "      - name: $module_name
-        source: $module" >> agents/${cloud}/config.yaml
+          echo "      - name: $APP_NAME
+        source: $MODULE_NAME" >> agents/${cloud}/config.yaml
           mkdir -p agents/${cloud}/config/apps
-          cp "$modulepath/$module/test/${cloud}.yaml" "agents/${cloud}/config/apps/${module_name}.yaml"
+          cp "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" "agents/${cloud}/config/apps/${APP_NAME}.yaml"
         fi
       done
     done

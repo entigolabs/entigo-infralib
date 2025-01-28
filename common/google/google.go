@@ -21,15 +21,12 @@ import (
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
-func GetTFOutputs (t testing.TestingT, prefix string, step string) map[string]interface{} {
+func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
         Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-%s-%s", prefix, os.Getenv("GOOGLE_PROJECT"), Region)
-	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, step)
 	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
-	
-	if !strings.Contains(stepName, "-main") { //Change to -main later
-	  file = fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
-	}
+	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
+
 	
 	reader, err := gcp.ReadBucketObjectE(t, bucket, file)
 	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", Region, bucket, file, err)
