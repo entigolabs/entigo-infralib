@@ -11,43 +11,29 @@ import (
 )
 
 func TestK8sPrometheusAWSBiz(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sPrometheus(t, "aws", "biz")
 }
 
 func TestK8sPrometheusAWSPri(t *testing.T) {
-	testK8sPrometheus(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sPrometheus(t, "aws", "pri")
 }
 
 func TestK8sPrometheusGoogleBiz(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
+	testK8sPrometheus(t, "google", "biz")
 }
 
 func TestK8sPrometheusGooglePri(t *testing.T) {
-	testK8sPrometheus(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sPrometheus(t, "google", "pri")
 }
 
-func testK8sPrometheus(t *testing.T, contextName string, envName string, hostName string, cloudProvider string) {
+func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("prometheus-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
-
-	gatewayName := ""
-	gatewayNamespace := ""
-
-	switch cloudProvider {
-	case "aws":
+	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
-
-	case "google":
-		gatewayNamespace = "google-gateway"
-
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-internal"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
 	}
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 20, 6*time.Second)
@@ -68,12 +54,12 @@ func testK8sPrometheus(t *testing.T, contextName string, envName string, hostNam
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://prometheus.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "prometheus ingress/gateway test error")
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://prometheus.%s/graph", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "prometheus ingress/gateway test error")
+	targetURL = fmt.Sprintf("https://%s/graph", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

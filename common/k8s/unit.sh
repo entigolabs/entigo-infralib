@@ -24,9 +24,11 @@ then
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
 
+google_auth_login
+
 if [ "$1" != "testonly" ]
 then
-  google_auth_login
+  
   if [ "`whoami`" == "runner" ]
   then
     if [ "$GOOGLE_CREDENTIALS" != "" ]

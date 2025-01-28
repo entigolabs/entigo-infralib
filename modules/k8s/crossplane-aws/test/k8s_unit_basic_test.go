@@ -29,11 +29,15 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 
 	namespaceName := "crossplane-system"
 	releaseName := "crossplane-aws"
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+	require.Equal(t, output, "yes")
 	
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	
-	_, err := k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	// Install AWS provider

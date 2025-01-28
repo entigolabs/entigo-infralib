@@ -3,8 +3,7 @@ package test
 import (
 	"testing"
 	"time"
-
-	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
@@ -27,10 +26,13 @@ func TestIstioIstiodGooglePri(t *testing.T) {
 func testIstioIstiod(t *testing.T, contextName string) {
   	t.Parallel()
 	namespaceName := "istio-system"
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+	require.Equal(t, output, "yes")
 
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}

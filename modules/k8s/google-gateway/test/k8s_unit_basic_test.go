@@ -10,18 +10,17 @@ import (
 )
 
 func TestK8sGoogleGatewayBiz(t *testing.T) {
-	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+	testK8sGoogleGateway(t, "google", "biz")
 }
 
 func TestK8sGoogleGatewayPri(t *testing.T) {
-	testK8sGoogleGateway(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
+	testK8sGoogleGateway(t, "google", "pri")
 }
 
-func testK8sGoogleGateway(t *testing.T, contextName, envName string) {
+func testK8sGoogleGateway(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 
-	namespaceName := "google-gateway"
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	//appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
 

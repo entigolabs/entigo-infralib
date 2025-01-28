@@ -11,43 +11,32 @@ import (
 )
 
 func TestK8sHarborAWSBiz(t *testing.T) {
-	testK8sHarbor(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sHarbor(t, "aws", "biz")
 }
 
 func TestK8sHarborAWSPri(t *testing.T) {
-	testK8sHarbor(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sHarbor(t, "aws", "pri")
 }
 
 func TestK8sHarborGoogleBiz(t *testing.T) {
-	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
+	testK8sHarbor(t, "google", "biz")
 }
 
 func TestK8sHarborGooglePri(t *testing.T) {
-	testK8sHarbor(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sHarbor(t, "google", "pri")
 }
 
-func testK8sHarbor(t *testing.T, contextName string, envName string, hostName string, cloudProvider string) {
+func testK8sHarbor(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("harbor-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-
-	gatewayName := ""
-	gatewayNamespace := ""
 	
-	switch cloudProvider {
-	case "aws":
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	
+	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-ingress", namespaceName)
-
-
-	case "google":
-		gatewayNamespace = "google-gateway"
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-internal"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
 	}
+	
 	err := terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-database-0", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-database-0 pod error:", namespaceName), err)
@@ -85,12 +74,12 @@ func testK8sHarbor(t *testing.T, contextName string, envName string, hostName st
         retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://harbor.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "harbor ingress/gateway test error")
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://harbor.%s/api/v2.0/ping", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "harbor ingress/gateway test error")
+	targetURL = fmt.Sprintf("https://%s/api/v2.0/ping", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

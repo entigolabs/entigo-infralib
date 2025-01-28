@@ -1,17 +1,17 @@
 global:
-  bucketName: "{{ .config.prefix }}-loki-logs"
+  bucketName: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
   google:
-    hostname: loki.{{ .toutput.dns.int_domain }}
+    hostname: "{{ .tsmodule.loki }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     gateway:
       name: google-gateway-internal
       namespace: google-gateway
     bucket:
-      location: europe-north1
+      location: "{{ .toutput.gke.region }}"
 loki:
   loki:
     storage:
       bucketNames:
-        admin: "{{ .config.prefix }}-loki-logs"
-        chunks: "{{ .config.prefix }}-loki-logs"
-        ruler: "{{ .config.prefix }}-loki-logs"
+        admin: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
+        chunks: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
+        ruler: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"

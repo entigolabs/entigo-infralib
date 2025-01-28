@@ -1,3 +1,4 @@
 kiali-server:
   server:
-    web_fqdn: kiali.{{ .toutput.route53.int_domain }}
+    web_fqdn: "{{ .tsmodule.kiali }}.{{ .toutput.route53.int_domain }}"
+  fullnameOverride: "{{ .tsmodule.kiali }}"

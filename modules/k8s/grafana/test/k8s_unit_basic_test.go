@@ -11,37 +11,29 @@ import (
 )
 
 func TestK8sGrafanaAWSBiz(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53.infralib.entigo.io", "aws")
+	testK8sGrafana(t, "aws", "biz")
 }
 
 func TestK8sGrafanaAWSPri(t *testing.T) {
-	testK8sGrafana(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sGrafana(t, "aws", "pri")
 }
 
 func TestK8sGrafanaGoogleBiz(t *testing.T) {
-	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sGrafana(t, "google", "biz")
 }
 
 func TestK8sGrafanaGooglePri(t *testing.T) {
-	testK8sGrafana(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sGrafana(t, "google", "pri")
 }
 
-func testK8sGrafana(t *testing.T, contextName string, envName string, hostname string, cloudProvider string) {
+func testK8sGrafana(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("grafana-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-  
-  
-	gatewayName := ""
-	gatewayNamespace := ""
-
-	switch cloudProvider {
-	case "aws":
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "external")
+	
+	if cloudName == "aws" {
 		gatewayName = "grafana"
-
-	case "google":
-		gatewayNamespace = "google-gateway"
-		gatewayName = "google-gateway-external"
 	}
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 20, 6*time.Second)
@@ -52,13 +44,13 @@ func testK8sGrafana(t *testing.T, contextName string, envName string, hostname s
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://grafana.%s", hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "grafana ingress/gateway test error")
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://grafana.%s/login", hostname)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "grafana ingress/gateway test error")
+	targetURL = fmt.Sprintf("https://%s/login", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }
 

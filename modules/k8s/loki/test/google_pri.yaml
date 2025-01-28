@@ -2,3 +2,5 @@ global:
   google:
     gateway:
       name: google-gateway-external
+loki:
+  fullnameOverride: "{{ .tsmodule.loki }}"

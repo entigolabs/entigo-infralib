@@ -1,9 +1,9 @@
 global:
   google:
-    hostname: grafana.{{ .toutput.dns.pub_domain }}
+    hostname: "{{ .tsmodule.grafana }}.{{ .toutput.dns.pub_domain }}"
     gateway:
       name: "google-gateway-external"
 grafana:
   grafana.ini:
     server:
-      root_url: https://grafana.{{ .toutput.dns.pub_domain }}
+      root_url: https://{{ .tsmodule.grafana }}.{{ .toutput.dns.pub_domain }}

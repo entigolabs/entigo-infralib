@@ -12,25 +12,24 @@ import (
 )
 
 func TestK8sExternalSecretsAWSBiz(t *testing.T) {
-	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+	testK8sExternalSecrets(t, "aws", "biz")
 }
 
 func TestK8sExternalSecretsAWSPri(t *testing.T) {
-	testK8sExternalSecrets(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+	testK8sExternalSecrets(t, "aws", "pri")
 }
 
 func TestK8sExternalSecretsGoogleBiz(t *testing.T) {
-	testK8sExternalSecrets(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+	testK8sExternalSecrets(t, "google", "biz")
 }
 
 func TestK8sExternalSecretsGooglePri(t *testing.T) {
-	testK8sExternalSecrets(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
+	testK8sExternalSecrets(t, "google", "pri")
 }
 
-func testK8sExternalSecrets(t *testing.T, contextName string, envName string) {
+func testK8sExternalSecrets(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
-	namespaceName := fmt.Sprintf("external-secrets-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
   
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)

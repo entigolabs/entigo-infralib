@@ -2,5 +2,10 @@ harbor:
   persistence:
     imageChartStorage:
       s3:
-        bucket: entigoharborbucketpri
+        bucket: "entigo{{ .tsmodule.harbor }}"
   harborAdminPassword: "Harbor12345"
+  expose:
+    ingress:
+      annotations:
+        alb.ingress.kubernetes.io/group.name: external
+        alb.ingress.kubernetes.io/scheme: internet-facing
