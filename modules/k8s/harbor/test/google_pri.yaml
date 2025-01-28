@@ -1,0 +1,11 @@
+global:
+  google:
+    gateway:
+      name: "google-gateway-external"
+
+harbor:
+  persistence:
+    imageChartStorage:
+      gcs:
+        bucket: entigoharborbucketpri
+  harborAdminPassword: "Harbor12345"

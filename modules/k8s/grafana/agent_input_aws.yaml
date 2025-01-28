@@ -1,0 +1,7 @@
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://grafana.{{ .toutput.route53.int_domain }}
+  ingress:
+    hosts:
+    - grafana.{{ .toutput.route53.int_domain }}

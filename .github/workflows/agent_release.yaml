@@ -1,0 +1,245 @@
+name: Agent Release
+
+on:
+  workflow_run:
+    workflows: ["Stable"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:     
+  install_main_aws:
+    name: Install main AWS
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+    - name: Checkout code (tfmain)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
+      run: |
+        ./release.sh tf
+        
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for AWS.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  install_main_google:
+    name: Install main Google
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+    - name: Checkout code (tfmain)
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: "main"
+      run: |
+        ./release.sh tf
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for Google.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+  
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Updating from latest release to main failed for K8S.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+        
+  release:   
+    runs-on: ubuntu-latest
+    needs: [install_main_aws,install_main_google]
+    name: Release
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: Run k8s tests
+      id: k8s_tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: "main"
+      run: |
+        ./release.sh k8s
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
+          const currentStable = await github.rest.repos.getCommit({ owner: context.repo.owner, repo: context.repo.repo, ref: 'refs/tags/' + latestStableRelease.data.tag_name });
+          
+          if (currentStable) {
+            if (currentMain) {
+              core.info('Latest main release commit: ' + currentStable.data.sha);
+              core.info('Main branch commit: ' +  currentMain.data.commit.sha);
+              if ( currentStable.data.sha != currentMain.data.commit.sha) {
+                
+                core.setOutput('new_release_needed', "true");
+                const versionString = '' + latestStableRelease.data.tag_name;
+                const regex = /^v(\d+)\.(\d+)\.(\d+)$/;
+                const match = versionString.match(regex);
+                const major = parseInt(match[1], 10);
+                const minor = parseInt(match[2], 10);
+                const patch = parseInt(match[3], 10) + 1;
+                
+                const fs = require('fs')
+                const versionFile = fs.readFileSync('release_version.txt');
+                const versionValue = versionFile.toString().trim();
+                let new_version;
+                if ( versionValue != `${major}.${minor}` ) {
+                  core.info('File majour and minor version differ from latest release, initializing new release! ' + versionValue + ' vs ' + major + '.' + minor);
+                  new_version = `v${versionValue}.0`
+                } else {
+                  new_version = `v${major}.${minor}.${patch}`
+                }
+                core.setOutput('new_version',  new_version);
+                core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
+              } else {
+                core.info('Latest release is same as main branch, no need to make a new release');
+                core.setOutput('new_release_needed', "false");
+              }
+            } else {
+               core.setFailed('No main branch found');
+            }
+          } else {
+            core.setFailed('No main releases found');
+          }
+      
+    - name: Authenticate with GitHub CLI
+      run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+    - name: Create Release
+      id: create_release
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}"
+        git push origin ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
+        --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
+        --generate-notes \
+        --draft=false \
+        --latest=true \
+        --prerelease=false)
+        echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+    - name: Tag correct version
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        aws-region: us-east-1
+      run: |
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ && 
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+    - name: Set up SSH key
+      run: |
+        mkdir ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+    - name: Get release notes
+      id: get_release_notes
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          core.setOutput('notes',  latestRelease.data.body);
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      
+    - name: Clone the target repository and copy files
+      run: |
+        git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
+        cd entigo-infralib-release
+        ../checksums.sh
+        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+
+    - name: Slack Success Release Message
+      if: ${{ success() && steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'success'
+        SLACK_MESSAGE: 'Released ${{ steps.get_latest_release.outputs.new_version }} ${{ env.RELEASE_URL }} ${{ steps.get_release_notes.outputs.notes }}'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        MSG_MINIMAL: actions url,commit
+        SLACK_FOOTER: ""
+    - name: Slack Failed To Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Releasing of new version failed.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""

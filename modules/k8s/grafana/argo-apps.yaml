@@ -1,0 +1,22 @@
+spec:
+  ignoreDifferences:
+  - group: ""
+    kind: Secret
+    name: grafana
+    jsonPointers:
+    - /data/admin-password
+  - jsonPointers:
+    - '/spec/template/metadata/annotations/checksum~1secret'
+    name: grafana
+    kind: Deployment
+    group: apps
+    
+  syncPolicy:
+    syncOptions:
+    - Retry=true
+    retry:
+      limit: 30 # Maximum number of retries
+      backoff:
+        duration: 15s
+        factor: 2 
+        maxDuration: 2m

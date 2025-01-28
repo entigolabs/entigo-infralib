@@ -1,0 +1,4 @@
+global:
+  google:
+    gateway:
+      name: "google-gateway-external"

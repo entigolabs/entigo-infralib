@@ -1,7 +1,8 @@
 #!/bin/bash
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/.."
 cd $SCRIPTPATH || exit 1
-
+pwd
+source ../common/generate_config.sh
 
 export DOCKER_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
@@ -53,4 +54,4 @@ cp *.tf tmp_tf/
 rm tmp_tf/base.tf
 
 
-docker run --rm -v "$(pwd)/tmp_tf":"/data" ghcr.io/terraform-linters/tflint:v0.50.3
+docker run --rm -v "$(pwd)/tmp_tf":"/data" $TFLINT_IMAGE

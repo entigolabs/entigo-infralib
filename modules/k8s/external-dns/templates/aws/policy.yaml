@@ -24,7 +24,16 @@ spec:
                   "route53:ListResourceRecordSets"
               ],
               "Resource": "*"
+          }{{- if .Values.global.aws.assumeRole -}},
+          {
+              "Sid": "VisualEditor2",
+              "Effect": "Allow",
+              "Action": [
+                  "sts:AssumeRole"
+              ],
+              "Resource": "{{ .Values.global.aws.assumeRole }}"
           }
+{{- end }}
         ]
       }
 

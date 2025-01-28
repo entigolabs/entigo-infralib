@@ -15,6 +15,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+    - name: Cache Docker images.
+      uses: ScribeMD/docker-cache@0.5.0
+      with:
+        key: docker-${{ runner.os }}-${{ hashFiles('common/generate_config.sh') }}
     - name: Run tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

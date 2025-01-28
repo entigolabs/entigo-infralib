@@ -1,2 +1,1 @@
-vpc_id: |
-  {{ .toptout.vpc.vpc_id }}
+vpc_id: "{{ .toptout.vpc.vpc_id }}"

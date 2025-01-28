@@ -1,0 +1,6 @@
+external-secrets:
+  env:
+  - value: "{{ .toutput.eks.region }}"
+    name: "AWS_DEFAULT_REGION"
+global:
+  createClusterSecretStore: true

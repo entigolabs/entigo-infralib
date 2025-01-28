@@ -1,87 +1,40 @@
 package test
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
+	"strings"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
 func TestK8sCrossplaneK8sAWSBiz(t *testing.T) {
-	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks")
 }
 
 func TestK8sCrossplaneK8sAWSPri(t *testing.T) {
-	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneK8s(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks")
 }
 
 func TestK8sCrossplaneK8sGoogleBiz(t *testing.T) {
-	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-biz", "runner-main-biz")
+	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke")
 }
 
 func TestK8sCrossplaneK8sGooglePri(t *testing.T) {
-	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_runner-main-pri", "runner-main-pri")
+	testK8sCrossplaneK8s(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
-func testK8sCrossplaneK8s(t *testing.T, contextName string, runnerName string) {
+func testK8sCrossplaneK8s(t *testing.T, contextName string) {
 	t.Parallel()
-	spew.Dump("")
-
-	helmChartPath, err := filepath.Abs("..")
-	require.NoError(t, err)
-
-	prefix := strings.ToLower(os.Getenv("TF_VAR_prefix"))
-	namespaceName := fmt.Sprintf("crossplane-system")
+	namespaceName := "crossplane-system"
 	releaseName := "crossplane-k8s"
+        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
 
-	extraArgs := make(map[string][]string)
-	setValues := make(map[string]string)
-
-	setValues["installProviderConfig"] = "false"
-
-	if prefix != "runner-main" {
-		extraArgs["upgrade"] = []string{"--skip-crds"}
-		extraArgs["install"] = []string{"--skip-crds"}
-	}
-
-	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
-
-	helmOptions := &helm.Options{
-		SetValues:         setValues,
-		KubectlOptions:    kubectlOptions,
-		BuildDependencies: false,
-		ExtraArgs:         extraArgs,
-	}
-
-	if os.Getenv("ENTIGO_INFRALIB_DESTROY") == "true" {
-		defer helm.Delete(t, helmOptions, releaseName, true)
-		// terrak8s.DeleteNamespace(t, kubectlOptions, namespaceName)
-	}
-
-	// Install K8s DeploymentRuntimeConfig and K8s provider
-	helmOptions.SetValues = setValues
-	err = terrak8s.CreateNamespaceE(t, kubectlOptions, namespaceName)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			fmt.Println("Namespace already exists.")
-		} else {
-			t.Fatal("Error:", err)
-		}
-	}
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
-
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	_, err := k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
@@ -90,11 +43,6 @@ func testK8sCrossplaneK8s(t *testing.T, contextName string, runnerName string) {
 	k8sproviderDeployment := k8s.GetStringValue(k8sprovider.Object, "status", "currentRevision")
 	assert.NotEmpty(t, k8sproviderDeployment, "Provider k8s currentRevision is empty")
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, k8sproviderDeployment, 60, 1*time.Second)
-
-	// Install K8s ProviderConfig
-	setValues["installProviderConfig"] = "true"
-	helmOptions.SetValues = setValues
-	helm.Upgrade(t, helmOptions, helmChartPath, releaseName)
 
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "kubernetes.crossplane.io/v1alpha1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
@@ -122,3 +70,4 @@ func testK8sCrossplaneK8s(t *testing.T, contextName string, runnerName string) {
 	err = k8s.WaitUntilK8SObjectDeleted(t, kubectlOptions, serviceName, 10, 6*time.Second)
 	require.NoError(t, err, "Object didn't get deleted")
 }
+

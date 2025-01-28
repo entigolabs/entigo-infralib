@@ -1,4 +1,2 @@
-eks_oidc_provider: |
-  module.{{ .tmodule.eks }}.oidc_provider
-eks_oidc_provider_arn: |
-  module.{{ .tmodule.eks }}.oidc_provider_arn
+eks_oidc_provider: "{{ .toutput.eks.oidc_provider }}"
+eks_oidc_provider_arn: "{{ .toutput.eks.oidc_provider_arn }}"

@@ -1,0 +1,4 @@
+global:
+  google:
+    hostname: "keycloak.{{ .toutput.dns.int_domain }}"
+    certificateMap: "{{ .toutput.dns.pub_zone_id }}"

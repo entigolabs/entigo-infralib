@@ -1,0 +1,6 @@
+harbor:
+  persistence:
+    imageChartStorage:
+      s3:
+        bucket: entigoharborbucketbiz
+  harborAdminPassword: "Harbor12345"
