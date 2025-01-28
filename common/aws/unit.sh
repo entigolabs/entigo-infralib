@@ -65,30 +65,33 @@ steps:" > agents/config.yaml
         fi
         if ! yq '.steps[].name' "agents/${MODULE_TYPE}_${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-            if [ "$MODULE_NAME" == "vpc" -o "$MODULE_NAME" == "cost-alert" ]
-            then
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
-            else
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
-            fi
+           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
         docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
-  done
-  FAIL=0
+  done 
+  
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo $p $FAIL
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
-    echo "FAILED AGENT RUN $FAIL"
+    echo "FAILED AGENT RUNS $FAIL"
     exit 1
   fi
+  
+  
 fi
 
 cd $MODULE_PATH

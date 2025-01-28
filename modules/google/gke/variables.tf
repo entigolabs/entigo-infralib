@@ -4,7 +4,7 @@ variable "prefix" {
 
 variable "master_ipv4_cidr_block" {
   type    = string
-  default = "10.1.0.0/28"
+  default = ""
 }
 
 variable "network" {

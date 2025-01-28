@@ -12,19 +12,11 @@ fi
 
 
 MODULE_PATH="$(pwd)"
-MODULE_TYPE=$(basename $(dirname $MODULE_PATH))
-MODULE_NAME=$(basename $MODULE_PATH)
+
 
 SCRIPTPATH=$(dirname "$0")
 cd $SCRIPTPATH/../..
 source common/generate_config.sh
-
-get_branch_name
-get_step_name_k8s
-
-echo "BRANCH: $BRANCH"
-echo "STEP: $STEP_NAME"
-echo "APP: $APP_NAME"
 
 DOCKER_OPTS=""
 if [ "$GOOGLE_CREDENTIALS" != "" ]
@@ -94,12 +86,15 @@ fi
   fi
   default_k8s_conf
   
+  MODULE_NAME=$(basename $MODULE_PATH)
+  get_branch_name
   PIDS=""
   for test in $(ls -1 $MODULE_PATH/test/*.yaml)
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         prefix="$(echo $testname | cut -d"_" -f2)"
         get_app_name
+        get_step_name_k8s
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
@@ -150,16 +145,21 @@ fi
   done
 
   
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo $p $FAIL
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
-    echo "FAILED AGENT RUN $FAIL"
+    echo "FAILED AGENT RUNS $FAIL"
     exit 1
   fi
 fi
@@ -171,6 +171,8 @@ then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
 prefix=""
+MODULE_NAME=$(basename $MODULE_PATH)
+get_branch_name
 get_app_name
 echo "TEST APP NAME: $APP_NAME"
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \

@@ -8,7 +8,7 @@ import (
 )
 
 func TestTerraformServices(t *testing.T) {
-       outputs := google.GetTFOutputs(t, "biz", "net")
+       outputs := google.GetTFOutputs(t, "biz")
       services := tf.GetStringValue(t, outputs, "services__services")
       assert.NotEmpty(t, services, "services was not returned")
 }
