@@ -14,14 +14,14 @@ func TestTerraformCrossplane(t *testing.T) {
 
 func testTerraformCrossplaneBiz(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz", "infra")
+	outputs := aws.GetTFOutputs(t, "biz")
 	iam_role := tf.GetStringValue(t, outputs, "crossplane__iam_role")
 	assert.NotEmpty(t, iam_role, "iam_role must not be empty")
 }
 
 func testTerraformCrossplanePri(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri", "infra")
+	outputs := aws.GetTFOutputs(t, "pri")
 	iam_role := tf.GetStringValue(t, outputs, "crossplane__iam_role")
 	assert.NotEmpty(t, iam_role, "iam_role must not be empty")
 }

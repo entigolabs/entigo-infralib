@@ -13,7 +13,7 @@ func TestCostAlert(t *testing.T) {
 
 func testTerraformCostAlertUs(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "us", "net")
+	outputs := aws.GetTFOutputs(t, "us")
 	sns_topic_arns := tf.GetStringListValue(t, outputs, "cost-alert__sns_topic_arns")
 	assert.NotEmpty(t, sns_topic_arns[0], "sns_topic_arns must not be empty")
 }

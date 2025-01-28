@@ -98,16 +98,21 @@ steps:" > agents/config.yaml
         docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
   done
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo $p $FAIL
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
-    echo "FAILED AGENT RUN $FAIL"
+    echo "FAILED AGENT RUNS $FAIL"
     exit 1
   fi
 fi

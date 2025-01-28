@@ -29,16 +29,67 @@ const (
 	GCloud ProviderType = "gcloud"
 )
 
-func GetNamespaceName(t testing.TestingT) (string) {
-      return strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
+func GetNamespaceName(t testing.TestingT, envName string) (string) {
+    appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
+    if strings.HasSuffix(appName, "-") {
+      return fmt.Sprintf("%s%s", appName, envName)
+    } else {
+      return appName
+    }
 }
 
-func CheckKubectlConnection(t testing.TestingT, contextName string, namespaceName string) (*k8s.KubectlOptions) {
+func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string) (*k8s.KubectlOptions, string) {
+      namespaceName := GetNamespaceName(t, envName)
+      
+      contextName := ""
+      switch cloudName {
+      case "aws":
+	      contextName = fmt.Sprintf("arn:aws:eks:eu-north-1:877483565445:cluster/%s-infra-eks", envName)
+      case "google":
+	      contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
+      }
+  
       kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
       output, err := k8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
       require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
       require.Equal(t, output, "yes")
-      return kubectlOptions
+      return kubectlOptions, namespaceName
+}
+
+func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode string) (string, string, string) {
+      namespaceName := GetNamespaceName(t, envName)
+      
+      hostName := ""
+      gatewayName := ""
+      gatewayNamespace := ""
+      switch cloudName {
+      case "aws":
+	      gatewayName = namespaceName
+	      switch envName {
+	      case "biz":
+		      hostName = fmt.Sprintf("%s.%s-net-route53-int.infralib.entigo.io", namespaceName, envName)
+	      case "pri":
+		      hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+	      }
+	      if mode == "external" {
+		hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+	      }
+      case "google":
+	      gatewayNamespace = "google-gateway"
+	      switch envName {
+	      case "biz":
+		      gatewayName = "google-gateway-internal"
+		      hostName = fmt.Sprintf("%s.%s-net-dns-int.gcp.infralib.entigo.io", namespaceName, envName)
+	      case "pri":
+		      gatewayName = "google-gateway-external"
+		      hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
+	      }
+	      if mode == "external" {
+		hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
+		gatewayName = "google-gateway-external"
+	      }
+      }
+      return gatewayName, gatewayNamespace, hostName
 }
 
 func WaitUntilClusterSecretStoreAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {

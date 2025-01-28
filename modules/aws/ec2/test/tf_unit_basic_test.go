@@ -16,7 +16,7 @@ func TestTerraformEc2(t *testing.T) {
 
 func testTerraformEc2Biz(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz", "infra")
+	outputs := aws.GetTFOutputs(t, "biz")
 	
 	private_dns := tf.GetStringValue(t, outputs, "ec2__private_dns")
 	assert.NotEmpty(t, private_dns, "private_dns must not be empty")
@@ -26,7 +26,7 @@ func testTerraformEc2Biz(t *testing.T) {
 
 func testTerraformEc2Pri(t *testing.T) {
 	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri", "infra")
+	outputs := aws.GetTFOutputs(t, "pri")
 	private_dns := tf.GetStringValue(t, outputs, "ec2__private_dns")
 	public_ip := tf.GetStringValue(t, outputs, "ec2__public_ip")
 	assert.NotEmpty(t, private_dns, "private_dns must not be empty")

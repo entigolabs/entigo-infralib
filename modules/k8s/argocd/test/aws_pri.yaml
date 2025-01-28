@@ -7,3 +7,6 @@ argocd:
       annotations:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing
+  global:
+    domain: |
+      {{ .tsmodule.argocd }}.{{ .toutput.route53.int_domain }}

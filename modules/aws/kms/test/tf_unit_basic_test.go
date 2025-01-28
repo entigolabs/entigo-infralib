@@ -14,7 +14,7 @@ func TestTerraformKms(t *testing.T) {
 
 func testTerraformKmsBiz(t *testing.T) {
         t.Parallel()
-        outputs := aws.GetTFOutputs(t, "biz", "net")
+        outputs := aws.GetTFOutputs(t, "biz")
 	
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "kms__config_alias_arn"), "config_alias_arn was not returned")
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "kms__config_key_arn"), "config_key_arn was not returned")
