@@ -20,7 +20,6 @@ cd $SCRIPTPATH/../..
 source common/generate_config.sh
 
 get_branch_name
-get_app_name
 get_step_name_k8s
 
 echo "BRANCH: $BRANCH"
@@ -171,7 +170,9 @@ if [ "$ENTIGO_INFRALIB_TEST_TIMEOUT" != "" ]
 then
   TIMEOUT_OPTS="-e ENTIGO_INFRALIB_TEST_TIMEOUT=$ENTIGO_INFRALIB_TEST_TIMEOUT"
 fi
-
+prefix=""
+get_app_name
+echo "TEST APP NAME: $APP_NAME"
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \
