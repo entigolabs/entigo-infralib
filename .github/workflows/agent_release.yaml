@@ -2,7 +2,7 @@ name: Agent Release
 
 on:
   workflow_run:
-    workflows: ["Stable"]
+    workflows: ["Agent Stable"]
     types:
       - completed
   workflow_dispatch:
