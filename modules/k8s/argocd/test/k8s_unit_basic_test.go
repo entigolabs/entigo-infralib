@@ -68,11 +68,11 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "argocd ingress/gateway test error")
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "argocd ingress/gateway test error")
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 	
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
 func TestIstioBaseAWSBiz(t *testing.T) {
@@ -27,7 +28,7 @@ func TestIstioBaseGooglePri(t *testing.T) {
 func testIstioBase(t *testing.T, contextName string) {
   	t.Parallel()
 	namespaceName := "istio-system"
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+        kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 
 	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices"}, 60, 1*time.Second)
 	require.NoError(t, err, "Istio Base no VirtualService CRD")

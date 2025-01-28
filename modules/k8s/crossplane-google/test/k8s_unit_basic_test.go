@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
 func TestK8sCrossplaneGoogleBiz(t *testing.T) {
@@ -25,9 +26,13 @@ func testK8sCrossplaneGoogle(t *testing.T, contextName, envName string) {
 	t.Parallel()
 	namespaceName := "crossplane-system"
 	releaseName := "crossplane-google"
-	kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+	require.Equal(t, output, "yes")
 
-	_, err := k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	_, err = k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-family-gcp", 60, 6*time.Second)

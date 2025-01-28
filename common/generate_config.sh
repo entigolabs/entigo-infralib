@@ -64,7 +64,7 @@ get_step_name_tf() {
 }
 
 get_step_name_k8s() {
-  if [ "$BRANCH" == "main" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "istio-istiod" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]
+  if [ "$BRANCH" == "main" -o "$MODULE_NAME" == "aws-alb" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]
   then
     STEP_NAME="apps"
   else
@@ -82,7 +82,7 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" ] 
         then
           APP_NAME=$MODULE_NAME
-        elif [ "$MODULE_NAME" == "aws-alb" ] 
+        elif [ "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" ] 
         then
           APP_NAME="${MODULE_NAME}-$prefix"
         elif [ "$BRANCH" == "main" ]

@@ -1,6 +1,7 @@
 global:
   google:
-    hostname: kiali.{{ .toutput.dns.int_domain }}
+    hostname: "{{ .tsmodule.kiali }}.{{ .toutput.dns.int_domain }}"
 kiali-server:
   server:
-    web_fqdn: kiali.{{ .toutput.dns.int_domain }}
+    web_fqdn: "{{ .tsmodule.kiali }}.{{ .toutput.dns.int_domain }}"
+  fullnameOverride: "{{ .tsmodule.kiali }}"

@@ -11,44 +11,31 @@ import (
 )
 
 func TestK8sLokiAWSBiz(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sLoki(t, "aws", "biz")
 }
 
 func TestK8sLokiAWSPri(t *testing.T) {
-	testK8sLoki(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sLoki(t, "aws", "pri")
 }
 
 func TestK8sLokiGoogleBiz(t *testing.T) {
-	testK8sLoki(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
+	testK8sLoki(t, "google", "biz")
 }
 
 func TestK8sLokiGooglePri(t *testing.T) {
-	testK8sLoki(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sLoki(t, "google", "pri")
 }
 
-func testK8sLoki(t *testing.T, contextName string, envName string, hostName string, cloudProvider string) {
+func testK8sLoki(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("loki-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-
-	gatewayName := ""
-	gatewayNamespace := ""
-
-	switch cloudProvider {
-	case "aws":
-
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	
+	if cloudName == "aws" {
 		gatewayName = "loki-gateway"
-
-	case "google":
-		gatewayNamespace = "google-gateway"
-
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-internal"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
 	}
+	
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "loki-read", 20, 6*time.Second)
 	if err != nil {
@@ -70,12 +57,12 @@ func testK8sLoki(t *testing.T, contextName string, envName string, hostName stri
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://loki.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "loki ingress/gateway test error")
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://loki.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "loki ingress/gateway test error")
+	targetURL = fmt.Sprintf("https://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

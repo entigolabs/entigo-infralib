@@ -32,9 +32,14 @@ func testK8sCrossplaneK8s(t *testing.T, contextName string) {
 	t.Parallel()
 	namespaceName := "crossplane-system"
 	releaseName := "crossplane-k8s"
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	
+	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
+	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+	require.Equal(t, output, "yes")
 
-	_, err := k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+
+	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	k8sprovider, k8serr := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)

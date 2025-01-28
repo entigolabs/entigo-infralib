@@ -11,56 +11,41 @@ import (
 )
 
 func TestK8sKialiAWSBiz(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sKiali(t, "aws", "biz")
 }
 
 func TestK8sKialiAWSPri(t *testing.T) {
-	testK8sKiali(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sKiali(t, "aws", "pri")
 }
 
 func TestK8sKialiGoogleBiz(t *testing.T) {
-	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
+	testK8sKiali(t, "google", "biz")
 }
 
 func TestK8sKialiGooglePri(t *testing.T) {
-	testK8sKiali(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sKiali(t, "google", "pri")
 }
 
-func testK8sKiali(t *testing.T, contextName string, envName string, hostName string, cloudProvider string) {
+func testK8sKiali(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("kiali-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-
-	gatewayName := ""
-	gatewayNamespace := ""
-
-	switch cloudProvider {
-	case "aws":
-		gatewayName = "kiali"
-	case "google":
-		gatewayNamespace = "google-gateway"
-
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-internal"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
-	}
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	
 	retries := 100
 	
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kiali", 30, 10*time.Second)
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 30, 10*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("kiali %s deployment error:", namespaceName), err)
 	}
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://kiali.%s/kiali", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	targetURL := fmt.Sprintf("http://%s/kiali", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "kiali ingress/gateway test error")
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://kiali.%s/kiali", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
+	targetURL = fmt.Sprintf("https://%s/kiali", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "kiali ingress/gateway test error")
 }

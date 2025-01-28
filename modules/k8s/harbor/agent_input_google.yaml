@@ -1,6 +1,6 @@
 global:
   google:
-    hostname: harbor.{{ .toutput.dns.int_domain }}
+    hostname: "{{ .tsmodule.harbor }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     gateway:
       name: google-gateway-internal
@@ -11,4 +11,4 @@ harbor:
   persistence:
     imageChartStorage:
       gcs:
-        bucket: "{{ .config.prefix }}-harbor"
+        bucket: "{{ .config.prefix }}-{{ .tsmodule.harbor }}"

@@ -10,25 +10,24 @@ import (
 )
 
 func TestK8sPromtailAWSBiz(t *testing.T) {
-	testK8sPromtail(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+	testK8sPromtail(t, "aws", "biz")
 }
 
 func TestK8sPromtailAWSPri(t *testing.T) {
-	testK8sPromtail(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+	testK8sPromtail(t, "aws", "pri")
 }
 
 func TestK8sPromtailGoogleBiz(t *testing.T) {
-	testK8sPromtail(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+	testK8sPromtail(t, "google", "biz")
 }
 
 func TestK8sPromtailGooglePri(t *testing.T) {
-	testK8sPromtail(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
+	testK8sPromtail(t, "google", "pri")
 }
 
-func testK8sPromtail(t *testing.T, contextName string, envName string) {
+func testK8sPromtail(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("promtail-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
 	dsname, err := terrak8s.GetDaemonSetE(t, kubectlOptions,  namespaceName)
 	if err != nil {

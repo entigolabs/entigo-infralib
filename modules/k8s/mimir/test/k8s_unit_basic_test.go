@@ -11,43 +11,30 @@ import (
 )
 
 func TestK8sMimirAWSBiz(t *testing.T) {
-	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "biz-net-route53-int.infralib.entigo.io", "aws")
+	testK8sMimir(t, "aws", "biz")
 }
 
 func TestK8sMimirAWSPri(t *testing.T) {
-	testK8sMimir(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "pri-net-route53.infralib.entigo.io", "aws")
+	testK8sMimir(t, "aws", "pri")
 }
 
 func TestK8sMimirGoogleBiz(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz", "biz-net-dns-int.gcp.infralib.entigo.io", "google")
+	testK8sMimir(t, "google", "biz")
 }
 
 func TestK8sMimirGooglePri(t *testing.T) {
-	testK8sMimir(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri", "pri-net-dns.gcp.infralib.entigo.io", "google")
+	testK8sMimir(t, "google", "pri")
 }
 
-func testK8sMimir(t *testing.T, contextName string, envName string, hostName string, cloudProvider string) {
+func testK8sMimir(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("mimir-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
-
 	
-	gatewayName := ""
-	gatewayNamespace := ""
-
-	switch cloudProvider {
-	case "aws":
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	
+	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	
+	if cloudName == "aws" {
 		gatewayName = "mimir-gateway"
-
-	case "google":
-		gatewayNamespace = "google-gateway"
-
-		switch envName {
-		case "biz":
-			gatewayName = "google-gateway-internal"
-		case "pri":
-			gatewayName = "google-gateway-external"
-		}
 	}
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-gateway", 20, 6*time.Second)
@@ -86,12 +73,12 @@ func testK8sMimir(t *testing.T, contextName string, envName string, hostName str
 	retries := 100
 
 	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://mimir.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "mimir ingress/gateway test error")
+	targetURL := fmt.Sprintf("http://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 
 	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://mimir.%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudProvider)
-	require.NoError(t, err, "mimir ingress/gateway test error")
+	targetURL = fmt.Sprintf("https://%s", hostName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

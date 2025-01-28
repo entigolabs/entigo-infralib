@@ -7,5 +7,5 @@ harbor:
   persistence:
     imageChartStorage:
       gcs:
-        bucket: entigoharborbucketpri
+        bucket: "entigo{{ .tsmodule.harbor }}"
   harborAdminPassword: "Harbor12345"

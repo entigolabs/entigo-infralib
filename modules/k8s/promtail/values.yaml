@@ -29,7 +29,7 @@ promtail:
     requests:
       cpu: 10m
       memory: 32Mi
-      ephemeral-storage: 1Gi
+      ephemeral-storage: 128Mi
 
   config:
     logLevel: info

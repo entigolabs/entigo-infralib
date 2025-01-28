@@ -3,24 +3,22 @@ package test
 import (
 	"testing"
 	"time"
-	"fmt"
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
 func TestK8sKarpenterAWSBiz(t *testing.T) {
-	testK8sKarpenter(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz", "aws")
+	testK8sKarpenter(t, "aws", "biz")
 }
 
 func TestK8sKarpenterAWSPri(t *testing.T) {
-	testK8sKarpenter(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri", "aws")
+	testK8sKarpenter(t, "aws", "pri")
 }
 
-func testK8sKarpenter(t *testing.T, contextName, envName, cloudProvider string) {
+func testK8sKarpenter(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	namespaceName := fmt.Sprintf("karpenter-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 30, 10*time.Second)
 	if err != nil {

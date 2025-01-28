@@ -1,0 +1,2 @@
+global:
+  sc_prefix: "{{ .tsmodule.aws-storageclass }}"

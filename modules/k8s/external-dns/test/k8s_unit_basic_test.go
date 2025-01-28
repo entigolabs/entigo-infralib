@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
@@ -9,25 +8,24 @@ import (
 )
 
 func TestK8sExternalDnsAWSBiz(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+	testK8sExternalDns(t, "aws", "biz")
 }
 
 func TestK8sExternalDnsAWSPri(t *testing.T) {
-	testK8sExternalDns(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+	testK8sExternalDns(t, "aws", "pri")
 }
 
 func TestK8sExternalDnsGoogleBiz(t *testing.T) {
-	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke", "biz")
+	testK8sExternalDns(t, "google", "biz")
 }
 
 func TestK8sExternalDnsGooglePri(t *testing.T) {
-	testK8sExternalDns(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke", "pri")
+	testK8sExternalDns(t, "google", "pri")
 }
 
-func testK8sExternalDns(t *testing.T, contextName string, envName string) {
+func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
-	namespaceName := fmt.Sprintf("external-dns-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
   
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
 	if err != nil {

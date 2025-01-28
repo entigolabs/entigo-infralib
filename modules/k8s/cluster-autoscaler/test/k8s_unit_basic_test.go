@@ -10,18 +10,17 @@ import (
 )
 
 func TestK8sClusterAutoscalerAWSBiz(t *testing.T) {
-	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+	testK8sClusterAutoscaler(t, "aws", "biz")
 }
 
 func TestK8sClusterAutoscalerAWSPri(t *testing.T) {
-	testK8sClusterAutoscaler(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+	testK8sClusterAutoscaler(t, "aws", "pri")
 }
 
 
-func testK8sClusterAutoscaler(t *testing.T, contextName string, envName string) {
-	t.Parallel()
-	namespaceName := fmt.Sprintf("cluster-autoscaler-%s", envName)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+func testK8sClusterAutoscaler(t *testing.T, cloudName string, envName string) {
+	t.Parallel()	
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-aws-cluster-autoscaler", namespaceName), 50, 6*time.Second)

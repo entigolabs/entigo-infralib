@@ -9,25 +9,24 @@ import (
 )
 
 func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks")
+	testK8sCrossplane(t, "aws", "biz")
 }
 
 func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplane(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks")
+	testK8sCrossplane(t, "aws", "pri")
 }
 
 func TestK8sCrossplaneGoogleBiz(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke")
+	testK8sCrossplane(t, "google", "biz")
 }
 
 func TestK8sCrossplaneGooglePri(t *testing.T) {
-	testK8sCrossplane(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
+	testK8sCrossplane(t, "google", "pri")
 }
 
-func testK8sCrossplane(t *testing.T, contextName string) {
+func testK8sCrossplane(t *testing.T,  cloudName string, envName string) {
 	t.Parallel()
-	namespaceName := k8s.GetNamespaceName(t)
-        kubectlOptions := k8s.CheckKubectlConnection(t, contextName, namespaceName)
+	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
 
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 6*time.Second)
