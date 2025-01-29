@@ -1,0 +1,45 @@
+name: PR modules/google
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'modules/google/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: PR modules/google
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v42
+    
+    - name: Run tests
+      env:
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        ENTIGO_INFRALIB_DESTROY: true
+      run: | 
+        echo "Changed modules:"
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep "modules/google" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          ${module}/test.sh
+          if [ $? -ne 0 ]
+          then
+            echo "Failed ${module}"
+            exit 2
+          fi
+        done
+
