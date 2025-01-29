@@ -28,7 +28,6 @@ func TestK8sHarborGooglePri(t *testing.T) {
 
 func testK8sHarbor(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")

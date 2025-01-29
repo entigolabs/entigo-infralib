@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
-
 func TestTerraformEc2(t *testing.T) {
 	t.Run("Biz", testTerraformEc2Biz)
 	t.Run("Pri", testTerraformEc2Pri)
