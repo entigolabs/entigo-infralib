@@ -59,10 +59,10 @@ jobs:
         PIDS=""
         echo "Changed modules:"
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file" | cut -d'/' -f1-3
+            echo "$file" | grep "modules/k8s" | cut -d'/' -f1-3
         done | sort -u )
         do
-          echo "$module"
+          echo "${module}/test.sh"
         done
           
         
