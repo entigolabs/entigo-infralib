@@ -77,7 +77,7 @@ spec:
         command:
         - /bin/bash
         - -c
-        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && kubectl wait --for=create -n {{ .Release.Namespace }} secret/aws-load-balancer-tls --timeout=300s && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
+        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
       restartPolicy: Never
   backoffLimit: 5
 

@@ -178,7 +178,7 @@ run_agents() {
   
   local only_steps="$1"
   AGENT_OPTS=""
-  if [ "$only_step" != "" ]
+  if [ "$only_steps" != "" ]
   then
     AGENT_OPTS="--steps $only_steps"
   fi
