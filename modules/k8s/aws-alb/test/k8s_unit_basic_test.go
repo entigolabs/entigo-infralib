@@ -36,7 +36,7 @@ func testK8sAwsAlb(t *testing.T, cloudName string, envName string) {
 
 	ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
 	require.NoError(t, err)
-	ingress.SetName("aws-load-balancer")
+	ingress.SetName(fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId())))
 	ingressClass := "alb"
 	err = unstructured.SetNestedField(ingress.Object, ingressClass, "spec", "ingressClassName")
 	require.NoError(t, err, "Setting ingressClassName error")
