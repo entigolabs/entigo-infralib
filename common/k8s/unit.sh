@@ -87,7 +87,7 @@ fi
   then
     default_google_conf
   fi
-  default_k8s_conf
+  full_k8s_conf
   
   MODULE_NAME=$(basename $MODULE_PATH)
   get_branch_name

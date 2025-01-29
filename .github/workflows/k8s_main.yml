@@ -43,7 +43,7 @@ jobs:
 
         default_aws_conf
         default_google_conf
-        default_k8s_conf
+        full_k8s_conf
         rm -rf agents/aws_ext agents/aws_min agents/aws_us
 
         docker pull $ENTIGO_INFRALIB_IMAGE

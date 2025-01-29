@@ -403,7 +403,7 @@ default_google_conf() {
   generate_config "./modules/google" "infra" "gke" "crossplane"
 }
 
-default_k8s_conf() {
+full_k8s_conf() {
   generate_config_k8s "./modules/k8s" "apps"
 }
 
