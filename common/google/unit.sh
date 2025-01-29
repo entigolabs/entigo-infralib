@@ -27,8 +27,6 @@ source common/generate_config.sh
 
 get_branch_name
 get_step_name_tf
-echo "BRANCH: $BRANCH"
-echo "STEP: $STEP_NAME"
 
 google_auth_login
 
