@@ -1,4 +1,5 @@
 promtail:
+  priorityClassName: "promtail"
   daemonset:
     enabled: true
 
