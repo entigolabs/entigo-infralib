@@ -63,7 +63,8 @@ then
     fi
     docker pull $ENTIGO_INFRALIB_IMAGE
   fi
-
+  MODULE_NAME=$(basename $MODULE_PATH)
+  get_branch_name
   prepare_agent
 if [ "$BRANCH" == "main" ]
 then
