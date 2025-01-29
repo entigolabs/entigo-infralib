@@ -198,13 +198,17 @@ then
       PIDS="$PIDS $!=$app_file"
   done
 
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo "$name finished (Failed apps: $FAIL)"
-      cat ${name}.log
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
 
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
@@ -219,7 +223,7 @@ then
 
   rm -f *.log
   
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
     echo "FAILED to plan $FAIL applications."
     echo "Plan ArgoCD failed!"
@@ -247,17 +251,20 @@ then
       PIDS="$PIDS $!=$app_file"
   done
 
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || let "FAIL+=1"
-      echo "$name finished (Failed apps: $FAIL)"
-      cat ${name}.log
-      rm ${name}.log
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
 
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
     echo "FAILED to apply $FAIL applications."
     echo "Apply ArgoCD failed!"
