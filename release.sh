@@ -21,21 +21,26 @@ then
   default_google_conf
 fi
 
-main_k8s_conf
+if [ "$1" == "" ]
+then
+  full_k8s_conf
+  run_agents
+  test_tf
+  test_k8s
 
-#When we run release in local we will run goole, aws and k8s tests all in one process. No argument needs to be supplied.
-#In GitHub "Agent Release" we run google and aws in separate processes (the tf argument is supplied).
-if [ "$1" == "tf" -o "$1" == "" ]
+elif [ "$1" == "tf" ]
 then
-docker pull $ENTIGO_INFRALIB_IMAGE
-run_agents
-docker pull $TFLINT_IMAGE
-test_tf
-fi
-#In GitHub "Agent Release" we run k8s tests in separate processes (the k8s argument is supplied). This will test k8s modules in aws and goole.
-if [ "$1" == "k8s" -o "$1" == ""  ]
+  main_k8s_conf
+  docker pull $ENTIGO_INFRALIB_IMAGE
+  run_agents
+  docker pull $TFLINT_IMAGE
+  test_tf
+
+elif  [ "$1" == "k8s" ]
 then
-docker pull $ENTIGO_INFRALIB_IMAGE
-docker pull $KUBESCORE_IMAGE
-test_k8s
+  full_k8s_conf
+  docker pull $ENTIGO_INFRALIB_IMAGE
+  run_agents
+  docker pull $KUBESCORE_IMAGE
+  test_k8s
 fi
