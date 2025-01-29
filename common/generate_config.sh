@@ -152,29 +152,29 @@ generate_config_k8s() {
       if [ ${#modules[@]} -eq 0 ] || [[ " ${modules[*]} " =~ " $MODULE_NAME " ]]
       then
       
-        for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
-        do
-          prefix="$(echo ${cloud} | cut -d'_' -f2)"
-          if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
+      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+      do
+        prefix="$(echo ${cloud} | cut -d'_' -f2)"
+        if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
+        then
+          get_app_name
+          if [[ "$existing_step" != *"${cloud}"* ]];
           then
-            get_app_name
-            if [[ "$existing_step" != *"${cloud}"* ]];
-            then
-              mkdir -p agents/${cloud}/config/apps
-              local existing_step="$existing_step ${cloud}"
-              echo "    - name: apps
-        type: argocd-apps
-        approve: force
-        argocd_namespace: argocd-$prefix
-        modules:" >> agents/${cloud}/config.yaml
-            fi
-
-            echo "      - name: $APP_NAME
-          source: $MODULE_NAME" >> agents/${cloud}/config.yaml
             mkdir -p agents/${cloud}/config/apps
-            cp "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" "agents/${cloud}/config/apps/${APP_NAME}.yaml"
+            local existing_step="$existing_step ${cloud}"
+            echo "    - name: apps
+      type: argocd-apps
+      approve: force
+      argocd_namespace: argocd-$prefix
+      modules:" >> agents/${cloud}/config.yaml
           fi
-        done
+
+          echo "      - name: $APP_NAME
+        source: $MODULE_NAME" >> agents/${cloud}/config.yaml
+          mkdir -p agents/${cloud}/config/apps
+          cp "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" "agents/${cloud}/config/apps/${APP_NAME}.yaml"
+        fi
+      done
       fi
     done
 }
