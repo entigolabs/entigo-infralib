@@ -208,6 +208,7 @@ then
       else
         echo "$p Done"
       fi
+      cat ${name}.log
   done
 
   for app_log_file in ./*.log
@@ -260,6 +261,7 @@ then
       if [[ $FAIL == *$p* ]]
       then
         echo "$p Failed"
+        cat ${name}.log
       else
         echo "$p Done"
       fi

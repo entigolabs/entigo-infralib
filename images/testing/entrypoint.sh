@@ -209,6 +209,7 @@ then
       else
         echo "$p Done"
       fi
+      cat ${name}.log
   done
 
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
@@ -259,6 +260,7 @@ then
       if [[ $FAIL == *$p* ]]
       then
         echo "$p Failed"
+        cat ${name}.log
       else
         echo "$p Done"
       fi
