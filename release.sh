@@ -40,6 +40,7 @@ elif  [ "$1" == "k8s" ]
 then
   full_k8s_conf
   docker pull $ENTIGO_INFRALIB_IMAGE
+  rm -rf agents/aws_ext agents/aws_min agents/aws_us
   run_agents apps
   docker pull $KUBESCORE_IMAGE
   test_k8s

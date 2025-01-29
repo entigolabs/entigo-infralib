@@ -1,2 +1,0 @@
-promtail:
-  priorityClassName: "{{ .tsmodule.promtail }}"
