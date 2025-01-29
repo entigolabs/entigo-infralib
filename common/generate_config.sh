@@ -64,7 +64,7 @@ get_step_name_tf() {
 }
 
 get_step_name_k8s() {
-  if [ "$BRANCH" == "main" -o "$MODULE_NAME" == "aws-alb" -o "$MODULENAME" == "crossplane-core" -o "$MODULENAME" == "crossplane-aws" -o "$MODULENAME" == "crossplane-k8s" -o "$MODULENAME" == "crossplane-google" ]
+  if [ "$BRANCH" == "main" ]
   then
     STEP_NAME="apps"
   else
