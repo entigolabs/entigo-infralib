@@ -79,4 +79,3 @@ spec:
         - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
       restartPolicy: Never
   backoffLimit: 5
-
