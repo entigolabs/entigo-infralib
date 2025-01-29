@@ -121,9 +121,9 @@ variable "gke_main_location_policy" {
 }
 
 variable "gke_main_spot_nodes" {
-  type     = bool
-  default  = false
-} 
+  type    = bool
+  default = false
+}
 
 variable "gke_main_volume_size" {
   type    = number
@@ -168,8 +168,8 @@ variable "gke_mainarm_location_policy" {
 }
 
 variable "gke_mainarm_spot_nodes" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "gke_mainarm_volume_size" {
@@ -258,8 +258,8 @@ variable "gke_mon_location_policy" {
 }
 
 variable "gke_mon_spot_nodes" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "gke_mon_volume_size" {
@@ -305,8 +305,8 @@ variable "gke_tools_location_policy" {
 }
 
 variable "gke_tools_spot_nodes" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "gke_tools_volume_size" {
@@ -353,8 +353,8 @@ variable "gke_db_location_policy" {
 }
 
 variable "gke_db_spot_nodes" {
-  type     = bool
-  default  = false
+  type    = bool
+  default = false
 }
 
 variable "gke_db_volume_size" {

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:v1.4.1-rc34"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:v1.4.3-rc35"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
@@ -178,7 +178,7 @@ run_agents() {
   
   local only_steps="$1"
   AGENT_OPTS=""
-  if [ "$only_step" != "" ]
+  if [ "$only_steps" != "" ]
   then
     AGENT_OPTS="--steps $only_steps"
   fi

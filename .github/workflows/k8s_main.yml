@@ -44,23 +44,29 @@ jobs:
         default_aws_conf
         default_google_conf
         default_k8s_conf
+        rm -rf agents/aws_ext agents/aws_min agents/aws_us
 
-        #docker pull $ENTIGO_INFRALIB_IMAGE
-        #run_agents apps
-        #docker pull $KUBESCORE_IMAGE
+        docker pull $ENTIGO_INFRALIB_IMAGE
+        run_agents apps
+        docker pull $KUBESCORE_IMAGE
 
-        #google_auth_login
+        google_auth_login
         
-        #gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-        #gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-        #aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-        #aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
         
         PIDS=""
-        echo "Changed files:"
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file"
-          done
+        echo "Changed modules:"
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep "modules/k8s" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          ${module}/test.sh testonly &
+          PIDS="$PIDS $!=${module}"
+        done
+
         FAIL=""
         for p in $PIDS; do
             pid=$(echo $p | cut -d"=" -f1)

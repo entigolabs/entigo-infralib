@@ -1,0 +1,85 @@
+ 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-certfix
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-certfix
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["aws-load-balancer-tls"]
+  verbs: ["list", "get", "delete", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  resourceNames: ["{{ .Release.Name }}-aws-load-balancer-controller"]
+  verbs: ["get", "patch"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+  resourceNames: ["aws-load-balancer-webhook"]
+  verbs: ["list", "get", "delete", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-certfix
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-certfix
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Release.Name }}-certfix
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-certfix
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    kube-score/ignore: pod-networkpolicy
+spec:
+  activeDeadlineSeconds: 600
+  parallelism: 1
+  completions: 1
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-certfix
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                - "true"
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:1.31
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+            ephemeral-storage: 200Mi
+          requests:
+            cpu: 1m
+            memory: 16Mi
+            ephemeral-storage: 2Mi
+        command:
+        - /bin/bash
+        - -c
+        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && kubectl delete mutatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
+      restartPolicy: Never
+  backoffLimit: 5

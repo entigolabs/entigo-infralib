@@ -1,28 +1,76 @@
-name: Update modules/aws/kms
+name: Update modules/aws
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'modules/aws/kms/**'
+      - 'modules/aws/**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Test modules/aws/kms
+    name: Test modules/aws
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v42
+    
     - name: Run tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
+        PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        modules/aws/kms/test.sh
+        source common/generate_config.sh
+        prepare_agent
+        echo "sources:
+            - url: https://github.com/entigolabs/entigo-infralib
+              version: main
+              force_version: true
+        steps:" > agents/config.yaml
+
+        default_aws_conf
+
+        docker pull $ENTIGO_INFRALIB_IMAGE
+        docker pull $TFLINT_IMAGE
+        run_agents
+        
+        PIDS=""
+        echo "Changed modules:"
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep "modules/aws" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          ${module}/test.sh testonly &
+          PIDS="$PIDS $!=${module}"
+        done
+
+        FAIL=""
+        for p in $PIDS; do
+            pid=$(echo $p | cut -d"=" -f1)
+            name=$(echo $p | cut -d"=" -f2)
+            wait $pid || FAIL="$FAIL $p"
+            if [[ $FAIL == *$p* ]]
+            then
+              echo "$p Failed"
+            else
+              echo "$p Done"
+            fi
+        done
+        if [ "$FAIL" != "" ]
+        then
+          echo "FAILED TESTS $FAIL"
+          exit 2
+        fi
+
     - name: Get latest release
       id: get_latest_release
       uses: actions/github-script@v6
@@ -37,7 +85,6 @@ jobs:
           const patch = parseInt(match[3], 10) + 1;
           const new_version = `v${major}.${minor}.${patch}`
           core.setOutput('new_version',  new_version);
-       
     - name: Authenticate with GitHub CLI
       run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'push' }}
@@ -47,10 +94,10 @@ jobs:
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        git tag -a modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
-        git push origin modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
-        RELEASE_URL=$(gh release create modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
-        --title "Release modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
+        git tag -a modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
+        git push origin modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
+        RELEASE_URL=$(gh release create modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
+        --title "Release modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
         --generate-notes \
         --draft=false \
         --latest=false \
@@ -59,13 +106,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'push' }}
-        
     - name: Slack Success Release Message
       if: ${{ success() && github.event_name == 'push' }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} ${{ env.RELEASE_URL }}'
+        SLACK_MESSAGE: 'Released modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} ${{ env.RELEASE_URL }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
@@ -76,7 +122,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'failure'
-        SLACK_MESSAGE: 'Failed to update modules/aws/kms-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} on main'
+        SLACK_MESSAGE: 'Failed to update modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} on main'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
