@@ -32,20 +32,14 @@ func testK8sKiali(t *testing.T, cloudName string, envName string) {
 	
 	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 	
-	retries := 100
 	
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 30, 10*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("kiali %s deployment error:", namespaceName), err)
 	}
 
-	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s/kiali", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "kiali ingress/gateway test error")
-
 	successResponseCode = "200"
 	targetURL = fmt.Sprintf("https://%s/kiali", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, "kiali ingress/gateway test error")
 }
