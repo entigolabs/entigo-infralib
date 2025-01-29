@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-certfix
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: {{ .Release.Name }}-certfix
 rules:
@@ -17,9 +17,13 @@ rules:
   resources: ["deployments"]
   resourceNames: ["{{ .Release.Name }}-aws-load-balancer-controller"]
   verbs: ["get", "patch"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+  resourceNames: ["aws-load-balancer-webhook"]
+  verbs: ["list", "get", "delete", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: {{ .Release.Name }}-certfix
 subjects:
@@ -76,6 +80,6 @@ spec:
         command:
         - /bin/bash
         - -c
-        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
+        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && kubectl delete mutatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
       restartPolicy: Never
   backoffLimit: 5
