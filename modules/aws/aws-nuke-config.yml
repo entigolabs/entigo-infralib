@@ -64,6 +64,23 @@ resource-types:
   - GameLiftMatchmakingConfiguration
   - GameLiftMatchmakingRuleSet
   - OSPackage
+  - ECRPublicRepository
+  - OpsWorksLayer
+  - OpsWorksApp
+  - OpsWorksUserProfile
+  - OpsWorksInstance
+  - OpsWorksCMBackup
+  - OpsWorksCMServerState
+  - OpsWorksCMServer
+  - CloudSearchDomain
+  - MachineLearningEvaluation
+  - MachineLearningDataSource
+  - MachineLearningBranchPrediction
+  - MachineLearningMLModel
+  - ElasticTranscoderPipeline
+  - ElasticTranscoderPreset
+  - TranscribeLanguageModel
+  
 
 accounts:
   "877483565445":
