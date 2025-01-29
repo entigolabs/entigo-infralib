@@ -177,7 +177,7 @@ prefix=""
 MODULE_NAME=$(basename $MODULE_PATH)
 get_branch_name
 get_app_name
-echo "TEST APP NAME: $APP_NAME"
+
 docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_ZONE="$GOOGLE_ZONE" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \
