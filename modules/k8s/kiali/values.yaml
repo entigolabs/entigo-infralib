@@ -1,12 +1,6 @@
 global:
   cloudProvider: ""
 
-  google:
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
-
 kiali-server:
   fullnameOverride: "kiali"
   istio_namespace: "istio-system"

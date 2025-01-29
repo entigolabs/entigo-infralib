@@ -28,7 +28,6 @@ func TestK8sHarborGooglePri(t *testing.T) {
 
 func testK8sHarbor(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
@@ -72,8 +71,8 @@ func testK8sHarbor(t *testing.T, cloudName string, envName string) {
 		t.Fatal(fmt.Sprintf("%s-jobservice deployment error:", namespaceName), err)
 	}
 
-	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s/api/v2.0/ping", hostName)
+	successResponseCode := "200"
+	targetURL := fmt.Sprintf("https://%s/api/v2.0/ping", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

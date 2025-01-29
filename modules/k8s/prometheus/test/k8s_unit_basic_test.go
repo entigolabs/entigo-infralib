@@ -51,8 +51,8 @@ func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
 		t.Fatal(fmt.Sprintf("%s-alertmanager-0 pod error:", namespaceName), err)
 	}
 
-	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s/graph", hostName)
+	successResponseCode := "200"
+	targetURL := fmt.Sprintf("https://%s/graph", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

@@ -70,8 +70,8 @@ func testK8sMimir(t *testing.T, cloudName string, envName string) {
 		t.Fatal("mimir-store-gateway-0 pod error:", err)
 	}
 
-	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s", hostName)
+	successResponseCode := "200"
+	targetURL := fmt.Sprintf("https://%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }
