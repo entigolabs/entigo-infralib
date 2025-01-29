@@ -31,7 +31,7 @@ subjects:
   name: {{ .Release.Name }}-certfix
   namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: {{ .Release.Name }}-certfix
   apiGroup: rbac.authorization.k8s.io
 ---
