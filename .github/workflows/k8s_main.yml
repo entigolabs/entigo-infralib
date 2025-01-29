@@ -57,10 +57,15 @@ jobs:
         #aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
         
         PIDS=""
-        echo "Changed files:"
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file"
-          done
+        echo "Changed modules:"
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          echo "$module"
+        done
+          
+        
         FAIL=""
         for p in $PIDS; do
             pid=$(echo $p | cut -d"=" -f1)
