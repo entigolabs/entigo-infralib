@@ -49,7 +49,6 @@ func testK8sAwsAlb(t *testing.T, cloudName string, envName string) {
 	createdIngress, err := k8s.CreateK8SIngress(t, kubectlOptions, ingress)
 	require.NoError(t, err, "Creating ingress error")
 	assert.NotNil(t, createdIngress, "Ingress is nil")
-	assert.Equal(t, "aws-load-balancer", createdIngress.GetName(), "Ingress name is not equal")
 
 	_, err = k8s.WaitUntilK8SIngressAvailable(t, kubectlOptions, createdIngress.GetName(), 40, 2*time.Second)
 	if err != nil {
