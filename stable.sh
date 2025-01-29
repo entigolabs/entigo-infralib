@@ -20,7 +20,7 @@ then
   default_google_conf
 fi
 
-default_k8s_conf
+main_k8s_conf
 
 #When we run release in local we will run goole, aws and k8s tests all in one process. No argument needs to be supplied.
 #In GitHub "Agent Release" we run google and aws in separate processes (the tf argument is supplied).
