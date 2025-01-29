@@ -194,12 +194,20 @@ then
   for app_file in ./*.yaml
   do
       argocd-apps-plan.sh $app_file > $app_file.log 2>&1 &
-      PIDS="$PIDS $!"
+      PIDS="$PIDS $!=$app_file"
   done
 
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
-      wait $p || let "FAIL+=1"
+      pid=$(echo $p | cut -d"=" -f1)
+      name=$(echo $p | cut -d"=" -f2)
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
 
   for app_log_file in ./*.log
@@ -219,7 +227,7 @@ then
 
   rm -f *.log
   
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
     echo "FAILED to plan $FAIL applications."
     echo "Plan ArgoCD failed!"
@@ -241,12 +249,20 @@ then
   for app_file in ./*.yaml
   do
       argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
-      PIDS="$PIDS $!"
+      PIDS="$PIDS $!=$app_file"
   done
 
-  FAIL=0
+  FAIL=""
   for p in $PIDS; do
-      wait $p || let "FAIL+=1"
+      pid=$(echo $p | cut -d"=" -f1)
+      name=$(echo $p | cut -d"=" -f2)
+      wait $pid || FAIL="$FAIL $p"
+      if [[ $FAIL == *$p* ]]
+      then
+        echo "$p Failed"
+      else
+        echo "$p Done"
+      fi
   done
 
   for app_log_file in ./*.log
@@ -255,7 +271,7 @@ then
     rm $app_log_file
   done
 
-  if [ "$FAIL" -ne 0 ]
+  if [ "$FAIL" != "" ]
   then
     echo "FAILED to apply $FAIL applications."
     echo "Apply ArgoCD failed!"
