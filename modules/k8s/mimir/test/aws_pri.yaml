@@ -4,3 +4,12 @@ mimir-distributed:
       annotations:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing
+  ingester:
+    persistentVolume:
+      size: 5Gi
+  store_gateway:
+    persistentVolume:
+      size: 5Gi
+  compactor:
+    persistentVolume:
+      size: 5Gi

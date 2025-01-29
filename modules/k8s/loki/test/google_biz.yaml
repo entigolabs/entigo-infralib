@@ -1,2 +1,11 @@
 loki:
   fullnameOverride: "{{ .tsmodule.loki }}"
+  write:
+    persistence:
+      size: 3Gi
+  read:
+    persistence:
+      size: 3Gi
+  backend:
+    persistence:
+      size: 3Gi
