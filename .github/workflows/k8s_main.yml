@@ -46,7 +46,7 @@ jobs:
         default_k8s_conf
 
         docker pull $ENTIGO_INFRALIB_IMAGE
-        run_agents
+        run_agents apps
         docker pull $KUBESCORE_IMAGE
 
         google_auth_login
@@ -55,12 +55,29 @@ jobs:
         gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
         aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
         aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-
+        
+        PIDS=""
         echo "Changed files:"
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file"
           done
-
+        FAIL=""
+        for p in $PIDS; do
+            pid=$(echo $p | cut -d"=" -f1)
+            name=$(echo $p | cut -d"=" -f2)
+            wait $pid || FAIL="$FAIL $p"
+            if [[ $FAIL == *$p* ]]
+            then
+              echo "$p Failed"
+            else
+              echo "$p Done"
+            fi
+        done
+        if [ "$FAIL" != "" ]
+        then
+          echo "FAILED TESTS $FAIL"
+          exit 2
+        fi
 
     - name: Get latest release
       id: get_latest_release
