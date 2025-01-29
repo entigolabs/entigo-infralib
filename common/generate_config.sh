@@ -176,7 +176,12 @@ generate_config_k8s() {
 run_agents() {
   google_auth_login
   
-  local module="$1"
+  local only_steps="$1"
+  AGENT_OPTS=""
+  if [ "$only_step" != "" ]
+  then
+    AGENT_OPTS="--steps $only_steps"
+  fi
   PIDS=""
   for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
   do
@@ -200,7 +205,7 @@ run_agents() {
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
 
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local  & #--steps apps
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS  & 
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
@@ -213,7 +218,7 @@ run_agents() {
           export AWS_REGION="eu-north-1"
         fi
     
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local  & #--steps apps
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
