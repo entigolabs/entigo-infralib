@@ -141,34 +141,41 @@ generate_config() {
 generate_config_k8s() {
     local MODULE_PATHS=$1
     local step=$2
+    shift 2
+    local modules=("$@")
     local existing_step=""
     BRANCH="main"
     for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
     do 
       MODULE_NAME=`basename $test`
-      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
-      do
-        prefix="$(echo ${cloud} | cut -d'_' -f2)"
-        if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
-        then
-          get_app_name
-          if [[ "$existing_step" != *"${cloud}"* ]];
+      
+      if [ ${#modules[@]} -eq 0 ] || [[ " ${modules[*]} " =~ " $MODULE_NAME " ]]
+      then
+      
+        for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+        do
+          prefix="$(echo ${cloud} | cut -d'_' -f2)"
+          if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
           then
-            mkdir -p agents/${cloud}/config/apps
-            local existing_step="$existing_step ${cloud}"
-            echo "    - name: apps
-      type: argocd-apps
-      approve: force
-      argocd_namespace: argocd-$prefix
-      modules:" >> agents/${cloud}/config.yaml
-          fi
+            get_app_name
+            if [[ "$existing_step" != *"${cloud}"* ]];
+            then
+              mkdir -p agents/${cloud}/config/apps
+              local existing_step="$existing_step ${cloud}"
+              echo "    - name: apps
+        type: argocd-apps
+        approve: force
+        argocd_namespace: argocd-$prefix
+        modules:" >> agents/${cloud}/config.yaml
+            fi
 
-          echo "      - name: $APP_NAME
-        source: $MODULE_NAME" >> agents/${cloud}/config.yaml
-          mkdir -p agents/${cloud}/config/apps
-          cp "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" "agents/${cloud}/config/apps/${APP_NAME}.yaml"
-        fi
-      done
+            echo "      - name: $APP_NAME
+          source: $MODULE_NAME" >> agents/${cloud}/config.yaml
+            mkdir -p agents/${cloud}/config/apps
+            cp "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" "agents/${cloud}/config/apps/${APP_NAME}.yaml"
+          fi
+        done
+      fi
     done
 }
 
@@ -398,4 +405,8 @@ default_google_conf() {
 
 default_k8s_conf() {
   generate_config_k8s "./modules/k8s" "apps"
+}
+
+main_k8s_conf() {
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "crossplane-aws" "crossplane-core" "crossplane-google" "external-dns" "google-gateway" "istio-base" "istio-istiod" 
 }

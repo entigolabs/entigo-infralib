@@ -4,8 +4,6 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $SCRIPTPATH
 source common/generate_config.sh
 
-
-
 prepare_agent
 
 echo "sources:
@@ -23,7 +21,7 @@ then
   default_google_conf
 fi
 
-default_k8s_conf
+main_k8s_conf
 
 #When we run release in local we will run goole, aws and k8s tests all in one process. No argument needs to be supplied.
 #In GitHub "Agent Release" we run google and aws in separate processes (the tf argument is supplied).
