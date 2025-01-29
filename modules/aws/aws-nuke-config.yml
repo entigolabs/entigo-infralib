@@ -64,6 +64,7 @@ resource-types:
   - GameLiftMatchmakingConfiguration
   - GameLiftMatchmakingRuleSet
   - OSPackage
+  - ECRPublicRepository
 
 accounts:
   "877483565445":
