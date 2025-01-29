@@ -37,7 +37,6 @@ metadata:
   name: {{ .Release.Name }}-certfix
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    helm.sh/hook: post-install
     kube-score/ignore: pod-networkpolicy
 spec:
   activeDeadlineSeconds: 600
