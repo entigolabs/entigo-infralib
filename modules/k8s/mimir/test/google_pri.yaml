@@ -2,3 +2,13 @@ global:
   google:
     gateway:
       name: google-gateway-external
+mimir-distributed:
+  ingester:
+    persistentVolume:
+      size: 5Gi
+  store_gateway:
+    persistentVolume:
+      size: 5Gi
+  compactor:
+    persistentVolume:
+      size: 5Gi
