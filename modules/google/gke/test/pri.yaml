@@ -6,6 +6,8 @@ master_authorized_networks: |
     }
   ]
 
+enable_l4_ilb_subsetting: true
+
 gke_main_min_size: 1
 gke_main_max_size: 3
 gke_main_spot_nodes: true
