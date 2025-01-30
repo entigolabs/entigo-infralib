@@ -8,7 +8,6 @@
 
 export TF_IN_AUTOMATION=1
 
-
 running_jobs() {
     local still_running=""
     local status_changed=0
@@ -23,17 +22,16 @@ running_jobs() {
         fi
         
         if kill -0 $pid 2>/dev/null; then
-            still_running="$still_running\n  - $(basename $name)"
+            still_running="$still_running\n~ $(basename $name) Running"
         else
             # Check if job completed successfully
             if wait $pid 2>/dev/null; then
-                echo "✓ $name Done"
+                echo "✓ $(basename $name) Done"
                 COMPLETED="$COMPLETED $p"
             else
-                echo "✗ $name Failed"
+                echo "✗ $(basename $name) Failed"
                 FAIL="$FAIL $p"
             fi
-            cat ${name}.log
             status_changed=1
         fi
     done
@@ -41,15 +39,27 @@ running_jobs() {
     # Only show running jobs if the list has changed
     if [ "$still_running" != "$LAST_RUNNING" ]; then
         if [ ! -z "$still_running" ]; then
-            echo -e "Still running: $still_running"
+            echo -e "-------$still_running"
         fi
         LAST_RUNNING="$still_running"
     fi
 }
 
 
+if [ "$COMMAND" == "test" ]
+then
+  if [ ! -f go.mod ]
+  then
+    cd /common && go mod download -x && cd /app
+    go mod init github.com/entigolabs/entigo-infralib
+    go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
+    go mod tidy
+  fi
+  cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
+  exit $?
+
 #Prepare project filesystems for plan stages. When we plan then we need to get the current S3 bucket content
-if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
+elif [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
 then
   echo "Need to copy project files from bucket $INFRALIB_BUCKET"
   if [ ! -z "$GOOGLE_REGION" ]
@@ -95,7 +105,10 @@ fi
 #Prepare and check the environment for terraform (common for plan and apply)
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
-  /usr/bin/gitlogin.sh
+  if [ -f /usr/bin/gitlogin.sh ]
+  then
+    /usr/bin/gitlogin.sh
+  fi
   cat backend.conf
   if [ $? -ne 0 ]
   then
@@ -108,10 +121,11 @@ then
     echo "Terraform init failed."
     exit 14
   fi
-  
+
 #Prepare and check the environment for Kubernetes (common for plan and apply)
 elif [ "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
+  echo "COMMAND $COMMAND, cluster $KUBERNETES_CLUSTER_NAME region $AWS_REGION"
   if [ ! -z "$GOOGLE_REGION" ]
   then
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
@@ -180,6 +194,7 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
+
   #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
@@ -219,14 +234,19 @@ then
   then
     echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
     ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
-    argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
-    export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
-    argocd logout ${ARGOCD_HOSTNAME}
-    if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+    if [ "$ARGO_PASS" != "" ]
     then
-      kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
+      argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
+      export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
+      argocd logout ${ARGOCD_HOSTNAME}
+      if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+      then
+        kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
+      else
+        echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+      fi
     else
-      echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
+      echo "Unable to get argocd Admin token to create the account token for infralib."
     fi
   fi
   rm -f *.sync *.log
@@ -241,6 +261,7 @@ then
   COMPLETED=""
   LAST_RUNNING=""
   while true; do
+      sleep 2
       running_jobs
       total_done=$(echo "$COMPLETED $FAIL" | wc -w)
       total_jobs=$(echo "$PIDS" | wc -w)
@@ -248,9 +269,18 @@ then
       if [ $total_done -eq $total_jobs ]; then
           break
       fi
-      sleep 2
   done
 
+  for p in $COMPLETED; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+  done
+  
+  for p in $FAIL; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+  done
+  
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
   then
     CHANGED=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep "RequiredPruning: 0$" | wc -l`
@@ -271,7 +301,7 @@ then
       echo "Plan ArgoCD failed!"
       exit 21
   fi
-  
+
 elif [ "$COMMAND" == "argocd-apply" ]
 then
 
@@ -281,7 +311,10 @@ then
     exit 25
   fi
   export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-
+  if [ "$ARGOCD_AUTH_TOKEN" == "" ]
+  then
+    echo "Did not get the infralib account token, falling back to kubectl sync and check."
+  fi
   
   PIDS=""
   for app_file in ./*.yaml
@@ -289,11 +322,12 @@ then
       argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
       PIDS="$PIDS $!=$app_file"
   done
-  
+
   FAIL=""
   COMPLETED=""
   LAST_RUNNING=""
   while true; do
+      sleep 2
       running_jobs
       total_done=$(echo "$COMPLETED $FAIL" | wc -w)
       total_jobs=$(echo "$PIDS" | wc -w)
@@ -301,11 +335,43 @@ then
       if [ $total_done -eq $total_jobs ]; then
           break
       fi
-      sleep 2
   done
-  rm -f *.log
+  
+  #Try the failed apps second time.
+  PIDS=""
+  for p in $FAIL; do
+      name=$(echo $p | cut -d"=" -f2)
+      argocd-apps-apply.sh $name > $name.log 2>&1 &
+      PIDS="$PIDS $!=$name"
+  done
+  
+  if [ ! -z "$FAIL" ]; then
+      echo "Retry Failed jobs:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      FAIL=""
+      COMPLETED=""
+      LAST_RUNNING=""
+      while true; do
+          sleep 2
+          running_jobs
+          total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+          total_jobs=$(echo "$PIDS" | wc -w)
+          if [ $total_done -eq $total_jobs ]; then
+              break
+          fi
+      done
+  fi
 
   if [ ! -z "$FAIL" ]; then
+      for p in $FAIL; do
+          name=$(echo $p | cut -d"=" -f2)
+          echo "#######################################"
+          echo "ERROR LOG FOR $name"
+          cat $name.log
+      done
+  
       echo "Failed jobs were:"
       for p in $FAIL; do
           echo "  - $(basename $(echo $p | cut -d"=" -f2))"
@@ -313,6 +379,7 @@ then
       echo "Apply ArgoCD failed!"
       exit 21
   fi
+  rm -f *.log
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then

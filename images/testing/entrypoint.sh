@@ -2,6 +2,7 @@
 #set -x
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
 
+export TF_IN_AUTOMATION=1
 
 running_jobs() {
     local still_running=""
@@ -17,17 +18,16 @@ running_jobs() {
         fi
         
         if kill -0 $pid 2>/dev/null; then
-            still_running="$still_running\n  - $(basename $name)"
+            still_running="$still_running\n~ $(basename $name) Running"
         else
             # Check if job completed successfully
             if wait $pid 2>/dev/null; then
-                echo "✓ $name Done"
+                echo "✓ $(basename $name) Done"
                 COMPLETED="$COMPLETED $p"
             else
-                echo "✗ $name Failed"
+                echo "✗ $(basename $name) Failed"
                 FAIL="$FAIL $p"
             fi
-            cat ${name}.log
             status_changed=1
         fi
     done
@@ -35,7 +35,7 @@ running_jobs() {
     # Only show running jobs if the list has changed
     if [ "$still_running" != "$LAST_RUNNING" ]; then
         if [ ! -z "$still_running" ]; then
-            echo -e "Still running: $still_running"
+            echo -e "-------$still_running"
         fi
         LAST_RUNNING="$still_running"
     fi
@@ -90,6 +90,10 @@ fi
 #Prepare and check the environment for terraform (common for plan and apply)
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
+  if [ -f /usr/bin/gitlogin.sh ]
+  then
+    /usr/bin/gitlogin.sh
+  fi
   cat backend.conf
   if [ $? -ne 0 ]
   then
@@ -252,6 +256,16 @@ then
       fi
   done
 
+  for p in $COMPLETED; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+  done
+  
+  for p in $FAIL; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+  done
+  
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
   then
     CHANGED=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep "RequiredPruning: 0$" | wc -l`
@@ -307,8 +321,42 @@ then
           break
       fi
   done
+  
+  #Try the failed apps second time.
+  PIDS=""
+  for p in $FAIL; do
+      name=$(echo $p | cut -d"=" -f2)
+      argocd-apps-apply.sh $name > $name.log 2>&1 &
+      PIDS="$PIDS $!=$name"
+  done
+  
+  if [ ! -z "$FAIL" ]; then
+      echo "Retry Failed jobs:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      FAIL=""
+      COMPLETED=""
+      LAST_RUNNING=""
+      while true; do
+          sleep 2
+          running_jobs
+          total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+          total_jobs=$(echo "$PIDS" | wc -w)
+          if [ $total_done -eq $total_jobs ]; then
+              break
+          fi
+      done
+  fi
 
   if [ ! -z "$FAIL" ]; then
+      for p in $FAIL; do
+          name=$(echo $p | cut -d"=" -f2)
+          echo "#######################################"
+          echo "ERROR LOG FOR $name"
+          cat $name.log
+      done
+  
       echo "Failed jobs were:"
       for p in $FAIL; do
           echo "  - $(basename $(echo $p | cut -d"=" -f2))"
@@ -316,6 +364,7 @@ then
       echo "Apply ArgoCD failed!"
       exit 21
   fi
+  rm -f *.log
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then

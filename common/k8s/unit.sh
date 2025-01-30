@@ -144,7 +144,6 @@ fi
         else
           echo "Unknown cloud provider type $testname"
         fi
-    
   done
 
   
