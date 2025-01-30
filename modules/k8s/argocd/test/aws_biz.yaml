@@ -9,4 +9,4 @@ argocd:
         alb.ingress.kubernetes.io/scheme: internet-facing
   global:
     domain: |
-      {{ .tsmodule.argocd }}.{{ .toutput.route53.pub_domain }}
+      {{ .module.name }}.{{ .toutput.route53.pub_domain }}

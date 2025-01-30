@@ -1,4 +1,4 @@
 argocd:
   global:
     domain: |
-      argocd.{{ .toutput.route53.int_domain }}
+      {{ .module.name }}.{{ .toutput.route53.int_domain }}
