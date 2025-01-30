@@ -2,6 +2,46 @@
 #set -x
 [ -z $COMMAND ] && echo "COMMAND must be set" && exit 1
 
+
+running_jobs() {
+    local still_running=""
+    local status_changed=0
+    
+    for p in $PIDS; do
+        pid=$(echo $p | cut -d"=" -f1)
+        name=$(echo $p | cut -d"=" -f2)
+        
+        # Skip if we already know about this job's completion
+        if [[ $COMPLETED == *$p* ]] || [[ $FAIL == *$p* ]]; then
+            continue
+        fi
+        
+        if kill -0 $pid 2>/dev/null; then
+            still_running="$still_running\n  - $(basename $name)"
+        else
+            # Check if job completed successfully
+            if wait $pid 2>/dev/null; then
+                echo "✓ $name Done"
+                COMPLETED="$COMPLETED $p"
+            else
+                echo "✗ $name Failed"
+                FAIL="$FAIL $p"
+            fi
+            cat ${name}.log
+            status_changed=1
+        fi
+    done
+    
+    # Only show running jobs if the list has changed
+    if [ "$still_running" != "$LAST_RUNNING" ]; then
+        if [ ! -z "$still_running" ]; then
+            echo -e "Still running: $still_running"
+        fi
+        LAST_RUNNING="$still_running"
+    fi
+}
+
+
 if [ "$COMMAND" == "test" ]
 then
   if [ ! -f go.mod ]
@@ -199,17 +239,17 @@ then
   done
 
   FAIL=""
-  for p in $PIDS; do
-      pid=$(echo $p | cut -d"=" -f1)
-      name=$(echo $p | cut -d"=" -f2)
-      wait $pid || FAIL="$FAIL $p"
-      if [[ $FAIL == *$p* ]]
-      then
-        echo "$p Failed"
-      else
-        echo "$p Done"
+  COMPLETED=""
+  LAST_RUNNING=""
+  while true; do
+      sleep 2
+      running_jobs
+      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+      total_jobs=$(echo "$PIDS" | wc -w)
+      
+      if [ $total_done -eq $total_jobs ]; then
+          break
       fi
-      cat ${name}.log
   done
 
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
@@ -224,11 +264,13 @@ then
 
   rm -f *.log
   
-  if [ "$FAIL" != "" ]
-  then
-    echo "FAILED to plan $FAIL applications."
-    echo "Plan ArgoCD failed!"
-    exit 20
+  if [ ! -z "$FAIL" ]; then
+      echo "Failed jobs were:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      echo "Plan ArgoCD failed!"
+      exit 21
   fi
 
 elif [ "$COMMAND" == "argocd-apply" ]
@@ -253,24 +295,26 @@ then
   done
 
   FAIL=""
-  for p in $PIDS; do
-      pid=$(echo $p | cut -d"=" -f1)
-      name=$(echo $p | cut -d"=" -f2)
-      wait $pid || FAIL="$FAIL $p"
-      if [[ $FAIL == *$p* ]]
-      then
-        echo "$p Failed"
-        cat ${name}.log
-      else
-        echo "$p Done"
+  COMPLETED=""
+  LAST_RUNNING=""
+  while true; do
+      sleep 2
+      running_jobs
+      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+      total_jobs=$(echo "$PIDS" | wc -w)
+      
+      if [ $total_done -eq $total_jobs ]; then
+          break
       fi
   done
 
-  if [ "$FAIL" != "" ]
-  then
-    echo "FAILED to apply $FAIL applications."
-    echo "Apply ArgoCD failed!"
-    exit 21
+  if [ ! -z "$FAIL" ]; then
+      echo "Failed jobs were:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      echo "Apply ArgoCD failed!"
+      exit 21
   fi
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]

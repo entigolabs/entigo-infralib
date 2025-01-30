@@ -8,6 +8,46 @@
 
 export TF_IN_AUTOMATION=1
 
+
+running_jobs() {
+    local still_running=""
+    local status_changed=0
+    
+    for p in $PIDS; do
+        pid=$(echo $p | cut -d"=" -f1)
+        name=$(echo $p | cut -d"=" -f2)
+        
+        # Skip if we already know about this job's completion
+        if [[ $COMPLETED == *$p* ]] || [[ $FAIL == *$p* ]]; then
+            continue
+        fi
+        
+        if kill -0 $pid 2>/dev/null; then
+            still_running="$still_running\n  - $(basename $name)"
+        else
+            # Check if job completed successfully
+            if wait $pid 2>/dev/null; then
+                echo "✓ $name Done"
+                COMPLETED="$COMPLETED $p"
+            else
+                echo "✗ $name Failed"
+                FAIL="$FAIL $p"
+            fi
+            cat ${name}.log
+            status_changed=1
+        fi
+    done
+    
+    # Only show running jobs if the list has changed
+    if [ "$still_running" != "$LAST_RUNNING" ]; then
+        if [ ! -z "$still_running" ]; then
+            echo -e "Still running: $still_running"
+        fi
+        LAST_RUNNING="$still_running"
+    fi
+}
+
+
 #Prepare project filesystems for plan stages. When we plan then we need to get the current S3 bucket content
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "argocd-plan"  -o "$COMMAND" == "argocd-plan-destroy" ]
 then
@@ -198,22 +238,17 @@ then
   done
 
   FAIL=""
-  for p in $PIDS; do
-      pid=$(echo $p | cut -d"=" -f1)
-      name=$(echo $p | cut -d"=" -f2)
-      wait $pid || FAIL="$FAIL $p"
-      if [[ $FAIL == *$p* ]]
-      then
-        echo "$p Failed"
-      else
-        echo "$p Done"
+  COMPLETED=""
+  LAST_RUNNING=""
+  while true; do
+      running_jobs
+      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+      total_jobs=$(echo "$PIDS" | wc -w)
+      
+      if [ $total_done -eq $total_jobs ]; then
+          break
       fi
-      cat ${name}.log
-  done
-
-  for app_log_file in ./*.log
-  do
-    cat $app_log_file
+      sleep 2
   done
 
   if [ "$ARGOCD_AUTH_TOKEN" != "" ]
@@ -228,11 +263,13 @@ then
 
   rm -f *.log
   
-  if [ "$FAIL" != "" ]
-  then
-    echo "FAILED to plan $FAIL applications."
-    echo "Plan ArgoCD failed!"
-    exit 20
+  if [ ! -z "$FAIL" ]; then
+      echo "Failed jobs were:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      echo "Plan ArgoCD failed!"
+      exit 21
   fi
   
 elif [ "$COMMAND" == "argocd-apply" ]
@@ -252,32 +289,29 @@ then
       argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
       PIDS="$PIDS $!=$app_file"
   done
-
+  
   FAIL=""
-  for p in $PIDS; do
-      pid=$(echo $p | cut -d"=" -f1)
-      name=$(echo $p | cut -d"=" -f2)
-      wait $pid || FAIL="$FAIL $p"
-      if [[ $FAIL == *$p* ]]
-      then
-        echo "$p Failed"
-        cat ${name}.log
-      else
-        echo "$p Done"
+  COMPLETED=""
+  LAST_RUNNING=""
+  while true; do
+      running_jobs
+      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+      total_jobs=$(echo "$PIDS" | wc -w)
+      
+      if [ $total_done -eq $total_jobs ]; then
+          break
       fi
+      sleep 2
   done
+  rm -f *.log
 
-  for app_log_file in ./*.log
-  do
-    cat $app_log_file
-    rm $app_log_file
-  done
-
-  if [ "$FAIL" != "" ]
-  then
-    echo "FAILED to apply $FAIL applications."
-    echo "Apply ArgoCD failed!"
-    exit 21
+  if [ ! -z "$FAIL" ]; then
+      echo "Failed jobs were:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      echo "Apply ArgoCD failed!"
+      exit 21
   fi
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]

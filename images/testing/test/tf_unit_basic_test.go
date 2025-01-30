@@ -3,10 +3,8 @@ package test
 import (
 	"testing"
 
-	_ "github.com/davecgh/go-spew/spew"
 	_ "github.com/gruntwork-io/terratest/modules/aws"
 	_ "github.com/gruntwork-io/terratest/modules/gcp"
-	_ "github.com/gruntwork-io/terratest/modules/helm"
 	_ "github.com/gruntwork-io/terratest/modules/k8s"
 	_ "github.com/gruntwork-io/terratest/modules/terraform"
 	_ "github.com/gruntwork-io/terratest/modules/test-structure"

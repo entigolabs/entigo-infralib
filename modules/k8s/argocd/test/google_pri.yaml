@@ -8,4 +8,4 @@ argocd:
       maxReplicas: 1
   global:
     domain: |
-      {{ .tsmodule.argocd }}.{{ .toutput.dns.pub_domain }}
+      {{ .module.name }}.{{ .toutput.dns.pub_domain }}

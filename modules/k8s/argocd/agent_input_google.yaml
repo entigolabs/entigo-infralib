@@ -6,5 +6,5 @@ global:
 argocd:
   global:
     domain: |
-      argocd.{{ .toutput.dns.int_domain }}
+      {{ .module.name }}.{{ .toutput.dns.int_domain }}
 

@@ -1,4 +1,4 @@
-module github.com/entigolabs/entigo-infralib-testing
+module github.com/entigolabs/entigo-infralib
 
 go 1.23
 
