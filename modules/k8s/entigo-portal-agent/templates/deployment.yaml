@@ -20,9 +20,16 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/cm.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 10
+      volumes:
+        - name: resources-config
+          configMap:
+            name: {{ .Release.Name }}-resources
       containers:
       - name: {{ .Release.Name }}
-        image: entigolabs/developer-portal-agent:main-57
+        image: entigolabs/developer-portal-agent:main-59
+        volumeMounts:
+        - mountPath: /config/
+          name: resources-config
         envFrom:
         - configMapRef:
             name: {{ .Release.Name }}
