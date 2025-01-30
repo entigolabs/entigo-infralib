@@ -1,4 +1,10 @@
 global:
   google:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
     gateway:
       name: "google-gateway-external"
+
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}
