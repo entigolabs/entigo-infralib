@@ -19,4 +19,4 @@ gke_tools_location_policy: "ANY"
 gke_mon_min_size: 1
 gke_mon_max_size: 3
 gke_mon_spot_nodes: true
-gke_mon_node_locations: "europe-north1-c"
+gke_mon_location_policy: "ANY"
