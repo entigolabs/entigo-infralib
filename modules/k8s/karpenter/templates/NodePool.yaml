@@ -1,5 +1,6 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
 
+{{- if .Values.createNodepool }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
@@ -35,6 +36,7 @@ spec:
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: 1m
+{{- end }}
 ---
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
@@ -53,27 +55,6 @@ spec:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
   amiSelectorTerms:
     - id: ami-0bd14c07a3e0f69cb
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ .Release.Name }}-test
-spec:
-  replicas: 0
-  selector:
-    matchLabels:
-      app: {{ .Release.Name }}-test
-  template:
-    metadata:
-      labels:
-        app: {{ .Release.Name }}-test
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: inflate-cluster-test
-          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
-          resources:
-            requests:
-              cpu: 1
+
               
 {{- end }}
