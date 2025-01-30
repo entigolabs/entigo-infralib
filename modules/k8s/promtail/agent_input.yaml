@@ -2,4 +2,4 @@ promtail:
   config:
     clients:
       - url: http://loki-gateway.{{ .tmodule.loki }}/loki/api/v1/push
-  priorityClassName: "{{ .tsmodule.promtail }}"
+  priorityClassName: "{{ .module.name }}"

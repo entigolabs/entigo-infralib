@@ -5,7 +5,6 @@ kind: HealthCheckPolicy
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Name }}
-  argocd.argoproj.io/sync-wave: "1"
 spec:
   default:
     checkIntervalSec: 5
