@@ -4,12 +4,12 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
-  bucketName: "{{ .config.prefix }}-{{ .tsmodule.mimir }}-metrics"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
 mimir-distributed:
   gateway:
     ingress:
       hosts:
-      - host: "{{ .tsmodule.mimir }}.{{ .toutput.route53.int_domain }}"
+      - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
         paths:
         - path: "/"
           pathType: "Prefix"

@@ -2,4 +2,4 @@ prometheus:
   server:
     ingress:
       hosts:
-        - "{{ .tsmodule.prometheus }}.{{ .toutput.route53.int_domain }}"
+        - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"

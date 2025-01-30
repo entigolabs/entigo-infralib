@@ -8,6 +8,48 @@ data:
   REGISTRIES: "{{ .Values.global.aws.account }}.dkr.ecr.{{ .Values.global.aws.region }}.amazonaws.com"
   EVENTS_SQS_URL: "https://sqs.{{ .Values.global.aws.region }}.amazonaws.com/{{ .Values.global.aws.account }}/{{ .Release.Name }}"
   ASSUME_ROLE_ARN: "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-ecr-push"
+  RESOURCES_FILE: "/config/resources.yaml"
 {{- with .Values.config }}
   {{- toYaml . | nindent 2 }}
 {{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-resources
+  labels:
+    category: application
+data:
+  resources.yaml: |-
+    resources:
+      - group: flow.entigo.io
+        version: v1alpha1
+        resources:
+          - webapps
+          - webaccesses
+          - cronjobs
+    globalResources:
+      - group: flow.entigo.io
+        version: v1alpha1
+        resources:
+          - compositerepositories
+      - group: karpenter.sh
+        version: v1
+        resources:
+          - nodepools
+    statusResources:
+      - group: ""
+        version: v1
+        resources:
+          - pods
+      - group: "apps"
+        version: v1
+        resources:
+          - replicasets
+          - deployments
+    mutateResources:
+      - group: flow.entigo.io
+        version: v1alpha1
+        resources:
+          - ociloginrequests

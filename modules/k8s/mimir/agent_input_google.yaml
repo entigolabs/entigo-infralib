@@ -1,7 +1,7 @@
 global:
-  bucketName: "{{ .config.prefix }}-{{ .tsmodule.mimir }}-metrics"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
   google:
-    hostname: "{{ .tsmodule.mimir }}.{{ .toutput.dns.int_domain }}"
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     gateway:
       name: google-gateway-internal
