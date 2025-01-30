@@ -4,7 +4,7 @@ loki:
       annotations:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing
-  fullnameOverride: "{{ .tsmodule.loki }}"
+  fullnameOverride: "{{ .module.name }}"
   write:
     persistence:
       size: 3Gi

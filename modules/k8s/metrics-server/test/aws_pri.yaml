@@ -1,2 +1,2 @@
 metrics-server:
-  nameOverride: "{{ .tsmodule.metrics-server }}"
+  nameOverride: "{{ .module.name }}"

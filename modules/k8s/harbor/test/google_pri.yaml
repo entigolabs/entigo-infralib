@@ -7,7 +7,7 @@ harbor:
   persistence:
     imageChartStorage:
       gcs:
-        bucket: "entigo{{ .tsmodule.harbor }}"
+        bucket: "entigo{{ .module.name }}"
     persistentVolumeClaim:
       registry:
         size: 3Gi

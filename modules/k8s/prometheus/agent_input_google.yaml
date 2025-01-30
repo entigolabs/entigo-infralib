@@ -1,6 +1,6 @@
 global:
   google:
-    hostname: "{{ .tsmodule.prometheus }}.{{ .toutput.dns.int_domain }}"
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     gateway:
       name: google-gateway-internal
       namespace: google-gateway

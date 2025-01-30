@@ -4,12 +4,12 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
-  bucketName: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
 loki:
   gateway:
     ingress:
       hosts:
-        - host: "{{ .tsmodule.loki }}.{{ .toutput.route53.int_domain }}"
+        - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
           paths:
             - path: "/"
               pathType: "Prefix"
@@ -18,10 +18,10 @@ loki:
       s3:
         region: "{{ .toutput.eks.region }}"
       bucketNames:
-        chunks: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
-        ruler: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
-        admin: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
+        chunks: "{{ .config.prefix }}-{{ .module.name }}-logs"
+        ruler: "{{ .config.prefix }}-{{ .module.name }}-logs"
+        admin: "{{ .config.prefix }}-{{ .module.name }}-logs"
     storage_config:
       aws:
         region: "{{ .toutput.eks.region }}"
-        bucketnames: "{{ .config.prefix }}-{{ .tsmodule.loki }}-logs"
+        bucketnames: "{{ .config.prefix }}-{{ .module.name }}-logs"
