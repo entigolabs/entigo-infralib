@@ -6,3 +6,4 @@ global:
     account: ""
     clusterOIDC: ""
     region: ""
+  createNodepool: false
