@@ -13,3 +13,5 @@ grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
+  serviceAccount:
+    name: "{{ .module.name }}"
