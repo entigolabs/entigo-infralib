@@ -1,7 +1,7 @@
 global:
   google:
     projectID: "{{ .toutput.crossplane.project_id }}"
-    hostname: grafana.{{ .toutput.dns.int_domain }}
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     gateway:
       name: google-gateway-internal
       namespace: google-gateway
@@ -12,4 +12,4 @@ global:
 grafana:
   grafana.ini:
     server:
-      root_url: https://grafana.{{ .toutput.dns.int_domain }}
+      root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}

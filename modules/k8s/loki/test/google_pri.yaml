@@ -3,7 +3,7 @@ global:
     gateway:
       name: google-gateway-external
 loki:
-  fullnameOverride: "{{ .tsmodule.loki }}"
+  fullnameOverride: "{{ .module.name }}"
   write:
     persistence:
       size: 3Gi
