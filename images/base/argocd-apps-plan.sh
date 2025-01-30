@@ -34,7 +34,13 @@ then
   yq -y -i 'del(.spec.sources[0].targetRevision)' $app_file
 fi
 
-kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1 
+if kubectl get app $app_name -n ${ARGOCD_NAMESPACE} -o jsonpath='{.metadata.name}' >/dev/null 2>&1; then
+    APP_EXISTED="yes"
+    kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1 
+else
+    APP_EXISTED="no"
+fi
+
 kubectl apply -n ${ARGOCD_NAMESPACE} -f $app_file
 if [ $? -ne 0 ]
 then
@@ -54,7 +60,10 @@ then
   if [ "$STATUS" != "Status: Synced RequiredPruning: 0" ]
   then
     touch $app_file.sync
-    argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
+    if [ "$APP_EXISTED" == "yes" ]
+    then
+      argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
+    fi
   fi
 fi
 echo "###############"

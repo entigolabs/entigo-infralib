@@ -351,8 +351,8 @@ argocd:
         effect: "NoSchedule"
     resources:
       limits:
-        cpu: 2000m
-        memory: 2048Mi
+        cpu: 3000m
+        memory: 4096Mi
         ephemeral-storage: 10Gi
       requests:
         cpu: 100m

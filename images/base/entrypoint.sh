@@ -28,16 +28,12 @@ running_jobs() {
             # Check if job completed successfully
             if wait $pid 2>/dev/null; then
                 echo "✓ $name Done"
-                if [ "$COMMAND" == "argocd-plan" -a "$ARGOCD_AUTH_TOKEN" != "" ]
-                then
-                  cat ${name}.log
-                fi
                 COMPLETED="$COMPLETED $p"
             else
                 echo "✗ $name Failed"
-                cat ${name}.log
                 FAIL="$FAIL $p"
             fi
+            cat ${name}.log
             status_changed=1
         fi
     done
