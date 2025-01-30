@@ -1,5 +1,11 @@
 grafana:
+  grafana.ini:
+    server:
+      root_url: https://{{ .module.name }}.{{ .toutput.route53.pub_domain }}
   ingress:
+    hosts:
+    - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
     annotations:
       alb.ingress.kubernetes.io/group.name: external
       alb.ingress.kubernetes.io/scheme: internet-facing
+
