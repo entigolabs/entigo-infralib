@@ -29,6 +29,11 @@ data:
         url: http://loki-gateway.{{ .tmodule.loki }}
         jsonData:
           maxLines: 1000
+      - name: CloudWatch
+        type: cloudwatch
+        jsonData:
+          authType: default
+          defaultRegion: {{ .Values.global.aws.region }}
 {{- end }}
 
 

@@ -33,7 +33,7 @@ spec:
               ],
               "Resource": "{{ .Values.global.aws.assumeRole }}"
           }
-{{- end }}
+  {{- end }}
         ]
       }
 

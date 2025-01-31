@@ -1,7 +1,13 @@
+global:
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+
 grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.route53.int_domain }}
   ingress:
     hosts:
-    - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+      - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"

@@ -2,6 +2,10 @@ global:
   cloudProvider: "aws"
   providerConfigRefName: "crossplane-aws"
 
+  aws:
+    account: ""
+    clusterOIDC: ""
+
 grafana:
   dashboardProviders:
     dashboardproviders.yaml:
