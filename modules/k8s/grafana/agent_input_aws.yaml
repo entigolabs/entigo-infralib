@@ -3,6 +3,11 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
+  datasources:
+    loki:
+      hostname: "http://loki-gateway.{{ .tmodule.loki }}"
+    prometheus:
+      hostname: "http://loki-gateway.{{ .tmodule.prometheus }}"
 
 grafana:
   grafana.ini:
