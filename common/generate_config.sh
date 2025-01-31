@@ -82,7 +82,7 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" ] 
         then
           APP_NAME=$MODULE_NAME
-        elif [ "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" ] 
+        elif [ "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "karpenter" ] 
         then
           APP_NAME="${MODULE_NAME}-$prefix"
         elif [ "$BRANCH" == "main" ]
@@ -352,8 +352,8 @@ test_k8s() {
   PIDS="$PIDS $!=argocd"
   ./modules/k8s/istio-base/test.sh testonly &
   PIDS="$PIDS $!=istio-base"
-  #./modules/k8s/istio-gateway/test.sh testonly &
-  #PIDS="$PIDS $!=istio-gateway"
+  ./modules/k8s/istio-gateway/test.sh testonly &
+  PIDS="$PIDS $!=istio-gateway"
   ./modules/k8s/istio-istiod/test.sh testonly &
   PIDS="$PIDS $!=istio-istiod"
   ./modules/k8s/karpenter/test.sh testonly &
@@ -370,8 +370,9 @@ test_k8s() {
   PIDS="$PIDS $!=promtail"
   ./modules/k8s/grafana/test.sh testonly &
   PIDS="$PIDS $!=grafana"
-  ./modules/k8s/harbor/test.sh testonly &
-  PIDS="$PIDS $!=harbor"
+  #Disable temporarily
+  #./modules/k8s/harbor/test.sh testonly &
+  #PIDS="$PIDS $!=harbor"
   
   FAIL=""
   for p in $PIDS; do

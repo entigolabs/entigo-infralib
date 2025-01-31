@@ -49,7 +49,8 @@ spec:
   amiFamily: AL2
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
+        karpenter.sh/discovery: {{ .Values.karpenter.settings.subnetTag }}
+        kubernetes.io/role/internal-elb: "1"
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
