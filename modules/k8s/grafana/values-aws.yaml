@@ -7,6 +7,9 @@ global:
     clusterOIDC: ""
 
 grafana:
+  serviceAccount:
+    create: false
+
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
