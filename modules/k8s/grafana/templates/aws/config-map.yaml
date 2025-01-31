@@ -20,13 +20,13 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
-        url: http://prometheus-server.{{ .Values.global.datasources.prometheus.hostname }}
+        url: {{ .Values.global.datasources.prometheus.hostname }}
         access: proxy
         isDefault: true
       - name: Loki
         type: loki
         access: proxy
-        url: http://loki-gateway.{{ .Values.global.datasources.loki.hostname }}
+        url: {{ .Values.global.datasources.loki.hostname }}
         jsonData:
           maxLines: 1000
       - name: CloudWatch
