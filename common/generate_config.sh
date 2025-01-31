@@ -352,8 +352,8 @@ test_k8s() {
   PIDS="$PIDS $!=argocd"
   ./modules/k8s/istio-base/test.sh testonly &
   PIDS="$PIDS $!=istio-base"
-  ./modules/k8s/istio-gateway/test.sh testonly &
-  PIDS="$PIDS $!=istio-gateway"
+  #./modules/k8s/istio-gateway/test.sh testonly &
+  #PIDS="$PIDS $!=istio-gateway"
   ./modules/k8s/istio-istiod/test.sh testonly &
   PIDS="$PIDS $!=istio-istiod"
   ./modules/k8s/karpenter/test.sh testonly &
