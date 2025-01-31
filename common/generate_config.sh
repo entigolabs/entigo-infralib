@@ -408,5 +408,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "crossplane-aws" "crossplane-core" "crossplane-google" "external-dns" "google-gateway" "istio-base" "istio-istiod" "loki"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "external-dns" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server"
 }
