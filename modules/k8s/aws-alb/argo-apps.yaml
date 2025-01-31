@@ -15,9 +15,3 @@ spec:
     name: aws-load-balancer-webhook
     jqPathExpressions:
     - '.webhooks[]?.clientConfig.caBundle'
-  syncPolicy:
-    syncOptions:
-    - ServerSideApply=true
-    - Retry=true
-    retry:
-      limit: 30 # Maximum number of retries
