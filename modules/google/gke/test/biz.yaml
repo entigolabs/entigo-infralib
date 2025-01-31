@@ -8,29 +8,30 @@ master_authorized_networks: |
 
 enable_l4_ilb_subsetting: true
 
-gke_main_min_size: 1
-gke_main_max_size: 3
+gke_main_min_size: 3
+gke_main_max_size: 6
 gke_main_spot_nodes: true
 gke_main_location_policy: "ANY"
+gke_main_node_locations: "europe-north1-b"
 
 gke_tools_min_size: 3
 gke_tools_max_size: 6
 gke_tools_spot_nodes: true
 gke_tools_location_policy: "ANY"
-gke_tools_node_locations: "europe-north1-a"
+gke_tools_node_locations: "europe-north1-b"
 
 gke_mon_min_size: 3
 gke_mon_max_size: 6
 gke_mon_spot_nodes: true
 gke_mon_location_policy: "ANY"
-gke_mon_node_locations: "europe-north1-a"
+gke_mon_node_locations: "europe-north1-b"
 
 gke_managed_node_groups_extra: |
   [
     {
       name               = "custom"
       machine_type       = "e2-standard-2"
-      node_locations     = "europe-north1-a"
+      node_locations     = "europe-north1-b"
       initial_node_count = 0
       min_count          = 0
       max_count          = 0
