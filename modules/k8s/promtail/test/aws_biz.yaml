@@ -1,4 +1,0 @@
-promtail:
-  config:
-    clients:
-    - url: http://loki-gateway.loki-biz

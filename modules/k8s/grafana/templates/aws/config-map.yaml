@@ -1,0 +1,40 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-loki
+data:
+{{ (.Files.Glob "dashboards/loki/*.json").AsConfig | indent 2 }}
+---
+{{- if not .Values.grafana.datasources }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    grafana_datasource: 'true'
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: {{ .Values.global.datasources.prometheus.hostname }}
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        access: proxy
+        url: {{ .Values.global.datasources.loki.hostname }}
+        jsonData:
+          maxLines: 1000
+      - name: CloudWatch
+        type: cloudwatch
+        jsonData:
+          authType: default
+          defaultRegion: {{ .Values.global.aws.region }}
+{{- end }}
+
+
+{{- end }}
