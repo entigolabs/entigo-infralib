@@ -16,6 +16,8 @@ func TestK8sIstioGatewayAWSPri(t *testing.T) {
 	testK8sIstioGateway(t, "aws", "pri")
 }
 
+/* https://entigo.atlassian.net/browse/RD-507
+Temporarily disalbed, causes slowdown in httproute processing in GKE
 func TestK8sIstioGatewayGoogleBiz(t *testing.T) {
 	testK8sIstioGateway(t, "google", "biz")
 }
@@ -23,6 +25,7 @@ func TestK8sIstioGatewayGoogleBiz(t *testing.T) {
 func TestK8sIstioGatewayGooglePri(t *testing.T) {
 	testK8sIstioGateway(t, "google", "pri")
 }
+*/
 
 func testK8sIstioGateway(t *testing.T, cloudName string, envName string) {
   	t.Parallel()

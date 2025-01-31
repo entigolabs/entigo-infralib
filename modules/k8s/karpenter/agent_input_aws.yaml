@@ -6,3 +6,4 @@ global:
 karpenter:
   settings:
     clusterName: "{{ .toutput.eks.cluster_name }}"
+    subnetTag: "{{ .config.prefix }}-net-vpc"
