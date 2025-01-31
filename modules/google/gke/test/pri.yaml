@@ -12,6 +12,7 @@ gke_main_min_size: 1
 gke_main_max_size: 3
 gke_main_spot_nodes: true
 gke_main_location_policy: "ANY"
+gke_main_node_locations: "europe-north1-a"
 
 gke_tools_min_size: 3
 gke_tools_max_size: 6
