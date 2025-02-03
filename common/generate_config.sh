@@ -370,9 +370,8 @@ test_k8s() {
   PIDS="$PIDS $!=promtail"
   ./modules/k8s/grafana/test.sh testonly &
   PIDS="$PIDS $!=grafana"
-  #Disable temporarily
-  #./modules/k8s/harbor/test.sh testonly &
-  #PIDS="$PIDS $!=harbor"
+  ./modules/k8s/harbor/test.sh testonly &
+  PIDS="$PIDS $!=harbor"
   
   FAIL=""
   for p in $PIDS; do

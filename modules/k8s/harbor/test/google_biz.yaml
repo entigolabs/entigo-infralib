@@ -1,0 +1,17 @@
+harbor:
+  persistence:
+    imageChartStorage:
+      gcs:
+        bucket: "entigo{{ .module.name }}"
+    persistentVolumeClaim:
+      registry:
+        size: 3Gi
+      jobservice:
+        size: 1Gi
+      database:
+        size: 1Gi
+      redis:
+        size: 1Gi
+      trivy:
+        size: 3Gi
+  harborAdminPassword: "Harbor12345"
