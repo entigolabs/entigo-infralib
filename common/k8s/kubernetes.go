@@ -56,12 +56,13 @@ func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string
       return kubectlOptions, namespaceName
 }
 
-func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode string) (string, string, string) {
+func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode string) (string, string, string, int) {
       namespaceName := GetNamespaceName(t, envName)
       
       hostName := ""
       gatewayName := ""
       gatewayNamespace := ""
+      retries := 100
       switch cloudName {
       case "aws":
 	      gatewayName = namespaceName
@@ -75,6 +76,7 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 		hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
 	      }
       case "google":
+	      retries = 400
 	      gatewayNamespace = "google-gateway"
 	      switch envName {
 	      case "biz":
@@ -89,7 +91,7 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 		gatewayName = "google-gateway-external"
 	      }
       }
-      return gatewayName, gatewayNamespace, hostName
+      return gatewayName, gatewayNamespace, hostName, retries
 }
 
 func WaitUntilClusterSecretStoreAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {

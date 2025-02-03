@@ -30,7 +30,7 @@ func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
-	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
 	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
@@ -53,6 +53,6 @@ func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
 
 	successResponseCode := "200"
 	targetURL := fmt.Sprintf("https://%s/graph", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 100, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 }

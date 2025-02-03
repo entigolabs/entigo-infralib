@@ -3,8 +3,8 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
-    kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
-  bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
+    kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 mimir-distributed:
   gateway:
     ingress:
