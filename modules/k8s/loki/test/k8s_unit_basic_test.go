@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
@@ -52,6 +54,20 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "loki-backend-0", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-backend-0 pod error:", err)
+	}
+
+
+	switch cloudName {
+	  case "aws":
+	    err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
+	    if err != nil {
+		    t.Fatal("File not found in AWS bucket:", err)
+	    }
+	  case "google":
+	    err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
+	    if err != nil {
+		    t.Fatal("File not found in Google bucket:", err)
+	    }
 	}
 	
 	successResponseCode := "200"

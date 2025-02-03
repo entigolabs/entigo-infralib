@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/entigolabs/entigo-infralib-common/k8s"
+	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
@@ -68,6 +70,19 @@ func testK8sMimir(t *testing.T, cloudName string, envName string) {
 	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "mimir-store-gateway-0", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("mimir-store-gateway-0 pod error:", err)
+	}
+	
+	switch cloudName {
+	  case "aws":
+	    err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
+	    if err != nil {
+		    t.Fatal("File not found in AWS bucket:", err)
+	    }
+	  case "google":
+	    err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-metrics", envName, namespaceName), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
+	    if err != nil {
+		    t.Fatal("File not found in Google bucket:", err)
+	    }
 	}
 
 	successResponseCode := "200"

@@ -90,3 +90,25 @@ func WaitUntilAWSBucketDeleted(t testing.TestingT, region string, name string, r
 	logger.Logf(t, message)
 	return nil
 }
+
+func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string, retries int, sleepBetweenRetries time.Duration) error {
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)	
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		_, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
+		if err != nil {
+			return "", err
+		}
+		return "File is now available", nil
+	},
+	)
+	if err != nil {
+		logger.Logf(t, "Timed out waiting for bucket file to be created: %s", err)
+		return err
+	}
+	logger.Logf(t, message)
+	return nil
+}
+
+
+

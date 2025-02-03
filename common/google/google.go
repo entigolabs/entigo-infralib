@@ -103,6 +103,24 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 	return nil
 }
 
+func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string, retries int, sleepBetweenRetries time.Duration) error {
+	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)	
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		_, err := gcp.ReadBucketObjectE(t, bucket, file)
+		if err != nil {
+			return "", err
+		}
+		return "Bucket is now available", nil
+	},
+	)
+	if err != nil {
+		logger.Log(t, "Timed out waiting for bucket to be created: %s", err)
+		return err
+	}
+	logger.Log(t, message)
+	return nil
+}
+
 func GetSecret(t testing.TestingT, secretName string) string {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
