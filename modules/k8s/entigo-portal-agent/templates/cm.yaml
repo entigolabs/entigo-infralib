@@ -38,6 +38,15 @@ data:
         version: v1
         resources:
           - nodepools
+    globalStatusResources:
+      - group: karpenter.sh
+        version: v1
+        resources:
+          - nodeclaims
+      - group: karpenter.k8s.aws
+        version: v1
+        resources:
+          - ec2nodeclasses
     statusResources:
       - group: ""
         version: v1
