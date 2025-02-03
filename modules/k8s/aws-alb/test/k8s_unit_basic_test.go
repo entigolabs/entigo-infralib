@@ -27,7 +27,7 @@ func testK8sAwsAlb(t *testing.T, cloudName string, envName string) {
   
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	_, _, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 	
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
 	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, "aws-load-balancer-webhook-service", 60, 1*time.Second)

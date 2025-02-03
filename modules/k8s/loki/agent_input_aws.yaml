@@ -3,8 +3,8 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
-    kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
-  bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
+    kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 loki:
   gateway:
     ingress:
@@ -18,10 +18,10 @@ loki:
       s3:
         region: "{{ .toutput.eks.region }}"
       bucketNames:
-        chunks: "{{ .config.prefix }}-{{ .module.name }}-logs"
-        ruler: "{{ .config.prefix }}-{{ .module.name }}-logs"
-        admin: "{{ .config.prefix }}-{{ .module.name }}-logs"
+        chunks: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+        ruler: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+        admin: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
     storage_config:
       aws:
         region: "{{ .toutput.eks.region }}"
-        bucketnames: "{{ .config.prefix }}-{{ .module.name }}-logs"
+        bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"

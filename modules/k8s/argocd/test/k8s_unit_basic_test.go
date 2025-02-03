@@ -31,7 +31,7 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
-	gatewayName, gatewayNamespace, hostName := k8s.GetGatewayConfig(t, cloudName, envName, "external")
+	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
 
 	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-server", namespaceName)
@@ -62,8 +62,6 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	if err != nil {
 		t.Fatal("argocd-dex-server deployment error:", err)
 	}
-	
-	retries := 100
 
 	successResponseCode := "301"
 	targetURL := fmt.Sprintf("http://%s", hostName)
