@@ -18,7 +18,7 @@ RUN apt-get update -y && apt-get -y install wget curl gpg && \
       curl -s -o /usr/bin/kubectl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && chmod +x /usr/bin/kubectl && \
       curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install --bin-dir /usr/bin && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples glibc-*.apk && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete && \
       curl -s "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" -o "helm.tar.gz" && tar xzf helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf helm.tar.gz linux-* && chmod +x /usr/bin/helm; \
-    fi    
+    fi
 
 ENV PATH=/google-cloud-sdk/bin:$PATH CLOUDSDK_PYTHON=/usr/bin/python3
 RUN ARCH=`arch` && CLOUD_SDK_VERSION="499.0.0" && cd / && curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${CLOUD_SDK_VERSION}-linux-${ARCH}.tar.gz && \

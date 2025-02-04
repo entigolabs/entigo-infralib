@@ -55,7 +55,7 @@ spec:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
   amiSelectorTerms:
-    - id: ami-0bd14c07a3e0f69cb
+    - id: ami-0c29e5f996b3a0fab
 
               
 {{- end }}
