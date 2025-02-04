@@ -23,5 +23,5 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 
 COPY test /app/test
 COPY common /common
-RUN export GOMAXPROCS=1 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy # && cd test && go test -timeout 5m
+RUN export GOMAXPROCS=1 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m
 COPY *.sh /usr/bin/
