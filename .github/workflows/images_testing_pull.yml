@@ -26,5 +26,5 @@ jobs:
         AWS_REGION:  ${{ secrets.AWS_REGION }}
         PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       run: |
-        cd images/testing/ && docker buildx build --platform linux/arm64/v8,linux/amd64 -t entigo-infralib-testing .
+        cd images/testing/ && docker buildx build --platform linux/arm64,linux/amd64 -t entigo-infralib-testing .
 
