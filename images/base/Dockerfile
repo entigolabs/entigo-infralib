@@ -31,7 +31,7 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
       rm -rf google-cloud-sdk/.install/.backup && \
       rm -rf google-cloud-sdk/bin/anthoscli && \
       git config --system credential.'https://source.developers.google.com'.helper gcloud.sh && \
-      gcloud --version
+      gcloud --version; \
     elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
       curl -Lo /usr/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-amd64 && chmod +x /usr/bin/argocd && \
       curl -s -o /usr/bin/kubectl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && chmod +x /usr/bin/kubectl && \
@@ -52,7 +52,7 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
       rm -rf google-cloud-sdk/.install/.backup && \
       rm -rf google-cloud-sdk/bin/anthoscli && \
       git config --system credential.'https://source.developers.google.com'.helper gcloud.sh && \
-      gcloud --version
+      gcloud --version; \
     fi
 
 COPY --from=entigolabs/entigo-infralib-agent /usr/bin/ei-agent /usr/bin/ei-agent
