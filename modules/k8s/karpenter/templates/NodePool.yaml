@@ -37,25 +37,5 @@ spec:
     consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: 1m
 {{- end }}
----
-apiVersion: karpenter.k8s.aws/v1
-kind: EC2NodeClass
-metadata:
-  name: {{ .Release.Name }}
-spec:
-  tags:
-    Name: {{ .Release.Name }}
-  instanceProfile: {{ .Release.Name }}-karpenter-node-instance-profile
-  amiFamily: AL2
-  subnetSelectorTerms:
-    - tags:
-        karpenter.sh/discovery: {{ .Values.karpenter.settings.subnetTag }}
-        kubernetes.io/role/internal-elb: "1"
-  securityGroupSelectorTerms:
-    - tags:
-        karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
-  amiSelectorTerms:
-    - id: ami-0c29e5f996b3a0fab
-
               
 {{- end }}

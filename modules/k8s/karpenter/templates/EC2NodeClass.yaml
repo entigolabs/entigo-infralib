@@ -1,0 +1,21 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  tags:
+    Name: {{ .Release.Name }}
+  instanceProfile: {{ .Release.Name }}-karpenter-node-instance-profile
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.karpenter.settings.subnetTag }}
+        kubernetes.io/role/internal-elb: "1"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
+  amiSelectorTerms:
+    - alias: al2023@v20240807
+    
+{{- end }}
