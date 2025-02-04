@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm-slim
+FROM --platform=${TARGETPLATFORM:-linux/amd64} debian:bookworm-slim
 ARG TARGETPLATFORM=linux/amd64
 ARG BUILDPLATFORM=linux/amd64
 WORKDIR /app
@@ -9,12 +9,12 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
     wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bullseye main" | tee /etc/apt/sources.list.d/hashicorp.list && \
     apt-get update -y && apt-get -y install unzip terraform=${TERRAFORM_VERSION} yq && rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
-    if [ "$BUILDPLATFORM" = "linux/arm64" ]; then \
+    if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
       curl -Lo /usr/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-arm64 && chmod +x /usr/bin/argocd && \
       curl -s -o /usr/bin/kubectl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/arm64/kubectl" && chmod +x /usr/bin/kubectl && \
       curl -s "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install --bin-dir /usr/bin && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples glibc-*.apk && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete && \
       curl -s "https://get.helm.sh/helm-${HELM_VERSION}-linux-arm64.tar.gz" -o "helm.tar.gz" && tar xzf helm.tar.gz && mv linux-arm64/helm /usr/bin/helm && rm -rf helm.tar.gz linux-* && chmod +x /usr/bin/helm; \
-    elif [ "$BUILDPLATFORM" = "linux/amd64" ]; then \
+    elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
       curl -Lo /usr/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-amd64 && chmod +x /usr/bin/argocd && \
       curl -s -o /usr/bin/kubectl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && chmod +x /usr/bin/kubectl && \
       curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install --bin-dir /usr/bin && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples glibc-*.apk && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete && \
