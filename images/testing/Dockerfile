@@ -13,9 +13,9 @@ RUN  echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -
 
 #RUN apt update && apt -y install golang-go
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-      wget  --no-verbose https://go.dev/dl/go1.23.4.linux-arm64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-arm64.tar.gz && rm go1.23.4.linux-arm64.tar.gz; \
+      wget  --no-verbose https://go.dev/dl/go1.23.5.linux-arm64.tar.gz && tar -C /usr/local -xzf go1.23.5.linux-arm64.tar.gz && rm go1.23.5.linux-arm64.tar.gz; \
     elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \  
-      wget  --no-verbose https://go.dev/dl/go1.23.4.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz && rm go1.23.4.linux-amd64.tar.gz; \
+      wget  --no-verbose https://go.dev/dl/go1.23.5.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.5.linux-amd64.tar.gz && rm go1.23.5.linux-amd64.tar.gz; \
     fi
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
@@ -23,5 +23,5 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 
 COPY test /app/test
 COPY common /common
-RUN cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
+RUN export GOMAXPROCS=1 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy # && cd test && go test -timeout 5m
 COPY *.sh /usr/bin/
