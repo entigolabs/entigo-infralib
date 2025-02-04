@@ -1,4 +1,4 @@
-FROM --platform=${TARGETPLATFORM:-linux/amd64} debian:bookworm-slim
+FROM debian:bookworm-slim
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 WORKDIR /app
