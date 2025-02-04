@@ -13,9 +13,9 @@ RUN  echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -
 
 #RUN apt update && apt -y install golang-go
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-      wget  --no-verbose https://go.dev/dl/go1.23.4.linux-arm64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-arm64.tar.gz && rm go1.23.4.linux-arm64.tar.gz; \
+      wget  --no-verbose https://go.dev/dl/go1.23.5.linux-arm64.tar.gz && tar -C /usr/local -xzf go1.23.5.linux-arm64.tar.gz && rm go1.23.5.linux-arm64.tar.gz; \
     elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \  
-      wget  --no-verbose https://go.dev/dl/go1.23.4.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz && rm go1.23.4.linux-amd64.tar.gz; \
+      wget  --no-verbose https://go.dev/dl/go1.23.5.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.23.5.linux-amd64.tar.gz && rm go1.23.5.linux-amd64.tar.gz; \
     fi
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
