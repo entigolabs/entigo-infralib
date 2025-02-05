@@ -41,6 +41,24 @@ func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
 	return result
 }
 
+func WaitUntilGCPBucketExists(t testing.TestingT, name string, retries int, sleepBetweenRetries time.Duration) error {
+	statusMsg := fmt.Sprintf("Wait for bucket %s to be created", name)
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		err := gcp.AssertStorageBucketExistsE(t, name)
+		if err != nil {
+			return "", err
+		}
+		return "Bucket is now available", nil
+	},
+	)
+	if err != nil {
+		logger.Log(t, "Timed out waiting for bucket to be created: %s", err)
+		return err
+	}
+	logger.Log(t, message)
+	return nil
+}
+
 func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for bucket %s to be deleted", name)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
