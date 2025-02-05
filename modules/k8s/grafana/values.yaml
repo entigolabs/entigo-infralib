@@ -15,6 +15,11 @@ global:
       name: google-gateway-external
       namespace: google-gateway
 
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
+
 grafana:
   enabled: true
   fullnameOverride: "grafana"

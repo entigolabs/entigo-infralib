@@ -1,14 +1,13 @@
 package google
 
 import (
-	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"io"
+	"os"
 	"strings"
 	"time"
-	"encoding/json"
 
 	"cloud.google.com/go/storage"
 	"github.com/gruntwork-io/terratest/modules/gcp"
@@ -16,18 +15,14 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
-
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
-func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
-        Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
+func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
+	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-%s-%s", prefix, os.Getenv("GOOGLE_PROJECT"), Region)
 	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 
-	
 	reader, err := gcp.ReadBucketObjectE(t, bucket, file)
 	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", Region, bucket, file, err)
 
@@ -36,7 +31,7 @@ func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
 
 	// Close the reader
 	if closer, ok := reader.(io.Closer); ok {
-	    defer closer.Close()
+		defer closer.Close()
 	}
 
 	//fmt.Printf("OUTPUT %s %s", file, string(outputs))
@@ -44,24 +39,6 @@ func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
 	err = json.Unmarshal(outputs, &result)
 	require.NoError(t, err, "Error parsing JSON: %s Error: %s", string(outputs), err)
 	return result
-}
-
-func SetupBucket(t testing.TestingT, bucketName string) string {
-	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
-	bucketAttrs := &storage.BucketAttrs{
-		Location: Region,
-	}
-	err := gcp.CreateStorageBucketE(t, os.Getenv("GOOGLE_PROJECT"), bucketName, bucketAttrs)
-	if err != nil {
-		if strings.Contains(err.Error(), "Your previous request to create the named bucket succeeded and you already own it.") {
-			logger.Log(t, "Bucket already owned by you. Skipping bucket creation.")
-		} else {
-			t.Fatal(err)
-		}
-	}
-	err = WaitUntilGCPBucketExists(t, bucketName, 30, 2*time.Second)
-	require.NoError(t, err, "Bucket creation error")
-	return Region
 }
 
 func WaitUntilGCPBucketExists(t testing.TestingT, name string, retries int, sleepBetweenRetries time.Duration) error {
@@ -104,7 +81,7 @@ func WaitUntilGCPBucketDeleted(t testing.TestingT, name string, retries int, sle
 }
 
 func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string, retries int, sleepBetweenRetries time.Duration) error {
-	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)	
+	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
 		_, err := gcp.ReadBucketObjectE(t, bucket, file)
 		if err != nil {
@@ -119,26 +96,4 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 	}
 	logger.Log(t, message)
 	return nil
-}
-
-func GetSecret(t testing.TestingT, secretName string) string {
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		logger.Logf(t, "failed to create secretmanager client: %v", err)
-	}
-	defer client.Close()
-
-	request := &secretmanagerpb.AccessSecretVersionRequest{Name: secretName}
-
-	result, err := client.AccessSecretVersion(ctx, request)
-	if err != nil {
-		logger.Logf(t, "failed to access secret %v", err)
-	}
-
-	fmt.Printf("retrieved payload for: %s %s\n", result.Name, result.Payload.Data)
-
-	secret := strings.Trim(strings.Split(fmt.Sprintf("%s", result.Payload.Data), ",")[0], `"`)
-
-	return secret
 }

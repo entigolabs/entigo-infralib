@@ -1,14 +1,14 @@
 package aws
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"os"
 	"strings"
 	"time"
-	"encoding/json"
-	
-	"github.com/aws/aws-sdk-go/aws/awserr"
+
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -16,14 +16,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
-        awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
+	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-877483565445-%s", prefix, awsRegion)
 	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
-	
+
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 	logger.Logf(t, "File %s", file)
-        outputs, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
+	outputs, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
 
 	require.NoError(t, err, "Failed to get module outputs region %s bucket %s file %s Error: %s", awsRegion, bucket, file, err)
 	//fmt.Printf("OUTPUT %s %s", file, outputs)
@@ -31,22 +31,6 @@ func GetTFOutputs (t testing.TestingT, prefix string) map[string]interface{} {
 	err = json.Unmarshal([]byte(outputs), &result)
 	require.NoError(t, err, "Error parsing JSON: %s Error: %s", outputs, err)
 	return result
-}
-
-
-func SetupBucket(t testing.TestingT, bucketName string) string {
-	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	err := aws.CreateS3BucketE(t, awsRegion, bucketName)
-	if err != nil {
-		if strings.Contains(err.Error(), "BucketAlreadyOwnedByYou") {
-			logger.Log(t, "Bucket already owned by you. Skipping bucket creation.")
-		} else {
-			t.Fatal(err)
-		}
-	}
-	err = WaitUntilAWSBucketExists(t, awsRegion, bucketName, 30, 2*time.Second)
-	require.NoError(t, err, "Bucket creation error")
-	return awsRegion
 }
 
 func WaitUntilAWSBucketExists(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
@@ -93,7 +77,7 @@ func WaitUntilAWSBucketDeleted(t testing.TestingT, region string, name string, r
 
 func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string, retries int, sleepBetweenRetries time.Duration) error {
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)	
+	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
 		_, err := aws.GetS3ObjectContentsE(t, awsRegion, bucket, file)
 		if err != nil {
@@ -109,6 +93,3 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 	logger.Logf(t, message)
 	return nil
 }
-
-
-
