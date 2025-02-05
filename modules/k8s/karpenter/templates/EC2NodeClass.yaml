@@ -7,7 +7,7 @@ metadata:
 spec:
   tags:
     Name: {{ .Release.Name }}
-  role: {{ .Values.global.nodeRole }}
+  role: {{ .Values.global.nodeRoleName }}
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.subnetTag }}
@@ -16,6 +16,6 @@ spec:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
   amiSelectorTerms:
-    - alias: al2023@v20240807
+    - alias: al2023@v20250123
     
 {{- end }}

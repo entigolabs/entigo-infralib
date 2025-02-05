@@ -47,7 +47,7 @@ spec:
               {
                   "Effect": "Allow",
                   "Action": "iam:PassRole",
-                  "Resource": "arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-karpenter-node-role",
+                  "Resource": "{{ .Values.global.nodeRoleARN }}",
                   "Sid": "PassNodeIAMRole"
               },
               {
