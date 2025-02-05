@@ -273,6 +273,8 @@ test_tf() {
     PIDS="$PIDS $!=crossplane"
     ./modules/aws/ec2/test.sh testonly &
     PIDS="$PIDS $!=ec2"
+    ./modules/aws/karpenter-node-role/test.sh testonly &
+    PIDS="$PIDS $!=karpenter-node-role"
   fi
   if [ "$GOOGLE_REGION" != "" ]
   then
@@ -395,7 +397,7 @@ test_k8s() {
 
 default_aws_conf() {
   generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
-  generate_config "./modules/aws" "infra" "eks" "crossplane" "ec2"
+  generate_config "./modules/aws" "infra" "eks" "crossplane" "ec2" "karpenter-node-role"
 }
 
 default_google_conf() {
