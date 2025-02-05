@@ -6,6 +6,9 @@ global:
       name: google-gateway-external
       namespace: google-gateway
 
+argocd-apps:
+  enabled: true
+
 argocd:
   crds:
     install: true
