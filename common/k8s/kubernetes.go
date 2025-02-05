@@ -14,12 +14,12 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 
+	"github.com/stretchr/testify/require"
 	kubernetesErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
-	"github.com/stretchr/testify/require"
 )
 
 type ProviderType string
@@ -29,69 +29,69 @@ const (
 	GCloud ProviderType = "gcloud"
 )
 
-func GetNamespaceName(t testing.TestingT, envName string) (string) {
-    appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
-    if strings.HasSuffix(appName, "-") {
-      return fmt.Sprintf("%s%s", appName, envName)
-    } else {
-      return appName
-    }
+func GetNamespaceName(t testing.TestingT, envName string) string {
+	appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
+	if strings.HasSuffix(appName, "-") {
+		return fmt.Sprintf("%s%s", appName, envName)
+	} else {
+		return appName
+	}
 }
 
 func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string) (*k8s.KubectlOptions, string) {
-      namespaceName := GetNamespaceName(t, envName)
-      
-      contextName := ""
-      switch cloudName {
-      case "aws":
-	      contextName = fmt.Sprintf("arn:aws:eks:eu-north-1:877483565445:cluster/%s-infra-eks", envName)
-      case "google":
-	      contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
-      }
-  
-      kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
-      output, err := k8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
-      require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
-      require.Equal(t, output, "yes")
-      return kubectlOptions, namespaceName
+	namespaceName := GetNamespaceName(t, envName)
+
+	contextName := ""
+	switch cloudName {
+	case "aws":
+		contextName = fmt.Sprintf("arn:aws:eks:eu-north-1:877483565445:cluster/%s-infra-eks", envName)
+	case "google":
+		contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
+	}
+
+	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
+	output, err := k8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
+	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
+	require.Equal(t, output, "yes")
+	return kubectlOptions, namespaceName
 }
 
 func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode string) (string, string, string, int) {
-      namespaceName := GetNamespaceName(t, envName)
-      
-      hostName := ""
-      gatewayName := ""
-      gatewayNamespace := ""
-      retries := 100
-      switch cloudName {
-      case "aws":
-	      gatewayName = namespaceName
-	      switch envName {
-	      case "biz":
-		      hostName = fmt.Sprintf("%s.%s-net-route53-int.infralib.entigo.io", namespaceName, envName)
-	      case "pri":
-		      hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
-	      }
-	      if mode == "external" {
-		hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
-	      }
-      case "google":
-	      retries = 400
-	      gatewayNamespace = "google-gateway"
-	      switch envName {
-	      case "biz":
-		      gatewayName = "google-gateway-internal"
-		      hostName = fmt.Sprintf("%s.%s-net-dns-int.gcp.infralib.entigo.io", namespaceName, envName)
-	      case "pri":
-		      gatewayName = "google-gateway-external"
-		      hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
-	      }
-	      if mode == "external" {
-		hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
-		gatewayName = "google-gateway-external"
-	      }
-      }
-      return gatewayName, gatewayNamespace, hostName, retries
+	namespaceName := GetNamespaceName(t, envName)
+
+	hostName := ""
+	gatewayName := ""
+	gatewayNamespace := ""
+	retries := 100
+	switch cloudName {
+	case "aws":
+		gatewayName = namespaceName
+		switch envName {
+		case "biz":
+			hostName = fmt.Sprintf("%s.%s-net-route53-int.infralib.entigo.io", namespaceName, envName)
+		case "pri":
+			hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+		}
+		if mode == "external" {
+			hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+		}
+	case "google":
+		retries = 400
+		gatewayNamespace = "google-gateway"
+		switch envName {
+		case "biz":
+			gatewayName = "google-gateway-internal"
+			hostName = fmt.Sprintf("%s.%s-net-dns-int.gcp.infralib.entigo.io", namespaceName, envName)
+		case "pri":
+			gatewayName = "google-gateway-external"
+			hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
+		}
+		if mode == "external" {
+			hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "google-gateway-external"
+		}
+	}
+	return gatewayName, gatewayNamespace, hostName, retries
 }
 
 func WaitUntilClusterSecretStoreAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
@@ -106,11 +106,6 @@ func WaitUntilProviderAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	availability.isAvailable = isProviderAvailable
 	availability.objectError = NewProviderNotAvailable
 	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
-}
-
-func WaitUntilControllerConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
-	resource := schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1alpha1", Resource: "controllerconfigs"}
-	return waitUntilObjectAvailable(t, options, defaultObjectAvailability(name, resource), retries, sleepBetweenRetries)
 }
 
 func WaitUntilDeploymentRuntimeConfigAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
