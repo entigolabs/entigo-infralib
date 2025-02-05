@@ -8,17 +8,6 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// GetDynamicKubernetesClientE returns a dynamic Kubernetes API client that can be used to make requests.
-func GetDynamicKubernetesClientE(t testing.TestingT) (dynamic.Interface, error) {
-	kubeConfigPath, err := k8s.GetKubeConfigPathE(t)
-	if err != nil {
-		return nil, err
-	}
-
-	options := k8s.NewKubectlOptions("", kubeConfigPath, "default")
-	return GetDynamicKubernetesClientFromOptionsE(t, options)
-}
-
 // GetDynamicKubernetesClientFromOptionsE returns a dynamic Kubernetes API client given a configured KubectlOptions object.
 func GetDynamicKubernetesClientFromOptionsE(t testing.TestingT, options *k8s.KubectlOptions) (dynamic.Interface, error) {
 	var err error
