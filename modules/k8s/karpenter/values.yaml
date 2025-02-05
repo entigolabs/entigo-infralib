@@ -1,11 +1,8 @@
 global:
   cloudProvider: ""
   providerConfigRefName: ""
-
-  aws:
-    account: ""
-    clusterOIDC: ""
-    region: ""
+  nodeRole: ""
+  createNodepool: false
 
 # https://github.com/aws/karpenter-provider-aws/blob/main/charts/karpenter/values.yaml
 

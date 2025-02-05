@@ -7,7 +7,7 @@ metadata:
 spec:
   tags:
     Name: {{ .Release.Name }}
-  instanceProfile: {{ .Release.Name }}-karpenter-node-instance-profile
+  role: {{ .Values.global.nodeRole }}
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.subnetTag }}

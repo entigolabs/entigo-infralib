@@ -3,6 +3,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
+  nodeRole: "{{ .toutput.karpenter-node-role.role_name }}"
 karpenter:
   settings:
     clusterName: "{{ .toutput.eks.cluster_name }}"

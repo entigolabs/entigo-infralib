@@ -3,28 +3,6 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: Role
 metadata:
-  name: {{ .Release.Name }}-karpenter-node-role
-spec:
-  forProvider:
-    assumeRolePolicyDocument: |
-      {
-          "Version": "2012-10-17",
-          "Statement": [
-              {
-                  "Effect": "Allow",
-                  "Principal": {
-                      "Service": "ec2.amazonaws.com"
-                  },
-                  "Action": "sts:AssumeRole"
-              }
-          ]
-      }
-  providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: Role
-metadata:
   name: {{ .Release.Name }}-karpenter-controller-role
 spec:
   forProvider:

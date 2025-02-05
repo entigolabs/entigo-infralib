@@ -3,54 +3,6 @@
 apiVersion: iam.aws.crossplane.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
-  name: {{ .Release.Name }}-karpenter-node-role-amazon-eks-worker-node-policy
-spec:
-  forProvider:
-    policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
-    roleNameRef:
-      name: {{ .Release.Name }}-karpenter-node-role
-  providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: RolePolicyAttachment
-metadata:
-  name: {{ .Release.Name }}-karpenter-node-role-amazon-eks-cni-policy
-spec:
-  forProvider:
-    policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-    roleNameRef:
-      name: {{ .Release.Name }}-karpenter-node-role
-  providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: RolePolicyAttachment
-metadata:
-  name: {{ .Release.Name }}-karpenter-node-role-amazon-ec2-container-registry-read-only
-spec:
-  forProvider:
-    policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-    roleNameRef:
-      name: {{ .Release.Name }}-karpenter-node-role
-  providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: RolePolicyAttachment
-metadata:
-  name: {{ .Release.Name }}-karpenter-node-role-amazon-ssm-managed-instance-core
-spec:
-  forProvider:
-    policyArn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-    roleNameRef:
-      name: {{ .Release.Name }}-karpenter-node-role
-  providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
----
-apiVersion: iam.aws.crossplane.io/v1beta1
-kind: RolePolicyAttachment
-metadata:
   name: {{ .Release.Name }}-karpenter-controller-role-karpenter-controller-policy
 spec:
   forProvider:
