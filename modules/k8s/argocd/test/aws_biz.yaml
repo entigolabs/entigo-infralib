@@ -10,3 +10,22 @@ argocd:
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.route53.pub_domain }}
+
+argocd-apps:
+    applications:
+        extra:
+            destination:
+                namespace: "{{ .module.name }}-extra"
+                server: https://kubernetes.default.svc
+            namespace: "{{ .module.name }}"
+            project: default
+            source:
+                helm:
+                    valueFiles:
+                        - values.yaml
+                path: modules/k8s/hello-world
+                repoURL: https://github.com/entigolabs/entigo-infralib-release.git
+                targetRevision: main
+            syncPolicy:
+                syncOptions:
+                    - CreateNamespace=true

@@ -211,7 +211,7 @@ then
         repo=`yq -r '.spec.sources[0].repoURL' $app_file`
         path=`yq -r '.spec.sources[0].path' $app_file`
         git clone --depth 1 --single-branch --branch $version $repo git-$app
-        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml $app git-$app/$path
+        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml --set argocd-apps.enabled=false $app git-$app/$path
         rm -rf values-$app.yaml git-$app
       fi
     done
