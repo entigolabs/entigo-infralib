@@ -80,7 +80,7 @@ resource-types:
   - ElasticTranscoderPipeline
   - ElasticTranscoderPreset
   - TranscribeLanguageModel
-  
+  - SNSSubscription
 
 accounts:
   "877483565445":
