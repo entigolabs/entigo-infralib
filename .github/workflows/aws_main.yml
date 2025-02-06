@@ -96,10 +96,9 @@ jobs:
         git config user.email "actions@github.com"
         git tag -a modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
         git push origin modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
-        echo "Changed modules, providers and images:"
         CHANGED=""
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file" | grep "^modules/" | cut -d'/' -f1-3
+            echo "$file" | grep "^modules/" | grep -ve"nuke" | cut -d'/' -f1-3
         done | sort -u )
         do
           CHANGED="$CHANGED 
