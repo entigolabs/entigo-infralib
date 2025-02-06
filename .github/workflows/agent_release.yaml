@@ -171,24 +171,21 @@ jobs:
             echo "$file" | grep "^modules/" | cut -d'/' -f1-3
         done | sort -u )
         do
-          CHANGED="$CHANGED 
-- $module"
+          CHANGED="$CHANGED \n- $module"
         done
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file" | grep -e "^images/\|^providers/" | cut -d'/' -f1-2
         done | sort -u )
         do
-          CHANGED="$CHANGED 
-- $module"
+          CHANGED="$CHANGED - $module"
         done
         
         RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
         --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
         --generate-notes \
---notes "## Changed modules, providers and images
-
-$CHANGED
-" \
+        --notes "## Changed modules, providers and images
+        $CHANGED
+        " \
         --draft=false \
         --latest=true \
         --prerelease=false)

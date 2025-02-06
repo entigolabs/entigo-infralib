@@ -103,22 +103,21 @@ jobs:
         done | sort -u )
         do
           CHANGED="$CHANGED 
-- $module"
+          - $module"
         done
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file" | grep -e "^images/\|^providers/" | cut -d'/' -f1-2
         done | sort -u )
         do
           CHANGED="$CHANGED 
-- $module"
+          - $module"
         done
         RELEASE_URL=$(gh release create modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
         --title "Release modules/aws-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
         --generate-notes \
---notes "## Changed modules, providers and images
-
-$CHANGED
-" \
+        --notes "## Changed modules, providers and images
+        $CHANGED
+        " \
         --draft=false \
         --latest=false \
         --prerelease=true)
