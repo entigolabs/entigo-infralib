@@ -39,8 +39,8 @@ func testTerraformVpcBiz(t *testing.T) {
 	assert.NotEmpty(t, routerId, "Output router_id not returned")
 
 	privateSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnet_cidrs")
-	assert.Equal(t, "10.149.32.0/22", privateSubnetCidrs[0], "Wrong value for private_subnet_cidrs returned")
-	assert.Equal(t, "10.149.48.0/22", privateSubnetCidrs[1], "Wrong value for private_subnet_cidrs returned")
+	assert.Equal(t, "10.149.128.0/20", privateSubnetCidrs[0], "Wrong value for private_subnet_cidrs returned")
+	assert.Equal(t, "10.149.192.0/20", privateSubnetCidrs[1], "Wrong value for private_subnet_cidrs returned")
 
 	publicSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__public_subnet_cidrs")
 	assert.Equal(t, "10.149.4.0/24", publicSubnetCidrs[0], "Wrong value for public_subnet_cidrs returned")
@@ -50,12 +50,12 @@ func testTerraformVpcBiz(t *testing.T) {
 	assert.Equal(t, "10.149.20.0/22", databaseSubnetCidrs[1], "Wrong value for database_subnet_cidrs returned")
 
 	privateSubnetPodsCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnet_cidrs_pods")
-	assert.Equal(t, "10.149.40.0/21", privateSubnetPodsCidrs[0], "Wrong value for private_subnet_cidrs_pods returned")
-	assert.Equal(t, "10.149.56.0/21", privateSubnetPodsCidrs[1], "Wrong value for private_subnet_cidrs_pods returned")
+	assert.Equal(t, "10.149.160.0/19", privateSubnetPodsCidrs[0], "Wrong value for private_subnet_cidrs_pods returned")
+	assert.Equal(t, "10.149.224.0/19", privateSubnetPodsCidrs[1], "Wrong value for private_subnet_cidrs_pods returned")
 	
 	privateSubnetServicesCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnet_cidrs_services")
-	assert.Equal(t, "10.149.36.0/22", privateSubnetServicesCidrs[0], "Wrong value for private_subnet_cidrs_services returned")
-	assert.Equal(t, "10.149.52.0/22", privateSubnetServicesCidrs[1], "Wrong value for private_subnet_cidrs_services returned")
+	assert.Equal(t, "10.149.144.0/20", privateSubnetServicesCidrs[0], "Wrong value for private_subnet_cidrs_services returned")
+	assert.Equal(t, "10.149.208.0/20", privateSubnetServicesCidrs[1], "Wrong value for private_subnet_cidrs_services returned")
 
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnet_cidrs")
 	assert.Equal(t, 0, len(intraSubnetCidrs), "Wrong value for intra_subnet_cidrs returned")
