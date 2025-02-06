@@ -22,7 +22,7 @@ jobs:
         MSG_MINIMAL: actions url,commit
         SLACK_FOOTER: ""
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Nuke entigo-infralib account
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Nuke entigo-infralib google project
       env:
         GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}

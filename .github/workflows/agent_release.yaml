@@ -15,7 +15,7 @@ jobs:
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
     - name: Checkout code (tfmain)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: main
     - name: Create resources based on latest release
@@ -46,7 +46,7 @@ jobs:
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
     - name: Checkout code (tfmain)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: main
     - name: Create resources based on latest release
@@ -87,9 +87,13 @@ jobs:
     name: Release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: main
+        fetch-depth: 0
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v42
     - name: Run k8s tests
       id: k8s_tests
       env:
@@ -160,9 +164,31 @@ jobs:
         git config user.email "actions@github.com"
         git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}"
         git push origin ${{ steps.get_latest_release.outputs.new_version }}
+        
+        echo "Changed modules, providers and images:"
+        CHANGED=""
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep "^modules/" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          CHANGED="$CHANGED 
+- $module"
+        done
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep -e "^images/\|^providers/" | cut -d'/' -f1-2
+        done | sort -u )
+        do
+          CHANGED="$CHANGED 
+- $module"
+        done
+        
         RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
         --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
         --generate-notes \
+--notes "## Changed modules, providers and images
+
+$CHANGED
+" \
         --draft=false \
         --latest=true \
         --prerelease=false)
