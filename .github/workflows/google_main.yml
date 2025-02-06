@@ -97,9 +97,28 @@ jobs:
         git config user.email "actions@github.com"
         git tag -a modules/google-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} -m "Release modules/google-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}"
         git push origin modules/google-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
+        CHANGED=""
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep "^modules/" | grep -ve"nuke" | cut -d'/' -f1-3
+        done | sort -u )
+        do
+          CHANGED="$CHANGED 
+          - $module"
+        done
+        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" | grep -e "^images/\|^providers/" | cut -d'/' -f1-2
+        done | sort -u )
+        do
+          CHANGED="$CHANGED 
+          - $module"
+        done
+
         RELEASE_URL=$(gh release create modules/google-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} \
         --title "Release modules/google-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}" \
         --generate-notes \
+        --notes "## Changed modules, providers and images
+        $CHANGED
+        " \
         --draft=false \
         --latest=false \
         --prerelease=true)
