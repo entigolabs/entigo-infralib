@@ -31,17 +31,3 @@ resource "google_service_account" "crossplane" {
   account_id   = local.crossplane_service_account_id
   display_name = "Crossplane service account"
 }
-
-module "service_account_email" {
-  source = "./secret"
-  prefix = var.prefix
-  key    = "service_account_email"
-  value  = google_service_account.crossplane.email
-}
-
-module "project_id" {
-  source = "./secret"
-  prefix = var.prefix
-  key    = "project_id"
-  value  = data.google_client_config.this.project
-}

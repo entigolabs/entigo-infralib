@@ -19,15 +19,6 @@ __vpc_id__ need to reference the VPC that the private dns zone will be attatched
 The use of the private zone only makes sense if we have LAN access to that network (for example Client VPN or access through TGW).
 
 
-### SSM parameters ###
-```
-"/entigo-infralib/${var.prefix}/pub_zone_id" 
-"/entigo-infralib/${var.prefix}/pub_domain"
-"/entigo-infralib/${var.prefix}/int_zone_id"
-"/entigo-infralib/${var.prefix}/int_domain"
-```
-
-
 ### Example code ###
 
 ```

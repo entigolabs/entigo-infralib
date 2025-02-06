@@ -345,36 +345,3 @@ module "kms_data" {
   }
 }
 
-
-resource "aws_ssm_parameter" "telemetry_alias_arn" {
-  count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/telemetry_alias_arn"
-  type  = "String"
-  value = module.kms_telemetry[0].aliases["${var.prefix}/telemetry"].arn
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-  }
-}
-
-resource "aws_ssm_parameter" "config_alias_arn" {
-  count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/config_alias_arn"
-  type  = "String"
-  value = module.kms_config[0].aliases["${var.prefix}/config"].arn
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-  }
-}
-
-resource "aws_ssm_parameter" "data_alias_arn" {
-  count = var.mode == "kms" ? 1 : 0
-  name  = "/entigo-infralib/${var.prefix}/data_alias_arn"
-  type  = "String"
-  value = module.kms_data[0].aliases["${var.prefix}/data"].arn
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-  }
-}
