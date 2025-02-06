@@ -24,7 +24,7 @@ jobs:
           }
 
     - name: Checkout code of latest release
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ steps.get_latest_release.outputs.release_tag }}
     - name: Create resources based on latest release
@@ -66,7 +66,7 @@ jobs:
           }
 
     - name: Checkout code of latest release
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ steps.get_latest_release.outputs.release_tag }}
     - name: Create resources based on latest release
@@ -97,7 +97,7 @@ jobs:
     name: Release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: main
     - name: Run k8s tests
