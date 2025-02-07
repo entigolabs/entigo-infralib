@@ -3,31 +3,6 @@
 
 Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 
-
-
-
-
-
-### SSM parameters ###
-```
-"/entigo-infralib/${var.prefix}/pipeline_security_group"
-"/entigo-infralib/${var.prefix}/vpc_id"
-"/entigo-infralib/${var.prefix}/private_subnets"
-"/entigo-infralib/${var.prefix}/public_subnets"
-"/entigo-infralib/${var.prefix}/intra_subnets"
-"/entigo-infralib/${var.prefix}/database_subnets"
-"/entigo-infralib/${var.prefix}/database_subnet_group"
-"/entigo-infralib/${var.prefix}/elasticache_subnets"
-"/entigo-infralib/${var.prefix}/elasticache_subnet_group"
-"/entigo-infralib/${var.prefix}/private_subnet_cidrs"
-"/entigo-infralib/${var.prefix}/public_subnet_cidrs"
-"/entigo-infralib/${var.prefix}/database_subnet_cidrs"
-"/entigo-infralib/${var.prefix}/elasticache_subnet_cidrs"
-"/entigo-infralib/${var.prefix}/intra_subnet_cidrs"
-
-```
-
-
 ### Example code ###
 ```
     modules:
