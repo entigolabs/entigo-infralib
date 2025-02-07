@@ -126,6 +126,10 @@ variable "eks_main_volume_type" {
   default = "gp3"
 }
 
+variable "eks_main_subnets" {
+  type    = list(string)
+}
+
 variable "eks_mainarm_min_size" {
   type     = number
   nullable = false
@@ -254,10 +258,8 @@ variable "eks_mon_volume_type" {
   default = "gp3"
 }
 
-variable "eks_mon_single_subnet" {
-  type     = bool
-  nullable = false
-  default  = true
+variable "eks_mon_subnets" {
+  type    = list(string)
 }
 
 variable "eks_tools_min_size" {
@@ -303,10 +305,8 @@ variable "eks_tools_volume_type" {
   default = "gp3"
 }
 
-variable "eks_tools_single_subnet" {
-  type     = bool
-  nullable = false
-  default  = false
+variable "eks_tools_subnets" {
+  type    = list(string)
 }
 
 variable "eks_db_min_size" {
