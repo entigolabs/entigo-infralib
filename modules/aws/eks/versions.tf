@@ -18,11 +18,11 @@ terraform {
       version = "2.3.5"
     }
     tls = {
-      source  = "hashicorp/cloudinit"
+      source  = "hashicorp/tls"
       version = "4.0.6"
     }
     time = {
-      source  = "hashicorp/cloudinit"
+      source  = "hashicorp/time"
       version = "0.12.1"
     }
   }
