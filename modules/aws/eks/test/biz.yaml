@@ -4,22 +4,12 @@ eks_mon_single_subnet: false
 eks_mon_capacity_type: "SPOT"
 cluster_enabled_log_types: |
   [] #Temporarily disabled, see https://entigo.atlassian.net/browse/RD-8
-eks_spot_desired_size: 0
-eks_spot_max_size: 0
-eks_db_desired_size: 0
-eks_db_max_size: 0
-eks_db_capacity_type: "SPOT"
 eks_main_desired_size: 4
 
 eks_main_max_size: 6
 eks_main_instance_types: |
   ["t3.small"]
 eks_main_capacity_type: "SPOT"
-eks_mainarm_desired_size: 0
-eks_mainarm_max_size: 0
-eks_mainarm_capacity_type: "SPOT"
-eks_mainarm_instance_types: |
-  ["t4g.micro"]
 eks_tools_max_size: 4
 eks_tools_capacity_type: "SPOT"
 aws_auth_user: "github"
@@ -48,7 +38,7 @@ eks_managed_node_groups_extra: |
         instance_types  = ["t4g.micro"]
         capacity_type   = "ON_DEMAND"
         release_version = ""
-        ami_type        = "AL2_ARM_64"
+        ami_type        = "AL2023_ARM_64_STANDARD"
         launch_template_tags = {
           Terraform = "true"
         }

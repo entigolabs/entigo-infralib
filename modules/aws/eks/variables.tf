@@ -111,6 +111,11 @@ variable "eks_main_capacity_type" {
   default = "ON_DEMAND"
 }
 
+variable "eks_main_ami_type" {
+  type    = string
+  default = "AL2023_x86_64_STANDARD"
+}
+
 variable "eks_main_volume_size" {
   type    = number
   default = 100
@@ -122,91 +127,6 @@ variable "eks_main_volume_iops" {
 }
 
 variable "eks_main_volume_type" {
-  type    = string
-  default = "gp3"
-}
-
-variable "eks_mainarm_min_size" {
-  type     = number
-  nullable = false
-  default  = 1
-}
-
-variable "eks_mainarm_desired_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_mainarm_max_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_mainarm_instance_types" {
-  type    = list(string)
-  default = ["t4g.large"]
-}
-
-variable "eks_mainarm_capacity_type" {
-  type    = string
-  default = "ON_DEMAND"
-}
-
-variable "eks_mainarm_volume_size" {
-  type    = number
-  default = 100
-}
-
-variable "eks_mainarm_volume_iops" {
-  type    = number
-  default = 3000
-}
-
-variable "eks_mainarm_volume_type" {
-  type    = string
-  default = "gp3"
-}
-
-variable "eks_spot_min_size" {
-  type     = number
-  nullable = false
-  default  = 1
-}
-
-variable "eks_spot_desired_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_spot_max_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_spot_instance_types" {
-  type     = list(string)
-  nullable = false
-  default = [
-    "t3.medium",
-    "t3.large"
-  ]
-}
-
-variable "eks_spot_volume_size" {
-  type    = number
-  default = 100
-}
-
-variable "eks_spot_volume_iops" {
-  type    = number
-  default = 3000
-}
-
-variable "eks_spot_volume_type" {
   type    = string
   default = "gp3"
 }
@@ -237,6 +157,11 @@ variable "eks_mon_instance_types" {
 variable "eks_mon_capacity_type" {
   type    = string
   default = "ON_DEMAND"
+}
+
+variable "eks_mon_ami_type" {
+  type    = string
+  default = "AL2023_x86_64_STANDARD"
 }
 
 variable "eks_mon_volume_size" {
@@ -288,6 +213,11 @@ variable "eks_tools_capacity_type" {
   default = "ON_DEMAND"
 }
 
+variable "eks_tools_ami_type" {
+  type    = string
+  default = "AL2023_x86_64_STANDARD"
+}
+
 variable "eks_tools_volume_size" {
   type    = number
   default = 50
@@ -308,51 +238,6 @@ variable "eks_tools_single_subnet" {
   nullable = false
   default  = false
 }
-
-variable "eks_db_min_size" {
-  type     = number
-  nullable = false
-  default  = 1
-}
-
-variable "eks_db_desired_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_db_max_size" {
-  type     = number
-  nullable = false
-  default  = 0
-}
-
-variable "eks_db_instance_types" {
-  type     = list(string)
-  nullable = false
-  default  = ["t3.large"]
-}
-
-variable "eks_db_capacity_type" {
-  type    = string
-  default = "ON_DEMAND"
-}
-
-variable "eks_db_volume_size" {
-  type    = number
-  default = 50
-}
-
-variable "eks_db_volume_iops" {
-  type    = number
-  default = 3000
-}
-
-variable "eks_db_volume_type" {
-  type    = string
-  default = "gp3"
-}
-
 
 variable "cluster_enabled_log_types" {
   type     = list(string)

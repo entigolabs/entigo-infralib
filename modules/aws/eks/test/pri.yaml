@@ -12,8 +12,6 @@ eks_main_min_size: 6
 eks_main_desired_size: 0
 eks_main_max_size: 8
 eks_main_capacity_type: "SPOT"
-eks_mainarm_capacity_type: "SPOT"
-eks_db_capacity_type: "SPOT"
 eks_nodeport_access_cidrs: |
   ["10.10.10.10/32"]
 aws_auth_user: "github"
