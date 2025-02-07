@@ -13,7 +13,7 @@ locals {
       desired_size    = var.eks_main_desired_size != 0 ? var.eks_main_desired_size : var.eks_main_min_size
       max_size        = var.eks_main_max_size
       instance_types  = var.eks_main_instance_types
-      subnet_ids      = var.eks_main_subnets
+      subnet_ids      = length(var.eks_main_subnets) == 0 ? var.private_subnets : var.eks_main_subnets
       capacity_type   = var.eks_main_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
@@ -105,7 +105,7 @@ locals {
       desired_size    = var.eks_mon_desired_size != 0 ? var.eks_mon_desired_size : var.eks_mon_min_size
       max_size        = var.eks_mon_max_size
       instance_types  = var.eks_mon_instance_types
-      subnet_ids      = var.eks_mon_subnets
+      subnet_ids      = length(var.eks_mon_subnets) == 0 ? var.private_subnets : var.eks_mon_subnets
       capacity_type   =  var.eks_mon_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
@@ -143,7 +143,7 @@ locals {
       desired_size    = var.eks_tools_desired_size != 0 ? var.eks_tools_desired_size : var.eks_tools_min_size
       max_size        = var.eks_tools_max_size
       instance_types  = var.eks_tools_instance_types
-      subnet_ids      = var.eks_tools_subnets
+      subnet_ids      = length(var.eks_tools_subnets) == 0 ? var.private_subnets : var.eks_tools_subnets
       capacity_type   = var.eks_tools_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version

@@ -128,6 +128,7 @@ variable "eks_main_volume_type" {
 
 variable "eks_main_subnets" {
   type    = list(string)
+  default = []
 }
 
 variable "eks_mainarm_min_size" {
@@ -260,6 +261,7 @@ variable "eks_mon_volume_type" {
 
 variable "eks_mon_subnets" {
   type    = list(string)
+  default = []
 }
 
 variable "eks_tools_min_size" {
@@ -307,6 +309,7 @@ variable "eks_tools_volume_type" {
 
 variable "eks_tools_subnets" {
   type    = list(string)
+  default = []
 }
 
 variable "eks_db_min_size" {

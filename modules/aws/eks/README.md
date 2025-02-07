@@ -28,7 +28,7 @@ __eks_main_max_size__ Defaults to 4, maximum size of the main nodegroup. Must be
 
 __eks_main_instance_types__ List of instance types, defaults to  ["t3.large"]. Set according to clients needs.
 
-__eks_main_subnets__ Nodegroups subnets. Defaults to the value of 'vpc.private_subnets'.
+__eks_main_subnets__ Defaults to the value of 'private_subnets' variable.
 
 __eks_mainarm_min_size__ Defaults to 0, minimum size of the main nodegroup. Set to 0 to disablet his nodegroup.
 
@@ -54,7 +54,7 @@ __eks_mon_max_size__ Defaults to 3, maximum size of the nodegroup. Must be large
 
 __eks_mon_instance_types__ List of instance types, defaults to  ["t3.large"]. Set according to clients needs.
 
-__eks_mon_subnets__ Nodegroups subnets. Defaults to the value of 'vpc.private_subnets'.
+__eks_mon_subnets__ Defaults to the value of 'private_subnets' variable.
 
 __eks_tools_min_size__ Defaults to 2, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
 
@@ -62,7 +62,7 @@ __eks_tools_max_size__ Defaults to 3, maximum size of the nodegroup. Must be lar
 
 __eks_tools_instance_types__ List of instance types, defaults to  ["t3.large"]. Set according to clients needs.
 
-__eks_tools_subnets__ Nodegroups subnets. Defaults to the value of 'vpc.private_subnets'.
+__eks_tools_subnets__ Defaults to the value of 'private_subnets' variable.
 
 __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable logging set to [].
 
