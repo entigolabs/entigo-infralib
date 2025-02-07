@@ -269,6 +269,8 @@ test_tf() {
     PIDS="$PIDS $!=route53"
     ./modules/aws/eks/test.sh testonly &
     PIDS="$PIDS $!=eks"
+    ./modules/aws/eks-node-group/test.sh testonly &
+    PIDS="$PIDS $!=eks-node-group"
     ./modules/aws/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
     ./modules/aws/ec2/test.sh testonly &
@@ -397,7 +399,7 @@ test_k8s() {
 
 default_aws_conf() {
   generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
-  generate_config "./modules/aws" "infra" "eks" "crossplane" "ec2" "karpenter-node-role"
+  generate_config "./modules/aws" "infra" "eks" "eks-node-group" "crossplane" "ec2" "karpenter-node-role"
 }
 
 default_google_conf() {
