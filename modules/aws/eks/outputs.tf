@@ -74,6 +74,11 @@ output "cluster_security_group_id" {
   value = module.eks.cluster_security_group_id
 }
 
+output "cluster_service_cidr" {
+  description = "The CIDR block where Kubernetes pod and service IP addresses are assigned from"
+  value = module.eks.cluster_service_cidr
+}
+
 output "node_security_group_arn" {
   description = "Amazon Resource Name (ARN) of the node shared security group"
   value = module.eks.node_security_group_arn
