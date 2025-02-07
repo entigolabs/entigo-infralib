@@ -1,0 +1,17 @@
+min_size: 1
+desired_size: 1
+max_size: 2
+capacity_type: "SPOT"
+volume_size: 20
+taints: |
+  [
+    {
+      key    = "tools"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }
+  ]
+labels: |
+  {
+    tools = "true"
+  }
