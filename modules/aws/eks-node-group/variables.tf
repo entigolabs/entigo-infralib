@@ -64,9 +64,9 @@ variable "capacity_type" {
 }
 
 variable "ami_type" {
-  description = "Type of Amazon Machine Image (AMI) associated with the EKS Node Group. AL2_ARM_64 for arm AL2_x86_64 for x86"
+  description = "Type of Amazon Machine Image (AMI) associated with the EKS Node Group. AL2023_ARM_64_STANDARD for arm AL2023_x86_64_STANDARD for x86"
   type        = string
-  default     = "AL2_x86_64"
+  default     = "AL2023_x86_64_STANDARD"
 }
 
 variable "volume_size" {
