@@ -16,6 +16,7 @@ locals {
       capacity_type   = var.eks_main_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
+      ami_type        = var.eks_main_ami_type
 
       launch_template_tags = {
         Terraform = "true"
@@ -35,70 +36,6 @@ locals {
         }
       }
     },
-    mainarm = {
-      min_size        = var.eks_mainarm_min_size
-      desired_size    = var.eks_mainarm_desired_size != 0 ? var.eks_mainarm_desired_size : var.eks_mainarm_min_size
-      max_size        = var.eks_mainarm_max_size
-      instance_types  = var.eks_mainarm_instance_types
-      capacity_type   = var.eks_mainarm_capacity_type
-      key_name         = var.node_ssh_key_pair_name
-      release_version = var.eks_cluster_version
-      ami_type        = "AL2_ARM_64"
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-      }
-      block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
-          ebs = {
-            volume_size           = var.eks_mainarm_volume_size
-            volume_iops           = var.eks_mainarm_volume_iops
-            volume_type           = var.eks_mainarm_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
-            delete_on_termination = true
-          }
-        }
-      }
-    },
-    spot = {
-      min_size        = var.eks_spot_min_size
-      desired_size    = var.eks_spot_desired_size != 0 ? var.eks_spot_desired_size : var.eks_spot_min_size
-      max_size        = var.eks_spot_max_size
-      instance_types  = var.eks_spot_instance_types
-      capacity_type   = "SPOT"
-      key_name         = var.node_ssh_key_pair_name
-      release_version = var.eks_cluster_version
-
-      taints = [
-        {
-          key    = "spot"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-      labels = {
-        spot = "true"
-      }
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-      }
-      block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
-          ebs = {
-            volume_size           = var.eks_spot_volume_size
-            volume_iops           = var.eks_spot_volume_iops
-            volume_type           = var.eks_spot_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
-            delete_on_termination = true
-          }
-        }
-      }
-    },
     mon = {
       min_size        = var.eks_mon_min_size
       desired_size    = var.eks_mon_desired_size != 0 ? var.eks_mon_desired_size : var.eks_mon_min_size
@@ -108,6 +45,7 @@ locals {
       capacity_type   =  var.eks_mon_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
+      ami_type        = var.eks_mon_ami_type
       taints = [
         {
           key    = "mon"
@@ -146,6 +84,7 @@ locals {
       capacity_type   = var.eks_tools_capacity_type
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
+      ami_type        = var.eks_tools_ami_type
       taints = [
         {
           key    = "tools"
@@ -174,50 +113,13 @@ locals {
           }
         }
       }
-    },
-    db = {
-      min_size        = var.eks_db_min_size
-      desired_size    = var.eks_db_desired_size != 0 ? var.eks_db_desired_size : var.eks_db_min_size
-      max_size        = var.eks_db_max_size
-      instance_types  = var.eks_db_instance_types
-      capacity_type   = var.eks_db_capacity_type
-      key_name         = var.node_ssh_key_pair_name
-      release_version = var.eks_cluster_version
-      taints = [
-        {
-          key    = "db"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-      labels = {
-        db = "true"
-      }
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-      }
-
-      block_device_mappings = {
-        xvda = {
-          device_name = "/dev/xvda"
-          ebs = {
-            volume_size           = var.eks_db_volume_size
-            volume_iops           = var.eks_db_volume_iops
-            volume_type           = var.eks_db_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
-            kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
-            delete_on_termination = true
-          }
-        }
-      }
     }
   }
 
   # Need to keep role name_prefix length under 38. 
   eks_managed_node_groups_default = {
     for key, value in local.eks_managed_node_groups_all :
-    "${substr(var.prefix, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mainarm" && var.eks_mainarm_max_size > 0 || key == "spot" && var.eks_spot_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0 || key == "db" && var.eks_db_max_size > 0
+    "${substr(var.prefix, 0, 21 - length(key) >= 0 ? 21 - length(key) : 0)}${length(key) < 21 ? "-" : ""}${substr(key, 0, 22)}" => value if key == "main" && var.eks_main_max_size > 0 || key == "mon" && var.eks_mon_max_size > 0 || key == "tools" && var.eks_tools_max_size > 0
   }
 
   # Set desired_size to min_size if desired_size is 0 for extra node groups
@@ -241,11 +143,8 @@ locals {
     for k, v in merge(
       {
         eks_main_desired_size    = var.eks_main_desired_size
-        eks_mainarm_desired_size = var.eks_mainarm_desired_size
         eks_tools_desired_size   = var.eks_tools_desired_size
         eks_mon_desired_size     = var.eks_mon_desired_size
-        eks_spot_desired_size    = var.eks_spot_desired_size
-        eks_db_desired_size      = var.eks_db_desired_size
       },
       local.extra_desired_sizes
     ) : k => v if v > 0
@@ -256,11 +155,8 @@ locals {
     for k, v in merge(
       {
         eks_main_min_size    = var.eks_main_min_size
-        eks_mainarm_min_size = var.eks_mainarm_min_size
         eks_tools_min_size   = var.eks_tools_min_size
         eks_mon_min_size     = var.eks_mon_min_size
-        eks_spot_min_size    = var.eks_spot_min_size
-        eks_db_min_size      = var.eks_db_min_size
       },
       local.extra_min_sizes
     ) : k => v if contains(keys(local.eks_desired_size_map), replace(k, "min_size", "desired_size"))
@@ -629,7 +525,7 @@ resource "null_resource" "update_desired_size" {
         echo ""
         echo "Nodegroup: $nodegroup"
 
-        # Get the short name of the node group (Example: main, mainarm, tools, mon, spot, db)
+        # Get the short name of the node group (Example: main, tools, mon)
         node_group_short_name=$(echo "$nodegroup" | awk -F'-' '{print $(NF-1)}')
         echo "Node group short name: $node_group_short_name"
 

@@ -26,24 +26,6 @@ __eks_main_max_size__ Defaults to 4, maximum size of the main nodegroup. Must be
 
 __eks_main_instance_types__ List of instance types, defaults to  ["t3.large"]. Set according to clients needs.
 
-__eks_mainarm_min_size__ Defaults to 0, minimum size of the main nodegroup. Set to 0 to disablet his nodegroup.
-
-__eks_mainarm_max_size__ Defaults to 0, maximum size of the main nodegroup. Must be larger than min_size.
-
-__eks_mainarm_instance_types__ List of instance types, defaults to  ["t4g.large"]. Set according to clients needs.
-
-__eks_spot_min_size__ Defaults to 0, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
-
-__eks_spot_max_size__ Defaults to 0, maximum size of the nodegroup. Must be larger than min_size.
-
-__eks_spot_instance_types__ List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
-
-__eks_db_min_size__ Defaults to 0, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
-
-__eks_db_max_size__ Defaults to 0, maximum size of the nodegroup. Must be larger than min_size.
-
-__eks_db_instance_types__ List of instance types, defaults to  ["t3.medium", "t3.large"]. Set according to clients needs.
-
 __eks_mon_min_size__ Defaults to 1, minimum size of the nodegroup. Set to 0 to disablet his nodegroup.
 
 __eks_mon_max_size__ Defaults to 3, maximum size of the nodegroup. Must be larger than min_size.
@@ -75,8 +57,6 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
         inputs:
           eks_main_min_size: 3
           eks_main_max_size: 6
-          eks_spot_max_size: 0
-          eks_db_max_size: 0
           cluster_enabled_log_types: |
             []
 
