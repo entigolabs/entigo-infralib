@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    version: "latest"
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 30%
+      maxUnavailable: 30%
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        version: "latest"
+      annotations:
+        kube-score/ignore: pod-probes,pod-networkpolicy
+    spec:
+      containers:
+      - name: saml-proxy
+        image: priitrent/saml-proxy:40-20240809-1
+        ports:
+        - name: http-service
+          containerPort: 80
+        livenessProbe:
+           tcpSocket:
+             port: http-service
+           initialDelaySeconds: 10
+        readinessProbe:
+           tcpSocket:
+             port: http-service
+           initialDelaySeconds: 3
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 25m
+            ephemeral-storage: 1Mi
+          limits:
+            memory: 1024Mi
+            cpu: 2
+            ephemeral-storage: 250Mi
+        volumeMounts:
+        - name: saml-volume
+          mountPath: /etc/httpd/conf.d/saml_idp.xml
+          subPath: saml_idp.xml
+        - name: saml-volume
+          mountPath: /etc/httpd/conf.d/saml_sp.xml
+          subPath: saml_sp.xml
+        - name: saml-volume
+          mountPath: /etc/httpd/conf.d/saml_sp.key
+          subPath: saml_sp.key
+        - name: saml-volume
+          mountPath: /etc/httpd/conf.d/saml_sp.cert
+          subPath: saml_sp.cert
+        env:
+        - name: BACKEND
+          value: "{{ .Values.targetService }}"
+        - name: COOKIE
+          value: {{ .Values.global.prefix }}
+        - name: SAML_MAP_email
+          value: X-WEBAUTH-USER
+        - name: SAML_MAP_name
+          value: X-WEBAUTH-NAME
+      volumes:
+        - name: saml-volume
+          secret:
+            secretName: {{ .Release.Name }}
