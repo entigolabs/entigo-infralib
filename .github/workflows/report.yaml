@@ -49,11 +49,11 @@ jobs:
       env:
         SLACK_COLOR: 'success'
         SLACK_MESSAGE: | 
-          K8S:
+          *K8S:*
           ${{ steps.create_report.outputs.kresult }} 
-          AWS:
+          *AWS:*
           ${{ steps.create_report.outputs.aresult }}
-          Google: 
+          *Google:*
           ${{ steps.create_report.outputs.gresult }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
