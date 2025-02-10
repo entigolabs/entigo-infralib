@@ -1,0 +1,14 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  secretStoreRef:
+    name: {{ .Values.secretStore.name }}
+    kind: {{ .Values.secretStore.kind }}
+  target:
+    name: {{ .Release.Name }}
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: {{ .Release.Name }}
