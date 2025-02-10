@@ -17,19 +17,44 @@ jobs:
     - name: Create Reports
       id: create_report
       run: |
+        echo "K8S"
         K_OUT=$(./common/k8s/report.sh)
+        echo $K_OUT
+        echo "AWS"
         A_OUT=$(./common/aws/report.sh)
+        echo $A_OUT
+        echo "Google"
         G_OUT=$(./common/google/report.sh)
-        echo "kresult=$K_OUT" >> "$GITHUB_OUTPUT"
-        echo "aresult=$A_OUT" >> "$GITHUB_OUTPUT"
-        echo "gresult=$G_OUT" >> "$GITHUB_OUTPUT"
+        echo $G_OUT
+        {
+            echo "kresult<<EOF"
+            echo "$K_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        {
+            echo "aresult<<EOF"
+            echo "$A_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        {
+            echo "gresult<<EOF"
+            echo "$G_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
 
     - name: Slack Success Report Message
       if: ${{ success() }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Available updates ${{ steps.create_report.outputs.kresult }} ${{ steps.create_report.outputs.aresult }} ${{ steps.create_report.outputs.gresult }}'
+        SLACK_MESSAGE: | 
+          *K8S:*
+          ${{ steps.create_report.outputs.kresult }} 
+          *AWS:*
+          ${{ steps.create_report.outputs.aresult }}
+          *Google:*
+          ${{ steps.create_report.outputs.gresult }}'
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}

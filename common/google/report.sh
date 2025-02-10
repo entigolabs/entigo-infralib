@@ -17,8 +17,8 @@ do
   namespace=$(echo $line | cut -d"/" -f1)
   name=$(echo $line | cut -d"/" -f2 | cut -d"=" -f1)
   currentversion=$(echo $line | cut -d"=" -f2)
-  registry=`curl -s "https://registry.terraform.io/v2/providers/$namespace/$name?include=provider-versions,latest-version&name=$name&namespace=$namespace"`
-  versionid=`echo $registry | jq -r '.data.relationships["provider-versions"].data[-1].id'`
+  registry=`curl -s "https://registry.terraform.io/v2/providers/$namespace/$name?include=latest-version&name=$name&namespace=$namespace"`
+  versionid=`echo $registry | jq -r '.data.relationships["provider-versions"].data.id'`
   latestversion=`echo $registry | jq -r --arg id "$versionid" '.included[] | select(.id == $id) | .attributes.version'`
   if [ "$currentversion" != "$latestversion" ]
   then
