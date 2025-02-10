@@ -109,7 +109,8 @@ chmod go+r "$OUTFILE.xml"
 chmod go+r "$OUTFILE.cert"
 
 
-touch secrets.json && chmod +rw secrets.json
+touch secrets.json
+chmod 666 secrets.json
 jq -n \
   --arg saml_idp_xml "$(cat saml_idp.xml)" \
   --arg saml_sp_cert "$(cat saml_sp.cert)" \
