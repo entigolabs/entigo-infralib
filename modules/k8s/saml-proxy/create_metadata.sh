@@ -118,10 +118,9 @@ jq -n \
   --arg saml_sp_xml "$(cat saml_sp.xml)" \
   '{ "saml_idp.xml": $saml_idp_xml, "saml_sp.cert": $saml_sp_cert, "saml_sp.key": $saml_sp_key, "saml_sp.xml": $saml_sp_xml }' > secrets.json
 
-aws secretsmanager create-secret --name "$AWS_SM_KEY" --region "$AWS_REGION" --secret-string file://secrets.json
+aws secretsmanager create-secret --name "$AWS_SM_KEY" --region "$AWS_REGION" --secret-string file://secrets.json || aws secretsmanager update-secret --secret-id "$AWS_SM_KEY" --region "$AWS_REGION" --secret-string file://secrets.json
 
-
-
-
-
-
+rm -f "$OUTFILE.xml"
+rm -f "$OUTFILE.cert"
+rm -f "$OUTFILE.key"
+rm -f secrets.json
