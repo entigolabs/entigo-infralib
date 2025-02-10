@@ -20,9 +20,23 @@ jobs:
         K_OUT=$(./common/k8s/report.sh)
         A_OUT=$(./common/aws/report.sh)
         G_OUT=$(./common/google/report.sh)
-        echo "kresult=$K_OUT" >> "$GITHUB_OUTPUT"
-        echo "aresult=$A_OUT" >> "$GITHUB_OUTPUT"
-        echo "gresult=$G_OUT" >> "$GITHUB_OUTPUT"
+        
+        {
+            echo "kresult<<EOF"
+            echo "$K_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        {
+            echo "aresult<<EOF"
+            echo "$A_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        {
+            echo "gresult<<EOF"
+            echo "$G_OUT"
+            echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
 
     - name: Slack Success Report Message
       if: ${{ success() }}
