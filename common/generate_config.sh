@@ -145,14 +145,14 @@ generate_config_k8s() {
     local modules=("$@")
     local existing_step=""
     BRANCH="main"
-    for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
+    for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
     do 
       MODULE_NAME=`basename $test`
       
       if [ ${#modules[@]} -eq 0 ] || [[ " ${modules[*]} " =~ " $MODULE_NAME " ]]
       then
       
-      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
       do
         prefix="$(echo ${cloud} | cut -d'_' -f2)"
         if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
@@ -190,7 +190,7 @@ run_agents() {
     AGENT_OPTS="--steps $only_steps"
   fi
   PIDS=""
-  for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+  for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
   do
     if [[ $agent == google_* ]]
     then
