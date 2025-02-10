@@ -103,7 +103,7 @@ chmod go+r "$OUTFILE.xml"
 chmod go+r "$OUTFILE.cert"
 
 
-jq -n --arg saml_idp.xml "$(cat saml_idp.xml)" --arg saml_sp.cert "$(cat saml_sp.cert)" --arg saml_sp.key "$(cat saml_sp.key)" --arg saml_sp.xml "$(cat saml_sp.xml)" '{saml_idp.xml: $saml_idp.xml, saml_sp.cert: $saml_sp.cert, saml_sp.key: $saml_sp.key, saml_sp.xml: $saml_sp.xml}' > secrets.json
+jq -n --arg saml_idp_xml "$(cat saml_idp.xml)" --arg saml_sp_cert "$(cat saml_sp.cert)" --arg saml_sp_key "$(cat saml_sp.key)" --arg saml_sp_xml "$(cat saml_sp.xml)" '{"saml_idp.xml": $saml_idp_xml, "saml_sp.cert": $saml_sp_cert, "saml_sp.key": $saml_sp_key, "saml_sp.xml": $saml_sp_xml}' > secrets.json
 aws secretsmanager create-secret --name $AWS_SM_KEY --secret-string file://secrets.json
 
 
