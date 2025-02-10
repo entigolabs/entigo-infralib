@@ -20,6 +20,11 @@ func TestK8sAwsSamlProxyPri(t *testing.T) {
 func testK8sAwsSamlProxy(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	
-	_, _ = k8s.CheckKubectlConnection(t, cloudName, envName)
+	kubectlOptions, namespaceName = k8s.CheckKubectlConnection(t, cloudName, envName)
 	
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s", namespaceName), 20, 6*time.Second)
+	if err != nil {
+		t.Fatal("saml-proxy deployment error:", err)
+	}
 }
+
