@@ -299,7 +299,7 @@ module "eks" {
 
       configuration_values = jsonencode({
         env = {
-          ENABLE_PREFIX_DELEGATION = "true"
+          ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
           WARM_PREFIX_TARGET       = "1"
         }
       })
