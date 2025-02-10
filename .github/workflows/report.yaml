@@ -1,0 +1,37 @@
+name: Report
+
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+jobs:
+  nuke_aws:
+    name: Create reports
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+    - name: Create Reports
+      id: create_report
+      run: |
+        K_OUT=$(./common/k8s/report.sh)
+        A_OUT=$(./common/aws/report.sh)
+        G_OUT=$(./common/google/report.sh)
+        echo "kresult=$K_OUT" >> "$GITHUB_OUTPUT"
+        echo "aresult=$A_OUT" >> "$GITHUB_OUTPUT"
+        echo "gresult=$G_OUT" >> "$GITHUB_OUTPUT"
+
+    - name: Slack Success Report Message
+      if: ${{ success() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'success'
+        SLACK_MESSAGE: 'Available updates ${{ steps.create_report.outputs.kresult }} ${{ steps.create_report.outputs.aresult }} ${{ steps.create_report.outputs.gresult }}'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        MSG_MINIMAL: actions url,commit
+        SLACK_FOOTER: ""
