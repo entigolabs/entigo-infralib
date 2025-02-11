@@ -3,6 +3,7 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
   installPrometheusOperatorCRDs: false
+  installBlackbox: true
 
   google:
     hostname: ""
