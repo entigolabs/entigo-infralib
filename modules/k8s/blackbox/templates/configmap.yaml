@@ -1,0 +1,136 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  config.yml: |
+    modules:
+      http_2xx:
+        prober: http
+        http:
+          preferred_ip_protocol: ip4
+      http_post_2xx:
+        prober: http
+        timeout: 5s
+        http:
+          method: POST
+          headers:
+            Content-Type: application/json
+          body: '{}'
+      http_2xx_with_header:
+        prober: http
+        http:
+          method: GET
+          headers:
+            API-PING-TOKEN: BQ8r7USfa5AC95kg
+      http_2xx_no_cert_verify:
+        prober: http
+        http:
+          method: GET
+          tls_config:
+            insecure_skip_verify: true
+      http_401:
+        prober: http
+        http:
+          valid_status_codes: [401]
+          preferred_ip_protocol: ip4s
+      http_403:
+        prober: http
+        http:
+          valid_status_codes: [403]
+          preferred_ip_protocol: ip4
+      http_basic_auth_example:
+        prober: http
+        timeout: 5s
+        http:
+          method: POST
+          headers:
+            Host: "login.example.com"
+          basic_auth:
+            username: "username"
+            password: "mysecret"
+      http_custom_ca_example:
+        prober: http
+        http:
+          method: GET
+          tls_config:
+            ca_file: "/certs/my_cert.crt"
+      tls_connect:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          tls: true
+      tcp_connect_example:
+        prober: tcp
+        timeout: 5s
+      imap_starttls:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          query_response:
+            - expect: "OK.*STARTTLS"
+            - send: ". STARTTLS"
+            - expect: "OK"
+            - starttls: true
+            - send: ". capability"
+            - expect: "CAPABILITY IMAP4rev1"
+      smtp_starttls:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          query_response:
+            - expect: "^220 ([^ ]+) ESMTP (.+)$"
+            - send: "EHLO prober"
+            - expect: "^250-STARTTLS"
+            - send: "STARTTLS"
+            - expect: "^220"
+            - starttls: true
+            - send: "EHLO prober"
+            - expect: "^250-AUTH"
+            - send: "QUIT"
+      irc_banner_example:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          query_response:
+            - send: "NICK prober"
+            - send: "USER prober prober prober :prober"
+            - expect: "PING :([^ ]+)"
+              send: "PONG ${1}"
+            - expect: "^:[^ ]+ 001"
+      icmp_example:
+        prober: icmp
+        timeout: 5s
+        icmp:
+          preferred_ip_protocol: "ip4"
+          source_ip_address: "127.0.0.1"
+      dns_udp_example:
+        prober: dns
+        timeout: 5s
+        dns:
+          query_name: "www.prometheus.io"
+          query_type: "A"
+          valid_rcodes:
+          - NOERROR
+          validate_answer_rrs:
+            fail_if_matches_regexp:
+            - ".*127.0.0.1"
+            fail_if_not_matches_regexp:
+            - "www.prometheus.io.\t300\tIN\tA\t127.0.0.1"
+          validate_authority_rrs:
+            fail_if_matches_regexp:
+            - ".*127.0.0.1"
+          validate_additional_rrs:
+            fail_if_matches_regexp:
+            - ".*127.0.0.1"
+      dns_soa:
+        prober: dns
+        dns:
+          query_name: "prometheus.io"
+          query_type: "SOA"
+      dns_tcp_example:
+        prober: dns
+        dns:
+          transport_protocol: "tcp" # defaults to "udp"
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+          query_name: "www.prometheus.io"

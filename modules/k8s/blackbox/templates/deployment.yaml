@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ .Release.Name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: blackbox-exporter
+        image: prom/blackbox-exporter
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 25m
+            ephemeral-storage: 1Mi
+          limits:
+            memory: 1024Mi
+            cpu: 2
+            ephemeral-storage: 250Mi
+        ports:
+        - containerPort: 9115
+          name: blackbox
+        volumeMounts:
+        - mountPath: /etc/blackbox_exporter
+          name: config-volume
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          name: {{ .Release.Name }}
+        name: config-volume
