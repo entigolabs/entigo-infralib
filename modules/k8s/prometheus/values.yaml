@@ -16,6 +16,17 @@ prometheus-operator-crds:
     annotations:
       argocd.argoproj.io/sync-options: ServerSideApply=true
 
+prometheus-blackbox-exporter:
+  resources:
+    limits:
+      memory: 300Mi
+      cpu: 1
+      ephemeral-storage: 250Mi
+    requests:
+      memory: 50Mi
+      cpu: 25m
+      ephemeral-storage: 1Mi
+
 prometheus:
   fullnameOverride: prometheus
   server:
