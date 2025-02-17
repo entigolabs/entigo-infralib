@@ -6,9 +6,9 @@ global:
       name: google-gateway-internal
       namespace: google-gateway
   loki:
-    hostname: "{{ .toptout.loki.loki_hostname }}"
+    hostname: "http://loki-gateway.{{ .tmodule.loki }}"
   prometheus:
-    hostname: "{{ .toptout.prometheus.prometheus_hostname }}"
+    hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
 grafana:
   grafana.ini:
     server:
