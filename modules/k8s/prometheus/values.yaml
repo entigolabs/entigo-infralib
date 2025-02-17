@@ -188,3 +188,4 @@ prometheus:
       cpu: 10m
       memory: 16Mi
       ephemeral-storage: 10Mi
+

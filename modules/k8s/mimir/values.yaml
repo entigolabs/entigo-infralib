@@ -858,3 +858,4 @@ mimir-distributed:
           {{- if .Values.store_gateway.zoneAwareReplication.enabled }}
           zone_awareness_enabled: true
           {{- end }}
+
