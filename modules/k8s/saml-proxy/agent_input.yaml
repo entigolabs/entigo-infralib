@@ -1,0 +1,5 @@
+ingress:
+  hostName: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+
+secretStore: 
+  name: "{{ .tmodule.external-secrets }}"

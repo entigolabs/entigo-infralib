@@ -1,0 +1,14 @@
+global:
+  aws:
+    scheme: internet-facing
+    groupName: external
+    additionalIngressAnnotations: {}
+
+ingress:
+  hostName: ""
+
+targetService: ""
+
+secretStore: 
+  name: ""
+  kind: ClusterSecretStore

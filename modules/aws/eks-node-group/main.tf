@@ -14,6 +14,7 @@ module "eks-managed-node-group" {
   cluster_service_cidr    = var.cluster_service_cidr
   vpc_security_group_ids            = [var.node_security_group_id]
   
+  pre_bootstrap_user_data = var.pre_bootstrap_user_data
   remote_access = var.remote_access
   
   min_size     = var.min_size

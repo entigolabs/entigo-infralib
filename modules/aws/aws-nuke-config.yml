@@ -85,6 +85,9 @@ resource-types:
 accounts:
   "877483565445":
     filters:
+      SecretsManagerSecret:
+      - "arn:aws:secretsmanager:eu-north-1:877483565445:secret:saml-proxy-biz-7uHnJt"
+      - "arn:aws:secretsmanager:eu-north-1:877483565445:secret:saml-proxy-pri-wFh1pu"
       ECRRepository:
       - "Repository: entigo-portal-agent"
       Route53HostedZone:

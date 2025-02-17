@@ -82,7 +82,7 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" ] 
         then
           APP_NAME=$MODULE_NAME
-        elif [ "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "karpenter" ] 
+        elif [ "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" ] 
         then
           APP_NAME="${MODULE_NAME}-$prefix"
         elif [ "$BRANCH" == "main" ]
@@ -145,14 +145,14 @@ generate_config_k8s() {
     local modules=("$@")
     local existing_step=""
     BRANCH="main"
-    for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -printf "%f\n" | sort)
+    for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
     do 
       MODULE_NAME=`basename $test`
       
       if [ ${#modules[@]} -eq 0 ] || [[ " ${modules[*]} " =~ " $MODULE_NAME " ]]
       then
       
-      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+      for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
       do
         prefix="$(echo ${cloud} | cut -d'_' -f2)"
         if [ -f "$MODULE_PATHS/$MODULE_NAME/test/${cloud}.yaml" ]
@@ -190,7 +190,7 @@ run_agents() {
     AGENT_OPTS="--steps $only_steps"
   fi
   PIDS=""
-  for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+  for agent in $(find ./agents -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
   do
     if [[ $agent == google_* ]]
     then

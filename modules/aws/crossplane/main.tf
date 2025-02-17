@@ -27,13 +27,3 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
   role       = aws_iam_role.crossplane.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
-
-resource "aws_ssm_parameter" "iam_role" {
-  name  = "/entigo-infralib/${var.prefix}/iam_role"
-  type  = "String"
-  value = aws_iam_role.crossplane.arn
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-  }
-}

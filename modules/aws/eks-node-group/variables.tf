@@ -89,6 +89,11 @@ variable "encryption_kms_key_arn" {
   default = ""
 }
 
+variable "pre_bootstrap_user_data" {
+  type        = string
+  default     = ""
+}
+
 variable "remote_access" {
   type        = any
   default     = {}
