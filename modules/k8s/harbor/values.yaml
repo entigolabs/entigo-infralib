@@ -1,7 +1,7 @@
 global:
   cloudProvider: ""
   providerConfigRefName: ""
-
+  createProxyRepos: true
   aws:
     account: ""
     clusterOIDC: ""
