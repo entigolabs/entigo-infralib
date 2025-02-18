@@ -10,7 +10,7 @@ dependencies:
     version: 25.30.2
     repository: https://prometheus-community.github.io/helm-charts
   - name: prometheus-operator-crds
-    version: 16.0.1
+    version: 18.0.0
     repository: https://prometheus-community.github.io/helm-charts
     condition: global.installPrometheusOperatorCRDs
   - name: prometheus-blackbox-exporter
