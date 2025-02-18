@@ -134,7 +134,7 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
+        cpu: 70m
         memory: 128Mi
         ephemeral-storage: 1Gi
   redisSecretInit:
@@ -189,7 +189,7 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
-          cpu: 100m
+          cpu: 70m
           memory: 128Mi
           ephemeral-storage: 1Gi
     sentinel:
@@ -214,7 +214,7 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
-          cpu: 100m
+          cpu: 70m
           memory: 128Mi
           ephemeral-storage: 1Gi
     haproxy:
@@ -239,7 +239,7 @@ argocd:
           memory: 128Mi
           ephemeral-storage: 10Gi
         requests:
-          cpu: 100m
+          cpu: 70m
           memory: 128Mi
           ephemeral-storage: 1Gi
 
@@ -272,7 +272,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
+        cpu: 70m
         memory: 128Mi
         ephemeral-storage: 1Gi
 
@@ -301,7 +301,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
+        cpu: 70m
         memory: 128Mi
         ephemeral-storage: 1Gi
 
@@ -329,8 +329,8 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 70m
+        memory: 64Mi
         ephemeral-storage: 1Gi
 
   controller:
@@ -358,6 +358,6 @@ argocd:
         memory: 4096Mi
         ephemeral-storage: 10Gi
       requests:
-        cpu: 100m
-        memory: 512Mi
+        cpu: 70m
+        memory: 768Mi
         ephemeral-storage: 1Gi

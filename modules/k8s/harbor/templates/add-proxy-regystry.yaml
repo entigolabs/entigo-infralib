@@ -46,10 +46,10 @@ spec:
         - /bin/bash
         - -c
         - |
-          curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries" \
+          curl "http://{{ .Release.Name }}-core/api/v2.0/registries" \
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
-            -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+            -H "Origin: http://{{ .Release.Name }}-core" \
             -H 'Sec-Fetch-Site: same-origin' \
             -H 'Sec-Fetch-Mode: cors' \
             -H 'Sec-Fetch-Dest: empty' \
@@ -58,10 +58,10 @@ spec:
             --data-raw '{"credential":{"access_key":"","access_secret":"","type":"basic"},"description":"","insecure":false,"name":"hub","type":"docker-hub","url":"https://hub.docker.com"}' \
             --compressed
             
-          curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries" \
+          curl "http://{{ .Release.Name }}-core/api/v2.0/registries" \
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
-            -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+            -H "Origin: http://{{ .Release.Name }}-core" \
             -H 'Sec-Fetch-Site: same-origin' \
             -H 'Sec-Fetch-Mode: cors' \
             -H 'Sec-Fetch-Dest: empty' \
@@ -70,10 +70,10 @@ spec:
             --data-raw '{"credential":{"access_key":"","access_secret":"","type":"basic"},"description":"","insecure":false,"name":"ghcr","type":"github-ghcr","url":"https://ghcr.io"}' \
             --compressed
             
-          curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries" \
+          curl "http://{{ .Release.Name }}-core/api/v2.0/registries" \
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
-            -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+            -H "Origin: http://{{ .Release.Name }}-core" \
             -H 'Sec-Fetch-Site: same-origin' \
             -H 'Sec-Fetch-Mode: cors' \
             -H 'Sec-Fetch-Dest: empty' \
@@ -82,10 +82,10 @@ spec:
             --data-raw '{"credential":{"access_key":"","access_secret":"","type":"basic"},"description":"","insecure":false,"name":"gcr","type":"docker-registry","url":"https://gcr.io"}' \
             --compressed
             
-          curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries" \
+          curl "http://{{ .Release.Name }}-core/api/v2.0/registries" \
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
-            -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+            -H "Origin: http://{{ .Release.Name }}-core" \
             -H 'Sec-Fetch-Site: same-origin' \
             -H 'Sec-Fetch-Mode: cors' \
             -H 'Sec-Fetch-Dest: empty' \
@@ -94,13 +94,13 @@ spec:
             --data-raw '{"credential":{"access_key":"","access_secret":"","type":"basic"},"description":"","insecure":false,"name":"k8s","type":"docker-registry","url":"https://registry.k8s.io"}' \
             --compressed
 
-          k8sid=`curl -X 'GET' 'https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "k8s").id'`
+          k8sid=`curl -X 'GET' 'http://{{ .Release.Name }}-core/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "k8s").id'`
           if [ "$k8sid" != "" ]
           then
-            curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/projects" \
+            curl "http://{{ .Release.Name }}-core/api/v2.0/projects" \
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json' \
-              -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+              -H "Origin: http://{{ .Release.Name }}-core" \
               -H 'Sec-Fetch-Site: same-origin' \
               -H 'Sec-Fetch-Mode: cors' \
               -H 'Sec-Fetch-Dest: empty' \
@@ -113,13 +113,13 @@ spec:
             exit 1
           fi
           
-          gcrid=`curl -X 'GET' 'https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "gcr").id'`
+          gcrid=`curl -X 'GET' 'http://{{ .Release.Name }}-core/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "gcr").id'`
           if [ "$gcrid" != "" ]
           then
-            curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/projects" \
+            curl "http://{{ .Release.Name }}-core/api/v2.0/projects" \
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json' \
-              -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+              -H "Origin: http://{{ .Release.Name }}-core" \
               -H 'Sec-Fetch-Site: same-origin' \
               -H 'Sec-Fetch-Mode: cors' \
               -H 'Sec-Fetch-Dest: empty' \
@@ -132,13 +132,13 @@ spec:
             exit 1
           fi
           
-          ghcrid=`curl -X 'GET' 'https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "ghcr").id'`
+          ghcrid=`curl -X 'GET' 'http://{{ .Release.Name }}-core/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "ghcr").id'`
           if [ "$ghcrid" != "" ]
           then
-            curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/projects" \
+            curl "http://{{ .Release.Name }}-core/api/v2.0/projects" \
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json' \
-              -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+              -H "Origin: http://{{ .Release.Name }}-core" \
               -H 'Sec-Fetch-Site: same-origin' \
               -H 'Sec-Fetch-Mode: cors' \
               -H 'Sec-Fetch-Dest: empty' \
@@ -151,13 +151,13 @@ spec:
             exit 1
           fi
           
-          hubid=`curl -X 'GET' 'https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "hub").id'`
+          hubid=`curl -X 'GET' 'http://{{ .Release.Name }}-core/api/v2.0/registries?page=1&page_size=10' -H 'accept: application/json' -u "admin:$HARBOR_ADMIN_PASSWORD" | jq '.[] | select(.name == "hub").id'`
           if [ "$hubid" != "" ]
           then
-            curl "https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}/api/v2.0/projects" \
+            curl "http://{{ .Release.Name }}-core/api/v2.0/projects" \
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json' \
-              -H "Origin: https://{{ default .Values.harbor.expose.ingress.hosts.core .Values.global.google.hostname }}" \
+              -H "Origin: http://{{ .Release.Name }}-core" \
               -H 'Sec-Fetch-Site: same-origin' \
               -H 'Sec-Fetch-Mode: cors' \
               -H 'Sec-Fetch-Dest: empty' \
