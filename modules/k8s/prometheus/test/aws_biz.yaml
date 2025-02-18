@@ -1,2 +1,3 @@
 global:
+  installPrometheusOperatorCRDs: true
   installBlackbox: true
