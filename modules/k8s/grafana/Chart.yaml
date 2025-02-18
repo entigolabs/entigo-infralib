@@ -7,5 +7,5 @@ appVersion: "8.6.1"
 
 dependencies:
   - name: grafana
-    version: 8.6.1
+    version: 8.10.0
     repository: https://grafana.github.io/helm-charts
