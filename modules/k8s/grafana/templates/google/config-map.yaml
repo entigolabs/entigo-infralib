@@ -20,13 +20,13 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
-        url: http://{{ .Values.global.prometheus.hostname }}
+        url: {{ .Values.global.prometheus.hostname }}
         access: proxy
         isDefault: true
       - name: Loki
         type: loki
         access: proxy
-        url: http://{{ .Values.global.loki.hostname }}
+        url: {{ .Values.global.loki.hostname }}
         jsonData:
           maxLines: 1000
       - name: Google Cloud Monitoring
