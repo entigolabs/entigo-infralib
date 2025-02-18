@@ -5,26 +5,22 @@ resource "random_integer" "subnet_third_octet" {
 
 resource "random_integer" "subnet_fourth_octet_raw" {
   min = 0
-  max = 15  # We'll multiply this by 16 later to get alignment
+  max = 15 # We'll multiply this by 16 later to get alignment
 }
 
 locals {
   aligned_fourth_octet = random_integer.subnet_fourth_octet_raw.result * 16
-  subnet_cidr = format("172.%d.%d.%d/28", 
+  subnet_cidr = format("172.%d.%d.%d/28",
     random_integer.subnet_third_octet.result,
     local.aligned_fourth_octet,
     0
   )
 
-
   google_compute_zones = join(",", data.google_compute_zones.this.names)
 
-  gke_main_node_locations    = var.gke_main_node_locations != "" ? var.gke_main_node_locations : local.google_compute_zones
-  gke_mainarm_node_locations = var.gke_mainarm_node_locations != "" ? var.gke_mainarm_node_locations : local.google_compute_zones
-  gke_spot_node_locations    = var.gke_spot_node_locations != "" ? var.gke_spot_node_locations : local.google_compute_zones
-  gke_mon_node_locations     = var.gke_mon_node_locations != "" ? var.gke_mon_node_locations : local.google_compute_zones
-  gke_tools_node_locations   = var.gke_tools_node_locations != "" ? var.gke_tools_node_locations : local.google_compute_zones
-  gke_db_node_locations      = var.gke_db_node_locations != "" ? var.gke_db_node_locations : local.google_compute_zones
+  gke_main_node_locations  = var.gke_main_node_locations != "" ? var.gke_main_node_locations : local.google_compute_zones
+  gke_mon_node_locations   = var.gke_mon_node_locations != "" ? var.gke_mon_node_locations : local.google_compute_zones
+  gke_tools_node_locations = var.gke_tools_node_locations != "" ? var.gke_tools_node_locations : local.google_compute_zones
 
   gke_managed_node_groups_all = [
     {
@@ -42,38 +38,6 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_main_spot_nodes
-    },
-    {
-      name               = "mainarm"
-      machine_type       = var.gke_mainarm_instance_type
-      node_locations     = local.gke_mainarm_node_locations
-      location_policy    = var.gke_mainarm_location_policy
-      initial_node_count = var.gke_mainarm_min_size
-      min_count          = var.gke_mainarm_min_size
-      max_count          = var.gke_mainarm_max_size
-      max_pods_per_node  = var.gke_mainarm_max_pods
-      disk_size_gb       = var.gke_mainarm_volume_size
-      disk_type          = var.gke_mainarm_volume_type
-      image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = false
-      spot               = var.gke_mainarm_spot_nodes
-    },
-    {
-      name               = "spot"
-      machine_type       = var.gke_spot_instance_type
-      node_locations     = local.gke_spot_node_locations
-      location_policy    = var.gke_spot_location_policy
-      initial_node_count = var.gke_spot_min_size
-      min_count          = var.gke_spot_min_size
-      max_count          = var.gke_spot_max_size
-      max_pods_per_node  = var.gke_spot_max_pods
-      disk_size_gb       = var.gke_spot_volume_size
-      disk_type          = var.gke_spot_volume_type
-      image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = false
-      spot               = true
     },
     {
       name               = "mon"
@@ -106,22 +70,6 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_tools_spot_nodes
-    },
-    {
-      name               = "db"
-      machine_type       = var.gke_db_instance_type
-      node_locations     = local.gke_db_node_locations
-      location_policy    = var.gke_db_location_policy
-      initial_node_count = var.gke_db_min_size
-      min_count          = var.gke_db_min_size
-      max_count          = var.gke_db_max_size
-      max_pods_per_node  = var.gke_db_max_pods
-      disk_size_gb       = var.gke_db_volume_size
-      disk_type          = var.gke_db_volume_type
-      image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = false
-      spot               = var.gke_db_spot_nodes
     }
   ]
 
@@ -168,13 +116,10 @@ module "gke" {
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {
-    all     = {}
-    main    = { "main" = "true" }
-    mainarm = { "mainarm" = "true" }
-    spot    = { "spot" = "true" }
-    mon     = { "mon" = "true" }
-    tools   = { "tools" = "true" }
-    db      = { "db" = "true" }
+    all   = {}
+    main  = { "main" = "true" }
+    mon   = { "mon" = "true" }
+    tools = { "tools" = "true" }
   }
 
   node_pools_taints = {
@@ -186,11 +131,6 @@ module "gke" {
     }]
     tools = [{
       key    = "tools"
-      value  = "true"
-      effect = "NO_SCHEDULE"
-    }]
-    db = [{
-      key    = "db"
       value  = "true"
       effect = "NO_SCHEDULE"
     }]
