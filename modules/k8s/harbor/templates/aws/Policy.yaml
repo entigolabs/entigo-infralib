@@ -1,43 +1,74 @@
-#
-#{{- if eq .Values.global.cloudProvider "aws" }}
-
-#apiVersion: iam.aws.crossplane.io/v1beta1
-#kind: Policy
-#metadata:
-  #name: {{ .Release.Name }} 
-#spec:
-  #forProvider:
-    #name: {{ .Release.Name }}
-    #document: |
-      #{
-        #"Version": "2012-10-17",
-        #"Statement": [
-          #{
-            #"Effect": "Allow",
-            #"Action": [
-              #"s3:ListObjects*",
-              #"s3:ListBucket",
-              #"s3:PutObject",
-              #"s3:GetObject",
-              #"s3:DeleteObject"
-            #],
-            #"Resource": [
-              #"arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}/*"
-            #]
-          #},
-          #{
-            #"Effect": "Allow",
-            #"Action": [
-              #"s3:ListBucket"
-            #],
-            #"Resource": [
-              #"arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}"
-            #]
-          #}
-        #]
-      #}
-
-  #providerConfigRef:
-    #name: {{ .Values.global.providerConfigRefName }}
-
-#{{- end }}
+# 
+# {{- if eq .Values.global.cloudProvider "aws" }}
+# 
+# apiVersion: iam.aws.crossplane.io/v1beta1
+# kind: Policy
+# metadata:
+#   name: {{ .Release.Name }} 
+# spec:
+#   forProvider:
+#     name: {{ .Release.Name }}
+#     document: |
+#       {
+#         "Version": "2012-10-17",
+#         "Statement": [
+#           {{- if .Values.global.aws.kmsKeyId }}
+#           {
+#               "Action": [
+#                   "kms:RevokeGrant",
+#                   "kms:ListGrants",
+#                   "kms:CreateGrant"
+#               ],
+#               "Condition": {
+#                   "Bool": {
+#                       "kms:GrantIsForAWSResource": "true"
+#                   }
+#               },
+#               "Effect": "Allow",
+#               "Resource": [
+#                 "{{ .Values.global.aws.kmsKeyId }}"
+#               ]
+#           },
+#           {
+#               "Action": [
+#                   "kms:ReEncrypt*",
+#                   "kms:GenerateDataKey*",
+#                   "kms:Encrypt",
+#                   "kms:DescribeKey",
+#                   "kms:Decrypt"
+#               ],
+#               "Effect": "Allow",
+#               "Resource": [
+#                 "{{ .Values.global.aws.kmsKeyId }}"
+#               ]
+#           },
+#           {{- end }}
+#           {
+#             "Effect": "Allow",
+#             "Action": [
+#               "s3:ListObjects*",
+#               "s3:ListBucket",
+#               "s3:PutObject",
+#               "s3:GetObject",
+#               "s3:DeleteObject"
+#             ],
+#             "Resource": [
+#               "arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}/*"
+#             ]
+#           },
+#           {
+#             "Effect": "Allow",
+#             "Action": [
+#               "s3:ListBucket"
+#             ],
+#             "Resource": [
+#               "arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}"
+#             ]
+#           }
+#         ]
+#       }
+# 
+#   providerConfigRef:
+#     name: {{ .Values.global.providerConfigRefName }}
+# 
+# {{- end }}

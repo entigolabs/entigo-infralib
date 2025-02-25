@@ -1,15 +1,15 @@
-#{{- if eq .Values.global.cloudProvider "aws" }}
-
-#apiVersion: iam.aws.crossplane.io/v1beta1
-#kind: RolePolicyAttachment
-#metadata:
-  #name: {{ .Release.Name }}
-#spec:
-  #forProvider:
-    #policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
-    #roleNameRef:
-      #name: {{ .Release.Name }}
-  #providerConfigRef:
-    #name: {{ .Values.global.providerConfigRefName }}
-
-#{{- end }}
+# {{- if eq .Values.global.cloudProvider "aws" }}
+# 
+# apiVersion: iam.aws.crossplane.io/v1beta1
+# kind: RolePolicyAttachment
+# metadata:
+#   name: {{ .Release.Name }}
+# spec:
+#   forProvider:
+#     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
+#     roleNameRef:
+#       name: {{ .Release.Name }}
+#   providerConfigRef:
+#     name: {{ .Values.global.providerConfigRefName }}
+# 
+# {{- end }}
