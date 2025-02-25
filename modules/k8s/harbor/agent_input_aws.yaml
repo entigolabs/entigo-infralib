@@ -2,14 +2,16 @@ global:
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   expose:
     ingress:
       hosts:
         core: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
-  persistence:
-    imageChartStorage:
-      s3:
-        region: "{{ .toutput.eks.region }}"
-        regionendpoint: "s3.{{ .toutput.eks.region }}.amazonaws.com"
+  #persistence:
+  #  imageChartStorage:
+  #    s3:
+  #      region: "{{ .toutput.eks.region }}"
+  #      regionendpoint: "s3.{{ .toutput.eks.region }}.amazonaws.com"
+  #      bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
