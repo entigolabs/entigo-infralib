@@ -110,7 +110,7 @@ jobs:
       with:
         script: |
           const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
-          core.setOutput('stable_version',  latestStableRelease);
+          core.setOutput('stable_version',  latestStableRelease.data.tag_name);
           const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
           const currentStable = await github.rest.repos.getCommit({ owner: context.repo.owner, repo: context.repo.repo, ref: 'refs/tags/' + latestStableRelease.data.tag_name });
           
