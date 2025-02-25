@@ -230,7 +230,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.31.6"
+  version = "20.33.1"
 
   cluster_name                    = var.prefix
   cluster_version                 = var.eks_cluster_version
