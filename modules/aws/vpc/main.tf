@@ -19,7 +19,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.1"
+  version = "5.19.0"
 
   name = var.prefix
   cidr = var.vpc_cidr
