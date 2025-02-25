@@ -2,7 +2,6 @@ global:
   cloudProvider: ""
 
 kiali-server:
-  fullnameOverride: "kiali"
   istio_namespace: "istio-system"
   server:
     web_fqdn: ""
@@ -11,6 +10,7 @@ kiali-server:
       url: "http://prometheus-server.prometheus:80/"
   deployment:
     image_pull_policy: "IfNotPresent"
+    instance_name: "kiali"
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     ingress:

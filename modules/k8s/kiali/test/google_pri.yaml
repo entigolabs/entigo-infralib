@@ -1,3 +1,6 @@
+kiali-server:
+  auth:
+    strategy: anonymous
 global:
   google:
     gateway:

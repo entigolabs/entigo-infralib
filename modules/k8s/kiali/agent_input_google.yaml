@@ -4,4 +4,5 @@ global:
 kiali-server:
   server:
     web_fqdn: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
-  fullnameOverride: "{{ .module.name }}"
+  deployment:
+    instance_name: "{{ .module.name }}"

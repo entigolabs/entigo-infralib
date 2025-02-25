@@ -1,4 +1,5 @@
 kiali-server:
   server:
     web_fqdn: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
-  fullnameOverride: "{{ .module.name }}"
+  deployment:
+    instance_name: "{{ .module.name }}"
