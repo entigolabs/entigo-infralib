@@ -91,9 +91,6 @@ jobs:
       with:
         ref: main
         fetch-depth: 0
-    - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@v42
     - name: Run k8s tests
       id: k8s_tests
       env:
@@ -113,6 +110,7 @@ jobs:
       with:
         script: |
           const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          core.setOutput('stable_version',  latestStableRelease);
           const currentMain =   await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: "main" });
           const currentStable = await github.rest.repos.getCommit({ owner: context.repo.owner, repo: context.repo.repo, ref: 'refs/tags/' + latestStableRelease.data.tag_name });
           
@@ -156,7 +154,15 @@ jobs:
     - name: Authenticate with GitHub CLI
       run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
-
+    
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v42
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      with:
+        base_sha: refs/tags/${{ steps.get_latest_release.outputs.stable_version }}
+        sha: ${{ github.ref }}
+        
     - name: Create Release
       id: create_release
       run: |
