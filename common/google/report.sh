@@ -18,7 +18,7 @@ do
   name=$(echo $line | cut -d"/" -f2 | cut -d"=" -f1)
   currentversion=$(echo $line | cut -d"=" -f2)
   registry=`curl -s "https://registry.terraform.io/v2/providers/$namespace/$name?include=latest-version&name=$name&namespace=$namespace"`
-  versionid=`echo $registry | jq -r '.data.relationships["provider-versions"].data.id'`
+  versionid=`echo $registry | jq -r '.data.relationships["latest-version"].data.id'`
   latestversion=`echo $registry | jq -r --arg id "$versionid" '.included[] | select(.id == $id) | .attributes.version'`
   if [ "$currentversion" != "$latestversion" ]
   then
