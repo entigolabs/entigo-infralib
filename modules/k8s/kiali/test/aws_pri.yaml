@@ -1,4 +1,6 @@
 kiali-server:
+  auth:
+    strategy: anonymous
   deployment:
     ingress:
       override_yaml:

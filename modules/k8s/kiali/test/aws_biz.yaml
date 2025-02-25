@@ -1,1 +1,3 @@
-
+kiali-server:
+  auth:
+    strategy: anonymous
