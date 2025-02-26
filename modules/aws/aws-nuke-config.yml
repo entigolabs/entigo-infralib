@@ -81,6 +81,13 @@ resource-types:
   - ElasticTranscoderPreset
   - TranscribeLanguageModel
   - SNSSubscription
+  - AppStreamImage
+  - AppConfigDeploymentStrategy
+  - MemoryDBParameterGroup
+  - CodeDeployDeploymentConfig
+  - CodePipelineCustomActionType
+  - DAXParameterGroup
+  - MemoryDBACL
 
 accounts:
   "877483565445":
