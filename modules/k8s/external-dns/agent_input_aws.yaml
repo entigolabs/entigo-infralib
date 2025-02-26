@@ -2,3 +2,7 @@ global:
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+external-dns:
+  env:
+  - value: "{{ .toutput.eks.region }}"
+    name: "AWS_DEFAULT_REGION"
