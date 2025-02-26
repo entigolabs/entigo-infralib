@@ -9,7 +9,7 @@ COPY cache /cache
 #SEE https://entigo.atlassian.net/browse/RD-76
 ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE="true"
 #SEE https://entigo.atlassian.net/browse/RD-76
-RUN  echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && cd /cache && mkdir /plugin-cache && terraform init && rm -rf /cache 
+RUN  echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && cd /cache && mkdir /plugin-cache /plan-json && terraform init && rm -rf /cache 
 
 #RUN apt update && apt -y install golang-go
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
