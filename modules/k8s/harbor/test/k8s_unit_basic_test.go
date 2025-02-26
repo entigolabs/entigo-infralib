@@ -30,7 +30,7 @@ func testK8sHarbor(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
+	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
 	
 	if cloudName == "aws" {
 		gatewayName = fmt.Sprintf("%s-ingress", namespaceName)

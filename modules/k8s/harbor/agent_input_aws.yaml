@@ -8,7 +8,7 @@ harbor:
   expose:
     ingress:
       hosts:
-        core: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+        core: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
   #persistence:
   #  imageChartStorage:
   #    s3:
