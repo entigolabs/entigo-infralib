@@ -8,26 +8,12 @@ global:
     prometheus:
       hostname: ""
 
-  google:
-    projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
-
-  aws:
-    account: ""
-    clusterOIDC: ""
-    region: ""
-
 grafana:
   enabled: true
   fullnameOverride: "grafana"
 
   annotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
-
-  datasources: {}
 
   dashboardProviders:
     dashboardproviders.yaml:
@@ -41,6 +27,19 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/kubernetes
+        - name: "loki"
+          orgId: 1
+          folder: "Loki"
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/loki
+
+  dashboardsConfigMaps:
+    loki: grafana-dashboards-loki
+
+  datasources: {}
 
   dashboards:
     kubernetes:
@@ -104,12 +103,11 @@ grafana:
       enabled: false
 
   serviceAccount:
-    create: true
+    create: false
     name: grafana
 
   persistence:
     enabled: true
-    storageClassName: "gp3"
     size: 2Gi
 
   service:
@@ -118,20 +116,6 @@ grafana:
     enabled: false
   testFramework:
     enabled: false
-  ingress:
-    enabled: true
-    ingressClassName: alb
-    annotations:
-      alb.ingress.kubernetes.io/ssl-redirect: "443"
-      alb.ingress.kubernetes.io/group.name: internal
-      alb.ingress.kubernetes.io/healthcheck-path: /
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-      alb.ingress.kubernetes.io/scheme: internal
-      alb.ingress.kubernetes.io/success-codes: 200-499
-      alb.ingress.kubernetes.io/target-type: ip
-    path: /
-    hosts: []
-    tls: []
   grafana.ini:
     default:
       instance_name: Grafana
@@ -195,4 +179,3 @@ grafana:
       operator: "Equal"
       value: "true"
       effect: "NoSchedule"
-

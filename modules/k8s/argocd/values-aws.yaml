@@ -7,6 +7,16 @@ argocd:
       server.insecure: false
   server:
     ingress:
+      enabled: true
+      controller: aws
+      ingressClassName: "alb"
       annotations:
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
+        alb.ingress.kubernetes.io/backend-protocol: HTTPS
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
         alb.ingress.kubernetes.io/group.name: internal
         alb.ingress.kubernetes.io/scheme: internal
+        alb.ingress.kubernetes.io/target-type: ip
+      aws:
+        serviceType: ClusterIP
+        backendProtocolVersion: GRPC

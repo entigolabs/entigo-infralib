@@ -5,11 +5,6 @@ global:
   installPrometheusOperatorCRDs: false
   installBlackbox: false
 
-  google:
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
 
 prometheus-operator-crds:
   crds:

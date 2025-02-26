@@ -5,6 +5,7 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    kmsKeyId: ""
 
 harbor:
   expose:

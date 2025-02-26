@@ -2,13 +2,11 @@ global:
   google:
     projectID: "{{ .toutput.crossplane.project_id }}"
     hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
-  loki:
-    hostname: "http://loki-gateway.{{ .tmodule.loki }}"
-  prometheus:
-    hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+  datasources:
+    loki:
+      hostname: "http://loki-gateway.{{ .tmodule.loki }}"
+    prometheus:
+      hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
 grafana:
   grafana.ini:
     server:

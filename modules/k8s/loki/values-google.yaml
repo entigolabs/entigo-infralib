@@ -8,26 +8,20 @@ global:
     projectID: ""
     hostname: ""
     gateway:
-      name: google-gateway-external
+      name: google-gateway-internal
       namespace: google-gateway
     bucket:
-      location: europe-north1
+      location: ""
 
 loki:
   loki:
     storage:
       type: gcs
-      bucketNames:
-        chunks: ""
-        ruler: ""
-        admin: ""
     storage_config:
       boltdb_shipper:
         shared_store: gcs
-
   read:
     persistence:
-      size: 30Gi
       storageClass: standard
 
   gateway:

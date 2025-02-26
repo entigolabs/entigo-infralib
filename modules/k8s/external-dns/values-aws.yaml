@@ -16,3 +16,6 @@ external-dns:
   env:
     - name: AWS_DEFAULT_REGION
       value: ""
+  serviceAccount:
+    create: false
+    name: "external-dns"

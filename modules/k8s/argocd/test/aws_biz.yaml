@@ -27,5 +27,6 @@ argocd-apps:
                 repoURL: https://github.com/entigolabs/entigo-infralib-release.git
                 targetRevision: main
             syncPolicy:
+                automated: {}
                 syncOptions:
                     - CreateNamespace=true

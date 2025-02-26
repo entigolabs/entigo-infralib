@@ -2,14 +2,6 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
 
-  aws:
-    account: ""
-    clusterOIDC: ""
-
-  google:
-    hostname: ""
-    projectID: ""
-    region: ""
 resources:
   limits:
     cpu: 1

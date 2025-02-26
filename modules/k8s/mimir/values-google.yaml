@@ -6,10 +6,10 @@ global:
     projectID: ""
     hostname: ""
     gateway:
-      name: google-gateway-external
+      name: google-gateway-internal
       namespace: google-gateway
     bucket:
-      location: europe-north1
+      location: ""
 
 mimir-distributed:
   gateway:

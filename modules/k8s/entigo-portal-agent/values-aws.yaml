@@ -5,4 +5,5 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    region: ""
 

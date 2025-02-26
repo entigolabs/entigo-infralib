@@ -1,2 +1,12 @@
 global:
   cloudProvider: aws
+  aws:
+    #All except test should use 0.0.0.0/0
+    ingressInboundAllow: "0.0.0.0/0"
+    tags: ""
+    certificateArn: ""
+    additionalIngressAnnotations: ""
+
+    scheme: internet-facing
+    groupName: external
+    groupOrder: 800

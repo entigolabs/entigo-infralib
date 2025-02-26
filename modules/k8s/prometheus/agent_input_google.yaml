@@ -1,6 +1,3 @@
 global:
   google:
     hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway

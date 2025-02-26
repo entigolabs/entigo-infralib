@@ -4,7 +4,7 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
 harbor:
-  externalURL: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+  externalURL: "https://{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
   expose:
     ingress:
       hosts:

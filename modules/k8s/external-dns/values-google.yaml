@@ -12,8 +12,7 @@ external-dns:
     - istio-gateway
     - istio-virtualservice
     - gateway-httproute
-  extraArgs:
-    - --metrics-address=:7979
+
   provider:
     name: google
   serviceAccount:
