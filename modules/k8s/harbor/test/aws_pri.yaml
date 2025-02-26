@@ -15,8 +15,3 @@ harbor:
       trivy:
         size: 3Gi
   harborAdminPassword: "Harbor12345"
-  expose:
-    ingress:
-      annotations:
-        alb.ingress.kubernetes.io/group.name: external
-        alb.ingress.kubernetes.io/scheme: internet-facing

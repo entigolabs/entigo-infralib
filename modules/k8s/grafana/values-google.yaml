@@ -6,7 +6,7 @@ global:
     projectID: ""
     hostname: ""
     gateway:
-      name: google-gateway-external
+      name: google-gateway-internal
       namespace: google-gateway
 
 grafana:

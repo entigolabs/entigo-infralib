@@ -5,7 +5,7 @@ global:
   google:
     hostname: ""
     gateway:
-      name: google-gateway-external
+      name: google-gateway-internal
       namespace: google-gateway
 
 prometheus:
