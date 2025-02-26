@@ -25,7 +25,7 @@ module "eks-managed-node-group" {
   capacity_type  = var.capacity_type
   ami_type       = var.ami_type
   
-  block_device_mappings = {
+  block_device_mappings = var.block_device_mappings != null ? var.block_device_mappings : {
     xvda = {
       device_name = "/dev/xvda"
       ebs = {

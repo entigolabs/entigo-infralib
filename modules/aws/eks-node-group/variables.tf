@@ -84,6 +84,13 @@ variable "volume_type" {
   default = "gp3"
 }
 
+variable "block_device_mappings" {
+  description = "If set then volume_size, volume_iops and volume_type are ignored."
+  type        = any
+  nullable    = true
+  default     = null
+}
+
 variable "encryption_kms_key_arn" {
   type = string
   default = ""
