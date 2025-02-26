@@ -2,19 +2,6 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
   createProxyRepos: true
-  aws:
-    account: ""
-    clusterOIDC: ""
-    kmsKeyId: ""
-
-  google:
-    hostname: ""
-    projectID: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
-    bucket:
-      location: ""
 
 harbor:
   ipFamily:

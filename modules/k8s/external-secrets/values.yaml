@@ -5,18 +5,6 @@ global:
     url: ""
     project: ""
     secret: ""
-
-  google:
-    projectID: ""
-    region: ""
-    cluster:
-      name: ""
-
-  aws:
-    account: ""
-    region: ""
-    clusterOIDC: ""
-
   createClusterSecretStore: false
 
 external-secrets:

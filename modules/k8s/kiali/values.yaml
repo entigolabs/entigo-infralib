@@ -7,25 +7,12 @@ kiali-server:
     web_fqdn: ""
   external_services:
     prometheus:
-      url: "http://prometheus-server.prometheus:80/"
+      url: ""
   deployment:
     image_pull_policy: "IfNotPresent"
     instance_name: "kiali"
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
-    ingress:
-      enabled: true
-      class_name: "alb"
-      override_yaml:
-        metadata:
-          annotations:
-            alb.ingress.kubernetes.io/ssl-redirect: "443"
-            alb.ingress.kubernetes.io/group.name: internal
-            alb.ingress.kubernetes.io/healthcheck-path: /
-            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-            alb.ingress.kubernetes.io/scheme: internal
-            alb.ingress.kubernetes.io/success-codes: 200-499
-            alb.ingress.kubernetes.io/target-type: ip
     affinity:
       node:
         preferredDuringSchedulingIgnoredDuringExecution:

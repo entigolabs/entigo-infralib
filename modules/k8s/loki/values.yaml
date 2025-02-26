@@ -4,21 +4,6 @@ global:
   bucketName: "loki"
   prefix: ""
 
-  google:
-    projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
-    bucket:
-      location: ""
-
-  aws:
-    account: ""
-    clusterOIDC: ""
-    region: ""
-    kmsKeyId: ""
-
 loki:
   fullnameOverride: loki
   serviceAccount:
@@ -32,26 +17,11 @@ loki:
         chunks: ""
         ruler: ""
         admin: ""
-      type: s3
-      s3:
-        endpoint: null
-        region: eu-north-1
-        secretAccessKey: null
-        accessKeyId: null
-        s3ForcePathStyle: false
-        insecure: false
-        http_config: {}
     storage_config:
       boltdb_shipper:
         active_index_directory: /var/loki/boltdb-shipper-active
         cache_location: /var/loki/boltdb-shipper-cache
         cache_ttl: 24h # Can be increased for faster performance over longer query periods, uses more disk space
-        shared_store: s3
-      aws:
-        s3forcepathstyle: false
-        bucketnames: ""
-        region: ""
-        insecure: false
   test:
     enabled: false
 
@@ -181,7 +151,6 @@ loki:
       targetMemoryUtilizationPercentage:
     persistence:
       size: 30Gi
-      storageClass: gp3
 
   gateway:
     enabled: true
@@ -227,23 +196,6 @@ loki:
       maxReplicas: 3
       targetCPUUtilizationPercentage: 60
       targetMemoryUtilizationPercentage:
-    ingress:
-      enabled: true
-      ingressClassName: "alb"
-      annotations:
-        alb.ingress.kubernetes.io/ssl-redirect: "443"
-        alb.ingress.kubernetes.io/group.name: internal
-        alb.ingress.kubernetes.io/healthcheck-path: /
-        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-        alb.ingress.kubernetes.io/scheme: internal
-        alb.ingress.kubernetes.io/success-codes: 200-499
-        alb.ingress.kubernetes.io/target-type: ip
-      hosts:
-        - host: loki
-          paths:
-            - path: /
-              pathType: Prefix
-      tls: []
   monitoring:
     selfMonitoring:
       enabled: false

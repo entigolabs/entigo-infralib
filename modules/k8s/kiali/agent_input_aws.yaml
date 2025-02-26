@@ -3,3 +3,6 @@ kiali-server:
     web_fqdn: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   deployment:
     instance_name: "{{ .module.name }}"
+  external_services:
+    prometheus:
+      url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"

@@ -13,32 +13,4 @@ grafana:
   ingress:
     enabled: false
   persistence:
-    enabled: true
     storageClassName: "standard"
-    size: 2Gi
-  serviceAccount:
-    create: false
-
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: "kubernetes"
-          orgId: 1
-          folder: "Kubernetes"
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/kubernetes
-        - name: "loki"
-          orgId: 1
-          folder: "Loki"
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/loki
-
-  dashboardsConfigMaps:
-    loki: grafana-dashboards-loki

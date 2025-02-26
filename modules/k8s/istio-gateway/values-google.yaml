@@ -1,6 +1,5 @@
 global:
   cloudProvider: google
-
   google:
     hostname: ""
     gateway:

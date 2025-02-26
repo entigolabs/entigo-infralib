@@ -9,7 +9,7 @@ global:
       name: google-gateway-external
       namespace: google-gateway
     bucket:
-      location: europe-north1
+      location: ""
 
 harbor:
   expose:

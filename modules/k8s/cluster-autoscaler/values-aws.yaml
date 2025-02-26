@@ -6,8 +6,10 @@ global:
     clusterOIDC: ""
 
 cluster-autoscaler:
+  awsRegion: ""
   autoDiscovery:
     cloudProviders: aws
+    clusterName: ""
   rbac:
     serviceAccount:
       create: false
