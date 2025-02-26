@@ -1,7 +1,6 @@
 global:
-  cloudProvider: aws
-  providerConfigRefName: crossplane-aws
-
+  cloudProvider: ""
+  providerConfigRefName: ""
 external-dns:
   registry: txt
   policy: upsert-only
