@@ -5,6 +5,7 @@ global:
     bucket:
       location: "{{ .toutput.gke.region }}"
 harbor:
+  externalURL: "https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   persistence:
     imageChartStorage:
       gcs:
