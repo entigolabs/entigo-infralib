@@ -13,6 +13,9 @@ external-dns:
     - ingress
     - istio-gateway
     - istio-virtualservice
+    
+  provider:
+    name: aws
   env:
     - name: AWS_DEFAULT_REGION
       value: ""
