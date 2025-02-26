@@ -257,6 +257,7 @@ test_tf() {
   PIDS=""
   if [ "$AWS_REGION" != "" ]
   then
+    export AWS_REGION="eu-north-1"
     ./modules/aws/kms/test.sh testonly &
     PIDS="$PIDS $!=kms"
     ./modules/aws/cost-alert/test.sh testonly &
