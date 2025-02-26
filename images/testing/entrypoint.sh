@@ -128,12 +128,21 @@ fi
 if [ "$COMMAND" == "plan" ]
 then
   terraform plan -no-color -out /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan -input=false
-  terraform show -json /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan > /plan-json/${TF_VAR_prefix}-plan.json
   if [ $? -ne 0 ]
   then
     echo "Failed to create TF plan!"
     exit 6
   fi
+  if [ -f /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan ]
+  then
+    terraform show -json /tmp/plans/$TF_VAR_prefix/${TF_VAR_prefix}.tf-plan > /plan-json/${TF_VAR_prefix}-plan.json
+    if [ $? -ne 0 ]
+    then
+      echo "Failed to create json plan from TF plan!"
+      exit 6
+    fi
+  fi
+
 elif [ "$COMMAND" == "apply" ]
 then
 #  echo "Syncing .terraform back to bucket"
