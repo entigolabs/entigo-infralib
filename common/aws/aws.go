@@ -93,3 +93,23 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 	logger.Logf(t, message)
 	return nil
 }
+
+func WaitUntilAWSRoute53RecordExists(t testing.TestingT, hostedZoneID, recordName, recordType, awsRegion string, retries int, sleepBetweenRetries time.Duration) error {
+	statusMsg := fmt.Sprintf("Wait for Route53Record %s in %s region to be created", recordName, awsRegion)
+
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		_, err := aws.GetRoute53RecordE(t, hostedZoneID, recordName, recordType, awsRegion)
+		if err != nil {
+			return "", err
+		}
+		return "Record is now available", nil
+	})
+
+	if err != nil {
+		logger.Logf(t, "Timed out waiting for Route53Record to be created: %s", err)
+		return err
+	}
+
+	logger.Logf(t, message)
+	return nil
+}
