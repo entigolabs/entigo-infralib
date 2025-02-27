@@ -6,7 +6,8 @@ external-dns:
   policy: upsert-only
   extraArgs:
     - --metrics-address=:7979
-
+  serviceAccount:
+    name: "external-dns"
   serviceMonitor:
     enabled: false
     scrapeTimeout: 20s
