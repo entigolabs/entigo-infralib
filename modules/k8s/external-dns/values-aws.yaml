@@ -21,4 +21,3 @@ external-dns:
       value: ""
   serviceAccount:
     create: false
-    name: "external-dns"

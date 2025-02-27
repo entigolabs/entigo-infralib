@@ -18,7 +18,7 @@ spec:
             "Condition": {
               "StringEquals": {
                 "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
-                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:external-dns"
+                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:{{ (index .Values "external-dns" "serviceAccount" "name") }}"
               }
             }
           }

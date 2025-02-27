@@ -6,7 +6,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   forProvider:
-    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Name }}/external-dns]
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Name }}/{{ (index .Values "external-dns" "serviceAccount" "name") }}]
     project: {{ .Values.global.google.projectID }}
     role: roles/dns.admin
   providerConfigRef:
