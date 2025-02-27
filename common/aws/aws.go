@@ -14,6 +14,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	goTesting "testing"
 )
 
 func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
@@ -96,9 +97,12 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 
 func WaitUntilAWSRoute53RecordExists(t testing.TestingT, hostedZoneID, recordName, recordType, awsRegion string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for Route53Record %s in %s region to be created", recordName, awsRegion)
-
+	tTest, ok := t.(*goTesting.T)
+	if !ok {
+		return fmt.Errorf("expected t to be *testing.T, but got %T", t)
+	}
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
-		_, err := aws.GetRoute53RecordE(t, hostedZoneID, recordName, recordType, awsRegion)
+		_, err := aws.GetRoute53RecordE(tTest, hostedZoneID, recordName, recordType, awsRegion)
 		if err != nil {
 			return "", err
 		}
