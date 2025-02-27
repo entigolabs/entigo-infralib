@@ -5,8 +5,8 @@ Oppinionated version of this https://registry.terraform.io/modules/terraform-aws
 
 ### Automatic subnet calculations ###
 If you do not specify the subnet ranges and only the vpc_cidr, then the module will create the following subnets.
-vpc_cidr: "10.24.0.0/16"
 
+#### vpc_cidr: "10.24.0.0/16"
 ![10.24.0.0/16](test/size-16.png)
 
 vpc_cidr: "10.24.0.0/17"
