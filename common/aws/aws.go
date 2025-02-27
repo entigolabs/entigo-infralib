@@ -18,9 +18,13 @@ import (
 )
 
 func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
+	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
+	return GetTFOutputsStep(t, prefix, stepName)
+}
+
+func GetTFOutputsStep(t testing.TestingT, prefix string, stepName string) map[string]interface{} {
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-877483565445-%s", prefix, awsRegion)
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
 
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 	logger.Logf(t, "File %s", file)

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"context"
 
 	"cloud.google.com/go/storage"
 	"github.com/gruntwork-io/terratest/modules/gcp"
@@ -15,12 +16,18 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/dns/v1"
+	"google.golang.org/api/option"
 )
 
 func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
+	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
+	return GetTFOutputsStep(t, prefix, stepName)
+}
+
+func GetTFOutputsStep(t testing.TestingT, prefix string, stepName string) map[string]interface{} {
 	Region := gcp.GetRandomRegion(t, os.Getenv("GOOGLE_PROJECT"), []string{os.Getenv("GOOGLE_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-%s-%s", prefix, os.Getenv("GOOGLE_PROJECT"), Region)
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 
 	reader, err := gcp.ReadBucketObjectE(t, bucket, file)
@@ -96,4 +103,43 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 	}
 	logger.Log(t, message)
 	return nil
+}
+
+
+func WaitUntilGoogleCloudDnsRecordExists(t testing.TestingT, zoneName, recordName, recordType string, retries int, sleepBetweenRetries time.Duration) error {
+	projectID := os.Getenv("GOOGLE_PROJECT")
+	message := fmt.Sprintf("Checking if DNS record %s (%s) exists in zone %s", recordName, recordType, zoneName)
+
+	_, err := retry.DoWithRetryE(t, message, retries, sleepBetweenRetries, func() (string, error) {
+		exists, err := CheckDNSRecordExists(projectID, zoneName, recordName, recordType)
+		if err != nil {
+			return "", err
+		}
+		if !exists {
+			return "", fmt.Errorf("DNS record %s (%s) not found yet", recordName, recordType)
+		}
+		return "DNS record found", nil
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to find DNS record %s (%s) after %d retries: %v", recordName, recordType, retries, err)
+		return err
+	}
+	return nil
+}
+
+// CheckDNSRecordExists checks if a DNS record exists in a specific zone.
+func CheckDNSRecordExists(projectID, zoneName, recordName, recordType string) (bool, error) {
+	ctx := context.Background()
+	dnsService, err := dns.NewService(ctx, option.WithScopes(dns.NdevClouddnsReadwriteScope))
+	if err != nil {
+		return false, fmt.Errorf("failed to create DNS service: %w", err)
+	}
+
+	resp, err := dnsService.ResourceRecordSets.List(projectID, zoneName).Name(fmt.Sprintf("%s.",recordName)).Type(recordType).Do()
+	if err != nil {
+		return false, fmt.Errorf("failed to list DNS records: %w", err)
+	}
+
+	return len(resp.Rrsets) > 0, nil
 }

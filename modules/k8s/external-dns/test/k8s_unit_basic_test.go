@@ -2,6 +2,7 @@ package test
 
 import (
   	"fmt"
+	"os"
 	"testing"
 	"time"
 	"strings"
@@ -14,6 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/google"
+	"github.com/entigolabs/entigo-infralib-common/tf"
 )
 
 func TestK8sExternalDnsAWSBiz(t *testing.T) {
@@ -37,6 +40,11 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "external")
 	
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
+	if err != nil {
+		t.Fatal("external-dns deployment error:", err)
+	}
+	
 	vs, err := k8s.ReadObjectFromFile(t, "./templates/virtualservice.yaml")
 	require.NoError(t, err)
 	vs.SetName(fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId())))
@@ -54,12 +62,19 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 	require.NoError(t, err, "Creating VirtualService error")
 	assert.NotNil(t, createdVS, "VirtualService is nil")
 	
-	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
-	err = aws.WaitUntilAWSRoute53RecordExists(t, hostedZoneID, host, "A", awsRegion, 30, 4*time.Second)
+	
+	switch cloudName {
+	case "aws":
+	  outputs := aws.GetTFOutputsStep(t, envName, "net")
+	  hostedZoneID := tf.GetStringValue(t, outputs, "route53__pub_zone_id")
+	  awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
+	  err = aws.WaitUntilAWSRoute53RecordExists(t, hostedZoneID, host, "A", awsRegion, 12, 15*time.Second)
+	case "google":
+	  outputs := google.GetTFOutputsStep(t, envName, "net")
+	  zoneID := tf.GetStringValue(t, outputs, "dns__pub_zone_id")
+	  err = google.WaitUntilGoogleCloudDnsRecordExists(t, zoneID, host, "A", 12, 15*time.Second)
+	}
 	require.NoError(t, err, "Route53Record creation error")
   
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 10, 6*time.Second)
-	if err != nil {
-		t.Fatal("external-dns deployment error:", err)
-	}
+
 }
