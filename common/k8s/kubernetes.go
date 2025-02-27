@@ -148,7 +148,7 @@ func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
 	}
-	return createObject(t, options, bucketObject, "", resource)
+	return CreateObject(t, options, bucketObject, "", resource)
 }
 
 func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
@@ -190,7 +190,7 @@ func CreateK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name strin
 		return nil, err
 	}
 	resource := schema.GroupVersionResource{Group: "kubernetes.crossplane.io", Version: "v1alpha2", Resource: "objects"}
-	return createObject(t, options, object, "", resource)
+	return CreateObject(t, options, object, "", resource)
 }
 
 func DeleteK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
@@ -227,7 +227,7 @@ func WaitUntilK8SIngressDeleted(t testing.TestingT, options *k8s.KubectlOptions,
 func CreateK8SIngress(t testing.TestingT, options *k8s.KubectlOptions, ingressObject *unstructured.Unstructured) (*unstructured.Unstructured, error) {
 	logger.Logf(t, "Creating Ingress %s", ingressObject.GetName())
 	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
-	return createObject(t, options, ingressObject, options.Namespace, resource)
+	return CreateObject(t, options, ingressObject, options.Namespace, resource)
 }
 
 func DeleteK8SIngress(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
@@ -334,7 +334,7 @@ func getObject(t testing.TestingT, options *k8s.KubectlOptions, name string, nam
 	return dynamicClient.Resource(resource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
 }
 
-func createObject(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured, namespace string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+func CreateObject(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured, namespace string, resource schema.GroupVersionResource) (*unstructured.Unstructured, error) {
 	dynamicClient, err := GetDynamicKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
@@ -533,7 +533,7 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 
 	resource := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
 
-	_, err = createObject(t, options, jobObject, options.Namespace, resource)
+	_, err = CreateObject(t, options, jobObject, options.Namespace, resource)
 	if err != nil {
 		return fmt.Errorf("failed to create job: %w", err)
 	}

@@ -14,12 +14,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	goTesting "testing"
 )
 
 func GetTFOutputs(t testing.TestingT, prefix string) map[string]interface{} {
+	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
+	return GetTFOutputsStep(t, prefix, stepName)
+}
+
+func GetTFOutputsStep(t testing.TestingT, prefix string, stepName string) map[string]interface{} {
 	awsRegion := aws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	bucket := fmt.Sprintf("%s-877483565445-%s", prefix, awsRegion)
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
 
 	file := fmt.Sprintf("%s-%s/terraform-output.json", prefix, stepName)
 	logger.Logf(t, "File %s", file)
@@ -90,6 +95,29 @@ func WaitUntilBucketFileAvailable(t testing.TestingT, bucket string, file string
 		logger.Logf(t, "Timed out waiting for bucket file to be created: %s", err)
 		return err
 	}
+	logger.Logf(t, message)
+	return nil
+}
+
+func WaitUntilAWSRoute53RecordExists(t testing.TestingT, hostedZoneID, recordName, recordType, awsRegion string, retries int, sleepBetweenRetries time.Duration) error {
+	statusMsg := fmt.Sprintf("Wait for Route53Record %s in %s region to be created", recordName, awsRegion)
+	tTest, ok := t.(*goTesting.T)
+	if !ok {
+		return fmt.Errorf("expected t to be *testing.T, but got %T", t)
+	}
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		_, err := aws.GetRoute53RecordE(tTest, hostedZoneID, recordName, recordType, awsRegion)
+		if err != nil {
+			return "", err
+		}
+		return "Record is now available", nil
+	})
+
+	if err != nil {
+		logger.Logf(t, "Timed out waiting for Route53Record to be created: %s", err)
+		return err
+	}
+
 	logger.Logf(t, message)
 	return nil
 }

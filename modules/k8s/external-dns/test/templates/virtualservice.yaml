@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: test
+  annotations:
+    external-dns.alpha.kubernetes.io/target: 127.0.0.1
+spec:
+  hosts:
+  - "change-domain"
+  gateways:
+  - change/me
+  http:
+  - match:
+    - uri:
+        exact: /
+    directResponse:
+      status: 200
+      body:
+        string: "OK"
