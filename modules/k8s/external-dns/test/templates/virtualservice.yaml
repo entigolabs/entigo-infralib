@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: test
+spec:
+  hosts:
+  - "change-domain"
+  gateways:
+  - change/me
+  http:
+  - match:
+    - uri:
+        exact: /
+    directResponse:
+      status: 200
+      body:
+        string: "OK"
