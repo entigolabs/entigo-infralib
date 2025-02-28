@@ -66,6 +66,9 @@ resource "aws_ecr_pull_through_cache_rule" "hub" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-hub"
   upstream_registry_url = "registry-1.docker.io"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_hub[0].arn
+  depends_on = [
+    "aws_secretsmanager_secret_version.ecr_pullthroughcache_hub"
+  ]
 }
 
 resource "aws_ecr_pull_through_cache_rule" "ghcr" {
@@ -73,6 +76,9 @@ resource "aws_ecr_pull_through_cache_rule" "ghcr" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-ghcr"
   upstream_registry_url = "ghcr.io"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_ghcr[0].arn
+  depends_on = [
+    "aws_secretsmanager_secret_version.ecr_pullthroughcache_ghcr"
+  ]
 }
 
 resource "aws_ecr_pull_through_cache_rule" "gcr" {
@@ -80,6 +86,9 @@ resource "aws_ecr_pull_through_cache_rule" "gcr" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-gcr"
   upstream_registry_url = "gcr.io"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_gcr[0].arn
+  depends_on = [
+    "aws_secretsmanager_secret_version.ecr_pullthroughcache_gcr"
+  ]
 }
 
 resource "aws_ecr_pull_through_cache_rule" "k8s" {
