@@ -1,0 +1,4 @@
+hub_username: "{{ .output-custom./ecr-proxy/hub/username }}"
+hub_token: "{{ .output-custom./ecr-proxy/hub/token }}"
+ghcr_username: "{{ .output-custom./ecr-proxy/ghcr/username }}"
+ghcr_token: "{{ .output-custom./ecr-proxy/ghcr/token }}"

@@ -399,7 +399,7 @@ test_k8s() {
 
 
 default_aws_conf() {
-  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
+  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53" "ecr-proxy"
   generate_config "./modules/aws" "infra" "eks" "eks-node-group" "crossplane" "ec2" "karpenter-node-role"
 }
 
