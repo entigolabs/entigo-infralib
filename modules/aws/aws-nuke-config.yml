@@ -9,6 +9,8 @@ blocklist:
 - 324427516708
 
 resource-types:
+  alternatives:
+  - AWS::ECR::RepositoryCreationTemplate
   excludes:
   - EC2KeyPair
   - IAMSAMLProvider
