@@ -4,9 +4,9 @@
 Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 
 ### Automatic subnet calculations ###
-If you do not specify the subnet ranges and only the vpc_cidr, then the module will create the following subnets. When the range is smaller than 19. (/21, /22 ...) then the database and elasticache subnets are not created.
+If you do not specify the subnet ranges and only the vpc_cidr, then the module will create the subnets automatically. When the range is smaller than 19 (/21, /22 ...) then the database and elasticache subnets are not created.
 
-We do leave a lot of spare space when using (azs = 2). This is done to enable clients to later switch to a 3 zone setup without recreating subnets. It will also keep NACL rules simple - by allowing one range ro cover the same type subnets.
+We do leave a lot of spare space when using (azs = 2). This is done to enable clients to later switch to a 3 zone setup without recreating subnets. It will also keep NACL rules simple - by allowing one range to cover the same type subnets.
 
 If the automatic calculation is not to Your liking then specify each subnet as desired.
 
