@@ -29,10 +29,9 @@ variable "cluster_service_cidr" {
   default     = ""
 }
 
-variable "node_security_group_id" {
-  type     = string
-  nullable = false
-  default  = ""
+variable "security_group_ids" {
+  type = list(string)
+  default = []
 }
 
 variable "min_size" {
