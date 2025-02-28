@@ -102,6 +102,10 @@ accounts:
       SSMParameter:
       - "/entigo-portal/agent-biz/CLIENT_SECRET"
       - "/entigo-portal/agent-pri/CLIENT_SECRET"
+      - "/ecr-proxy/hub/token"
+      - "/ecr-proxy/hub/username"
+      - "/ecr-proxy/ghcr/token"
+      - "/ecr-proxy/ghcr/username"
       Route53ResourceRecordSet:
       - "gcp.infralib.entigo.io." 
       IAMUser:

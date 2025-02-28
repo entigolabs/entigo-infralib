@@ -41,7 +41,7 @@ resource "aws_secretsmanager_secret" "ecr_pullthroughcache_ghcr" {
 
 resource "aws_secretsmanager_secret_version" "ecr_pullthroughcache_ghcr" {
   count = var.ghcr_username != "" && var.ghcr_token != "" ? 1 : 0
-  secret_id     = aws_secretsmanager_secret.ecr_pullthroughcache_hub[0].id
+  secret_id     = aws_secretsmanager_secret.ecr_pullthroughcache_ghcr[0].id
   secret_string = jsonencode(local.ghcr)
 }
 
@@ -57,7 +57,7 @@ resource "aws_secretsmanager_secret" "ecr_pullthroughcache_gcr" {
 
 resource "aws_secretsmanager_secret_version" "ecr_pullthroughcache_gcr" {
   count = var.gcr_username != "" && var.gcr_token != "" ? 1 : 0
-  secret_id     = aws_secretsmanager_secret.ecr_pullthroughcache_hub[0].id
+  secret_id     = aws_secretsmanager_secret.ecr_pullthroughcache_gcr[0].id
   secret_string = jsonencode(local.gcr)
 }
 
@@ -97,36 +97,6 @@ resource "aws_ecr_pull_through_cache_rule" "quay" {
   upstream_registry_url = "quay.io"
 }
 
-data "aws_iam_policy_document" "ecr-proxy" {
-  statement {
-    sid    = var.prefix
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = [data.aws_caller_identity.current.account_id]
-    }
-
-    actions = [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:GetRepositoryPolicy",
-                "ecr:DescribeRepositories",
-                "ecr:ListImages",
-                "ecr:DescribeImages",
-                "ecr:BatchGetImage",
-                "ecr:GetLifecyclePolicy",
-                "ecr:GetLifecyclePolicyPreview",
-                "ecr:ListTagsForResource",
-                "ecr:DescribeImageScanFindings",
-                "ecr:CreateRepository",
-                "ecr:ReplicateImage",
-                "ecr:BatchImportUpstreamImage"
-    ]
-  }
-}
-
 resource "aws_ecr_repository_creation_template" "ecr-proxy" {
   for_each = toset(["hub", "ghcr", "gcr", "k8s", "ecr", "quay"])
   prefix               = "${substr(var.prefix, 0, 24)}-${each.value}"
@@ -140,8 +110,6 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
   encryption_configuration {
     encryption_type = "AES256"
   }
-
-  repository_policy = data.aws_iam_policy_document.ecr-proxy.json
 
   lifecycle_policy = <<EOT
 {
@@ -177,4 +145,38 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
 }
 EOT
 
+}
+
+
+resource "aws_iam_policy" "ecr-proxy" {
+  name        = substr(var.prefix, 0, 24)
+  path        = "/"
+  description = "ECR ${substr(var.prefix, 0, 24)} usage"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages",
+                "ecr:DescribeImages",
+                "ecr:BatchGetImage",
+                "ecr:ListTagsForResource",
+                "ecr:DescribeImageScanFindings",
+                "ecr:ReplicateImage",
+                "ecr:CreateRepository",
+                "ecr:BatchImportUpstreamImage",
+                "ecr:TagResource"
+        ]
+        Effect   = "Allow"
+        Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${substr(var.prefix, 0, 24)}-*"
+      },
+    ]
+  })
 }
