@@ -55,7 +55,7 @@ resource "aws_instance" "ec2" {
   ami           = data.aws_ami.ec2.id
   instance_type = var.instance_type
   subnet_id = var.subnet_id
-  user_data = var.user_data
+  user_data_base64 = var.user_data_base64 != "" ? var.user_data_base64 : base64encode(var.user_data)
   vpc_security_group_ids = [aws_security_group.ec2.id]
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
   key_name = var.key_name
