@@ -3,6 +3,7 @@ variable "prefix" {
 }
 
 variable "vpc_cidr" {
+  description = "Must be at least size /24 for automatic subnet calculation. Recommended at least /21 or larger."
   type     = string
   nullable = false
   default  = "10.156.0.0/16"

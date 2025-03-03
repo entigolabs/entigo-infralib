@@ -72,6 +72,11 @@ variable "user_data" {
   default = ""
 }
 
+variable "user_data_base64" {
+  type = string
+  default = ""
+}
+
 variable "security_group_egress" {
   type = map(object({
     from_port = number

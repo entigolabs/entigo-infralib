@@ -1,18 +1,24 @@
 locals {
   azs = var.public_subnets == null ? var.azs : length(var.public_subnets)
-
+  vpc_cidr_size = tonumber(split("/", var.vpc_cidr)[1])
+  vpc_split_ranges = local.vpc_cidr_size > 19 ? 1 : 2 #When the vpc_cicr is smaller than /19, then we only divide it into two(1),otherwise into four(2).
+  
   #First range
-  public_subnets = var.public_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 0), 2, i)] : var.public_subnets
-  intra_subnets  = var.intra_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 1), 2, i)] : var.intra_subnets
+  public_subnets = var.public_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0), 2, i)] : var.public_subnets
+  intra_subnets  = var.intra_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 1), 2, i)] : var.intra_subnets
 
   #second range
-  private_subnets = var.private_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 1), 2, i)] : var.private_subnets
+  private_subnets = var.private_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 1), 2, i)] : var.private_subnets
 
-  #third range
-  database_subnets = var.database_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 2, i)] : var.database_subnets
+  #third range (only when vpc_cidr_size is large)
+  database_subnets = var.database_subnets == null ? (
+    local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) : cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 2), 2, i)]
+  ) : var.database_subnets
 
-  #fourth range
-  elasticache_subnets = var.elasticache_subnets == null ? [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 3), 1, 0), 2, i)] : var.elasticache_subnets
+  #fourth range (only when vpc_cidr_size is large)
+  elasticache_subnets = var.elasticache_subnets == null ? (
+  local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 3), 1, 0), 2, i)] 
+  ) : var.elasticache_subnets
 }
 
 

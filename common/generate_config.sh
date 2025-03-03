@@ -219,13 +219,13 @@ run_agents() {
         if [ "$(echo $agent | cut -d"_" -f2)" == "us" ]
         then
           echo "Defaulting AWS_REGION to us-east-1"
-          export AWS_REGION="us-east-1"
+          export AGENT_AWS_REGION="us-east-1"
         else
           echo "Defaulting AWS_REGION to eu-north-1"
-          export AWS_REGION="eu-north-1"
+          export AGENT_AWS_REGION="eu-north-1"
         fi
     
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS &
+        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AGENT_AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
@@ -399,7 +399,7 @@ test_k8s() {
 
 
 default_aws_conf() {
-  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53"
+  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53" "ecr-proxy"
   generate_config "./modules/aws" "infra" "eks" "eks-node-group" "crossplane" "ec2" "karpenter-node-role"
 }
 

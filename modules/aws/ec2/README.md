@@ -28,6 +28,8 @@ __route53_name__ If not set prefix will be used for the DNS name of the ec2 inst
 
 __user_data__ run commands on instance creation
 
+__user_data_base64__ run commands on instance creation. Also supports gzipped and base64 encoded data
+
 __security_group_egress__ at the moment only support CIDR blocks
 ```
   default = {
