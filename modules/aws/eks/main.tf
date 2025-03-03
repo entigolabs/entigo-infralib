@@ -6,6 +6,8 @@ locals {
   #  provider_key_arn = var.cluster_encryption_kms_key_arn
   #}] : []
   cluster_encryption_config = {}
+  
+  iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
   eks_managed_node_groups_all = {
     main = {
@@ -18,7 +20,10 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
-
+      iam_role_additional_policies = local.iam_role_additional_policies
+      labels = {
+        main = "true"
+      }
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
@@ -47,6 +52,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_mon_ami_type
+      iam_role_additional_policies = local.iam_role_additional_policies
       taints = [
         {
           key    = "mon"
@@ -86,6 +92,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
+      iam_role_additional_policies = local.iam_role_additional_policies
       taints = [
         {
           key    = "tools"
