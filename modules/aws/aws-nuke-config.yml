@@ -1,5 +1,5 @@
 regions:
-- us-east-1
+#- us-east-1
 - eu-north-1
 - global
 
