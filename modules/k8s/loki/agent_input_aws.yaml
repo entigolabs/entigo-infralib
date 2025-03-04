@@ -7,6 +7,8 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 loki:
   gateway:
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
     ingress:
       hosts:
         - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
@@ -25,3 +27,8 @@ loki:
       aws:
         region: "{{ .toutput.eks.region }}"
         bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  sidecar:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/kiwigrid/k8s-sidecar'

@@ -1,5 +1,26 @@
 prometheus:
   server:
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}/prometheus/prometheus'
     ingress:
       hosts:
         - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+  prometheus-node-exporter:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+      
+  kube-state-metrics:
+    image:
+      registry: '{{ .toptout.ecr-proxy.k8s_registry | "registry.k8s.io" }}'
+  
+  alertmanager:
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}/prometheus/alertmanager'
+  
+  configmapReload:
+    prometheus:
+      image:
+        repository: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
+prometheus-blackbox-exporter:
+  image:
+    registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

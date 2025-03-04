@@ -6,3 +6,5 @@ aws-load-balancer-controller:
   clusterName: "{{ .toutput.eks.cluster_name }}"
   image:
     repository: "602401143452.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/bitnami/kubectl'

@@ -3,3 +3,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
+image:
+  repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/developer-portal-agent'
+function:
+  repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/function-flow-web-access'

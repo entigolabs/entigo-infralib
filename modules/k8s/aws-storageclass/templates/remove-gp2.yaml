@@ -71,7 +71,7 @@ spec:
 
       containers:
       - name: kubectl
-        image: bitnami/kubectl:1.27
+        image: {{ .Values.job.image }}:{{ .Values.job.tag }}
         resources:
           limits:
             cpu: 1000m

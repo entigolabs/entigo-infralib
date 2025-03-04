@@ -15,3 +15,7 @@ spec:
     name: aws-load-balancer-webhook
     jqPathExpressions:
     - '.webhooks[]?.clientConfig.caBundle'
+  - group: "batch"
+    kind: Job
+    jsonPointers:
+    - /spec/template/spec

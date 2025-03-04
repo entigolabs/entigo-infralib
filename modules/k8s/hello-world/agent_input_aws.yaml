@@ -1,0 +1,2 @@
+image:
+  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/nginx'

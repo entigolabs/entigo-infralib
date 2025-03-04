@@ -6,3 +6,5 @@ cluster-autoscaler:
   awsRegion: "{{ .toutput.eks.region }}"
   autoDiscovery:
     clusterName: "{{ .toutput.eks.cluster_name }}"
+  image:
+    repository: '{{ .toptout.ecr-proxy.k8s_registry | "registry.k8s.io" }}/autoscaling/cluster-autoscaler'

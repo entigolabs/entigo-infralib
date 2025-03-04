@@ -1,0 +1,3 @@
+metrics-server:
+  image:
+    repository: '{{ .toptout.ecr-proxy.k8s_registry | "registry.k8s.io" }}/metrics-server/metrics-server'

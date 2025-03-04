@@ -2,3 +2,11 @@ argocd:
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.route53.int_domain }}
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}/argoproj/argocd'
+  dex:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/dexidp/dex'
+  redis:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'

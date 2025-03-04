@@ -29,7 +29,7 @@ spec:
           effect: "NoSchedule"
       containers:
       - name: kubectl
-        image: entigolabs/entigo-infralib-base:v1.5.4
+        image: {{ .Values.job.image }}:{{ .Values.job.tag }}
         envFrom:
         - secretRef:
             name: {{ .Release.Name }}-core

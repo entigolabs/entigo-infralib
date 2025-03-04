@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: saml-proxy
-        image: priitrent/saml-proxy:40-20240809-1
+        image: {{ .Values.image.registry }}:{{ .Values.image.tag }}
         ports:
         - name: http-service
           containerPort: 80

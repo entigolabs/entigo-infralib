@@ -12,3 +12,7 @@ targetService: ""
 secretStore: 
   name: ""
   kind: ClusterSecretStore
+  
+image:
+  registry: docker.io/priitrent/saml-proxy
+  tag: "40-20240809-1"

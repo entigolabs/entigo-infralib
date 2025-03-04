@@ -26,7 +26,7 @@ spec:
             name: {{ .Release.Name }}-resources
       containers:
       - name: {{ .Release.Name }}
-        image: entigolabs/developer-portal-agent:main-62
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         volumeMounts:
         - mountPath: /config/
           name: resources-config
