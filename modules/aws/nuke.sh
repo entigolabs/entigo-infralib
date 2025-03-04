@@ -12,6 +12,41 @@ fi
 
 echo "$SCRIPTPATH/aws-nuke-config.yml"
 
+# Function to completely delete all versions of objects in a versioned bucket
+delete_all_versions() {
+    local bucket_name="$1"
+    echo "Fully deleting all versions from bucket: $bucket_name"
+    
+    # List and delete all object versions
+    aws s3api list-object-versions --bucket "$bucket_name" --output json | \
+    jq -r '.Versions[], .DeleteMarkers[] | select(.Key != null) | [.Key, .VersionId] | @tsv' | \
+    while IFS=$'\t' read -r key version_id; do
+        echo "Deleting version: $key (Version ID: $version_id)"
+        aws s3api delete-object --bucket "$bucket_name" --key "$key" --version-id "$version_id"
+    done
+    
+    # Additional cleanup for any remaining delete markers
+    aws s3api list-object-versions --bucket "$bucket_name" --output json | \
+    jq -r '.DeleteMarkers[] | select(.Key != null) | [.Key, .VersionId] | @tsv' | \
+    while IFS=$'\t' read -r key version_id; do
+        echo "Removing delete marker: $key (Version ID: $version_id)"
+        aws s3api delete-object --bucket "$bucket_name" --key "$key" --version-id "$version_id"
+    done
+}
+
+# List and process all buckets
+echo "Listing and preparing to delete all versions from S3 buckets:"
+aws s3 ls | while read -r line; do
+    # Extract bucket name (3rd column in the ls output)
+    bucket=$(echo "$line" | awk '{print $3}')
+    
+    # Confirm before processing each bucket
+    echo "Delete ALL versions from bucket $bucket"
+    #delete_all_versions "$bucket"
+done
+
+echo "Versioned bucket cleanup process completed."
+
 
 if [ "$GITHUB_ACTION" == "" ]
 then
