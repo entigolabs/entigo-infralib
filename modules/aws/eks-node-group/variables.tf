@@ -100,14 +100,15 @@ variable "encryption_kms_key_arn" {
   default = ""
 }
 
+variable "key_name" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "pre_bootstrap_user_data" {
   type        = string
   default     = ""
-}
-
-variable "remote_access" {
-  type        = any
-  default     = {}
 }
 
 variable "labels" {
