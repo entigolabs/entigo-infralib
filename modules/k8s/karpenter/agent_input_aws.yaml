@@ -9,3 +9,6 @@ karpenter:
   settings:
     clusterName: "{{ .toutput.eks.cluster_name }}"
     subnetTag: "{{ .config.prefix }}-net-{{ .tmodule.vpc }}"
+  controller:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/karpenter/controller'

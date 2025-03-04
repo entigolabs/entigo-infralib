@@ -14,3 +14,11 @@ resources:
 
 installCompositeResources: true
 config: {}
+
+image:
+  repository: docker.io/entigolabs/developer-portal-agent
+  tag: main-62
+
+function:
+  repository: docker.io/entigolabs/function-flow-web-access
+  tag: v0.0.0-20240807123315-1be423dde9fe

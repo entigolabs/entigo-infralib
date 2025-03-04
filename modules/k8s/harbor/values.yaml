@@ -3,6 +3,10 @@ global:
   providerConfigRefName: ""
   createProxyRepos: true
 
+job:
+  image: docker.io/entigolabs/entigo-infralib-base
+  tag: "v1.5.22"
+
 harbor:
   ipFamily:
     ipv6:

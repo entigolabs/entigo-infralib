@@ -38,3 +38,6 @@ aws-load-balancer-controller:
   
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
+job:
+  image: docker.io/bitnami/kubectl
+  tag: "1.31"

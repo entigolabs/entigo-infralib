@@ -4,3 +4,7 @@ spec:
     kind: StorageClass
     jsonPointers:
     - /parameters
+  - group: "batch"
+    kind: Job
+    jsonPointers:
+    - /spec/template/spec

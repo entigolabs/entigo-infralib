@@ -1,16 +1,16 @@
 output "hub_registry" {
   description = "Registry URL for docker hub"
-  value       = var.hub_username != "" && var.hub_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.hub[0].ecr_repository_prefix}" : ""
+  value       = var.hub_username != "" && var.hub_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.hub[0].ecr_repository_prefix}" : null
 }
 
 output "ghcr_registry" {
   description = "Registry URL for ghcr"
-  value       = var.ghcr_username != "" && var.ghcr_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.ghcr[0].ecr_repository_prefix}" : ""
+  value       = var.ghcr_username != "" && var.ghcr_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.ghcr[0].ecr_repository_prefix}" : null
 }
 
 output "gcr_registry" {
   description = "Registry URL for gcr"
-  value       =  var.gcr_username != "" && var.gcr_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.gcr[0].ecr_repository_prefix}" : ""
+  value       =  var.gcr_username != "" && var.gcr_token != "" ? "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_pull_through_cache_rule.gcr[0].ecr_repository_prefix}" : null
 }
 
 output "k8s_registry" {

@@ -3,6 +3,10 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
+    
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+    
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
   expose:
@@ -15,3 +19,33 @@ harbor:
   #      region: "{{ .toutput.eks.region }}"
   #      regionendpoint: "s3.{{ .toutput.eks.region }}.amazonaws.com"
   #      bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+  portal:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-portal'
+  core:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-core'
+  jobservice:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-jobservice'
+  registry:
+    registry:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/registry-photon'
+    controller:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-registryctl'
+  trivy:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/trivy-adapter-photon'
+  database:
+    internal:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-db'
+  redis:
+    internal:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/redis-photon'
+  exporter:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'

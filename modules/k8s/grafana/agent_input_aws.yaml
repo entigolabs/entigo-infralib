@@ -16,3 +16,8 @@ grafana:
   ingress:
     hosts:
       - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  sidecar:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

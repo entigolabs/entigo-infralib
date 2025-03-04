@@ -1,0 +1,3 @@
+crossplane:
+  image:
+    repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/crossplane/crossplane'

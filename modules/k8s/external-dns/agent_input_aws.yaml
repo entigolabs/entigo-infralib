@@ -6,3 +6,5 @@ external-dns:
   env:
   - value: "{{ .toutput.eks.region }}"
     name: "AWS_DEFAULT_REGION"
+  image:
+    repository: '{{ .toptout.ecr-proxy.k8s_registry | "registry.k8s.io" }}/external-dns/external-dns'
