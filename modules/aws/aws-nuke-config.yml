@@ -27,6 +27,7 @@ resource-types:
   - AWS::AppFlow::Flow
   - AWS::AppRunner::Service
   - AthenaWorkGroup
+  - AthenaDataCatalog
   - MediaConvertQueue
   - CloudWatchEventsTarget
   - CloudWatchEventsRule
@@ -67,6 +68,7 @@ resource-types:
   - GameLiftMatchmakingRuleSet
   - OSPackage
   - ECRPublicRepository
+  - ECSCapacityProvider
   - OpsWorksLayer
   - OpsWorksApp
   - OpsWorksUserProfile
@@ -94,6 +96,7 @@ resource-types:
   - BedrockAgent
   - BedrockPrompt
   - BedrockEvaluationJob
+  - BedrockModelCustomizationJob
 
 accounts:
   "877483565445":
