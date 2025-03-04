@@ -13,20 +13,29 @@ fi
 echo "$SCRIPTPATH/aws-nuke-config.yml"
 
 # Function to completely delete all versions of objects in a versioned bucket
-delete_all_versions() {
-    local bucket_name="$1"    
-    # List and delete all object versions
-    aws s3api list-object-versions --bucket "$bucket_name" --output json | \
-    jq -r '.Versions[], .DeleteMarkers[] | select(.Key != null) | [.Key, .VersionId] | @tsv' | \
-    while IFS=$'\t' read -r key version_id; do
-        aws s3api delete-object --bucket "$bucket_name" --key "$key" --version-id "$version_id"
-    done
+delete_versions_in_batch() {
+    local bucket_name="$1"
     
-    # Additional cleanup for any remaining delete markers
+    # Batch delete object versions
     aws s3api list-object-versions --bucket "$bucket_name" --output json | \
-    jq -r '.DeleteMarkers[] | select(.Key != null) | [.Key, .VersionId] | @tsv' | \
-    while IFS=$'\t' read -r key version_id; do
-        aws s3api delete-object --bucket "$bucket_name" --key "$key" --version-id "$version_id"
+    jq -c '.Versions[], .DeleteMarkers[] | select(.Key != null) | {Key: .Key, VersionId: .VersionId}' | \
+    split -l 1000 - /tmp/versions_batch_
+    
+    # Process each batch file
+    for batch_file in /tmp/versions_batch_*; do
+        # Create a JSON file for batch delete
+        jq -n --arg bucket "$bucket_name" \
+            '{Bucket: $bucket, Delete: {Objects: inputs}}' \
+            "$batch_file" > "${batch_file}_delete.json"
+        
+        # Perform batch delete (quietly)
+        aws s3api batch-delete-objects \
+            --bucket "$bucket_name" \
+            --delete "file://${batch_file}_delete.json" \
+            > /dev/null 2>&1
+        
+        # Clean up temporary files
+        rm "$batch_file" "${batch_file}_delete.json"
     done
 }
 
@@ -38,7 +47,7 @@ aws s3 ls | while read -r line; do
     
     # Confirm before processing each bucket
     echo "Delete ALL versions from bucket $bucket"
-    delete_all_versions "$bucket"
+    delete_versions_in_batch "$bucket"
 done
 
 echo "Versioned bucket cleanup process completed."
