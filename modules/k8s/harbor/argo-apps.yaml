@@ -15,3 +15,7 @@ spec:
     - '/spec/template/metadata/annotations/checksum~1secret-jobservice'
     kind: Deployment
     group: apps
+  - group: "batch"
+    kind: Job
+    jsonPointers:
+    - /spec/template/spec
