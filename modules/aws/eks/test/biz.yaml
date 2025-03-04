@@ -44,6 +44,13 @@ eks_managed_node_groups_extra: |
         labels = {
           altarm = "true"
         }
+        taints = [
+          {
+            key    = "altarm"
+            value  = "true"
+            effect = "NO_SCHEDULE"
+          }
+        ]
         block_device_mappings = {
           xvda = {
             device_name = "/dev/xvda"
