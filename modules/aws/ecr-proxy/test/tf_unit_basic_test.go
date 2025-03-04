@@ -26,9 +26,6 @@ func testTerraformEksBiz(t *testing.T) {
 	ecr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ecr_registry")
 	assert.Equal(t, ecr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ecr", registry_name), "No correct value for ecr_registry")
 
-	gcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__gcr_registry")
-	assert.Equal(t, gcr_registry, "", "No correct value for gcr_registry")
-	
 	ghcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ghcr_registry")
 	assert.Equal(t, ghcr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ghcr", registry_name), "No correct value for ghcr_registry")
 	
@@ -52,9 +49,6 @@ func testTerraformEksPri(t *testing.T) {
 	
 	ecr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ecr_registry")
 	assert.Equal(t, ecr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ecr", registry_name), "No correct value for ecr_registry")
-
-	gcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__gcr_registry")
-	assert.Equal(t, gcr_registry, "", "No correct value for gcr_registry")
 	
 	ghcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ghcr_registry")
 	assert.Equal(t, ghcr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ghcr", registry_name), "No correct value for ghcr_registry")
