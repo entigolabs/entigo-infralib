@@ -90,6 +90,7 @@ resource-types:
   - CodePipelineCustomActionType
   - DAXParameterGroup
   - MemoryDBACL
+  - BedrockCustomModel
 
 accounts:
   "877483565445":
