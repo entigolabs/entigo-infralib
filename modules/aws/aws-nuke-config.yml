@@ -91,6 +91,9 @@ resource-types:
   - DAXParameterGroup
   - MemoryDBACL
   - BedrockCustomModel
+  - BedrockAgent
+  - BedrockPrompt
+  - BedrockEvaluationJob
 
 accounts:
   "877483565445":
