@@ -1,2 +1,5 @@
 installProviderConfig: true
 
+image:
+  registry: docker.io/crossplanecontrib/provider-kubernetes
+  tag: v0.15.3
