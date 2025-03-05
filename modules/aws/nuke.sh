@@ -18,7 +18,7 @@ delete_versions_in_batch() {
     while true; do
 	batch=$(aws s3api list-object-versions \
 	    --bucket "$bucket_name" \
-	    --max-items 1000 \
+	    --max-items 500 \
 	    --output json | \
 	jq -c '(.Versions // [])[], (.DeleteMarkers // [])[] | select(.Key != null) | {Key: .Key, VersionId: .VersionId}')   
         # Check if batch is empty
