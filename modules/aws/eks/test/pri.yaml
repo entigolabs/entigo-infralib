@@ -15,3 +15,15 @@ eks_nodeport_access_cidrs: |
   ["10.10.10.10/32"]
 aws_auth_user: "github"
 iam_admin_role: "AWSReservedSSO_AdministratorAccess_.*"
+cluster_identity_providers: |
+  {
+    zitadel = {
+      client_id = "309813509141668682"
+      groups_claim = "groups"
+      groups_prefix = "oidc:"
+      identity_provider_config_name = "zitadel"
+      issuer_url = "https://entigo-dev-if3upz.zitadel.cloud"
+      username_claim = "sub"
+      username_prefix = "oidc:"
+    }
+  }

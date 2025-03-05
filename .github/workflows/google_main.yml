@@ -47,7 +47,7 @@ jobs:
         PIDS=""
         echo "Changed modules:"
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file" | grep "modules/google" | cut -d'/' -f1-3
+            echo "$file" | grep "modules/google" | grep -ve"nuke\.sh" | cut -d'/' -f1-3
         done | sort -u )
         do
           ${module}/test.sh testonly &

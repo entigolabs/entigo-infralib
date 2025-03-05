@@ -246,6 +246,8 @@ module "eks" {
   cluster_enabled_log_types       = var.cluster_enabled_log_types
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
+  cluster_identity_providers = var.cluster_identity_providers
+  
   create_kms_key = false
   cluster_encryption_config = local.cluster_encryption_config
 
