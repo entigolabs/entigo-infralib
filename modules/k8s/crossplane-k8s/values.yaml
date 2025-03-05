@@ -1,5 +1,5 @@
 installProviderConfig: true
 
 image:
-  registry: docker.io/crossplanecontrib/provider-kubernetes
+  registry: xpkg.upbound.io/upbound/provider-kubernetes
   tag: v0.15.3
