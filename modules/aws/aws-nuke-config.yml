@@ -109,6 +109,8 @@ accounts:
       Route53HostedZone:
       - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
       SSMParameter:
+      - "/argocd-pri/clientSecret"
+      - "/argocd-biz/clientSecret"
       - "/entigo-portal/agent-biz/CLIENT_SECRET"
       - "/entigo-portal/agent-pri/CLIENT_SECRET"
       - "/ecr-proxy/hub/token"
