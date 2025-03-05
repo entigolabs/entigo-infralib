@@ -23,6 +23,9 @@ argocd-apps:
                 helm:
                     valueFiles:
                         - values.yaml
+                    values: |
+                      image:
+                        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/nginx'
                 path: modules/k8s/hello-world
                 repoURL: https://github.com/entigolabs/entigo-infralib-release.git
                 targetRevision: main
