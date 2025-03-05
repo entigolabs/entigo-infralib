@@ -7,6 +7,6 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.49.2
+  package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.50.3
   runtimeConfigRef:
     name: {{ .Release.Name }}

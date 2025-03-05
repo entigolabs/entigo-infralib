@@ -28,7 +28,7 @@ do
        let security++
      fi
    fi  
-  if [[ ! $image =~ (^877483565445\.dkr\.ecr\.eu-north-1\.amazonaws\.com|^602401143452\.dkr\.ecr\.eu-north-1\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^oci\.external-secrets\.io) ]]
+  if [[ ! $image =~ (^877483565445\.dkr\.ecr\.eu-north-1\.amazonaws\.com|^602401143452\.dkr\.ecr\.eu-north-1\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^oci\.external-secrets\.io|^xpkg\.upbound\.io) ]]
   then
     echo "$image does not use Internal Registry"
     let registry++
