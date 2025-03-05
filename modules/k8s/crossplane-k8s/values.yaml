@@ -1,2 +1,5 @@
 installProviderConfig: true
 
+image:
+  registry: xpkg.upbound.io/upbound/provider-kubernetes
+  tag: v0.15.3
