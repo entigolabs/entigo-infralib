@@ -37,6 +37,12 @@ variable "cluster_iam_role_arn" {
   default  = null
 }
 
+variable "cluster_identity_providers" {
+  description = "Map of cluster identity provider configurations to enable for the cluster. Note - this is different/separate from IRSA"
+  type        = any
+  default     = {}
+}
+
 variable "authentication_mode" {
   type     = string
   nullable = false
