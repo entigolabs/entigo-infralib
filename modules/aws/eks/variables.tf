@@ -290,22 +290,22 @@ variable "bootstrap_self_managed_addons" {
 
 variable "coredns_addon_version" {
   type = string
-  default = "v1.11.3-eksbuild.2"
+  default = "v1.11.4-eksbuild.2"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.30.6-eksbuild.3"
+  default = "v1.30.9-eksbuild.3"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.19.0-eksbuild.1"
+  default = "v1.19.3-eksbuild.1"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.37.0-eksbuild.1"
+  default = "v1.40.0-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {
