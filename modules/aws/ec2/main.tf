@@ -56,7 +56,7 @@ resource "aws_instance" "ec2" {
   instance_type = var.instance_type
   subnet_id = var.subnet_id
   user_data_base64 = var.user_data_base64 != "" ? var.user_data_base64 : base64encode(var.user_data)
-  vpc_security_group_ids = [aws_security_group.ec2.id]
+  vpc_security_group_ids = concat([aws_security_group.ec2.id], var.extra_security_group_ids)
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
   key_name = var.key_name
   iam_instance_profile = var.iam_instance_profile
@@ -72,7 +72,7 @@ resource "aws_instance" "ec2" {
     "Name" = var.prefix
   }
   lifecycle {
-     ignore_changes = [ user_data, ami ]
+     ignore_changes = [ user_data_base64, ami ]
   }
 }
 

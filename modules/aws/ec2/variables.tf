@@ -111,6 +111,11 @@ variable "security_group_ingress" {
   }
 }
 
+variable "extra_security_group_ids" {
+  type = list(string)
+  default = []
+}
+
 variable "kms_key_id" {
   type = string
   default = ""
