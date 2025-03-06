@@ -10,6 +10,27 @@ argocd:
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.route53.pub_domain }}
+  configs:
+    rbac:
+      policy.csv: |
+        g, web-admin-*, role:admin
+        g, web-read-only-*, role:readonly
+        p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
+    cm:
+      oidc.config: |
+        name: Zitadel
+        issuer: https://entigo-dev-if3upz.zitadel.cloud
+        clientID: "309975115372779890"
+        clientSecret: "{{ .output-custom./argocd-biz/clientSecret }}"
+        requestedScopes:
+          - openid
+          - profile
+          - email
+          - groups
+        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
+
 
 argocd-apps:
     applications:
