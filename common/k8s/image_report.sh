@@ -17,7 +17,7 @@ aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --
 total=0
 security=0
 registry=0
-for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+for image in $(echo "entigolabs/entigo-infralib-agent $AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
 do
   let total++
   docker pull $image > /dev/null 2>&1
