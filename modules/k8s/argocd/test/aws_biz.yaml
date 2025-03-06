@@ -13,11 +13,11 @@ argocd:
   configs:
     rbac:
       policy.csv: |
-        g, web-admin-*, role:admin
-        g, web-read-only-*, role:readonly
+        g, web-admin-258953744228679165, role:admin
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
+      policy.default: role:readonly
     cm:
       oidc.config: |
         name: Zitadel
