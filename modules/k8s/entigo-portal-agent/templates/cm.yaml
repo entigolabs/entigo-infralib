@@ -49,6 +49,10 @@ data:
         version: v1
         resources:
           - ec2nodeclasses
+      - group: ""
+        version: v1
+        resources:
+          - nodes
     statusResources:
       - group: ""
         version: v1
