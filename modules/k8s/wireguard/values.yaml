@@ -1,0 +1,49 @@
+wireguard:
+  wireguard:
+    serverAddress: ""
+    serverCidr: ""
+    clients: []
+  image:
+    tag: "20250306-d267b30"
+    pullPolicy: IfNotPresent
+  initContainer:
+    image:
+      tag: "1.37.0"
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  metrics:
+    enabled: true
+  healthSideCar:
+    enabled: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+        ephemeral-storage: 8Mi
+      limits:
+        cpu: 100m
+        memory: 256Mi
+        ephemeral-storage: 128Mi
+    service:
+      enabled: false
+  podAnnotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes,container-security-context-privileged
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+      ephemeral-storage: 8Mi
+    limits:     
+      cpu: 1000m
+      memory: 128Mi
+      ephemeral-storage: 128Mi
+  keygenJob:
+    wireguardMgrImage:
+      tag: 20250306-4c02d5d
+      pullPolicy: IfNotPresent
+    image:
+      tag: 20241030-7d8d487
+      pullPolicy: IfNotPresent
+    podAnnotations:
+      kube-score/ignore: pod-networkpolicy,pod-probes

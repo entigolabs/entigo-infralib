@@ -1,0 +1,10 @@
+wireguard:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/wireguard'
+  keygenJob:
+    wireguardMgrImage:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/k8s-wireguard-mgr'
+    image:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/curium-rocks/wg-kubectl'
+  metrics:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
