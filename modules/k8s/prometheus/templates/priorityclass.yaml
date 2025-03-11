@@ -1,0 +1,8 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ index .Values.prometheus "prometheus-node-exporter" "priorityClassName" }}
+value: 1000001
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "This priority class will cause other pods to be preempted since Monitoring is important."

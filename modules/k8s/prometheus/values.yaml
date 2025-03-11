@@ -157,6 +157,7 @@ prometheus:
         ephemeral-storage: 10Mi
 
   prometheus-node-exporter:
+    priorityClassName: "prometheus-node-exporter"
     enabled: true
     daemonsetAnnotations:
       kube-score/ignore: pod-probes
