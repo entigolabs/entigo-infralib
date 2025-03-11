@@ -1,7 +1,7 @@
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
-  name: "{{ .Values.prometheus.prometheus-node-exporter.priorityClassName }}"
+  name: {{ index .Values.prometheus "prometheus-node-exporter" "priorityClassName" }}
 value: 1000001
 preemptionPolicy: PreemptLowerPriority
 globalDefault: false
