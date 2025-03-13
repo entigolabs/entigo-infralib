@@ -8,3 +8,15 @@ grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}
+    auth.generic_oauth:
+      enabled: true
+      name: zitadel
+      allow_sign_up: true
+      scopes: openid email profile roles 
+      auth_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/authorize
+      token_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/token
+      api_url: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/userinfo
+      use_pkce: true
+      use_refresh_token: true
+      client_id: "310990521457785152"
+      role_attribute_path: "contains(groups[*], 'web-admin-258953744228679165') && 'Admin'"
