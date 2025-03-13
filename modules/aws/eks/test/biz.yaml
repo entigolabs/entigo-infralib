@@ -12,7 +12,7 @@ eks_main_volume_size: 30
 eks_main_instance_types: |
   ["t3.small"]
 eks_main_capacity_type: "SPOT"
-eks_mon_subnets: |
+eks_main_subnets: |
   ["{{ .toutput.vpc.private_subnets[0] }}"]
 eks_tools_max_size: 3
 eks_tools_capacity_type: "SPOT"
