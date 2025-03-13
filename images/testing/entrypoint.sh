@@ -90,6 +90,7 @@ fi
 #Prepare and check the environment for terraform (common for plan and apply)
 if [ "$COMMAND" == "plan" -o "$COMMAND" == "plan-destroy" -o "$COMMAND" == "apply" -o "$COMMAND" == "apply-destroy" ]
 then
+  #Authenticate git repos if any.
   if [ -f /usr/bin/gitlogin.sh ]
   then
     /usr/bin/gitlogin.sh
@@ -193,6 +194,11 @@ then
   #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
+    #Authenticate git repos if any.
+    if [ -f /usr/bin/gitlogin.sh ]
+    then
+      /usr/bin/gitlogin.sh
+    fi
     echo "Detecting ArgoCD modules."
     for app_file in ./*.yaml
     do
@@ -206,7 +212,30 @@ then
         repo=`yq -r '.spec.sources[0].repoURL' $app_file`
         path=`yq -r '.spec.sources[0].path' $app_file`
         git clone --depth 1 --single-branch --branch $version $repo git-$app
-        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml --set argocd-apps.enabled=false $app git-$app/$path
+        #Create bootstrap value file that is only used first time ArgoCD is created.
+        if compgen -A variable | grep -q "^GIT_AUTH_SOURCE_"
+        then
+          echo "
+argocd:
+  configs:
+    repositories:" > git-$app/$path/extra_repos.yaml
+
+          for var in "${!GIT_AUTH_SOURCE_@}"; do
+            NAME=$(echo $var | sed 's/GIT_AUTH_SOURCE_//g')
+            SOURCE="$(echo ${!var})"
+            PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
+            USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
+            echo "      ${NAME}:
+        url: ${SOURCE}.git
+        name: ${NAME}
+        password: ${!PASSWORD}
+        username: ${!USERNAME}" >> git-$app/$path/extra_repos.yaml
+          done
+        else
+            touch git-$app/$path/extra_repos.yaml
+        fi
+        
+        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml -f git-$app/$path/extra_repos.yaml --set argocd.configs.cm.admin.enabled="true" --set argocd-apps.enabled=false $app git-$app/$path        
         rm -rf values-$app.yaml git-$app
       fi
     done
