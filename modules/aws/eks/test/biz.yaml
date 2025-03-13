@@ -2,17 +2,24 @@ eks_cluster_public: true
 enable_cluster_creator_admin_permissions: false
 eks_mon_capacity_type: "SPOT"
 eks_mon_volume_size: 30
+eks_mon_subnets: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]
 cluster_enabled_log_types: |
   [] #Temporarily disabled, see https://entigo.atlassian.net/browse/RD-8
-eks_main_desired_size: 4
+eks_main_desired_size: 1
 eks_main_max_size: 6
 eks_main_volume_size: 30
 eks_main_instance_types: |
   ["t3.small"]
 eks_main_capacity_type: "SPOT"
-eks_tools_max_size: 4
+eks_mon_subnets: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]
+eks_tools_max_size: 3
 eks_tools_capacity_type: "SPOT"
 eks_tools_volume_size: 30
+eks_tools_subnets: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]
+
 aws_auth_user: "github"
 iam_admin_role: "AWSReservedSSO_AdministratorAccess_.*"
 additional_access_entries: |

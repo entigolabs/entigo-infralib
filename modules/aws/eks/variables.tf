@@ -209,7 +209,7 @@ variable "eks_tools_min_size" {
 variable "eks_tools_desired_size" {
   type     = number
   nullable = false
-  default  = 2
+  default  = 1
 }
 
 variable "eks_tools_max_size" {
