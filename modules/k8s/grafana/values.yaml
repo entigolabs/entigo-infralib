@@ -67,7 +67,18 @@ grafana:
         gnetId: 19105
         revision: 5
         datasource: Prometheus
-
+      limitsrequests:
+        gnetId: 22849
+        revision: 3
+        datasource: Prometheus
+      limitsrequests:
+        gnetId: 22849
+        revision: 3
+        datasource: Prometheus
+      pvc:
+        gnetId: 13646
+        revision: 2
+        datasource: Prometheus
   deploymentStrategy:
     type: Recreate
 
