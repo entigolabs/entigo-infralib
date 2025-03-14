@@ -10,3 +10,5 @@ argocd:
   redis:
     image:
       repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
