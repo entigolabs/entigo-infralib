@@ -5,6 +5,10 @@ global:
 argocd-apps:
   enabled: true
 
+job:
+  image: docker.io/entigolabs/entigo-infralib-base
+  tag: "v1.5.33"
+
 argocd:
   crds:
     install: true
