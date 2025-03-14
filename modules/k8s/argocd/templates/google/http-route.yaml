@@ -16,6 +16,6 @@ spec:
   rules:
     - backendRefs:
         - name: {{ .Release.Name }}-server
-          port: 80
+          port: 443
         
 {{- end }}
