@@ -94,7 +94,12 @@ spec:
             ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
             if [ "$ARGO_PASS" != "" ]
             then
-              argocd login --password ${ARGO_PASS} --insecure --username admin {{ .Release.Name }}-server:{{ if .Values.argocd.configs.params."server.insecure" }}80{{ else }}443{{ end }}
+              {{- if and (hasKey .Values "argocd") (hasKey .Values.argocd "configs") (hasKey .Values.argocd.configs "params") (hasKey .Values.argocd.configs.params "server.insecure") (eq (index .Values.argocd.configs.params "server.insecure") true) }}
+              AUTH_FLAGS="--plaintext"
+              {{- else }}
+              AUTH_FLAGS="--insecure"
+              {{- end }}
+              argocd login --password ${ARGO_PASS} ${AUTH_FLAGS} --username admin {{ .Release.Name }}-server
               if [ $? -ne 0 ]
               then
                 echo "Unable to login to ArgoCD with admin user."
@@ -108,7 +113,7 @@ spec:
                 sleep 30
                 exit 1
               fi
-              argocd logout {{ .Release.Name }}-server:{{ if .Values.argocd.configs.params."server.insecure" }}80{{ else }}443{{ end }}
+              argocd logout {{ .Release.Name }}-server
               if [ "$ARGOCD_AUTH_TOKEN" != "" ]
               then
                 kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
