@@ -8,7 +8,7 @@ global:
 argocd:
   configs:
     params:
-      server.insecure: true
+      server.insecure: false
   server:
     ingress:
       enabled: false
