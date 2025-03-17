@@ -21,7 +21,7 @@ then
 fi
 
 #We want to use argocd for sync but in first runs it is not yet available so we fall back to auto sync in Applications.
-if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+if [ "$USE_ARGOCD_CLI" == "true" ]
 then
   if [ ! -f "${app_file}.sync" ] #In plan stage we mark the apps that are not synced so we would only sync the ones we need to sync.
   then
