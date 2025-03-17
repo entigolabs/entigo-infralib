@@ -139,6 +139,17 @@ then
     export PROVIDER="aws"
     export ARGOCD_HOSTNAME=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}')
   fi
+  export ARGOCD_AUTH_TOKEN=$(kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d)
+  export USE_ARGOCD_CLI="false"
+  if [ "$ARGOCD_AUTH_TOKEN" != "" -a "$ARGOCD_HOSTNAME" != "" ]
+  then
+    TES_CONNECTION=$(argocd --server ${ARGOCD_HOSTNAME} --grpc-web app list)
+    if [ $? -eq 0 ]
+    then
+      echo "Connected to ArgoCD successfully."
+      export USE_ARGOCD_CLI="true"
+    fi
+  fi
 fi
 
 #ALL SPECIFIC COMMANDS HERE
@@ -259,9 +270,8 @@ argocd:
     echo "Unable to get ArgoCD hostname. Check ArgoCD installation."
     exit 25
   fi
-  export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
   
-  if [ "$ARGOCD_AUTH_TOKEN" == "" ]
+  if [ "$USE_ARGOCD_CLI" == "false" ] #keeping this for a while for legacy reasons, to be deleted as this is done by argocd job now.
   then
     echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
     ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
@@ -273,6 +283,7 @@ argocd:
       if [ "$ARGOCD_AUTH_TOKEN" != "" ]
       then
         kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
+        export USE_ARGOCD_CLI="true"
       else
         echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
       fi
@@ -312,7 +323,7 @@ argocd:
       cat $name.log
   done
   
-  if [ "$ARGOCD_AUTH_TOKEN" != "" ]
+  if [ "$USE_ARGOCD_CLI" == "true" ]
   then
     CHANGED=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep "RequiredPruning: 0$" | wc -l`
     DESTROY=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning: 0$" | wc -l`
@@ -340,11 +351,6 @@ then
   then
     echo "Unable to get ArgoCD hostname."
     exit 25
-  fi
-  export ARGOCD_AUTH_TOKEN=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-infralib-token -o jsonpath="{.data.token}" | base64 -d`
-  if [ "$ARGOCD_AUTH_TOKEN" == "" ]
-  then
-    echo "Did not get the infralib account token, falling back to kubectl sync and check."
   fi
   
   PIDS=""
