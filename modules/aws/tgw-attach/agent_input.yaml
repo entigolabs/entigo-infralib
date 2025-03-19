@@ -1,7 +1,7 @@
 vpc_id: "{{ .toutput.vpc.vpc_id }}"
 attachment_subnets: |
-  [{{ .toptout.vpc.intra_subnets }}]
+  flatten([{{ .toptout.vpc.intra_subnets }}])
 routes: |
   {
-    "0.0.0.0/0" = concat({{ .toutput.vpc.private_route_table_ids }},{{ .toutput.vpc.intra_route_table_ids }})
+    "0.0.0.0/0" = concat(flatten([{{ .toutput.vpc.private_route_table_ids }}]),flatten([{{ .toutput.vpc.intra_route_table_ids }}]))
   }
