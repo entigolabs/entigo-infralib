@@ -5,11 +5,11 @@ import (
 )
 
 
-func TestTerraformRoute53(t *testing.T) {
-	t.Run("Biz", testTerraformRoute53Biz)
+func TestTerraformRoute53ResolverAssociate(t *testing.T) {
+	t.Run("Biz", testTerraformRoute53ResolverAssociateBiz)
 }
 
-func testTerraformRoute53Biz(t *testing.T) {
+func testTerraformRoute53ResolverAssociateBiz(t *testing.T) {
         t.Parallel()
 	
 }
