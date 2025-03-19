@@ -12,5 +12,5 @@ resource "aws_route53_resolver_rule_association" "shared_rules" {
   for_each         = local.filtered_rules
   resolver_rule_id = each.value
   vpc_id           = var.vpc_id
-  name             = "${var.prefix}-${each.key}"
+  name             = substr(replace("${var.prefix}-${each.key}", ".", "-"), 0, 63)
 }
