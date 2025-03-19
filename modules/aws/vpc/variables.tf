@@ -85,6 +85,18 @@ variable "intra_subnet_names" {
   default  = []
 }
 
+variable "create_multiple_intra_route_tables" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
+variable "create_multiple_public_route_tables" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "enable_nat_gateway" {
   type     = bool
   nullable = false
