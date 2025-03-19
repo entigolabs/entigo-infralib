@@ -1,0 +1,4 @@
+attachment_subnets: |
+  [{{ .toptout.vpc.private_subnets }}]
+routes: |
+  { }
