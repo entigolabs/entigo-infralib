@@ -1,4 +1,4 @@
 attachment_subnets: |
-  [{{ .toptout.vpc.private_subnets }}]
+  concat({{ .toptout.vpc.private_subnets }})
 routes: |
   { }
