@@ -1,0 +1,3 @@
+vpc_id: "{{ .toutput.vpc.vpc_id }}"
+exclude_domains: |
+  ["{{ .toptout.route53.int_domain }}"]

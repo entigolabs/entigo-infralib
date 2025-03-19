@@ -268,6 +268,8 @@ test_tf() {
     PIDS="$PIDS $!=vpc"
     ./modules/aws/route53/test.sh testonly &
     PIDS="$PIDS $!=route53"
+    ./modules/aws/route53-resolver-associate/test.sh testonly &
+    PIDS="$PIDS $!=route53-resolver-associate"
     ./modules/aws/eks/test.sh testonly &
     PIDS="$PIDS $!=eks"
     ./modules/aws/eks-node-group/test.sh testonly &
@@ -399,7 +401,7 @@ test_k8s() {
 
 
 default_aws_conf() {
-  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53" "ecr-proxy"
+  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "route53" "route53-resolver-associate" "ecr-proxy"
   generate_config "./modules/aws" "infra" "eks" "eks-node-group" "crossplane" "ec2" "karpenter-node-role"
 }
 
