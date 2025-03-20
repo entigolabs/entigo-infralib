@@ -95,6 +95,7 @@ then
   then
     /usr/bin/gitlogin.sh
   fi
+  /usr/bin/ca-certificates.sh
   cat backend.conf
   if [ $? -ne 0 ]
   then
@@ -111,6 +112,7 @@ then
 #Prepare and check the environment for Kubernetes (common for plan and apply)
 elif [ "$COMMAND" == "argocd-plan" -o "$COMMAND" == "argocd-apply" -o "$COMMAND" == "argocd-plan-destroy" -o "$COMMAND" == "argocd-apply-destroy" ]
 then
+  /usr/bin/ca-certificates.sh
   echo "COMMAND $COMMAND, cluster $KUBERNETES_CLUSTER_NAME region $AWS_REGION"
   if [ ! -z "$GOOGLE_REGION" ]
   then
