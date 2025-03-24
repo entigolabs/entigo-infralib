@@ -68,10 +68,10 @@ then
     GOOGLE_S3_EXCLUDE_TERRAFORM=()
   fi
   mkdir -p /tmp/plans/$TF_VAR_prefix/
-  mkdir -p /tmp/project/steps/
+  mkdir -p /tmp/project/steps/$TF_VAR_prefix
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    gsutil -m -q cp -r ${GOOGLE_S3_EXCLUDE_TERRAFORM[@]} gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /tmp/project/steps/
+    gsutil -m -q rsync -r ${GOOGLE_S3_EXCLUDE_TERRAFORM[@]} gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /tmp/project/steps/
     cd /tmp/project
   else
     cd /tmp/project
