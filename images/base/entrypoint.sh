@@ -65,21 +65,21 @@ then
   if [ "$TERRAFORM_CACHE" != "true" ]
   then
     echo "Excluding .terraform cache."
-    AWS_S3_EXCLUDE_TERRAFORM='--exclude "*.terraform/*"'
-    GOOGLE_S3_EXCLUDE_TERRAFORM='-x ".*/\.terraform/.*"'
+    AWS_S3_EXCLUDE_TERRAFORM=(--exclude "*.terraform/*")
+    GOOGLE_S3_EXCLUDE_TERRAFORM=(-x "\.terraform/.*")
   else
-    AWS_S3_EXCLUDE_TERRAFORM=""
-    GOOGLE_S3_EXCLUDE_TERRAFORM=""
+    AWS_S3_EXCLUDE_TERRAFORM=()
+    GOOGLE_S3_EXCLUDE_TERRAFORM=()
   fi
   
   if [ ! -z "$GOOGLE_REGION" ]
   then
-    mkdir /project/steps/
-    gsutil -m -q cp -r $GOOGLE_S3_EXCLUDE_TERRAFORM gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/
+    mkdir -p /project/steps/$TF_VAR_prefix
+    gsutil -m rsync -r ${GOOGLE_S3_EXCLUDE_TERRAFORM[@]} gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/$TF_VAR_prefix
     cd /project
   else
     cd $CODEBUILD_SRC_DIR
-    aws s3 cp s3://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive --no-progress --quiet $AWS_S3_EXCLUDE_TERRAFORM
+    aws s3 cp s3://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix ./steps/$TF_VAR_prefix --recursive --no-progress --quiet ${AWS_S3_EXCLUDE_TERRAFORM[@]}
   fi
 
   if [ ! -d "steps/$TF_VAR_prefix" ]
