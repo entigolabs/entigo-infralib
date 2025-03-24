@@ -9,8 +9,6 @@ cluster_enabled_log_types: |
 eks_main_desired_size: 1
 eks_main_max_size: 6
 eks_main_volume_size: 30
-eks_main_instance_types: |
-  ["t3.small"]
 eks_main_capacity_type: "SPOT"
 eks_main_subnets: |
   ["{{ .toutput.vpc.private_subnets[0] }}"]
