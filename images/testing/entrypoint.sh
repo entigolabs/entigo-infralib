@@ -260,7 +260,7 @@ argocd:
             touch git-$app/$path/extra_repos.yaml
         fi
         
-        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml -f git-$app/$path/extra_repos.yaml --set argocd.configs.cm.admin.enabled="true" --set argocd.redisSecretInit.enabled=true --set argocd-apps.enabled=false $app git-$app/$path
+        helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml -f git-$app/$path/extra_repos.yaml --set argocd.configs.cm.admin.enabled="true" --set argocd-apps.enabled=false $app git-$app/$path
         rm -rf values-$app.yaml git-$app
       fi
     done
