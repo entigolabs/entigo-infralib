@@ -55,7 +55,7 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
       gcloud --version; \
     fi
 
-COPY --from=entigolabs/entigo-infralib-agent:latest  /usr/bin/ei-agent /usr/bin/ei-agent
+COPY --from=entigolabs/entigo-infralib-agent:latest /usr/bin/ei-agent /usr/bin/ei-agent
 
 #SEE https://entigo.atlassian.net/browse/RD-76
 COPY *.sh /usr/bin/
