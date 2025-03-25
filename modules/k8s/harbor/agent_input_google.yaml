@@ -4,9 +4,41 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"
+job:
+  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   persistence:
     imageChartStorage:
       gcs:
         bucket: "{{ .config.prefix }}-{{ .module.name }}"
+  portal:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-portal'
+  core:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-core'
+  jobservice:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-jobservice'
+  registry:
+    registry:
+      image:
+        repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/registry-photon'
+    controller:
+      image:
+        repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-registryctl'
+  trivy:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/trivy-adapter-photon'
+  database:
+    internal:
+      image:
+        repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-db'
+  redis:
+    internal:
+      image:
+        repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/redis-photon'
+  exporter:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'

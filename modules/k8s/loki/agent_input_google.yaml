@@ -6,9 +6,17 @@ global:
     bucket:
       location: "{{ .toutput.gke.region }}"
 loki:
+  gateway:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   loki:
     storage:
       bucketNames:
         admin: "{{ .config.prefix }}-{{ .module.name }}-logs"
         chunks: "{{ .config.prefix }}-{{ .module.name }}-logs"
         ruler: "{{ .config.prefix }}-{{ .module.name }}-logs"
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  sidecar:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/kiwigrid/k8s-sidecar'
