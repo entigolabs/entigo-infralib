@@ -20,7 +20,6 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
-      iam_role_additional_policies = local.iam_role_additional_policies
       labels = {
         main = "true"
       }
@@ -52,7 +51,6 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_mon_ami_type
-      iam_role_additional_policies = local.iam_role_additional_policies
       taints = [
         {
           key    = "mon"
@@ -92,7 +90,6 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
-      iam_role_additional_policies = local.iam_role_additional_policies
       taints = [
         {
           key    = "tools"
@@ -446,9 +443,8 @@ module "eks" {
   }
 
   eks_managed_node_group_defaults = {
-    iam_role_additional_policies = {
-      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    }
+    iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" },
+                                          local.iam_role_additional_policies)
     iam_role_attach_cni_policy = false
   }
 
