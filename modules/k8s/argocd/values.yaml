@@ -17,6 +17,9 @@ argocd:
     domain: argocd.${domain}
     networkPolicy:
       create: true
+      
+  redisSecretInit:
+    enabled: false
   configs:
     params:
       server.insecure: false
