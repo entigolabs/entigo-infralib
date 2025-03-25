@@ -17,9 +17,6 @@ argocd:
     domain: argocd.${domain}
     networkPolicy:
       create: true
-      
-  redisSecretInit:
-    enabled: false
   configs:
     params:
       server.insecure: false
@@ -129,6 +126,8 @@ argocd:
   redisSecretInit:
     jobAnnotations:
       kube-score/ignore: pod-networkpolicy
+      argocd.argoproj.io/hook: Sync
+      argocd.argoproj.io/hook-delete-policy: HookSucceeded
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
