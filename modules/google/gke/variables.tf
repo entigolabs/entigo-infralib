@@ -53,7 +53,7 @@ variable "kubernetes_version" {
 
 variable "grant_registry_access" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "registry_project_ids" {
