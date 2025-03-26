@@ -3,8 +3,8 @@ locals {
     hub  = { uri = "registry-1.docker.io", username_secret = var.hub_username_secret, access_token_secret = var.hub_access_token_secret }
     ghcr = { uri = "ghcr.io", username_secret = var.ghcr_username_secret, access_token_secret = var.ghcr_access_token_secret }
     gcr  = { uri = "gcr.io", username_secret = var.gcr_username_secret, access_token_secret = var.gcr_access_token_secret }
-    ecr  = { uri = "public.ecr.aws", username_secret = "", access_token_secret = "" }
-    quay = { uri = "quay.io", username_secret = "", access_token_secret = "" }
+    ecr  = { uri = "public.ecr.aws", username_secret = var.ecr_username_secret, access_token_secret = var.ecr_access_token_secret }
+    quay = { uri = "quay.io", username_secret = var.quay_username_secret, access_token_secret = var.quay_access_token_secret }
     k8s  = { uri = "registry.k8s.io", username_secret = "", access_token_secret = "" }
   }
 
