@@ -408,7 +408,7 @@ default_aws_conf() {
 }
 
 default_google_conf() {
-  generate_config "./modules/google" "net" "services" "vpc" "dns"
+  generate_config "./modules/google" "net" "services" "vpc" "dns" "gar-proxy"
   generate_config "./modules/google" "infra" "gke" "crossplane"
 }
 

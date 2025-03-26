@@ -125,7 +125,7 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
   "rules": [
         {
             "rulePriority": 1,
-            "description": "Expire untagged images older than 14 days",
+            "description": "Expire untagged images older than 7 days",
             "selection": {
                 "tagStatus": "untagged",
                 "countType": "sinceImagePushed",

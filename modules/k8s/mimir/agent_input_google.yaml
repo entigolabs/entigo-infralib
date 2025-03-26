@@ -5,3 +5,13 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"
+mimir-distributed:
+  gateway:
+    nginx:
+      image:
+        registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  image:
+    repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/grafana/mimir'
+  nginx:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

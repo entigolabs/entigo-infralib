@@ -1,0 +1,2 @@
+global:
+  hub: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/istio'

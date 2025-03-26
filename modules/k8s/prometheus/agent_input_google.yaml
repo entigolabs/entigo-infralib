@@ -1,3 +1,27 @@
 global:
   google:
     hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
+
+prometheus:
+  server:
+    image:
+      repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/prometheus'
+  prometheus-node-exporter:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
+
+  kube-state-metrics:
+    image:
+      registry: '{{ .toptout.gar-proxy.k8s_registry | "registry.k8s.io" }}'
+
+  alertmanager:
+    image:
+      repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/alertmanager'
+
+  configmapReload:
+    prometheus:
+      image:
+        repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
+prometheus-blackbox-exporter:
+  image:
+    registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'

@@ -2,4 +2,13 @@ argocd:
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.dns.int_domain }}
-
+    image:
+      repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/argoproj/argocd'
+  dex:
+    image:
+      repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/dexidp/dex'
+  redis:
+    image:
+      repository: '{{ .toptout.gar-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
+job:
+  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'

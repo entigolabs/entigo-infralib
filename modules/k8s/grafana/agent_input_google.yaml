@@ -13,3 +13,8 @@ grafana:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
   serviceAccount:
     name: "{{ .module.name }}"
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  sidecar:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'

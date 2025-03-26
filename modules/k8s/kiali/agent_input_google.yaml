@@ -6,6 +6,7 @@ kiali-server:
     web_fqdn: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
   deployment:
     instance_name: "{{ .module.name }}"
+    image_name: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/kiali/kiali'
   external_services:
     prometheus:
       url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"

@@ -280,7 +280,7 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud -q secrets list --uri | grep -ve"argocd-biz_clientSecret\|argocd-pri_clientSecret"); do
+for line in $(gcloud -q secrets list --uri | grep -ve"argocd-biz_clientSecret\|argocd-pri_clientSecret\|gar-proxy-hub-username\|gar-proxy-hub-access-token\|gar-proxy-ghcr-username\|gar-proxy-ghcr-access-token"); do
   gcloud secrets delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done
@@ -442,6 +442,21 @@ fi
 gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@developer.gserviceaccount.com|infralib-agent|github' | while read line; do
   gcloud 'iam' 'service-accounts' delete --project $GOOGLE_PROJECT -q $line
 done
+
+PIDS=""
+for line in $(gcloud -q artifacts repositories list --format='value(name)' --location="$GOOGLE_REGION" --project="$GOOGLE_PROJECT"); do
+  gcloud artifacts repositories delete "$line" --project="$GOOGLE_PROJECT" --location="$GOOGLE_REGION" -q &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete artifact repositories. $FAIL"
+  exit 1
+fi
 
 PIDS=""
 for line in $(gcloud storage ls); do
