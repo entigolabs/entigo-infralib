@@ -324,7 +324,7 @@ argocd:
   controller:
     env: 
     - name: ARGOCD_K8S_CLIENT_QPS
-      value: "300"
+      value: "150"
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
