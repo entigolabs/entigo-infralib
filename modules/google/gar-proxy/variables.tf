@@ -2,38 +2,44 @@ variable "prefix" {
   type = string
 }
 
-variable "hub_username" {
-  description = "Docker Hub username"
+variable "enablement_config" {
+  description = "This configures whether vulnerability scanning is automatically performed for artifacts pushed to this repository. Possible values are: INHERITED, DISABLED."
+  type = string
+  default = "DISABLED"
+}
+
+variable "hub_username_secret" {
+  description = "Secret Manager secret name for Docker Hub username"
   type        = string
   default     = ""
 }
 
-variable "hub_access_token_secret_name" {
-  description = "Docker Hub access token secret name"
+variable "hub_access_token_secret" {
+  description = "Secret Manager secret name for Docker Hub access token"
   type        = string
   default     = ""
 }
 
-variable "ghcr_username" {
-  description = "GitHub Container Registry username"
+variable "ghcr_username_secret" {
+  description = "Secret Manager secret name for GitHub Container Registry username"
   type        = string
   default     = ""
 }
 
-variable "ghcr_access_token_secret_name" {
-  description = "GitHub Container Registry access token secret name"
+variable "ghcr_access_token_secret" {
+  description = "Secret Manager secret name for GitHub Container Registry access token"
   type        = string
   default     = ""
 }
 
-variable "gcr_username" {
-  description = "Google Container Registry username"
+variable "gcr_username_secret" {
+  description = "Secret Manager secret name for Google Container Registry username"
   type        = string
   default     = ""
 }
 
-variable "gcr_access_token_secret_name" {
-  description = "Google Container Registry access token secret name"
+variable "gcr_access_token_secret" {
+  description = "Secret Manager secret name for Google Container Registry access token"
   type        = string
   default     = ""
 }

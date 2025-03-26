@@ -1,2 +1,2 @@
-hub_username: "{{ .output-custom./gar-proxy-hub-username }}"
-hub_access_token_secret_name: "gar-proxy-hub-access-token"
+hub_username_secret: "gar-proxy-hub-username"
+hub_access_token_secret: "gar-proxy-hub-access-token"

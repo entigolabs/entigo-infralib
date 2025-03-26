@@ -1,4 +1,4 @@
-hub_username: "{{ .output-custom./gar-proxy-hub-username }}"
-hub_access_token_secret_name: "gar-proxy-hub-access-token"
-ghcr_username: "{{ .output-custom./gar-proxy-ghcr-username }}"
-ghcr_access_token_secret_name: "gar-proxy-ghcr-access-token"
+hub_username_secret: "gar-proxy-hub-username"
+hub_access_token_secret: "gar-proxy-hub-access-token"
+ghcr_username_secret: "gar-proxy-ghcr-username"
+ghcr_access_token_secret: "gar-proxy-ghcr-access-token"

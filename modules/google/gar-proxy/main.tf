@@ -1,19 +1,19 @@
 locals {
   registries = {
-    hub  = { uri = "registry-1.docker.io", username = var.hub_username, access_token_secret_name = var.hub_access_token_secret_name }
-    ghcr = { uri = "ghcr.io", username = var.ghcr_username, access_token_secret_name = var.ghcr_access_token_secret_name }
-    gcr  = { uri = "gcr.io", username = var.gcr_username, access_token_secret_name = var.gcr_access_token_secret_name }
-    ecr  = { uri = "public.ecr.aws", username = "", access_token_secret_name = "" }
-    quay = { uri = "quay.io", username = "", access_token_secret_name = "" }
-    k8s  = { uri = "registry.k8s.io", username = "", access_token_secret_name = "" }
+    hub  = { uri = "registry-1.docker.io", username_secret = var.hub_username_secret, access_token_secret = var.hub_access_token_secret }
+    ghcr = { uri = "ghcr.io", username_secret = var.ghcr_username_secret, access_token_secret = var.ghcr_access_token_secret }
+    gcr  = { uri = "gcr.io", username_secret = var.gcr_username_secret, access_token_secret = var.gcr_access_token_secret }
+    ecr  = { uri = "public.ecr.aws", username_secret = "", access_token_secret = "" }
+    quay = { uri = "quay.io", username_secret = "", access_token_secret = "" }
+    k8s  = { uri = "registry.k8s.io", username_secret = "", access_token_secret = "" }
   }
 
-  registries_with_credentials = { for k, v in local.registries : k => v if v.username != "" && v.access_token_secret_name != "" }
+  registries_with_credentials = { for k, v in local.registries : k => v if v.username_secret != "" && v.access_token_secret != "" }
 }
 
 resource "google_secret_manager_secret_iam_member" "gar_proxy" {
   for_each  = local.registries_with_credentials
-  secret_id = each.value.access_token_secret_name
+  secret_id = each.value.access_token_secret
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-artifactregistry.iam.gserviceaccount.com"
 }
@@ -31,18 +31,18 @@ resource "google_artifact_registry_repository" "gar_proxy" {
     }
 
     dynamic "upstream_credentials" {
-      for_each = each.value.username != "" && each.value.access_token_secret_name != "" ? [1] : []
+      for_each = each.value.username_secret != "" && each.value.access_token_secret != "" ? [1] : []
       content {
         username_password_credentials {
-          username                = each.value.username
-          password_secret_version = data.google_secret_manager_secret_version_access.gar_proxy[each.key].name
+          username                = data.google_secret_manager_secret_version_access.gar_proxy_username[each.key].secret_data
+          password_secret_version = data.google_secret_manager_secret_version_access.gar_proxy_access_token[each.key].name
         }
       }
     }
   }
 
   vulnerability_scanning_config {
-    enablement_config = "DISABLED"
+    enablement_config = var.enablement_config
   }
 
   cleanup_policies {
