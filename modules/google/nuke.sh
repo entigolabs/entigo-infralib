@@ -444,7 +444,7 @@ gcloud iam service-accounts list --format='value(email)' | grep -vE 'compute@dev
 done
 
 PIDS=""
-for line in $(gcloud -q artifacts repositories list --format='value(name)' --location="$GOOGLE_REGION" --project="$GOOGLE_PROJECT"); do
+for line in $(gcloud -q artifacts repositories list --format='value(name)' --location="$GOOGLE_REGION" --project="$GOOGLE_PROJECT" | grep -vE 'entigolabs'); do
   gcloud artifacts repositories delete "$line" --project="$GOOGLE_PROJECT" --location="$GOOGLE_REGION" -q &
   PIDS="$PIDS $!"
 done
