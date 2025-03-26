@@ -5,7 +5,7 @@ global:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.5.22"
+  tag: "v1.5.33"
 
 harbor:
   ipFamily:
