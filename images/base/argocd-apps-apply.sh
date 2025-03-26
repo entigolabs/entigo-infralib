@@ -57,6 +57,8 @@ else #Fall back to Application auto sync when we can not get argo token.
   if [ "$success" == "false" ]
   then
     echo "Failed $app_name wait"
+    kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1 
+    kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type merge --patch '{"status": {"operationState": {"phase": "Terminating"}}}'
     kubectl describe applications -n ${ARGOCD_NAMESPACE} $app_name
     exit 25
   fi
