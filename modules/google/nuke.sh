@@ -280,7 +280,7 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
-for line in $(gcloud -q secrets list --uri | grep -ve"argocd-biz_clientSecret\|argocd-pri_clientSecret\|gar-proxy-hub-username\|gar-proxy-hub-access-token\|gar-proxy-ghcr-username\|gar-proxy-ghcr-access-token"); do
+for line in $(gcloud -q secrets list --uri | grep -ve"argocd-biz_clientSecret\|argocd-pri_clientSecret\|gar-proxy-"); do
   gcloud secrets delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"
 done

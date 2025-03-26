@@ -1,2 +1,4 @@
 hub_username_secret: "gar-proxy-hub-username"
 hub_access_token_secret: "gar-proxy-hub-access-token"
+quay_username_secret: "gar-proxy-quay-username"
+quay_access_token_secret: "gar-proxy-quay-access-token"

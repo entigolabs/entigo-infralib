@@ -43,3 +43,28 @@ variable "gcr_access_token_secret" {
   type        = string
   default     = ""
 }
+
+variable "ecr_username_secret" {
+  description = "Secret Manager secret name for Amazon ECR username"
+  type        = string
+  default     = ""
+}
+
+variable "ecr_access_token_secret" {
+  description = "Secret Manager secret name for Amazon ECR access token"
+  type        = string
+  default     = ""
+}
+
+variable "quay_username_secret" {
+  description = "Secret Manager secret name for Quay username"
+  type        = string
+  default     = ""
+}
+
+variable "quay_access_token_secret" {
+  description = "Secret Manager secret name for Quay access token"
+  type        = string
+  default     = ""
+}
+
