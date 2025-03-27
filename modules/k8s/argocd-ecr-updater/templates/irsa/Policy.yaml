@@ -1,0 +1,36 @@
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }} 
+spec:
+  forProvider:
+    name: {{ .Release.Name }}
+    document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "",
+            "Effect": "Allow",
+            "Action": [
+              "ecr:ListTagsForResource",
+              "ecr:ListImages",
+              "ecr:GetRepositoryPolicy",
+              "ecr:GetLifecyclePolicyPreview",
+              "ecr:GetLifecyclePolicy",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:GetAuthorizationToken",
+              "ecr:DescribeRepositories",
+              "ecr:DescribeImages",
+              "ecr:DescribeImageScanFindings",
+              "ecr:BatchGetImage",
+              "ecr:BatchCheckLayerAvailability"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+

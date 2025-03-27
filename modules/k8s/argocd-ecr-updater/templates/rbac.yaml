@@ -1,0 +1,30 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ index .Values "argocd-ecr-updater" "env" "namespace" }}
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ index .Values "argocd-ecr-updater" "env" "namespace" }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}
+subjects:
+  - kind: ServiceAccount
+    name: argocd-ecr-updater
+    namespace: {{ .Release.Namespace }}

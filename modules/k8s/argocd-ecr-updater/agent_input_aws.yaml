@@ -1,0 +1,12 @@
+global:
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+
+
+argocd-ecr-updater:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/karlderkaefer/argocd-ecr-updater'
+  env:
+    namespace: "{{ .tmodule.argocd }}"

@@ -1,0 +1,27 @@
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:argocd-ecr-updater"
+              }
+            }
+          }
+        ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
