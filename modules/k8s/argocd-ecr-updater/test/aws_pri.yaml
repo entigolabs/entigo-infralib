@@ -1,0 +1,32 @@
+argocd:
+  repoServer:
+    autoscaling:
+      maxReplicas: 1
+  server:
+    ingress:
+      annotations:
+        alb.ingress.kubernetes.io/group.name: external
+        alb.ingress.kubernetes.io/scheme: internet-facing
+  global:
+    domain: |
+      {{ .module.name }}.{{ .toutput.route53.int_domain }}
+  configs:
+    rbac:
+      policy.csv: |
+        g, web-admin-258953744228679165, role:admin
+        p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
+      policy.default: role:readonly
+    cm:
+      oidc.config: |
+        name: Zitadel
+        issuer: https://entigo-dev-if3upz.zitadel.cloud
+        clientID: "309696599393701642"
+        clientSecret: "{{ .output-custom./argocd-pri/clientSecret }}"
+        requestedScopes:
+          - openid
+          - profile
+          - email
+          - groups
+        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session

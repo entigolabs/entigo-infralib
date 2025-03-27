@@ -1,0 +1,26 @@
+global:
+  providerConfigRefName: crossplane-aws
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
+
+argocd-ecr-updater:
+  env:
+    namespace: "argocd"
+  serviceAccount:
+    create: false
+    name: "argocd-ecr-updater"
+  rbac:
+    enabled: false
+  podAnnotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 128Mi
+      ephemeral-storage: 100Mi
+    requests:
+      cpu: 20m
+      memory: 64Mi
+      ephemeral-storage: 10Mi

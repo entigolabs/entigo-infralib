@@ -1,0 +1,56 @@
+argocd:
+  repoServer:
+    autoscaling:
+      maxReplicas: 1
+  server:
+    ingress:
+      annotations:
+        alb.ingress.kubernetes.io/group.name: external
+        alb.ingress.kubernetes.io/scheme: internet-facing
+  global:
+    domain: |
+      {{ .module.name }}.{{ .toutput.route53.pub_domain }}
+  configs:
+    rbac:
+      policy.csv: |
+        g, web-admin-258953744228679165, role:admin
+        p, infralib, applications, get, */*, allow
+        p, infralib, applications, sync, */*, allow
+        p, infralib, projects, get, *, allow
+      policy.default: role:readonly
+    cm:
+      oidc.config: |
+        name: Zitadel
+        issuer: https://entigo-dev-if3upz.zitadel.cloud
+        clientID: "309977719532247410"
+        clientSecret: "{{ .output-custom./argocd-biz/clientSecret }}"
+        requestedScopes:
+          - openid
+          - profile
+          - email
+          - groups
+        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
+
+
+argocd-apps:
+    applications:
+        extra:
+            destination:
+                namespace: "extra"
+                server: https://kubernetes.default.svc
+            namespace: "{{ .module.name }}"
+            project: default
+            source:
+                helm:
+                    valueFiles:
+                        - values.yaml
+                    values: |
+                      image:
+                        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/nginx'
+                path: modules/k8s/hello-world
+                repoURL: https://github.com/entigolabs/entigo-infralib-release.git
+                targetRevision: main
+            syncPolicy:
+                automated: {}
+                syncOptions:
+                    - CreateNamespace=true

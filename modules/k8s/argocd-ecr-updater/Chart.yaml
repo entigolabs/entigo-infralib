@@ -1,0 +1,11 @@
+apiVersion: v2
+name: argocd-ecr-updater
+description: argocd-ecr-updater
+version: 0.1.0
+appVersion: "0.1.0"
+
+dependencies:
+- name: argocd-ecr-updater
+  version: 0.3.30
+  repository: https://karlderkaefer.github.io/argocd-ecr-updater
+  alias: argocd-ecr-updater
