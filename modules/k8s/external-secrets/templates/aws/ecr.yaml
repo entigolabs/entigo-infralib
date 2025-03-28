@@ -1,0 +1,143 @@
+{{- if and 
+    (eq .Values.global.cloudProvider "aws")
+    (not (empty .Values.global.aws.createECRAccounts))
+    (.Values.global.aws.createECRNamespace)
+}}
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-ecr-token
+spec:
+  forProvider:
+    name: {{ .Release.Name }}-ecr-token
+    document: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "ecr:ListTagsForResource",
+              "ecr:ListImages",
+              "ecr:GetRepositoryPolicy",
+              "ecr:GetLifecyclePolicyPreview",
+              "ecr:GetLifecyclePolicy",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:GetAuthorizationToken",
+              "ecr:DescribeRepositories",
+              "ecr:DescribeImages",
+              "ecr:DescribeImageScanFindings",
+              "ecr:BatchGetImage",
+              "ecr:BatchCheckLayerAvailability"
+            ],
+            "Resource": [
+              "*"
+            ]
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-ecr-token
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Values.global.aws.createECRNamespace }}:ecr-token"
+              }
+            }
+          }
+        ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}-ecr-token
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}-ecr-token
+    roleNameRef:
+      name: {{ .Release.Name }}-ecr-token
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}-ecr-token
+  name: ecr-token
+  namespace: {{ .Values.global.aws.createECRNamespace }}
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: ECRAuthorizationToken
+metadata:
+  name: ecr-token
+  namespace: {{ .Values.global.aws.createECRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  region: {{ .Values.global.aws.region }}
+  auth:
+    jwt:
+      serviceAccountRef:
+        name: "ecr-token"
+---
+
+  {{- range .Values.global.aws.createECRAccounts }}
+
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+  namespace: {{ $.Values.global.aws.createECRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 30m
+  target:
+    name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+        type: helm
+        enableOCI: "true"
+        url: {{ .accountNumber }}.dkr.ecr.{{ .acocuntRegion }}.amazonaws.com
+        password: "{{`{{ .password }}`}}"
+        username: "{{`{{ .username }}`}}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ECRAuthorizationToken
+          name: ecr-token
+          
+---
+
+
+{{- end }}
+{{- end }}
