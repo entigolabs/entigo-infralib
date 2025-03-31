@@ -1,0 +1,15 @@
+{{- if .Values.clusterrolebinding }}
+{{- range $role, $subjects := .Values.clusterrolebinding }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $.Release.Name }}-{{ $role }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $role }}
+subjects:
+{{ toYaml $subjects | indent 2 }}
+---
+{{- end }}
+{{- end }}

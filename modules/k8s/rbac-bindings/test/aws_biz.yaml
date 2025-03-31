@@ -1,0 +1,9 @@
+clusterrolebinding:
+  cluster-admin:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: oidc:web-admin-258953744228679165
+  view:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: oidc:web-read-only-258953744228679165
