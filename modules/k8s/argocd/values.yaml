@@ -128,6 +128,7 @@ argocd:
       kube-score/ignore: pod-networkpolicy
       argocd.argoproj.io/hook: Sync
       argocd.argoproj.io/hook-delete-policy: HookSucceeded
+      sidecar.istio.io/inject: "false"
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
