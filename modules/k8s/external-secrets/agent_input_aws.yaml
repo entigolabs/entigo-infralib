@@ -3,3 +3,7 @@ global:
     region: "{{ .toutput.eks.region }}"
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    #createECRNamespace: "{{ .tmodule.argocd }}"
+    createECRAccounts: 
+    - accountNumber: "{{ .toutput.eks.account }}"
+      acocuntRegion: "{{ .toutput.eks.region }}"

@@ -255,7 +255,7 @@ module "kms_data" {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
           values = [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}ebs-csi"
           ]
         }
       ]
@@ -283,7 +283,7 @@ module "kms_data" {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
           values = [
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}-ebs-csi"
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.policy_prefix}ebs-csi"
           ]
         },
         {

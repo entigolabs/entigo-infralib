@@ -6,3 +6,6 @@ global:
     account: ""
     region: ""
     clusterOIDC: ""
+    createECRNamespace: ""
+    createECRAccounts: []   
+    
