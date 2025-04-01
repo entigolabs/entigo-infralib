@@ -34,9 +34,9 @@ then
   yq -y -i 'del(.spec.sources[0].targetRevision)' $app_file
 fi
 
-if kubectl get app $app_name -n ${ARGOCD_NAMESPACE} -o jsonpath='{.metadata.name}' >/dev/null 2>&1; then
+if kubectl get applications.argoproj.io $app_name -n ${ARGOCD_NAMESPACE} -o jsonpath='{.metadata.name}' >/dev/null 2>&1; then
     APP_EXISTED="yes"
-    kubectl patch -n ${ARGOCD_NAMESPACE} app $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1 
+    kubectl patch -n ${ARGOCD_NAMESPACE} applications.argoproj.io $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1
 else
     APP_EXISTED="no"
 fi
@@ -50,20 +50,43 @@ fi
 
 if [ "$USE_ARGOCD_CLI" == "true" ]
 then
-  STATUS=`argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status: \(.status.sync.status) RequiredPruning: \(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
+  STATUS=`argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .requiresPruning == null and (.hook == null or .hook == false))) | length) else 0 end) RequiredPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
   if [ $? -ne 0 ]
   then
     echo "Failed to refresh ArgoCD Application $app_name!"
     exit 25
   fi
-  echo "Status $app_name $STATUS"
-  if [ "$STATUS" != "Status: Synced RequiredPruning: 0" ]
+else
+  if [ $APP_EXISTED == "no" ]
   then
-    touch $app_file.sync
-    if [ "$APP_EXISTED" == "yes" ]
-    then
-      argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
-    fi
+    retry_count=0
+    while [ $retry_count -lt 50 ]; do
+      APPSTATUS=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} $app_name -o json | jq -r '.status.sync.status // "null"')
+      # Check if the result is not "null"
+      if [ "$APPSTATUS" != "null" ] && [ -n "$APPSTATUS" ]; then
+        break
+      fi    
+      echo "Waiting for ArgoCD to process $app_name application. Status is Null."
+      sleep 6
+      retry_count=$((retry_count + 1))
+    done
+  fi
+
+  STATUS=`kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .requiresPruning == null and (.hook == null or .hook == false))) | length) else 0 end) RequiredPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
+  if [ $? -ne 0 ]
+  then
+    echo "Failed to get ArgoCD Application $app_name!"
+    exit 26
+  fi
+fi
+
+echo "Status $app_name $STATUS"
+if [ "$STATUS" != "Status:Synced Missing:0 Changed:0 RequiredPruning:0" ]
+then
+  touch $app_file.sync
+  if [ "$APP_EXISTED" == "yes" -a "$USE_ARGOCD_CLI" == "true" ]
+  then
+    argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false $app_name
   fi
 fi
 echo "###############"
