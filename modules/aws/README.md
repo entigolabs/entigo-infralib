@@ -14,7 +14,6 @@ steps:
   - name: network
     type: terraform
     workspace: test
-    approve: minor
     modules:
       - name: hello
         source: aws/hello-world
