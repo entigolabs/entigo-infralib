@@ -215,7 +215,7 @@ then
   fi
 elif [ "$COMMAND" == "argocd-plan" ]
 then
-
+  HELM_BOOTSTAP="false"
   #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
@@ -262,6 +262,7 @@ argocd:
         
         helm upgrade --create-namespace --install -n $namespace -f git-$app/$path/values.yaml -f git-$app/$path/values-${PROVIDER}.yaml -f values-$app.yaml -f git-$app/$path/extra_repos.yaml --set argocd.configs.cm.admin.enabled="true" --set argocd-apps.enabled=false $app git-$app/$path
         rm -rf values-$app.yaml git-$app
+        HELM_BOOTSTAP="true"
       fi
     done
     if [ "$PROVIDER" == "google" ]
@@ -278,26 +279,6 @@ argocd:
     exit 25
   fi
   
-  if [ "$USE_ARGOCD_CLI" == "false" ] #keeping this for a while for legacy reasons, to be deleted as this is done by argocd job now.
-  then
-    echo "No infralib ArgoCD token found, probably it is first run. Trying to create token using admin credentials."
-    ARGO_PASS=`kubectl -n ${ARGOCD_NAMESPACE} get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d` 
-    if [ "$ARGO_PASS" != "" ]
-    then
-      argocd login --password ${ARGO_PASS} --username admin ${ARGOCD_HOSTNAME} --grpc-web
-      export ARGOCD_AUTH_TOKEN=`argocd account generate-token --account infralib`
-      argocd logout ${ARGOCD_HOSTNAME}
-      if [ "$ARGOCD_AUTH_TOKEN" != "" ]
-      then
-        kubectl create secret -n ${ARGOCD_NAMESPACE} generic argocd-infralib-token --from-literal=token=$ARGOCD_AUTH_TOKEN
-        export USE_ARGOCD_CLI="true"
-      else
-        echo "Failed to create ARGOCD_AUTH_TOKEN. This is normal initially when the ArgoCD ingress hostname is not resolving yet."
-      fi
-    else
-      echo "Unable to get argocd Admin token to create the account token for infralib."
-    fi
-  fi
   rm -f *.sync *.log
   PIDS=""
   for app_file in ./*.yaml
@@ -330,15 +311,17 @@ argocd:
       cat $name.log
   done
   
-  if [ "$USE_ARGOCD_CLI" == "true" ]
+  ADD=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Missing:0" | wc -l`
+  CHANGE=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Changed:0" | wc -l`
+  DESTROY=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning:0" | wc -l`
+  
+  #Prevent agent from confirming first bootstrap when ArgoCD's own application will always show changes since it is already bootstrapped with Helm.
+  if [ $HELM_BOOTSTAP == "true"  -a $CHANGE -gt 0 ]
   then
-    CHANGED=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep "RequiredPruning: 0$" | wc -l`
-    DESTROY=`cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning: 0$" | wc -l`
-  else
-    CHANGED=`cat ./*.log | grep '^application\.argoproj\.io/.*' | wc -l`
-    DESTROY="0"
+    CHANGE=$((CHANGE - 1))
   fi
-  echo "ArgoCD Applications: ${CHANGED} has changed objects, ${DESTROY} has RequiredPruning objects."
+
+  echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
 
   rm -f *.log
   
