@@ -43,12 +43,14 @@ metadata:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-delete-policy: before-hook-creation
     kube-score/ignore: pod-networkpolicy
-    sidecar.istio.io/inject: "false"
 spec:
   activeDeadlineSeconds: 900
   parallelism: 1
   completions: 1
   template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: {{ .Release.Name }}-infralibtoken
       affinity:
