@@ -118,12 +118,14 @@ generate_config() {
           then
           echo "    - name: ${step}
       type: terraform
-      approve: force
+      manual_approve_update: never
+      manual_approve_run: never
       modules:" >> agents/${cloud}_$testname/config.yaml
           else
           echo "    - name: ${step}
       type: terraform
-      approve: force
+      manual_approve_update: never
+      manual_approve_run: never
       vpc:
         attach: true
       modules:" >> agents/${cloud}_$testname/config.yaml
@@ -164,7 +166,8 @@ generate_config_k8s() {
             local existing_step="$existing_step ${cloud}"
             echo "    - name: apps
       type: argocd-apps
-      approve: force
+      manual_approve_update: never
+      manual_approve_run: never
       argocd_namespace: argocd-$prefix
       modules:" >> agents/${cloud}/config.yaml
           fi
