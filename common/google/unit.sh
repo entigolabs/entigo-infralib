@@ -56,7 +56,10 @@ else
   fi
 
   prepare_agent
-  echo "sources:
+  echo "callback:
+    url: http://localhost
+    key: 123456
+sources:
  - url: /conf
 steps:" > agents/config.yaml
   if [ "$AWS_ACCESS_KEY_ID" != "" ]
