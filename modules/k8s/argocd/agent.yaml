@@ -1,0 +1,4 @@
+version: v1
+metadata:
+  ui_url: "https://{{ .input.argocd.global.domain }}"
+module_types: [cd]

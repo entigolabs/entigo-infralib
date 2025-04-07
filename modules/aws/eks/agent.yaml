@@ -1,0 +1,6 @@
+version: v1
+metadata:
+  cluster_arn: "{{ .toutput.eks.cluster_arn }}"
+  cluster_endpoint: "{{ .toutput.eks.cluster_endpoint }}"
+  cluster_version: "{{ .toutput.eks.cluster_version }}"
+module_types: [kubernetes-cluster, kubernetes-nodes]
