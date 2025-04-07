@@ -1,0 +1,4 @@
+version: v1
+metadata:
+  ui_url: "https://{{ .input.grafana.ingress.hosts.0 }}"
+module_types: [visualize]
