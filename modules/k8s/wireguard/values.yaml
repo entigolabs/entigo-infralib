@@ -39,6 +39,7 @@ wireguard:
       memory: 128Mi
       ephemeral-storage: 128Mi
   keygenJob:
+    useWireguardManager: true
     wireguardMgrImage:
       tag: 20250306-4c02d5d
       pullPolicy: IfNotPresent
