@@ -86,9 +86,9 @@ steps:" > agents/config.yaml
         then
             if [ "$MODULE_NAME" == "vpc" -o "$MODULE_NAME" == "cost-alert" ]
             then
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
+              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
             else
-              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
+              yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "manual_approve_update": "never", "manual_approve_run": "never", "vpc": {"attach": true}, "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
             fi
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"

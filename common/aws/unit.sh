@@ -63,7 +63,7 @@ steps:" > agents/config.yaml
         fi
         if ! yq '.steps[].name' "agents/${MODULE_TYPE}_${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "approve": "force", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
+           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
