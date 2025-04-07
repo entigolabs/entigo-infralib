@@ -68,15 +68,21 @@ then
   prepare_agent
 if [ "$BRANCH" == "main" ]
 then
-echo "sources:
-    - url: https://github.com/entigolabs/entigo-infralib
+echo "callback:
+    url: http://localhost
+    key: 123456
+sources:
+  - url: https://github.com/entigolabs/entigo-infralib
       version: main
       force_version: true
 steps:" > agents/config.yaml
 
 else
-  echo "sources:
- - url: /conf
+  echo "callback:
+    url: http://localhost
+    key: 123456
+sources:
+  - url: /conf
 steps:" > agents/config.yaml
 fi
   if [ "$AWS_ACCESS_KEY_ID" != "" ]
@@ -100,7 +106,7 @@ fi
         get_step_name_k8s
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "approve": "force", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
+          yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
