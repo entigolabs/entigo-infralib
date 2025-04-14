@@ -1,6 +1,6 @@
 {{- if .Values.installProviderConfig }}
 
-apiVersion: kubernetes.crossplane.io/v1alpha1
+apiVersion: kubernetes.crossplane.io/v1alpha2
 kind: ProviderConfig
 metadata:
   name: {{ .Release.Name }}
