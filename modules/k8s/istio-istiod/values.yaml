@@ -6,11 +6,11 @@ istiod:
       requests:
         cpu: 10m
         memory: 32Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 10Mi
       limits:
         cpu: 2000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
   pilot:
     autoscaleMin: 2
     replicaCount: 2
@@ -33,10 +33,10 @@ istiod:
         effect: "NoSchedule"
     resources:
       requests:
-        cpu: 10m
-        memory: 256Mi
-        ephemeral-storage: 1Gi
+        cpu: 5m
+        memory: 160Mi
+        ephemeral-storage: 100Mi
       limits:
         cpu: 2000m
-        memory: 4096Mi
-        ephemeral-storage: 10Gi
+        memory: 2048Mi
+        ephemeral-storage: 1Gi
