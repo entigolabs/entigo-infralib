@@ -1,26 +1,108 @@
-module "aws_config" {
-  source  = "cloudposse/config/aws"
-  version = "0.13.0"
+# AWS Config Recorder
+resource "aws_config_configuration_recorder" "main" {
+  name     = "aws-config-recorder"
+  role_arn = aws_iam_role.config_role.arn
 
-  name = "aws-config"
+  recording_group {
+    all_supported                 = true
+    include_global_resource_types = true
+  }
+}
 
-  # Configure AWS Config to deliver snapshots once per day
-  delivery_frequency = "TwentyFour_Hours"
+# AWS Config Delivery Channel
+resource "aws_config_delivery_channel" "main" {
+  name           = "aws-config-delivery-channel"
+  s3_bucket_name = aws_s3_bucket.config_logs.id
+  s3_key_prefix  = "config-logs"
   
-  # S3 bucket for storing logs
-  s3_bucket_enabled = true
-  s3_bucket_name    = "aws-config-logs-${data.aws_caller_identity.current.account_id}"
-  s3_key_prefix     = "config-logs"
+  # Set to run once per day
+  snapshot_delivery_properties {
+    delivery_frequency = "TwentyFour_Hours"
+  }
 
-  # Recording group configuration
-  recording_group_all_supported                 = true
-  recording_group_include_global_resource_types = true
+  depends_on = [aws_config_configuration_recorder.main]
+}
 
-  # Configure SNS topic for notifications (optional)
-  sns_topic_enabled = false
-  # sns_topic_name  = "aws-config-notifications"
+# Enable the Config Recorder
+resource "aws_config_configuration_recorder_status" "main" {
+  name       = aws_config_configuration_recorder.main.name
+  is_enabled = true
+  depends_on = [aws_config_delivery_channel.main]
+}
 
-  # Optional KMS key for encryption
-  # kms_key_enabled = true
-  # kms_key_alias   = "alias/aws-config-encryption"
+# S3 Bucket for Config logs
+resource "aws_s3_bucket" "config_logs" {
+  bucket = "aws-config-logs-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_s3_bucket_versioning" "config_logs" {
+  bucket = aws_s3_bucket.config_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "config_logs" {
+  bucket = aws_s3_bucket.config_logs.id
+  
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# S3 Bucket Policy
+resource "aws_s3_bucket_policy" "config_logs" {
+  bucket = aws_s3_bucket.config_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AWSConfigBucketPermissionsCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "config.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.config_logs.id}"
+      },
+      {
+        Sid    = "AWSConfigBucketDelivery"
+        Effect = "Allow"
+        Principal = {
+          Service = "config.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.config_logs.id}/config-logs/AWSLogs/${data.aws_caller_identity.current.account_id}/Config/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# IAM Role for AWS Config
+resource "aws_iam_role" "config_role" {
+  name = "aws-config-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "config.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "config" {
+  role       = aws_iam_role.config_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
