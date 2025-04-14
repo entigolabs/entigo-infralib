@@ -15,11 +15,11 @@ external-secrets:
     limits:
       cpu: 1000m
       memory: 512Mi
-      ephemeral-storage: 10Gi
-    requests:
-      cpu: 10m
-      memory: 64Mi
       ephemeral-storage: 1Gi
+    requests:
+      cpu: 5m
+      memory: 50Mi
+      ephemeral-storage: 100Mi
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -42,11 +42,11 @@ external-secrets:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
-      requests:
-        cpu: 10m
-        memory: 64Mi
         ephemeral-storage: 1Gi
+      requests:
+        cpu: 3m
+        memory: 24Mi
+        ephemeral-storage: 100Mi
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
@@ -70,11 +70,11 @@ external-secrets:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
-      requests:
-        cpu: 10m
-        memory: 64Mi
         ephemeral-storage: 1Gi
+      requests:
+        cpu: 3m
+        memory: 41Mi
+        ephemeral-storage: 100Mi
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
