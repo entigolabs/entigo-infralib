@@ -55,7 +55,7 @@ prometheus:
       limits:
         cpu: 4000m
         memory: 8Gi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 5Gi
       requests:
         cpu: 300m
         memory: 2048Mi
