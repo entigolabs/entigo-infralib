@@ -2,6 +2,10 @@ metrics-server:
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
   resources:
+    requests:
+      cpu: 5m
+      memory: 45Mi
+      ephemeral-storage: 28Mi
     limits:
       cpu: 100m
       memory: 128Mi
