@@ -37,7 +37,7 @@ harbor:
       limits:
         cpu: 2000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 128Mi
@@ -66,7 +66,7 @@ harbor:
       limits:
         cpu: 2000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 128Mi
@@ -96,7 +96,7 @@ harbor:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 128Mi
@@ -125,7 +125,7 @@ harbor:
         limits:
           cpu: 1000m
           memory: 512Mi
-          ephemeral-storage: 10Gi
+          ephemeral-storage: 1Gi
         requests:
           cpu: 10m
           memory: 128Mi
@@ -135,7 +135,7 @@ harbor:
         limits:
           cpu: 1000m
           memory: 512Mi
-          ephemeral-storage: 10Gi
+          ephemeral-storage: 1Gi
         requests:
           cpu: 10m
           memory: 128Mi
@@ -169,7 +169,7 @@ harbor:
         limits:
           cpu: 2000m
           memory: 2Gi
-          ephemeral-storage: 10Gi
+          ephemeral-storage: 1Gi
         requests:
           cpu: 100m
           memory: 256Mi
@@ -195,7 +195,7 @@ harbor:
             limits:
               cpu: 2000m
               memory: 2Gi
-              ephemeral-storage: 10Gi
+              ephemeral-storage: 1Gi
             requests:
               cpu: 1m
               memory: 64Mi
@@ -205,7 +205,7 @@ harbor:
             limits:
               cpu: 2000m
               memory: 2Gi
-              ephemeral-storage: 10Gi
+              ephemeral-storage: 1Gi
             requests:
               cpu: 1m
               memory: 64Mi
@@ -219,7 +219,7 @@ harbor:
         limits:
           cpu: 1000m
           memory: 512Mi
-          ephemeral-storage: 10Gi
+          ephemeral-storage: 1Gi
         requests:
           cpu: 10m
           memory: 32Mi
@@ -245,7 +245,7 @@ harbor:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 32Mi
@@ -276,7 +276,7 @@ harbor:
       limits:
         cpu: 1
         memory: 1Gi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
