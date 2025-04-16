@@ -12,7 +12,6 @@ domains: |
     },
     "bizprivateextra" = {
       domain_name        = "{{ .config.prefix }}-{{ .module.name  }}-extra-int.infralib.entigo.io"
-      parent_zone_id     = "Z07983041XRLSLZUTHHDY"
       private            = true
       create_certificate = false
     }
