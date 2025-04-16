@@ -1,0 +1,18 @@
+domains: |
+  {
+    "extpublic" = {
+      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}.infralib.entigo.io"
+      parent_zone_id     = "Z07983041XRLSLZUTHHDY"
+      default_public     = true
+    },
+    "extprivate" = {
+      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}-private.infralib.entigo.io"
+      parent_zone_id     = "Z07983041XRLSLZUTHHDY"
+      default_private    = true
+    }
+    "extpublic-extra" = {
+      domain_name        = "infralib.entigo.io"
+      create_certificate = false
+      create_zone        = false
+    }
+  }

@@ -1,0 +1,8 @@
+domains: |
+  {
+    "min" = {
+      domain_name        = "infralib.entigo.io"
+      create_certificate = true
+      create_zone        = false
+    }
+  }
