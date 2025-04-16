@@ -58,8 +58,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 50m
-        memory: 128Mi
+        cpu: 40m
+        memory: 96Mi
         ephemeral-storage: 100Mi
     autoscaling:
       enabled: true
@@ -92,7 +92,7 @@ argocd:
         ephemeral-storage: 20Gi
       requests:
         cpu: 10m
-        memory: 32Mi
+        memory: 48Mi
         ephemeral-storage: 2Gi
 
   redis:
@@ -120,8 +120,8 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
-        memory: 128Mi
+        cpu: 30m
+        memory: 32Mi
         ephemeral-storage: 100Mi
   redisSecretInit:
     jobAnnotations:
@@ -262,8 +262,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
-        memory: 128Mi
+        cpu: 50m
+        memory: 96Mi
         ephemeral-storage: 100Mi
 
   applicationSet:
@@ -291,8 +291,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
-        memory: 128Mi
+        cpu: 10m
+        memory: 32Mi
         ephemeral-storage: 100Mi
 
   notifications:
@@ -319,8 +319,8 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
-        memory: 64Mi
+        cpu: 10m
+        memory: 32Mi
         ephemeral-storage: 100Mi
 
   controller:
