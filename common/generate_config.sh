@@ -94,15 +94,15 @@ get_app_name() {
 }
 
 generate_config() {
-    local cloud=$(basename $1)
-    local MODULE_PATHS=$1
+    local cloud=$1
     local step=$2
     shift 2
     local modules=("$@")
     local existing_step=""
     for module in "${modules[@]}"
     do
-      for test in $(ls -1 ${MODULE_PATHS}/$module/test/*.yaml)
+      module_name=$(basename $module)
+      for test in $(ls -1 ./modules/$module/test/*.yaml)
       do 
         testname=`basename $test | sed 's/\.yaml$//'`
         if [ ! -f agents/${cloud}_$testname/config.yaml ]
@@ -132,10 +132,10 @@ generate_config() {
           fi
         fi
 
-          echo "      - name: $module
-        source: ${cloud}/$module" >> agents/${cloud}_$testname/config.yaml
+          echo "      - name: $module_name
+        source: $module" >> agents/${cloud}_$testname/config.yaml
         mkdir -p agents/${cloud}_$testname/config/${step}
-        cp $test agents/${cloud}_$testname/config/${step}/${module}.yaml
+        cp $test agents/${cloud}_$testname/config/${step}/${module_name}.yaml
       done
     done
 }
@@ -406,13 +406,13 @@ test_k8s() {
 
 
 default_aws_conf() {
-  generate_config "./modules/aws" "net" "kms" "cost-alert" "hello-world" "vpc" "tgw-attach" "route53" "route53-resolver-associate" "ecr-proxy"
-  generate_config "./modules/aws" "infra" "eks" "eks-node-group" "crossplane" "ec2" "karpenter-node-role"
+  generate_config "aws" "net" "aws/kms" "aws/cost-alert" "aws/hello-world" "aws/vpc" "aws/tgw-attach" "aws/route53" "aws/route53-resolver-associate" "aws/ecr-proxy"
+  generate_config "aws" "infra" "aws/eks" "aws/eks-node-group" "aws/crossplane" "aws/ec2" "aws/karpenter-node-role"
 }
 
 default_google_conf() {
-  generate_config "./modules/google" "net" "services" "vpc" "dns" "gar-proxy"
-  generate_config "./modules/google" "infra" "gke" "crossplane"
+  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy"
+  generate_config "google" "infra" "google/gke" "google/crossplane"
 }
 
 full_k8s_conf() {

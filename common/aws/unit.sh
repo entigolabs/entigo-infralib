@@ -7,7 +7,8 @@ then
 fi
 
 MODULE_PATH="$(pwd)"
-MODULE_TYPE=$(basename $(dirname $(pwd)))
+MODULE_TYPE_VERSIONED=$(basename $(dirname $(pwd)))
+MODULE_TYPE=$(echo $(basename $(dirname $(pwd))) | cut -d"-" -f1)
 MODULE_NAME=$(basename $(pwd))
 
 SCRIPTPATH=$(dirname "$0")
@@ -24,7 +25,7 @@ then
         testname=`basename $test | sed 's/\.yaml$//'`
         if [ "$BRANCH" == "main" ] 
         then
-          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE/$MODULE_NAME\") | .name")
+          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE_VERSIONED/$MODULE_NAME\") | .name")
           break
         fi
   done
@@ -62,11 +63,11 @@ steps:" > agents/config.yaml
         
         if [ "$BRANCH" == "main" ] 
         then
-          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE/$MODULE_NAME\") | .name")
+          STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE_VERSIONED/$MODULE_NAME\") | .name")
         fi
         if ! yq '.steps[].name' "agents/${MODULE_TYPE}_${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
-           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
+           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "terraform", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$MODULE_NAME"'", "source": "'"$MODULE_TYPE_VERSIONED"'/'"$MODULE_NAME"'"}]}]' "agents/${MODULE_TYPE}_${testname}/config.yaml"
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
