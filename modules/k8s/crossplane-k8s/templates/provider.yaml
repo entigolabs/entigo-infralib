@@ -7,6 +7,6 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-kubernetes:v0.17.1
+  package: {{ .Values.image.registry }}:{{ .Values.image.tag }}
   runtimeConfigRef:
     name: {{.Release.Name}}
