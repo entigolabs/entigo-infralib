@@ -39,20 +39,8 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 		t.Fatal("loki-read deployment error:", err)
 	}
 
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-	fmt.Println(kubectlOptions)
-
-	gatewayName2 := fmt.Sprintf("%s-gateway", namespaceName)
-	if cloudName == "aws" {
-		gatewayName = gatewayName2
-	}
-
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, gatewayName2, 20, 6*time.Second)
+	lokiGatewayName := fmt.Sprintf("%s-gateway", namespaceName)
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, lokiGatewayName, 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-gateway deployment error:", err)
 	}
@@ -67,6 +55,8 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 
 	switch cloudName {
 	case "aws":
+		gatewayName = fmt.Sprintf("%s-gateway", gatewayName)
+
 		err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
 		if err != nil {
 			t.Fatal("File not found in AWS bucket:", err)
