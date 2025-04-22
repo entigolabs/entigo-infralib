@@ -10,7 +10,7 @@ ENV PATH=/google-cloud-sdk/bin:$PATH CLOUDSDK_PYTHON=/usr/bin/python3
 RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_base && apt-get update -y && apt-get -y install wget curl gpg && \
     wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bullseye main" | tee /etc/apt/sources.list.d/hashicorp.list && \
-    apt-get update -y && apt-get -y install unzip terraform=${TERRAFORM_VERSION} yq && rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
+    apt-get update -y && apt-get -y install unzip terraform=${TERRAFORM_VERSION} yq python3-crcmod && rm -rf /var/cache/apt/archives /var/lib/apt/lists/* && \
     if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
       curl -Lo /usr/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-arm64 && chmod +x /usr/bin/argocd && \
       curl -s -o /usr/bin/kubectl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/arm64/kubectl" && chmod +x /usr/bin/kubectl && \
