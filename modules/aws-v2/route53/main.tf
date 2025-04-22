@@ -220,11 +220,12 @@ resource "aws_route53_record" "validation" {
 }
 
 # Validate the public certificates
-resource "aws_acm_certificate_validation" "this" {
+resource "aws_acm_certificate_validation" "this" {  
   for_each = {
-    for k, cert in aws_acm_certificate.this : k => cert
-    if cert.validation_method == "DNS"
+    for k, v in var.domains : k => v
+    if v.create_certificate && v.certificate_authority_arn == "" && v.parent_zone_id != ""
   }
-  certificate_arn         = each.value.arn
+  
+  certificate_arn         = aws_acm_certificate.this[each.key].arn
 }
 
