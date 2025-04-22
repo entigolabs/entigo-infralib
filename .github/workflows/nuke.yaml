@@ -10,6 +10,9 @@ jobs:
     name: Nuke AWS account
     runs-on: ubuntu-latest
     steps:
+    - name: Sleep for 5 minutes
+      if: github.event_name == 'schedule'
+      run: sleep 300
     - name: Slack Started Message
       if: github.event_name != 'schedule'
       uses: rtCamp/action-slack-notify@v2
@@ -45,6 +48,9 @@ jobs:
     name: Nuke Google project
     runs-on: ubuntu-latest
     steps:
+    - name: Sleep for 5 minutes
+      if: github.event_name == 'schedule'
+      run: sleep 300
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Nuke entigo-infralib google project
