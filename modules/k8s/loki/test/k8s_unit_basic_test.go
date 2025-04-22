@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/google"
-	"github.com/stretchr/testify/require"
+	"github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 )
 
 func TestK8sLokiAWSBiz(t *testing.T) {
@@ -29,21 +29,30 @@ func TestK8sLokiGooglePri(t *testing.T) {
 }
 
 func testK8sLoki(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
+	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
+
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
-	
-	if cloudName == "aws" {
-		gatewayName = "loki-gateway"
-	}
-	
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "loki-read", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-read deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "loki-gateway", 20, 6*time.Second)
+
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+	fmt.Println(kubectlOptions)
+
+	gatewayName2 := fmt.Sprintf("%s-gateway", namespaceName)
+	if cloudName == "aws" {
+		gatewayName = gatewayName2
+	}
+
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, gatewayName2, 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-gateway deployment error:", err)
 	}
@@ -56,20 +65,19 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 		t.Fatal("loki-backend-0 pod error:", err)
 	}
 
-
 	switch cloudName {
-	  case "aws":
-	    err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
-	    if err != nil {
-		    t.Fatal("File not found in AWS bucket:", err)
-	    }
-	  case "google":
-	    err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
-	    if err != nil {
-		    t.Fatal("File not found in Google bucket:", err)
-	    }
+	case "aws":
+		err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
+		if err != nil {
+			t.Fatal("File not found in AWS bucket:", err)
+		}
+	case "google":
+		err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
+		if err != nil {
+			t.Fatal("File not found in Google bucket:", err)
+		}
 	}
-	
+
 	successResponseCode := "200"
 	targetURL := fmt.Sprintf("https://%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
