@@ -150,3 +150,30 @@ resource "google_certificate_manager_certificate_map_entry" "pub_cert_2" {
   certificates = [google_certificate_manager_certificate.pub_cert[0].id]
   hostname     = "*.${trimsuffix(local.pub_domain, ".")}"
 }
+
+resource "google_dns_policy" "dns_policy" {
+  count                     = length(var.dns_policy_vpc_ids) > 0 ? 1 : 0
+  name                      = var.prefix
+  enable_inbound_forwarding = var.enable_inbound_forwarding
+  enable_logging            = var.enable_logging
+
+  dynamic "networks" {
+    for_each = var.dns_policy_vpc_ids
+    content {
+      network_url = networks.value
+    }
+  }
+
+  dynamic "alternative_name_server_config" {
+    for_each = var.alternative_name_servers != null ? [1] : []
+    content {
+      dynamic "target_name_servers" {
+        for_each = var.alternative_name_servers
+        content {
+          ipv4_address    = target_name_servers.value.ipv4_address
+          forwarding_path = lookup(target_name_servers.value, "forwarding_path", null)
+        }
+      }
+    }
+  }
+}
