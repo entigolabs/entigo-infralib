@@ -1,9 +1,9 @@
-## Helm charts that we use
+## Helm charts that we use ##
 
-These modules can be used in the [entigo-infralib-agent](https://github.com/entigolabs/entigo-infralib-agent) steps of "**type: argocd-apps**".
+These modules can be used in the [entigo-infralib-agent](https://github.com/entigolabs/entigo-infralib-agent) steps of "__type: argocd-apps__".
 
-## Example code
 
+## Example code ##
 ```
 steps:
   - name: apps
