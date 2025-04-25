@@ -11,3 +11,4 @@ wireguard:
   service:
     annotations: 
       external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+      hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
