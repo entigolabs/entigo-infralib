@@ -75,7 +75,7 @@ then
   if [ ! -z "$GOOGLE_REGION" ]
   then
     mkdir -p /project/steps/$TF_VAR_prefix
-    gsutil -m rsync -r ${GOOGLE_S3_EXCLUDE_TERRAFORM[@]} gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/$TF_VAR_prefix
+    gsutil -m -q rsync -r ${GOOGLE_S3_EXCLUDE_TERRAFORM[@]} gs://${INFRALIB_BUCKET}/steps/$TF_VAR_prefix /project/steps/$TF_VAR_prefix
     cd /project
   else
     cd $CODEBUILD_SRC_DIR
