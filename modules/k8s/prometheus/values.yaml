@@ -74,6 +74,8 @@ prometheus:
     enabled: false
   alertmanager:
     enabled: true
+    configmapReload:
+      enabled: true
     statefulSet:
       annotations:
         kube-score/ignore: pod-probes,pod-networkpolicy
