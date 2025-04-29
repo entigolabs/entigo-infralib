@@ -66,6 +66,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: {{ .package }}
+  skipDependencyResolution: {{ .skipDependencyResolution }}
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
