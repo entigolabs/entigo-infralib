@@ -6,7 +6,7 @@ locals {
 resource "google_project_iam_member" "crossplane_core" {
   project = data.google_client_config.this.project
   role    = "roles/artifactregistry.reader"
-  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
+  member  = "serviceAccount:${data.google_client_config.this.project}.svc.id.goog[${var.kubernetes_namespace}/crossplane"
 }
 
 resource "google_service_account_iam_member" "crossplane_workload_identity_user" {
