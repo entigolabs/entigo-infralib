@@ -6,6 +6,7 @@ global:
 
   deploymentRuntimeConfig:
     googleServiceAccount: ""
+    serviceAccountName: crossplane
 
   registry: docker.io
 
