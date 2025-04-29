@@ -3,3 +3,4 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
   deploymentRuntimeConfig:
     googleServiceAccount: "{{ .toutput.crossplane.service_account_email }}"
+  registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

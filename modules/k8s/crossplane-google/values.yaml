@@ -7,6 +7,6 @@ global:
   deploymentRuntimeConfig:
     googleServiceAccount: ""
 
-  registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  registry: docker.io
 
   extraProviders: []
