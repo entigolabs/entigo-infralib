@@ -3,7 +3,7 @@ kind: DeploymentRuntimeConfig
 metadata:
   name: {{ .Release.Name }}
   annotations:
-    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-wave: '1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     helm.sh/resource-policy: keep
 spec:
@@ -28,7 +28,7 @@ spec:
               securityContext: {}
           securityContext:
             fsGroup: 2000
-          serviceAccountName: {{ .Release.Name }}
+          serviceAccountName: crossplane
           tolerations:
             - effect: NoSchedule
               key: tools
@@ -37,6 +37,6 @@ spec:
   serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: {{ .Release.Name }}
+      name: crossplane
       annotations:
         iam.gke.io/gcp-service-account: {{ .Values.global.deploymentRuntimeConfig.googleServiceAccount }}

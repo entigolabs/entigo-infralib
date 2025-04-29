@@ -11,7 +11,7 @@ variable "crossplane_service_account_id" {
 variable "kubernetes_service_account" {
   type        = string
   description = "Kubernetes service account name for Google Crossplane provider"
-  default     = "crossplane-google"
+  default     = "crossplane"
 }
 
 variable "kubernetes_namespace" {
