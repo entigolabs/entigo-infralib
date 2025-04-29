@@ -1,7 +1,7 @@
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "20.33.1"
+  version = "20.36.0"
   use_name_prefix = true
   name                    = substr(var.prefix, 0, 35)
   iam_role_use_name_prefix = true
