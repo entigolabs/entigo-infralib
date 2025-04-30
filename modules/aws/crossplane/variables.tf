@@ -23,8 +23,3 @@ variable "kubernetes_namespace" {
   default = "crossplane-system"
 }
 
-variable "crossplane_core_iam_policy" {
-  type = string
-  description = "Policy for crossplane-core kubernetes service account"
-  default = ""
-}
