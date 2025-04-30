@@ -14,7 +14,7 @@ spec:
   hostnames: [ {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: loki-gateway
+        - name: {{ .Values.loki.fullnameOverride }}-gateway
           port: 80
 
 {{- end }}

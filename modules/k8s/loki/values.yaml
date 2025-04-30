@@ -12,16 +12,62 @@ loki:
 
   loki:
     auth_enabled: false
+    limits_config:
+      allow_structured_metadata: true # Set to false if schema v12 is used.
     storage:
       bucketNames:
         chunks: ""
         ruler: ""
         admin: ""
-    storage_config:
-      boltdb_shipper:
-        active_index_directory: /var/loki/boltdb-shipper-active
-        cache_location: /var/loki/boltdb-shipper-cache
-        cache_ttl: 24h # Can be increased for faster performance over longer query periods, uses more disk space
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /var/loki/boltdb-shipper-active
+          cache_location: /var/loki/boltdb-shipper-cache
+          cache_ttl: 24h
+        tsdb_shipper:
+          active_index_directory: /var/loki/tsdb-index
+          cache_location: /var/loki/tsdb-cache
+          cache_ttl: 24h
+    schemaConfig:
+      configs:
+        - from: "2022-01-11"
+          index:
+            period: 24h
+            prefix: loki_index_
+          object_store: s3
+          schema: v12
+          store: boltdb-shipper
+        - from: "2025-12-01" # Replace with future date
+          store: tsdb
+          object_store: "s3"
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+  resultsCache:
+    enabled: false
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+
+  chunksCache:
+    enabled: false
+
   test:
     enabled: false
 
@@ -48,24 +94,8 @@ loki:
       #     - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
       #       expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
 
-    # ServiceMonitor configuration
-    serviceMonitor:
-      # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
-      enabled: true
-      # -- Namespace selector for ServiceMonitor resources
-      metricsInstance:
-        # -- If enabled, MetricsInstance resources for Grafana Agent Operator are created
-        enabled: false
-    selfMonitoring:
-      enabled: false
-      grafanaAgent:
-        installOperator: false
-        enableConfigReadAPI: false
-
-    # The Loki canary pushes logs to and queries from this loki installation to test
-    # that it's working correctly
-    lokiCanary:
-      enabled: true
+  lokiCanary:
+    enabled: false
 
   write:
     replicas: 2 #3
@@ -80,23 +110,23 @@ loki:
         ephemeral-storage: 100Mi
     persistence:
       size: 30Gi
-    affinity: |
+    affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 90
-          preference:
-            matchExpressions:
-            - key: mon
-              operator: In
-              values:
-              - "true"
-        - weight: 10
-          preference:
-            matchExpressions:
-            - key: tools
-              operator: In
-              values:
-              - "true"
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -117,23 +147,23 @@ loki:
         cpu: 50m
         memory: 256Mi
         ephemeral-storage: 100Mi
-    affinity: |
+    affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 90
-          preference:
-            matchExpressions:
-            - key: mon
-              operator: In
-              values:
-              - "true"
-        - weight: 10
-          preference:
-            matchExpressions:
-            - key: tools
-              operator: In
-              values:
-              - "true"
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -155,23 +185,23 @@ loki:
   gateway:
     enabled: true
     verboseLogging: true
-    affinity: |
+    affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 90
-          preference:
-            matchExpressions:
-            - key: mon
-              operator: In
-              values:
-              - "true"
-        - weight: 10
-          preference:
-            matchExpressions:
-            - key: tools
-              operator: In
-              values:
-              - "true"
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -201,33 +231,35 @@ loki:
       enabled: false
       grafanaAgent:
         installOperator: false
-    # Dashboards for monitoring Loki
-    lokiCanary:
-      enabled: false
+        enableConfigReadAPI: false
     dashboards:
       enabled: false
       labels:
         grafana_dashboard: "1"
+    serviceMonitor:
+      enabled: true
+      metricsInstance:
+        enabled: false
 
   backend:
     replicas: 2
-    affinity: |
+    affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 90
-          preference:
-            matchExpressions:
-            - key: mon
-              operator: In
-              values:
-              - "true"
-        - weight: 10
-          preference:
-            matchExpressions:
-            - key: tools
-              operator: In
-              values:
-              - "true"
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -251,4 +283,3 @@ loki:
       minReplicas: 2
       maxReplicas: 3
       targetCPUUtilizationPercentage: 60
-
