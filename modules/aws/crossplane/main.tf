@@ -57,6 +57,6 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "crossplane_core" {
   count = var.crossplane_core_iam_policy != "" ? 1 : 0
-  role       = aws_iam_role.crossplane_core.name
+  role       = aws_iam_role.crossplane_core[0].name
   policy_arn = var.crossplane_core_iam_policy
 }
