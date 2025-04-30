@@ -22,3 +22,9 @@ variable "kubernetes_namespace" {
   description = "Kubernetes namespace name for crossplane"
   default = "crossplane-system"
 }
+
+variable "crossplane_core_iam_policy" {
+  type = string
+  description = "Policy for crossplane-core kubernetes service account"
+  default = ""
+}

@@ -1,0 +1,2 @@
+global:
+  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'

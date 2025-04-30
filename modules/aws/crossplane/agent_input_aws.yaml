@@ -1,2 +1,3 @@
 eks_oidc_provider: "{{ .toutput.eks.oidc_provider }}"
 eks_oidc_provider_arn: "{{ .toutput.eks.oidc_provider_arn }}"
+crossplane_core_iam_policy: "{{ .toptout.ecr-proxy.policy }}"
