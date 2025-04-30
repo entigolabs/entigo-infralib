@@ -7,6 +7,6 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: {{ .Values.image.registry }}:{{ .Values.image.tag }}
+  package: {{ .Values.global.registry }}/entigolabs/provider-kubernetes:v0.17.3
   runtimeConfigRef:
     name: {{.Release.Name}}
