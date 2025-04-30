@@ -1,10 +1,10 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
-  name: {{.Release.Name}}
+  name: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: '1'
     helm.sh/resource-policy: keep
 spec:
   deploymentTemplate:
@@ -21,20 +21,20 @@ spec:
                       - key: tools
                         operator: In
                         values:
-                          - "true"
+                          - 'true'
                   weight: 90
           containers:
             - name: package-runtime
               securityContext: {}
           securityContext:
             fsGroup: 2000
-          serviceAccountName: {{.Release.Name}}
+          serviceAccountName: {{ .Release.Name }}
           tolerations:
             - effect: NoSchedule
               key: tools
               operator: Equal
-              value: "true"
+              value: 'true'
   serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: {{.Release.Name}}
+      name: {{ .Release.Name }}
