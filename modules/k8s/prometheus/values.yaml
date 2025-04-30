@@ -5,7 +5,6 @@ global:
   installPrometheusOperatorCRDs: false
   installBlackbox: false
 
-
 prometheus-operator-crds:
   crds:
     annotations:
@@ -75,6 +74,17 @@ prometheus:
     enabled: false
   alertmanager:
     enabled: true
+    configmapReload:
+      enabled: true
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+          ephemeral-storage: 1Gi
+        requests:
+          cpu: 5m
+          memory: 16Mi
+          ephemeral-storage: 10Mi
     statefulSet:
       annotations:
         kube-score/ignore: pod-probes,pod-networkpolicy
@@ -184,4 +194,3 @@ prometheus:
       cpu: 10m
       memory: 16Mi
       ephemeral-storage: 10Mi
-
