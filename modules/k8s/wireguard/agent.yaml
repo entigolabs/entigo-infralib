@@ -1,4 +1,6 @@
 version: v1
 metadata:
-  vpn_host: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+  vpn_host: "{{ .input.wireguard.service.annotations.hostname }}"
+  server_cidr: "{{ .input.wireguard.wireguard.serverCidr }}"
+  server_address: "{{ .input.wireguard.wireguard.serverAddress }}"
 module_types: [client-vpn]

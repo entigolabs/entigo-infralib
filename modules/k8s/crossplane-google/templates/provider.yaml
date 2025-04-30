@@ -1,13 +1,27 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
+  name: upbound-provider-family-gcp
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: {{.Values.global.registry}}/entigolabs/provider-family-gcp:v1.12.2
+  runtimeConfigRef:
+    name: {{.Release.Name}}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
   name: provider-gcp-cloudplatform
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v1.12.1
+  package: {{.Values.global.registry}}/entigolabs/provider-gcp-cloudplatform:v1.12.2
+  skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
 ---
@@ -20,7 +34,8 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-storage:v1.12.1
+  package: {{.Values.global.registry}}/entigolabs/provider-gcp-storage:v1.12.2
+  skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
 ---
@@ -33,7 +48,8 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v1.12.1
+  package: {{.Values.global.registry}}/entigolabs/provider-gcp-secretmanager:v1.12.2
+  skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
 
@@ -50,6 +66,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: {{ .package }}
+  skipDependencyResolution: {{ .skipDependencyResolution }}
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

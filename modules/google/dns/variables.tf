@@ -36,3 +36,26 @@ variable "private_subdomain_name" {
   type    = string
   default = ""
 }
+
+variable "dns_policy_vpc_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "enable_inbound_forwarding" {
+  type    = bool
+  default = false
+}
+
+variable "enable_logging" {
+  type    = bool
+  default = false
+}
+
+variable "alternative_name_servers" {
+  type = list(object({
+    ipv4_address    = string
+    forwarding_path = optional(string)
+  }))
+  default = null
+}

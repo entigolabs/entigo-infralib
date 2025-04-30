@@ -1,0 +1,9 @@
+version: v1
+metadata: 
+  pub_cert_arn: "{{ .sout.pub_cert_arn }}"
+  pub_domain: "{{ .sout.pub_domain }}"
+  pub_zone_id: "{{ .sout.pub_zone_id }}"
+  int_cert_arn: "{{ .sout.int_cert_arn }}"
+  int_domain: "{{ .sout.int_domain }}"
+  int_zone_id: "{{ .sout.int_zone_id }}"
+module_types: [dns, certificates]
