@@ -91,21 +91,21 @@ grafana:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 64Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 100Mi
 
   resources:
     limits:
       cpu: 1000m
       memory: 512Mi
-      ephemeral-storage: 10Gi
+      ephemeral-storage: 1Gi
     requests:
       cpu: 10m
       memory: 64Mi
-      ephemeral-storage: 1Gi
+      ephemeral-storage: 100Mi
   networkPolicy:
     enabled: false
     ingress: true
@@ -141,11 +141,11 @@ grafana:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 1Gi
       requests:
         cpu: 10m
         memory: 32Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 100Mi
     alerts:
       enabled: true
     dashboards:
@@ -158,11 +158,11 @@ grafana:
       limits:
         cpu: 1000m
         memory: 512Mi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 100Mi
       requests:
         cpu: 10m
         memory: 32Mi
-        ephemeral-storage: 1Gi
+        ephemeral-storage: 10Mi
 
   affinity:
     nodeAffinity:

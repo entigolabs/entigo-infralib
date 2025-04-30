@@ -95,7 +95,7 @@ mimir-distributed:
       limits:
         cpu: 2
         memory: 8Gi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 2Gi
       requests:
         cpu: 100m
         memory: 2Gi
@@ -327,7 +327,7 @@ mimir-distributed:
       limits:
         cpu: 2
         memory: 2Gi
-        ephemeral-storage: 10Gi
+        ephemeral-storage: 3Gi
       requests:
         cpu: 100m
         memory: 512Mi

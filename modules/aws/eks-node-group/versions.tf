@@ -3,15 +3,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.83.1"
+      version = "5.95.0"
     }
     null = {
       source  = "hashicorp/null"
-      version = "3.2.3"
+      version = "3.2.4"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
-      version = "2.3.5"
+      version = "2.3.7"
     }
   }
 }

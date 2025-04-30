@@ -220,6 +220,22 @@ if [ "$FAIL" -ne 0 ]; then
 fi
 
 PIDS=""
+for line in $(gcloud -q dns policies list --uri); do
+  gcloud dns policies update --project $GOOGLE_PROJECT --networks="" -q $line
+  gcloud dns policies delete --project $GOOGLE_PROJECT -q $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete DNS policies. $FAIL"
+  exit 1
+fi
+
+PIDS=""
 for line in $(gcloud -q "compute" "addresses" list --uri); do
   gcloud 'compute' "addresses" delete --project $GOOGLE_PROJECT -q $line &
   PIDS="$PIDS $!"

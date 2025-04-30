@@ -3,3 +3,6 @@ create_private: true
 parent_zone_id: "gcp-infralib-entigo-io"
 vpc_ids: |
   ["{{ .toutput.vpc.vpc_id }}"]
+dns_policy_vpc_ids: |
+  ["{{ .toutput.vpc.vpc_id }}"]
+enable_inbound_forwarding: true

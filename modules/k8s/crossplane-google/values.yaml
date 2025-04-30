@@ -7,4 +7,6 @@ global:
   deploymentRuntimeConfig:
     googleServiceAccount: ""
 
+  registry: docker.io
+
   extraProviders: []

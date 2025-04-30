@@ -29,6 +29,13 @@ karpenter:
         cpu: 1
         memory: 1Gi
         ephemeral-storage: 2Gi
+  tolerations:
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -36,6 +43,14 @@ karpenter:
           - matchExpressions:
               - key: karpenter.sh/nodepool
                 operator: DoesNotExist
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         - topologyKey: "kubernetes.io/hostname"
