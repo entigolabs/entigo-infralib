@@ -1,2 +1,0 @@
-eks_oidc_provider: "{{ .toutput.eks.oidc_provider }}"
-eks_oidc_provider_arn: "{{ .toutput.eks.oidc_provider_arn }}"

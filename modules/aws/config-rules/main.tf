@@ -1,7 +1,7 @@
 # AWS Config Recorder
 resource "aws_config_configuration_recorder" "main" {
-  name     = "aws-config-recorder"
-  role_arn = aws_iam_role.config_role.arn
+  name     = var.prefix
+  role_arn = aws_iam_role.config.arn
 
   recording_group {
     all_supported                 = true
@@ -11,11 +11,10 @@ resource "aws_config_configuration_recorder" "main" {
 
 # AWS Config Delivery Channel
 resource "aws_config_delivery_channel" "main" {
-  name           = "aws-config-delivery-channel"
+  name           = var.prefix
   s3_bucket_name = aws_s3_bucket.config_logs.id
   s3_key_prefix  = "config-logs"
-  
-  # Set to run once per day
+
   snapshot_delivery_properties {
     delivery_frequency = "TwentyFour_Hours"
   }
@@ -32,7 +31,7 @@ resource "aws_config_configuration_recorder_status" "main" {
 
 # S3 Bucket for Config logs
 resource "aws_s3_bucket" "config_logs" {
-  bucket = "aws-config-logs-${data.aws_caller_identity.current.account_id}"
+  bucket = "${substr(var.prefix, 0, 30)}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}"
 }
 
 resource "aws_s3_bucket_versioning" "config_logs" {
@@ -44,7 +43,7 @@ resource "aws_s3_bucket_versioning" "config_logs" {
 
 resource "aws_s3_bucket_public_access_block" "config_logs" {
   bucket = aws_s3_bucket.config_logs.id
-  
+
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -85,8 +84,8 @@ resource "aws_s3_bucket_policy" "config_logs" {
 }
 
 # IAM Role for AWS Config
-resource "aws_iam_role" "config_role" {
-  name = "aws-config-role"
+resource "aws_iam_role" "config" {
+  name = var.prefix
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -103,6 +102,6 @@ resource "aws_iam_role" "config_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "config" {
-  role       = aws_iam_role.config_role.name
+  role       = aws_iam_role.config.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
