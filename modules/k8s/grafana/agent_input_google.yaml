@@ -20,10 +20,10 @@ grafana:
       registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
   initChownData:
     image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   downloadDashboardsImage:
     image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   imageRenderer:
     image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
