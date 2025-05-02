@@ -5,7 +5,7 @@ global:
     region: "{{ .toutput.eks.region }}"
   datasources:
     loki:
-      hostname: "http://loki-gateway.{{ .tmodule.loki }}"
+      hostname: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
     prometheus:
       hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
 
@@ -21,3 +21,12 @@ grafana:
   sidecar:
     image:
       registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+  initChownData:
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  downloadDashboardsImage:
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  imageRenderer:
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
