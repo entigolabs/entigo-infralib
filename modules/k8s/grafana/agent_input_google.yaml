@@ -18,3 +18,12 @@ grafana:
   sidecar:
     image:
       registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
+  initChownData:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  downloadDashboardsImage:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  imageRenderer:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
