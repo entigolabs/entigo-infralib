@@ -1,9 +1,11 @@
 # https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs
 
 # Operational-Best-Practices-for-CIS-AWS-v1.4-Level1.yaml
-resource "aws_config_conformance_pack" "operational_best_practices_for_cis_aws_v1_4_level1" {
+resource "aws_config_conformance_pack" "operational_best_practices_without_s3" {
 
-  name = "${var.prefix}-Operational-Best-Practices-for-CIS-AWS-v1-4-Level1"
+  name = "${var.prefix}-operational-best-practices-without-s3"
+
+  count = var.operational_best_practices_without_s3_conformance_pack_enabled ? 1 : 0
 
   template_body = <<EOT
 Parameters:
@@ -39,21 +41,6 @@ Parameters:
     Type: String
   RestrictedIncomingTrafficParamBlockedPort3:
     Default: '3389'
-    Type: String
-  S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicAcls:
-    Default: 'True'
-    Type: String
-  S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicPolicy:
-    Default: 'True'
-    Type: String
-  S3AccountLevelPublicAccessBlocksPeriodicParamIgnorePublicAcls:
-    Default: 'True'
-    Type: String
-  S3AccountLevelPublicAccessBlocksPeriodicParamRestrictPublicBuckets:
-    Default: 'True'
-    Type: String
-  S3BucketVersioningEnabledParamIsMfaDeleteEnabled:
-    Default: 'true'
     Type: String
 Resources:
   AccessKeysRotated:
@@ -279,90 +266,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: ROOT_ACCOUNT_MFA_ENABLED
     Type: AWS::Config::ConfigRule
-  S3AccountLevelPublicAccessBlocksPeriodic:
-    Properties:
-      ConfigRuleName: s3-account-level-public-access-blocks-periodic
-      InputParameters:
-        BlockPublicAcls:
-          Fn::If:
-          - s3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicAcls
-          - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicAcls
-          - Ref: AWS::NoValue
-        BlockPublicPolicy:
-          Fn::If:
-          - s3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicPolicy
-          - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicPolicy
-          - Ref: AWS::NoValue
-        IgnorePublicAcls:
-          Fn::If:
-          - s3AccountLevelPublicAccessBlocksPeriodicParamIgnorePublicAcls
-          - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamIgnorePublicAcls
-          - Ref: AWS::NoValue
-        RestrictPublicBuckets:
-          Fn::If:
-          - s3AccountLevelPublicAccessBlocksPeriodicParamRestrictPublicBuckets
-          - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamRestrictPublicBuckets
-          - Ref: AWS::NoValue
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_ACCOUNT_LEVEL_PUBLIC_ACCESS_BLOCKS_PERIODIC
-    Type: AWS::Config::ConfigRule
-  S3BucketLevelPublicAccessProhibited:
-    Properties:
-      ConfigRuleName: s3-bucket-level-public-access-prohibited
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_LEVEL_PUBLIC_ACCESS_PROHIBITED
-    Type: AWS::Config::ConfigRule
-  S3BucketLoggingEnabled:
-    Properties:
-      ConfigRuleName: s3-bucket-logging-enabled
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_LOGGING_ENABLED
-    Type: AWS::Config::ConfigRule
-  S3BucketPublicReadProhibited:
-    Properties:
-      ConfigRuleName: s3-bucket-public-read-prohibited
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_PUBLIC_READ_PROHIBITED
-    Type: AWS::Config::ConfigRule
-  S3BucketPublicWriteProhibited:
-    Properties:
-      ConfigRuleName: s3-bucket-public-write-prohibited
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_PUBLIC_WRITE_PROHIBITED
-    Type: AWS::Config::ConfigRule
-  S3BucketVersioningEnabled:
-    Properties:
-      ConfigRuleName: s3-bucket-versioning-enabled
-      InputParameters:
-        isMfaDeleteEnabled:
-          Fn::If:
-          - s3BucketVersioningEnabledParamIsMfaDeleteEnabled
-          - Ref: S3BucketVersioningEnabledParamIsMfaDeleteEnabled
-          - Ref: AWS::NoValue
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_VERSIONING_ENABLED
-    Type: AWS::Config::ConfigRule
   AccountContactDetailsConfigured:
     Properties:
       ConfigRuleName: account-contact-details-configured
@@ -455,14 +358,6 @@ Resources:
     Properties:
       ConfigRuleName: alarm-cloudtrail-config-change
       Description: Ensure a log metric filter and an alarm exists for AWS CloudTrail configuration changes.
-      Source:
-        Owner: AWS
-        SourceIdentifier: AWS_CONFIG_PROCESS_CHECK
-    Type: AWS::Config::ConfigRule
-  AlarmS3BucketPolicyChange:
-    Properties:
-      ConfigRuleName: alarm-s3-bucket-policy-change
-      Description: Ensure a log metric filter and an alarm exists for Amazon S3 bucket policy changes.
       Source:
         Owner: AWS
         SourceIdentifier: AWS_CONFIG_PROCESS_CHECK
@@ -563,32 +458,8 @@ Conditions:
     - Fn::Equals:
       - ''
       - Ref: RestrictedIncomingTrafficParamBlockedPort3
-  s3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicAcls:
-    Fn::Not:
-    - Fn::Equals:
-      - ''
-      - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicAcls
-  s3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicPolicy:
-    Fn::Not:
-    - Fn::Equals:
-      - ''
-      - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamBlockPublicPolicy
-  s3AccountLevelPublicAccessBlocksPeriodicParamIgnorePublicAcls:
-    Fn::Not:
-    - Fn::Equals:
-      - ''
-      - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamIgnorePublicAcls
-  s3AccountLevelPublicAccessBlocksPeriodicParamRestrictPublicBuckets:
-    Fn::Not:
-    - Fn::Equals:
-      - ''
-      - Ref: S3AccountLevelPublicAccessBlocksPeriodicParamRestrictPublicBuckets
-  s3BucketVersioningEnabledParamIsMfaDeleteEnabled:
-    Fn::Not:
-    - Fn::Equals:
-      - ''
-      - Ref: S3BucketVersioningEnabledParamIsMfaDeleteEnabled
 EOT
 
-  depends_on = [aws_config_configuration_recorder.main]
+  depends_on = [aws_config_configuration_recorder.config_rules]
 }
+

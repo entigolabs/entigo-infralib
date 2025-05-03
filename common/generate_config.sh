@@ -61,6 +61,10 @@ get_branch_name() {
 
 get_step_name_tf() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
+
+  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ]; then
+    STEP_NAME="net"
+  fi
 }
 
 get_step_name_k8s() {
@@ -285,6 +289,8 @@ test_tf() {
     PIDS="$PIDS $!=ec2"
     ./modules/aws/karpenter-node-role/test.sh testonly &
     PIDS="$PIDS $!=karpenter-node-role"
+    ./modules/aws/config-rules/test.sh testonly &
+    PIDS="$PIDS $!=config-rules"
   fi
   if [ "$GOOGLE_REGION" != "" ]
   then
@@ -406,7 +412,7 @@ test_k8s() {
 
 
 default_aws_conf() {
-  generate_config "aws" "net" "aws/kms" "aws/cost-alert" "aws/hello-world" "aws/vpc" "aws/tgw-attach" "aws/route53" "aws/route53-resolver-associate" "aws/ecr-proxy"
+  generate_config "aws" "net" "aws/kms" "aws/cost-alert" "aws/hello-world" "aws/vpc" "aws/tgw-attach" "aws/route53" "aws/route53-resolver-associate" "aws/ecr-proxy" "aws/config-rules"
   generate_config "aws" "infra" "aws/eks" "aws/eks-node-group" "aws/crossplane" "aws/ec2" "aws/karpenter-node-role"
 }
 

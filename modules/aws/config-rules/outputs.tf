@@ -1,5 +1,5 @@
 output "bucket_name" {
-  value = aws_s3_bucket.config_logs.id
+  value = aws_s3_bucket.config_rules_logs.id
 }
 
 output "prefix" {
