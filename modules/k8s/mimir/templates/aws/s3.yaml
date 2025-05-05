@@ -30,6 +30,12 @@ spec:
           sseAlgorithm: AES256
           {{- end }}
         bucketKeyEnabled: true
+    lifecycleConfiguration:
+      {{- if .Values.global.aws.bucketLifecycleRules }}
+      rules:
+        {{- toYaml .Values.global.aws.bucketLifecycleRules | nindent 8 }}
+        {{- else }}
+      {{- end }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 

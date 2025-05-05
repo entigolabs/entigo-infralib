@@ -1,3 +1,11 @@
+global:
+  aws:
+    bucketLifecycleRules:
+      - id: "archive-after-3-years"
+        status: Enabled
+        transitions:
+          - days: 1095
+            storageClass: "GLACIER"
 mimir-distributed:
   ingester:
     persistentVolume:
