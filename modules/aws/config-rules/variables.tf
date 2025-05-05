@@ -8,7 +8,7 @@ variable "resource_types_to_exclude" {
   default = []
 }
 
-variable "logs_bucket" {
+variable "config_logs_bucket" {
   type    = string
   default = ""
 }
@@ -16,4 +16,19 @@ variable "logs_bucket" {
 variable "operational_best_practices_without_s3_conformance_pack_enabled" {
   type    = bool
   default = false
+}
+
+variable "iam_password_policy_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "multi_region_cloudtrail_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "cloudtrail_logs_bucket" {
+  type    = string
+  default = ""
 }

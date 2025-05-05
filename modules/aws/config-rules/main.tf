@@ -62,7 +62,7 @@ resource "aws_iam_role_policy_attachment" "config_rules" {
 
 # S3 Bucket for Config logs
 resource "aws_s3_bucket" "config_rules_logs" {
-  bucket = var.logs_bucket
+  bucket = var.config_logs_bucket
 }
 
 resource "aws_s3_bucket_versioning" "config_rules_logs" {
