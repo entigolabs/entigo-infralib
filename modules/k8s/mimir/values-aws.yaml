@@ -6,6 +6,7 @@ global:
     clusterOIDC: ""
     region: ""
     kmsKeyId: ""
+    bucketLifecycleRules: []
 
 mimir-distributed:
   gateway:
@@ -207,4 +208,3 @@ mimir-distributed:
           {{- if .Values.store_gateway.zoneAwareReplication.enabled }}
           zone_awareness_enabled: true
           {{- end }}
-

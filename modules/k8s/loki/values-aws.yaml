@@ -6,6 +6,7 @@ global:
     clusterOIDC: ""
     region: ""
     kmsKeyId: ""
+    bucketLifecycleRules: []
 
 loki:
   loki:
