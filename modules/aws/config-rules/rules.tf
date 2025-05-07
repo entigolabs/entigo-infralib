@@ -459,4 +459,3 @@ EOT
 
   depends_on = [aws_config_configuration_recorder.config_rules]
 }
-

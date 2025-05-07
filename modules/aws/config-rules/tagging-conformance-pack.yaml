@@ -1,0 +1,35 @@
+#TAGGING CONFORMANCE PACK
+# Create the conformance pack
+resource "aws_config_conformance_pack" "resource_tagging_compliance" {
+ name = "${var.prefix}-resource-tagging-compliance"
+ count = var.resource_tagging_compliance_pack_enabled ? 1 : 0
+}
+
+# Create the appropriate tagging rule based on whether tag keys are provided
+resource "aws_config_config_rule" "tagging_rule" {
+ count = var.resource_tagging_compliance_pack_enabled ? 1 : 0
+ 
+ name = "${var.prefix}-${var.required_tag_keys != "" ? "specific" : "any"}-tags-required"
+ description = var.required_tag_keys != "" ? "Checks whether resources have specific required tags" : "Checks whether resources are tagged with at least one tag"
+ 
+ source {
+   owner             = "AWS"
+   source_identifier = var.required_tag_keys != "" ? "REQUIRED_TAGS" : "TAGGED_RESOURCE"
+ }
+ 
+ # Only include parameters when specific tags are required
+ dynamic "input_parameters" {
+   for_each = var.required_tag_keys != "" ? [1] : []
+   content {
+     tag1Key = length(split(",", var.required_tag_keys)) >= 1 ? element(split(",", var.required_tag_keys), 0) : null
+     tag2Key = length(split(",", var.required_tag_keys)) >= 2 ? element(split(",", var.required_tag_keys), 1) : null
+     tag3Key = length(split(",", var.required_tag_keys)) >= 3 ? element(split(",", var.required_tag_keys), 2) : null
+     tag4Key = length(split(",", var.required_tag_keys)) >= 4 ? element(split(",", var.required_tag_keys), 3) : null
+     tag5Key = length(split(",", var.required_tag_keys)) >= 5 ? element(split(",", var.required_tag_keys), 4) : null
+     tag6Key = length(split(",", var.required_tag_keys)) >= 6 ? element(split(",", var.required_tag_keys), 5) : null
+     tag7Key = length(split(",", var.required_tag_keys)) >= 7 ? element(split(",", var.required_tag_keys), 6) : null
+     tag8Key = length(split(",", var.required_tag_keys)) >= 8 ? element(split(",", var.required_tag_keys), 7) : null
+     tag9Key = length(split(",", var.required_tag_keys)) >= 9 ? element(split(",", var.required_tag_keys), 8) : null
+   }
+ }
+}

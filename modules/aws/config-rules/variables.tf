@@ -32,3 +32,15 @@ variable "cloudtrail_logs_bucket" {
   type    = string
   default = ""
 }
+
+variable "resource_tagging_compliance_pack_enabled" {
+ description = "Enable or disable the resource tagging compliance pack"
+ type        = bool
+ default     = false
+}
+
+variable "required_tag_keys" {
+ description = "Comma-separated list of required tag keys (up to 9). If empty, just checks for any tag."
+ type        = string
+ default     = ""
+}
