@@ -1,60 +1,50 @@
-resource "aws_config_conformance_pack" "resource_tagging_compliance" {
+resource "aws_config_config_rule" "required_tags" {
+  name        = "required_tags"
+  description = "Ensure all listed resources have required tags"
   count = var.resource_tagging_compliance_pack_enabled ? 1 : 0
 
-  name = "${var.prefix}-resource-tagging-compliance"
-
-  template_body = <<EOT
-Parameters:
-  %{ for idx, tag_key in var.required_tag_keys ~}
-  Tag${idx + 1}Key:
-    Type: String
-    Default: "${tag_key}"
-  %{ endfor ~}
-
-Resources:
-  RequiredTags:
-    Type: AWS::Config::ConfigRule
-    Properties:
-      ConfigRuleName: required-tags
-      Source:
-        Owner: AWS
-        SourceIdentifier: REQUIRED_TAGS
-      InputParameters:
-        %{ for idx, tag_key in var.required_tag_keys ~}
-        tag${idx + 1}Key:
-          Ref: Tag${idx + 1}Key
-        %{ endfor ~}
-      Scope:
-        ComplianceResourceTypes:
-          - AWS::ACM::Certificate
-          - AWS::AutoScaling::AutoScalingGroup
-          - AWS::CloudFormation::Stack
-          - AWS::CodeBuild::Project
-          - AWS::DynamoDB::Table
-          - AWS::EC2::CustomerGateway
-          - AWS::EC2::Instance
-          - AWS::EC2::InternetGateway
-          - AWS::EC2::NetworkAcl
-          - AWS::EC2::NetworkInterface
-          - AWS::EC2::RouteTable
-          - AWS::EC2::SecurityGroup
-          - AWS::EC2::Subnet
-          - AWS::EC2::Volume
-          - AWS::EC2::VPC
-          - AWS::EC2::VPNConnection
-          - AWS::EC2::VPNGateway
-          - AWS::ElasticLoadBalancing::LoadBalancer
-          - AWS::ElasticLoadBalancingV2::LoadBalancer
-          - AWS::RDS::DBInstance
-          - AWS::RDS::DBSecurityGroup
-          - AWS::RDS::DBSnapshot
-          - AWS::RDS::DBSubnetGroup
-          - AWS::RDS::EventSubscription
-          - AWS::Redshift::Cluster
-          - AWS::Redshift::ClusterParameterGroup
-          - AWS::Redshift::ClusterSecurityGroup
-          - AWS::Redshift::ClusterSnapshot
-          - AWS::Redshift::ClusterSubnetGroup
-          - AWS::S3::Bucket
-EOT
+  source {
+    owner             = "AWS"
+    source_identifier = "REQUIRED_TAGS"
+  }
+  
+  input_parameters = jsonencode({
+    for idx, tag_key in var.required_tag_keys :
+    "tag${idx + 1}Key" => tag_key
+  })
+  
+  scope {
+    compliance_resource_types = [
+      "AWS::ACM::Certificate",
+      "AWS::AutoScaling::AutoScalingGroup",
+      "AWS::CloudFormation::Stack",
+      "AWS::CodeBuild::Project",
+      "AWS::DynamoDB::Table",
+      "AWS::EC2::CustomerGateway",
+      "AWS::EC2::Instance",
+      "AWS::EC2::InternetGateway",
+      "AWS::EC2::NetworkAcl",
+      "AWS::EC2::NetworkInterface",
+      "AWS::EC2::RouteTable",
+      "AWS::EC2::SecurityGroup",
+      "AWS::EC2::Subnet",
+      "AWS::EC2::Volume",
+      "AWS::EC2::VPC",
+      "AWS::EC2::VPNConnection",
+      "AWS::EC2::VPNGateway",
+      "AWS::ElasticLoadBalancing::LoadBalancer",
+      "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "AWS::RDS::DBInstance",
+      "AWS::RDS::DBSecurityGroup",
+      "AWS::RDS::DBSnapshot",
+      "AWS::RDS::DBSubnetGroup",
+      "AWS::RDS::EventSubscription",
+      "AWS::Redshift::Cluster",
+      "AWS::Redshift::ClusterParameterGroup",
+      "AWS::Redshift::ClusterSecurityGroup",
+      "AWS::Redshift::ClusterSnapshot",
+      "AWS::Redshift::ClusterSubnetGroup",
+      "AWS::S3::Bucket"
+    ]
+  }
 }
