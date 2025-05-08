@@ -40,7 +40,7 @@ variable "resource_tagging_compliance_pack_enabled" {
 }
 
 variable "required_tag_keys" {
- description = "Comma-separated list of required tag keys (up to 9). If empty, just checks for any tag."
- type        = string
- default     = ""
+  type        = list(string)
+  description = "List of required tag keys, max 9 tags."
+  default     = ["Owner", "Environment", "Project"]
 }
