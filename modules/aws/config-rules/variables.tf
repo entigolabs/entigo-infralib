@@ -37,5 +37,5 @@ variable "cloudtrail_logs_bucket" {
 variable "required_tag_keys" {
   type        = list(string)
   description = "List of required tag keys, max 6 tags."
-  default     = ["Terraform"]
+  default     = ["Terraform", "Prefix"]
 }
