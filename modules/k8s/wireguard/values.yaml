@@ -24,10 +24,6 @@ wireguard:
     enabled: false
     serviceMonitor:
       enabled: false
-  volumes:
-  - name: pubkey
-    secret:
-      secretName: wireguard-wg-generated-public
   healthSideCar:
     enabled: true
     resources:
