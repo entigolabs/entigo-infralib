@@ -61,7 +61,8 @@ steps:" > agents/config.yaml
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         
-        if [ "$BRANCH" == "main" ] 
+        # if [ "$BRANCH" == "main" ]
+        if [ "$BRANCH" == "main" -o "$MODULE_NAME" == "config-rules" ] 
         then
           STEP_NAME=$(cat "agents/${MODULE_TYPE}_${testname}/config.yaml" | yq -r ".steps[] | select(.modules[].source == \"$MODULE_TYPE_VERSIONED/$MODULE_NAME\") | .name")
         fi
