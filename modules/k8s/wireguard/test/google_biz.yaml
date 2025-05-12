@@ -1,7 +1,0 @@
-wireguard:
-  wireguard:
-    serverAddress: 172.31.200.1/24
-    serverCidr: 172.31.200.0/24
-    clients:
-      - PublicKey: oW7EeveWn6H84JSCLYZhxqK9sBN2XgomI1MKIMx4wR0=
-        AllowedIPs: 172.31.200.2/32
