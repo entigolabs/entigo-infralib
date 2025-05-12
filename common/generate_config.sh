@@ -61,10 +61,6 @@ get_branch_name() {
 
 get_step_name_tf() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
-
-  if [[ "$MODULE_NAME" == "config-rules" && "$BRANCH" != "main" ]] || [[ "$MODULE_NAME" == "tgw-attach" && "$BRANCH" != "main" ]]; then
-    STEP_NAME="net"
-  fi
 }
 
 get_step_name_k8s() {
