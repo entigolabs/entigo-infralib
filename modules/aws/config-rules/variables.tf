@@ -13,7 +13,7 @@ variable "config_logs_bucket" {
   default = ""
 }
 
-variable "operational_best_practices_without_s3_conformance_pack_enabled" {
+variable "operational_best_practices_conformance_pack_enabled" {
   type    = bool
   default = false
 }
@@ -33,14 +33,9 @@ variable "cloudtrail_logs_bucket" {
   default = ""
 }
 
-# variable "resource_tagging_rule_enabled" {
-#  description = "Enable or disable the resource tagging rule"
-#  type        = bool
-#  default     = false
-# }
-
-# variable "required_tag_keys" {
-#   type        = list(string)
-#   description = "List of required tag keys, max 9 tags."
-#   default     = ["Owner", "Environment", "Project"]
-# }
+# https://docs.aws.amazon.com/config/latest/developerguide/required-tags.html
+variable "required_tag_keys" {
+  type        = list(string)
+  description = "List of required tag keys, max 6 tags."
+  default     = ["Terraform"]
+}

@@ -1,11 +1,28 @@
 # https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs
 
+locals {
+  tag_parameters = length(var.required_tag_keys) > 0 ? join("\n  ", [
+    for i, tag in var.required_tag_keys : 
+    "tag${i+1}Key:\n    Default: '${tag}'\n    Type: String"
+  ]) : ""
+
+  tag_input_parameters = length(var.required_tag_keys) > 0 ? join("\n        ", [
+    for i, tag in var.required_tag_keys :
+    "tag${i+1}Key:\n          Fn::If:\n          - tag${i+1}KeyCondition\n          - Ref: tag${i+1}Key\n          - Ref: AWS::NoValue"
+  ]) : ""
+
+  tag_conditions = length(var.required_tag_keys) > 0 ? join("\n  ", [
+    for i, tag in var.required_tag_keys :
+    "tag${i+1}KeyCondition:\n    Fn::Not:\n    - Fn::Equals:\n      - ''\n      - Ref: tag${i+1}Key"
+  ]) : ""
+}
+
 # Operational-Best-Practices-for-CIS-AWS-v1.4-Level1.yaml
-resource "aws_config_conformance_pack" "operational_best_practices_without_s3" {
+resource "aws_config_conformance_pack" "operational_best_practices" {
 
-  name = "${var.prefix}-operational-best-practices-without-s3"
+  name = "${var.prefix}-operational-best-practices"
 
-  count = var.operational_best_practices_without_s3_conformance_pack_enabled ? 1 : 0
+  count = var.operational_best_practices_conformance_pack_enabled ? 1 : 0
 
   template_body = <<EOT
 Parameters:
@@ -39,6 +56,7 @@ Parameters:
   RestrictedIncomingTrafficParamBlockedPort3:
     Default: '3389'
     Type: String
+  ${local.tag_parameters}
 Resources:
   AccessKeysRotated:
     Properties:
@@ -366,6 +384,48 @@ Resources:
         Owner: AWS
         SourceIdentifier: AWS_CONFIG_PROCESS_CHECK
     Type: AWS::Config::ConfigRule
+  ResourceTaggingCheck:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: required-tags
+      Description: Check resources against the required tags
+      Source:
+        Owner: AWS
+        SourceIdentifier: REQUIRED_TAGS
+      Scope:
+        ComplianceResourceTypes:
+          - "AWS::ACM::Certificate"
+          - "AWS::AutoScaling::AutoScalingGroup"
+          - "AWS::CloudFormation::Stack"
+          - "AWS::CodeBuild::Project"
+          - "AWS::DynamoDB::Table"
+          - "AWS::EC2::CustomerGateway"
+          - "AWS::EC2::Instance"
+          - "AWS::EC2::InternetGateway"
+          - "AWS::EC2::NetworkAcl"
+          - "AWS::EC2::NetworkInterface"
+          - "AWS::EC2::RouteTable"
+          - "AWS::EC2::SecurityGroup"
+          - "AWS::EC2::Subnet"
+          - "AWS::EC2::Volume"
+          - "AWS::EC2::VPC"
+          - "AWS::EC2::VPNConnection"
+          - "AWS::EC2::VPNGateway"
+          - "AWS::ElasticLoadBalancing::LoadBalancer"
+          - "AWS::ElasticLoadBalancingV2::LoadBalancer"
+          - "AWS::RDS::DBInstance"
+          - "AWS::RDS::DBSecurityGroup"
+          - "AWS::RDS::DBSnapshot"
+          - "AWS::RDS::DBSubnetGroup"
+          - "AWS::RDS::EventSubscription"
+          - "AWS::Redshift::Cluster"
+          - "AWS::Redshift::ClusterParameterGroup"
+          - "AWS::Redshift::ClusterSecurityGroup"
+          - "AWS::Redshift::ClusterSnapshot"
+          - "AWS::Redshift::ClusterSubnetGroup"
+          - "AWS::S3::Bucket"
+      InputParameters:
+        ${local.tag_input_parameters}
 Conditions:
   accessKeysRotatedParamMaxAccessKeyAge:
     Fn::Not:
@@ -417,6 +477,7 @@ Conditions:
     - Fn::Equals:
       - ''
       - Ref: RestrictedIncomingTrafficParamBlockedPort3
+  ${local.tag_conditions}
 EOT
 
   depends_on = [aws_config_configuration_recorder.config_rules]

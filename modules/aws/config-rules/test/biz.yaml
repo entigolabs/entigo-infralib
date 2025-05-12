@@ -1,5 +1,4 @@
-operational_best_practices_without_s3_conformance_pack_enabled: true
+operational_best_practices_conformance_pack_enabled: true
 iam_password_policy_enabled: true
 multi_region_cloudtrail_enabled: true
-# resource_tagging_compliance_pack_enabled: true
 prefix: "biz-net-config-rules"
