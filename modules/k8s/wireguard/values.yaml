@@ -13,7 +13,9 @@ wireguard:
   autoscaling:
     enabled: false
   metrics:
-    enabled: true
+    enabled: false
+    serviceMonitor:
+      enabled: false
   healthSideCar:
     enabled: true
     resources:
@@ -41,7 +43,7 @@ wireguard:
   keygenJob:
     useWireguardManager: true
     wireguardMgrImage:
-      tag: 20250306-4c02d5d
+      tag: 20250512-7dab026
       pullPolicy: IfNotPresent
     image:
       tag: 20241030-7d8d487

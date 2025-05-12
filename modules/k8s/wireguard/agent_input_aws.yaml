@@ -12,3 +12,15 @@ wireguard:
     annotations: 
       external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
       hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "{{ .toutput.route53.pub_cert_arn }}"
+  extraSideCars:
+  - name: pubkey
+    image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.27-alpine'
+    volumeMounts:
+    - name: pubkey
+      mountPath: /usr/share/nginx/html/index.html
+      subPath: publickey
+  volumes:
+  - name: pubkey
+    secret:
+      secretName: '{{ .module.name }}-wg-generated-public'

@@ -8,3 +8,7 @@ wireguard:
       repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/curium-rocks/wg-kubectl'
   metrics:
     repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
+  service:
+    annotations: 
+      external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+      hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
