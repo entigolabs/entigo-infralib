@@ -33,14 +33,14 @@ variable "cloudtrail_logs_bucket" {
   default = ""
 }
 
-variable "resource_tagging_compliance_pack_enabled" {
- description = "Enable or disable the resource tagging compliance pack"
- type        = bool
- default     = false
-}
+# variable "resource_tagging_rule_enabled" {
+#  description = "Enable or disable the resource tagging rule"
+#  type        = bool
+#  default     = false
+# }
 
-variable "required_tag_keys" {
-  type        = list(string)
-  description = "List of required tag keys, max 9 tags."
-  default     = ["Owner", "Environment", "Project"]
-}
+# variable "required_tag_keys" {
+#   type        = list(string)
+#   description = "List of required tag keys, max 9 tags."
+#   default     = ["Owner", "Environment", "Project"]
+# }

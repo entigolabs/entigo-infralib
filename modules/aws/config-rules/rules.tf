@@ -132,19 +132,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
-#  IamPolicyInUse:
-#    Properties:
-#      ConfigRuleName: iam-policy-in-use
-#      InputParameters:
-#        policyARN:
-#          Fn::If:
-#          - iamPolicyInUseParamPolicyARN
-#          - Ref: IamPolicyInUseParamPolicyARN
-#          - Ref: AWS::NoValue
-#      Source:
-#        Owner: AWS
-#        SourceIdentifier: IAM_POLICY_IN_USE
-#    Type: AWS::Config::ConfigRule
   IamPolicyNoStatementsWithAdminAccess:
     Properties:
       ConfigRuleName: iam-policy-no-statements-with-admin-access
@@ -162,26 +149,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: IAM_ROOT_ACCESS_KEY_CHECK
     Type: AWS::Config::ConfigRule
-#  IamUserGroupMembershipCheck:
-#    Properties:
-#      ConfigRuleName: iam-user-group-membership-check
-#      Scope:
-#        ComplianceResourceTypes:
-#        - AWS::IAM::User
-#      Source:
-#        Owner: AWS
-#        SourceIdentifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
-#    Type: AWS::Config::ConfigRule
-#  IamUserNoPoliciesCheck:
-#    Properties:
-#      ConfigRuleName: iam-user-no-policies-check
-#      Scope:
-#        ComplianceResourceTypes:
-#        - AWS::IAM::User
-#      Source:
-#        Owner: AWS
-#        SourceIdentifier: IAM_USER_NO_POLICIES_CHECK
-#    Type: AWS::Config::ConfigRule
   IamUserUnusedCredentialsCheck:
     Properties:
       ConfigRuleName: iam-user-unused-credentials-check
@@ -440,11 +407,6 @@ Conditions:
     - Fn::Equals:
       - ''
       - Ref: IamPasswordPolicyParamRequireUppercaseCharacters
-#  iamPolicyInUseParamPolicyARN:
-#    Fn::Not:
-#    - Fn::Equals:
-#      - ''
-#      - Ref: IamPolicyInUseParamPolicyARN
   iamUserUnusedCredentialsCheckParamMaxCredentialUsageAge:
     Fn::Not:
     - Fn::Equals:
