@@ -6,6 +6,14 @@ wireguard:
   image:
     tag: "20250306-d267b30"
     pullPolicy: IfNotPresent
+  service:
+    annotations: 
+      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    extraPorts:
+    - name: pubkey
+      port: 443
+      protocol: TCP
+      targetPort: 8080
   initContainer:
     image:
       tag: "1.37.0"
@@ -13,7 +21,13 @@ wireguard:
   autoscaling:
     enabled: false
   metrics:
-    enabled: true
+    enabled: false
+    serviceMonitor:
+      enabled: false
+  volumes:
+  - name: pubkey
+    secret:
+      secretName: wireguard-wg-generated-public
   healthSideCar:
     enabled: true
     resources:
@@ -41,7 +55,7 @@ wireguard:
   keygenJob:
     useWireguardManager: true
     wireguardMgrImage:
-      tag: 20250306-4c02d5d
+      tag: 20250512-7dab026
       pullPolicy: IfNotPresent
     image:
       tag: 20241030-7d8d487
