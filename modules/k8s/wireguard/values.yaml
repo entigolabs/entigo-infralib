@@ -6,14 +6,6 @@ wireguard:
   image:
     tag: "20250306-d267b30"
     pullPolicy: IfNotPresent
-  service:
-    annotations: 
-      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
-    extraPorts:
-    - name: pubkey
-      port: 443
-      protocol: TCP
-      targetPort: 8080
   initContainer:
     image:
       tag: "1.37.0"
