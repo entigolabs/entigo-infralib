@@ -1,6 +1,6 @@
 # Remediate iam-password-policy
 resource "aws_iam_account_password_policy" "aws_config" {
-  count = var.iam_password_policy_enabled ? 1 : 0
+  count                          = var.iam_password_policy_enabled ? 1 : 0
   minimum_password_length        = 14
   require_lowercase_characters   = true
   require_numbers                = true
@@ -13,7 +13,7 @@ resource "aws_iam_account_password_policy" "aws_config" {
 
 # Remediate multi-region-cloudtrail-enabled
 resource "aws_cloudtrail" "aws_config_cloudtrail" {
-  count = var.multi_region_cloudtrail_enabled ? 1 : 0
+  count      = var.multi_region_cloudtrail_enabled ? 1 : 0
   depends_on = [aws_s3_bucket_policy.aws_config_cloudtrail[0]]
 
   name                          = var.prefix
@@ -24,33 +24,33 @@ resource "aws_cloudtrail" "aws_config_cloudtrail" {
 }
 
 resource "aws_s3_bucket" "aws_config_cloudtrail" {
-  count = var.multi_region_cloudtrail_enabled ? 1 : 0
+  count  = var.multi_region_cloudtrail_enabled ? 1 : 0
   bucket = var.cloudtrail_logs_bucket
 }
 
 resource "aws_s3_bucket_policy" "aws_config_cloudtrail" {
-  count = var.multi_region_cloudtrail_enabled ? 1 : 0
+  count  = var.multi_region_cloudtrail_enabled ? 1 : 0
   bucket = aws_s3_bucket.aws_config_cloudtrail[0].id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Sid       = "AWSCloudTrailAclCheck",
-        Effect    = "Allow",
+        Sid    = "AWSCloudTrailAclCheck",
+        Effect = "Allow",
         Principal = {
           Service = "cloudtrail.amazonaws.com"
         },
-        Action    = "s3:GetBucketAcl",
-        Resource  = aws_s3_bucket.aws_config_cloudtrail[0].arn
+        Action   = "s3:GetBucketAcl",
+        Resource = aws_s3_bucket.aws_config_cloudtrail[0].arn
       },
       {
-        Sid       = "AWSCloudTrailWrite",
-        Effect    = "Allow",
+        Sid    = "AWSCloudTrailWrite",
+        Effect = "Allow",
         Principal = {
           Service = "cloudtrail.amazonaws.com"
         },
-        Action    = "s3:PutObject",
-        Resource  = "${aws_s3_bucket.aws_config_cloudtrail[0].arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.aws_config_cloudtrail[0].arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
         Condition = {
           StringEquals = {
             "s3:x-amz-acl" = "bucket-owner-full-control"
