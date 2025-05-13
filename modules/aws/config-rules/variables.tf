@@ -13,10 +13,10 @@ variable "config_logs_bucket" {
   default = ""
 }
 
-# variable "operational_best_practices_conformance_pack_enabled" {
-#   type    = bool
-#   default = false
-# }
+variable "operational_best_practices_conformance_pack_enabled" {
+  type    = bool
+  default = false
+}
 
 variable "iam_password_policy_enabled" {
   type    = bool
@@ -33,9 +33,8 @@ variable "cloudtrail_logs_bucket" {
   default = ""
 }
 
-# # https://docs.aws.amazon.com/config/latest/developerguide/required-tags.html
-# variable "required_tag_keys" {
-#   type        = list(string)
-#   description = "List of required tag keys, max 6 tags."
-#   default     = ["created-by", "Terraform", "Prefix"]
-# }
+variable "required_tag_keys" {
+  type        = list(string)
+  description = "List of required tag keys."
+  default     = ["Terraform", "created-by"]
+}
