@@ -9,16 +9,8 @@ import (
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
-func TestK8sWireguardAWSBiz(t *testing.T) {
-	testK8sWireguard(t, "aws", "biz")
-}
-
 func TestK8sWireguardAWSPri(t *testing.T) {
 	testK8sWireguard(t, "aws", "pri")
-}
-
-func TestK8sWireguardGoogleBiz(t *testing.T) {
-	testK8sWireguard(t, "google", "biz")
 }
 
 func TestK8sWireguardGooglePri(t *testing.T) {

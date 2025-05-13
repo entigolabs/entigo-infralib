@@ -5,6 +5,3 @@ wireguard:
     clients:
       - PublicKey: MNbWAV9XCrphXZteANcUXudImmlh5gYuVZJcaC1gWnQ=
         AllowedIPs: 172.31.201.2/32
-  metrics:
-    serviceMonitor:
-      enabled: false
