@@ -35,12 +35,15 @@ Example new configuration:
 ```
 
 Run the agent and DISCARD/Reject the plan for the changes. Make a backup of the state file in S3.
-
+```
+docker run --pull always -it --rm -v "$(pwd)":"/etc/ei-agent" -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -e CONFIG=/etc/ei-agent/config.yaml entigolabs/entigo-infralib-agent ei-agent run --steps infra 
 ```
 
-docker run -it --rm -v "$(pwd)":"/etc/ei-agent" -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -e CONFIG=/etc/ei-agent/config.yaml --entrypoint /bin/bash entigolabs/entigo-infralib-testing
-aws s3 cp s3://ep-413636892216-eu-north-1/steps/ep-infra ./tmp_infra --recursive --exclude "*.terraform/*"
-cd ./tmp_infra
+Move the aws_acm_certificate, aws_route53_zone and aws_route53_record resources to new locations.
+```
+docker run -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --entrypoint /bin/bash entigolabs/entigo-infralib-base
+aws s3 cp s3://<CONFIG PREFIX>-<ACCOUNT NUMBER>-$AWS_REGION/steps/<CONFIG PREFIX>-<STEP NAME> ./tmp --recursive --exclude "*.terraform/*"
+cd ./tmp
 terraform init -input=false -backend-config=backend.conf
 terraform plan #The plan will show that it want to destroy many resources. 
 terraform state list | grep aws_acm_certificate
@@ -59,11 +62,12 @@ terraform state mv 'module.dns.aws_route53_record.int-cert["*.dev-int.entigo.dev
 terraform state mv 'module.dns.aws_route53_record.int-cert["dev-int.entigo.dev"]' 'module.dns.aws_route53_record.validation["private_dev-int.entigo.dev"]'
 terraform state mv 'module.dns.aws_route53_record.pub-cert["*.dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_*.dev.entigo.dev"]'
 terraform state mv 'module.dns.aws_route53_record.pub-cert["dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_dev.entigo.dev"]'
+terraform state list | grep aws_route53_record
 
 terraform plan #Now the plan should only show changes to tags and nothing to destroy. If not find what resources are still mismatchin or what config changes cause a destructive plan.
-
+exit
 ```
-
+Now run the agent again and verify the plan is not going to destroy your zones or certificates.
 
 
 ## Standard domain structure with route53 ##
