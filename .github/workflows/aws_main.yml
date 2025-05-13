@@ -47,7 +47,7 @@ jobs:
         PIDS=""
         echo "Changed modules:"
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
-            echo "$file" | grep "modules/aws" | cut -d'/' -f1-3
+            echo "$file" | grep -e "modules/aws\|modules/aws-v2" | cut -d'/' -f1-3
         done | sort -u )
         do
           ${module}/test.sh testonly &
