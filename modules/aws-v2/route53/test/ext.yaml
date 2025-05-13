@@ -1,12 +1,12 @@
 domains: |
   {
     "extpublic" = {
-      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}.infralib.entigo.io"
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}.infralib.entigo.io"
       parent_zone_id     = "Z07983041XRLSLZUTHHDY"
       default_public     = true
     },
     "extprivate" = {
-      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}-private.infralib.entigo.io"
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}-private.infralib.entigo.io"
       parent_zone_id     = "Z07983041XRLSLZUTHHDY"
       default_private    = true
     }

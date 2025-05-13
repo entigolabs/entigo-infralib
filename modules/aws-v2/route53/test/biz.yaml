@@ -1,17 +1,17 @@
 domains: |
   {
     "bizpublic" = {
-      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}.infralib.entigo.io"
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}.infralib.entigo.io"
       parent_zone_id     = "Z07983041XRLSLZUTHHDY"
     },
     "bizprivate" = {
-      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}-int.infralib.entigo.io"
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}-int.infralib.entigo.io"
       parent_zone_id     = "Z07983041XRLSLZUTHHDY"
       private            = true
       default_private    = true
     },
     "bizprivateextra" = {
-      domain_name        = "{{ .config.prefix }}-{{ .module.name  }}-extra-int.infralib.entigo.io"
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}-extra-int.infralib.entigo.io"
       private            = true
       create_certificate = false
     }
