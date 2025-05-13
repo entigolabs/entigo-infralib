@@ -36,5 +36,10 @@ variable "cloudtrail_logs_bucket" {
 variable "required_tag_keys" {
   type        = list(string)
   description = "List of required tag keys."
-  default     = ["Terraform", "created-by"]
+  default     = ["created-by"]
+
+  validation {
+    condition     = length(var.required_tag_keys) <= 6
+    error_message = "You can specify a maximum of 6 required tag keys."
+  }
 }

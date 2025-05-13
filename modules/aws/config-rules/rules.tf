@@ -2,7 +2,7 @@
 
 locals {
 # https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
-  check_required_tags_resource_types = [
+  required_tags_custom_resource_types = [
     "AWS::IAM::User",
     "AWS::IAM::Policy",
     "AWS::IAM::User",
@@ -41,12 +41,12 @@ locals {
     "AWS::S3::Bucket"
   ]
 
-  check_required_tags_resource_types_formatted = join(",\n  ", formatlist("\"%s\"", local.check_required_tags_resource_types))
+  required_tags_custom_resource_types_formatted = join(",\n  ", formatlist("\"%s\"", local.required_tags_custom_resource_types))
 
   tag_rules = join("\n\n", [
     for tag in var.required_tag_keys : <<-EOT
       rule check_required_tag_${replace(tag, "-", "_")} when resourceType in [
-        ${local.check_required_tags_resource_types_formatted}
+        ${local.required_tags_custom_resource_types_formatted}
       ] {
         tags["${tag}"] !empty
       }
@@ -54,22 +54,24 @@ locals {
   ])
 }
 
-resource "aws_config_config_rule" "check_required_tags" {
-  name = "check_required_tags"
-  scope {
-    compliance_resource_types = local.check_required_tags_resource_types
-  }
-  source {
-    owner = "CUSTOM_POLICY"
-    source_detail {
-      message_type = "ConfigurationItemChangeNotification"
-    }
-    custom_policy_details {
-      policy_runtime = "guard-2.x.x"
-      policy_text    = local.tag_rules
-    }
-  }
-}
+# resource "aws_config_config_rule" "required_tags_custom" {
+#   name = "required-tags-custom"
+#   scope {
+#     compliance_resource_types = local.required_tags_custom_resource_types
+#   }
+#   source {
+#     owner = "CUSTOM_POLICY"
+#     source_detail {
+#       message_type = "ConfigurationItemChangeNotification"
+#     }
+#     custom_policy_details {
+#       policy_runtime = "guard-2.x.x"
+#       policy_text    = local.tag_rules
+#     }
+#   }
+# }
+
+
 
 resource "aws_config_conformance_pack" "operational_best_practices" {
   name = "${var.prefix}-operational-best-practices"
@@ -108,6 +110,24 @@ Parameters:
     Default: '3389'
     Type: String
 Resources:
+%{ if length(var.required_tag_keys) > 0 }
+  CheckRequiredTags:
+    Properties:
+      ConfigRuleName: required-tags-custom
+      Description: Ensure required tags are present on resources.
+      Scope:
+        ComplianceResourceTypes: ${jsonencode(local.required_tags_custom_resource_types)}
+      Source:
+        Owner: CUSTOM_POLICY
+        SourceDetails:
+          - EventSource: aws.config
+            MessageType: ConfigurationItemChangeNotification
+        CustomPolicyDetails:
+          PolicyRuntime: guard-2.x.x
+          PolicyText: |
+            ${indent(12, local.tag_rules)}
+    Type: AWS::Config::ConfigRule
+%{ endif }
   AccessKeysRotated:
     Properties:
       ConfigRuleName: access-keys-rotated
