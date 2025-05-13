@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'modules/aws/**'
+      - 'modules/aws-v2/**'
   workflow_dispatch:
 
 jobs:
