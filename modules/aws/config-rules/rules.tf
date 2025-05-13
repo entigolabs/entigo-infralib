@@ -1,5 +1,3 @@
-# https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs
-
 locals {
 # https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
   required_tags_custom_resource_types = [
@@ -71,8 +69,7 @@ locals {
 #   }
 # }
 
-
-
+# https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs
 resource "aws_config_conformance_pack" "operational_best_practices" {
   name = "${var.prefix}-operational-best-practices"
   count = var.operational_best_practices_conformance_pack_enabled ? 1 : 0
