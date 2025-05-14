@@ -1,2 +1,2 @@
-config_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}-config-logs"
-cloudtrail_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}-cloudtrail-logs"
+config_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .agent.accountId }}-{{ .agent.region }}-config-logs"
+cloudtrail_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .agent.accountId }}-{{ .agent.region }}-cloudtrail-logs"
