@@ -40,6 +40,9 @@ resource "aws_config_configuration_recorder_status" "config_rules" {
 # IAM Role for AWS Config
 resource "aws_iam_role" "config_rules" {
   name = var.prefix
+  tags = {
+    created-by        = "entigo-infralib"
+  }
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -63,6 +66,9 @@ resource "aws_iam_role_policy_attachment" "config_rules" {
 # S3 Bucket for Config logs
 resource "aws_s3_bucket" "config_rules_logs" {
   bucket = var.config_logs_bucket
+  tags = {
+    created-by        = "entigo-infralib"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "config_rules_logs" {

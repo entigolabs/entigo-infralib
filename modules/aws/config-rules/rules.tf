@@ -47,7 +47,10 @@ locals {
         ${local.required_tags_custom_resource_types_formatted}
       ] {
         resourceName == /AWSServiceRoleFor(?i)/ or 
-        resourceName == /OrganizationAccountAccessRole(?i)/ or 
+        resourceName == /OrganizationAccountAccessRole(?i)/ or
+        resourceName == /AWSReservedSSO_AdministratorAccess(?i)/ or
+        resourceName == /AmazonEKS_(?i)/ or
+        resourceName == /VPC-CNI-(?i)/
         tags["${tag}"] !empty
       }
     EOT

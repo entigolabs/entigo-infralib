@@ -15,6 +15,9 @@ resource "aws_iam_account_password_policy" "aws_config" {
 resource "aws_cloudtrail" "aws_config_cloudtrail" {
   count      = var.multi_region_cloudtrail_enabled ? 1 : 0
   depends_on = [aws_s3_bucket_policy.aws_config_cloudtrail[0]]
+  tags = {
+    created-by        = "entigo-infralib"
+  }
 
   name                          = var.prefix
   s3_bucket_name                = aws_s3_bucket.aws_config_cloudtrail[0].id
@@ -26,6 +29,9 @@ resource "aws_cloudtrail" "aws_config_cloudtrail" {
 resource "aws_s3_bucket" "aws_config_cloudtrail" {
   count  = var.multi_region_cloudtrail_enabled ? 1 : 0
   bucket = var.cloudtrail_logs_bucket
+  tags = {
+    created-by        = "entigo-infralib"
+  }
 }
 
 resource "aws_s3_bucket_policy" "aws_config_cloudtrail" {
