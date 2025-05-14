@@ -41,7 +41,7 @@ locals {
 
   required_tags_custom_resource_types_formatted = join(",\n  ", formatlist("\"%s\"", local.required_tags_custom_resource_types))
 
-  tag_rules = join("\n\n", [
+  required_tags_custom_rules = join("\n\n", [
     for tag in var.required_tag_keys : <<-EOT
       rule check_required_tag_${replace(tag, "-", "_")} when resourceType in [
         ${local.required_tags_custom_resource_types_formatted}
@@ -127,7 +127,7 @@ Resources:
         CustomPolicyDetails:
           PolicyRuntime: guard-2.x.x
           PolicyText: |
-            ${indent(12, local.tag_rules)}
+            ${indent(12, local.required_tags_custom_rules)}
     Type: AWS::Config::ConfigRule
 %{ endif }
   AccessKeysRotated:
