@@ -36,7 +36,7 @@ gke_managed_node_groups_extra: |
       min_count          = 0
       max_count          = 0
       max_pods_per_node  = 64
-      disk_size_gb       = 10
+      disk_size_gb       = 50
       disk_type          = "pd-standard"
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
