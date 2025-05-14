@@ -46,8 +46,8 @@ locals {
       rule check_required_tag_${replace(tag, "-", "_")} when resourceType in [
         ${local.required_tags_custom_resource_types_formatted}
       ] {
-        # resourceName == /AWSServiceRoleFor(?i)/ or 
-        # resourceName == /OrganizationAccountAccessRole(?i)/ or 
+        resourceName == /AWSServiceRoleFor(?i)/ or 
+        resourceName == /OrganizationAccountAccessRole(?i)/ or 
         tags["${tag}"] !empty
       }
     EOT
