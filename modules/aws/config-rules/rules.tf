@@ -50,7 +50,7 @@ locals {
         resourceName == /OrganizationAccountAccessRole(?i)/ or
         resourceName == /AWSReservedSSO_AdministratorAccess(?i)/ or
         resourceName == /AmazonEKS_(?i)/ or
-        resourceName == /VPC-CNI-(?i)/
+        resourceName == /VPC-CNI-(?i)/ or
         tags["${tag}"] !empty
       }
     EOT
