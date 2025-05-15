@@ -143,13 +143,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: ACCESS_KEYS_ROTATED
     Type: AWS::Config::ConfigRule
-  CloudTrailCloudWatchLogsEnabled:
-    Properties:
-      ConfigRuleName: cloud-trail-cloud-watch-logs-enabled
-      Source:
-        Owner: AWS
-        SourceIdentifier: CLOUD_TRAIL_CLOUD_WATCH_LOGS_ENABLED
-    Type: AWS::Config::ConfigRule
   Ec2EbsEncryptionByDefault:
     Properties:
       ConfigRuleName: ec2-ebs-encryption-by-default
@@ -166,18 +159,6 @@ Resources:
       Source:
         Owner: AWS
         SourceIdentifier: ENCRYPTED_VOLUMES
-    Type: AWS::Config::ConfigRule
-  IamNoInlinePolicyCheck:
-    Properties:
-      ConfigRuleName: iam-no-inline-policy-check
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::IAM::User
-        - AWS::IAM::Role
-        - AWS::IAM::Group
-      Source:
-        Owner: AWS
-        SourceIdentifier: IAM_NO_INLINE_POLICY_CHECK
     Type: AWS::Config::ConfigRule
   IamPasswordPolicy:
     Properties:
