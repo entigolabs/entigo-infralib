@@ -28,6 +28,7 @@ resource "aws_cloudtrail" "aws_config_cloudtrail" {
 
 resource "aws_s3_bucket" "aws_config_cloudtrail" {
   count = var.multi_region_cloudtrail_enabled ? 1 : 0
+  bucket = substr(var.cloudtrail_logs_bucket, 0, 63)
   tags = {
     created-by = "entigo-infralib"
   }
