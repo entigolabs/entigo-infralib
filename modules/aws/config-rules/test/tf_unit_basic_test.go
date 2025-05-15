@@ -23,13 +23,13 @@ func testTerraformConfigRulesBiz(t *testing.T) {
 	awsRegion := terraaws.GetRandomRegion(t, []string{os.Getenv("AWS_REGION")}, nil)
 	outputs := aws.GetTFOutputs(t, "biz")
 
-	bucket_name := tf.GetStringValue(t, outputs, "config-rules__bucket_name")
-	assert.NotEmpty(t, bucket_name, "bucket_name must not be empty")
+	configRulesLogsBucketName := tf.GetStringValue(t, outputs, "config-rules__config_rules_logs_bucket_name")
+	assert.NotEmpty(t, configRulesLogsBucketName, "config_rules_logs_bucket_name must not be empty")
 
-	err := aws.WaitUntilAWSBucketExists(t, awsRegion, bucket_name, 30, 4*time.Second)
+	err := aws.WaitUntilAWSBucketExists(t, awsRegion, configRulesLogsBucketName, 30, 4*time.Second)
 	require.NoError(t, err, "S3 bucket creation error")
 
-	err = aws.WaitUntilBucketFileAvailable(t, bucket_name, "config-logs/AWSLogs/877483565445/Config/ConfigWritabilityCheckFile", 20, 6*time.Second)
+	err = aws.WaitUntilBucketFileAvailable(t, configRulesLogsBucketName, "config-logs/AWSLogs/877483565445/Config/ConfigWritabilityCheckFile", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("File not found in AWS bucket:", err)
 	}
