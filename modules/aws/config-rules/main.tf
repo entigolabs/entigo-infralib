@@ -41,7 +41,7 @@ resource "aws_config_configuration_recorder_status" "config_rules" {
 resource "aws_iam_role" "config_rules" {
   name = var.prefix
   tags = {
-    created-by        = "entigo-infralib"
+    created-by = "entigo-infralib"
   }
 
   assume_role_policy = jsonencode({
@@ -65,9 +65,9 @@ resource "aws_iam_role_policy_attachment" "config_rules" {
 
 # S3 Bucket for Config logs
 resource "aws_s3_bucket" "config_rules_logs" {
-  bucket = var.config_logs_bucket
+  bucket = substr(var.config_logs_bucket, 0, 63)
   tags = {
-    created-by        = "entigo-infralib"
+    created-by = "entigo-infralib"
   }
 }
 

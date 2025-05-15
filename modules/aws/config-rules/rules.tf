@@ -1,5 +1,5 @@
 locals {
-# https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
+  # https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
   required_tags_custom_resource_types = [
     "AWS::IAM::User",
     "AWS::IAM::Policy",
@@ -76,7 +76,7 @@ locals {
 
 # https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs
 resource "aws_config_conformance_pack" "operational_best_practices" {
-  name = "${var.prefix}-operational-best-practices"
+  name  = "${var.prefix}-operational-best-practices"
   count = var.operational_best_practices_conformance_pack_enabled ? 1 : 0
 
   template_body = <<EOT
@@ -112,7 +112,7 @@ Parameters:
     Default: '3389'
     Type: String
 Resources:
-%{ if length(var.required_tag_keys) > 0 }
+%{if length(var.required_tag_keys) > 0}
   CheckRequiredTags:
     Properties:
       ConfigRuleName: required-tags-custom
@@ -129,7 +129,7 @@ Resources:
           PolicyText: |
             ${indent(12, local.required_tags_custom_rules)}
     Type: AWS::Config::ConfigRule
-%{ endif }
+%{endif}
   AccessKeysRotated:
     Properties:
       ConfigRuleName: access-keys-rotated
