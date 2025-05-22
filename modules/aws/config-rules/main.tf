@@ -1,5 +1,5 @@
 resource "aws_config_aggregate_authorization" "config_rules" {
-  count                 = (var.aggregate_authorization_account_id != "" && var.aggregate_authorization_aws_region != "") ? 1 : 0
+  count                 = (var.aggregate_authorization_account_id != "" && var.aggregate_authorization_authorized_aws_region != "") ? 1 : 0
   account_id            = var.aggregate_authorization_account_id
   region                = var.aggregate_authorization_authorized_aws_region
   # Starting from provider version 6.0.0 "region" is deprecated and "authorized_aws_region" must be used
