@@ -43,3 +43,13 @@ variable "required_tag_keys" {
     error_message = "You can specify a maximum of 6 required tag keys."
   }
 }
+
+variable "aggregate_authorization_account_id" {
+  type    = string
+  default = ""
+}
+
+variable "aggregate_authorization_authorized_aws_region" {
+  type    = string
+  default = ""
+}
