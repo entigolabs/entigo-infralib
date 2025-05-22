@@ -49,7 +49,7 @@ variable "aggregate_authorization_account_id" {
   default = ""
 }
 
-variable "aggregate_authorization_aws_region" {
+variable "aggregate_authorization_authorized_aws_region" {
   type    = string
   default = ""
 }
