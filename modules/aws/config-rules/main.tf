@@ -1,3 +1,12 @@
+resource "aws_config_aggregate_authorization" "config_rules" {
+  count                 = (var.aggregate_authorization_account_id != "" && var.aggregate_authorization_aws_region != "") ? 1 : 0
+  account_id            = var.aggregate_authorization_account_id
+  authorized_aws_region = var.aggregate_authorization_aws_region
+  tags = {
+    created-by = "entigo-infralib"
+  }
+}
+
 resource "aws_config_configuration_recorder" "config_rules" {
   name     = var.prefix
   role_arn = aws_iam_role.config_rules.arn
