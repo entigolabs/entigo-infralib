@@ -106,7 +106,7 @@ variable "security_group_ingress" {
       from_port = 22
       to_port = 22
       protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["13.51.186.14/32", "13.53.208.166/32"]
     }
   }
 }
