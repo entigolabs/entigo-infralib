@@ -6,6 +6,8 @@ metadata:
 spec:
   deletionPolicy: Delete
   forProvider:
+    tags:
+      created-by: entigo-infralib
     region: {{ .Values.global.aws.region }}
     delaySeconds: 0
     messageRetentionPeriod: 7200

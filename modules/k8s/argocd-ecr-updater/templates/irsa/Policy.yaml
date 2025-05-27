@@ -5,6 +5,9 @@ metadata:
 spec:
   forProvider:
     name: {{ .Release.Name }}
+    tags:
+      - key: created-by
+        value: entigo-infralib
     document: |
       {
         "Version": "2012-10-17",

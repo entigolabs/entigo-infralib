@@ -51,6 +51,14 @@ eks_managed_node_groups_extra: |
         labels = {
           altarm = "true"
         }
+        autoscaling_group_tags = {
+          Terraform = "true"
+          created-by = "entigo-infralib"
+        }
+        launch_template_tags = {
+          Terraform = "true"
+          created-by = "entigo-infralib"
+        }
         taints = [
           {
             key    = "altarm"
