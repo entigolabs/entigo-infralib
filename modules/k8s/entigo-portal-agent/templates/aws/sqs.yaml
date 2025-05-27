@@ -7,8 +7,7 @@ spec:
   deletionPolicy: Delete
   forProvider:
     tags:
-      - key: created-by
-        value: entigo-infralib
+      created-by: entigo-infralib
     region: {{ .Values.global.aws.region }}
     delaySeconds: 0
     messageRetentionPeriod: 7200

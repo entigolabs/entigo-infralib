@@ -23,6 +23,11 @@ locals {
       labels = {
         main = "true"
       }
+      autoscaling_group_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        created-by = "entigo-infralib"
+      }
       launch_template_tags = {
         Terraform = "true"
         Prefix    = var.prefix
@@ -61,6 +66,11 @@ locals {
       ]
       labels = {
         mon = "true"
+      }
+      autoscaling_group_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        created-by = "entigo-infralib"
       }
       launch_template_tags = {
         Terraform = "true"
@@ -101,6 +111,11 @@ locals {
       ]
       labels = {
         tools = "true"
+      }
+      autoscaling_group_tags = {
+        Terraform = "true"
+        Prefix    = var.prefix
+        created-by = "entigo-infralib"
       }
       launch_template_tags = {
         Terraform = "true"
