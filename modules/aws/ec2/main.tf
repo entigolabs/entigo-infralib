@@ -1,6 +1,9 @@
 resource "aws_eip" "ec2" {
   count = var.eip ? 1 : 0
   instance = aws_instance.ec2.id
+  tags = {
+    created-by = "entigo-infralib"
+  }
 }
 
 data "aws_ami" "ec2" {
@@ -26,6 +29,7 @@ resource "aws_security_group" "ec2" {
   vpc_id = data.aws_subnet.ec2.vpc_id
   tags = {
     "Name" = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -70,6 +74,9 @@ resource "aws_instance" "ec2" {
 
   tags = {
     "Name" = var.prefix
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
   }
   lifecycle {
      ignore_changes = [ user_data_base64, ami ]

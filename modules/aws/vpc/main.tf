@@ -82,6 +82,7 @@ module "vpc" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -90,7 +91,9 @@ resource "aws_security_group" "pipeline_security_group" {
   description = "${var.prefix} Security group used by pipelines that run terraform"
   vpc_id      = module.vpc.vpc_id
   tags = {
-    Name = "Allow pipeline access to ${var.prefix}"
+    Terraform  = "true"
+    Prefix     = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

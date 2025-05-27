@@ -12,6 +12,11 @@ locals {
 resource "aws_route53_zone" "pub" {
   count = var.create_public ? 1 : 0
   name = local.pub_domain
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
+  }
 }
 
 resource "aws_acm_certificate" "pub" {
@@ -22,6 +27,12 @@ resource "aws_acm_certificate" "pub" {
   
   lifecycle {
     create_before_destroy = true
+  }
+
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -56,11 +67,21 @@ resource "aws_route53_zone" "int" {
   lifecycle {
     ignore_changes = [vpc]
   }
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
+  }
 }
 
 resource "aws_route53_zone" "int-cert" {
   count = var.create_cert && var.create_private ? 1 : 0
   name = local.int_domain
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
+  }
 }
 
 resource "aws_acm_certificate" "int" {
@@ -71,6 +92,12 @@ resource "aws_acm_certificate" "int" {
   
   lifecycle {
     create_before_destroy = true
+  }
+
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

@@ -1,5 +1,10 @@
 resource "aws_iam_role" "crossplane" {
   name = "crossplane-${var.prefix}"
+  tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
 
   assume_role_policy = <<POLICY
 {
