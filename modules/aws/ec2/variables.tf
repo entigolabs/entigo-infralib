@@ -101,14 +101,7 @@ variable "security_group_ingress" {
     protocol = string
     cidr_blocks = list(string)
   }))
-  default = {
-    ssh = {
-      from_port = 22
-      to_port = 22
-      protocol = "tcp"
-      cidr_blocks = ["13.51.186.14/32", "13.53.208.166/32"]
-    }
-  }
+  default = {}
 }
 
 variable "extra_security_group_ids" {
