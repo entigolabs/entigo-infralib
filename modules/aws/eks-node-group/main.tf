@@ -42,11 +42,6 @@ module "eks-managed-node-group" {
   
   labels = var.labels
   taints = var.taints
-  autoscaling_group_tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    created-by = "entigo-infralib"
-  }
   launch_template_tags = {
     Terraform = "true"
     Prefix    = var.prefix
