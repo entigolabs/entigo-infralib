@@ -53,12 +53,10 @@ eks_managed_node_groups_extra: |
         }
         autoscaling_group_tags = {
           Terraform = "true"
-          Prefix    = var.prefix
           created-by = "entigo-infralib"
         }
         launch_template_tags = {
           Terraform = "true"
-          Prefix    = var.prefix
           created-by = "entigo-infralib"
         }
         taints = [
