@@ -6,6 +6,9 @@ metadata:
   name: {{ .Release.Name }}-karpenter-controller-role
 spec:
   forProvider:
+    tags:
+      - key: created-by
+        value: entigo-infralib
     assumeRolePolicyDocument: |
       {
           "Version": "2012-10-17",

@@ -7,6 +7,9 @@ metadata:
 spec:
   forProvider:
     name: {{ .Release.Name }}-karpenter-controller-policy
+    tags:
+      - key: created-by
+        value: entigo-infralib
     document: |
       {
           "Statement": [

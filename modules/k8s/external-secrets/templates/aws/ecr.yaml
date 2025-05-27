@@ -10,6 +10,9 @@ metadata:
 spec:
   forProvider:
     name: {{ .Release.Name }}-ecr-token
+    tags:
+      - key: created-by
+        value: entigo-infralib
     document: |
       {
         "Version": "2012-10-17",
@@ -46,6 +49,9 @@ metadata:
   name: {{ .Release.Name }}-ecr-token
 spec:
   forProvider:
+    tags:
+      - key: created-by
+        value: entigo-infralib
     assumeRolePolicyDocument: |
       {
         "Version": "2012-10-17",
