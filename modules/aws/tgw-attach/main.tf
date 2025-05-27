@@ -14,6 +14,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "tgw" {
     Name = var.prefix
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

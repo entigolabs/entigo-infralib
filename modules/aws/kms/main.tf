@@ -154,6 +154,7 @@ module "kms_telemetry" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -174,6 +175,7 @@ module "kms_config" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -342,6 +344,7 @@ module "kms_data" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

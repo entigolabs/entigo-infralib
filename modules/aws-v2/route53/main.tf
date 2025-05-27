@@ -93,6 +93,7 @@ resource "aws_route53_zone" "this" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
     DefaultPublic  = local.domains_with_defaults[each.key].default_public == true ? "true" : "false"
     DefaultPrivate = local.domains_with_defaults[each.key].default_private == true ? "true" : "false"
   }
@@ -147,6 +148,7 @@ resource "aws_route53_zone" "validation" {
     Terraform = "true"
     Prefix    = var.prefix
     Purpose   = "ACM-Validation"
+    created-by = "entigo-infralib"
   }
 }
 
@@ -187,6 +189,7 @@ resource "aws_acm_certificate" "this" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

@@ -20,6 +20,7 @@ resource "aws_secretsmanager_secret" "ecr_pullthroughcache_hub" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -36,6 +37,7 @@ resource "aws_secretsmanager_secret" "ecr_pullthroughcache_ghcr" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -52,6 +54,7 @@ resource "aws_secretsmanager_secret" "ecr_pullthroughcache_gcr" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -120,6 +123,12 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
     encryption_type = "AES256"
   }
 
+  resource_tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
+
   lifecycle_policy = <<EOT
 {
   "rules": [
@@ -161,6 +170,12 @@ resource "aws_iam_policy" "ecr-proxy" {
   name        = substr(var.prefix, 0, 24)
   path        = "/"
   description = "ECR ${substr(var.prefix, 0, 24)} usage"
+
+  tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
 
   # Terraform's "jsonencode" function converts a
   # Terraform expression result to valid JSON syntax.

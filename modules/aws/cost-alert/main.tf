@@ -23,6 +23,7 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -34,6 +35,7 @@ resource "aws_sns_topic" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 

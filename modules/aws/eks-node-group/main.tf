@@ -45,9 +45,11 @@ module "eks-managed-node-group" {
   launch_template_tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }

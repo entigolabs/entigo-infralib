@@ -8,6 +8,7 @@ resource "aws_iam_role" "node" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
 
@@ -32,5 +33,6 @@ resource "aws_eks_access_entry" "node" {
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
+    created-by = "entigo-infralib"
   }
 }
