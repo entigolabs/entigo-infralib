@@ -123,7 +123,7 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
     encryption_type = "AES256"
   }
 
-  tags = {
+  resource_tags = {
     Terraform   = "true"
     Environment = var.prefix
     created-by = "entigo-infralib"
@@ -170,7 +170,7 @@ resource "aws_iam_policy" "ecr-proxy" {
   name        = substr(var.prefix, 0, 24)
   path        = "/"
   description = "ECR ${substr(var.prefix, 0, 24)} usage"
-  
+
   tags = {
     Terraform   = "true"
     Environment = var.prefix
