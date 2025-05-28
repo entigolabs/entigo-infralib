@@ -213,8 +213,8 @@ resource "aws_iam_policy" "ecr_proxy" {
   })
 }
 
-resource "aws_iam_role" "ecr_proxy_template" {
-  name = "${substr(var.prefix, 0, 24)}-ecr-proxy-template"
+resource "aws_iam_role" "ecr_proxy" {
+  name = "${substr(var.prefix, 0, 24)}-ecr-proxy"
   tags = {
     Terraform   = "true"
     Environment = var.prefix
@@ -222,7 +222,7 @@ resource "aws_iam_role" "ecr_proxy_template" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "ecr_proxy_template" {
-  role       = aws_iam_role.crossplane.name
+resource "aws_iam_role_policy_attachment" "ecr_proxy" {
+  role       = aws_iam_role.ecr_proxy.name
   policy_arn = aws_iam_policy.ecr_proxy.arn
 }
