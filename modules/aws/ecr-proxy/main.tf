@@ -69,7 +69,6 @@ resource "aws_ecr_pull_through_cache_rule" "hub" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-hub"
   upstream_registry_url = "registry-1.docker.io"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_hub[0].arn
-  upstream_repository_prefix = "ROOT"
   depends_on = [
     aws_secretsmanager_secret_version.ecr_pullthroughcache_hub
   ]
@@ -79,7 +78,6 @@ resource "aws_ecr_pull_through_cache_rule" "ghcr" {
   count = var.ghcr_username != "" && var.ghcr_token != "" ? 1 : 0
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-ghcr"
   upstream_registry_url = "ghcr.io"
-  upstream_repository_prefix = "ROOT"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_ghcr[0].arn
   depends_on = [
     aws_secretsmanager_secret_version.ecr_pullthroughcache_ghcr
@@ -90,7 +88,6 @@ resource "aws_ecr_pull_through_cache_rule" "gcr" {
   count = var.gcr_username != "" && var.gcr_token != "" ? 1 : 0
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-gcr"
   upstream_registry_url = "gcr.io"
-  upstream_repository_prefix = "ROOT"
   credential_arn        = aws_secretsmanager_secret.ecr_pullthroughcache_gcr[0].arn
   depends_on = [
     aws_secretsmanager_secret_version.ecr_pullthroughcache_gcr
@@ -100,19 +97,16 @@ resource "aws_ecr_pull_through_cache_rule" "gcr" {
 resource "aws_ecr_pull_through_cache_rule" "k8s" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-k8s"
   upstream_registry_url = "registry.k8s.io"
-  upstream_repository_prefix = "ROOT"
 }
 
 resource "aws_ecr_pull_through_cache_rule" "ecr" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-ecr"
   upstream_registry_url = "public.ecr.aws"
-  upstream_repository_prefix = "ROOT"
 }
 
 resource "aws_ecr_pull_through_cache_rule" "quay" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-quay"
   upstream_registry_url = "quay.io"
-  upstream_repository_prefix = "ROOT"
 }
 
 resource "aws_ecr_repository_creation_template" "ecr_proxy" {
