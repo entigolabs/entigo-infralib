@@ -115,7 +115,7 @@ resource "aws_ecr_pull_through_cache_rule" "quay" {
   upstream_repository_prefix = "ROOT"
 }
 
-resource "aws_ecr_repository_creation_template" "ecr-proxy" {
+resource "aws_ecr_repository_creation_template" "ecr_proxy" {
   for_each = toset(["hub", "ghcr", "gcr", "k8s", "ecr", "quay"])
   prefix               = "${substr(var.prefix, 0, 24)}-${each.value}"
   description          = "${var.prefix}-${each.value}"
@@ -125,15 +125,17 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
     "PULL_THROUGH_CACHE",
   ]
 
+  custom_role_arn = aws_iam_role.ecr_proxy.arn
+
   encryption_configuration {
     encryption_type = "AES256"
   }
 
-  # resource_tags = {
-  #   Terraform   = "true"
-  #   Environment = var.prefix
-  #   created-by = "entigo-infralib"
-  # }
+  resource_tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
 
   lifecycle_policy = <<EOT
 {
@@ -172,7 +174,7 @@ EOT
 }
 
 
-resource "aws_iam_policy" "ecr-proxy" {
+resource "aws_iam_policy" "ecr_proxy" {
   name        = substr(var.prefix, 0, 24)
   path        = "/"
   description = "ECR ${substr(var.prefix, 0, 24)} usage"
@@ -209,4 +211,18 @@ resource "aws_iam_policy" "ecr-proxy" {
       },
     ]
   })
+}
+
+resource "aws_iam_role" "ecr_proxy_template" {
+  name = "${substr(var.prefix, 0, 24)}-ecr-proxy-template"
+  tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_proxy_template" {
+  role       = aws_iam_role.crossplane.name
+  policy_arn = aws_iam_policy.ecr_proxy.arn
 }
