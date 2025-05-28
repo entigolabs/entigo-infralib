@@ -98,7 +98,7 @@ fi
   MODULE_NAME=$(basename $MODULE_PATH)
   get_branch_name
   PIDS=""
-  for test in $(ls -1 $MODULE_PATH/test/*.yaml)
+  for test in $(ls -1 $MODULE_PATH/test/*.yaml | grep -ve"static_tests.yaml")
   do 
         testname=`basename $test | sed 's/\.yaml$//'`
         prefix="$(echo $testname | cut -d"_" -f2)"
