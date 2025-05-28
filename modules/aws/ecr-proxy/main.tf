@@ -129,11 +129,11 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
     encryption_type = "AES256"
   }
 
-  resource_tags = {
-    Terraform   = "true"
-    Environment = var.prefix
-    created-by = "entigo-infralib"
-  }
+  # resource_tags = {
+  #   Terraform   = "true"
+  #   Environment = var.prefix
+  #   created-by = "entigo-infralib"
+  # }
 
   lifecycle_policy = <<EOT
 {
