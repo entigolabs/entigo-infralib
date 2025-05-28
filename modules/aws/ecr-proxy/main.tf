@@ -214,6 +214,19 @@ resource "aws_iam_role" "ecr_proxy" {
     Environment = var.prefix
     created-by = "entigo-infralib"
   }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "pullthroughcache.ecr.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "ecr_proxy" {
