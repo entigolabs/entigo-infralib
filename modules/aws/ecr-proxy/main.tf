@@ -168,7 +168,7 @@ EOT
 }
 
 
-resource "aws_iam_policy" "ecr_proxy" {
+resource "aws_iam_policy" "ecr-proxy" {
   name        = substr(var.prefix, 0, 24)
   path        = "/"
   description = "ECR ${substr(var.prefix, 0, 24)} usage"
@@ -231,5 +231,5 @@ resource "aws_iam_role" "ecr_proxy" {
 
 resource "aws_iam_role_policy_attachment" "ecr_proxy" {
   role       = aws_iam_role.ecr_proxy.name
-  policy_arn = aws_iam_policy.ecr_proxy.arn
+  policy_arn = aws_iam_policy.ecr-proxy.arn
 }
