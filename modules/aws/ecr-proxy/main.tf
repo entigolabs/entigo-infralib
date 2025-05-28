@@ -119,7 +119,7 @@ resource "aws_ecr_repository_creation_template" "ecr_proxy" {
     "PULL_THROUGH_CACHE",
   ]
 
-  custom_role_arn = aws_iam_role.ecr_proxy.arn
+  # custom_role_arn = aws_iam_role.ecr_proxy.arn
 
   encryption_configuration {
     encryption_type = "AES256"
@@ -173,11 +173,11 @@ resource "aws_iam_policy" "ecr-proxy" {
   path        = "/"
   description = "ECR ${substr(var.prefix, 0, 24)} usage"
 
-  tags = {
-    Terraform   = "true"
-    Environment = var.prefix
-    created-by = "entigo-infralib"
-  }
+  # tags = {
+  #   Terraform   = "true"
+  #   Environment = var.prefix
+  #   created-by = "entigo-infralib"
+  # }
 
   # Terraform's "jsonencode" function converts a
   # Terraform expression result to valid JSON syntax.
@@ -207,29 +207,29 @@ resource "aws_iam_policy" "ecr-proxy" {
   })
 }
 
-resource "aws_iam_role" "ecr_proxy" {
-  name = "${substr(var.prefix, 0, 24)}-ecr-proxy"
-  tags = {
-    Terraform   = "true"
-    Environment = var.prefix
-    created-by = "entigo-infralib"
-  }
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "pullthroughcache.ecr.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
+# resource "aws_iam_role" "ecr_proxy" {
+#   name = "${substr(var.prefix, 0, 24)}-ecr-proxy"
+#   tags = {
+#     Terraform   = "true"
+#     Environment = var.prefix
+#     created-by = "entigo-infralib"
+#   }
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Sid    = ""
+#         Principal = {
+#           Service = "pullthroughcache.ecr.amazonaws.com"
+#         }
+#       },
+#     ]
+#   })
+# }
 
-resource "aws_iam_role_policy_attachment" "ecr_proxy" {
-  role       = aws_iam_role.ecr_proxy.name
-  policy_arn = aws_iam_policy.ecr-proxy.arn
-}
+# resource "aws_iam_role_policy_attachment" "ecr_proxy" {
+#   role       = aws_iam_role.ecr_proxy.name
+#   policy_arn = aws_iam_policy.ecr-proxy.arn
+# }
