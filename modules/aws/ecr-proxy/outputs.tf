@@ -30,5 +30,5 @@ output "quay_registry" {
 
 output "policy" {
   description = "Policy ARN that allows the usage of these registries."
-  value       = aws_iam_policy.ecr_proxy.arn
+  value       = aws_iam_policy.ecr-proxy.arn
 }
