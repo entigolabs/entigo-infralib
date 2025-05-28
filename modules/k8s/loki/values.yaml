@@ -28,22 +28,6 @@ loki:
           active_index_directory: /var/loki/tsdb-index
           cache_location: /var/loki/tsdb-cache
           cache_ttl: 24h
-    schemaConfig:
-      configs:
-        - from: "2022-01-11"
-          index:
-            period: 24h
-            prefix: loki_index_
-          object_store: s3
-          schema: v12
-          store: boltdb-shipper
-        - from: "2025-12-01" # Replace with future date
-          store: tsdb
-          object_store: "s3"
-          schema: v13
-          index:
-            prefix: index_
-            period: 24h
 
   resultsCache:
     enabled: false
