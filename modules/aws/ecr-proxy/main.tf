@@ -109,7 +109,7 @@ resource "aws_ecr_pull_through_cache_rule" "quay" {
   upstream_registry_url = "quay.io"
 }
 
-resource "aws_ecr_repository_creation_template" "ecr_proxy" {
+resource "aws_ecr_repository_creation_template" "ecr-proxy" {
   for_each = toset(["hub", "ghcr", "gcr", "k8s", "ecr", "quay"])
   prefix               = "${substr(var.prefix, 0, 24)}-${each.value}"
   description          = "${var.prefix}-${each.value}"
