@@ -37,7 +37,7 @@ loki:
           object_store: s3
           schema: v12
           store: boltdb-shipper
-        - from: "2025-04-22" # Replace with future date
+        - from: "2025-12-01" # Replace with future date
           store: tsdb
           object_store: s3
           schema: v13
