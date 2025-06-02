@@ -5,6 +5,8 @@ global:
     clusterOIDC: ""
 
 aws-load-balancer-controller:
+  defaultTags:
+    created-by: "entigo-infralib"
   serviceAccount:
     name: aws-load-balancer-controller
     create: false
