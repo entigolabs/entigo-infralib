@@ -64,6 +64,13 @@ resource "aws_secretsmanager_secret_version" "ecr_pullthroughcache_gcr" {
   secret_string = jsonencode(local.gcr)
 }
 
+resource "aws_ecr_pull_through_cache_rule" "upstream_ecr" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  ecr_repository_prefix = "ROOT"
+  upstream_registry_url = var.upstream_registry_url
+  custom_role_arn       =  aws_iam_role.ecrptc_service_role[0].arn
+}
+
 resource "aws_ecr_pull_through_cache_rule" "hub" {
   count = var.hub_username != "" && var.hub_token != "" ? 1 : 0
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-hub"
@@ -107,6 +114,23 @@ resource "aws_ecr_pull_through_cache_rule" "ecr" {
 resource "aws_ecr_pull_through_cache_rule" "quay" {
   ecr_repository_prefix = "${substr(var.prefix, 0, 24)}-quay"
   upstream_registry_url = "quay.io"
+}
+
+resource "aws_ecr_repository_creation_template" "ecr_upstream_proxy" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  prefix               = "ROOT"
+  description          = "By default proxy all images from upstream"
+  image_tag_mutability = "MUTABLE"
+
+  applied_for = [
+    "PULL_THROUGH_CACHE",
+  ]
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  lifecycle_policy = var.upstream_registry_lifecycle_policy
 }
 
 resource "aws_ecr_repository_creation_template" "ecr-proxy" {
@@ -156,9 +180,61 @@ resource "aws_ecr_repository_creation_template" "ecr-proxy" {
   ]
 }
 EOT
-
 }
 
+data "aws_iam_policy_document" "ecrptc_assume_role" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["pullthroughcache.ecr.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "ecrptc_policy" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  statement {
+    sid    = "ECRPTC"
+    effect = "Allow"
+
+    actions   = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchImportUpstreamImage",
+      "ecr:BatchGetImage",
+      "ecr:GetImageCopyStatus",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "ecrptc_service_role" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  name               = "ECRPTCRole"
+  assume_role_policy = data.aws_iam_policy_document.ecrptc_assume_role[0].json
+
+  tags = {
+    Terraform   = "true"
+    Environment = var.prefix
+    created-by = "entigo-infralib"
+  }
+}
+
+resource "aws_iam_role_policy" "ecrptc_policy" {
+  count = var.upstream_registry_url != "" ? 1 : 0
+  name   = "ECRPTCRolePolicy"
+  role   = aws_iam_role.ecrptc_service_role[0].id
+  policy = data.aws_iam_policy_document.ecrptc_policy[0].json
+}
 
 resource "aws_iam_policy" "ecr-proxy" {
   name        = substr(var.prefix, 0, 24)
@@ -171,8 +247,6 @@ resource "aws_iam_policy" "ecr-proxy" {
     created-by = "entigo-infralib"
   }
 
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
