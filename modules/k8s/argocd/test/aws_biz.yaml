@@ -22,7 +22,7 @@ argocd:
       oidc.config: |
         name: Zitadel
         issuer: https://entigo-dev-if3upz.zitadel.cloud
-        clientID: "309977719532247410"
+        clientID: "322752930186919807"
         clientSecret: "{{ .output-custom./argocd-biz/clientSecret }}"
         requestedScopes:
           - openid

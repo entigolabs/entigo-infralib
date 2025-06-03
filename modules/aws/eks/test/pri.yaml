@@ -23,7 +23,7 @@ iam_admin_role: "AWSReservedSSO_AdministratorAccess_.*"
 cluster_identity_providers: |
   {
     zitadel = {
-      client_id = "309813509141668682"
+      client_id = "322752940471339376"
       groups_claim = "groups"
       groups_prefix = "oidc:"
       identity_provider_config_name = "zitadel"

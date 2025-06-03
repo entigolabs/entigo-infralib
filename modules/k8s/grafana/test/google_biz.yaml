@@ -18,5 +18,5 @@ grafana:
       api_url: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/userinfo
       use_pkce: true
       use_refresh_token: true
-      client_id: "310990521457785152"
+      client_id: "322752930505686911"
       role_attribute_path: "contains(groups[*], 'web-admin-258953744228679165') && 'Admin'"
