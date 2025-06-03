@@ -31,19 +31,16 @@ trivy-operator:
         effect: "NoSchedule"
   trivy:
     slow: true
-    # severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
-    # severity: "CRITICAL"
-    # ignoreUnfixed: true
+    severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
   operator:
     metricsFindingsEnabled: true
-    metricsVulnIdEnabled: true
-    exposedSecretScannerEnabled: true
-    # metricsExposedSecretInfo: true
-    # metricsConfigAuditInfo: true
-    # metricsRbacAssessmentInfo: true
-    # metricsInfraAssessmentInfo: true
-    # metricsImageInfo: true
-    # metricsClusterComplianceInfo: true
+    metricsVulnIdEnabled: true # Needed for grafana dashboard
+    exposedSecretScannerEnabled: false
+    sbomGenerationEnabled: false
+    configAuditScannerEnabled: false
+    rbacAssessmentScannerEnabled: false
+    infraAssessmentScannerEnabled: false
+    clusterComplianceEnabled: false
 
   affinity:
     nodeAffinity:

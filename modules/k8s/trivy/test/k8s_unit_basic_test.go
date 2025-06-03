@@ -9,8 +9,20 @@ import (
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
+// func TestK8sTrivyAWSBiz(t *testing.T) {
+// 	testK8sTrivy(t, "aws", "biz")
+// }
+
 func TestK8sTrivyAWSPri(t *testing.T) {
 	testK8sTrivy(t, "aws", "pri")
+}
+
+// func TestK8sTrivyGoogleBiz(t *testing.T) {
+// 	testK8sTrivy(t, "google", "biz")
+// }
+
+func TestK8sTrivyGooglePri(t *testing.T) {
+	testK8sTrivy(t, "google", "pri")
 }
 
 func testK8sTrivy(t *testing.T, cloudName string, envName string) {
