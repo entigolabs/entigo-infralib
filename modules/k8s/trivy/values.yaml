@@ -1,0 +1,85 @@
+trivy-operator:
+  service:
+    headless: false
+  trivyOperator:
+    scanJobCompressLogs: false
+    scanJobAffinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 50
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+    scanJobTolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+  trivy:
+    slow: true
+    # severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+    # severity: "CRITICAL"
+    # ignoreUnfixed: true
+  operator:
+    metricsFindingsEnabled: true
+    metricsVulnIdEnabled: true
+    exposedSecretScannerEnabled: true
+    # metricsExposedSecretInfo: true
+    # metricsConfigAuditInfo: true
+    # metricsRbacAssessmentInfo: true
+    # metricsInfraAssessmentInfo: true
+    # metricsImageInfo: true
+    # metricsClusterComplianceInfo: true
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          preference:
+            matchExpressions:
+              - key: mon
+                operator: In
+                values:
+                  - "true"
+        - weight: 50
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+
+  nodeCollector:
+    useNodeSelector: false
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"

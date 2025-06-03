@@ -1,0 +1,11 @@
+apiVersion: v2
+name: trivy
+description: Trivy operator Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: trivy-operator
+    version: 0.28.1
+    repository: https://aquasecurity.github.io/helm-charts/
