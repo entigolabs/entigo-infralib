@@ -36,6 +36,15 @@ trivy-operator:
   trivy:
     slow: true
     severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100M
+        ephemeralStorage: "2Gi"
+      limits:
+        cpu: 1000m
+        memory: 2000M
+        ephemeralStorage: "5Gi"
   operator:
     metricsFindingsEnabled: true
     metricsVulnIdEnabled: true
