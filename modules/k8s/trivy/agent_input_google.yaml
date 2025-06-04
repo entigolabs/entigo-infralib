@@ -1,3 +1,5 @@
 global:
+  google:
+    projectID: "{{ .toutput.crossplane.project_id }}"
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

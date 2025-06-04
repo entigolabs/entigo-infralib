@@ -1,4 +1,13 @@
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
+  google:
+    projectID: ""
+
 trivy-operator:
+  serviceAccount:
+    create: true
+    name: "trivy"
   service:
     headless: true
     annotations:
@@ -40,11 +49,9 @@ trivy-operator:
       requests:
         cpu: 100m
         memory: 100M
-        ephemeralStorage: "2Gi"
       limits:
-        cpu: 1000m
-        memory: 2000M
-        ephemeralStorage: "5Gi"
+        cpu: 500m
+        memory: 500M
   operator:
     metricsFindingsEnabled: true
     metricsVulnIdEnabled: true

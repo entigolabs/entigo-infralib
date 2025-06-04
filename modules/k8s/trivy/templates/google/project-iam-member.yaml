@@ -1,0 +1,15 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ProjectIAMMember
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  forProvider:
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Name }}/{{ (index .Values "trivy-operator" "serviceAccount" "name") }}]
+    project: {{ .Values.global.google.projectID }}
+    role: roles/artifactregistry.reader
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}
