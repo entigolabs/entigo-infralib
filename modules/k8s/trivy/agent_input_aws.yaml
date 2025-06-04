@@ -1,0 +1,8 @@
+trivy-operator:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  trivy:
+    image:
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  nodeCollector:
+    registry: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}'

@@ -1,0 +1,11 @@
+global:
+  google:
+    projectID: "{{ .toutput.crossplane.project_id }}"
+trivy-operator:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  trivy:
+    image:
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  nodeCollector:
+    registry: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}'

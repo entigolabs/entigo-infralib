@@ -1,0 +1,10 @@
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
+
+  google:
+    projectID: ""
+
+trivy-operator:
+  trivyOperator:
+    scanJobAutomountServiceAccountToken: true
