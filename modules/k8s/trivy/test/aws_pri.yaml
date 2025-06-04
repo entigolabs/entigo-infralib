@@ -1,0 +1,26 @@
+trivy-operator:
+  trivyOperator:
+    scanJobAffinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 33
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 33
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 33
+            preference:
+              matchExpressions:
+                - key: main
+                  operator: In
+                  values:
+                    - "true"
