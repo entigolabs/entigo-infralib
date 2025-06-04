@@ -90,7 +90,6 @@ trivy-operator:
       effect: "NoSchedule"
 
   nodeCollector:
-    useNodeSelector: false
     tolerations:
       - key: "mon"
         operator: "Equal"
