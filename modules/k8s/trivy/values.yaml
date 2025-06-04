@@ -1,19 +1,23 @@
 trivy-operator:
   service:
-    headless: false
+    headless: true
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+      prometheus.io/path: "/metrics"
   trivyOperator:
     scanJobCompressLogs: false
     scanJobAffinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 50
+          - weight: 90
             preference:
               matchExpressions:
                 - key: mon
                   operator: In
                   values:
                     - "true"
-          - weight: 50
+          - weight: 10
             preference:
               matchExpressions:
                 - key: tools
@@ -34,7 +38,7 @@ trivy-operator:
     severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
   operator:
     metricsFindingsEnabled: true
-    metricsVulnIdEnabled: true # Needed for grafana dashboard
+    metricsVulnIdEnabled: true
     exposedSecretScannerEnabled: false
     sbomGenerationEnabled: false
     configAuditScannerEnabled: false
@@ -45,14 +49,14 @@ trivy-operator:
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 50
+        - weight: 90
           preference:
             matchExpressions:
               - key: mon
                 operator: In
                 values:
                   - "true"
-        - weight: 50
+        - weight: 10
           preference:
             matchExpressions:
               - key: tools

@@ -71,13 +71,13 @@ grafana:
         gnetId: 22849
         revision: 3
         datasource: Prometheus
-      limitsrequests:
-        gnetId: 22849
-        revision: 3
-        datasource: Prometheus
       pvc:
         gnetId: 13646
         revision: 2
+        datasource: Prometheus
+      trivy-operator-vulnerabilities:
+        gnetId: 16337
+        revision: 14
         datasource: Prometheus
   deploymentStrategy:
     type: Recreate
