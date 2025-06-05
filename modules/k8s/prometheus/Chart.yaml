@@ -7,13 +7,13 @@ appVersion: "1.0"
 
 dependencies:
   - name: prometheus
-    version: 27.11.0
+    version: 27.20.0
     repository: https://prometheus-community.github.io/helm-charts
   - name: prometheus-operator-crds
-    version: 19.1.0
+    version: 20.0.1
     repository: https://prometheus-community.github.io/helm-charts
     condition: global.installPrometheusOperatorCRDs
   - name: prometheus-blackbox-exporter
-    version: 9.4.0
+    version: 10.1.0
     repository: https://prometheus-community.github.io/helm-charts
     condition: global.installBlackbox
