@@ -61,7 +61,7 @@ get_branch_name() {
 
 get_step_name_tf() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
-  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ]; then
+  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ] || [ "$MODULE_NAME" == "dns" ]; then
     STEP_NAME="net"
   fi
 }
