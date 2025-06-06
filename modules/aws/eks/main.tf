@@ -213,7 +213,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.55.0"
+  version               = "5.58.0"
   role_name             = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_ids = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -232,7 +232,7 @@ module "ebs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.55.0"
+  version               = "5.58.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
