@@ -2,9 +2,6 @@ locals {
   # https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html
   required_tags_custom_resource_types = [
     "AWS::IAM::User",
-    "AWS::IAM::Policy",
-    "AWS::IAM::User",
-    "AWS::IAM::Policy",
     "AWS::IAM::Role",
     "AWS::Lambda::Function",
     "AWS::SNS::Topic",
@@ -13,7 +10,6 @@ locals {
     "AWS::CloudFront::Distribution",
     "AWS::KMS::Key",
     "AWS::ACM::Certificate",
-    "AWS::AutoScaling::AutoScalingGroup",
     "AWS::CloudFormation::Stack",
     "AWS::CodeBuild::Project",
     "AWS::DynamoDB::Table",
@@ -21,11 +17,9 @@ locals {
     "AWS::EC2::Instance",
     "AWS::EC2::InternetGateway",
     "AWS::EC2::NetworkAcl",
-    "AWS::EC2::NetworkInterface",
     "AWS::EC2::RouteTable",
     "AWS::EC2::SecurityGroup",
     "AWS::EC2::Subnet",
-    "AWS::EC2::Volume",
     "AWS::EC2::VPC",
     "AWS::EC2::VPNConnection",
     "AWS::EC2::VPNGateway",
@@ -51,6 +45,7 @@ locals {
         resourceName == /AWSReservedSSO_AdministratorAccess(?i)/ or
         resourceName == /AmazonEKS_(?i)/ or
         resourceName == /VPC-CNI-(?i)/ or
+        resourceName == /awsconfigconforms(?i)/ or
         tags["${tag}"] !empty
       }
     EOT
