@@ -18,6 +18,11 @@ variable "operational_best_practices_conformance_pack_enabled" {
   default = false
 }
 
+variable "operational_best_practices_for_cis_aws_v1_4_level2_enabled" {
+  type    = bool
+  default = false
+}
+
 variable "iam_password_policy_enabled" {
   type    = bool
   default = false
