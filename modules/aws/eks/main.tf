@@ -215,6 +215,24 @@ module "ebs_csi_irsa_role" {
   }
 }
 
+module "efs_csi_irsa_role" {
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version               = "5.58.0"
+  role_name             = "${var.prefix}-efs-csi"
+  attach_efs_csi_policy = true
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
+    }
+  }
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
+  }
+}
+
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version               = "5.58.0"
@@ -316,6 +334,63 @@ module "eks" {
         }
       })
     }
+
+    aws-efs-csi-driver = {
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
+      addon_version               = var.efs_csi_addon_version
+      service_account_role_arn = module.efs_csi_irsa_role.iam_role_arn
+      configuration_values = jsonencode({
+        controller : {
+          volumeModificationFeature: {
+                enabled: true
+          },
+          tolerations : [
+            {
+              key : "tools",
+              operator : "Equal",
+              value : "true",
+              effect : "NoSchedule"
+            }
+          ],
+          affinity : {
+            nodeAffinity : {
+              preferredDuringSchedulingIgnoredDuringExecution : [
+                {
+                  preference : {
+                    matchExpressions : [
+                      {
+                        "key" : "eks.amazonaws.com/compute-type",
+                        "operator" : "NotIn",
+                        "values" : [
+                          "fargate"
+                        ]
+                      }
+                    ]
+                  },
+                  "weight" : 1
+                },
+                {
+                  preference : {
+                    matchExpressions : [
+                      {
+                        "key" : "tools",
+                        "operator" : "In",
+                        "values" : [
+                          "true"
+                        ]
+                      }
+                    ]
+                  },
+                  "weight" : 5
+                }
+              ]
+            }
+          }
+        }
+      })
+    }
+
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"

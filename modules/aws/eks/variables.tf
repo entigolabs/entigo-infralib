@@ -308,6 +308,11 @@ variable "ebs_csi_addon_version" {
   default = "v1.41.0-eksbuild.1"
 }
 
+variable "efs_csi_addon_version" {
+  type = string
+  default = "v2.1.8-eksbuild.1"
+}
+
 variable "enable_vpc_cni_prefix_delegation" {
   type    = string
   default = "true"
