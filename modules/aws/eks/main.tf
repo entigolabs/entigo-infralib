@@ -215,6 +215,25 @@ module "ebs_csi_irsa_role" {
   }
 }
 
+module "efs_csi_irsa_role" {
+  count                 = var.enable_efs_csi ? 1 : 0
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version               = "5.58.0"
+  role_name             = "${var.prefix}-efs-csi"
+  attach_efs_csi_policy = true
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
+    }
+  }
+  tags = {
+    Terraform = "true"
+    Prefix    = var.prefix
+    created-by = "entigo-infralib"
+  }
+}
+
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version               = "5.58.0"
@@ -260,7 +279,7 @@ module "eks" {
 
   bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
 
-  cluster_addons = {
+cluster_addons = merge({
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -316,6 +335,26 @@ module "eks" {
         }
       })
     }
+  }, var.enable_efs_csi ? {
+    aws-efs-csi-driver = {
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
+      addon_version               = var.efs_csi_addon_version
+      service_account_role_arn = module.efs_csi_irsa_role[0].iam_role_arn
+      configuration_values = jsonencode({
+        controller : {
+          tolerations : [
+            {
+              key : "tools",
+              operator : "Equal",
+              value : "true",
+              effect : "NoSchedule"
+            }
+          ]
+        }
+      })
+    }
+  } : {}, {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -372,7 +411,7 @@ module "eks" {
         }
       })
     }
-  }
+  })
 
   vpc_id     = var.vpc_id
   subnet_ids = var.private_subnets
