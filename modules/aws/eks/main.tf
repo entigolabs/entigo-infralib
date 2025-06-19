@@ -349,41 +349,7 @@ module "eks" {
               value : "true",
               effect : "NoSchedule"
             }
-          ],
-          affinity : {
-            nodeAffinity : {
-              preferredDuringSchedulingIgnoredDuringExecution : [
-                {
-                  preference : {
-                    matchExpressions : [
-                      {
-                        "key" : "eks.amazonaws.com/compute-type",
-                        "operator" : "NotIn",
-                        "values" : [
-                          "fargate"
-                        ]
-                      }
-                    ]
-                  },
-                  "weight" : 1
-                },
-                {
-                  preference : {
-                    matchExpressions : [
-                      {
-                        "key" : "tools",
-                        "operator" : "In",
-                        "values" : [
-                          "true"
-                        ]
-                      }
-                    ]
-                  },
-                  "weight" : 5
-                }
-              ]
-            }
-          }
+          ]
         }
       })
     }
