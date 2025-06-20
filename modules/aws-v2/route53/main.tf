@@ -196,16 +196,16 @@ resource "aws_acm_certificate" "this" {
 # Create DNS validation records - using the appropriate zone based on domain type
 resource "aws_route53_record" "validation" {
   for_each = {
-    for k, v in var.domains : k => v
+    for k, v in var.domains : "${k}_${v.domain_name}" => merge(v, { key = k })
     if v.create_certificate && v.certificate_authority_arn == ""
   }
   
-  zone_id = local.domains_with_defaults[each.key].needs_validation_zone ? aws_route53_zone.validation[each.key].zone_id : (local.domains_with_defaults[each.key].create_zone == false ? data.aws_route53_zone.existing[each.key].zone_id : aws_route53_zone.this[each.key].zone_id )
+  zone_id = local.domains_with_defaults[each.value.key].needs_validation_zone ? aws_route53_zone.validation[each.value.key].zone_id : (local.domains_with_defaults[each.value.key].create_zone == false ? data.aws_route53_zone.existing[each.value.key].zone_id : aws_route53_zone.this[each.value.key].zone_id )
   
   # Since you always do wildcard + apex, there's typically just one validation record
-  name            = tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_name
-  type            = tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_type
-  records         = [tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_value]
+  name            = tolist(aws_acm_certificate.this[each.value.key].domain_validation_options)[0].resource_record_name
+  type            = tolist(aws_acm_certificate.this[each.value.key].domain_validation_options)[0].resource_record_type
+  records         = [tolist(aws_acm_certificate.this[each.value.key].domain_validation_options)[0].resource_record_value]
   ttl             = 60
   allow_overwrite = true
 }
