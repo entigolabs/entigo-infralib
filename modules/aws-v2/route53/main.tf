@@ -196,31 +196,21 @@ resource "aws_acm_certificate" "this" {
 # Create DNS validation records - using the appropriate zone based on domain type
 resource "aws_route53_record" "validation" {
   for_each = {
-    for dvo in flatten([
-      for domain_key, cert in aws_acm_certificate.this : [
-        for dvo in cert.domain_validation_options : {
-          domain_key = domain_key
-          domain_name = dvo.domain_name
-          dvo = dvo
-          is_private = local.domains_with_defaults[domain_key].private
-          needs_validation_zone = local.domains_with_defaults[domain_key].needs_validation_zone
-          create_zone = local.domains_with_defaults[domain_key].create_zone
-        }
-      ]
-      # Only include certificates that have validation options (public certificates)
-      if length(cert.domain_validation_options) > 0
-    ]) : "${dvo.domain_key}_${dvo.domain_name}" => dvo
+    for k, v in var.domains : k => v
+    if v.create_certificate && v.certificate_authority_arn == ""
   }
   
-  # Use the validation zone for private domains that need certificate validation,
-  # otherwise use the primary zone
-  zone_id = each.value.needs_validation_zone ? aws_route53_zone.validation[each.value.domain_key].zone_id : ( each.value.create_zone == false ? data.aws_route53_zone.existing[each.value.domain_key].zone_id :     aws_route53_zone.this[each.value.domain_key].zone_id  )
-  name    = each.value.dvo.resource_record_name
-  type    = each.value.dvo.resource_record_type
-  records = [each.value.dvo.resource_record_value]
-  ttl     = 60
+  zone_id = local.domains_with_defaults[each.key].needs_validation_zone ? aws_route53_zone.validation[each.key].zone_id : (local.domains_with_defaults[each.key].create_zone == false ? data.aws_route53_zone.existing[each.key].zone_id : aws_route53_zone.this[each.key].zone_id )
+  
+  # Since you always do wildcard + apex, there's typically just one validation record
+  name            = tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_name
+  type            = tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_type
+  records         = [tolist(aws_acm_certificate.this[each.key].domain_validation_options)[0].resource_record_value]
+  ttl             = 60
   allow_overwrite = true
 }
+
+
 
 # Validate the public certificates
 resource "aws_acm_certificate_validation" "this" {  
