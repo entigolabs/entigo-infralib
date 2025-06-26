@@ -9,6 +9,13 @@ variable "vpc_cidr" {
   default  = "10.156.0.0/16"
 }
 
+variable "subnet_split_mode" {
+  description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
+  type     = string
+  nullable = false
+  default  = "default"
+}
+
 variable "secondary_cidr_blocks" {
   type     = list(string)
   nullable = false
