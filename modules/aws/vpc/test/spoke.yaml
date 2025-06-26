@@ -1,0 +1,6 @@
+one_nat_gateway_per_az: false
+vpc_cidr: "10.30.0.0/21"
+azs: 3
+enable_flow_log: false
+enable_nat_gateway: false
+subnet_split_mode: "spoke"
