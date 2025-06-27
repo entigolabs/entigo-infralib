@@ -7,15 +7,15 @@ locals {
   spoke_tgw      =  [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), (23-local.vpc_cidr_size), 0), 2, i)]
   spoke_control  =  [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), ((local.vpc_cidr_size <= 19 ? 22 : 23)-local.vpc_cidr_size), 1), 2, i)]
   spoke_public   =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 1), 2, i)]
-  spoke_private  =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 2), 2, i)]
+  spoke_service  =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 2), 2, i)]
   spoke_database =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 3), 2, i)]
-  spoke_server   =  [for i in range(local.azs) :                       cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, i)]
+  spoke_compute   =  [for i in range(local.azs) :                       cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, i)]
   
   #Naming for "spoke"
   spoke_tgw_names =  [for i in range(local.azs) : format("${var.prefix}-tgw-%s", element(data.aws_availability_zones.available.names, i))]
   spoke_control_names =  [for i in range(local.azs) : format("${var.prefix}-control-%s", element(data.aws_availability_zones.available.names, i))]
-  spoke_private_names =  [for i in range(local.azs) : format("${var.prefix}-private-%s", element(data.aws_availability_zones.available.names, i))]
-  spoke_server_names =  [for i in range(local.azs) : format("${var.prefix}-server-%s", element(data.aws_availability_zones.available.names, i))]
+  spoke_service_names =  [for i in range(local.azs) : format("${var.prefix}-service-%s", element(data.aws_availability_zones.available.names, i))]
+  spoke_compute_names =  [for i in range(local.azs) : format("${var.prefix}-compute-%s", element(data.aws_availability_zones.available.names, i))]
   
   #Calculations for "default"
   default_public      = [for i in range(local.azs) :                                 cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0), 2, i)]
@@ -27,7 +27,7 @@ locals {
   #Determine the subnets to be passed to the vpc module depending on weahter users specify the range themselves or depending on the subnet split mode.
   public_subnets      = var.public_subnets == null      ? var.subnet_split_mode == "default" ? local.default_public      : local.spoke_public : var.public_subnets
   intra_subnets       = var.intra_subnets == null       ? var.subnet_split_mode == "default" ? local.default_intra       : local.spoke_tgw :    var.intra_subnets
-  private_subnets     = var.private_subnets == null     ? var.subnet_split_mode == "default" ? local.default_private     : concat(local.spoke_control, local.spoke_private, local.spoke_server) : var.private_subnets
+  private_subnets     = var.private_subnets == null     ? var.subnet_split_mode == "default" ? local.default_private     : concat(local.spoke_control, local.spoke_service, local.spoke_compute) : var.private_subnets
   database_subnets    = var.database_subnets == null    ? var.subnet_split_mode == "default" ? local.default_database    : local.spoke_database : var.database_subnets
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
 }
@@ -50,7 +50,7 @@ module "vpc" {
   elasticache_subnets = local.elasticache_subnets
   intra_subnets       = local.intra_subnets
 
-  private_subnet_names     = var.subnet_split_mode == "default" ? var.private_subnet_names : concat(local.spoke_control_names, local.spoke_private_names, local.spoke_server_names)
+  private_subnet_names     = var.subnet_split_mode == "default" ? var.private_subnet_names : concat(local.spoke_control_names, local.spoke_service_names, local.spoke_compute_names)
   public_subnet_names      = var.public_subnet_names
   database_subnet_names    = var.database_subnet_names
   elasticache_subnet_names = var.elasticache_subnet_names
