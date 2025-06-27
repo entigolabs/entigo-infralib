@@ -585,13 +585,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: CLOUD_TRAIL_LOG_FILE_VALIDATION_ENABLED
     Type: AWS::Config::ConfigRule
-  CloudtrailS3DataeventsEnabled:
-    Properties:
-      ConfigRuleName: cloudtrail-s3-dataevents-enabled
-      Source:
-        Owner: AWS
-        SourceIdentifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED
-    Type: AWS::Config::ConfigRule
   CmkBackingKeyRotationEnabled:
     Properties:
       ConfigRuleName: cmk-backing-key-rotation-enabled
@@ -670,19 +663,6 @@ Resources:
       Source:
         Owner: AWS
         SourceIdentifier: IAM_PASSWORD_POLICY
-    Type: AWS::Config::ConfigRule
-  IamPolicyInUse:
-    Properties:
-      ConfigRuleName: iam-policy-in-use
-      InputParameters:
-        policyARN:
-          Fn::If:
-          - iamPolicyInUseParamPolicyARN
-          - Ref: IamPolicyInUseParamPolicyARN
-          - Ref: AWS::NoValue
-      Source:
-        Owner: AWS
-        SourceIdentifier: IAM_POLICY_IN_USE
     Type: AWS::Config::ConfigRule
   IamPolicyNoStatementsWithAdminAccess:
     Properties:
@@ -855,16 +835,6 @@ Resources:
         Owner: AWS
         SourceIdentifier: S3_BUCKET_LEVEL_PUBLIC_ACCESS_PROHIBITED
     Type: AWS::Config::ConfigRule
-  S3BucketLoggingEnabled:
-    Properties:
-      ConfigRuleName: s3-bucket-logging-enabled
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_LOGGING_ENABLED
-    Type: AWS::Config::ConfigRule
   S3BucketPublicReadProhibited:
     Properties:
       ConfigRuleName: s3-bucket-public-read-prohibited
@@ -894,42 +864,6 @@ Resources:
       Source:
         Owner: AWS
         SourceIdentifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
-    Type: AWS::Config::ConfigRule
-  S3BucketSslRequestsOnly:
-    Properties:
-      ConfigRuleName: s3-bucket-ssl-requests-only
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_SSL_REQUESTS_ONLY
-    Type: AWS::Config::ConfigRule
-  S3BucketVersioningEnabled:
-    Properties:
-      ConfigRuleName: s3-bucket-versioning-enabled
-      InputParameters:
-        isMfaDeleteEnabled:
-          Fn::If:
-          - s3BucketVersioningEnabledParamIsMfaDeleteEnabled
-          - Ref: S3BucketVersioningEnabledParamIsMfaDeleteEnabled
-          - Ref: AWS::NoValue
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::S3::Bucket
-      Source:
-        Owner: AWS
-        SourceIdentifier: S3_BUCKET_VERSIONING_ENABLED
-    Type: AWS::Config::ConfigRule
-  VpcDefaultSecurityGroupClosed:
-    Properties:
-      ConfigRuleName: vpc-default-security-group-closed
-      Scope:
-        ComplianceResourceTypes:
-        - AWS::EC2::SecurityGroup
-      Source:
-        Owner: AWS
-        SourceIdentifier: VPC_DEFAULT_SECURITY_GROUP_CLOSED
     Type: AWS::Config::ConfigRule
   VpcFlowLogsEnabled:
     Properties:
