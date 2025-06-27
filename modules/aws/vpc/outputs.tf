@@ -597,3 +597,39 @@ output "intra_subnet_names" {
 output "pipeline_security_group" {
   value = aws_security_group.pipeline_security_group.id
 }
+
+#Ouputs for subnet_split_mode (default and spoke)
+
+output "control_subnets" {
+  description = "List of IDs of control subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i]]
+}
+
+output "service_subnets" {
+  description = "List of IDs of service subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+local.azs]]
+}
+
+output "compute_subnets" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]]
+}
+
+output "control_subnets_cidr_blocks" {
+  description = "List of IDs of control subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i]]
+}
+
+output "service_subnets_cidr_blocks" {
+  description = "List of IDs of service subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+local.azs]]
+}
+
+output "compute_subnets_cidr_blocks" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+(2*local.azs)]]
+}
+
+
+
+
