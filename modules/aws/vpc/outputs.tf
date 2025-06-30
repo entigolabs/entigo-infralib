@@ -597,3 +597,230 @@ output "intra_subnet_names" {
 output "pipeline_security_group" {
   value = aws_security_group.pipeline_security_group.id
 }
+
+#Ouputs for subnet_split_mode (default and spoke)
+
+output "control_subnets" {
+  description = "List of IDs of control subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i]]
+}
+
+output "service_subnets" {
+  description = "List of IDs of service subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+local.azs]]
+}
+
+output "compute_subnets" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]]
+}
+
+output "control_subnets_cidr_blocks" {
+  description = "List of IDs of control subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i]]
+}
+
+output "service_subnets_cidr_blocks" {
+  description = "List of IDs of service subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+local.azs]]
+}
+
+output "compute_subnets_cidr_blocks" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+(2*local.azs)]]
+}
+
+
+
+#Zone based outputs
+output "zoned_private_subnets" {
+  description = "List of IDs of private subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in module.vpc.private_subnets :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_private_subnets_cidr_blocks" {
+  description = "List of IDs of private subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in module.vpc.private_subnets_cidr_blocks :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_public_subnets" {
+  description = "List of IDs of public subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in module.vpc.public_subnets :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_public_subnets_cidr_blocks" {
+  description = "List of IDs of public subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in module.vpc.public_subnets_cidr_blocks :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_intra_subnets" {
+  description = "List of IDs of intra subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in module.vpc.intra_subnets :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_intra_subnets_cidr_blocks" {
+  description = "List of IDs of intra subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in module.vpc.intra_subnets_cidr_blocks :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_elasticache_subnets" {
+  description = "List of IDs of elasticache subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in module.vpc.elasticache_subnets :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_elasticache_subnets_cidr_blocks" {
+  description = "List of IDs of elasticache subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in module.vpc.elasticache_subnets_cidr_blocks :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_database_subnets" {
+  description = "List of IDs of database subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in module.vpc.database_subnets :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_database_subnets_cidr_blocks" {
+  description = "List of IDs of database subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in module.vpc.database_subnets_cidr_blocks :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_control_subnets" {
+  description = "List of IDs of control subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i]] :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_control_subnets_cidr_blocks" {
+  description = "List of IDs of control subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i]] :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_service_subnets" {
+  description = "List of IDs of service subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+local.azs]] :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_service_subnets_cidr_blocks" {
+  description = "List of IDs of service subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+local.azs]] :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_compute_subnets" {
+  description = "List of IDs of compute subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_id in var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]] :
+      subnet_id
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
+
+output "zoned_compute_subnets_cidr_blocks" {
+  description = "List of IDs of compute subnets by zone"
+  value = {
+    for az_index in range(local.azs) : 
+    substr(data.aws_availability_zones.available.names[az_index], -2, 2) => [
+      for subnet_index, subnet_cidr in var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+(2*local.azs)]] :
+      subnet_cidr
+      if subnet_index % local.azs == az_index
+    ]
+  }
+}
