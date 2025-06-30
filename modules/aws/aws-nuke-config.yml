@@ -114,6 +114,7 @@ accounts:
       - "/argocd-biz/clientSecret"
       - "/entigo-portal/agent-biz/CLIENT_SECRET"
       - "/entigo-portal/agent-pri/CLIENT_SECRET"
+      - "/entigo-portal/vulnerability-agent-pri/CLIENT_SECRET"
       - "/ecr-proxy/hub/token"
       - "/ecr-proxy/hub/username"
       - "/ecr-proxy/ghcr/token"
