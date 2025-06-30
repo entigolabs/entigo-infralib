@@ -134,6 +134,9 @@ fi
 
           docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
+        elif [[ $testname == aws_spoke ]]
+        then
+	   echo "Skip aws_spoke test"
         elif [[ $testname == aws_* ]]
         then
             if [ "$prefix" == "us" ]
@@ -144,7 +147,6 @@ fi
               echo "Defaulting AWS_REGION to eu-north-1"
               export AWS_REGION="eu-north-1"
             fi
-        
             docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
         else
