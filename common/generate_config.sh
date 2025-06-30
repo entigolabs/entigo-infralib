@@ -230,9 +230,11 @@ run_agents() {
           echo "Defaulting AWS_REGION to eu-north-1"
           export AGENT_AWS_REGION="eu-north-1"
         fi
-    
-        docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AGENT_AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS &
-        PIDS="$PIDS $!=$agent"
+        if [ $agent != "aws_spoke" -o \( $agent == "aws_spoke" -a "$AGENT_OPTS" == "" \) ]
+        then
+          docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AGENT_AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS &
+          PIDS="$PIDS $!=$agent"
+        fi
     else
       echo "Unknown cloud provider type $agent"
     fi
