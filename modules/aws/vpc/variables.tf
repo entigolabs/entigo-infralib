@@ -110,6 +110,13 @@ variable "enable_nat_gateway" {
   default  = true
 }
 
+variable "manage_default_network_acl" {
+  type     = bool
+  nullable = false
+  default  = true
+}
+
+
 variable "map_public_ip_on_launch" {
   type     = bool
   nullable = false

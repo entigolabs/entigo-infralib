@@ -70,6 +70,7 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
+  manage_default_network_acl = var.manage_default_network_acl
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   enable_flow_log                                 = var.enable_flow_log
