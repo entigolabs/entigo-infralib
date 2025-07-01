@@ -1,7 +1,7 @@
 cluster_name: "{{ .toutput.eks.cluster_name }}"
 cluster_version: "{{ .toutput.eks.cluster_version }}"
 subnets: |
-  [{{ .toutput.vpc.private_subnets }}]
+  [{{ .toutput.vpc.compute_subnets }}]
 
 cluster_primary_security_group_id: "{{ .toutput.eks.cluster_primary_security_group_id }}"
 cluster_service_cidr: "{{ .toutput.eks.cluster_service_cidr }}"
