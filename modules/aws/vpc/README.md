@@ -3,13 +3,18 @@
 
 Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 
+
 ### Automatic subnet calculations ###
 If you do not specify the subnet ranges and only the vpc_cidr, then the module will create the subnets automatically. When the range is smaller than 19 (/21, /22 ...) then the database and elasticache subnets are not created.
+
+In addition we support two subnet calculation modes (subnet_split_mode = "default" and "spoke)". The latter will create separated subnets for control plane, loadbalancers and servers/compute.
 
 We do leave a lot of spare space when using (azs = 2). This is done to enable clients to later switch to a 3 zone setup without recreating subnets. It will also keep NACL rules simple - by allowing one range to cover the same type subnets.
 
 If the automatic calculation is not to Your liking then specify each subnet as desired.
 
+
+### subnet_split_mode = default
 #### vpc_cidr: "10.24.0.0/16"
 ![10.24.0.0/16](test/size-16.png)
 
@@ -28,6 +33,9 @@ If the automatic calculation is not to Your liking then specify each subnet as d
 #### vpc_cidr: "10.24.0.0/24"
 ![10.24.0.0/24](test/size-24.png)
 
+### subnet_split_mode = spoke
+#### vpc_cidr: "10.30.0.0/21"
+![10.30.0.0/21](test/size-spoke-21.png)
 
 ### Example code ###
 ```

@@ -1,10 +1,16 @@
 vpc_id: "{{ .toutput.vpc.vpc_id }}"
 private_subnets: |
-  [{{ .toutput.vpc.private_subnets }}]
+  [{{ .toutput.vpc.control_subnets }}]
 public_subnets: |
   [{{ .toutput.vpc.public_subnets }}]
+eks_mon_subnets: |
+  [{{ .toutput.vpc.compute_subnets }}]
+eks_tools_subnets: |
+  [{{ .toutput.vpc.compute_subnets }}]
+eks_main_subnets: |
+  [{{ .toutput.vpc.compute_subnets }}]
 eks_api_access_cidrs: |
-  [{{ .toutput.vpc.private_subnet_cidrs }}]
+  [{{ .toutput.vpc.control_subnets_cidr_blocks }}]
 cloudwatch_log_group_kms_key_id: "{{ .toptout.kms.telemetry_alias_arn }}"
 node_encryption_kms_key_arn: "{{ .toptout.kms.data_alias_arn }}"
 iam_role_additional_policies: |
