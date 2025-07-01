@@ -53,6 +53,7 @@ trivy-operator:
         cpu: 500m
         memory: 500M
   operator:
+    scanJobsConcurrentLimit: 3
     metricsFindingsEnabled: true
     metricsVulnIdEnabled: true
     exposedSecretScannerEnabled: false
