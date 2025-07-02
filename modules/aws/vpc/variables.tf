@@ -144,7 +144,7 @@ variable "flow_log_cloudwatch_log_group_kms_key_id" {
   default = ""
 }
 
-variable "create_endpoint_s3" {
+variable "create_gateway_s3" {
   type     = bool
   nullable = false
   default  = true

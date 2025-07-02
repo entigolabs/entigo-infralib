@@ -4,4 +4,4 @@ azs: 3
 enable_flow_log: false
 enable_nat_gateway: false
 subnet_split_mode: "spoke"
-create_endpoint_s3: false
+create_gateway_s3: false
