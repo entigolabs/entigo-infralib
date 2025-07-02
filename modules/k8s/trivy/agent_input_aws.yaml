@@ -6,5 +6,3 @@ trivy-operator:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   nodeCollector:
     registry: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}'
-  trivyOperator:
-    metricsVulnIdEnabled: true
