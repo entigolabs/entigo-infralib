@@ -12,3 +12,4 @@ elasticache_subnets: |
   ["10.146.0.0/26", "10.146.0.64/26"]
 intra_subnets: |
   []
+create_endpoint_ecr: true
