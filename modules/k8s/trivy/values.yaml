@@ -55,7 +55,7 @@ trivy-operator:
   operator:
     scanJobsConcurrentLimit: 3
     metricsFindingsEnabled: true
-    metricsVulnIdEnabled: true
+    metricsVulnIdEnabled: false
     exposedSecretScannerEnabled: false
     sbomGenerationEnabled: false
     configAuditScannerEnabled: false

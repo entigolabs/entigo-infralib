@@ -9,3 +9,5 @@ trivy-operator:
       registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   nodeCollector:
     registry: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}'
+  trivyOperator:
+    metricsVulnIdEnabled: true
