@@ -1,5 +1,5 @@
 module "vpc_endpoints" {
-  count = var.create_endpoint_ecr || var.create_endpoint_s3 ? 1 : 0
+  count = var.create_endpoint_ecr || var.create_gateway_s3 ? 1 : 0
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "5.21.0"
   
@@ -9,7 +9,7 @@ module "vpc_endpoints" {
   security_group_name_prefix = "${var.prefix}-endpoint"
   security_group_description = "${var.prefix} VPC endpoint SG"
 
-  endpoints = merge(var.create_endpoint_s3 ? {
+  endpoints = merge(var.create_gateway_s3 ? {
       s3 = {
         service             = "s3"
         service_type    = "Gateway"
