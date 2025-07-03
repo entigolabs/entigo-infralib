@@ -20,20 +20,17 @@ module "vpc_endpoints" {
       s3e = {
         service             = "s3"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-s3e" }
       }
     } : {} , var.create_endpoint_ecr ? {
       ecr_api = {
         service             = "ecr.api"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-ecr.api-vpc-endpoint" }
       },
       ecr_dkr = {
         service             = "ecr.dkr"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-ecr.dkr-vpc-endpoint" }
       }
     } : {})
@@ -42,30 +39,5 @@ module "vpc_endpoints" {
     Terraform = "true"
     Prefix    = var.prefix
     created-by = "entigo-infralib"
-  }
-}
-
-data "aws_organizations_organization" "current" {
-  count = var.allow_organization_endpoint_policy ? 1 : 0
-}
-
-
-data "aws_iam_policy_document" "generic_endpoint_policy" {
-  statement {
-    effect    = "Deny"
-    actions   = ["*"]
-    resources = ["*"]
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    condition {
-      test     = "StringNotEquals"
-      variable = var.allow_organization_endpoint_policy ? "aws:PrincipalOrgID" : "aws:SourceVpc"
-
-      values = [var.allow_organization_endpoint_policy ? data.aws_organizations_organization.current[0].id : module.vpc.vpc_id]
-    }
   }
 }
