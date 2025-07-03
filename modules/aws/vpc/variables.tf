@@ -161,3 +161,9 @@ variable "create_endpoint_ecr" {
   nullable = false
   default  = false
 }
+
+variable "allow_organization_endpoint_policy" {
+  type     = bool
+  nullable = false
+  default  = false
+}

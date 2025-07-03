@@ -45,6 +45,10 @@ module "vpc_endpoints" {
   }
 }
 
+data "aws_organizations_organization" "current" {
+  count = var.allow_organization_endpoint_policy ? 1 : 0
+}
+
 
 data "aws_iam_policy_document" "generic_endpoint_policy" {
   statement {
@@ -59,9 +63,9 @@ data "aws_iam_policy_document" "generic_endpoint_policy" {
 
     condition {
       test     = "StringNotEquals"
-      variable = "aws:SourceVpc"
+      variable = var.allow_organization_endpoint_policy ? "aws:PrincipalOrgID" : "aws:SourceVpc"
 
-      values = [module.vpc.vpc_id]
+      values = [var.allow_organization_endpoint_policy ? data.aws_organizations_organization.current[0].id : module.vpc.vpc_id]
     }
   }
 }
