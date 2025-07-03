@@ -630,7 +630,36 @@ output "compute_subnets_cidr_blocks" {
   value = var.subnet_split_mode == "default" ? module.vpc.private_subnets_cidr_blocks : [for i in range(local.azs) : module.vpc.private_subnets_cidr_blocks[i+(2*local.azs)]]
 }
 
+#Output to be used for Network ACL or SG rules covering all zones of a specifi type of subnet with one CIDR. Does not work when not using automatic subnet calculation.
+output "acl_control_subnets_cidr_block" {
+  description = "List of IDs of control subnets"
+  value = var.subnet_split_mode == "default" ? local.default_private_nacl : local.spoke_control_nacl
+}
 
+output "acl_service_subnets_cidr_block" {
+  description = "List of IDs of service subnets"
+  value = var.subnet_split_mode == "default" ? local.default_private_nacl : local.spoke_service_nacl
+}
+
+output "acl_compute_subnets_cidr_block" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? local.default_private_nacl : local.spoke_compute_nacl
+}
+
+output "acl_intra_subnets_cidr_block" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? local.default_intra_nacl : local.spoke_tgw_nacl
+}
+
+output "acl_database_subnets_cidr_block" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? local.default_database_nacl : local.spoke_database_nacl
+}
+
+output "acl_public_subnets_cidr_block" {
+  description = "List of IDs of compute subnets"
+  value = var.subnet_split_mode == "default" ? local.default_public_nacl : local.spoke_public_nacl
+}
 
 #Zone based outputs
 output "zoned_private_subnets" {

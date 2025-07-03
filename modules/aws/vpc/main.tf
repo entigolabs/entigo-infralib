@@ -4,12 +4,19 @@ locals {
   vpc_split_ranges = local.vpc_cidr_size > 19 ? 1 : 2 #When the vpc_cicr is smaller than /19, then we only divide it into two(1),otherwise into four(2).
   
   #Calculations for "spoke"
-  spoke_tgw      =  [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), (23-local.vpc_cidr_size), 0), 2, i)]
-  spoke_control  =  [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), ((local.vpc_cidr_size <= 19 ? 22 : 23)-local.vpc_cidr_size), 1), 2, i)]
-  spoke_public   =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 1), 2, i)]
-  spoke_service  =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 2), 2, i)]
-  spoke_database =  [for i in range(local.azs) :            cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 3), 2, i)]
-  spoke_compute   =  [for i in range(local.azs) :                       cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, i)]
+  spoke_tgw_nacl      = cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), (23-local.vpc_cidr_size), 0)
+  spoke_control_nacl  = cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), ((local.vpc_cidr_size <= 19 ? 22 : 23)-local.vpc_cidr_size), 1)
+  spoke_public_nacl   =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 1)
+  spoke_service_nacl  =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 2)
+  spoke_database_nacl =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 3)
+  spoke_compute_nacl  =                       cidrsubnet(var.vpc_cidr, 1, 1)
+  
+  spoke_tgw      =  [for i in range(local.azs) : cidrsubnet(local.spoke_tgw_nacl, 2, i)]
+  spoke_control  =  [for i in range(local.azs) : cidrsubnet(local.spoke_control_nacl, 2, i)]
+  spoke_public   =  [for i in range(local.azs) : cidrsubnet(local.spoke_public_nacl, 2, i)]
+  spoke_service  =  [for i in range(local.azs) : cidrsubnet(local.spoke_service_nacl, 2, i)]
+  spoke_database =  [for i in range(local.azs) : cidrsubnet(local.spoke_database_nacl, 2, i)]
+  spoke_compute  =  [for i in range(local.azs) : cidrsubnet(local.spoke_compute_nacl, 2, i)]
   
   #Naming for "spoke"
   spoke_tgw_names =  [for i in range(local.azs) : format("${var.prefix}-tgw-%s", element(data.aws_availability_zones.available.names, i))]
@@ -18,11 +25,18 @@ locals {
   spoke_compute_names =  [for i in range(local.azs) : format("${var.prefix}-compute-%s", element(data.aws_availability_zones.available.names, i))]
   
   #Calculations for "default"
-  default_public      = [for i in range(local.azs) :                                 cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0), 2, i)]
-  default_private     = [for i in range(local.azs) :                                            cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 1), 2, i)]
-  default_intra       = [for i in range(local.azs) :                                 cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 1), 2, i)]
-  default_database    = local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) :            cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 2), 2, i)]
-  default_elasticache = local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) : cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 3), 1, 0), 2, i)] 
+
+  default_public_nacl      =                                 cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0)
+  default_intra_nacl       =                                 cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 1)
+  default_private_nacl     =                                            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 1)
+  default_database_nacl    = local.vpc_cidr_size > 19 ? "" :            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 2)
+  default_elasticache_nacl = local.vpc_cidr_size > 19 ? "" : cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 3), 1, 0)
+  
+  default_public      = [for i in range(local.azs) : cidrsubnet(local.default_public_nacl, 2, i)]
+  default_intra       = [for i in range(local.azs) : cidrsubnet(local.default_intra_nacl, 2, i)]
+  default_private     = [for i in range(local.azs) : cidrsubnet(local.default_private_nacl, 2, i)]
+  default_database    = local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) : cidrsubnet(local.default_database_nacl, 2, i)]
+  default_elasticache = local.vpc_cidr_size > 19 ? [] : [for i in range(local.azs) : cidrsubnet(local.default_elasticache_nacl, 2, i)] 
   
   #Determine the subnets to be passed to the vpc module depending on weahter users specify the range themselves or depending on the subnet split mode.
   public_subnets      = var.public_subnets == null      ? var.subnet_split_mode == "default" ? local.default_public      : local.spoke_public : var.public_subnets

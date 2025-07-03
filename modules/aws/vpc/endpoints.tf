@@ -1,5 +1,5 @@
 module "vpc_endpoints" {
-  count = var.create_endpoint_ecr || var.create_gateway_s3 ? 1 : 0
+  count = var.create_endpoint_ecr || var.create_gateway_s3 || var.create_endpoint_s3 ? 1 : 0
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "5.21.0"
   
@@ -15,6 +15,13 @@ module "vpc_endpoints" {
         service_type    = "Gateway"
         route_table_ids = module.vpc.private_route_table_ids
         tags                = { Name = "${var.prefix}-s3" }
+      }
+    } : {} ,var.create_endpoint_s3 ? {
+      s3e = {
+        service             = "s3"
+        private_dns_enabled = true
+        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
+        tags                = { Name = "${var.prefix}-s3e" }
       }
     } : {} , var.create_endpoint_ecr ? {
       ecr_api = {
