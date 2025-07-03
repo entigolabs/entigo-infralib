@@ -4,7 +4,7 @@ module "vpc_endpoints" {
   version = "5.21.0"
   
   vpc_id = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]]
   create_security_group      = true
   security_group_name_prefix = "${var.prefix}-endpoint"
   security_group_description = "${var.prefix} VPC endpoint SG"
