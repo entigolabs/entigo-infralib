@@ -4,7 +4,7 @@ module "vpc_endpoints" {
   version = "5.21.0"
   
   vpc_id = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]]
   create_security_group      = true
   security_group_name_prefix = "${var.prefix}-endpoint"
   security_group_description = "${var.prefix} VPC endpoint SG"
@@ -20,20 +20,17 @@ module "vpc_endpoints" {
       s3e = {
         service             = "s3"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-s3e" }
       }
     } : {} , var.create_endpoint_ecr ? {
       ecr_api = {
         service             = "ecr.api"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-ecr.api-vpc-endpoint" }
       },
       ecr_dkr = {
         service             = "ecr.dkr"
         private_dns_enabled = true
-        policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
         tags                = { Name = "${var.prefix}-ecr.dkr-vpc-endpoint" }
       }
     } : {})
@@ -42,26 +39,5 @@ module "vpc_endpoints" {
     Terraform = "true"
     Prefix    = var.prefix
     created-by = "entigo-infralib"
-  }
-}
-
-
-data "aws_iam_policy_document" "generic_endpoint_policy" {
-  statement {
-    effect    = "Deny"
-    actions   = ["*"]
-    resources = ["*"]
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    condition {
-      test     = "StringNotEquals"
-      variable = "aws:SourceVpc"
-
-      values = [module.vpc.vpc_id]
-    }
   }
 }

@@ -161,3 +161,4 @@ variable "create_endpoint_ecr" {
   nullable = false
   default  = false
 }
+
