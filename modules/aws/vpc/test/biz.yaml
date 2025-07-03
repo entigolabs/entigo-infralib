@@ -13,3 +13,4 @@ elasticache_subnets: |
 intra_subnets: |
   []
 create_endpoint_ecr: true
+allow_organization_endpoint_policy: true
