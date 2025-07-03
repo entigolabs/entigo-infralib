@@ -648,7 +648,7 @@ output "acl_compute_subnets_cidr_block" {
 
 output "acl_intra_subnets_cidr_block" {
   description = "List of IDs of compute subnets"
-  value = var.subnet_split_mode == "default" ? local.default_intra_nacl : local.spoke_intra_nacl
+  value = var.subnet_split_mode == "default" ? local.default_intra_nacl : local.spoke_tgw_nacl
 }
 
 output "acl_database_subnets_cidr_block" {
