@@ -8,7 +8,6 @@ Once the release is created then we make it public in [entigo-infralib-release](
 
 To create a new release the "Release" action should be run. It will create a release if main branch differs from last release.
 
-
 ## Folders ##
 
 __modules__ contains opinnionated Terraform modules or Kubernetes Helm charts that we repeatedly use in our projects.
