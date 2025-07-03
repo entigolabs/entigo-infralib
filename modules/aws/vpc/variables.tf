@@ -162,3 +162,8 @@ variable "create_endpoint_ecr" {
   default  = false
 }
 
+variable "endpoints_sg_extra_rules" {
+  type     = list(string)
+  nullable = false
+  default  = []
+}

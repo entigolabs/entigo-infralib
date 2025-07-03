@@ -8,6 +8,12 @@ module "vpc_endpoints" {
   create_security_group      = true
   security_group_name_prefix = "${var.prefix}-endpoint"
   security_group_description = "${var.prefix} VPC endpoint SG"
+  security_group_rules = {
+    ingress_https = {
+      description = "HTTPS from VPC"
+      cidr_blocks = concat([module.vpc.vpc_cidr_block], var.endpoints_sg_extra_rules)
+    }
+  }
 
   endpoints = merge(var.create_gateway_s3 ? {
       s3 = {
