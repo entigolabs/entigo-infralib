@@ -26,6 +26,9 @@ module "vpc_endpoints" {
       s3e = {
         service             = "s3"
         private_dns_enabled = true
+        dns_options = {
+          private_dns_only_for_inbound_resolver_endpoint = var.create_gateway_s3
+        }
         tags                = { Name = "${var.prefix}-s3e" }
       }
     } : {} , var.create_endpoint_ecr ? {
