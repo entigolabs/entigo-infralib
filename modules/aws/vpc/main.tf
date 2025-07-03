@@ -26,11 +26,11 @@ locals {
   
   #Calculations for "default"
 
-  default_public_nacl      = cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0)
-  default_intra_nacl       = cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 1)
-  default_private_nacl     =            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 1)
-  default_database_nacl    =            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 2)
-  default_elasticache_nacl = cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 3), 1, 0)
+  default_public_nacl      =                                 cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 0)
+  default_intra_nacl       =                                 cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 0), 1, 1)
+  default_private_nacl     =                                            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 1)
+  default_database_nacl    = local.vpc_cidr_size > 19 ? "" :            cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 2)
+  default_elasticache_nacl = local.vpc_cidr_size > 19 ? "" : cidrsubnet(cidrsubnet(var.vpc_cidr, local.vpc_split_ranges, 3), 1, 0)
   
   default_public      = [for i in range(local.azs) : cidrsubnet(local.default_public_nacl, 2, i)]
   default_intra       = [for i in range(local.azs) : cidrsubnet(local.default_intra_nacl, 2, i)]
