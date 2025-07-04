@@ -5,7 +5,7 @@ locals {
   
   #Calculations for "spoke"
   spoke_tgw_nacl      = cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), (23-local.vpc_cidr_size), 0)
-  spoke_control_nacl  = cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), ((local.vpc_cidr_size <= 19 ? 22 : 23)-local.vpc_cidr_size), 1)
+  spoke_control_nacl  = cidrsubnet(cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 0), ((local.vpc_cidr_size <= 19 ? 21 : 22)-local.vpc_cidr_size), 1)
   spoke_public_nacl   =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 1)
   spoke_service_nacl  =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 2)
   spoke_database_nacl =            cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 0), 2, 3)
