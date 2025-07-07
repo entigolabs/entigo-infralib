@@ -331,7 +331,7 @@ cluster_addons = merge({
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
-          WARM_PREFIX_TARGET       = "0"
+          WARM_PREFIX_TARGET       = "1"
         }
       })
     }
