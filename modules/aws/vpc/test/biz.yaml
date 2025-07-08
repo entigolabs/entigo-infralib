@@ -13,5 +13,7 @@ elasticache_subnets: |
 intra_subnets: |
   []
 create_endpoint_ecr: true
+create_endpoint_ec2: true
+create_endpoint_sts: true
 endpoints_sg_extra_rules: |
   ["10.0.0.0/8"]
