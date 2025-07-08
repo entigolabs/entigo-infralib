@@ -168,6 +168,12 @@ variable "create_endpoint_ec2" {
   default  = false
 }
 
+variable "create_endpoint_sts" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "endpoints_sg_extra_rules" {
   type     = list(string)
   nullable = false
