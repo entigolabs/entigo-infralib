@@ -42,6 +42,12 @@ module "vpc_endpoints" {
         private_dns_enabled = true
         tags                = { Name = "${var.prefix}-ecr.dkr-vpc-endpoint" }
       }
+    } : {}, var.create_endpoint_ec2 ? {
+      ec2 = {
+        service             = "ec2"
+        private_dns_enabled = true
+        tags                = { Name = "${var.prefix}-ec2.vpc-endpoint" }
+      }
     } : {})
 
   tags = {

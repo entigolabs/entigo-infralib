@@ -162,6 +162,12 @@ variable "create_endpoint_ecr" {
   default  = false
 }
 
+variable "create_endpoint_ec2" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "endpoints_sg_extra_rules" {
   type     = list(string)
   nullable = false
