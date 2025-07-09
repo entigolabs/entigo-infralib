@@ -16,6 +16,9 @@ if [ "$#" -lt 2 ]; then
     exit 1
 fi
 
+# Entity ID should be your application hostname (e.g., https://myapp.example.com)
+# This serves as the unique identifier for your SAML Service Provider
+
 ENTITYID="$1"
 if [ -z "$ENTITYID" ]; then
     echo "$PROG: An entity ID is required." >&2
