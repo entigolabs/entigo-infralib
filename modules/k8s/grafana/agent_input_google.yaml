@@ -22,8 +22,7 @@ grafana:
     image:
       registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   downloadDashboardsImage:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   imageRenderer:
     image:
       registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
