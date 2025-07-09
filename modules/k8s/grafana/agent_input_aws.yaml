@@ -25,8 +25,7 @@ grafana:
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   downloadDashboardsImage:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   imageRenderer:
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
