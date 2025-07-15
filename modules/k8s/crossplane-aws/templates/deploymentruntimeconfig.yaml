@@ -25,6 +25,10 @@ spec:
                   weight: 90
           containers:
             - name: package-runtime
+              args:
+                {{- with .Values.global.deploymentRuntimeConfig.args }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
               securityContext: {}
           securityContext:
             fsGroup: 2000

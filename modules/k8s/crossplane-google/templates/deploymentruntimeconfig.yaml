@@ -26,6 +26,10 @@ spec:
           containers:
             - name: package-runtime
               securityContext: {}
+              args:
+                {{- with .Values.global.deploymentRuntimeConfig.args }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
           securityContext:
             fsGroup: 2000
           serviceAccountName: {{ .Release.Name }}
