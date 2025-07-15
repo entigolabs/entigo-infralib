@@ -6,6 +6,8 @@ global:
 
   deploymentRuntimeConfig:
     googleServiceAccount: ""
+    args:
+      - --enable-management-policies
 
   registry: docker.io
 

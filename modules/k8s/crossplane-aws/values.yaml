@@ -3,3 +3,6 @@ installProviderConfig: true
 global:
   aws:
     role: ""
+  deploymentRuntimeConfig:
+    args:
+      - --enable-management-policies
