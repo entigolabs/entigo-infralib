@@ -1,4 +1,3 @@
-#https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
   version = "20.36.0"
@@ -17,7 +16,14 @@ module "eks-managed-node-group" {
 
   key_name = var.key_name
   pre_bootstrap_user_data = var.pre_bootstrap_user_data
-  cloudinit_pre_nodeadm = var.cloudinit_pre_nodeadm
+  
+  # Conditional cloudinit_pre_nodeadm based on content being non-empty
+  cloudinit_pre_nodeadm = var.cloudinit_pre_nodeadm_content != "" ? [
+    {
+      content_type = "text/x-shellscript"
+      content = var.cloudinit_pre_nodeadm_content
+    }
+  ] : []
 
   min_size     = var.min_size
   max_size     = var.max_size
