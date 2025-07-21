@@ -1,0 +1,71 @@
+{{- $database_subnet_ids := splitList "," .Values.vpc.database_subnets_id }}
+{{- $database_subnet_cidr_blocks := splitList "," .Values.vpc.database_subnet_cidr }}
+
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: VPC
+metadata:
+  name: {{ .Values.vpc.name }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.vpc.id}}
+spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
+  providerConfigRef:
+    name: crossplane-aws
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    cidrBlock: {{ .Values.vpc.cidr }}
+
+
+{{- range $i, $value := $database_subnet_ids }}
+---
+apiVersion: ec2.aws.crossplane.io/v1beta1
+kind: Subnet
+metadata:
+  name: dbsubnet-{{ $i }}
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
+  providerConfigRef:
+    name: crossplane-aws
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+    cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
+
+{{- end }}
+
+---
+apiVersion: database.aws.crossplane.io/v1beta1
+kind: DBSubnetGroup
+metadata:
+  name: {{ .Values.rds.subnet_group_name }}
+spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    description: "Subnet group for PostgreSQL instance"
+    subnetIdRefs:
+    {{- range $i, $value := $database_subnet_ids }}
+      - name: dbsubnet-{{ $i }}
+    {{- end }}
+  providerConfigRef:
+    name: crossplane-aws
+
+---
+apiVersion: kms.aws.crossplane.io/v1alpha1
+kind: Key
+metadata:
+  name: {{ .Values.kms.data_name }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.kms.data_key_arn }}
+spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
+  providerConfigRef:
+    name: crossplane-aws
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+
