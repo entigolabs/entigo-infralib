@@ -1,3 +1,4 @@
+#https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
   version = "20.36.0"
