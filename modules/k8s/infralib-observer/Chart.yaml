@@ -1,0 +1,5 @@
+apiVersion: v2
+name: Infralib Observer
+description: Make infralib managed resources observable in the managed Kubernetes cluster
+version: 0.1.0
+appVersion: "0.1.0"
