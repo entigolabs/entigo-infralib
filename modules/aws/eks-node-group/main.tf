@@ -17,6 +17,7 @@ module "eks-managed-node-group" {
 
   key_name = var.key_name
   pre_bootstrap_user_data = var.pre_bootstrap_user_data
+  cloudinit_pre_nodeadm = var.cloudinit_pre_nodeadm
 
   min_size     = var.min_size
   max_size     = var.max_size

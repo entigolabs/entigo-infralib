@@ -111,6 +111,17 @@ variable "pre_bootstrap_user_data" {
   default     = ""
 }
 
+variable "cloudinit_pre_nodeadm" {
+  description = "Array of cloud-init document parts that are created before the nodeadm document part"
+  type = list(object({
+    content      = string
+    content_type = optional(string)
+    filename     = optional(string)
+    merge_type   = optional(string)
+  }))
+  default = []
+}
+
 variable "labels" {
   type        = map(string)
   default     = null
