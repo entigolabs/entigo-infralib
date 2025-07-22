@@ -28,7 +28,7 @@ variable "eks_nodeport_access_cidrs" {
 variable "eks_cluster_version" {
   type     = string
   nullable = false
-  default  = "1.31"
+  default  = "1.32"
 }
 
 variable "cluster_iam_role_arn" {
@@ -290,27 +290,27 @@ variable "bootstrap_self_managed_addons" {
 
 variable "coredns_addon_version" {
   type = string
-  default = "v1.11.4-eksbuild.2"
+  default = "v1.11.4-eksbuild.14"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.31.3-eksbuild.2"
+  default = "v1.32.6-eksbuild.2"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.19.3-eksbuild.1"
+  default = "v1.19.6-eksbuild.7"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.41.0-eksbuild.1"
+  default = "v1.45.0-eksbuild.2"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v2.1.8-eksbuild.1"
+  default = "v2.1.9-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {

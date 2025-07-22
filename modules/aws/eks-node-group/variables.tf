@@ -111,6 +111,12 @@ variable "pre_bootstrap_user_data" {
   default     = ""
 }
 
+variable "cloudinit_pre_nodeadm_content" {
+  description = "Value of cloud-init document content"
+  type = string
+  default = ""
+}
+
 variable "labels" {
   type        = map(string)
   default     = null

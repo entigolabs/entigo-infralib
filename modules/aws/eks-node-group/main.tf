@@ -17,6 +17,14 @@ module "eks-managed-node-group" {
 
   key_name = var.key_name
   pre_bootstrap_user_data = var.pre_bootstrap_user_data
+  
+  # Conditional cloudinit_pre_nodeadm based on content being non-empty
+  cloudinit_pre_nodeadm = var.cloudinit_pre_nodeadm_content != "" ? [
+    {
+      content_type = "text/x-shellscript"
+      content = var.cloudinit_pre_nodeadm_content
+    }
+  ] : []
 
   min_size     = var.min_size
   max_size     = var.max_size
