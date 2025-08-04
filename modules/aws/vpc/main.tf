@@ -70,6 +70,9 @@ module "vpc" {
   elasticache_subnet_names = var.elasticache_subnet_names
   intra_subnet_names       = var.subnet_split_mode == "default" ? var.intra_subnet_names : local.spoke_tgw_names
 
+  database_subnet_group_name    = var.database_subnet_group_name
+  elasticache_subnet_group_name = var.elasticache_subnet_group_name
+
   create_database_subnet_group    = length(local.database_subnets) > 0 ? true : false
   create_elasticache_subnet_group = length(local.elasticache_subnets) > 0 ? true : false
   create_multiple_intra_route_tables = var.create_multiple_intra_route_tables
