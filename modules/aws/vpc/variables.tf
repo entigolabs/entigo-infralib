@@ -86,6 +86,18 @@ variable "elasticache_subnet_names" {
   default  = []
 }
 
+variable "database_subnet_group_name" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "elasticache_subnet_group_name" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
 variable "intra_subnet_names" {
   type     = list(string)
   nullable = true
