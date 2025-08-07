@@ -270,7 +270,7 @@ module "eks" {
   identity_providers = var.cluster_identity_providers
   
   create_kms_key = false
-  encryption_config = local.cluster_encryption_config
+  encryption_config = local.encryption_config
 
   create_iam_role = var.cluster_iam_role_arn != null ? false : true
   iam_role_arn = var.cluster_iam_role_arn
