@@ -1,11 +1,11 @@
 locals {
   #Cant do yet...
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3036 
-  #cluster_encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
+  #encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
   #  resources        = ["secrets"]
   #  provider_key_arn = var.cluster_encryption_kms_key_arn
   #}] : []
-  encryption_config = {}
+
   
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
@@ -276,7 +276,6 @@ module "eks" {
   identity_providers = var.cluster_identity_providers
   
   create_kms_key = false
-  encryption_config = local.encryption_config
 
   create_iam_role = var.cluster_iam_role_arn != null ? false : true
   iam_role_arn = var.cluster_iam_role_arn
