@@ -20,6 +20,8 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
       labels = {
         main = "true"
       }
@@ -52,6 +54,8 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_mon_ami_type
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
       taints = [
         {
           key    = "mon"
@@ -92,6 +96,8 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
       taints = [
         {
           key    = "tools"
@@ -277,9 +283,7 @@ module "eks" {
 
   enable_irsa                     = true
 
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
-
-cluster_addons = merge({
+  addons = merge({
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -416,7 +420,7 @@ cluster_addons = merge({
   vpc_id     = var.vpc_id
   subnet_ids = var.private_subnets
 
-  cluster_security_group_additional_rules = {
+  security_group_additional_rules = {
     egress_nodes_ephemeral_ports_tcp = {
       description                = "To node 1025-65535"
       protocol                   = "tcp"
@@ -486,11 +490,6 @@ cluster_addons = merge({
     "karpenter.sh/discovery" = var.prefix
   }
 
-  eks_managed_node_group_defaults = {
-    iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" },
-                                          local.iam_role_additional_policies)
-    iam_role_attach_cni_policy = false
-  }
 
   eks_managed_node_groups = local.eks_managed_node_groups
 
