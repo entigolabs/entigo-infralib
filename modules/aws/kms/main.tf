@@ -3,7 +3,7 @@
 
 module "kms_telemetry" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} telemetry"
@@ -19,7 +19,7 @@ module "kms_telemetry" {
       principals = [
         {
           type        = "Service"
-          identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
+          identifiers = ["logs.${data.aws_region.current.region}.amazonaws.com"]
         }
       ]
     
@@ -40,8 +40,8 @@ module "kms_telemetry" {
           test     = "ArnLike"
           variable = "kms:EncryptionContext:aws:logs:arn"
           values = concat([
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.policy_prefix}",
-            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/eks/${var.policy_prefix}",
+            "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.policy_prefix}",
+            "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/eks/${var.policy_prefix}",
           ], var.telemetry_extra_encryption_context)
         }
       ]
@@ -134,7 +134,7 @@ module "kms_telemetry" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "rds.${data.aws_region.current.name}.amazonaws.com"
+             "rds.${data.aws_region.current.region}.amazonaws.com"
           ]
         },
         {
@@ -160,7 +160,7 @@ module "kms_telemetry" {
 
 module "kms_config" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} config"
@@ -181,7 +181,7 @@ module "kms_config" {
 
 module "kms_data" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} data"
@@ -220,7 +220,7 @@ module "kms_data" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "ec2.${data.aws_region.current.name}.amazonaws.com"
+             "ec2.${data.aws_region.current.region}.amazonaws.com"
           ]
         },
         {
@@ -324,7 +324,7 @@ module "kms_data" {
           test     = "StringEquals"
           variable = "kms:ViaService"
           values = [
-             "rds.${data.aws_region.current.name}.amazonaws.com"
+             "rds.${data.aws_region.current.region}.amazonaws.com"
           ]
         },
         {

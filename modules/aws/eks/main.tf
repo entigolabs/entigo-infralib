@@ -1,11 +1,11 @@
 locals {
   #Cant do yet...
   #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3036 
-  #cluster_encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
+  #encryption_config = var.cluster_encryption_kms_key_arn != null ? [{
   #  resources        = ["secrets"]
   #  provider_key_arn = var.cluster_encryption_kms_key_arn
   #}] : []
-  cluster_encryption_config = {}
+
   
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
@@ -20,6 +20,8 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
       labels = {
         main = "true"
       }
@@ -52,13 +54,15 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_mon_ami_type
-      taints = [
-        {
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
+      taints = {
+        mon = {
           key    = "mon"
           value  = "true"
           effect = "NO_SCHEDULE"
         }
-      ]
+      }
       labels = {
         mon = "true"
       }
@@ -92,13 +96,15 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
-      taints = [
-        {
+      iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+      iam_role_attach_cni_policy = false
+      taints = {
+        tools = {
           key    = "tools"
           value  = "true"
           effect = "NO_SCHEDULE"
         }
-      ]
+      }
       labels = {
         tools = "true"
       }
@@ -198,7 +204,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name             = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_ids = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -218,7 +224,7 @@ module "ebs_csi_irsa_role" {
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name             = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -236,7 +242,7 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -258,28 +264,26 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.36.0"
+  version = "21.0.7"
 
-  cluster_name                    = var.prefix
-  cluster_version                 = var.eks_cluster_version
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = var.eks_cluster_public
-  cluster_enabled_log_types       = var.cluster_enabled_log_types
+  name                    = var.prefix
+  kubernetes_version                 = var.eks_cluster_version
+  endpoint_private_access = true
+  endpoint_public_access  = var.eks_cluster_public
+  enabled_log_types       = var.cluster_enabled_log_types
+  encryption_config = null
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
-  cluster_identity_providers = var.cluster_identity_providers
+  identity_providers = var.cluster_identity_providers
   
   create_kms_key = false
-  cluster_encryption_config = local.cluster_encryption_config
 
   create_iam_role = var.cluster_iam_role_arn != null ? false : true
   iam_role_arn = var.cluster_iam_role_arn
 
   enable_irsa                     = true
 
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
-
-cluster_addons = merge({
+  addons = merge({
     coredns = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -416,7 +420,7 @@ cluster_addons = merge({
   vpc_id     = var.vpc_id
   subnet_ids = var.private_subnets
 
-  cluster_security_group_additional_rules = {
+  security_group_additional_rules = {
     egress_nodes_ephemeral_ports_tcp = {
       description                = "To node 1025-65535"
       protocol                   = "tcp"
@@ -486,11 +490,6 @@ cluster_addons = merge({
     "karpenter.sh/discovery" = var.prefix
   }
 
-  eks_managed_node_group_defaults = {
-    iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" },
-                                          local.iam_role_additional_policies)
-    iam_role_attach_cni_policy = false
-  }
 
   eks_managed_node_groups = local.eks_managed_node_groups
 

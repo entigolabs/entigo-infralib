@@ -282,12 +282,6 @@ variable "node_ssh_key_pair_name" {
   default = null
 }
 
-variable "bootstrap_self_managed_addons" {
-  type    = bool
-  nullable = true
-  default = true
-}
-
 variable "coredns_addon_version" {
   type = string
   default = "v1.11.4-eksbuild.14"
