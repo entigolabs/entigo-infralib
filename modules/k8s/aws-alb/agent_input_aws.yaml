@@ -3,6 +3,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
 aws-load-balancer-controller:
+  vpcId: "{{ .toutput.vpc.vpc_id }}"
   clusterName: "{{ .toutput.eks.cluster_name }}"
   image:
     repository: "602401143452.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
