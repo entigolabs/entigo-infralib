@@ -143,6 +143,8 @@ locals {
       v,
       {
         desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
+        iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
+        iam_role_attach_cni_policy = false
       }
     )
   }
