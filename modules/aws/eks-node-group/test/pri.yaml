@@ -15,13 +15,13 @@ block_device_mappings: |
     }
   }
 taints: |
-  [
-    {
+  {
+    tools = {
       key    = "tools"
       value  = "true"
       effect = "NO_SCHEDULE"
     }
-  ]
+  }
 labels: |
   {
     tools = "true"
