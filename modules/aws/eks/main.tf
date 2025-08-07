@@ -57,7 +57,7 @@ locals {
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
       taints = {
-        {
+        mon = {
           key    = "mon"
           value  = "true"
           effect = "NO_SCHEDULE"
@@ -99,7 +99,7 @@ locals {
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
       taints = {
-        {
+        tools = {
           key    = "tools"
           value  = "true"
           effect = "NO_SCHEDULE"
