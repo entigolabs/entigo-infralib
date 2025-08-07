@@ -271,6 +271,7 @@ module "eks" {
   endpoint_private_access = true
   endpoint_public_access  = var.eks_cluster_public
   enabled_log_types       = var.cluster_enabled_log_types
+  encryption_config = null
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
   identity_providers = var.cluster_identity_providers
