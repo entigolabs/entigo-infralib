@@ -53,7 +53,3 @@ output "node_group_taints" {
   value       = module.eks-managed-node-group.node_group_taints
 }
 
-output "autoscaling_group_schedule_arns" {
-  description = "ARNs of autoscaling group schedules"
-  value       = module.eks-managed-node-group.autoscaling_group_schedule_arns
-}
