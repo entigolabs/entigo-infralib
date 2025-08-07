@@ -3,7 +3,7 @@
 
 module "kms_telemetry" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} telemetry"
@@ -160,7 +160,7 @@ module "kms_telemetry" {
 
 module "kms_config" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} config"
@@ -181,7 +181,7 @@ module "kms_config" {
 
 module "kms_data" {
   source = "terraform-aws-modules/kms/aws"
-  version = "3.1.1"
+  version = "4.0.0"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} data"

@@ -198,7 +198,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name             = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_ids = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -218,7 +218,7 @@ module "ebs_csi_irsa_role" {
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name             = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -236,7 +236,7 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.58.0"
+  version               = "5.59.0"
   role_name_prefix      = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -258,7 +258,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.36.0"
+  version = "21.0.7"
 
   cluster_name                    = var.prefix
   cluster_version                 = var.eks_cluster_version
