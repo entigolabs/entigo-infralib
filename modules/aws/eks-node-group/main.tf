@@ -9,7 +9,7 @@ module "eks-managed-node-group" {
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
   launch_template_name    = substr(var.prefix, 0, 35)
   cluster_name            = var.cluster_name
-  cluster_version         = var.cluster_version
+  kubernetes_version         = var.cluster_version
   subnet_ids              = var.subnets
   cluster_primary_security_group_id = var.cluster_primary_security_group_id
   cluster_service_cidr    = var.cluster_service_cidr

@@ -5,7 +5,7 @@ locals {
   #  resources        = ["secrets"]
   #  provider_key_arn = var.cluster_encryption_kms_key_arn
   #}] : []
-  cluster_encryption_config = {}
+  encryption_config = {}
   
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
@@ -260,17 +260,17 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.0.7"
 
-  cluster_name                    = var.prefix
-  cluster_version                 = var.eks_cluster_version
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = var.eks_cluster_public
-  cluster_enabled_log_types       = var.cluster_enabled_log_types
+  name                    = var.prefix
+  kubernetes_version                 = var.eks_cluster_version
+  endpoint_private_access = true
+  endpoint_public_access  = var.eks_cluster_public
+  enabled_log_types       = var.cluster_enabled_log_types
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
   
-  cluster_identity_providers = var.cluster_identity_providers
+  identity_providers = var.cluster_identity_providers
   
   create_kms_key = false
-  cluster_encryption_config = local.cluster_encryption_config
+  encryption_config = local.cluster_encryption_config
 
   create_iam_role = var.cluster_iam_role_arn != null ? false : true
   iam_role_arn = var.cluster_iam_role_arn
