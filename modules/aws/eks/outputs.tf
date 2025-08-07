@@ -172,6 +172,6 @@ output "account" {
 
 output "region" {
   description = "Cluster region"
-  value = data.aws_region.current.name
+  value = data.aws_region.current.region
 }
 

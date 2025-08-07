@@ -267,7 +267,7 @@ resource "aws_iam_policy" "ecr-proxy" {
                 "ecr:TagResource"
         ]
         Effect   = "Allow"
-        Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${substr(var.prefix, 0, 24)}-*"
+        Resource = "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${substr(var.prefix, 0, 24)}-*"
       },
     ]
   })
