@@ -2,6 +2,8 @@ min_size: 1
 desired_size: 1
 max_size: 2
 capacity_type: "SPOT"
+subnets: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]
 block_device_mappings: |
   {
     xvda = {
