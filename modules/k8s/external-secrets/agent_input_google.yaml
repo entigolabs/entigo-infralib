@@ -4,3 +4,12 @@ global:
     region: "{{ .toutput.gke.region }}"
     cluster:
       name: "{{ .toutput.gke.cluster_name }}"
+external-secrets:
+  image:
+    repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
+  webhook:
+    image:
+      repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
+  certController:
+    image:
+      repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
