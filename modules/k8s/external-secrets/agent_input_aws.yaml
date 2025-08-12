@@ -7,3 +7,7 @@ global:
     createECRAccounts: 
     - accountNumber: "{{ .toutput.eks.account }}"
       acocuntRegion: "{{ .toutput.eks.region }}"
+external-secrets:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
+
