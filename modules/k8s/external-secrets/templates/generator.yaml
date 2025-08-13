@@ -1,0 +1,18 @@
+{{- if .Values.global.createPasswordGenerator   }}
+
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: ClusterGenerator
+metadata:
+  name: {{ .Release.Name }}-password
+spec:
+  kind: Password
+  generator:
+    passwordSpec:
+      length: 32
+      digits: 5
+      symbols: 1
+      symbolCharacters: "~!%+="
+      noUpper: false
+      allowRepeat: true
+
+{{- end }}
