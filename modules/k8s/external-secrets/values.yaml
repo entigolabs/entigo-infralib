@@ -6,7 +6,7 @@ global:
     project: ""
     secret: ""
   createClusterSecretStore: false
-  enablePushSecret: false
+  createPushClusterSecretStore: false
 
 external-secrets:
   installCRDs: true
