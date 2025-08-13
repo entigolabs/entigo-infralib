@@ -6,7 +6,8 @@ global:
     project: ""
     secret: ""
   createClusterSecretStore: false
-
+  enableWriteForClusterSecretStore: false
+  createPasswordGenerator: false
 external-secrets:
   installCRDs: true
   deploymentAnnotations:

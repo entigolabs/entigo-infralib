@@ -17,6 +17,12 @@ spec:
           {
             "Effect": "Allow",
             "Action": [
+{{- if .Values.global.enableWriteForClusterSecretStore }}
+              "secretsmanager:ListSecrets",
+              "secretsmanager:CreateSecret",
+              "secretsmanager:DeleteSecret",
+              "secretsmanager:TagResource",
+{{- end }}
               "secretsmanager:GetResourcePolicy",
               "secretsmanager:GetSecretValue",
               "secretsmanager:DescribeSecret",
