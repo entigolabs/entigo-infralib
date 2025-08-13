@@ -77,6 +77,22 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
+PIDS=""
+for line in $(gcloud -q dns policies list --uri); do
+  gcloud dns policies update --project $GOOGLE_PROJECT --networks="" -q $line
+  gcloud dns policies delete --project $GOOGLE_PROJECT -q $line &
+  PIDS="$PIDS $!"
+done
+FAIL=0
+for p in $PIDS; do
+  wait $p || let "FAIL+=1"
+  echo $p $FAIL
+done
+if [ "$FAIL" -ne 0 ]; then
+  echo "FAILED to delete DNS policies. $FAIL"
+  exit 1
+fi
+
 delete_cluster() {
   local cluster_uri=$1
   local max_retries=20
@@ -216,22 +232,6 @@ for p in $PIDS; do
 done
 if [ "$FAIL" -ne 0 ]; then
   echo "FAILED to delete routers. $FAIL"
-  exit 1
-fi
-
-PIDS=""
-for line in $(gcloud -q dns policies list --uri); do
-  gcloud dns policies update --project $GOOGLE_PROJECT --networks="" -q $line
-  gcloud dns policies delete --project $GOOGLE_PROJECT -q $line &
-  PIDS="$PIDS $!"
-done
-FAIL=0
-for p in $PIDS; do
-  wait $p || let "FAIL+=1"
-  echo $p $FAIL
-done
-if [ "$FAIL" -ne 0 ]; then
-  echo "FAILED to delete DNS policies. $FAIL"
   exit 1
 fi
 
