@@ -4,5 +4,5 @@ external-secrets:
     name: "AWS_DEFAULT_REGION"
 global:
   createClusterSecretStore: true
-  createPushClusterSecretStore: true
+  enableWriteForClusterSecretStore: true
   createPasswordGenerator: true
