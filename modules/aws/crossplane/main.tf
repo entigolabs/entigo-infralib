@@ -36,7 +36,7 @@ resource "aws_iam_role_policy_attachment" "crossplane-attach" {
 }
 
 
-This role is for ECR pull permissions
+#This role is for ECR pull permissions
 resource "aws_iam_role" "crossplane-core" {
   name = "crossplane-core-${var.prefix}"
   tags = {
