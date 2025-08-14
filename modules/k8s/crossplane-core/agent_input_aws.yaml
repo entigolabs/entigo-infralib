@@ -2,6 +2,10 @@ crossplane:
   image:
     repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/crossplane/crossplane'
 
+global:
+  aws:
+    region: "{{ .toutput.eks.region }}"
+    ecrRole: "{{ .toutput.crossplane.iam_role_core }}"
 #Not needed for now.
 #  serviceAccount:
 #    customAnnotations: 
