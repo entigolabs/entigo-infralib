@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "aws" }}
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.ecrPolicy }}
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: ECRAuthorizationToken
 metadata:
@@ -9,8 +9,6 @@ spec:
   # specify aws region (mandatory)
   region: {{ .Values.global.aws.region }}
 
-  # assume role with the given authentication credentials
-  role: "{{ .Values.global.aws.ecrRole }}"
   auth:
     jwt:
       serviceAccountRef:

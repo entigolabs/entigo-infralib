@@ -1,3 +1,2 @@
 global:
-  aws:
-    role: "{{ .toutput.crossplane.iam_role }}"
+  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'

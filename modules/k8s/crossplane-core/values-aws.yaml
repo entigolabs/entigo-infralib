@@ -3,3 +3,4 @@ global:
   aws:
     region: ""
     ecrRole: ""
+    ecrPolicy: ""
