@@ -1,2 +1,5 @@
 global:
   cloudProvider: "aws"
+  aws:
+    region: ""
+    ecrRole: ""
