@@ -4,6 +4,9 @@ kind: ECRAuthorizationToken
 metadata:
   name: "crossplane-ecr"
   namespace: "{{.Release.Namespace}}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
 
   # specify aws region (mandatory)
@@ -19,6 +22,9 @@ kind: ExternalSecret
 metadata:
   name: "crossplane-ecr"
   namespace: "{{.Release.Namespace}}"
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   # Refresh every 11 hours (ECR tokens expire after 12 hours)
   refreshInterval: 11h
