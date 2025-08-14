@@ -35,14 +35,14 @@ spec:
       type: kubernetes.io/dockerconfigjson
       metadata:
         annotations:
-          expiresAt: "{{ .expires_at }}"
+          expiresAt: "{{`{{ .expires_at }}`}}"
       data:
         .dockerconfigjson: |
           {
             "auths": {
-              "{{ .proxy_endpoint }}": {
-                "username": "{{ .username }}",
-                "password": "{{ .password }}"
+              "{{`{{ .proxy_endpoint }}`}}": {
+                "username": "{{`{{ .username }}`}}",
+                "password": "{{`{{ .password }}`}}"
               }
             }
           }
