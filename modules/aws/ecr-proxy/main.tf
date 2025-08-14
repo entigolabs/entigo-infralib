@@ -252,7 +252,6 @@ resource "aws_iam_policy" "ecr-proxy" {
     Statement = [
       {
         Action = [
-                "ecr:GetAuthorizationToken",
                 "ecr:BatchCheckLayerAvailability",
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:DescribeRepositories",
@@ -269,6 +268,13 @@ resource "aws_iam_policy" "ecr-proxy" {
         Effect   = "Allow"
         Resource = "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${substr(var.prefix, 0, 24)}-*"
       },
+      {
+        Action = [
+                "ecr:GetAuthorizationToken",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
     ]
   })
 }

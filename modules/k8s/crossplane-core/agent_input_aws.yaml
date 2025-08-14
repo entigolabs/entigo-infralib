@@ -1,8 +1,12 @@
 crossplane:
   image:
     repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/crossplane/crossplane'
+  serviceAccount:
+    customAnnotations: 
+      eks.amazonaws.com/role-arn: "{{ .toutput.crossplane.iam_role_core }}"
 
+global:
+  aws:
+    region: "{{ .toutput.eks.region }}"
+    ecrPolicy: "{{ .toptout.ecr-proxy.policy }}"
 #Not needed for now.
-#  serviceAccount:
-#    customAnnotations: 
-#      eks.amazonaws.com/role-arn: "{{ .toutput.crossplane.iam_role_core }}"

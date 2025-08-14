@@ -1,0 +1,49 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.ecrPolicy }}
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: ECRAuthorizationToken
+metadata:
+  name: "crossplane-ecr"
+  namespace: "{{.Release.Namespace}}"
+spec:
+
+  # specify aws region (mandatory)
+  region: {{ .Values.global.aws.region }}
+
+  auth:
+    jwt:
+      serviceAccountRef:
+        name: "crossplane"
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "crossplane-ecr"
+  namespace: "{{.Release.Namespace}}"
+spec:
+  # Refresh every 11 hours (ECR tokens expire after 12 hours)
+  refreshInterval: 11h
+  
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: ECRAuthorizationToken
+        name: "crossplane-ecr"
+  target:
+    name: crossplane-ecr
+    template:
+      type: kubernetes.io/dockerconfigjson
+      metadata:
+        annotations:
+          expiresAt: "{{ .expires_at }}"
+      data:
+        .dockerconfigjson: |
+          {
+            "auths": {
+              "{{ .proxy_endpoint }}": {
+                "username": "{{ .username }}",
+                "password": "{{ .password }}"
+              }
+            }
+          }
+{{- end }}
