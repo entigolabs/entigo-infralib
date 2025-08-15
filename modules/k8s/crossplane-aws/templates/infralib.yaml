@@ -33,7 +33,7 @@ spec:
   managementPolicies: ["Observe"]
   deletionPolicy: Orphan
   providerConfigRef:
-    name: {{ .Release.Name }}
+    name: {{ $.Release.Name }}
   forProvider:
     region: {{ $.Values.global.aws.region }}
     cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
@@ -41,6 +41,7 @@ spec:
 {{- end }}
 
 ---
+{{- if .Values.global.aws.vpc.database_subnet_group_name }}
 apiVersion: database.aws.crossplane.io/v1beta1
 kind: DBSubnetGroup
 metadata:
@@ -60,8 +61,9 @@ spec:
     {{- end }}
   providerConfigRef:
     name: {{ .Release.Name }}
-
 ---
+{{- end }}
+{{- if .Values.global.aws.kms.data_key_arn }}
 apiVersion: kms.aws.crossplane.io/v1alpha1
 kind: Key
 metadata:
@@ -77,3 +79,4 @@ spec:
     name: {{ .Release.Name }}
   forProvider:
     region: {{ .Values.global.aws.region }}
+{{- end }}

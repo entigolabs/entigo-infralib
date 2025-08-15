@@ -11,8 +11,7 @@ global:
         {{ .toutput.vpc.database_subnets }}
       database_subnet_cidr: |
         {{ .toutput.vpc.database_subnets_cidr_blocks }}
-      database_subnet_group_name: |
-        {{ .toutput.vpc.database_subnet_group_name }}
+      database_subnet_group_name: "{{ .toutput.vpc.database_subnet_group_name }}"
     kms:
       data_name: "{{ .config.prefix }}-data"
-      data_key_arn: "{{ .toutput.kms.data_key_arn }}"
+      data_key_arn: "{{ .toptout.kms.data_key_arn }}"
