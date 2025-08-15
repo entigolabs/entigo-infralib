@@ -1,6 +1,7 @@
 installProviderConfig: true
 
 global:
+  cloudProvider: ""
   aws:
     role: ""
   deploymentRuntimeConfig:

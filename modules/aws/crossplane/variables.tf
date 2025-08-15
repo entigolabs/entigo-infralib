@@ -23,14 +23,14 @@ variable "kubernetes_namespace" {
   default = "crossplane-system"
 }
 
-#variable "ecr_proxy_policy_arn" {
-#  type = string
-#  description = "Policy to attatch to crossplane core for ecr access"
-#  default = ""
-#}
+variable "ecr_proxy_policy_arn" {
+ type = string
+ description = "Policy to attatch to crossplane core for ecr access"
+ default = ""
+}
 
-#variable "kubernetes_core_service_account" {
-#  type = string
-#  description = "Kubernetes service account name for crossplane core"
-#  default = "crossplane"
-#}
+variable "kubernetes_core_service_account" {
+ type = string
+ description = "Kubernetes service account name for crossplane core"
+ default = "crossplane"
+}
