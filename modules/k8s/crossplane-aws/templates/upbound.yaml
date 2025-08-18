@@ -1,0 +1,47 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-aws
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: xpkg.upbound.io/upbound/provider-family-aws:v1.23.1    
+{{- if and (eq .Values.global.cloudProvider "aws") (ne .Values.global.registry "docker.io") }}
+  packagePullSecrets: 
+  - name: crossplane-ecr
+{{- end }}
+  runtimeConfigRef:
+    name: {{ .Release.Name }}-upbound
+    
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-networkfirewall
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-networkfirewall:v1.23.1
+{{- if and (eq .Values.global.cloudProvider "aws") (ne .Values.global.registry "docker.io") }}
+  packagePullSecrets: 
+  - name: crossplane-ecr
+{{- end }}
+  runtimeConfigRef:
+    name: {{ .Release.Name }}-upbound
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: {{ .Release.Name }}-upbound
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  credentials:
+    source: IRSA
+
