@@ -1,3 +1,6 @@
+metadata:
+  annotations:
+    infralib.entigo.io/sync-wave: "1"
 spec:
   ignoreDifferences:
     - group: admissionregistration.k8s.io
