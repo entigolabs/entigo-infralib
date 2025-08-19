@@ -32,7 +32,7 @@ spec:
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" -}}
+{{- $providers := list "iam" "s3" "sqs" -}}
 {{- range $provider := $providers }}
 ---
 apiVersion: pkg.crossplane.io/v1
