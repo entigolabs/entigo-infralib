@@ -1,18 +1,16 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
 
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Policy
 metadata:
   name: {{ .Release.Name }}-karpenter-controller-policy
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}-karpenter-controller-policy"
 spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
-    name: {{ .Release.Name }}-karpenter-controller-policy
     tags:
-      - key: created-by
-        value: entigo-infralib
-    document: |
+      created-by: "entigo-infralib"
+    policy: |
       {
           "Statement": [
               {

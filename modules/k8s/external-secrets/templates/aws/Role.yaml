@@ -1,20 +1,18 @@
 {{- if and (eq .Values.global.cloudProvider "aws") .Values.global.createClusterSecretStore }}
 
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Role
 metadata:
   name: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    crossplane.io/external-name: "{{ .Release.Name }}"
 spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
     tags:
-      - key: created-by
-        value: entigo-infralib
-    assumeRolePolicyDocument: |
+      created-by: entigo-infralib
+    assumeRolePolicy: |
       {
         "Version": "2012-10-17",
         "Statement": [
