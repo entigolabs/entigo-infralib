@@ -32,13 +32,13 @@ spec:
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" "vpc" "secretsmanager" "rds" "kms" "sqs" -}}
+{{- $providers := list "iam" "s3" -}}
 {{- range $provider := $providers }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-aws-{{ $provider }}
+  name: upbound-provider-aws-{{ $provider }}
   annotations:
     argocd.argoproj.io/sync-wave: '4'
     helm.sh/resource-policy: keep
