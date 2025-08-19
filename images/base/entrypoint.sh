@@ -50,7 +50,7 @@ get_priority_from_yaml() {
     local priority
     
     # Extract priority from metadata.annotations."infralib.entigo.io/sync-wave" using yq
-    priority=$(yq eval '.metadata.annotations."infralib.entigo.io/sync-wave" // 100' "$yaml_file" 2>/dev/null)
+    priority=$(yq -r '.metadata.annotations."infralib.entigo.io/sync-wave" // 100' "$yaml_file" 2>/dev/null)
     
     # Ensure we have a numeric value
     if ! [[ "$priority" =~ ^[0-9]+$ ]]; then
