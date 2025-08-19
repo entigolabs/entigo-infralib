@@ -5,6 +5,8 @@ kind: Policy
 metadata:
   name: {{ .Release.Name }}-karpenter-controller-policy
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     name: {{ .Release.Name }}-karpenter-controller-policy
     tags:

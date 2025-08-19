@@ -3,6 +3,8 @@ kind: Policy
 metadata:
   name: {{ .Release.Name }}
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     name: {{ .Release.Name }}
     tags:

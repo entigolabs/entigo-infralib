@@ -5,6 +5,8 @@ kind: Role
 metadata:
   name: {{ .Release.Name }}
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     tags:
       - key: created-by

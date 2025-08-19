@@ -5,6 +5,8 @@ kind: RolePolicyAttachment
 metadata:
   name: {{ .Release.Name }}-karpenter-controller-role-karpenter-controller-policy
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}-karpenter-controller-policy
     roleNameRef:

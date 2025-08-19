@@ -4,7 +4,8 @@ kind: Queue
 metadata:
   name: {{ .Release.Name }}
 spec:
-  deletionPolicy: Delete
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     tags:
       created-by: entigo-infralib

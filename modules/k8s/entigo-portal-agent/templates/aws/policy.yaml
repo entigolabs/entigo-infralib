@@ -4,6 +4,8 @@ kind: Policy
 metadata:
   name: {{ .Release.Name }}
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     name: {{ .Release.Name }}
     tags:
@@ -68,6 +70,8 @@ kind: Policy
 metadata:
   name: {{ .Release.Name }}-ecr-push
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     name: {{ .Release.Name }}-ecr-push
     document: |
