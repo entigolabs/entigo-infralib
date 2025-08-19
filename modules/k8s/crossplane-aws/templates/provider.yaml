@@ -32,20 +32,20 @@ spec:
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" "vpc" "secretsmanager" "rds" "kms" -}}
+{{- $providers := list "iam" "s3" "vpc" "secretsmanager" "rds" "kms" "sqs" -}}
 {{- range $provider := $providers }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: upbound-provider-aws-{{ $provider }}
+  name: provider-aws-{{ $provider }}
   annotations:
     argocd.argoproj.io/sync-wave: '4'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
   skipDependencyResolution: true
+  package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
 {{- if and (eq $.Values.global.cloudProvider "aws") (ne $.Values.global.registry "docker.io") }}
   packagePullSecrets: 
   - name: crossplane-ecr
@@ -67,6 +67,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  skipDependencyResolution: true
   package: {{ .package }}
   skipDependencyResolution: {{ .skipDependencyResolution }}
 {{- if and (eq $.Values.global.cloudProvider "aws") (ne $.Values.global.registry "docker.io") }}
