@@ -379,8 +379,12 @@ then
     PIDS=""
     for app_file in ./*.yaml
     do
-        argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
-        PIDS="$PIDS $!=$app_file"
+        app_priority=$(get_priority_from_yaml "$app_file")
+        if [ $priority -eq $app_priority ]
+        then
+          argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
+          PIDS="$PIDS $!=$app_file"
+        fi
     done
 
     FAIL=""
