@@ -41,7 +41,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	// Install AWS provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-aws-s3", 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
@@ -49,9 +49,9 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
 
 
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.upbound.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
+	resource := schema.GroupVersionResource{Group: "aws.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
