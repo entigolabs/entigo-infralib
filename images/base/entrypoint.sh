@@ -45,6 +45,21 @@ running_jobs() {
     fi
 }
 
+get_priority_from_yaml() {
+    local yaml_file="$1"
+    local priority
+    
+    # Extract priority from metadata.annotations."infralib.entigo.io/sync-wave" using yq
+    priority=$(yq -r '.metadata.annotations."infralib.entigo.io/sync-wave" // 100' "$yaml_file" 2>/dev/null)
+    
+    # Ensure we have a numeric value
+    if ! [[ "$priority" =~ ^[0-9]+$ ]]; then
+        priority=100
+    fi
+    
+    echo "$priority"
+}
+
 
 if [ "$COMMAND" == "test" ]
 then
@@ -352,69 +367,93 @@ then
     exit 25
   fi
   
-  PIDS=""
-  for app_file in ./*.yaml
-  do
-      argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
-      PIDS="$PIDS $!=$app_file"
+  # Show priority summary
+  echo "Application sync order:"
+  declare -a file_priority_pairs
+  declare -a unique_priorities
+  for app_file in ./*.yaml; do
+        priority=$(get_priority_from_yaml "$app_file")
+        file_priority_pairs+=("$priority:$(basename $app_file)")
+        if [[ ! " ${unique_priorities[@]} " =~ " ${priority} " ]]; then
+            unique_priorities+=("$priority")
+        fi
   done
 
-  FAIL=""
-  COMPLETED=""
-  LAST_RUNNING=""
-  while true; do
-      sleep 2
-      running_jobs
-      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
-      total_jobs=$(echo "$PIDS" | wc -w)
-      
-      if [ $total_done -eq $total_jobs ]; then
-          break
-      fi
+  # Sort by priority and display
+  printf '%s\n' "${file_priority_pairs[@]}" | sort -n | while IFS=':' read -r priority filename; do
+      echo "  $filename: priority $priority"
   done
-  
-  #Try the failed apps second time.
-  PIDS=""
-  for p in $FAIL; do
-      name=$(echo $p | cut -d"=" -f2)
-      argocd-apps-apply.sh $name > $name.log 2>&1 &
-      PIDS="$PIDS $!=$name"
-  done
-  
-  if [ ! -z "$FAIL" ]; then
-      echo "Retry Failed jobs:"
-      for p in $FAIL; do
-          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
-      done
-      FAIL=""
-      COMPLETED=""
-      LAST_RUNNING=""
-      while true; do
-          sleep 2
-          running_jobs
-          total_done=$(echo "$COMPLETED $FAIL" | wc -w)
-          total_jobs=$(echo "$PIDS" | wc -w)
-          if [ $total_done -eq $total_jobs ]; then
-              break
-          fi
-      done
-  fi
+  echo ""
+  for priority in $(printf '%s\n' "${unique_priorities[@]}" | sort -n); do
+    echo "Syncing apps with priority $priority"
+    PIDS=""
+    for app_file in ./*.yaml
+    do
+        app_priority=$(get_priority_from_yaml "$app_file")
+        if [ $priority -eq $app_priority ]
+        then
+          argocd-apps-apply.sh $app_file > $app_file.log 2>&1 &
+          PIDS="$PIDS $!=$app_file"
+        fi
+    done
 
-  if [ ! -z "$FAIL" ]; then
-      for p in $FAIL; do
-          name=$(echo $p | cut -d"=" -f2)
-          echo "#######################################"
-          echo "ERROR LOG FOR $name"
-          cat $name.log
-      done
-  
-      echo "Failed jobs were:"
-      for p in $FAIL; do
-          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
-      done
-      echo "Apply ArgoCD failed!"
-      exit 21
-  fi
+    FAIL=""
+    COMPLETED=""
+    LAST_RUNNING=""
+    while true; do
+        sleep 2
+        running_jobs
+        total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+        total_jobs=$(echo "$PIDS" | wc -w)
+        
+        if [ $total_done -eq $total_jobs ]; then
+            break
+        fi
+    done
+    
+    #Try the failed apps second time.
+    PIDS=""
+    for p in $FAIL; do
+        name=$(echo $p | cut -d"=" -f2)
+        argocd-apps-apply.sh $name > $name.log 2>&1 &
+        PIDS="$PIDS $!=$name"
+    done
+    
+    if [ ! -z "$FAIL" ]; then
+        echo "Retry Failed jobs:"
+        for p in $FAIL; do
+            echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+        done
+        FAIL=""
+        COMPLETED=""
+        LAST_RUNNING=""
+        while true; do
+            sleep 2
+            running_jobs
+            total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+            total_jobs=$(echo "$PIDS" | wc -w)
+            if [ $total_done -eq $total_jobs ]; then
+                break
+            fi
+        done
+    fi
+
+    if [ ! -z "$FAIL" ]; then
+        for p in $FAIL; do
+            name=$(echo $p | cut -d"=" -f2)
+            echo "#######################################"
+            echo "ERROR LOG FOR $name"
+            cat $name.log
+        done
+    
+        echo "Failed jobs were:"
+        for p in $FAIL; do
+            echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+        done
+        echo "Apply ArgoCD failed!"
+        exit 21
+    fi
+  done
   rm -f *.log
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
