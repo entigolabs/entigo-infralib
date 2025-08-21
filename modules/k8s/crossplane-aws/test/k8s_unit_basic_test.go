@@ -41,7 +41,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	// Install AWS provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "upbound-provider-aws-s3", 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
