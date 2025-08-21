@@ -1,82 +1,82 @@
-{{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
-{{- $database_subnet_cidr_blocks := splitList "," .Values.global.aws.vpc.database_subnet_cidr }}
-
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: VPC
-metadata:
-  name: {{ .Values.global.aws.vpc.name }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    crossplane.io/external-name: {{ .Values.global.aws.vpc.id}}
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ .Release.Name }}
-  forProvider:
-    region: {{ .Values.global.aws.region }}
-    cidrBlock: {{ .Values.global.aws.vpc.cidr }}
-
-
-{{- range $i, $value := $database_subnet_ids }}
----
-apiVersion: ec2.aws.crossplane.io/v1beta1
-kind: Subnet
-metadata:
-  name: dbsubnet-{{ $i }}
-  annotations:
-    crossplane.io/external-name: {{ $value }}
-    argocd.argoproj.io/sync-wave: "6"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ $.Release.Name }}
-  forProvider:
-    region: {{ $.Values.global.aws.region }}
-    cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
-
-{{- end }}
-
----
-{{- if .Values.global.aws.vpc.database_subnet_group_name }}
-apiVersion: database.aws.crossplane.io/v1beta1
-kind: DBSubnetGroup
-metadata:
-  name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "7"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  forProvider:
-    region: {{ .Values.global.aws.region }}
-    description: "Subnet group for PostgreSQL instance"
-    subnetIdRefs:
-    {{- range $i, $value := $database_subnet_ids }}
-      - name: dbsubnet-{{ $i }}
-    {{- end }}
-  providerConfigRef:
-    name: {{ .Release.Name }}
----
-{{- end }}
-{{- if .Values.global.aws.kms.data_key_arn }}
-apiVersion: kms.aws.crossplane.io/v1alpha1
-kind: Key
-metadata:
-  name: {{ .Values.global.aws.kms.data_name }}
-  annotations:
-    crossplane.io/external-name: {{ .Values.global.aws.kms.data_key_arn }}
-    argocd.argoproj.io/sync-wave: "6"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ .Release.Name }}
-  forProvider:
-    region: {{ .Values.global.aws.region }}
-{{- end }}
+# {{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
+# {{- $database_subnet_cidr_blocks := splitList "," .Values.global.aws.vpc.database_subnet_cidr }}
+# 
+# apiVersion: ec2.aws.crossplane.io/v1beta1
+# kind: VPC
+# metadata:
+#   name: {{ .Values.global.aws.vpc.name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "6"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+#     crossplane.io/external-name: {{ .Values.global.aws.vpc.id}}
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   providerConfigRef:
+#     name: {{ .Release.Name }}
+#   forProvider:
+#     region: {{ .Values.global.aws.region }}
+#     cidrBlock: {{ .Values.global.aws.vpc.cidr }}
+# 
+# {{- if .Values.global.aws.vpc.database_subnets_id }}
+# {{- range $i, $value := $database_subnet_ids }}
+# ---
+# apiVersion: ec2.aws.crossplane.io/v1beta1
+# kind: Subnet
+# metadata:
+#   name: dbsubnet-{{ $i }}
+#   annotations:
+#     crossplane.io/external-name: {{ $value }}
+#     argocd.argoproj.io/sync-wave: "6"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   providerConfigRef:
+#     name: {{ $.Release.Name }}
+#   forProvider:
+#     region: {{ $.Values.global.aws.region }}
+#     cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
+# 
+# {{- end }}
+# {{- end }}
+# ---
+# {{- if .Values.global.aws.vpc.database_subnet_group_name }}
+# apiVersion: database.aws.crossplane.io/v1beta1
+# kind: DBSubnetGroup
+# metadata:
+#   name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "7"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   forProvider:
+#     region: {{ .Values.global.aws.region }}
+#     description: "Subnet group for PostgreSQL instance"
+#     subnetIdRefs:
+#     {{- range $i, $value := $database_subnet_ids }}
+#       - name: dbsubnet-{{ $i }}
+#     {{- end }}
+#   providerConfigRef:
+#     name: {{ .Release.Name }}
+# ---
+# {{- end }}
+# {{- if .Values.global.aws.kms.data_key_arn }}
+# apiVersion: kms.aws.crossplane.io/v1alpha1
+# kind: Key
+# metadata:
+#   name: {{ .Values.global.aws.kms.data_name }}
+#   annotations:
+#     crossplane.io/external-name: {{ .Values.global.aws.kms.data_key_arn }}
+#     argocd.argoproj.io/sync-wave: "6"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   providerConfigRef:
+#     name: {{ .Release.Name }}
+#   forProvider:
+#     region: {{ .Values.global.aws.region }}
+# {{- end }}

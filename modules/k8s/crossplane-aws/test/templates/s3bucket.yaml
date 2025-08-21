@@ -1,24 +1,9 @@
-apiVersion: s3.aws.crossplane.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta1
 kind: Bucket
 metadata:
   name: change-me
 spec:
   forProvider:
-    acl: private
-    locationConstraint: eu-north-1
-    objectOwnership: BucketOwnerPreferred
-    publicAccessBlockConfiguration:
-      blockPublicPolicy: true
-      blockPublicAcls: true
-      ignorePublicAcls: true
-      restrictPublicBuckets: true
-    accelerateConfiguration:
-      status: Enabled
-    versioningConfiguration:
-      status: Suspended
-    serverSideEncryptionConfiguration:
-      rules:
-      - applyServerSideEncryptionByDefault:
-          sseAlgorithm: AES256
+    region: eu-north-1
   providerConfigRef:
     name: crossplane-aws
