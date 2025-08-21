@@ -5,6 +5,8 @@ kind: Role
 metadata:
   name: {{ .Release.Name }}-karpenter-controller-role
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     tags:
       - key: created-by

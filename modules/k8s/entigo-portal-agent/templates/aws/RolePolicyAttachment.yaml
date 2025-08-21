@@ -4,6 +4,8 @@ kind: RolePolicyAttachment
 metadata:
   name: {{ .Release.Name }}
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
     roleNameRef:
@@ -16,6 +18,8 @@ kind: RolePolicyAttachment
 metadata:
   name: {{ .Release.Name }}-ecr-push
 spec:
+  managementPolicies: ["Observe"]
+  deletionPolicy: Orphan
   forProvider:
     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}-ecr-push
     roleNameRef:
