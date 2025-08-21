@@ -6,4 +6,4 @@ global:
 image:
   repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/developer-portal-agent'
 function:
-  repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/function-flow-web-access'
+  repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/developer-portal-function'

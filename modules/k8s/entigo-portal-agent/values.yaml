@@ -20,8 +20,8 @@ image:
   tag: main-62
 
 function:
-  repository: docker.io/entigolabs/function-flow-web-access
-  tag: v0.0.0-20240807123315-1be423dde9fe
+  repository: docker.io/entigolabs/developer-portal-function
+  tag: v0.0.0-20250821130815-ed4c04bf5cf2
 
 tolerations:
   - key: "tools"

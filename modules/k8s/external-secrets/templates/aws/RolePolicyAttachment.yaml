@@ -1,6 +1,6 @@
 {{- if and (eq .Values.global.cloudProvider "aws") .Values.global.createClusterSecretStore }}
 
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: RolePolicyAttachment
 metadata:
   name: {{ .Release.Name }}
@@ -8,11 +8,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
-    roleNameRef:
+    roleRef:
       name: {{ .Release.Name }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}

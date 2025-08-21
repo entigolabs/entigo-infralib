@@ -1,17 +1,17 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
 
-apiVersion: iam.aws.crossplane.io/v1beta1
+apiVersion: iam.aws.upbound.io/v1beta1
 kind: Role
 metadata:
   name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}"
+    argocd.argoproj.io/sync-wave: '-2'
 spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
     tags:
-      - key: created-by
-        value: entigo-infralib
-    assumeRolePolicyDocument: |
+      created-by: entigo-infralib
+    assumeRolePolicy: |
       {
         "Version": "2012-10-17",
         "Statement": [

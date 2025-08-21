@@ -1,12 +1,14 @@
 # {{- if eq .Values.global.cloudProvider "aws" }}
 # 
-# apiVersion: iam.aws.crossplane.io/v1beta1
+# apiVersion: iam.aws.upbound.io/v1beta1
 # kind: Role
 # metadata:
 #   name: {{ .Release.Name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: '-2'
 # spec:
 #   forProvider:
-#     assumeRolePolicyDocument: |
+#     assumeRolePolicy: |
 #       {
 #         "Version": "2012-10-17",
 #         "Statement": [

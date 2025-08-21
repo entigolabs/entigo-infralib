@@ -1,20 +1,20 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
-apiVersion: sqs.aws.crossplane.io/v1beta1
+apiVersion: sqs.aws.upbound.io/v1beta1
 kind: Queue
 metadata:
   name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: {{ .Release.Name }}
 spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
-    tags:
-      created-by: entigo-infralib
     region: {{ .Values.global.aws.region }}
+    tags:
+      created-by: "entigo-infralib"
     delaySeconds: 0
-    messageRetentionPeriod: 7200
-    maximumMessageSize: 8192
-    receiveMessageWaitTimeSeconds: 20
-    visibilityTimeout: 60
+    messageRetentionSeconds: 7200
+    maxMessageSize: 8192
+    receiveWaitTimeSeconds: 20
+    visibilityTimeoutSeconds: 60
     policy: |
       {
         "Version": "2012-10-17",
