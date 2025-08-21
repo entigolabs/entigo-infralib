@@ -18,7 +18,7 @@
 #     region: {{ .Values.global.aws.region }}
 #     cidrBlock: {{ .Values.global.aws.vpc.cidr }}
 # 
-# 
+# {{- if .Values.global.aws.vpc.database_subnets_id }}
 # {{- range $i, $value := $database_subnet_ids }}
 # ---
 # apiVersion: ec2.aws.crossplane.io/v1beta1
@@ -39,7 +39,7 @@
 #     cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
 # 
 # {{- end }}
-# 
+# {{- end }}
 # ---
 # {{- if .Values.global.aws.vpc.database_subnet_group_name }}
 # apiVersion: database.aws.crossplane.io/v1beta1
