@@ -5,6 +5,8 @@
 # kind: Policy
 # metadata:
 #   name: {{ .Release.Name }} 
+#   annotations:
+#     argocd.argoproj.io/sync-wave: '-2'
 # spec:
 #   forProvider:
 #     policy: |

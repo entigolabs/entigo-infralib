@@ -6,6 +6,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-2'
 spec:
   forProvider:
     tags:
@@ -21,6 +22,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     acl: private
@@ -36,6 +38,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     rule:
@@ -52,6 +55,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     blockPublicPolicy: true
@@ -70,6 +74,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     status: Enabled
@@ -85,6 +90,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     versioningConfiguration:
@@ -101,6 +107,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     rule:
@@ -125,6 +132,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
     rule:

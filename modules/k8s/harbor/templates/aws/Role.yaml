@@ -4,6 +4,8 @@
 # kind: Role
 # metadata:
 #   name: {{ .Release.Name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: '-2'
 # spec:
 #   forProvider:
 #     assumeRolePolicy: |
