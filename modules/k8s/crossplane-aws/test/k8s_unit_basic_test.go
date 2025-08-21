@@ -49,9 +49,9 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
 
 
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.crossplane.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
+	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "aws.upbound.io/v1beta1", []string{"providerconfigs"}, 60, 1*time.Second)
 	require.NoError(t, err, "Providerconfigs crd error")
-	resource := schema.GroupVersionResource{Group: "aws.crossplane.io", Version: "v1beta1", Resource: "providerconfigs"}
+	resource := schema.GroupVersionResource{Group: "aws.upbound.io", Version: "v1beta1", Resource: "providerconfigs"}
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider config error")
 
