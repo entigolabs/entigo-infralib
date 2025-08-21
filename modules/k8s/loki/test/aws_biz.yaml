@@ -3,7 +3,7 @@ global:
     bucketLifecycleRules:
       - id: "archive-after-3-years"
         status: Enabled
-        transitions:
+        transition:
           - days: 1095
             storageClass: "GLACIER"
 

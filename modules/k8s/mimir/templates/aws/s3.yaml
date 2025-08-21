@@ -21,10 +21,11 @@ kind: BucketACL
 metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    crossplane.io/external-name: {{ .Values.global.bucketName }},private
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     acl: private
     bucketRef:
       name: {{ .Values.global.bucketName }}
@@ -41,6 +42,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     blockPublicPolicy: true
     blockPublicAcls: true
     ignorePublicAcls: true
@@ -60,6 +62,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     versioningConfiguration:
       - status: Suspended
     bucketRef:
@@ -77,6 +80,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     rule:
       - applyServerSideEncryptionByDefault:
           {{- if .Values.global.aws.kmsKeyId }}
@@ -101,6 +105,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     status: Enabled
     bucketRef:
       name: {{ .Values.global.bucketName }}
@@ -117,6 +122,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     rule:
       - objectOwnership: BucketOwnerPreferred
     bucketRef:
@@ -135,6 +141,7 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     rule:
       {{- toYaml .Values.global.aws.bucketLifecycleRules | nindent 6 }}
     bucketRef:

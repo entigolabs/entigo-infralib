@@ -7,6 +7,7 @@ metadata:
     crossplane.io/external-name: {{ .Release.Name }}
 spec:
   forProvider:
+    region: {{ .Values.global.aws.region }}
     tags:
       created-by: "entigo-infralib"
     delaySeconds: 0

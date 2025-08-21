@@ -9,7 +9,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-2'
 spec:
   forProvider:
-    name: {{ .Release.Name }}
     tags:
       created-by: "entigo-infralib"
     policy: |
