@@ -5,6 +5,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   forProvider:
+    name: {{ .Release.Name }}
     region: {{ .Values.global.aws.region }}
     tags:
       created-by: "entigo-infralib"
