@@ -7,7 +7,7 @@ argocd-apps:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.9.28"
+  tag: "v1.13.1"
 
 argocd:
   crds:
