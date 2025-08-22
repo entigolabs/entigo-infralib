@@ -3,8 +3,6 @@ apiVersion: sqs.aws.upbound.io/v1beta1
 kind: Queue
 metadata:
   name: {{ .Release.Name }}
-  annotations:
-    crossplane.io/external-name: {{ .Release.Name }}
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
