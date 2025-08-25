@@ -15,15 +15,15 @@ spec:
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" "sqs" "ecr" -}}
-{{- range $provider := $providers }}
+{{- $providers := list "iam" "s3" "sqs" "ecr" "rds" "kms" "vpc" "secretsmanager" -}}
+{{- range $index, $provider := $providers }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '4'
+    argocd.argoproj.io/sync-wave: '{{ add 4 (div $index 3) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
@@ -39,14 +39,14 @@ spec:
 
 
 {{- if .Values.global.extraProviders }}
-{{- range $provider := .Values.global.extraProviders }}
+{{- range $index, $provider := .Values.global.extraProviders }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '4'
+    argocd.argoproj.io/sync-wave: '{{ add 7 (div $index 3) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
