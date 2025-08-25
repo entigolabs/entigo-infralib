@@ -1,49 +1,49 @@
 {{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
 {{- $database_subnet_cidr_blocks := splitList "," .Values.global.aws.vpc.database_subnet_cidr }}
 
-{{- if .Values.global.aws.vpc.cidr }}
-apiVersion: ec2.aws.upbound.io/v1beta1
-kind: VPC
-metadata:
-  name: {{ .Values.global.aws.vpc.name }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    crossplane.io/external-name: {{ .Values.global.aws.vpc.id}}
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ .Release.Name }}
-  forProvider:
-    region: {{ .Values.global.aws.region }}
-    cidrBlock: {{ .Values.global.aws.vpc.cidr }}
-    tags:
-      created-by: "entigo-infralib"
-{{- end }}
-{{- if .Values.global.aws.vpc.database_subnets_id }}
-{{- range $i, $value := $database_subnet_ids }}
----
-apiVersion: ec2.aws.upbound.io/v1beta1
-kind: Subnet
-metadata:
-  name: dbsubnet-{{ $i }}
-  annotations:
-    crossplane.io/external-name: {{ $value }}
-    argocd.argoproj.io/sync-wave: "10"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ $.Release.Name }}
-  forProvider:
-    region: {{ $.Values.global.aws.region }}
-    cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
-    tags:
-      created-by: "entigo-infralib"
-{{- end }}
-{{- end }}
+# {{- if .Values.global.aws.vpc.cidr }}
+# apiVersion: ec2.aws.upbound.io/v1beta1
+# kind: VPC
+# metadata:
+#   name: {{ .Values.global.aws.vpc.name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "10"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+#     crossplane.io/external-name: {{ .Values.global.aws.vpc.id}}
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   providerConfigRef:
+#     name: {{ .Release.Name }}
+#   forProvider:
+#     region: {{ .Values.global.aws.region }}
+#     cidrBlock: {{ .Values.global.aws.vpc.cidr }}
+#     tags:
+#       created-by: "entigo-infralib"
+# {{- end }}
+# {{- if .Values.global.aws.vpc.database_subnets_id }}
+# {{- range $i, $value := $database_subnet_ids }}
+# ---
+# apiVersion: ec2.aws.upbound.io/v1beta1
+# kind: Subnet
+# metadata:
+#   name: dbsubnet-{{ $i }}
+#   annotations:
+#     crossplane.io/external-name: {{ $value }}
+#     argocd.argoproj.io/sync-wave: "10"
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   managementPolicies: ["Observe"]
+#   deletionPolicy: Orphan
+#   providerConfigRef:
+#     name: {{ $.Release.Name }}
+#   forProvider:
+#     region: {{ $.Values.global.aws.region }}
+#     cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
+#     tags:
+#       created-by: "entigo-infralib"
+# {{- end }}
+# {{- end }}
 
 {{- if .Values.global.aws.vpc.database_subnet_group_name }}
 ---
@@ -60,9 +60,9 @@ spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
     description: "Subnet group for PostgreSQL instance"
-    subnetIdRefs:
+    subnetIds:
     {{- range $i, $value := $database_subnet_ids }}
-      - name: dbsubnet-{{ $i }}
+      - {{ $value }}
     {{- end }}
     tags:
       created-by: "entigo-infralib"
