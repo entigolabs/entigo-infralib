@@ -1,0 +1,12 @@
+global:
+  cloudProvider: "aws"
+  providerConfigRefName: "crossplane-aws"
+
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
+
+trivy-operator:
+  serviceAccount:
+    create: false
