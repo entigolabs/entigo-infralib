@@ -45,6 +45,7 @@
 # {{- end }}
 # {{- end }}
 
+{{- if .Values.global.aws.vpc.database_subnets_id }}
 {{- if .Values.global.aws.vpc.database_subnet_group_name }}
 ---
 apiVersion: rds.aws.upbound.io/v1beta1
@@ -52,7 +53,7 @@ kind: SubnetGroup
 metadata:
   name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "12"
+    argocd.argoproj.io/sync-wave: "10"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   managementPolicies: ["Observe"]
@@ -70,6 +71,8 @@ spec:
     name: {{ .Release.Name }}
 
 {{- end }}
+{{- end }}
+
 {{- if .Values.global.aws.kms.data_key_arn }}
 ---
 apiVersion: kms.aws.upbound.io/v1beta1
