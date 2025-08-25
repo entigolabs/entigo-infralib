@@ -1,5 +1,4 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
-
 apiVersion: iam.aws.upbound.io/v1beta1
 kind: Policy
 metadata:
@@ -35,7 +34,4 @@ spec:
       }
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
-
 {{- end }}
-
-

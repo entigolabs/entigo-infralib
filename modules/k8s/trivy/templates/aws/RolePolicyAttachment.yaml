@@ -12,5 +12,4 @@ spec:
       name: {{ .Release.Name }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
-
 {{- end }}

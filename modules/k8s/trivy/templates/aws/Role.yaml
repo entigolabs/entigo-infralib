@@ -31,5 +31,4 @@ spec:
       }
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
-
 {{- end }}
