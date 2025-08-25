@@ -6,5 +6,5 @@ global:
     projectID: ""
 
 trivy-operator:
-  trivyOperator:
-    scanJobAutomountServiceAccountToken: true
+  serviceAccount:
+    create: true
