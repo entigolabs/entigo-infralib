@@ -29,6 +29,9 @@ loki:
           cache_location: /var/loki/tsdb-cache
           cache_ttl: 24h
 
+  memcached:
+    enabled: false
+
   resultsCache:
     enabled: false
     affinity:

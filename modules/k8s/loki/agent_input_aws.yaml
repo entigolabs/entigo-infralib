@@ -32,3 +32,6 @@ loki:
   sidecar:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/kiwigrid/k8s-sidecar'
+  memcached:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/memcached'
