@@ -1,16 +1,13 @@
 {{- if .Values.installCompositeResources }}
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: compositecronjobs.flow.entigo.io
+  name: entigocronjobs.workloads.entigo.com
 spec:
-  group: flow.entigo.io
+  group: workloads.entigo.com
   names:
-    kind: CompositeCronJob
-    plural: compositecronjobs
-  claimNames:
-    kind: CronJob
-    plural: cronjobs
+    kind: EntigoCronJob
+    plural: entigocronjobs
   versions:
     - name: v1alpha1
       served: true
@@ -200,9 +197,9 @@ spec:
                           limits:
                             properties:
                               cpu:
-                                type: string
+                                type: number
                               ram:
-                                type: string
+                                type: number
                             title: ResourceLimits
                             type: object
                         title: ContainerResources

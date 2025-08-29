@@ -1,0 +1,172 @@
+{{- if .Values.installCompositeResources }}
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: postgresqls.databases.entigo.com
+spec:
+  group: databases.entigo.com
+  scope: Cluster
+  names:
+    kind: PostgreSQL
+    plural: postgresqls
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+              required:
+                - name
+                - namespace
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+                labels:
+                  type: object
+                  propertyNames:
+                    pattern: ^[A-Za-z][A-Za-z0-9_./-]*$
+            spec:
+              properties:
+                allocatedStorage:
+                  default: 20
+                  type: number
+                allowMajorVersionUpgrade:
+                  default: false
+                  type: boolean
+                autoMinorVersionUpgrade:
+                  default: true
+                  type: boolean
+                backupWindow:
+                  type: string
+                deletionProtection:
+                  default: true
+                  type: boolean
+                engineVersion:
+                  type: string
+                instanceClass:
+                  type: string
+                iops:
+                  type: string
+                maintenanceWindow:
+                  type: string
+                multiAZ:
+                  default: false
+                  type: boolean
+                parameterGroupName:
+                  type: string
+                performanceInsightsEnabled:
+                  default: false
+                  type: boolean
+                storageType:
+                  default: gp3
+                  type: string
+                vpcSecurityGroupIdRef:
+                  items:
+                    type: string
+                  type: array
+              required:
+                - allocatedStorage
+                - deletionProtection
+                - engineVersion
+                - instanceClass
+                - multiAZ
+                - storageType
+              type: object
+            status:
+              properties:
+                conditions:
+                  items:
+                    properties:
+                      lastTransitionTime:
+                        format: date-time
+                        type: string
+                      message:
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                allowMajorVersionUpgrade:
+                  type: boolean
+                autoMinorVersionUpgrade:
+                  type: boolean
+                backupWindow:
+                  type: string
+                endpoint:
+                  properties:
+                    address:
+                      type: string
+                    hostedZoneId:
+                      type: string
+                    port:
+                      type: number
+                  required:
+                    - address
+                    - hostedZoneId
+                    - port
+                  type: object
+                iops:
+                  type: number
+                kmsKeyId:
+                  type: string
+                latestRestorableTime:
+                  format: date-time
+                  type: string
+                maintenanceWindow:
+                  type: string
+                parameterGroupName:
+                  type: string
+                performanceInsightsEnabled:
+                  type: boolean
+                resourceId:
+                  type: string
+                status:
+                  type: string
+                storageEncrypted:
+                  type: boolean
+                storageThroughput:
+                  type: number
+                vpcSecurityGroupIds:
+                  items:
+                    type: string
+                  type: array
+              type: object
+          required:
+            - spec
+          type: object
+{{- end }}
