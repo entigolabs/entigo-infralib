@@ -2,14 +2,14 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: entigocronjobs.workloads.entigo.com
+  name: postgresqls.databases.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: workloads.entigo.com/v1alpha1
-    kind: EntigoCronJob
+    apiVersion: databases.entigo.com/v1alpha1
+    kind: PostgreSQL
   mode: Pipeline
   pipeline:
-    - step: cron-job
+    - step: postgresql
       functionRef:
         name: developer-portal-function
 {{- end }}

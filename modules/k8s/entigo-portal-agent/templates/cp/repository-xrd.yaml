@@ -1,16 +1,14 @@
 {{- if .Values.installCompositeResources }}
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: compositerepositories.flow.entigo.io
+  name: entigorepositories.artifacts.entigo.com
 spec:
-  group: flow.entigo.io
+  scope: Cluster
+  group: artifacts.entigo.com
   names:
-    kind: CompositeRepository
-    plural: compositerepositories
-  claimNames:
-    kind: FlowRepository
-    plural: flowrepositories
+    kind: EntigoRepository
+    plural: entigorepositories
   versions:
     - name: v1alpha1
       served: true
