@@ -6,9 +6,9 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
-    crossplane.io/deletion-policy: Orphan
     argocd.argoproj.io/sync-wave: '-2'
 spec:
+  deletionPolicy: Orphan
   forProvider:
     tags:
       created-by: "entigo-infralib"

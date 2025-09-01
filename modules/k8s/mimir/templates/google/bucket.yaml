@@ -6,8 +6,8 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
-    crossplane.io/deletion-policy: Orphan
 spec:
+  deletionPolicy: Orphan
   forProvider:
     location: {{ .Values.global.google.bucket.location }}
     uniformBucketLevelAccess: true
