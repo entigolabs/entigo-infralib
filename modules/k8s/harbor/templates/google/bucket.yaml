@@ -7,6 +7,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.gcs.bucket }}
 spec:
+  deletionPolicy: Orphan
   forProvider:
     location: {{ .Values.global.google.bucket.location }}
     uniformBucketLevelAccess: true

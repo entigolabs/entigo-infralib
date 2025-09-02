@@ -8,6 +8,7 @@
 #     crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
 # spec:
 #   forProvider:
+#     deletionPolicy: Orphan
 #     acl: private
 #     locationConstraint: {{ .Values.harbor.persistence.imageChartStorage.s3.region }}
 #     objectOwnership: BucketOwnerPreferred

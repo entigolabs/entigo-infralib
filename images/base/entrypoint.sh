@@ -472,20 +472,149 @@ then
 
 elif [ "$COMMAND" == "argocd-plan-destroy" ]
 then
-  false
-  if [ $? -ne 0 ]
-  then
-    echo "Plan ArgoCD destroy failed!"
-    exit 22
+  HELM_BOOTSTAP="false"
+  #When we first run then argocd is not yet installed and we can not use Application objects without installing it.
+  
+  rm -f *.sync *.log
+  PIDS=""
+  for app_file in ./*.yaml
+  do
+      argocd-apps-plan-destroy.sh $app_file > $app_file.log 2>&1 &
+      PIDS="$PIDS $!=$app_file"
+  done
+
+  FAIL=""
+  COMPLETED=""
+  LAST_RUNNING=""
+  while true; do
+      sleep 2
+      running_jobs
+      total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+      total_jobs=$(echo "$PIDS" | wc -w)
+      
+      if [ $total_done -eq $total_jobs ]; then
+          break
+      fi
+  done
+  DESTROY=0
+  for p in $COMPLETED; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+      let DESTROY++
+  done
+  
+  for p in $FAIL; do
+      name=$(echo $p | cut -d"=" -f2)
+      cat $name.log
+  done
+  
+  echo "ArgoCD Applications: 0 to add, 0 to change, ${DESTROY} to destroy."
+
+  rm -f *.log
+  
+  if [ ! -z "$FAIL" ]; then
+      echo "Failed jobs were:"
+      for p in $FAIL; do
+          echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+      done
+      echo "Plan ArgoCD destroy failed!"
+      exit 21
   fi
+
 elif [ "$COMMAND" == "argocd-apply-destroy" ]
 then
-  false
-  if [ $? -ne 0 ]
-  then
-    echo "Apply ArgoCD destroy failed!"
-    exit 23
-  fi
+ 
+  echo "Detecting external-dns modules."
+  for app_file in ./*.yaml
+  do
+      if yq -r '.spec.sources[0].path' $app_file | grep -q "modules/k8s/external-dns"
+      then
+        app=`yq -r '.metadata.name' $app_file`
+        echo "Found $app, patching policy to sync."
+        POLICY_INDEX=`kubectl get deployment $app -n $app -o jsonpath='{.spec.template.spec.containers[0].args}' | jq -r 'to_entries[] | select(.value | test("--policy")) | .key'`
+        if [ "$POLICY_INDEX" = "null" ] || [ -z "$POLICY_INDEX" ]
+        then
+          kubectl patch deployment $app -n $app --type='json' -p='[
+            {
+              "op": "add",
+              "path": "/spec/template/spec/containers/0/args/-",
+              "value": "--policy=sync"
+            }
+          ]'
+        else
+            kubectl patch deployment $app -n $app --type='json' -p='[
+              {
+                "op": "replace",
+                "path": "/spec/template/spec/containers/0/args/'$POLICY_INDEX'",
+                "value": "--policy=sync"
+              }
+            ]'
+        fi
+      fi
+  done
+ 
+ 
+  # Show priority summary
+  echo "Application sync order:"
+  declare -a file_priority_pairs
+  declare -a unique_priorities
+  for app_file in ./*.yaml; do
+        priority=$(get_priority_from_yaml "$app_file")
+        file_priority_pairs+=("$priority:$(basename $app_file)")
+        if [[ ! " ${unique_priorities[@]} " =~ " ${priority} " ]]; then
+            unique_priorities+=("$priority")
+        fi
+  done
+
+  # Sort by priority and display
+  printf '%s\n' "${file_priority_pairs[@]}" | sort -nr | while IFS=':' read -r priority filename; do
+      echo "  $filename: priority $priority"
+  done
+  echo ""
+  for priority in $(printf '%s\n' "${unique_priorities[@]}" | sort -nr); do
+    echo "Deleting apps with priority $priority"
+    PIDS=""
+    for app_file in ./*.yaml
+    do
+        app_priority=$(get_priority_from_yaml "$app_file")
+        if [ $priority -eq $app_priority ]
+        then
+          argocd-apps-apply-destroy.sh $app_file > $app_file.log 2>&1 &
+          PIDS="$PIDS $!=$app_file"
+        fi
+    done
+
+    FAIL=""
+    COMPLETED=""
+    LAST_RUNNING=""
+    while true; do
+        sleep 2
+        running_jobs
+        total_done=$(echo "$COMPLETED $FAIL" | wc -w)
+        total_jobs=$(echo "$PIDS" | wc -w)
+        
+        if [ $total_done -eq $total_jobs ]; then
+            break
+        fi
+    done
+
+    if [ ! -z "$FAIL" ]; then
+        for p in $FAIL; do
+            name=$(echo $p | cut -d"=" -f2)
+            echo "#######################################"
+            echo "ERROR LOG FOR $name"
+            cat $name.log
+        done
+    
+        echo "Failed jobs were:"
+        for p in $FAIL; do
+            echo "  - $(basename $(echo $p | cut -d"=" -f2))"
+        done
+        echo "Destroy ArgoCD failed!"
+        exit 21
+    fi
+  done
+  rm -f *.log
 else
   echo "Unknown command: $COMMAND"
   exit 1
