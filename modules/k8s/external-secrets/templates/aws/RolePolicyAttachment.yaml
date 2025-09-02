@@ -5,8 +5,7 @@ kind: RolePolicyAttachment
 metadata:
   name: {{ .Release.Name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   forProvider:
     policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
