@@ -37,6 +37,7 @@ external-secrets:
       value: "true"
       effect: "NoSchedule"
   webhook:
+    create: false
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy
     resources:
@@ -65,6 +66,7 @@ external-secrets:
         effect: "NoSchedule"
 
   certController:
+    create: false
     deploymentAnnotations:
       kube-score/ignore: pod-networkpolicy
     resources:

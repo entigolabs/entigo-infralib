@@ -239,7 +239,7 @@ argocd:
       minReplicas: 1
       maxReplicas: 3
       targetMemoryUtilizationPercentage: 80
-      targetCPUUtilizationPercentage: 90
+      targetCPUUtilizationPercentage: 95
 
     affinity:
       nodeAffinity:
@@ -262,7 +262,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 50m
+        cpu: 70m
         memory: 96Mi
         ephemeral-storage: 100Mi
 
