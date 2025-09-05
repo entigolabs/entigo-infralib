@@ -1,14 +1,12 @@
 {{- if .Values.installCompositeResources }}
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: compositewebapps.flow.entigo.io
+  name: webapps.workloads.entigo.com
 spec:
-  group: flow.entigo.io
+  scope: Namespaced
+  group: workloads.entigo.com
   names:
-    kind: CompositeWebapp
-    plural: compositewebapps
-  claimNames:
     kind: WebApp
     plural: webapps
   versions:
@@ -45,9 +43,9 @@ spec:
             spec:
               type: object
               properties:
-                kind:
-                  type: string
                 architecture:
+                  type: string
+                kind:
                   type: string
                 replicas:
                   type: integer

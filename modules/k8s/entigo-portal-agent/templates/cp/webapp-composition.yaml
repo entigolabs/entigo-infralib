@@ -2,17 +2,14 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: compositewebapps.flow.entigo.io
+  name: webapps.workloads.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: flow.entigo.io/v1alpha1
-    kind: CompositeWebapp
+    apiVersion: workloads.entigo.com/v1alpha1
+    kind: WebApp
   mode: Pipeline
   pipeline:
     - step: web-app
       functionRef:
         name: developer-portal-function
-      input:
-        apiVersion: template.fn.crossplane.io/v1beta1
-        kind: Input
 {{- end }}
