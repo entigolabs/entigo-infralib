@@ -8,10 +8,6 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: {{ .Values.global.registry }}/entigolabs/provider-family-aws:v1.23.1    
-{{- if and (eq .Values.global.cloudProvider "aws") (ne .Values.global.registry "docker.io") }}
-  packagePullSecrets: 
-  - name: crossplane-ecr
-{{- end }}
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
@@ -29,10 +25,6 @@ metadata:
 spec:
   skipDependencyResolution: true
   package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
-{{- if and (eq $.Values.global.cloudProvider "aws") (ne $.Values.global.registry "docker.io") }}
-  packagePullSecrets: 
-  - name: crossplane-ecr
-{{- end }}
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
@@ -52,10 +44,6 @@ metadata:
 spec:
   skipDependencyResolution: true
   package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
-{{- if and (eq $.Values.global.cloudProvider "aws") (ne $.Values.global.registry "docker.io") }}
-  packagePullSecrets: 
-  - name: crossplane-ecr
-{{- end }}
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

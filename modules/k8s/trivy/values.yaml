@@ -1,4 +1,5 @@
 global:
+  prefix: ""
   cloudProvider: ""
   providerConfigRefName: ""
   google:
@@ -6,8 +7,9 @@ global:
 
 trivy-operator:
   serviceAccount:
-    create: true
     name: "trivy"
+  trivyOperator:
+    scanJobAutomountServiceAccountToken: true
   service:
     headless: true
     annotations:

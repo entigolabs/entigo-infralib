@@ -11,6 +11,8 @@ grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
+    users:
+      home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
   serviceAccount:
     name: "{{ .module.name }}"
   image:

@@ -1,0 +1,15 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  forProvider:
+    policyArn: {{ .Values.global.aws.ecrPolicy }}
+    roleRef:
+      name: {{ .Release.Name }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

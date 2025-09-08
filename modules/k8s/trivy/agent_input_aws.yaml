@@ -1,3 +1,10 @@
+global:
+  prefix: "{{ .config.prefix}}"
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+    ecrPolicy: "{{ .toptout.ecr-proxy.policy }}"
 trivy-operator:
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'

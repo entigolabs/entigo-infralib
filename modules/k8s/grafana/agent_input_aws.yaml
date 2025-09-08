@@ -13,6 +13,8 @@ grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.route53.int_domain }}
+    users:
+      home_page: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}/dashboards"
   ingress:
     hosts:
       - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"

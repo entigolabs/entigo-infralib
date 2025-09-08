@@ -252,12 +252,9 @@ resource "aws_iam_policy" "ecr-proxy" {
     Statement = [
       {
         Action = [
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
                 "ecr:DescribeRepositories",
                 "ecr:ListImages",
                 "ecr:DescribeImages",
-                "ecr:BatchGetImage",
                 "ecr:ListTagsForResource",
                 "ecr:DescribeImageScanFindings",
                 "ecr:ReplicateImage",
@@ -271,6 +268,9 @@ resource "aws_iam_policy" "ecr-proxy" {
       {
         Action = [
                 "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage"
         ]
         Effect   = "Allow"
         Resource = "*"
