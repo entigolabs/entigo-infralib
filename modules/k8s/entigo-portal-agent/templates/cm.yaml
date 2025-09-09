@@ -25,21 +25,21 @@ metadata:
 data:
   resources.yaml: |-
     resources:
-      - group: workloads.entigo.com
+      - group: workload.entigo.com
         version: v1alpha1
         resources:
           - webapps
-          - entigocronjobs
-      - group: network.entigo.com
+          - cronjobs
+      - group: networking.entigo.com
         version: v1alpha1
         resources:
           - webaccesses
     globalResources:
-      - group: artifacts.entigo.com
+      - group: artifact.entigo.com
         version: v1alpha1
         resources:
-          - entigorepositories
-      - group: databases.entigo.com
+          - repositories
+      - group: database.entigo.com
         version: v1alpha1
         resources:
           - postgresqls
@@ -74,8 +74,3 @@ data:
         version: v1alpha1
         resources:
           - applications
-    mutateResources:
-      - group: flow.entigo.io
-        version: v1alpha1
-        resources:
-          - ociloginrequests
