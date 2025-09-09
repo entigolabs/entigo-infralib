@@ -2,10 +2,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: compositerepositories.flow.entigo.io
+  name: compositerepositories.artifact.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: flow.entigo.io/v1alpha1
+    apiVersion: artifact.entigo.com/v1alpha1
     kind: CompositeRepository
   mode: Pipeline
   pipeline:

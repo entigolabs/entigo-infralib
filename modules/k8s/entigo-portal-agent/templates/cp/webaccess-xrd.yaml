@@ -2,9 +2,9 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: compositewebaccesses.flow.entigo.io
+  name: compositewebaccesses.networking.entigo.com
 spec:
-  group: flow.entigo.io
+  group: networking.entigo.com
   names:
     kind: CompositeWebAccess
     plural: compositewebaccesses
