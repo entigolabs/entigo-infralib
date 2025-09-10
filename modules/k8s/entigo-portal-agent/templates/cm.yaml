@@ -74,3 +74,8 @@ data:
         version: v1alpha1
         resources:
           - applications
+    mutateResources:
+      - group: flow.entigo.io
+        version: v1alpha1
+        resources:
+          - ociloginrequests
