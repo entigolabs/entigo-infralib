@@ -1,4 +1,3 @@
- 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -12,7 +11,7 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   resourceNames: ["aws-load-balancer-tls"]
-  verbs: ["list", "get", "delete", "watch"]
+  verbs: ["get"]
 - apiGroups: ["apps"]
   resources: ["deployments"]
   resourceNames: ["{{ .Release.Name }}-aws-load-balancer-controller"]
@@ -20,7 +19,7 @@ rules:
 - apiGroups: ["admissionregistration.k8s.io"]
   resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
   resourceNames: ["aws-load-balancer-webhook"]
-  verbs: ["list", "get", "delete", "watch"]
+  verbs: ["get", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -64,7 +63,6 @@ spec:
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
-
       containers:
       - name: kubectl
         image: {{ .Values.job.image }}:{{ .Values.job.tag }}
@@ -80,6 +78,19 @@ spec:
         command:
         - /bin/bash
         - -c
-        - kubectl delete secret -n {{ .Release.Namespace }} aws-load-balancer-tls && kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && kubectl delete mutatingwebhookconfigurations.admissionregistration.k8s.io aws-load-balancer-webhook && sleep 5 && kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
+        - |
+          # Get CA from secret
+          CA_BUNDLE=$(kubectl get secret aws-load-balancer-tls -n {{ .Release.Namespace }} -o jsonpath='{.data.ca\.crt}')
+          
+          # Patch validating webhook
+          kubectl patch validatingwebhookconfiguration aws-load-balancer-webhook --type='json' \
+            -p='[{"op": "replace", "path": "/webhooks/0/clientConfig/caBundle", "value":"'${CA_BUNDLE}'"}]'
+          
+          # Patch mutating webhook  
+          kubectl patch mutatingwebhookconfiguration aws-load-balancer-webhook --type='json' \
+            -p='[{"op": "replace", "path": "/webhooks/0/clientConfig/caBundle", "value":"'${CA_BUNDLE}'"}]'
+          
+          # Restart deployment
+          kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
       restartPolicy: Never
   backoffLimit: 5
