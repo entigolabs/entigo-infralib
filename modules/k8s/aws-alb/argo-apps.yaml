@@ -22,3 +22,6 @@ spec:
     kind: Job
     jsonPointers:
     - /spec/template/spec
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
