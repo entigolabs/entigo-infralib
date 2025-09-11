@@ -25,17 +25,24 @@ metadata:
 data:
   resources.yaml: |-
     resources:
-      - group: flow.entigo.io
+      - group: workloads.entigo.com
         version: v1alpha1
         resources:
           - webapps
-          - webaccesses
-          - cronjobs
-    globalResources:
-      - group: flow.entigo.io
+          - entigocronjobs
+      - group: network.entigo.com
         version: v1alpha1
         resources:
-          - compositerepositories
+          - webaccesses
+    globalResources:
+      - group: artifacts.entigo.com
+        version: v1alpha1
+        resources:
+          - entigorepositories
+      - group: databases.entigo.com
+        version: v1alpha1
+        resources:
+          - postgresqls
       - group: karpenter.sh
         version: v1
         resources:

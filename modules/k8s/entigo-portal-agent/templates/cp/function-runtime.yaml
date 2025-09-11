@@ -22,8 +22,6 @@ spec:
               env:
                 - name: ISTIO_GATEWAY
                   value: "istio-gateway/istio-gateway"
-                - name: KUBERNETES_PROVIDER
-                  value: "crossplane-k8s"
                 - name: AWS_PROVIDER
                   value: "{{ .Values.global.providerConfigRefName }}"
                 - name: IMAGE_PULL_SECRETS
