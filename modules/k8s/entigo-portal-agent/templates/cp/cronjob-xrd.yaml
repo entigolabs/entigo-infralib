@@ -2,7 +2,7 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: cronjob.workload.entigo.com
+  name: cronjobs.workload.entigo.com
 spec:
   group: workload.entigo.com
   names:
