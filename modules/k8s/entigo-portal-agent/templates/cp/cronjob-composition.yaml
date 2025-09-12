@@ -2,11 +2,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: entigocronjobs.workloads.entigo.com
+  name: cronjobs.workload.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: workloads.entigo.com/v1alpha1
-    kind: EntigoCronJob
+    apiVersion: workload.entigo.com/v1alpha1
+    kind: CronJob
   mode: Pipeline
   pipeline:
     - step: cron-job

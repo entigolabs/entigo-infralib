@@ -2,10 +2,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: postgresqls.databases.entigo.com
+  name: postgresqls.database.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: databases.entigo.com/v1alpha1
+    apiVersion: database.entigo.com/v1alpha1
     kind: PostgreSQL
   mode: Pipeline
   pipeline:

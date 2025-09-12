@@ -2,11 +2,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: entigorepositories.artifacts.entigo.com
+  name: repositories.artifact.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: artifacts.entigo.com/v1alpha1
-    kind: EntigoRepository
+    apiVersion: artifact.entigo.com/v1alpha1
+    kind: Repository
   mode: Pipeline
   pipeline:
     - step: repository

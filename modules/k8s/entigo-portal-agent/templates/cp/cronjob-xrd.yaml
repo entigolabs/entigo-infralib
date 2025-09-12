@@ -2,12 +2,12 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: entigocronjobs.workloads.entigo.com
+  name: cronjobs.workload.entigo.com
 spec:
-  group: workloads.entigo.com
+  group: workload.entigo.com
   names:
-    kind: EntigoCronJob
-    plural: entigocronjobs
+    kind: CronJob
+    plural: cronjobs
   versions:
     - name: v1alpha1
       served: true
