@@ -1,0 +1,12 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-3'
+spec:
+  activate:
+  - 'rolepolicyattachments.iam.aws.upbound.io'
+  - 'roles.iam.aws.upbound.io'
+{{- end }}

@@ -53,6 +53,7 @@ crossplane:
   provider:
     # -- The list of Provider packages to install together with Crossplane.
     packages: []
+    defaultActivations: {}
 
   configuration:
     # -- The list of Configuration packages to install together with Crossplane.
