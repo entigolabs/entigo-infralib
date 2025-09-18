@@ -13,6 +13,7 @@ argocd:
     rbac:
       policy.csv: |
         g, web-admin-258953744228679165, role:admin
+        g, web-admin-337507228502216899, role:admin
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
@@ -21,7 +22,7 @@ argocd:
       oidc.config: |
         name: Zitadel
         issuer: https://entigo-dev-if3upz.zitadel.cloud
-        clientID: "322752939766761840"
+        clientID: "338377330693002894"
         clientSecret: "{{ .output-custom.argocd-pri_clientSecret }}"
         requestedScopes:
           - openid
