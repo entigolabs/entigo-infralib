@@ -7,43 +7,49 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: {{ .Values.global.registry }}/entigolabs/provider-family-aws:v1.23.1    
+  package: {{ .Values.global.registry }}/entigolabs/provider-family-aws:v1.23.1
+  #capabilities:
+  #- safe-start
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" "sqs" "ecr" -}}
-{{- range $provider := $providers }}
+{{- $providers := list "iam" "s3" "sqs" "ecr" "rds" "kms" "secretsmanager" "ec2" -}}
+{{- range $index, $provider := $providers }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '4'
+    argocd.argoproj.io/sync-wave: '{{ add 4 (div $index 4) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
   package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
+  #capabilities:
+  #- safe-start
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
 
 
 {{- if .Values.global.extraProviders }}
-{{- range $provider := .Values.global.extraProviders }}
+{{- range $index, $provider := .Values.global.extraProviders }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '4'
+    argocd.argoproj.io/sync-wave: '{{ add 7 (div $index 4) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
   package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v1.23.1
+  #capabilities:
+  #- safe-start
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

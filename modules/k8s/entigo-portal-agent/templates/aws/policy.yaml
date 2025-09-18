@@ -31,7 +31,8 @@ spec:
                     "ecr:DescribeRepositories",
                     "ecr:BatchCheckLayerAvailability",
                     "ecr:GetRepositoryPolicy",
-                    "ecr:GetLifecyclePolicy"
+                    "ecr:GetLifecyclePolicy",
+                    "ecr:BatchDeleteImage"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"
