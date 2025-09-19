@@ -10,6 +10,9 @@ kind: ClusterRole
 metadata:
   name: {{ .Release.Name }}-cleanup
 rules:
+- apiGroups: ["pkg.crossplane.io"]
+  resources: ["providerrevisions"]
+  verbs: ["*"]
 - apiGroups: ["apiextensions.crossplane.io"]
   resources: ["managedresourceactivationpolicies", "managedresourcedefinitions"]
   verbs: ["*"]
