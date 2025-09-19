@@ -1,0 +1,13 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-3'
+spec:
+  activate:
+  - 'projectiammembers.cloudplatform.gcp.upbound.io'
+  - 'serviceaccountiammembers.cloudplatform.gcp.upbound.io'
+  - 'serviceaccounts.cloudplatform.gcp.upbound.io'
+{{- end }}

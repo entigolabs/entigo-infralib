@@ -1,0 +1,12 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-3'
+spec:
+  activate: 
+  - 'buckets.storage.gcp.upbound.io'
+  - 'bucketiammembers.storage.gcp.upbound.io'
+{{- end }}
