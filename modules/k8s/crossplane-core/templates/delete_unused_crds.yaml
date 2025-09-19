@@ -1,4 +1,4 @@
-{{- if or .Values.job.deleteUnusedCrds .Values.deleteInactiveProviderRevisions }}
+{{- if or .Values.job.deleteUnusedCrds .Values.job.deleteInactiveProviderRevisions }}
 
 apiVersion: v1
 kind: ServiceAccount
