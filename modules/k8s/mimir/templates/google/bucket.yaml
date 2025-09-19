@@ -6,6 +6,7 @@ metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   deletionPolicy: Orphan
   forProvider:

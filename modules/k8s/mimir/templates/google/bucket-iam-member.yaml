@@ -4,6 +4,8 @@ apiVersion: storage.gcp.upbound.io/v1beta1
 kind: BucketIAMMember
 metadata:
   name: {{ .Release.Name }}-storage-object-admin
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     bucketRef:

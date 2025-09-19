@@ -6,6 +6,7 @@
 #   name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
 #   annotations:
 #     crossplane.io/external-name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 # spec:
 #   forProvider:
 #     deletionPolicy: Orphan

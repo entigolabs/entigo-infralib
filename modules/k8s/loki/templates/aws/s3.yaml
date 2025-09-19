@@ -7,6 +7,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   deletionPolicy: Orphan
   forProvider:
@@ -24,6 +25,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }},private
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     acl: private
@@ -41,6 +43,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
@@ -59,6 +62,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
@@ -79,6 +83,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
@@ -96,6 +101,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
@@ -114,6 +120,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
@@ -140,6 +147,7 @@ metadata:
   annotations:
     crossplane.io/external-name: {{ .Values.global.bucketName }}
     argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     region: {{ .Values.global.aws.region }}

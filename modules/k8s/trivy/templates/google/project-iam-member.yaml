@@ -4,6 +4,8 @@ apiVersion: cloudplatform.gcp.upbound.io/v1beta1
 kind: ProjectIAMMember
 metadata:
   name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Name }}/{{ (index .Values "trivy-operator" "serviceAccount" "name") }}]
