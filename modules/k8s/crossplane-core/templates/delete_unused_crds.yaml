@@ -180,7 +180,7 @@ spec:
           echo ""
           echo "Cleanup complete!"
           echo "Checking for inactive ProviderRevisions..."
-
+{{- end }}
 
       restartPolicy: Never
   backoffLimit: 5
