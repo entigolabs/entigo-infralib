@@ -5,6 +5,7 @@ metadata:
   annotations:
     crossplane.io/external-name: "{{ .Release.Name }}"
     argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     tags:
