@@ -230,3 +230,5 @@ crossplane:
 job:
   image: docker.io/entigolabs/entigo-infralib-base
   tag: "v1.13.1"
+  deleteUnusedCrds: false
+  deleteInactiveProviderRevisions: false
