@@ -280,6 +280,7 @@ argocd:
           -f values-$app.yaml \
           -f git-$app/$path/extra_repos.yaml \
           --set-string 'argocd.configs.cm.admin\.enabled=true' \
+          --set argocd.server.ingress.enabled=false \
           --set argocd.server.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-server \
           --set argocd.dex.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-dex-server \
           --set argocd.redis.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-redis \
@@ -287,7 +288,6 @@ argocd:
           --set argocd.applicationSet.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-applicationset-controller \
           --set argocd.notifications.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-notifications-controller \
           --set argocd.controller.statefulsetAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/StatefulSet:$app/$app-application-controller \
-          --set argocd.server.ingress.annotations."argocd\.argoproj\.io/tracking-id"=$app:networking.k8s.io/Ingress:$app/$app-server \
           --set argocd-apps.enabled=false $app git-$app/$path
         rm -rf values-$app.yaml git-$app
         HELM_BOOTSTAP="true"
@@ -303,8 +303,8 @@ argocd:
 
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
-    echo "Unable to get ArgoCD hostname. Check ArgoCD installation."
-    exit 25
+    export USE_ARGOCD_CLI="false"
+    echo "Unable to get ArgoCD hostname. Falling back to kubectl."
   fi
   
   rm -f *.sync *.log
@@ -367,8 +367,8 @@ then
 
   if [ "$ARGOCD_HOSTNAME" == "" ]
   then
-    echo "Unable to get ArgoCD hostname."
-    exit 25
+    export USE_ARGOCD_CLI="false"
+    echo "Unable to get ArgoCD hostname. Falling back to kubectl."
   fi
   
   # Show priority summary
