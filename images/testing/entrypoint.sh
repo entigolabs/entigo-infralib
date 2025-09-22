@@ -288,7 +288,6 @@ argocd:
           --set argocd.applicationSet.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-applicationset-controller \
           --set argocd.notifications.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-notifications-controller \
           --set argocd.controller.statefulsetAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/StatefulSet:$app/$app-application-controller \
-          --set argocd.server.ingress.annotations."argocd\.argoproj\.io/tracking-id"=$app:networking.k8s.io/Ingress:$app/$app-server \
           --set argocd-apps.enabled=false $app git-$app/$path
         rm -rf values-$app.yaml git-$app
         HELM_BOOTSTAP="true"
