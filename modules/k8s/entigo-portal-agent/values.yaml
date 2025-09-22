@@ -17,7 +17,7 @@ config: {}
 
 image:
   repository: docker.io/entigolabs/developer-portal-agent
-  tag: main-74
+  tag: main-76
 
 function:
   repository: docker.io/entigolabs/developer-portal-function

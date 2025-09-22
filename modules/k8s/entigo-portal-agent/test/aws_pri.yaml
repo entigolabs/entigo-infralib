@@ -1,5 +1,5 @@
 config:
-  SOURCE_HOST: "https://portal.dev.entigo.dev/clusters/root:infralib:pri"
+  SOURCE_HOST: "https://portal.dev.entigo.dev/clusters/root:martin:pri"
   BACKEND_URI: "https://portal.dev.entigo.dev/api"
   GRPC_URI: "https://portal.dev.entigo.dev/grpc"
   CLIENT_ID: "agent-martin-pri"
