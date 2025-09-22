@@ -23,6 +23,8 @@ spec:
       annotations:
         kube-score/ignore: pod-probes,pod-networkpolicy
     spec:
+      affinity: {{ .Values.affinity }}
+      tolerations: {{ .Values.tolerations }}
       containers:
       - name: saml-proxy
         image: {{ .Values.image.registry }}:{{ .Values.image.tag }}
