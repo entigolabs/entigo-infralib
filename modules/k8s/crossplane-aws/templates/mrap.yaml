@@ -1,0 +1,21 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  activate:
+  - 'policies.iam.aws.upbound.io'
+  - 'rolepolicyattachments.iam.aws.upbound.io'
+  - 'roles.iam.aws.upbound.io'
+{{- if .Values.global.aws.vpc.cidr }}
+  - 'vpcs.ec2.aws.upbound.io'
+  - 'subnets.ec2.aws.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.vpc.database_subnets_id }}
+{{- if .Values.global.aws.vpc.database_subnet_group_name }}
+  - 'subnetgroups.rds.aws.upbound.io'
+{{- end }}
+{{- end }}
+{{- if .Values.global.aws.kms.data_key_arn }}
+  - 'keys.kms.aws.upbound.io'
+{{- end }}
