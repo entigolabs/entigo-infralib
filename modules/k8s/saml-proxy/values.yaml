@@ -27,9 +27,19 @@ affinity:
               operator: In
               values:
                 - "true"
-
+      - weight: 10
+        preference:
+          matchExpressions:
+            - key: mon
+              operator: In
+              values:
+                - "true"
 tolerations:
   - key: "tools"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  - key: "mon"
     operator: "Equal"
     value: "true"
     effect: "NoSchedule"
