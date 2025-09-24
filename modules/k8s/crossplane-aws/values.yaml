@@ -1,6 +1,8 @@
 installProviderConfig: true
 
 global:
+  extraProviders: []
+  defaultProviders: ["iam", "s3", "sqs", "ecr", "rds", "kms", "secretsmanager", "ec2", "eks"]
   cloudProvider: ""
   aws:
     role: ""

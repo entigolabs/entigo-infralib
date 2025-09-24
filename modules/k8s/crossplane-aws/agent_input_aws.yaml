@@ -6,12 +6,17 @@ global:
     vpc:
       name: "{{ .toutput.vpc.name }}"
       id: "{{ .toutput.vpc.vpc_id }}"
-      cidr: "{{ .toutput.vpc.vpc_cidr_block }}"
       database_subnets_id: |
         {{ .toptout.vpc.database_subnets }}
-      database_subnet_cidr: |
-        {{ .toptout.vpc.database_subnets_cidr_blocks }}
+      compute_subnets_id: |
+        {{ .toptout.vpc.compute_subnets }}
       database_subnet_group_name: "{{ .toptout.vpc.database_subnet_group_name }}"
     kms:
-      data_name: "{{ .config.prefix }}-data"
       data_key_arn: "{{ .toptout.kms.data_key_arn }}"
+      data_alias_arn: "{{ .toptout.kms.data_alias_arn }}"
+    eks:
+      cluster_name: "{{ .toutput.eks.cluster_name }}"
+      node_security_group_id: "{{ .toutput.eks.node_security_group_id }}"
+      cluster_primary_security_group_id: "{{ .toutput.eks.cluster_primary_security_group_id }}"
+    ecrProxy: 
+      policy: "{{ .toptout.ecr-proxy.policy }}"

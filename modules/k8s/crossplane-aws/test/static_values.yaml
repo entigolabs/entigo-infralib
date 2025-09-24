@@ -2,14 +2,18 @@ global:
   aws:
     region: "eu-north-1"
     vpc:
-      name: "vpc-1"
       id: "vpc-0101316aa26b27cbd"
-      cidr: "10.146.0.0/16"
       database_subnets_id: |
         "subnet-02643338edd5ecc93","subnet-06bf14d744764860c","subnet-0c61d46a612fd051b"
-      database_subnet_cidr: |
-        "10.24.0.0/24", "10.24.1.0/24", "10.24.1.0/24"
+      compute_subnets_id: |
+        "subnet-02643338edd5ecc95","subnet-06bf14d744764861c","subnet-0c61d46a612fd052b"
       database_subnet_group_name: "foo"
     kms:
-      data_name: "foo-data"
       data_key_arn: "arn:aws:kms:eu-north-1:123456789:key/mrk-24ec917c1df34b21a872faa3cfe26e17"
+      data_alias_arn: "arn:aws:kms:eu-north-1:877483565445:alias/biz-net-kms/data"
+    eks:
+      cluster_name: "foo"
+      node_security_group_id: "sg-123"
+      cluster_primary_security_group_id: "sg-123"
+    ecrProxy: 
+      policy: "arn:aws:iam::877483565445:policy/arn:aws:iam::877483565445:policy/biz-net-ecr-proxy"
