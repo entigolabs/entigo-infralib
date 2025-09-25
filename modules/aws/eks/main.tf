@@ -339,6 +339,7 @@ module "eks" {
           ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
           WARM_PREFIX_TARGET       = "1"
         }
+        enableNetworkPolicy = var.enable_vpc_cni_network_policy
       })
     }
   }, var.enable_efs_csi ? {

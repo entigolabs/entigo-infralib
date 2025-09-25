@@ -312,6 +312,11 @@ variable "enable_vpc_cni_prefix_delegation" {
   default = "true"
 }
 
+variable "enable_vpc_cni_network_policy" {
+  type    = string
+  default = "false"
+}
+
 variable "enable_efs_csi" {
   type    = bool
   default = false
