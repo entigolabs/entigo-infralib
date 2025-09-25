@@ -1,3 +1,9 @@
 global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
+promtail:
+  networkPolicy:
+    k8sApi:
+      port: 443
+      cidrs:
+      - 172.20.0.1/32
