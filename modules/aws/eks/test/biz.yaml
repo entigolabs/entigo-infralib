@@ -1,4 +1,5 @@
 eks_cluster_public: true
+enable_vpc_cni_network_policy: true
 enable_cluster_creator_admin_permissions: false
 eks_mon_capacity_type: "SPOT"
 eks_mon_volume_size: 30
