@@ -8,51 +8,46 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: {{ .Values.global.registry }}/entigolabs/provider-family-aws:v2.0.2
-  #capabilities:
-  #- safe-start
   runtimeConfigRef:
     name: {{ .Release.Name }}
 
-{{- $providers := list "iam" "s3" "sqs" "ecr" "rds" "kms" "secretsmanager" "ec2" -}}
-{{- range $index, $provider := $providers }}
+# Build the final list of providers based on conditions
+{{- $allProviders := list }}
+
+# Always include requiredProviders and extraProviders
+{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
+{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+
+# Add observerProviders if observers are enabled
+{{- if or .Values.global.createObservers .Values.global.createNamespacedObservers }}
+  {{- $allProviders = concat $allProviders .Values.global.observerProviders }}
+{{- end }}
+
+# Deduplicate the list
+{{- $uniqueProviders := list }}
+{{- range $provider := $allProviders }}
+  {{- if not (has $provider $uniqueProviders) }}
+    {{- $uniqueProviders = append $uniqueProviders $provider }}
+  {{- end }}
+{{- end }}
+
+# Create Provider resources for each unique provider
+{{- range $index, $provider := $uniqueProviders }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '{{ add 4 (div $index 4) }}'
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 5) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
   package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v2.0.2
-  #capabilities:
-  #- safe-start
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
 
-
-{{- if .Values.global.extraProviders }}
-{{- range $index, $provider := .Values.global.extraProviders }}
----
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: upbound-provider-aws-{{ $provider }}
-  annotations:
-    argocd.argoproj.io/sync-wave: '{{ add 7 (div $index 4) }}'
-    helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  skipDependencyResolution: true
-  package: {{ $.Values.global.registry }}/entigolabs/provider-aws-{{ $provider }}:v2.0.2
-  #capabilities:
-  #- safe-start
-  runtimeConfigRef:
-    name: {{ $.Release.Name }}
-{{- end }}
-{{- end }}
 
 

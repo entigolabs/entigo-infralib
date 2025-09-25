@@ -1,6 +1,13 @@
 installProviderConfig: true
 
 global:
+  extraProviders: []
+  observerProviders: ["ecr", "rds", "kms", "secretsmanager", "ec2", "eks"]
+  requiredProviders:  ["iam", "s3", "sqs"]
+  createObservers: false
+  createNamespacedObservers: false
+
+
   cloudProvider: ""
   aws:
     role: ""

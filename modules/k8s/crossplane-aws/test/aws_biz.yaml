@@ -1,0 +1,3 @@
+global:
+  createObservers: false
+  createNamespacedObservers: true

@@ -1,78 +1,82 @@
-{{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
-{{- $database_subnet_cidr_blocks := splitList "," .Values.global.aws.vpc.database_subnet_cidr }}
-
-{{- if .Values.global.aws.vpc.cidr }}
+{{- if .Values.global.createObservers }}
+{{- if .Values.global.aws.vpc.id }}
 apiVersion: ec2.aws.upbound.io/v1beta1
 kind: VPC
 metadata:
-  name: {{ .Values.global.aws.vpc.name }}
+  name: vpc
   annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.id }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    crossplane.io/external-name: {{ .Values.global.aws.vpc.id}}
 spec:
   managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ .Release.Name }}
   forProvider:
     region: {{ .Values.global.aws.region }}
-    cidrBlock: {{ .Values.global.aws.vpc.cidr }}
-    tags:
-      created-by: "entigo-infralib"
+  providerConfigRef:
+    name: {{ .Release.Name }}
 {{- end }}
 
 
-# {{- if .Values.global.aws.vpc.database_subnets_id }}
-# {{- range $i, $value := $database_subnet_ids }}
-# ---
-# apiVersion: ec2.aws.upbound.io/v1beta1
-# kind: Subnet
-# metadata:
-#   name: dbsubnet-{{ $i }}
-#   annotations:
-#     crossplane.io/external-name: {{ $value }}
-#     argocd.argoproj.io/sync-wave: "10"
-#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-# spec:
-#   managementPolicies: ["Observe"]
-#   deletionPolicy: Orphan
-#   providerConfigRef:
-#     name: {{ $.Release.Name }}
-#   forProvider:
-#     region: {{ $.Values.global.aws.region }}
-#     cidrBlock: {{ index $database_subnet_cidr_blocks $i }}
-#     tags:
-#       created-by: "entigo-infralib"
-# {{- end }}
-# {{- end }}
-
 {{- if .Values.global.aws.vpc.database_subnets_id }}
+{{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
+{{- range $i, $value := $database_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: database-{{ $i }}
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.compute_subnets_id }}
+{{- $compute_subnet_ids := splitList "," .Values.global.aws.vpc.compute_subnets_id }}
+{{- range $i, $value := $compute_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: compute-{{ $i }}
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
+
 {{- if .Values.global.aws.vpc.database_subnet_group_name }}
 ---
 apiVersion: rds.aws.upbound.io/v1beta1
 kind: SubnetGroup
 metadata:
-  name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
+  name: database
   annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
   forProvider:
     region: {{ .Values.global.aws.region }}
-    description: "Subnet group for Database instances"
-    subnetIds:
-    {{- range $i, $value := $database_subnet_ids }}
-      - {{ $value }}
-    {{- end }}
-    tags:
-      created-by: "entigo-infralib"
   providerConfigRef:
     name: {{ .Release.Name }}
 
-{{- end }}
 {{- end }}
 
 {{- if .Values.global.aws.kms.data_key_arn }}
@@ -80,18 +84,337 @@ spec:
 apiVersion: kms.aws.upbound.io/v1beta1
 kind: Key
 metadata:
-  name: {{ .Values.global.aws.kms.data_name }}
+  name: data
   annotations:
     crossplane.io/external-name: {{ .Values.global.aws.kms.data_key_arn }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   managementPolicies: ["Observe"]
-  deletionPolicy: Orphan
-  providerConfigRef:
-    name: {{ .Release.Name }}
   forProvider:
     region: {{ .Values.global.aws.region }}
-    tags:
-      created-by: "entigo-infralib"
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasParts := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasName := index $aliasParts (sub (len $aliasParts) 1) }}
+---
+apiVersion: kms.aws.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: data
+  annotations:
+    crossplane.io/external-name: {{ $aliasName }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
+
+
+{{- if .Values.global.aws.eks.cluster_name }}
+---
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  name: eks
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.cluster_name }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  
+  providerConfigRef:
+    name: {{ .Release.Name }}
+
+
+{{- end }}
+
+
+
+{{- if .Values.global.aws.ecrProxy.policy }}
+{{- $policyParts := splitList "/" .Values.global.aws.ecrProxy.policy }}
+{{- $policyName := index $policyParts (sub (len $policyParts) 1) }}
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: ecr-proxy
+  annotations:
+    crossplane.io/external-name: {{ $policyName }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: 
+    description: ECR {{ $policyName }} usage
+  providerConfigRef:
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.eks.node_security_group_id }}
+---
+
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: eks-node
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.node_security_group_id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.eks.node_security_group_id }}
+---
+
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: eks-cluster
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.cluster_primary_security_group_id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+
+{{- end }}
+{{- end }}
+
+
+
+#Namespaced
+{{- if .Values.global.createNamespacedObservers }}
+{{- if .Values.global.aws.vpc.id }}
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: VPC
+metadata:
+  name: vpc
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+
+
+{{- if .Values.global.aws.vpc.database_subnets_id }}
+{{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
+{{- range $i, $value := $database_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: database-{{ $i }}
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.compute_subnets_id }}
+{{- $compute_subnet_ids := splitList "," .Values.global.aws.vpc.compute_subnets_id }}
+{{- range $i, $value := $compute_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: compute-{{ $i }}
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.database_subnet_group_name }}
+---
+apiVersion: rds.aws.m.upbound.io/v1beta1
+kind: SubnetGroup
+metadata:
+  name: database
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.kms.data_key_arn }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Key
+metadata:
+  name: data
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.kms.data_key_arn }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasParts := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasName := index $aliasParts (sub (len $aliasParts) 1) }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: data
+  annotations:
+    crossplane.io/external-name: {{ $aliasName }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+
+
+{{- if .Values.global.aws.eks.cluster_name }}
+---
+apiVersion: eks.aws.m.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  name: eks
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.cluster_name }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+
+{{- end }}
+
+
+
+{{- if .Values.global.aws.ecrProxy.policy }}
+{{- $policyParts := splitList "/" .Values.global.aws.ecrProxy.policy }}
+{{- $policyName := index $policyParts (sub (len $policyParts) 1) }}
+---
+apiVersion: iam.aws.m.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: ecr-proxy
+  annotations:
+    crossplane.io/external-name: {{ $policyName }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    description: ECR {{ $policyName }} usage
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.eks.node_security_group_id }}
+---
+
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: eks-node
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.node_security_group_id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.eks.node_security_group_id }}
+---
+
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: eks-cluster
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.eks.cluster_primary_security_group_id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+{{- end }}
 {{- end }}
