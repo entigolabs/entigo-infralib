@@ -11,7 +11,8 @@ global:
 grafana:
   enabled: true
   fullnameOverride: "grafana"
-
+  podLabels:
+    netpol-loki: "loki"
   annotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
 

@@ -40,11 +40,11 @@ loki:
      cidrs:
      - "{{ .toutput.vpc.vpc_cidr_block }}"
     ingress:
-        namespaceSelector:
+        podSelector:
             matchExpressions:
-            - key: kubernetes.io/metadata.name
+            - key: netpol-loki
               operator: In
               values:
-              - '{{ .tmodule.promtail | "promtail" }}'
-              - '{{ .tmodule.grafana | "grafana" }}'
+              - 'loki'
+              - '{{ .module.name }}'
 
