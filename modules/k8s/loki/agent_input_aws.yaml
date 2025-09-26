@@ -43,7 +43,7 @@ loki:
         namespaceSelector:
           matchExpressions:
             - key: kubernetes.io/metadata.name
-            operator: Exists
+              operator: Exists
         podSelector:
             matchExpressions:
             - key: netpol-loki
