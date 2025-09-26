@@ -66,3 +66,15 @@ loki:
             - path: /
               pathType: Prefix
       tls: []
+  networkPolicy:
+    externalStorage:
+     ports:
+     - 443
+    discovery:
+      port: 53
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
