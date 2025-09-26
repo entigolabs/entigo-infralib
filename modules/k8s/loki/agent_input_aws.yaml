@@ -38,7 +38,7 @@ loki:
   networkPolicy:
     externalStorage:
      cidrs:
-     - "{{ .toutput.vpc.vpc_cidr_block }}"
+     - "0.0.0.0/0"
     ingress:
         namespaceSelector:
           matchExpressions:
