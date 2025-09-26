@@ -2,9 +2,9 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: webaccesses.network.entigo.com
+  name: webaccesses.networking.entigo.com
 spec:
-  group: network.entigo.com
+  group: networking.entigo.com
   names:
     kind: WebAccess
     plural: webaccesses

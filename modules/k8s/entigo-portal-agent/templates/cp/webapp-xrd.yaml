@@ -2,10 +2,10 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: webapps.workloads.entigo.com
+  name: webapps.workload.entigo.com
 spec:
   scope: Namespaced
-  group: workloads.entigo.com
+  group: workload.entigo.com
   names:
     kind: WebApp
     plural: webapps
