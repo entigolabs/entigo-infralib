@@ -21,7 +21,7 @@ image:
 
 function:
   repository: docker.io/entigolabs/developer-portal-function
-  tag: v0.0.0-20250902104013-29594eb1d885
+  tag: v0.0.0-20250926123009-657c9f36f4f4
 
 tolerations:
   - key: "tools"

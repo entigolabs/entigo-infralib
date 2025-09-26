@@ -2,10 +2,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: webapps.workloads.entigo.com
+  name: webapps.workload.entigo.com
 spec:
   compositeTypeRef:
-    apiVersion: workloads.entigo.com/v1alpha1
+    apiVersion: workload.entigo.com/v1alpha1
     kind: WebApp
   mode: Pipeline
   pipeline:

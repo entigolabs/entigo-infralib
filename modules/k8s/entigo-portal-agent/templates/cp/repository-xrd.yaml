@@ -2,13 +2,13 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: entigorepositories.artifacts.entigo.com
+  name: repositories.artifact.entigo.com
 spec:
   scope: Cluster
-  group: artifacts.entigo.com
+  group: artifact.entigo.com
   names:
-    kind: EntigoRepository
-    plural: entigorepositories
+    kind: Repository
+    plural: repositories
   versions:
     - name: v1alpha1
       served: true

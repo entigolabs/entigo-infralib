@@ -7,8 +7,12 @@ metadata:
     argocd.argoproj.io/sync-wave: '-3'
 spec:
   activate:
+  - 'instances.rds.aws.m.upbound.io'
   - 'policies.iam.aws.upbound.io'
+  - 'repositories.ecr.aws.upbound.io'
   - 'rolepolicyattachments.iam.aws.upbound.io'
   - 'roles.iam.aws.upbound.io'
   - 'queues.sqs.aws.upbound.io'
+  - 'securitygrouprules.ec2.aws.m.upbound.io'
+  - 'securitygroups.ec2.aws.upbound.io'
 {{- end }}
