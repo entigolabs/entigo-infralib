@@ -40,6 +40,10 @@ loki:
      cidrs:
      - "{{ .toutput.vpc.vpc_cidr_block }}"
     ingress:
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+            operator: Exists
         podSelector:
             matchExpressions:
             - key: netpol-loki
