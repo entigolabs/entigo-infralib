@@ -44,5 +44,7 @@ loki:
             matchExpressions:
             - key: kubernetes.io/metadata.name
               operator: In
-              values: ["{{ .tmodule.promtail }}", "{{ .tmodule.grafana }}"]
+              values:
+              - '{{ .tmodule.promtail | "promtail" }}'
+              - '{{ .tmodule.grafana | "grafana" }}'
 
