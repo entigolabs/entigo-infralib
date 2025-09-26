@@ -1,4 +1,6 @@
 promtail:
+  podLabels:
+    netpol-loki: "loki"
   priorityClassName: "promtail"
   daemonset:
     enabled: true
