@@ -35,3 +35,7 @@ loki:
   memcached:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/memcached'
+  networkPolicy:
+    externalStorage:
+     cidrs:
+     - "{{ .toutput.vpc.vpc_cidr_block }}"

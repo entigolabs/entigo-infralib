@@ -61,6 +61,7 @@ loki:
 
   networkPolicy:
     enabled: true
+
   ruler:
     enabled: false
 
