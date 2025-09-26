@@ -40,9 +40,10 @@ additional_access_entries: |
 eks_managed_node_groups_extra: |
   {
   altarm = {
-        desired_size    = 1
+        desired_size    = 0
+        min_size    = 0
         max_size        = 1
-        instance_types  = ["t4g.small"]
+        instance_types  = ["t4g.small","t4g.medium"]
         capacity_type   = "SPOT"
         release_version = ""
         ami_type        = "AL2023_ARM_64_STANDARD"
