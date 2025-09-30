@@ -35,7 +35,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "ArnLike"
           variable = "kms:EncryptionContext:aws:logs:arn"
@@ -66,7 +66,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -92,7 +92,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -129,7 +129,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
@@ -215,7 +215,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
@@ -252,7 +252,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -280,7 +280,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -319,7 +319,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
