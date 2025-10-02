@@ -400,7 +400,7 @@ spec:
     name: {{ .Release.Name }}
 {{- end }}
 
-{{- if .Values.global.aws.kms.data_key_arn }}
+{{- if .Values.global.aws.kms.config_key_arn }}
 ---
 apiVersion: kms.aws.m.upbound.io/v1beta1
 kind: Key
