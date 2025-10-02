@@ -207,6 +207,39 @@ module "kms_config" {
           ]
         }
       ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+
+      actions = [
+          "kms:GenerateDataKey*"
+      ]
+
+      resources = [
+        "*",
+      ]
+
+      condition = [
+        {
+          test     = "StringLike"
+          variable = "kms:ViaService"
+          values = [
+             "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        }
+      ]
     }
   ]
 
