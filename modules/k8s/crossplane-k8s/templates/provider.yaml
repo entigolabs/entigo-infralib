@@ -4,9 +4,8 @@ metadata:
   name: {{.Release.Name}}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: {{ .Values.global.registry }}/entigolabs/provider-kubernetes:v0.17.3
+  package: xpkg.upbound.io/upbound/provider-kubernetes:v0.17.3
   runtimeConfigRef:
     name: {{.Release.Name}}

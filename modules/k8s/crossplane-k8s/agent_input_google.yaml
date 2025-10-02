@@ -1,2 +1,0 @@
-global:
-  registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

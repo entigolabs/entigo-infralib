@@ -4,3 +4,6 @@ crossplane:
   
 job:
   image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+
+imageConfigs:
+  proxy: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs'
