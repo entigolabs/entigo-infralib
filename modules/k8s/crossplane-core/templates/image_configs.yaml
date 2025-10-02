@@ -1,0 +1,28 @@
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: upbound-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: xpkg.upbound.io/upbound
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.proxy }}
+
+{{- if ne .Values.imageConfigs.proxy "docker.io/entigolabs" }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: entigolabs-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: docker.io/entigolabs
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.proxy }}
+{{- end }}
