@@ -234,4 +234,5 @@ job:
   deleteInactiveProviderRevisions: false
 
 imageConfigs:
-  proxy: docker.io/entigolabs
+  hubProxy: docker.io/entigolabs
+  ghcrProxy: ghcr.io/entigolabs
