@@ -10,6 +10,19 @@ spec:
     - prefix: xpkg.upbound.io/upbound
   rewriteImage:
     prefix: {{ .Values.imageConfigs.proxy }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: contrib-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: xpkg.upbound.io/crossplane-contrib
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.proxy }}
 
 {{- if ne .Values.imageConfigs.proxy "docker.io/entigolabs" }}
 ---
