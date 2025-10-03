@@ -6,4 +6,5 @@ job:
   image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
 
 imageConfigs:
-  proxy: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs'
+  hubProxy: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs'
+  ghcrProxy: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/entigolabs'

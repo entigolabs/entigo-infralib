@@ -24,12 +24,12 @@ spec:
   rewriteImage:
     prefix: {{ .Values.imageConfigs.proxy }}
 
-{{- if ne .Values.imageConfigs.proxy "docker.io/entigolabs" }}
+{{- if ne .Values.imageConfigs.hubProxy "docker.io/entigolabs" }}
 ---
 apiVersion: pkg.crossplane.io/v1beta1
 kind: ImageConfig
 metadata:
-  name: entigolabs-to-proxy
+  name: hub-entigolabs-to-proxy
   annotations:
     argocd.argoproj.io/sync-wave: "9"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -37,5 +37,21 @@ spec:
   matchImages:
     - prefix: docker.io/entigolabs
   rewriteImage:
-    prefix: {{ .Values.imageConfigs.proxy }}
+    prefix: {{ .Values.imageConfigs.hubProxy }}
+{{- end }}
+
+{{- if ne .Values.imageConfigs.ghcrProxy "ghcr.io/entigolabs" }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: ghcr-entigolabs-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: ghcr.io/entigolabs
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.ghcrProxy }}
 {{- end }}
