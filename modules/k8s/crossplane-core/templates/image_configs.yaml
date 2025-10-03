@@ -9,7 +9,7 @@ spec:
   matchImages:
     - prefix: xpkg.upbound.io/upbound
   rewriteImage:
-    prefix: {{ .Values.imageConfigs.proxy }}
+    prefix: {{ .Values.imageConfigs.hubProxy }}
 ---
 apiVersion: pkg.crossplane.io/v1beta1
 kind: ImageConfig
@@ -22,7 +22,7 @@ spec:
   matchImages:
     - prefix: xpkg.upbound.io/crossplane-contrib
   rewriteImage:
-    prefix: {{ .Values.imageConfigs.proxy }}
+    prefix: {{ .Values.imageConfigs.hubProxy }}
 
 {{- if ne .Values.imageConfigs.hubProxy "docker.io/entigolabs" }}
 ---
