@@ -25,6 +25,8 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: database-{{ $i }}
+  labels:
+    subnet-type: database
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -46,6 +48,8 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: compute-{{ $i }}
+  labels:
+    subnet-type: compute
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -304,6 +308,8 @@ apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: database-{{ $i }}
+  labels:
+    subnet-type: database
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -327,6 +333,8 @@ apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: compute-{{ $i }}
+  labels:
+    subnet-type: compute
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
