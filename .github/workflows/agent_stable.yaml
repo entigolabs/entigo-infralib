@@ -96,6 +96,10 @@ jobs:
     needs: [install_stable_aws,install_stable_google]
     name: Release
     steps:
+    - name: Free disk space
+      run: |
+        # Remove large preinstalled tools
+        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
     - name: Checkout code
       uses: actions/checkout@v4
       with:

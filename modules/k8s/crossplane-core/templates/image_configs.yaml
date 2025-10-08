@@ -1,0 +1,57 @@
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: upbound-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: xpkg.upbound.io/upbound
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.hubProxy }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: contrib-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: xpkg.upbound.io/crossplane-contrib
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.hubProxy }}
+
+{{- if ne .Values.imageConfigs.hubProxy "docker.io/entigolabs" }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: hub-entigolabs-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: docker.io/entigolabs
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.hubProxy }}
+{{- end }}
+
+{{- if ne .Values.imageConfigs.ghcrProxy "ghcr.io/entigolabs" }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: ImageConfig
+metadata:
+  name: ghcr-entigolabs-to-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  matchImages:
+    - prefix: ghcr.io/entigolabs
+  rewriteImage:
+    prefix: {{ .Values.imageConfigs.ghcrProxy }}
+{{- end }}

@@ -232,3 +232,7 @@ job:
   tag: "v1.13.1"
   deleteUnusedCrds: false
   deleteInactiveProviderRevisions: false
+
+imageConfigs:
+  hubProxy: docker.io/entigolabs
+  ghcrProxy: ghcr.io/entigolabs

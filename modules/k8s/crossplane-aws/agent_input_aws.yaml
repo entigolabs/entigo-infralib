@@ -1,5 +1,4 @@
 global:
-  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   aws:
     role: "{{ .toutput.crossplane.iam_role }}"
     region: "{{ .toutput.eks.region }}"
@@ -14,6 +13,10 @@ global:
     kms:
       data_key_arn: "{{ .toptout.kms.data_key_arn }}"
       data_alias_arn: "{{ .toptout.kms.data_alias_arn }}"
+      config_key_arn: "{{ .toptout.kms.config_key_arn }}"
+      config_alias_arn: "{{ .toptout.kms.config_alias_arn }}"
+      telemetry_key_arn: "{{ .toptout.kms.telemetry_key_arn }}"
+      telemetry_alias_arn: "{{ .toptout.kms.telemetry_alias_arn }}"
     eks:
       cluster_name: "{{ .toutput.eks.cluster_name }}"
       node_security_group_id: "{{ .toutput.eks.node_security_group_id }}"

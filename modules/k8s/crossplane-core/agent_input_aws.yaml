@@ -12,3 +12,7 @@ global:
 
 job:
   image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+
+imageConfigs:
+  hubProxy: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs'
+  ghcrProxy: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs'

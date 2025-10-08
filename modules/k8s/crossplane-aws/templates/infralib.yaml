@@ -25,6 +25,8 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: database-{{ $i }}
+  labels:
+    subnet-type: database
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -46,6 +48,8 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: compute-{{ $i }}
+  labels:
+    subnet-type: compute
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -97,15 +101,15 @@ spec:
     name: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.global.aws.kms.data_alias_arn }}
-{{- $aliasParts := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
-{{- $aliasName := index $aliasParts (sub (len $aliasParts) 1) }}
+{{- $aliasPartsData := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasNameData := index $aliasPartsData (sub (len $aliasPartsData) 1) }}
 ---
 apiVersion: kms.aws.upbound.io/v1beta1
 kind: Alias
 metadata:
   name: data
   annotations:
-    crossplane.io/external-name: {{ $aliasName }}
+    crossplane.io/external-name: {{ $aliasNameData }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
@@ -115,7 +119,78 @@ spec:
   providerConfigRef:
     name: {{ .Release.Name }}
 {{- end }}
-
+{{- if .Values.global.aws.kms.config_key_arn }}
+---
+apiVersion: kms.aws.upbound.io/v1beta1
+kind: Key
+metadata:
+  name: config
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.kms.config_key_arn }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.config_alias_arn }}
+{{- $aliasPartsConfig := splitList ":alias/" .Values.global.aws.kms.config_alias_arn }}
+{{- $aliasNameConfig := index $aliasPartsConfig (sub (len $aliasPartsConfig) 1) }}
+---
+apiVersion: kms.aws.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: config
+  annotations:
+    crossplane.io/external-name: {{ $aliasNameConfig }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.telemetry_key_arn }}
+---
+apiVersion: kms.aws.upbound.io/v1beta1
+kind: Key
+metadata:
+  name: telemetry
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.kms.telemetry_key_arn }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.telemetry_alias_arn }}
+{{- $aliasPartsTelemetry := splitList ":alias/" .Values.global.aws.kms.telemetry_alias_arn }}
+{{- $aliasNameTelemetry := index $aliasPartsTelemetry (sub (len $aliasPartsTelemetry) 1) }}
+---
+apiVersion: kms.aws.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: telemetry
+  annotations:
+    crossplane.io/external-name: {{ $aliasNameTelemetry }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+{{- end }}
 
 {{- if .Values.global.aws.eks.cluster_name }}
 ---
@@ -233,6 +308,8 @@ apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: database-{{ $i }}
+  labels:
+    subnet-type: database
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -256,6 +333,8 @@ apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: compute-{{ $i }}
+  labels:
+    subnet-type: compute
   annotations:
     crossplane.io/external-name: {{ $value }}
     argocd.argoproj.io/sync-wave: "20"
@@ -309,15 +388,93 @@ spec:
     name: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.global.aws.kms.data_alias_arn }}
-{{- $aliasParts := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
-{{- $aliasName := index $aliasParts (sub (len $aliasParts) 1) }}
+{{- $aliasPartsData := splitList ":alias/" .Values.global.aws.kms.data_alias_arn }}
+{{- $aliasNameData := index $aliasPartsData (sub (len $aliasPartsData) 1) }}
 ---
 apiVersion: kms.aws.m.upbound.io/v1beta1
 kind: Alias
 metadata:
   name: data
   annotations:
-    crossplane.io/external-name: {{ $aliasName }}
+    crossplane.io/external-name: {{ $aliasNameData }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+
+{{- if .Values.global.aws.kms.config_key_arn }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Key
+metadata:
+  name: config
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.kms.config_key_arn }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.config_alias_arn }}
+{{- $aliasPartsConfig := splitList ":alias/" .Values.global.aws.kms.config_alias_arn }}
+{{- $aliasNameConfig := index $aliasPartsConfig (sub (len $aliasPartsConfig) 1) }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: config
+  annotations:
+    crossplane.io/external-name: {{ $aliasNameConfig }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+
+{{- if .Values.global.aws.kms.telemetry_key_arn }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Key
+metadata:
+  name: telemetry
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.kms.telemetry_key_arn }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.global.aws.kms.telemetry_alias_arn }}
+{{- $aliasPartsTelemetry := splitList ":alias/" .Values.global.aws.kms.telemetry_alias_arn }}
+{{- $aliasNameTelemetry := index $aliasPartsTelemetry (sub (len $aliasPartsTelemetry) 1) }}
+---
+apiVersion: kms.aws.m.upbound.io/v1beta1
+kind: Alias
+metadata:
+  name: telemetry
+  annotations:
+    crossplane.io/external-name: {{ $aliasNameTelemetry }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:

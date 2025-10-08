@@ -35,7 +35,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "ArnLike"
           variable = "kms:EncryptionContext:aws:logs:arn"
@@ -66,7 +66,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -92,7 +92,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -129,7 +129,7 @@ module "kms_telemetry" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
@@ -170,6 +170,81 @@ module "kms_config" {
   multi_region            = var.multi_region
   enable_default_policy                  = true
   key_owners                             = [data.aws_iam_session_context.current.issuer_arn]
+  key_statements = [
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+
+      actions = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:CreateGrant",
+          "kms:DescribeKey"
+      ]
+
+      resources = [
+        "*",
+      ]
+
+      condition = [
+        {
+          test     = "StringEquals"
+          variable = "kms:ViaService"
+          values = [
+             "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        }
+      ]
+    },
+    {
+      principals = [
+        {
+          type        = "AWS"
+          identifiers = ["*"]
+        }
+      ]
+
+      actions = [
+          "kms:GenerateDataKey*"
+      ]
+
+      resources = [
+        "*",
+      ]
+
+      condition = [
+        {
+          test     = "StringLike"
+          variable = "kms:ViaService"
+          values = [
+             "secretsmanager.${data.aws_region.current.region}.amazonaws.com"
+          ]
+        },
+        {
+          test     = "StringEquals"
+          variable = "kms:CallerAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        }
+      ]
+    }
+  ]
+
+
+
   aliases = ["${var.prefix}/config"]
 
   tags = {
@@ -215,7 +290,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
@@ -252,7 +327,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -280,7 +355,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringLike"
           variable = "aws:PrincipalArn"
@@ -319,7 +394,7 @@ module "kms_data" {
         "*",
       ]
       
-      conditions = [
+      condition = [
         {
           test     = "StringEquals"
           variable = "kms:ViaService"
