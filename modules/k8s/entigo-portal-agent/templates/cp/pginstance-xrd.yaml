@@ -19,24 +19,6 @@ spec:
         openAPIV3Schema:
           type: object
           properties:
-            apiVersion:
-              type: string
-            kind:
-              type: string
-            metadata:
-              type: object
-              required:
-                - name
-                - namespace
-              properties:
-                name:
-                  type: string
-                namespace:
-                  type: string
-                labels:
-                  type: object
-                  propertyNames:
-                    pattern: ^[A-Za-z][A-Za-z0-9_./-]*$
             spec:
               type: object
               properties:
@@ -92,47 +74,13 @@ spec:
             status:
               type: object
               properties:
-                conditions:
-                  items:
-                    properties:
-                      lastTransitionTime:
-                        format: date-time
-                        type: string
-                      message:
-                        maxLength: 32768
-                        type: string
-                      observedGeneration:
-                        format: int64
-                        minimum: 0
-                        type: integer
-                      reason:
-                        maxLength: 1024
-                        minLength: 1
-                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                        type: string
-                      status:
-                        enum:
-                          - "True"
-                          - "False"
-                          - Unknown
-                        type: string
-                      type:
-                        maxLength: 316
-                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                        type: string
-                    required:
-                      - lastTransitionTime
-                      - message
-                      - reason
-                      - status
-                      - type
-                    type: object
-                  type: array
                 allowMajorVersionUpgrade:
                   type: boolean
                 autoMinorVersionUpgrade:
                   type: boolean
                 backupWindow:
+                  type: string
+                dbInstanceIdentifier:
                   type: string
                 endpoint:
                   properties:
@@ -147,6 +95,8 @@ spec:
                     - hostedZoneId
                     - port
                   type: object
+                finalSnapshotIdentifier:
+                  type: string
                 iops:
                   type: number
                 kmsKeyId:
@@ -166,6 +116,8 @@ spec:
                   type: boolean
                 storageThroughput:
                   type: number
+                storageType:
+                  type: string
                 vpcSecurityGroupIds:
                   items:
                     type: string

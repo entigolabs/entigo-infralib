@@ -33,7 +33,10 @@ spec:
                     "ecr:BatchCheckLayerAvailability",
                     "ecr:GetRepositoryPolicy",
                     "ecr:GetLifecyclePolicy",
-                    "ecr:BatchDeleteImage"
+                    "ecr:BatchDeleteImage",
+                    "rds:StartDBInstance",
+                    "rds:StopDBInstance",
+                    "rds:RebootDBInstance"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"

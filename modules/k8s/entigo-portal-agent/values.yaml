@@ -17,11 +17,11 @@ config: {}
 
 image:
   repository: docker.io/entigolabs/developer-portal-agent
-  tag: main-76
+  tag: main-77
 
 function:
   repository: docker.io/entigolabs/developer-portal-function
-  tag: v0.0.0-20250926123009-657c9f36f4f4
+  tag: v0.0.0-20251008090721-c7815a3bc8fa
 
 tolerations:
   - key: "tools"
