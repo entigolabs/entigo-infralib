@@ -1,17 +1,13 @@
 package test
 
 import (
-  	"fmt"
-	"os"
 	"testing"
 	"time"
-	"strings"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	terraaws "github.com/gruntwork-io/terratest/modules/aws"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"github.com/entigolabs/entigo-infralib-common/aws"
@@ -37,8 +33,7 @@ func TestK8sKyvernoGooglePri(t *testing.T) {
 
 func testK8sKyverno(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "external")
+	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kyverno-admission-controller", 10, 6*time.Second)
 	if err != nil {
