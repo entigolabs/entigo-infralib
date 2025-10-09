@@ -15,7 +15,7 @@ func TestK8sMetricsServerAWSPri(t *testing.T) {
 
 func testK8sMetricsServer(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
-	_, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
+	_, _ = k8s.CheckKubectlConnection(t, cloudName, envName)
 
 
 }
