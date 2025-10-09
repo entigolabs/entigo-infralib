@@ -1,0 +1,5 @@
+platform-apis:
+  repository:
+    environmentConfig:
+      awsRegion: "{{ .toutput.eks.region }}"
+

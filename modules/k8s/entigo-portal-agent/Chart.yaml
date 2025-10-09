@@ -2,6 +2,11 @@ apiVersion: v2
 name: entigo-portal-agent
 description: A entigo-portal-agent chart for Kubernetes
 type: application
-version: 0.1.0
-appVersion: "1.0"
+version: 0.2.9
+appVersion: "0.2.9"
 
+
+dependencies:
+- name: developer-portal-agent
+  version: 0.2.9
+  repository: oci://ghcr.io/entigolabs
