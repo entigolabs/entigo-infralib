@@ -1,0 +1,10 @@
+platform-apis:
+  postgresql:
+    package:
+      image: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs/platform-apis-postgresql'
+    function:
+      image: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs/platform-apis-postgresql-fn'
+  zone:
+    package:
+      image: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs/platform-apis-zone'
+
