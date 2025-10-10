@@ -1,4 +1,7 @@
 kyverno:
+  global:
+    image:
+      registry: ghcr.io
   crds:
     annotations:
       argocd.argoproj.io/sync-wave: "-1"
