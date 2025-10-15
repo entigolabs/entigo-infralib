@@ -44,7 +44,5 @@ spec:
 {{- end }}
 {{- if .Values.global.aws.eks.cluster_name }}
   - 'clusters.eks.aws.m.upbound.io'
-  - 'nodegroups.eks.aws.m.upbound.io'
-  - 'launchtemplates.ec2.m.aws.upbound.io'
 {{- end }}
 {{- end }}
