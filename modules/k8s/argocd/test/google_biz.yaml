@@ -14,6 +14,7 @@ argocd:
       policy.csv: |
         g, web-admin-258953744228679165, role:admin
         g, web-admin-337507228502216899, role:admin
+        g, web-admin-343159627493470238, role:admin
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
