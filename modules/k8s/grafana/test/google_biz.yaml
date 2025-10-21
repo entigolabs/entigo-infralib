@@ -19,4 +19,4 @@ grafana:
       use_pkce: true
       use_refresh_token: true
       client_id: "343161092010274846"
-      role_attribute_path: "contains(groups[*], 'web-admin-258953744228679165') && 'Admin'"
+      role_attribute_path: "contains(groups[*], 'web-admin-343159627493470238') && 'Admin'"
