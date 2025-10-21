@@ -6,7 +6,7 @@ if [ "$1" == "" ]; then
 fi
 
 VERSION=$1
-PROVIDERS="provider-family-aws provider-aws-elasticache provider-aws-ram provider-aws-networkfirewall provider-aws-ec2 provider-aws-route53 provider-aws-ecr provider-aws-sqs provider-aws-s3 provider-aws-iam provider-aws-vpc provider-aws-secretsmanager provider-aws-rds provider-aws-kms provider-aws-eks"
+PROVIDERS="provider-family-aws provider-aws-elasticache provider-aws-ram provider-aws-networkfirewall provider-aws-ec2 provider-aws-route53 provider-aws-ecr provider-aws-sqs provider-aws-s3 provider-aws-iam provider-aws-vpc provider-aws-secretsmanager provider-aws-rds provider-aws-kms provider-aws-eks provider-aws-kafka"
 
 for provider in $PROVIDERS; do
     SOURCE="xpkg.upbound.io/upbound/$provider:$VERSION"
