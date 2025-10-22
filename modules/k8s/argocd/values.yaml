@@ -19,6 +19,7 @@ argocd:
       create: true
   configs:
     params:
+      application.namespaces: "*"
       server.insecure: false
     cm:
       accounts.infralib: apiKey
@@ -168,6 +169,10 @@ argocd:
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
+        p, role:authenticated, clusters, get, *, allow
+      policy.default: "role:authenticated"
+      policy.matchMode: glob
+      scopes: "[groups]"
   server:
     affinity:
       nodeAffinity:
