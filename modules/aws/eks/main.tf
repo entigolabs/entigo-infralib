@@ -25,11 +25,14 @@ locals {
       labels = {
         main = "true"
       }
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-        created-by = "entigo-infralib"
-      }
+      launch_template_tags = merge(
+        {
+          Terraform  = "true"
+          Prefix     = var.prefix
+          created-by = "entigo-infralib"
+        },
+        var.node_launch_template_tags
+      )
       block_device_mappings = {
         xvda = {
           device_name = "/dev/xvda"
@@ -66,11 +69,14 @@ locals {
       labels = {
         mon = "true"
       }
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-        created-by = "entigo-infralib"
-      }
+      launch_template_tags = merge(
+        {
+          Terraform  = "true"
+          Prefix     = var.prefix
+          created-by = "entigo-infralib"
+        },
+        var.node_launch_template_tags
+      )
 
       block_device_mappings = {
         xvda = {
@@ -108,11 +114,14 @@ locals {
       labels = {
         tools = "true"
       }
-      launch_template_tags = {
-        Terraform = "true"
-        Prefix    = var.prefix
-        created-by = "entigo-infralib"
-      }
+      launch_template_tags = merge(
+        {
+          Terraform  = "true"
+          Prefix     = var.prefix
+          created-by = "entigo-infralib"
+        },
+        var.node_launch_template_tags
+      )
 
       block_device_mappings = {
         xvda = {
@@ -151,43 +160,7 @@ locals {
 
   eks_managed_node_groups = merge(local.eks_managed_node_groups_default, local.eks_managed_node_groups_extra)
 
-  extra_min_sizes     = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_min_size" => lookup(node_group_config, "min_size", 1) }
-  extra_desired_sizes = { for node_group_name, node_group_config in var.eks_managed_node_groups_extra : "eks_${node_group_name}_desired_size" => lookup(node_group_config, "desired_size", 0) }
 
-  // Contains desired sizes with values more than 0
-  eks_desired_size_map = {
-    for k, v in merge(
-      {
-        eks_main_desired_size    = var.eks_main_desired_size
-        eks_tools_desired_size   = var.eks_tools_desired_size
-        eks_mon_desired_size     = var.eks_mon_desired_size
-      },
-      local.extra_desired_sizes
-    ) : k => v if v > 0
-  }
-
-  // Contains min sizes for node pools that have desired size value more than 0
-  eks_min_size_map = {
-    for k, v in merge(
-      {
-        eks_main_min_size    = var.eks_main_min_size
-        eks_tools_min_size   = var.eks_tools_min_size
-        eks_mon_min_size     = var.eks_mon_min_size
-      },
-      local.extra_min_sizes
-    ) : k => v if contains(keys(local.eks_desired_size_map), replace(k, "min_size", "desired_size"))
-  }
-
-  temp_map_1 = {
-    for k, v in local.eks_min_size_map : k => v if local.eks_desired_size_map[replace(k, "min_size", "desired_size")] >= v
-  }
-
-  temp_map_2 = {
-    for k, v in local.eks_desired_size_map : k => v if local.eks_min_size_map[replace(k, "desired_size", "min_size")] <= v
-  }
-
-  // Contains min_size and desired_size for node groups that have desired_size >= min_size
-  eks_min_and_desired_size_map = merge(local.temp_map_1, local.temp_map_2)
 }
 
 resource "aws_ec2_tag" "privatesubnets" {
@@ -205,29 +178,32 @@ resource "aws_ec2_tag" "publicsubnets" {
 }
 
 module "ebs_csi_irsa_role" {
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.59.0"
-  role_name             = "${var.prefix}-ebs-csi"
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version               = "6.2.2"
+  name                  = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
-  ebs_csi_kms_cmk_ids = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
+  ebs_csi_kms_cmk_arns  = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
   oidc_providers = {
     ex = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    created-by = "entigo-infralib"
-  }
+  tags = merge(
+    {
+      Terraform  = "true"
+      Prefix     = var.prefix
+      created-by = "entigo-infralib"
+    },
+    var.node_launch_template_tags
+  )
 }
 
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.59.0"
-  role_name             = "${var.prefix}-efs-csi"
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version               = "6.2.2"
+  name                  = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
     ex = {
@@ -235,38 +211,43 @@ module "efs_csi_irsa_role" {
       namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
     }
   }
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    created-by = "entigo-infralib"
-  }
+  tags = merge(
+    {
+      Terraform  = "true"
+      Prefix     = var.prefix
+      created-by = "entigo-infralib"
+    },
+    var.node_launch_template_tags
+  )
 }
 
 module "vpc_cni_irsa_role" {
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version               = "5.59.0"
-  role_name_prefix      = "VPC-CNI-IRSA"
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version               = "6.2.2"
+  name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
   vpc_cni_enable_ipv6   = true
-
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:aws-node"]
     }
   }
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
-    created-by = "entigo-infralib"
-  }
+  tags = merge(
+    {
+      Terraform  = "true"
+      Prefix     = var.prefix
+      created-by = "entigo-infralib"
+    },
+    var.node_launch_template_tags
+  )
 }
 
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.0.7"
+  version = "21.6.1"
 
   name                    = var.prefix
   kubernetes_version                 = var.eks_cluster_version
@@ -332,7 +313,7 @@ module "eks" {
       addon_version               = var.vpc_cni_addon_version
       most_recent                 = true
       before_compute              = true
-      service_account_role_arn    = module.vpc_cni_irsa_role.iam_role_arn
+      service_account_role_arn    = module.vpc_cni_irsa_role.arn
 
       configuration_values = jsonencode({
         env = {
@@ -347,7 +328,7 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.efs_csi_addon_version
-      service_account_role_arn = module.efs_csi_irsa_role[0].iam_role_arn
+      service_account_role_arn = module.efs_csi_irsa_role[0].arn
       configuration_values = jsonencode({
         controller : {
           tolerations : [
@@ -367,7 +348,7 @@ module "eks" {
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.ebs_csi_addon_version
       #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
-      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      service_account_role_arn = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
         controller : {
           volumeModificationFeature: {
@@ -536,115 +517,5 @@ module "eks" {
     Terraform = "true"
     Prefix    = var.prefix
     created-by = "entigo-infralib"
-  }
-}
-
-
-#resource "aws_eks_identity_provider_config" "aad" {
-#  cluster_name = module.eks.cluster_name
-#  oidc {
-#    client_id                     = "..."
-#    identity_provider_config_name = "AAD"
-#    issuer_url                    = "https://sts.windows.net/.../"
-#    username_claim                = "upn"
-#    groups_claim                  = "groups"
-#  }
-#}
-
-resource "null_resource" "update_desired_size" {
-  count      = length(local.eks_desired_size_map) > 0 ? 1 : 0
-  depends_on = [module.eks]
-
-  triggers = {
-    eks_desired_size_map = jsonencode([
-      for key in sort(keys(local.eks_desired_size_map)) : {
-        key   = key
-        value = local.eks_desired_size_map[key]
-      }
-    ])
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    environment = local.eks_min_and_desired_size_map
-
-    command = <<-EOT
-
-      # Get list of node groups
-      nodegroups=$(aws eks list-nodegroups --cluster-name ${module.eks.cluster_name} --query "nodegroups" --output text)
-      
-      # Loop through each node group
-      for nodegroup in $nodegroups; do
-        echo ""
-        echo "Nodegroup: $nodegroup"
-
-        # Get the short name of the node group (Example: main, tools, mon)
-        node_group_short_name=$(echo "$nodegroup" | awk -F'-' '{print $(NF-1)}')
-        echo "Node group short name: $node_group_short_name"
-
-        # Get desired size variable name (Example: eks_main_desired_size)
-        desired_size_variable_name="eks_$${node_group_short_name}_desired_size"
-        echo "desired_size_variable_name: $desired_size_variable_name"
-
-        # If desired_size_variable_name is not set as an environment variable (Does not exist in eks_min_and_desired_size_map), skip this node group
-        if [ -z "$${!desired_size_variable_name}" ]; then
-          echo "Skipping node group $nodegroup because desired_size variable is not set"
-          continue
-        fi
-
-        # Get new desired size value from environment variable
-        new_desired_size=$${!desired_size_variable_name}
-
-        # Convert new desired size value to an integer
-        new_desired_size=$(printf "%d" "$new_desired_size")
-        echo "New desired size: $new_desired_size"
-        
-        # Get the current desired size of the node group
-        current_desired_size=$(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.scalingConfig.desiredSize" --output text)
-
-        # Convert current desired size value to an integer
-        current_desired_size=$(printf "%d" "$current_desired_size")
-        echo "Current desired size: $current_desired_size"
-
-        if [ $current_desired_size -eq $new_desired_size ]; then
-           echo "Node group $nodegroup already at desired size: $new_desired_size". No update needed.
-           continue
-        fi
-
-        # Get min size variable name (Example: eks_main_min_size)
-        min_size_variable_name="eks_$${node_group_short_name}_min_size"
-        echo "min_size_variable_name: $min_size_variable_name"
-
-        # Get new min size value from environment variable
-        new_min_size=$${!min_size_variable_name}
-
-        # Convert new min size value to an integer
-        new_min_size=$(printf "%d" "$new_min_size")
-        echo "New min size: $new_min_size"
-
-        # Get the current min size of the node group
-        current_min_size=$(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.scalingConfig.minSize" --output text)
-
-        # Convert current min size value to an integer
-        current_min_size=$(printf "%d" "$current_min_size")
-        echo "Current min size: $current_min_size"
-
-        # Check if node group is in ACTIVE state, if not then sleep for 5 seconds and check again
-        while [ $(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.status" --output text) != "ACTIVE" ]; do
-          sleep 5
-        done
-
-        # Update node group desired size
-        aws eks update-nodegroup-config --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --scaling-config desiredSize=$new_desired_size
-        echo "Updated node group $nodegroup to new desired size: $new_desired_size"
-
-        # Check if node group is in ACTIVE state, if not then sleep for 5 seconds and check again
-        while [ $(aws eks describe-nodegroup --cluster-name ${module.eks.cluster_name} --nodegroup-name $nodegroup --query "nodegroup.status" --output text) != "ACTIVE" ]; do
-          sleep 5
-        done
-
-      done
-
-    EOT
   }
 }
