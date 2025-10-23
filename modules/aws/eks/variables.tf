@@ -46,7 +46,7 @@ variable "cluster_identity_providers" {
 variable "authentication_mode" {
   type     = string
   nullable = false
-  default  = "API_AND_CONFIG_MAP" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
+  default  = "API" # Possible values are API, CONFIG_MAP or API_AND_CONFIG_MAP
 }
 
 variable "enable_cluster_creator_admin_permissions" {
@@ -103,13 +103,13 @@ variable "eks_main_min_size" {
 variable "eks_main_desired_size" {
   type     = number
   nullable = false
-  default  = 2
+  default  = 0
 }
 
 variable "eks_main_max_size" {
   type     = number
   nullable = false
-  default  = 4
+  default  = 3
 }
 
 variable "eks_main_instance_types" {
@@ -156,7 +156,7 @@ variable "eks_mon_min_size" {
 variable "eks_mon_desired_size" {
   type     = number
   nullable = false
-  default  = 1
+  default  = 0
 }
 
 variable "eks_mon_max_size" {
@@ -209,7 +209,7 @@ variable "eks_tools_min_size" {
 variable "eks_tools_desired_size" {
   type     = number
   nullable = false
-  default  = 1
+  default  = 0
 }
 
 variable "eks_tools_max_size" {
@@ -282,6 +282,12 @@ variable "node_ssh_key_pair_name" {
   default = null
 }
 
+variable "node_launch_template_tags" {
+  type        = map(string)
+  default     = {}
+  nullable = false
+}
+
 variable "coredns_addon_version" {
   type = string
   default = "v1.11.4-eksbuild.14"
@@ -321,3 +327,4 @@ variable "enable_efs_csi" {
   type    = bool
   default = false
 }
+

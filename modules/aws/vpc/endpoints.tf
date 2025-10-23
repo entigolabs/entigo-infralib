@@ -1,7 +1,7 @@
 module "vpc_endpoints" {
   count = var.create_endpoint_ecr || var.create_gateway_s3 || var.create_endpoint_s3 ? 1 : 0
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "6.0.1"
+  version = "6.5.0"
   
   vpc_id = module.vpc.vpc_id
   subnet_ids = var.subnet_split_mode == "default" ? module.vpc.private_subnets : [for i in range(local.azs) : module.vpc.private_subnets[i+(2*local.azs)]]
