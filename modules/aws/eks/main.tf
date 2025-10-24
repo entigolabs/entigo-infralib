@@ -347,10 +347,10 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.ebs_csi_addon_version
-      #configuration_values     = "{\"controller\":{\"extraVolumeTags\": {\"map-migrated\": \"migXXXXX\"}}}"
       service_account_role_arn = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
         controller : {
+          extraVolumeTags = var.node_launch_template_tags
           volumeModificationFeature: {
                 enabled: true
           },
