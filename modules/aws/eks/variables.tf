@@ -290,27 +290,27 @@ variable "node_launch_template_tags" {
 
 variable "coredns_addon_version" {
   type = string
-  default = "v1.11.4-eksbuild.14"
+  default = "v1.11.4-eksbuild.24"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.32.6-eksbuild.2"
+  default = "v1.32.6-eksbuild.12"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.19.6-eksbuild.7"
+  default = "v1.20.4-eksbuild.1"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.45.0-eksbuild.2"
+  default = "v1.51.1-eksbuild.1"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v2.1.9-eksbuild.1"
+  default = "v2.1.13-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {
