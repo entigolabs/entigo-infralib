@@ -1,0 +1,9 @@
+domains: |
+  {
+    "cert" = {
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}.infralib.entigo.io"
+      create_validation  = false
+      create_certificate = true
+      create_zone        = false
+    }
+  }
