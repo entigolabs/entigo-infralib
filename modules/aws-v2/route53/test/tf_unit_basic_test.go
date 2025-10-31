@@ -1,14 +1,13 @@
 package test
 
 import (
-	"fmt"
-	"os"
-	"strings"
 	"testing"
-
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
+	"strings"
+	"fmt"
+	"os"
 )
 
 
