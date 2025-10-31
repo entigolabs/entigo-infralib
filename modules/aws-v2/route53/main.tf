@@ -72,14 +72,14 @@ locals {
       v.create_zone == false ? 
       data.aws_route53_zone.existing[k].zone_id : 
       aws_route53_zone.this[k].zone_id
-    )
+    ) if v.create_validation
   }
 }
 
 resource "aws_route53_zone" "this" {
   for_each = {
     for k, v in var.domains : k => v
-    if v.create_zone
+    if v.create_zone && v.create_validation
   }
   
   name    = each.value.domain_name

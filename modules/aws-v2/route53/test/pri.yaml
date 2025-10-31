@@ -3,5 +3,13 @@ domains: |
     "pri" = {
       domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}.infralib.entigo.io"
       parent_zone_id     = "Z07983041XRLSLZUTHHDY"
+      default_private    = true
+      default_public     = true
+    },
+    "cert" = {
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name  }}-cert.infralib.entigo.io"
+      create_certificate = true
+      create_validation  = false
+      create_zone        = false
     }
   }
