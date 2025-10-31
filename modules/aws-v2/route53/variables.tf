@@ -14,6 +14,7 @@ variable "domains" {
     parent_zone_id             = optional(string, "")
     create_zone                = optional(bool, true)
     create_certificate         = optional(bool, true)
+    create_validation          = optional(bool, true)
     certificate_key_algorithm  = optional(string, "EC_secp384r1")
     certificate_authority_arn  = optional(string, "")
     private                    = optional(bool, false)

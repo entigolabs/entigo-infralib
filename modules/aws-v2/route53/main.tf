@@ -72,14 +72,14 @@ locals {
       v.create_zone == false ? 
       data.aws_route53_zone.existing[k].zone_id : 
       aws_route53_zone.this[k].zone_id
-    )
+    ) if v.create_validation
   }
 }
 
 resource "aws_route53_zone" "this" {
   for_each = {
     for k, v in var.domains : k => v
-    if v.create_zone
+    if v.create_zone && v.create_validation
   }
   
   name    = each.value.domain_name
@@ -110,7 +110,7 @@ resource "aws_route53_zone" "this" {
 data "aws_route53_zone" "existing" {
   for_each = {
     for k, v in var.domains : k => v
-    if v.create_zone == false
+    if v.create_zone == false && v.create_validation
   }
   
   name         = each.value.domain_name
@@ -197,7 +197,7 @@ resource "aws_acm_certificate" "this" {
 resource "aws_route53_record" "validation" {
   for_each = {
     for k, v in var.domains : "${k}_${v.domain_name}" => merge(v, { key = k })
-    if v.create_certificate && v.certificate_authority_arn == ""
+    if v.create_certificate && v.create_validation && v.certificate_authority_arn == ""
   }
   
   zone_id = local.domains_with_defaults[each.value.key].needs_validation_zone ? aws_route53_zone.validation[each.value.key].zone_id : (local.domains_with_defaults[each.value.key].create_zone == false ? data.aws_route53_zone.existing[each.value.key].zone_id : aws_route53_zone.this[each.value.key].zone_id )

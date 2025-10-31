@@ -56,7 +56,7 @@ output "nameservers" {
       v.create_zone == false ? 
       data.aws_route53_zone.existing[k].name_servers : 
       aws_route53_zone.this[k].name_servers
-    )
+    ) if v.create_validation
   }
 }
 
