@@ -10,6 +10,7 @@ locals {
       parent_zone_id             = domain.parent_zone_id
       create_zone                = domain.create_zone
       create_certificate         = domain.create_certificate
+      create_validation          = domain.create_validation
       certificate_authority_arn  = domain.certificate_authority_arn
       private                    = domain.private
       default_public             = domain.default_public
@@ -70,9 +71,10 @@ locals {
   effective_zone_ids = {
     for k, v in var.domains : k => (
       v.create_zone == false ? 
-      data.aws_route53_zone.existing[k].zone_id : 
+      v.create_validation == true ?
+      data.aws_route53_zone.existing[k].zone_id : "" :
       aws_route53_zone.this[k].zone_id
-    ) if v.create_validation
+    )
   }
 }
 
