@@ -324,7 +324,8 @@ module "eks" {
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
-          WARM_PREFIX_TARGET       = "1"
+          WARM_IP_TARGET           = "1"
+          MINIMUM_IP_TARGET        = "1"
         }
         enableNetworkPolicy = var.enable_vpc_cni_network_policy
       })
