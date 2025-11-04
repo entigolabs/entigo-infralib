@@ -73,6 +73,18 @@ variable "ami_type" {
   default     = "AL2023_x86_64_STANDARD"
 }
 
+variable "ami_release_version" {
+  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
+  type        = string
+  default     = "1.32.9-20251029"
+}
+
+variable "use_latest_ami_release_version" {
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "volume_size" {
   type    = number
   default = 100
