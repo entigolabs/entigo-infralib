@@ -121,6 +121,7 @@ func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions
 	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
+		resource.Version = "v1beta2"
 	}
 	availability := defaultObjectAvailability(name, resource)
 	availability.isAvailable = isCrossplaneObjectAvailable
@@ -132,6 +133,7 @@ func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, 
 	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
+		resource.Version = "v1beta2"
 	}
 	namespacedObject := defaultNamespacedObject(name, resource)
 	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
@@ -147,6 +149,7 @@ func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
+		resource.Version = "v1beta2"
 	}
 	return CreateObject(t, options, bucketObject, "", resource)
 }
@@ -156,6 +159,7 @@ func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
+		resource.Version = "v1beta2"
 	}
 	return deleteObject(t, options, name, "", resource)
 }

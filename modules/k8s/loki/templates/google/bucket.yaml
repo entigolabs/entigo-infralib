@@ -1,6 +1,6 @@
 {{- if eq .Values.global.cloudProvider "google" }}
 
-apiVersion: storage.gcp.upbound.io/v1beta1
+apiVersion: storage.gcp.upbound.io/v1beta2
 kind: Bucket
 metadata:
   name: {{ .Values.global.bucketName }}
