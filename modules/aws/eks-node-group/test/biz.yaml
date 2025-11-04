@@ -3,3 +3,4 @@ desired_size: 1
 max_size: 1
 capacity_type: "SPOT"
 volume_size: 20
+use_latest_ami_release_version: true

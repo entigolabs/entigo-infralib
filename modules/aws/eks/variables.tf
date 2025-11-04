@@ -31,6 +31,19 @@ variable "eks_cluster_version" {
   default  = "1.32"
 }
 
+variable "ami_release_version" {
+  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
+  type        = string
+  default     = "1.32.9-20251029"
+}
+
+variable "use_latest_ami_release_version" {
+  description = "By default the node AMI versions are fixed to ami_release_version"
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "cluster_iam_role_arn" {
   type     = string
   nullable = true

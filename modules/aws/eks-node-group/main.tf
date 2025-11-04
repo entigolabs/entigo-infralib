@@ -33,6 +33,8 @@ module "eks-managed-node-group" {
   instance_types = var.instance_types
   capacity_type  = var.capacity_type
   ami_type       = var.ami_type
+  ami_release_version = var.ami_release_version
+  use_latest_ami_release_version = var.use_latest_ami_release_version
   
   block_device_mappings = var.block_device_mappings != null ? var.block_device_mappings : {
     xvda = {
