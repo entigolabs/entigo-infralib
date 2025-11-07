@@ -130,7 +130,7 @@ output "ebs_csi_role_arn" {
 }
 
 output "efs_csi_role_arn" {
-  description = "IAM role ARN of the EBS CSI addon"
+  description = "IAM role ARN of the EFS CSI addon"
   value = var.enable_efs_csi ? module.efs_csi_irsa_role[0].arn : ""
 }
 
