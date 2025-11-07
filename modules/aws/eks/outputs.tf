@@ -119,6 +119,21 @@ output "cluster_iam_role_unique_id" {
   value = module.eks.cluster_iam_role_unique_id
 }
 
+output "vpc_cni_role_arn" {
+  description = "IAM role ARN of the VPC CNI addon"
+  value = module.vpc_cni_irsa_role[0].arn
+}
+
+output "ebs_csi_role_arn" {
+  description = "IAM role ARN of the EBS CSI addon"
+  value = module.ebs_csi_irsa_role[0].arn
+}
+
+output "efs_csi_role_arn" {
+  description = "IAM role ARN of the EBS CSI addon"
+  value = var.enable_efs_csi ? module.efs_csi_irsa_role[0].arn : ""
+}
+
 output "cluster_addons" {
   description = "Map of attribute maps for all EKS cluster addons enabled"
   value = module.eks.cluster_addons
