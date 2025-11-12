@@ -76,7 +76,7 @@ variable "ami_type" {
 variable "ami_release_version" {
   description = "The AMI version. Defaults to current AMI release version for the given infralib release"
   type        = string
-  default     = "1.32.9-20251029"
+  default     = null
 }
 
 variable "use_latest_ami_release_version" {

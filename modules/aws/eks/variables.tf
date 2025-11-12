@@ -31,14 +31,8 @@ variable "eks_cluster_version" {
   default  = "1.32"
 }
 
-variable "ami_release_version" {
-  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
-  type        = string
-  default     = "1.32.9-20251029"
-}
-
 variable "use_latest_ami_release_version" {
-  description = "By default the node AMI versions are fixed to ami_release_version"
+  description = "By default the node AMI versions are infralib release specific"
   type        = bool
   default     = false
   nullable    = false
@@ -140,6 +134,12 @@ variable "eks_main_ami_type" {
   default = "AL2023_x86_64_STANDARD"
 }
 
+variable "eks_main_ami_release_version" {
+  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
+  type        = string
+  default     = null
+}
+
 variable "eks_main_volume_size" {
   type    = number
   default = 100
@@ -193,6 +193,12 @@ variable "eks_mon_ami_type" {
   default = "AL2023_x86_64_STANDARD"
 }
 
+variable "eks_mon_ami_release_version" {
+  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
+  type        = string
+  default     = null
+}
+
 variable "eks_mon_volume_size" {
   type    = number
   default = 50
@@ -244,6 +250,12 @@ variable "eks_tools_capacity_type" {
 variable "eks_tools_ami_type" {
   type    = string
   default = "AL2023_x86_64_STANDARD"
+}
+
+variable "eks_tools_ami_release_version" {
+  description = "The AMI version. Defaults to current AMI release version for the given infralib release"
+  type        = string
+  default     = null
 }
 
 variable "eks_tools_volume_size" {
