@@ -6,7 +6,17 @@ locals {
   #  provider_key_arn = var.cluster_encryption_kms_key_arn
   #}] : []
 
-  
+  ami_release_version = {
+    "AL2023_x86_64_STANDARD"     = "1.32.9-20251029"
+    "AL2023_x86_64_NVIDIA"       = "1.32.9-20251108"
+    "AL2023_ARM_64_STANDARD"     = "1.32.9-20251108"
+    "AL2023_ARM_64_NVIDIA"       = "1.32.9-20251108"
+    "BOTTLEROCKET_x86_64"        = "1.50.0-80378023"
+    "BOTTLEROCKET_x86_64_NVIDIA" = "1.50.0-80378023"
+    "BOTTLEROCKET_ARM_64"        = "1.50.0-80378023"
+    "BOTTLEROCKET_ARM_64_NVIDIA" = "1.50.0-80378023"
+  }
+   
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
   eks_managed_node_groups_all = {
@@ -20,7 +30,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
-      ami_release_version = var.ami_release_version
+      ami_release_version = try(coalesce(var.eks_main_ami_release_version, local.ami_release_version[var.eks_main_ami_type]), null)
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
@@ -59,7 +69,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_mon_ami_type
-      ami_release_version = var.ami_release_version
+      ami_release_version = try(coalesce(var.eks_mon_ami_release_version, local.ami_release_version[var.eks_mon_ami_type]), null)
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
@@ -106,7 +116,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
-      ami_release_version = var.ami_release_version
+      ami_release_version = try(coalesce(var.eks_tools_ami_release_version, local.ami_release_version[var.eks_tools_ami_type]), null)
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false

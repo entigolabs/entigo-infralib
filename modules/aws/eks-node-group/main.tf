@@ -1,3 +1,17 @@
+locals {
+  ami_release_version = {
+    "AL2023_x86_64_STANDARD"     = "1.32.9-20251029"
+    "AL2023_x86_64_NVIDIA"       = "1.32.9-20251108"
+    "AL2023_ARM_64_STANDARD"     = "1.32.9-20251108"
+    "AL2023_ARM_64_NVIDIA"       = "1.32.9-20251108"
+    "BOTTLEROCKET_x86_64"        = "1.50.0-80378023"
+    "BOTTLEROCKET_x86_64_NVIDIA" = "1.50.0-80378023"
+    "BOTTLEROCKET_ARM_64"        = "1.50.0-80378023"
+    "BOTTLEROCKET_ARM_64_NVIDIA" = "1.50.0-80378023"
+  }
+}
+
+
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
@@ -33,7 +47,7 @@ module "eks-managed-node-group" {
   instance_types = var.instance_types
   capacity_type  = var.capacity_type
   ami_type       = var.ami_type
-  ami_release_version = var.ami_release_version
+  ami_release_version = try(coalesce(var.ami_release_version, local.ami_release_version[var.ami_type]), null)
   use_latest_ami_release_version = var.use_latest_ami_release_version
   
   block_device_mappings = var.block_device_mappings != null ? var.block_device_mappings : {
