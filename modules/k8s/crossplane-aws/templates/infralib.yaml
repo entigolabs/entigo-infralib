@@ -83,6 +83,25 @@ spec:
 
 {{- end }}
 
+{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
+---
+apiVersion: rds.aws.upbound.io/v1beta1
+kind: SubnetGroup
+metadata:
+  name: elasticache
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.elasticache_subnet_group_name }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Release.Name }}
+
+{{- end }}
+
 {{- if .Values.global.aws.kms.data_key_arn }}
 ---
 apiVersion: kms.aws.upbound.io/v1beta1
@@ -357,6 +376,26 @@ metadata:
   name: database
   annotations:
     crossplane.io/external-name: {{ .Values.global.aws.vpc.database_subnet_group_name }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Release.Name }}
+
+{{- end }}
+
+{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
+---
+apiVersion: rds.aws.m.upbound.io/v1beta1
+kind: SubnetGroup
+metadata:
+  name: elasticache
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.aws.vpc.elasticache_subnet_group_name }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
