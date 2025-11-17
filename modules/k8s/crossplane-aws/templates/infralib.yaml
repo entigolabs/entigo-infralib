@@ -40,6 +40,29 @@ spec:
 {{- end }}
 {{- end }}
 
+{{- if .Values.global.aws.vpc.elasticache_subnets_id }}
+{{- $elasticache_subnet_ids := splitList "," .Values.global.aws.vpc.elasticache_subnets_id }}
+{{- range $i, $value := $elasticache_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: elasticache-{{ $i }}
+  labels:
+    subnet-type: elasticache
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
 {{- if .Values.global.aws.vpc.compute_subnets_id }}
 {{- $compute_subnet_ids := splitList "," .Values.global.aws.vpc.compute_subnets_id }}
 {{- range $i, $value := $compute_subnet_ids }}
@@ -85,7 +108,7 @@ spec:
 
 {{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
 ---
-apiVersion: rds.aws.upbound.io/v1beta1
+apiVersion: elasticache.aws.upbound.io/v1beta1
 kind: SubnetGroup
 metadata:
   name: elasticache
@@ -344,6 +367,31 @@ spec:
 {{- end }}
 {{- end }}
 
+{{- if .Values.global.aws.vpc.elasticache_subnets_id }}
+{{- $elasticache_subnet_ids := splitList "," .Values.global.aws.vpc.elasticache_subnets_id }}
+{{- range $i, $value := $elasticache_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: elasticache-{{ $i }}
+  labels:
+    subnet-type: elasticache
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
+
 {{- if .Values.global.aws.vpc.compute_subnets_id }}
 {{- $compute_subnet_ids := splitList "," .Values.global.aws.vpc.compute_subnets_id }}
 {{- range $i, $value := $compute_subnet_ids }}
@@ -390,7 +438,7 @@ spec:
 
 {{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
 ---
-apiVersion: rds.aws.m.upbound.io/v1beta1
+apiVersion: elasticache.aws.m.upbound.io/v1beta1
 kind: SubnetGroup
 metadata:
   name: elasticache
