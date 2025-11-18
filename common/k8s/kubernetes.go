@@ -118,10 +118,9 @@ func WaitUntilProviderConfigAvailable(t testing.TestingT, options *k8s.KubectlOp
 }
 
 func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
-	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
+	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta2", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
-		resource.Version = "v1beta2"
 	}
 	availability := defaultObjectAvailability(name, resource)
 	availability.isAvailable = isCrossplaneObjectAvailable
@@ -130,10 +129,9 @@ func WaitUntilK8SBucketAvailable(t testing.TestingT, options *k8s.KubectlOptions
 }
 
 func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
-	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
+	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta2", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
-		resource.Version = "v1beta2"
 	}
 	namespacedObject := defaultNamespacedObject(name, resource)
 	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
@@ -146,20 +144,18 @@ func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name strin
 		return nil, err
 	}
 	bucketObject.SetName(name)
-	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
+	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta2", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
-		resource.Version = "v1beta2"
 	}
 	return CreateObject(t, options, bucketObject, "", resource)
 }
 
 func DeleteK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
 	logger.Logf(t, "Deleting S3 bucket %s", name)
-	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta1", Resource: "buckets"}
+	resource := schema.GroupVersionResource{Group: "s3.aws.upbound.io", Version: "v1beta2", Resource: "buckets"}
 	if getProviderType(options) == GCloud {
 		resource.Group = "storage.gcp.upbound.io"
-		resource.Version = "v1beta2"
 	}
 	return deleteObject(t, options, name, "", resource)
 }
