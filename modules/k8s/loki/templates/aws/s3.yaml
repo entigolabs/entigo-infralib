@@ -48,7 +48,7 @@ spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
     rule:
-      - objectOwnership: BucketOwnerPreferred
+      objectOwnership: BucketOwnerPreferred
     bucketRef:
       name: {{ .Values.global.bucketName }}
   providerConfigRef:
@@ -109,7 +109,7 @@ spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
     versioningConfiguration:
-      - status: Suspended
+      status: Suspended
     bucketRef:
       name: {{ .Values.global.bucketName }}
   providerConfigRef:
@@ -130,10 +130,10 @@ spec:
     rule:
       - applyServerSideEncryptionByDefault:
           {{- if .Values.global.aws.kmsKeyId }}
-          - kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
+            kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
             sseAlgorithm: aws:kms
           {{- else }}
-          - sseAlgorithm: AES256
+            sseAlgorithm: AES256
           {{- end }}
         bucketKeyEnabled: true
     bucketRef:
