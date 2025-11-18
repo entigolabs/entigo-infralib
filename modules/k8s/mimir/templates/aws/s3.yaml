@@ -1,5 +1,5 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: Bucket
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -18,7 +18,7 @@ spec:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # ACL Configuration (separate resource in Upbound)
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketACL
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -57,7 +57,7 @@ spec:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # Versioning Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketVersioning
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -76,7 +76,7 @@ spec:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # Server Side Encryption Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketServerSideEncryptionConfiguration
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -123,7 +123,7 @@ spec:
 {{- end }}
 ---
 # Object Ownership Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketOwnershipControls
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -143,7 +143,7 @@ spec:
 {{- if .Values.global.aws.bucketLifecycleRules }}
 ---
 # Lifecycle Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketLifecycleConfiguration
 metadata:
   name: {{ .Values.global.bucketName }}
