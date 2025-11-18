@@ -1,3 +1,11 @@
+output "arn" {
+  value = aws_instance.ec2.arn
+}
+
+output "id" {
+  value = aws_instance.ec2.id
+}
+
 output "private_dns" {
   value = aws_instance.ec2.private_dns
 }
