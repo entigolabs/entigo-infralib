@@ -9,7 +9,7 @@ VERSION=$1
 PROVIDERS="provider-kafka"
 
 for provider in $PROVIDERS; do
-    SOURCE="xpkg.upbound.io/upbound/$provider:$VERSION"
+    SOURCE="xpkg.upbound.io/crossplane-contrib/$provider:$VERSION"
     DEST="entigolabs/$provider:$VERSION"
     
     echo "Copying $SOURCE to $DEST"
