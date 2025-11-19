@@ -1,0 +1,11 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-kafka
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-kafka:v0.5.0
+  runtimeConfigRef:
+    apiVersion: pkg.crossplane.io/v1beta1
+    kind: DeploymentRuntimeConfig
+    name: {{ $.Release.Name }}
