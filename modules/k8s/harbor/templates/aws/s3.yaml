@@ -1,6 +1,6 @@
 # {{- if eq .Values.global.cloudProvider "aws" }}
 # 
-# apiVersion: s3.aws.upbound.io/v1beta1
+# apiVersion: s3.aws.upbound.io/v1beta2
 # kind: Bucket
 # metadata:
 #   name: {{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}

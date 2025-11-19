@@ -1,6 +1,6 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
 # Main S3 Bucket
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: Bucket
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -18,7 +18,7 @@ spec:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # ACL Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketACL
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -36,7 +36,7 @@ spec:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # Object Ownership Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketOwnershipControls
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -48,7 +48,7 @@ spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
     rule:
-      - objectOwnership: BucketOwnerPreferred
+      objectOwnership: BucketOwnerPreferred
     bucketRef:
       name: {{ .Values.global.bucketName }}
   providerConfigRef:
@@ -97,7 +97,7 @@ spec:
 {{- end }}
 ---
 # Versioning Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketVersioning
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -109,14 +109,14 @@ spec:
   forProvider:
     region: {{ .Values.global.aws.region }}
     versioningConfiguration:
-      - status: Suspended
+      status: Suspended
     bucketRef:
       name: {{ .Values.global.bucketName }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 ---
 # Server Side Encryption Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketServerSideEncryptionConfiguration
 metadata:
   name: {{ .Values.global.bucketName }}
@@ -130,10 +130,10 @@ spec:
     rule:
       - applyServerSideEncryptionByDefault:
           {{- if .Values.global.aws.kmsKeyId }}
-          - kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
+            kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
             sseAlgorithm: aws:kms
           {{- else }}
-          - sseAlgorithm: AES256
+            sseAlgorithm: AES256
           {{- end }}
         bucketKeyEnabled: true
     bucketRef:
@@ -143,7 +143,7 @@ spec:
 {{- if .Values.global.aws.bucketLifecycleRules }}
 ---
 # Lifecycle Configuration
-apiVersion: s3.aws.upbound.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketLifecycleConfiguration
 metadata:
   name: {{ .Values.global.bucketName }}
