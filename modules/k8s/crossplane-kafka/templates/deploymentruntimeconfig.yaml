@@ -1,0 +1,43 @@
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{.Release.Name}}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      strategy: {}
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: tools
+                        operator: In
+                        values:
+                          - "true"
+                  weight: 90
+          containers:
+            - name: package-runtime
+              securityContext: {}
+          securityContext:
+            fsGroup: 2000
+          serviceAccountName: {{.Values.global.aws.serviceAccountName}}
+          tolerations:
+            - effect: NoSchedule
+              key: tools
+              operator: Equal
+              value: "true"
+  serviceAccountTemplate:
+    metadata:
+      name: {{.Values.global.aws.serviceAccountName}}
+      annotations:
+        eks.amazonaws.com/role-arn: {{.Values.global.aws.role}}
+  serviceTemplate: {}

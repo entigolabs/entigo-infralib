@@ -1,0 +1,4 @@
+global:
+  aws:
+    role: "{{ .toutput.crossplane.iam_role }}"
+    serviceAccountName: "{{ .tmodule.crossplane-aws }}"
