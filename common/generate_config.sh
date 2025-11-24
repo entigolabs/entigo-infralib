@@ -365,6 +365,8 @@ test_k8s() {
   #common
   ./modules/k8s/crossplane-k8s/test.sh testonly &
   PIDS="$PIDS $!=crossplane-k8s"
+  ./modules/k8s/crossplane-kafka/test.sh testonly &
+  PIDS="$PIDS $!=crossplane-kafka"
   ./modules/k8s/external-dns/test.sh testonly &
   PIDS="$PIDS $!=external-dns"
   ./modules/k8s/external-secrets/test.sh testonly &
@@ -431,5 +433,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
 }
