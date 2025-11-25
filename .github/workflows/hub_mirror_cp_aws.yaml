@@ -2,9 +2,15 @@ name: Mirror CP AWS
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - 'modules/k8s/crossplane-aws/pullpush.sh'
+  pull_request:
     paths:
       - 'modules/k8s/crossplane-aws/pullpush.sh'
   workflow_dispatch:
+
 
 jobs:
   sync-providers:
