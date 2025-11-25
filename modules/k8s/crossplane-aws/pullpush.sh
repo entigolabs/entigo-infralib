@@ -15,7 +15,10 @@ PROVIDERS="provider-family-aws provider-aws-accessanalyzer provider-aws-account 
 for provider in $PROVIDERS; do
     SOURCE="xpkg.upbound.io/upbound/$provider:$VERSION"
     DEST="entigolabs/$provider:$VERSION"
-    
+    if docker manifest inspect $DEST > /dev/null 2>&1; then
+        echo "Skipping $provider - already exists at $DEST"
+        continue
+    fi
     echo "Copying $SOURCE to $DEST"
     docker buildx imagetools create --tag $DEST $SOURCE
     
