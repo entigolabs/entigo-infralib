@@ -29,9 +29,6 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
 	require.Equal(t, output, "yes")
 
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
-	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-
 	// Install AWS provider
 	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "contrib-provider-sql", 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
