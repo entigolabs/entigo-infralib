@@ -22,7 +22,6 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	t.Parallel()
 
 	namespaceName := "crossplane-system"
-	releaseName := "crossplane-sql"
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
