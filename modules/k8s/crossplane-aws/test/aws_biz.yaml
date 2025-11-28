@@ -1,3 +1,6 @@
 global:
   createObservers: true
   createNamespacedObservers: true
+  extraProviders:
+    - networkfirewall
+    - ram
