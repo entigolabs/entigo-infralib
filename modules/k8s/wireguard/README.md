@@ -11,7 +11,6 @@ steps:
     modules:
       - name: wireguard
         source: wireguard
-        version: stable
 
 ```
 
