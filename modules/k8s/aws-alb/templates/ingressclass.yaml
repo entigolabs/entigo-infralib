@@ -73,21 +73,21 @@ spec:
     kind: IngressClassParams
     name: service
 {{- end }}
-{{- if .Values.ingressClass.public.enabled }}
+{{- if .Values.ingressClass.external.enabled }}
 ---
 apiVersion: elbv2.k8s.aws/v1beta1
 kind: IngressClassParams
 metadata:
-  name: public
+  name: external
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   group:
-    name: public
-  {{- if .Values.ingressClass.public.subnets }}
+    name: external
+  {{- if .Values.ingressClass.external.subnets }}
   subnets:
     ids:
-      {{- range split "," .Values.ingressClass.public.subnets }}
+      {{- range split "," .Values.ingressClass.external.subnets }}
       - {{ . | trim | trimAll "\"" }}
       {{- end }}
   {{- end }}
@@ -101,7 +101,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: public
+  name: external
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -109,5 +109,5 @@ spec:
   parameters:
     apiGroup: elbv2.k8s.aws
     kind: IngressClassParams
-    name: public
+    name: external
 {{- end }}

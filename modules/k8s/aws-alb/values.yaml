@@ -52,6 +52,6 @@ ingressClass:
   service:
     enabled: true
     subnets: ""
-  public:
+  external:
     enabled: true
     subnets: ""

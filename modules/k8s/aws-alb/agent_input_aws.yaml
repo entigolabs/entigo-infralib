@@ -15,5 +15,5 @@ ingressClass:
     subnets: '{{ .toutput.vpc.control_subnets }}'
   service:
     subnets: '{{ .toutput.vpc.service_subnets }}'
-  public:
+  external:
     subnets: '{{ .toutput.vpc.public_subnets }}'
