@@ -2,7 +2,7 @@
 apiVersion: elbv2.k8s.aws/v1beta1
 kind: IngressClassParams
 metadata:
-  name: alb-internal
+  name: internal
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -25,7 +25,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: alb-internal
+  name: internal
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -33,14 +33,14 @@ spec:
   parameters:
     apiGroup: elbv2.k8s.aws
     kind: IngressClassParams
-    name: alb-internal
+    name: internal
 {{- end }}
 {{- if .Values.ingressClass.service.enabled }}
 ---
 apiVersion: elbv2.k8s.aws/v1beta1
 kind: IngressClassParams
 metadata:
-  name: alb-service
+  name: service
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -63,7 +63,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: alb-service
+  name: service
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -71,14 +71,14 @@ spec:
   parameters:
     apiGroup: elbv2.k8s.aws
     kind: IngressClassParams
-    name: alb-service
+    name: service
 {{- end }}
 {{- if .Values.ingressClass.public.enabled }}
 ---
 apiVersion: elbv2.k8s.aws/v1beta1
 kind: IngressClassParams
 metadata:
-  name: alb-public
+  name: public
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -101,7 +101,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: alb-public
+  name: public
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -109,5 +109,5 @@ spec:
   parameters:
     apiGroup: elbv2.k8s.aws
     kind: IngressClassParams
-    name: alb-public
+    name: public
 {{- end }}
