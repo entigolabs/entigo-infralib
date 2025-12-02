@@ -9,3 +9,11 @@ aws-load-balancer-controller:
     repository: "602401143452.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
 job:
   image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+
+ingressClass:
+  internal:
+    subnets: '{{ .toutput.vpc.control_subnets }}'
+  service:
+    subnets: '{{ .toutput.vpc.service_subnets }}'
+  external:
+    subnets: '{{ .toutput.vpc.public_subnets }}'
