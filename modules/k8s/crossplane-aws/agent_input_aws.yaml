@@ -5,12 +5,18 @@ global:
     vpc:
       name: "{{ .toutput.vpc.name }}"
       id: "{{ .toutput.vpc.vpc_id }}"
-      database_subnets_id: |
-        {{ .toptout.vpc.database_subnets }}
-      elasticache_subnets_id: |
-        {{ .toptout.vpc.elasticache_subnets }}
+      control_subnets_id: |
+        {{ .toptout.vpc.control_subnets }}
+      service_subnets_id: |
+        {{ .toptout.vpc.service_subnets }}
       compute_subnets_id: |
         {{ .toptout.vpc.compute_subnets }}
+      database_subnets_id: |
+        {{ .toptout.vpc.database_subnets }}
+      public_subnets_id: |
+        {{ .toptout.vpc.public_subnets }}
+      elasticache_subnets_id: |
+        {{ .toptout.vpc.elasticache_subnets }}
       database_subnet_group_name: "{{ .toptout.vpc.database_subnet_group_name }}"
       elasticache_subnet_group_name: "{{ .toptout.vpc.elasticache_subnet_group_name }}"
     kms:
