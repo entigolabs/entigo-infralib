@@ -8,6 +8,10 @@ on:
       - 'modules/k8s/**'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: PR modules/k8s

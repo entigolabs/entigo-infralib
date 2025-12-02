@@ -11,6 +11,5 @@ steps:
     modules:
       - name: hello-world
         source: hello-world
-        version: stable
 
 ```

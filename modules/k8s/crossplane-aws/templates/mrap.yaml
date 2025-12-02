@@ -16,6 +16,9 @@ spec:
 {{- if .Values.global.aws.vpc.database_subnet_group_name }}
   - 'subnetgroups.rds.aws.upbound.io'
 {{- end }}
+{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
+  - 'subnetgroups.elasticache.aws.upbound.io'
+{{- end }}
 {{- if .Values.global.aws.kms.data_key_arn }}
   - 'keys.kms.aws.upbound.io'
   - 'aliases.kms.aws.upbound.io'
@@ -37,6 +40,9 @@ spec:
 {{- end }}
 {{- if .Values.global.aws.vpc.database_subnet_group_name }}
   - 'subnetgroups.rds.aws.m.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
+  - 'subnetgroups.elasticache.aws.m.upbound.io'
 {{- end }}
 {{- if .Values.global.aws.kms.data_key_arn }}
   - 'keys.kms.aws.m.upbound.io'

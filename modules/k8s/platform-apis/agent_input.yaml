@@ -2,3 +2,6 @@ platform-apis:
   zone:
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
+  database:
+    environmentConfig:
+      esClusterSecretStore: "{{ .tmodule.external-secrets }}"

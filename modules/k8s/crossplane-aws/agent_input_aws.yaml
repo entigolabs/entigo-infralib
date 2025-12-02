@@ -7,9 +7,12 @@ global:
       id: "{{ .toutput.vpc.vpc_id }}"
       database_subnets_id: |
         {{ .toptout.vpc.database_subnets }}
+      elasticache_subnets_id: |
+        {{ .toptout.vpc.elasticache_subnets }}
       compute_subnets_id: |
         {{ .toptout.vpc.compute_subnets }}
       database_subnet_group_name: "{{ .toptout.vpc.database_subnet_group_name }}"
+      elasticache_subnet_group_name: "{{ .toptout.vpc.elasticache_subnet_group_name }}"
     kms:
       data_key_arn: "{{ .toptout.kms.data_key_arn }}"
       data_alias_arn: "{{ .toptout.kms.data_alias_arn }}"
@@ -21,5 +24,5 @@ global:
       cluster_name: "{{ .toutput.eks.cluster_name }}"
       node_security_group_id: "{{ .toutput.eks.node_security_group_id }}"
       cluster_primary_security_group_id: "{{ .toutput.eks.cluster_primary_security_group_id }}"
-    ecrProxy: 
+    ecrProxy:
       policy: "{{ .toptout.ecr-proxy.policy }}"
