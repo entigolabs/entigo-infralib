@@ -17,6 +17,75 @@ spec:
 {{- end }}
 
 
+{{- if .Values.global.aws.vpc.public_subnets_id }}
+{{- $public_subnet_ids := splitList "," .Values.global.aws.vpc.public_subnets_id }}
+{{- range $i, $value := $public_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: public-{{ $i }}
+  labels:
+    subnet-type: public
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.control_subnets_id }}
+{{- $control_subnet_ids := splitList "," .Values.global.aws.vpc.control_subnets_id }}
+{{- range $i, $value := $control_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: control-{{ $i }}
+  labels:
+    subnet-type: control
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.service_subnets_id }}
+{{- $service_subnet_ids := splitList "," .Values.global.aws.vpc.service_subnets_id }}
+{{- range $i, $value := $service_subnet_ids }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: service-{{ $i }}
+  labels:
+    subnet-type: service
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+
 {{- if .Values.global.aws.vpc.database_subnets_id }}
 {{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
 {{- range $i, $value := $database_subnet_ids }}
@@ -341,6 +410,81 @@ spec:
     name: {{ .Release.Name }}
 {{- end }}
 
+
+{{- if .Values.global.aws.vpc.control_subnets_id }}
+{{- $control_subnet_ids := splitList "," .Values.global.aws.vpc.control_subnets_id }}
+{{- range $i, $value := $control_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: control-{{ $i }}
+  labels:
+    subnet-type: control
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.public_subnets_id }}
+{{- $public_subnet_ids := splitList "," .Values.global.aws.vpc.public_subnets_id }}
+{{- range $i, $value := $public_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: public-{{ $i }}
+  labels:
+    subnet-type: public
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
+
+{{- if .Values.global.aws.vpc.service_subnets_id }}
+{{- $service_subnet_ids := splitList "," .Values.global.aws.vpc.service_subnets_id }}
+{{- range $i, $value := $service_subnet_ids }}
+---
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: service-{{ $i }}
+  labels:
+    subnet-type: service
+  annotations:
+    crossplane.io/external-name: {{ $value }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    region: {{ $.Values.global.aws.region }}
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ $.Release.Name }}
+
+{{- end }}
+{{- end }}
 
 {{- if .Values.global.aws.vpc.database_subnets_id }}
 {{- $database_subnet_ids := splitList "," .Values.global.aws.vpc.database_subnets_id }}
