@@ -1,0 +1,4 @@
+ingressClass:
+  tags:
+  - key: testtag
+    value: tagvalue

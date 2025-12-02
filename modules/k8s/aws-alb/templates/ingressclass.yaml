@@ -1,0 +1,113 @@
+{{- if .Values.ingressClass.internal.enabled }}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: alb-internal
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  group:
+    name: internal
+  {{- if .Values.ingressClass.internal.subnets }}
+  subnets:
+    ids:
+      {{- range split "," .Values.ingressClass.internal.subnets }}
+      - {{ . | trim | trimAll "\"" }}
+      {{- end }}
+  {{- end }}
+  scheme: internal
+  targetType: ip
+  {{- if .Values.ingressClass.tags }}
+  tags:
+    {{- toYaml .Values.ingressClass.tags | nindent 4 }}
+  {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb-internal
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  controller: ingress.k8s.aws/alb
+  parameters:
+    apiGroup: elbv2.k8s.aws
+    kind: IngressClassParams
+    name: alb-internal
+{{- end }}
+{{- if .Values.ingressClass.service.enabled }}
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: alb-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  group:
+    name: service
+  {{- if .Values.ingressClass.service.subnets }}
+  subnets:
+    ids:
+      {{- range split "," .Values.ingressClass.service.subnets }}
+      - {{ . | trim | trimAll "\"" }}
+      {{- end }}
+  {{- end }}
+  scheme: internal
+  targetType: ip
+  {{- if .Values.ingressClass.tags }}
+  tags:
+    {{- toYaml .Values.ingressClass.tags | nindent 4 }}
+  {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  controller: ingress.k8s.aws/alb
+  parameters:
+    apiGroup: elbv2.k8s.aws
+    kind: IngressClassParams
+    name: alb-service
+{{- end }}
+{{- if .Values.ingressClass.public.enabled }}
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: alb-public
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  group:
+    name: public
+  {{- if .Values.ingressClass.public.subnets }}
+  subnets:
+    ids:
+      {{- range split "," .Values.ingressClass.public.subnets }}
+      - {{ . | trim | trimAll "\"" }}
+      {{- end }}
+  {{- end }}
+  scheme: internet-facing
+  targetType: ip
+  {{- if .Values.ingressClass.tags }}
+  tags:
+    {{- toYaml .Values.ingressClass.tags | nindent 4 }}
+  {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb-public
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  controller: ingress.k8s.aws/alb
+  parameters:
+    apiGroup: elbv2.k8s.aws
+    kind: IngressClassParams
+    name: alb-public
+{{- end }}
