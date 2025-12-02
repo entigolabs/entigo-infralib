@@ -82,7 +82,7 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "istio-istiod" ]
         then
           APP_NAME="istio-system"  
-        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" ]
+        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" -o "$MODULE_NAME" == "crossplane-kafka" ]
         then
           APP_NAME=$MODULE_NAME
         elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" ]
@@ -365,6 +365,8 @@ test_k8s() {
   #common
   ./modules/k8s/crossplane-k8s/test.sh testonly &
   PIDS="$PIDS $!=crossplane-k8s"
+  ./modules/k8s/crossplane-kafka/test.sh testonly &
+  PIDS="$PIDS $!=crossplane-kafka"
   ./modules/k8s/crossplane-sql/test.sh testonly &
   PIDS="$PIDS $!=crossplane-sql"
   ./modules/k8s/external-dns/test.sh testonly &
@@ -433,5 +435,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
 }

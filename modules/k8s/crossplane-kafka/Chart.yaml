@@ -1,0 +1,7 @@
+apiVersion: v2
+name: crossplane-kafka
+description: Crossplane kafka operator chart
+type: application
+version: 0.1.1
+appVersion: "1.1"
+dependencies: []
