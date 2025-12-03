@@ -89,7 +89,8 @@ jobs:
     - name: Free disk space
       run: |
         # Remove large preinstalled tools
-        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/lib/android
+        sudo docker image prune --all --force
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -107,6 +108,8 @@ jobs:
         GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
         PR_BRANCH: "main"
       run: |
+        df -h
+        du -sh ../*
         ./release.sh k8s
     - name: Get latest release
       id: get_latest_release
