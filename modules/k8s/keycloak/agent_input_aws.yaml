@@ -1,7 +1,0 @@
-keycloakx:
-  ingress:
-    rules:
-    - host: "keycloak.{{ .toutput.route53.int_domain }}"
-      paths:
-      - path: "/"
-        pathType: "Prefix"
