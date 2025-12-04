@@ -312,6 +312,8 @@ test_tf() {
     PIDS="$PIDS $!=kms"
     ./modules/google/gke/test.sh testonly &
     PIDS="$PIDS $!=gke"
+    ./modules/google/gke-node-pool/test.sh testonly &
+    PIDS="$PIDS $!=gke-node-pool"
     ./modules/google/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
   fi
@@ -432,7 +434,7 @@ default_aws_conf() {
 
 default_google_conf() {
   generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" "google/kms"
-  generate_config "google" "infra" "google/gke" "google/crossplane"
+  generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane"
 }
 
 full_k8s_conf() {
