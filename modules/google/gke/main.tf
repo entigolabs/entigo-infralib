@@ -31,8 +31,6 @@ locals {
       initial_node_count = var.gke_main_min_size
       min_count          = var.gke_main_min_size
       max_count          = var.gke_main_max_size
-      total_min_count    = var.gke_main_total_min_size
-      total_max_count    = var.gke_main_total_max_size
       max_pods_per_node  = var.gke_main_max_pods
       disk_size_gb       = var.gke_main_volume_size
       disk_type          = var.gke_main_volume_type
@@ -49,8 +47,6 @@ locals {
       initial_node_count = var.gke_mon_min_size
       min_count          = var.gke_mon_min_size
       max_count          = var.gke_mon_max_size
-      total_min_count    = var.gke_mon_total_min_size
-      total_max_count    = var.gke_mon_total_max_size
       max_pods_per_node  = var.gke_mon_max_pods
       disk_size_gb       = var.gke_mon_volume_size
       disk_type          = var.gke_mon_volume_type
@@ -67,8 +63,6 @@ locals {
       initial_node_count = var.gke_tools_min_size
       min_count          = var.gke_tools_min_size
       max_count          = var.gke_tools_max_size
-      total_min_count    = var.gke_tools_total_min_size
-      total_max_count    = var.gke_tools_total_max_size
       max_pods_per_node  = var.gke_tools_max_pods
       disk_size_gb       = var.gke_tools_volume_size
       disk_type          = var.gke_tools_volume_type

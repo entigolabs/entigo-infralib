@@ -11,17 +11,20 @@ deploy_using_private_endpoint: false
 enable_private_endpoint: false
 dns_allow_external_traffic: true
 
-gke_main_total_min_size: 3
-gke_main_total_max_size: 6
+gke_main_min_size: 3
+gke_main_max_size: 6
 gke_main_spot_nodes: true
 gke_main_location_policy: "ANY"
+gke_main_node_locations: "europe-north1-a"
 
-gke_tools_total_min_size: 3
-gke_tools_total_max_size: 6
+gke_tools_min_size: 3
+gke_tools_max_size: 6
 gke_tools_spot_nodes: true
 gke_tools_location_policy: "ANY"
+gke_tools_node_locations: "europe-north1-a"
 
-gke_mon_total_min_size: 3
-gke_mon_total_max_size: 6
+gke_mon_min_size: 3
+gke_mon_max_size: 6
 gke_mon_spot_nodes: true
 gke_mon_location_policy: "ANY"
+gke_mon_node_locations: "europe-north1-a"
