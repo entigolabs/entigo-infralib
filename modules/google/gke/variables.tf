@@ -111,6 +111,16 @@ variable "gke_main_max_size" {
   default  = 4
 }
 
+variable "gke_main_total_min_size" {
+  type     = number
+  default  = null
+}
+
+variable "gke_main_total_max_size" {
+  type     = number
+  default  = null
+}
+
 variable "gke_main_instance_type" {
   type    = string
   default = "e2-standard-2"
@@ -158,6 +168,16 @@ variable "gke_mon_max_size" {
   default  = 3
 }
 
+variable "gke_mon_total_min_size" {
+  type     = number
+  default  = null
+}
+
+variable "gke_mon_total_max_size" {
+  type     = number
+  default  = null
+}
+
 variable "gke_mon_instance_type" {
   type    = string
   default = "e2-standard-2"
@@ -203,6 +223,16 @@ variable "gke_tools_max_size" {
   type     = number
   nullable = false
   default  = 3
+}
+
+variable "gke_tools_total_min_size" {
+  type     = number
+  default  = null
+}
+
+variable "gke_tools_total_max_size" {
+  type     = number
+  default  = null
 }
 
 variable "gke_tools_instance_type" {
