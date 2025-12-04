@@ -1,0 +1,3 @@
+cluster_name: "{{ .toutput.gke.cluster_name }}"
+cluster_region: "{{ .toutput.gke.region }}"
+service_account: "{{ .toutput.gke.service_account }}"
