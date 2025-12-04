@@ -78,7 +78,7 @@ locals {
 
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "38.0.1"
+  version = "41.0.2"
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
@@ -98,6 +98,7 @@ module "gke" {
   master_global_access_enabled           = var.master_global_access_enabled
   enable_l4_ilb_subsetting               = var.enable_l4_ilb_subsetting
   issue_client_certificate               = false
+  dns_allow_external_traffic             = var.dns_allow_external_traffic
   deploy_using_private_endpoint          = var.deploy_using_private_endpoint
   enable_private_endpoint                = var.enable_private_endpoint
   enable_private_nodes                   = true

@@ -29,15 +29,21 @@ variable "master_global_access_enabled" {
   default  = false
 }
 
+variable "dns_allow_external_traffic" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "deploy_using_private_endpoint" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "enable_private_endpoint" {
   type     = bool
   nullable = false
-  default  = false
+  default  = true
 }
 
 variable "enable_l4_ilb_subsetting" {
