@@ -43,3 +43,15 @@ aws-load-balancer-controller:
 job:
   image: docker.io/entigolabs/entigo-infralib-base
   tag: "v1.13.1"
+
+ingressClass:
+  tags: {}
+  internal:
+    enabled: true
+    subnets: ""
+  service:
+    enabled: true
+    subnets: ""
+  external:
+    enabled: true
+    subnets: ""

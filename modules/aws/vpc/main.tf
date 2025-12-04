@@ -50,7 +50,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.5.0"
+  version = "6.5.1"
 
   name = var.prefix
   cidr = var.vpc_cidr

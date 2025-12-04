@@ -17,6 +17,5 @@ steps:
     modules:
       - name: hello
         source: aws/hello-world
-        version: stable
 
 ```
