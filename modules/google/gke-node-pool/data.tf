@@ -1,4 +1,4 @@
-data "google_compute_zones" "this" {}
+data "google_client_config" "this" {}
 
 data "google_compute_zones" "this" {}
 

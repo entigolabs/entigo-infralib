@@ -1,6 +1,6 @@
 spot_nodes: true
-# node_locations: |
-#   ["europe-north1-a", "europe-north1-b"]
+node_locations: |
+  ["europe-north1-a"]
 location_policy: "ANY"
 total_min_size: 0
 total_max_size: 2

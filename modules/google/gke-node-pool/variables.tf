@@ -2,6 +2,11 @@ variable "prefix" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.32."
+}
+
 variable "cluster_name" {
   type  = string
 }
@@ -10,15 +15,28 @@ variable "cluster_region" {
   type  = string
 }
 
+variable "initial_size" {
+  type     = number
+  default  = 1
+}
+
 variable "min_size" {
   type     = number
-  nullable = false
-  default  = 1
+  default  = 0
 }
 
 variable "max_size" {
   type     = number
-  nullable = false
+  default  = 0
+}
+
+variable "total_min_size" {
+  type     = number
+  default  = 1
+}
+
+variable "total_max_size" {
+  type     = number
   default  = 3
 }
 
@@ -59,4 +77,5 @@ variable "volume_type" {
 
 variable "service_account" {
   type        = string
+  default     = ""
 }

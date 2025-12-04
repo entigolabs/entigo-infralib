@@ -7,7 +7,13 @@ import (
 )
 
 func TestTerraformGke(t *testing.T) {
+	t.Run("Pri", testTerraformGkePri)
 	t.Run("Biz", testTerraformGkeBiz)
+}
+
+func testTerraformGkePri(t *testing.T) {
+	t.Parallel()
+	testTerraformGke(t, "pri")
 }
 
 func testTerraformGkeBiz(t *testing.T) {
