@@ -99,7 +99,8 @@ jobs:
     - name: Free disk space
       run: |
         # Remove large preinstalled tools
-        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/lib/android
+        sudo docker image prune --all --force
     - name: Checkout code
       uses: actions/checkout@v4
       with:
