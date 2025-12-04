@@ -7,6 +7,8 @@ master_authorized_networks: |
   ]
 
 enable_l4_ilb_subsetting: true
+deploy_using_private_endpoint: false
+enable_private_endpoint: false
 
 gke_main_min_size: 3
 gke_main_max_size: 6

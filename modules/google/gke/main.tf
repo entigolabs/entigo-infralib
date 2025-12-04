@@ -98,6 +98,7 @@ module "gke" {
   master_global_access_enabled           = var.master_global_access_enabled
   enable_l4_ilb_subsetting               = var.enable_l4_ilb_subsetting
   issue_client_certificate               = false
+  dns_allow_external_traffic             = var.dns_allow_external_traffic
   deploy_using_private_endpoint          = var.deploy_using_private_endpoint
   enable_private_endpoint                = var.enable_private_endpoint
   enable_private_nodes                   = true
