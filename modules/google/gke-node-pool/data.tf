@@ -1,5 +1,7 @@
 data "google_client_config" "this" {}
 
+# data "google_project" "this" {}
+
 data "google_compute_zones" "this" {}
 
 data "google_container_engine_versions" "this" {

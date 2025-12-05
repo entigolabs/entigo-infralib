@@ -1,4 +1,4 @@
 create_kms_key_ring: false
 kms_key_ring_name: "taivotest"
-kms_key_rotation_period: 7776000s
+# kms_key_rotation_period: 7776000s
 kms_destroy_scheduled_duration: 86400s

@@ -8,36 +8,36 @@ variable "kubernetes_version" {
 }
 
 variable "cluster_name" {
-  type  = string
+  type = string
 }
 
 variable "cluster_region" {
-  type  = string
+  type = string
 }
 
 variable "initial_size" {
-  type     = number
-  default  = 1
+  type    = number
+  default = 0
 }
 
 variable "min_size" {
-  type     = number
-  default  = 0
+  type    = number
+  default = 0
 }
 
 variable "max_size" {
-  type     = number
-  default  = 0
+  type    = number
+  default = 0
 }
 
 variable "total_min_size" {
-  type     = number
-  default  = 1
+  type    = number
+  default = 1
 }
 
 variable "total_max_size" {
-  type     = number
-  default  = 3
+  type    = number
+  default = 3
 }
 
 variable "instance_type" {
@@ -76,6 +76,11 @@ variable "volume_type" {
 }
 
 variable "service_account" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
+}
+
+variable "boot_disk_kms_key" {
+  type    = string
+  default = ""
 }

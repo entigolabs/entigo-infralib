@@ -1,0 +1,2 @@
+kms_data_key_additional_encrypters_decrypters: |
+  ["serviceAccount:${{{ .toutput.gke.service_account }}}"]
