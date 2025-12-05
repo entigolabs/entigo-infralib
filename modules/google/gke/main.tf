@@ -114,6 +114,7 @@ module "gke" {
   monitoring_enabled_components          = var.monitoring_enabled_components
   logging_enabled_components             = var.logging_enabled_components
   insecure_kubelet_readonly_port_enabled = false
+  boot_disk_kms_key                      = var.boot_disk_kms_key
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {

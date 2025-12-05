@@ -245,3 +245,8 @@ variable "gke_managed_node_groups_extra" {
   nullable = false
   default  = []
 }
+
+variable "boot_disk_kms_key" {
+  type    = string
+  default = ""
+}
