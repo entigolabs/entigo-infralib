@@ -72,7 +72,7 @@ locals {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = false
-      spot               = var.gke_tools_spot_node
+      spot               = var.gke_tools_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
     }
   ]
