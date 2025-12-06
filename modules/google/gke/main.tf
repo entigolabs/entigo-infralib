@@ -39,7 +39,6 @@ locals {
       auto_upgrade       = false
       spot               = var.gke_main_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
-
     },
     {
       name               = "mon"

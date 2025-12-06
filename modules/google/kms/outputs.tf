@@ -2,14 +2,22 @@ output "prefix" {
   value = var.prefix
 }
 
-output "kms_data_key_id" {
-  value = google_kms_crypto_key.kms_data_key.id
+output "location" {
+  value = local.location
 }
 
-output "kms_config_key_id" {
-  value = google_kms_crypto_key.kms_config_key.id
+output "key_ring_id" {
+  value = var.create_key_ring ? google_kms_key_ring.this[0].id : data.google_kms_key_ring.this[0].id
 }
 
-output "kms_telemetry_key_id" {
-  value = google_kms_crypto_key.kms_telemetry_key.id
+output "data_key_id" {
+  value = google_kms_crypto_key.data.id
+}
+
+output "config_key_id" {
+  value = google_kms_crypto_key.config.id
+}
+
+output "telemetry_key_id" {
+  value = google_kms_crypto_key.telemetry.id
 }
