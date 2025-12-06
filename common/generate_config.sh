@@ -68,11 +68,8 @@ get_step_name_tf_aws() {
 
 get_step_name_tf_google() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
-  if [ "$MODULE_NAME" == "dns" ]; then
+  if [ "$MODULE_NAME" == "dns" ] || [ "$MODULE_NAME" == "kms" ]; then
     STEP_NAME="net"
-  fi
-  if [ "$MODULE_NAME" == "kms" ]; then
-    STEP_NAME="infra"
   fi
 }
 
@@ -440,8 +437,8 @@ default_aws_conf() {
 }
 
 default_google_conf() {
-  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" 
-  generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane" "google/kms"
+  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" "google/kms"
+  generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane"
 }
 
 full_k8s_conf() {
