@@ -1,6 +1,6 @@
 module "gke_node_pool" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/gke-node-pool"
-  version = "41.0.2"
+  version = "42.0.0"
 
   name               = substr(var.prefix, 0, 40)
   cluster            = var.cluster_name
@@ -26,8 +26,6 @@ module "gke_node_pool" {
     location_policy      = var.location_policy
   }
 
-  # network_config = {}
-
   node_config = {
     disk_size_gb      = var.volume_size
     disk_type         = var.volume_type
@@ -52,46 +50,21 @@ module "gke_node_pool" {
     }
   }
 
-  # placement_policy = {}
+  upgrade_settings = {
+    max_surge       = 1
+    max_unavailable = 0
+    strategy        = "SURGE"
+  }
 
-  # queued_provisioning	= {}
+  network_config = null
+
+  placement_policy = null
+
+  queued_provisioning	= null
 
   timeouts = {
     create = "45m"
     update = "45m"
     delete = "45m"
   }
-
-  upgrade_settings = {
-    max_surge       = 5
-    max_unavailable = 0
-    strategy        = "SURGE"
-  }
 }
-
-# locals {
-#   service_agents = {
-#     compute          = "serviceAccount:service-${data.google_project.this.number}@compute-system.iam.gserviceaccount.com"
-#     gke              = "serviceAccount:service-${data.google_project.this.number}@container-engine-robot.iam.gserviceaccount.com"
-#     cloud_sql        = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-cloud-sql.iam.gserviceaccount.com"
-#     storage          = "serviceAccount:service-${data.google_project.this.number}@gs-project-accounts.iam.gserviceaccount.com"
-#     redis            = "serviceAccount:service-${data.google_project.this.number}@cloud-redis.iam.gserviceaccount.com"
-#     filestore        = "serviceAccount:service-${data.google_project.this.number}@cloud-filer.iam.gserviceaccount.com"
-#     artifactregistry = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-artifactregistry.iam.gserviceaccount.com"
-#     pubsub           = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
-#     secretmanager    = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-secretmanager.iam.gserviceaccount.com"
-#   }
-# }
-
-# resource "google_project_service_identity" "gke" {
-#   project = data.google_client_config.this.project
-#   service = "container.googleapis.com"
-# }
-
-# resource "google_kms_crypto_key_iam_member" "kms_data_encrypt_decrypt" {
-#   for_each = var.boot_disk_kms_key != "" ? local.service_agents : {}
-
-#   crypto_key_id = var.boot_disk_kms_key
-#   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-#   member        = each.value
-# }
