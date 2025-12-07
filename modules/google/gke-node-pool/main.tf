@@ -10,7 +10,7 @@ module "gke_node_pool" {
   location           = var.cluster_region
   node_locations     = length(var.node_locations) > 0 ? var.node_locations : data.google_compute_zones.this.names
   max_pods_per_node  = var.max_pods_per_node
-  initial_node_count = var.initial_size
+  initial_node_count = ceil(var.min_size / (length(var.node_locations) > 0 ? length(var.node_locations) : length(data.google_compute_zones.this.names)))
   node_count         = var.node_count
 
   management = {

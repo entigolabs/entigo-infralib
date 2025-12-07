@@ -33,7 +33,7 @@ gke_managed_node_groups_extra: |
     {
       name               = "custom"
       machine_type       = "e2-standard-2"
-      node_locations     = "europe-north1-b"
+      node_locations     = "europe-north1-a"
       initial_node_count = 0
       node_count         = null
       total_min_count    = 0
