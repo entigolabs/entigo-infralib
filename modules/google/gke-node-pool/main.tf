@@ -1,7 +1,7 @@
 module "gke_node_pool" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/gke-node-pool"
   version = "42.0.0"
-
+  
   name               = substr(var.prefix, 0, 40)
   cluster            = var.cluster_name
   project_id         = data.google_client_config.this.project
@@ -9,24 +9,22 @@ module "gke_node_pool" {
 
   location           = var.cluster_region
   node_locations     = length(var.node_locations) > 0 ? var.node_locations : data.google_compute_zones.this.names
+  max_pods_per_node  = var.max_pods_per_node
   initial_node_count = var.initial_size
-  node_count         = null
-  max_pods_per_node  = var.max_pods
+  node_count         = var.node_count
 
   management = {
-    auto_repair  = true
-    auto_upgrade = false
+    auto_repair  = var.auto_repair
+    auto_upgrade = var.auto_upgrade
   }
 
-  autoscaling = {
-    min_node_count       = var.min_size
-    max_node_count       = var.max_size
-    total_min_node_count = var.total_min_size
-    total_max_node_count = var.total_max_size
+  autoscaling = var.autoscaling != null ? var.autoscaling : {
+    total_min_node_count = var.min_size
+    total_max_node_count = var.max_size
     location_policy      = var.location_policy
   }
 
-  node_config = {
+  node_config = var.node_config != null ? var.node_config : {
     disk_size_gb      = var.volume_size
     disk_type         = var.volume_type
     image_type        = "COS_CONTAINERD"
@@ -37,34 +35,30 @@ module "gke_node_pool" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
-    taint = [{
-      key    = "spot"
-      value  = "true"
-      effect = "NO_SCHEDULE"
-    }]
 
-    tags = []
-    labels = {
-      created-by = "entigo-infralib"
-      node-pool  = "spot"
-    }
+    taint = var.taints
+    tags   = var.tags
+    labels = merge(var.labels, { created-by = "entigo-infralib" })
   }
 
-  upgrade_settings = {
-    max_surge       = 1
-    max_unavailable = 0
+  upgrade_settings = var.upgrade_settings != null ? var.upgrade_settings : {
+    max_surge       = var.max_surge
+    max_unavailable = var.max_unavailable
     strategy        = "SURGE"
   }
 
-  network_config = null
+  network_config = var.network_config
 
-  placement_policy = null
+  placement_policy = var.placement_policy
 
-  queued_provisioning	= null
+  queued_provisioning = var.queued_provisioning
 
-  timeouts = {
-    create = "45m"
-    update = "45m"
-    delete = "45m"
-  }
+  timeouts = var.timeouts
+}
+
+resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypters_decrypters" {
+  count         = var.grant_boot_disk_kms_key_access_to_service_account ? 0 : 1
+  crypto_key_id = var.boot_disk_kms_key
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "serviceAccount:${var.service_account}"
 }

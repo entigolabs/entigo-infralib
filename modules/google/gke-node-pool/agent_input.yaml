@@ -1,4 +1,4 @@
 cluster_name: "{{ .toutput.gke.cluster_name }}"
 cluster_region: "{{ .toutput.gke.region }}"
 service_account: "{{ .toutput.gke.service_account }}"
-boot_disk_kms_key: "{{ .toptout.kms.kms_data_key_id }}"
+boot_disk_kms_key: "{{ .toptout.kms.data_key_id }}"
