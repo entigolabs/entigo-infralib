@@ -28,9 +28,10 @@ locals {
       machine_type       = var.gke_main_instance_type
       node_locations     = local.gke_main_node_locations
       location_policy    = var.gke_main_location_policy
+      node_count         = null
       initial_node_count = var.gke_main_min_size
-      min_count          = var.gke_main_min_size
-      max_count          = var.gke_main_max_size
+      total_min_count    = var.gke_main_min_size
+      total_max_count    = var.gke_main_max_size
       max_pods_per_node  = var.gke_main_max_pods
       disk_size_gb       = var.gke_main_volume_size
       disk_type          = var.gke_main_volume_type
@@ -38,16 +39,19 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_main_spot_nodes
-      boot_disk_kms_key  = var.boot_disk_kms_key
+      # boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_main_max_surge
+      max_unavailable    = 0
     },
     {
       name               = "mon"
       machine_type       = var.gke_mon_instance_type
       node_locations     = local.gke_mon_node_locations
       location_policy    = var.gke_mon_location_policy
+      node_count         = null
       initial_node_count = var.gke_mon_min_size
-      min_count          = var.gke_mon_min_size
-      max_count          = var.gke_mon_max_size
+      total_min_count    = var.gke_mon_min_size
+      total_max_count    = var.gke_mon_max_size
       max_pods_per_node  = var.gke_mon_max_pods
       disk_size_gb       = var.gke_mon_volume_size
       disk_type          = var.gke_mon_volume_type
@@ -55,7 +59,9 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_mon_spot_nodes
-      boot_disk_kms_key  = var.boot_disk_kms_key
+      # boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_mon_max_surge
+      max_unavailable    = 0
     },
     {
       name               = "tools"
@@ -63,8 +69,9 @@ locals {
       node_locations     = local.gke_tools_node_locations
       location_policy    = var.gke_tools_location_policy
       initial_node_count = var.gke_tools_min_size
-      min_count          = var.gke_tools_min_size
-      max_count          = var.gke_tools_max_size
+      node_count         = null
+      total_min_count    = var.gke_tools_min_size
+      total_max_count    = var.gke_tools_max_size
       max_pods_per_node  = var.gke_tools_max_pods
       disk_size_gb       = var.gke_tools_volume_size
       disk_type          = var.gke_tools_volume_type
@@ -72,7 +79,9 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_tools_spot_nodes
-      boot_disk_kms_key  = var.boot_disk_kms_key
+      # boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_tools_max_surge
+      max_unavailable    = 0
     }
   ]
 
@@ -81,7 +90,7 @@ locals {
 
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "41.0.2"
+  version = "42.0.0"
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
@@ -117,6 +126,11 @@ module "gke" {
   monitoring_enabled_components          = var.monitoring_enabled_components
   logging_enabled_components             = var.logging_enabled_components
   insecure_kubelet_readonly_port_enabled = false
+  boot_disk_kms_key                      = var.boot_disk_kms_key
+
+  gce_pd_csi_driver    = var.gce_pd_csi_driver
+  gcs_fuse_csi_driver  = var.gcs_fuse_csi_driver
+  filestore_csi_driver = var.filestore_csi_driver
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {
@@ -151,4 +165,11 @@ module "gke" {
   }
 
   master_authorized_networks = var.master_authorized_networks
+}
+
+resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypter_decrypter" {
+  count         = var.boot_disk_kms_key == "" ? 0 : 1
+  crypto_key_id = var.boot_disk_kms_key
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "serviceAccount:${module.gke.service_account}"
 }

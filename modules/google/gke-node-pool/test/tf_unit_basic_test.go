@@ -6,22 +6,22 @@ import (
 	"github.com/entigolabs/entigo-infralib-common/google"
 )
 
-func TestTerraformGke(t *testing.T) {
-	t.Run("Pri", testTerraformGkePri)
-	t.Run("Biz", testTerraformGkeBiz)
+func TestTerraformGkeNodePool(t *testing.T) {
+	t.Run("Pri", testTerraformGkeNodePoolPri)
+	t.Run("Biz", testTerraformGkeNodePoolBiz)
 }
 
-func testTerraformGkePri(t *testing.T) {
+func testTerraformGkeNodePoolPri(t *testing.T) {
 	t.Parallel()
-	testTerraformGke(t, "pri")
+	testTerraformGkeNodePool(t, "pri")
 }
 
-func testTerraformGkeBiz(t *testing.T) {
+func testTerraformGkeNodePoolBiz(t *testing.T) {
 	t.Parallel()
-	testTerraformGke(t, "biz")
+	testTerraformGkeNodePool(t, "biz")
 }
 
-func testTerraformGke(t *testing.T, envName string) {
+func testTerraformGkeNodePool(t *testing.T, envName string) {
 	outputs := google.GetTFOutputs(t, envName)
 
 	_ = outputs

@@ -1,6 +1,6 @@
 spot_nodes: true
-node_locations: |
-  ["europe-north1-a", "europe-north1-b"]
-location_policy: "BALANCED"
 min_size: 0
 max_size: 2
+location_policy: "BALANCED"
+node_locations: |
+  ["europe-north1-a", "europe-north1-b"]

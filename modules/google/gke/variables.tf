@@ -146,6 +146,11 @@ variable "gke_main_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_main_max_surge" {
+  type    = number
+  default = 3
+}
+
 variable "gke_mon_min_size" {
   type     = number
   nullable = false
@@ -191,6 +196,11 @@ variable "gke_mon_max_pods" {
 variable "gke_mon_volume_type" {
   type    = string
   default = "pd-standard"
+}
+
+variable "gke_mon_max_surge" {
+  type    = number
+  default = 3
 }
 
 variable "gke_tools_min_size" {
@@ -240,6 +250,11 @@ variable "gke_tools_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_tools_max_surge" {
+  type    = number
+  default = 3
+}
+
 variable "gke_managed_node_groups_extra" {
   type     = list(any)
   nullable = false
@@ -249,4 +264,19 @@ variable "gke_managed_node_groups_extra" {
 variable "boot_disk_kms_key" {
   type    = string
   default = ""
+}
+
+variable "gce_pd_csi_driver" {
+  type    = bool
+  default = true
+}
+
+variable "gcs_fuse_csi_driver" {
+  type    = bool
+  default = false
+}
+
+variable "filestore_csi_driver" {
+  type    = bool
+  default = false
 }

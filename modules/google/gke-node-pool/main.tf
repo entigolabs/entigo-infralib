@@ -56,7 +56,7 @@ module "gke_node_pool" {
   timeouts = var.timeouts
 }
 
-resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypters_decrypters" {
+resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypter_decrypter" {
   count         = var.grant_boot_disk_kms_key_access_to_service_account ? 1 : 0
   crypto_key_id = var.boot_disk_kms_key
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
