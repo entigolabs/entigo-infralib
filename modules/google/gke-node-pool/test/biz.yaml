@@ -2,6 +2,7 @@ spot_nodes: true
 location_policy: "ANY"
 min_size: 1
 max_size: 2
+grant_boot_disk_kms_key_access_to_service_account: true
 
 taints: |
   [

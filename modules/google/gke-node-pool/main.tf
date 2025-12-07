@@ -57,7 +57,7 @@ module "gke_node_pool" {
 }
 
 resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypters_decrypters" {
-  count         = var.grant_boot_disk_kms_key_access_to_service_account ? 0 : 1
+  count         = var.grant_boot_disk_kms_key_access_to_service_account ? 1 : 0
   crypto_key_id = var.boot_disk_kms_key
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
   member        = "serviceAccount:${var.service_account}"
