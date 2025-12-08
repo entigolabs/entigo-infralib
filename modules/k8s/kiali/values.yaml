@@ -2,7 +2,6 @@ global:
   cloudProvider: ""
 
 kiali-server:
-  istio_namespace: "istio-system"
   server:
     web_fqdn: ""
   external_services:
