@@ -10,8 +10,14 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
+    labels:
+      crossplane: "true"
     location: {{ .Values.global.google.bucket.location }}
     uniformBucketLevelAccess: true
+    {{- if .Values.global.google.bucket.kmsKeyId }}
+    encryption:
+      defaultKmsKeyName: {{ .Values.global.google.bucket.kmsKeyId }}
+    {{- end }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 

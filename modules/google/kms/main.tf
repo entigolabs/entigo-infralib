@@ -39,7 +39,9 @@ locals {
   # KMS Telemetry key
   telemetry_key_encrypters = setunion(toset(var.telemetry_key_additional_encrypters), toset([]))
   telemetry_key_decrypters = setunion(toset(var.telemetry_key_additional_decrypters), toset([]))
-  telemetry_key_encrypters_decrypters = setunion(toset(var.telemetry_key_additional_encrypters_decrypters),toset([])
+  telemetry_key_encrypters_decrypters = setunion(toset(var.telemetry_key_additional_encrypters_decrypters),toset([
+      "serviceAccount:service-${data.google_project.this.number}@gs-project-accounts.iam.gserviceaccount.com",
+  ])
   )
 }
 
