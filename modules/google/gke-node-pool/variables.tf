@@ -15,11 +15,6 @@ variable "cluster_region" {
   type = string
 }
 
-variable "initial_size" {
-  type    = number
-  default = null
-}
-
 variable "node_count" {
   type    = number
   default = null
