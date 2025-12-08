@@ -1,0 +1,8 @@
+global:
+  cloudProvider: "google"
+  google:
+    projectID: ""
+    hostname: ""
+    gateway:
+      name: google-gateway-external
+      namespace: google-gateway
