@@ -1,22 +1,17 @@
-
 locals {
   node_pool_name = substr(var.prefix, 0, 40)
 
   latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
   valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
 
-  # Find the node pool's current version
-  existing_pool = try([
-    for pool in data.google_container_cluster.this.node_pool :
-    pool if pool.name == local.node_pool_name
-  ][0], null)
+  # Find existing node pool version
+  existing_node_pool    = try([for pool in data.google_container_cluster.this.node_pool : pool if pool.name == local.node_pool_name][0], null)
+  existing_node_pool_kubernetes_version = try(local.existing_node_pool.version, "")
 
-  existing_version = try(local.existing_pool.version, "")
-
-  # Use existing if valid, otherwise stable
-  current_kubernetes_version = (
-    local.existing_version != "" && contains(local.valid_node_versions, local.existing_version)
-    ? local.existing_version
+  # Determine version: preserve existing if valid and flag is true, otherwise use stable
+  kubernetes_version = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version)
+    ? local.existing_node_pool_kubernetes_version
     : local.latest_stable_version
   )
 }
@@ -28,7 +23,7 @@ module "gke_node_pool" {
   name               = local.node_pool_name
   cluster            = var.cluster_name
   project_id         = data.google_client_config.this.project
-  kubernetes_version = var.preserve_kubernetes_version ? local.current_kubernetes_version : local.latest_stable_version
+  kubernetes_version = local.kubernetes_version
 
   location           = var.cluster_region
   node_locations     = length(var.node_locations) > 0 ? var.node_locations : data.google_compute_zones.this.names
