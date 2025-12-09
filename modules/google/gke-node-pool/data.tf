@@ -9,7 +9,7 @@ data "google_container_engine_versions" "this" {
 
 data "google_container_cluster" "this" {
   count    = var.preserve_kubernetes_version ? 1 : 0
-  name     = var.prefix
+  name     = var.cluster_name
   location = data.google_client_config.this.region
   project  = data.google_client_config.this.project
 }
