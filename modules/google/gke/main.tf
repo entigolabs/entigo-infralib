@@ -113,6 +113,7 @@ module "gke" {
   dns_allow_external_traffic             = var.dns_allow_external_traffic
   deploy_using_private_endpoint          = var.deploy_using_private_endpoint
   enable_private_endpoint                = var.enable_private_endpoint
+  gcp_public_cidrs_access_enabled        = var.gcp_public_cidrs_access_enabled
   enable_private_nodes                   = true
   remove_default_node_pool               = true
   enable_shielded_nodes                  = false
