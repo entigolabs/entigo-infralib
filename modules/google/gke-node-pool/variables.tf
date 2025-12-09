@@ -10,7 +10,7 @@ variable "kubernetes_version" {
 variable "preserve_kubernetes_version" {
   type        = bool
   default     = false
-  description = "Preserve the kubernetes version for node pools. Must be false if cluster does not exist yet."
+  description = "Preserve existing node pool Kubernetes version if valid, otherwise use latest stable version. Must be false if cluster does not exist yet."
 }
 
 variable "cluster_name" {
