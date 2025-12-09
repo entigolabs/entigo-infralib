@@ -2,7 +2,7 @@ spot_nodes: true
 min_size: 0
 max_size: 1
 location_policy: "ANY"
-# grant_boot_disk_kms_key_access_to_service_account: true
+preserve_kubernetes_version: true
 
 taints: |
   [

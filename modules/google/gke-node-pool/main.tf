@@ -1,11 +1,34 @@
+
+locals {
+  node_pool_name = substr(var.prefix, 0, 40)
+
+  latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
+
+  # Find the node pool's current version
+  existing_pool = try([
+    for pool in data.google_container_cluster.this.node_pool :
+    pool if pool.name == local.node_pool_name
+  ][0], null)
+
+  existing_version = try(local.existing_pool.version, "")
+
+  # Use existing if valid, otherwise stable
+  current_kubernetes_version = (
+    local.existing_version != "" && contains(local.valid_node_versions, local.existing_version)
+    ? local.existing_version
+    : local.latest_stable_version
+  )
+}
+
 module "gke_node_pool" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/gke-node-pool"
   version = "42.0.0"
-  
-  name               = substr(var.prefix, 0, 40)
+
+  name               = local.node_pool_name
   cluster            = var.cluster_name
   project_id         = data.google_client_config.this.project
-  kubernetes_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  kubernetes_version = var.preserve_kubernetes_version ? local.current_kubernetes_version : local.latest_stable_version
 
   location           = var.cluster_region
   node_locations     = length(var.node_locations) > 0 ? var.node_locations : data.google_compute_zones.this.names
@@ -36,7 +59,7 @@ module "gke_node_pool" {
       "https://www.googleapis.com/auth/cloud-platform"
     ]
 
-    taint = var.taints
+    taint  = var.taints
     tags   = var.tags
     labels = merge(var.labels, { created-by = "entigo-infralib" })
   }

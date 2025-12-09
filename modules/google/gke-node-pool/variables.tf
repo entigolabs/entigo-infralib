@@ -7,6 +7,11 @@ variable "kubernetes_version" {
   default = "1.32."
 }
 
+variable "preserve_kubernetes_version" {
+  type    = bool
+  default = false
+}
+
 variable "cluster_name" {
   type = string
 }
@@ -47,8 +52,8 @@ variable "location_policy" {
 
 variable "autoscaling" {
   description = "If set then min_size, max_size and location_policy are ignored."
-  type    = any
-  default = null
+  type        = any
+  default     = null
 }
 
 variable "instance_type" {
