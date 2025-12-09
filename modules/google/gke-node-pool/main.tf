@@ -5,7 +5,7 @@ locals {
   valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
 
   # Find existing node pool version
-  existing_node_pool    = try([for pool in data.google_container_cluster.this.node_pool : pool if pool.name == local.node_pool_name][0], null)
+  existing_node_pool                    = try([for pool in data.google_container_cluster.this.node_pool : pool if pool.name == local.node_pool_name][0], null)
   existing_node_pool_kubernetes_version = try(local.existing_node_pool.version, "")
 
   # Determine version: preserve existing if valid and flag is true, otherwise use stable

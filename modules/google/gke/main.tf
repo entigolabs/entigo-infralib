@@ -9,6 +9,22 @@ resource "random_integer" "subnet_fourth_octet_raw" {
 }
 
 locals {
+  node_pool_name = "main"
+
+  latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
+
+  # Find existing node pool version
+  existing_node_pool                    = try([for pool in data.google_container_cluster.this.node_pool : pool if pool.name == local.node_pool_name][0], null)
+  existing_node_pool_kubernetes_version = try(local.existing_node_pool.version, "")
+
+  # Determine version: preserve existing if valid and flag is true, otherwise use stable
+  kubernetes_version = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version)
+    ? local.existing_node_pool_kubernetes_version
+    : local.latest_stable_version
+  )
+
   aligned_fourth_octet = random_integer.subnet_fourth_octet_raw.result * 16
   subnet_cidr = format("172.%d.%d.%d/28",
     random_integer.subnet_third_octet.result,
@@ -42,6 +58,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_main_max_surge
       max_unavailable    = 0
+      version            = local.kubernetes_version
     },
     {
       name               = "mon"
@@ -62,6 +79,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_mon_max_surge
       max_unavailable    = 0
+      version            = local.kubernetes_version
     },
     {
       name               = "tools"
@@ -82,6 +100,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_tools_max_surge
       max_unavailable    = 0
+      version            = local.kubernetes_version
     }
   ]
 
@@ -94,7 +113,7 @@ module "gke" {
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
-  kubernetes_version     = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  kubernetes_version     = local.latest_stable_version
   release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
   region                 = data.google_client_config.this.region
   network                = var.network

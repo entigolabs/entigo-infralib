@@ -6,6 +6,8 @@ master_authorized_networks: |
     }
   ]
 
+preserve_kubernetes_version: true
+
 enable_l4_ilb_subsetting: true
 deploy_using_private_endpoint: false
 enable_private_endpoint: false

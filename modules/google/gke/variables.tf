@@ -2,6 +2,17 @@ variable "prefix" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.32."
+}
+
+variable "preserve_kubernetes_version" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "master_ipv4_cidr_block" {
   type    = string
   default = ""
@@ -56,11 +67,6 @@ variable "enable_l4_ilb_subsetting" {
   type     = bool
   nullable = false
   default  = false
-}
-
-variable "kubernetes_version" {
-  type    = string
-  default = "1.32."
 }
 
 variable "grant_registry_access" {
