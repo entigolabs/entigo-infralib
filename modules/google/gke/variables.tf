@@ -8,9 +8,9 @@ variable "kubernetes_version" {
 }
 
 variable "preserve_kubernetes_version" {
-  type     = bool
-  nullable = false
-  default  = false
+  type        = bool
+  default     = false
+  description = "Preserve the kubernetes version for node pools. Must be false if cluster does not exist yet."
 }
 
 variable "master_ipv4_cidr_block" {
