@@ -94,7 +94,7 @@ module "gke" {
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
-  kubernetes_version     = data.google_container_engine_versions.this.release_channel_default_version["STABLE"]
+  kubernetes_version     = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
   release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
   region                 = data.google_client_config.this.region
   network                = var.network

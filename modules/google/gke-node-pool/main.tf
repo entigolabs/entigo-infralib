@@ -5,7 +5,7 @@ module "gke_node_pool" {
   name               = substr(var.prefix, 0, 40)
   cluster            = var.cluster_name
   project_id         = data.google_client_config.this.project
-  kubernetes_version = data.google_container_engine_versions.this.release_channel_default_version["STABLE"]
+  kubernetes_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
 
   location           = var.cluster_region
   node_locations     = length(var.node_locations) > 0 ? var.node_locations : data.google_compute_zones.this.names
