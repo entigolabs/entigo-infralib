@@ -108,7 +108,7 @@ crossplane:
       # -- CPU resource requests for Crossplane.
       cpu: 10m
       # -- Memory resource requests for Crossplane.
-      memory: 128Mi
+      memory: 160Mi
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
@@ -140,7 +140,7 @@ crossplane:
       # -- CPU resource requests for RBAC Manager.
       cpu: 10m
       # -- Memory resource requests for RBAC Manager.
-      memory: 128Mi
+      memory: 32Mi
 
   securityContextRBACManager:
     # -- Run as user for RBAC Manager.

@@ -30,6 +30,13 @@ spec:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
+              resources:
+                requests:
+                  cpu: 1m
+                  memory: 130Mi
+                limits:
+                  cpu: 2000m
+                  memory: 1024Mi
           securityContext:
             fsGroup: 2000
           serviceAccountName: {{ .Release.Name }}

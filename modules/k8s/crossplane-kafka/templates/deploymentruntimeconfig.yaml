@@ -27,6 +27,13 @@ spec:
           containers:
             - name: package-runtime
               securityContext: {}
+              resources:
+                requests:
+                  cpu: 1m
+                  memory: 15Mi
+                limits:
+                  cpu: 2000m
+                  memory: 1024Mi
           securityContext:
             fsGroup: 2000
           serviceAccountName: {{.Values.global.aws.serviceAccountName}}
