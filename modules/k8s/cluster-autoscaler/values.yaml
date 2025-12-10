@@ -29,3 +29,4 @@ cluster-autoscaler:
       kube-score/ignore: pod-probes,pod-networkpolicy
   extraArgs:
     stderrthreshold: warning
+    v: 2
