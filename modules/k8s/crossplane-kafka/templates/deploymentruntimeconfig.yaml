@@ -44,7 +44,5 @@ spec:
               value: "true"
   serviceAccountTemplate:
     metadata:
-      name: {{.Values.global.aws.serviceAccountName}}
-      annotations:
-        eks.amazonaws.com/role-arn: {{.Values.global.aws.role}}
+      name: {{ .Release.Name }}
   serviceTemplate: {}
