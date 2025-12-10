@@ -27,3 +27,6 @@ cluster-autoscaler:
   deployment:
     annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
+  extraArgs:
+    stderrthreshold: warning
+    v: 2
