@@ -1,7 +1,9 @@
 global:
   cloudProvider: ""
   addPrometheusAnnotations: true
-
+  logging:
+    format: json
+    level: warn
 argocd-apps:
   enabled: true
 
