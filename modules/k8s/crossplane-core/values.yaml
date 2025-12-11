@@ -154,7 +154,7 @@ crossplane:
 
   metrics:
     # -- Expose Crossplane and RBAC Manager metrics endpoint.
-    enabled: false
+    enabled: true
 
   # -- List of extra environment variables to set in the Crossplane deployment.
   # Any `.` in variable names will be replaced with `_` (example: `SAMPLE.KEY=value1` becomes `SAMPLE_KEY=value1`).
