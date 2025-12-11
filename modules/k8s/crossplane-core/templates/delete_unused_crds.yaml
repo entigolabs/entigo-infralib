@@ -104,6 +104,28 @@ spec:
               echo "ProviderRevision cleanup complete!"
           fi
 {{- end }}
+{{- if .Values.job.deleteInactiveFunctionRevisions | default false }}
+          # Get all ProviderRevisions with desiredState = Inactive
+          INACTIVE_FREVISIONS=$(kubectl get functionrevisions.pkg.crossplane.io -o json | \
+          jq -r '.items[] | select(.spec.desiredState == "Inactive") | .metadata.name')
+
+          if [ -z "$INACTIVE_FREVISIONS" ]; then
+              echo "No inactive FunctionRevisions found."
+          else
+              echo "Found inactive FunctionRevisions to delete:"
+              echo "$INACTIVE_FREVISIONS"
+              echo ""
+
+              # Loop through and delete each inactive revision
+              for revision in $INACTIVE_FREVISIONS; do
+                  echo "Deleting FunctionRevision: $revision"
+                  kubectl delete functionrevisions.pkg.crossplane.io "$revision"
+              done
+
+              echo ""
+              echo "ProviderRevision cleanup complete!"
+          fi
+{{- end }}
 {{- if .Values.job.deleteUnusedCrds | default false }}
           # Get CRDs actually in use from providerconfigusages
           AWSUSEDAPIS=$(kubectl get providerconfigusages.aws.upbound.io -o json | \

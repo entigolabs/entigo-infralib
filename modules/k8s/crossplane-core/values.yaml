@@ -232,6 +232,7 @@ job:
   tag: "v1.13.1"
   deleteUnusedCrds: false
   deleteInactiveProviderRevisions: false
+  deleteInactiveFunctionRevisions: false
 
 imageConfigs:
   hubProxy: docker.io/entigolabs
