@@ -36,7 +36,7 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
-          serviceAccountName: {{.Values.global.aws.serviceAccountName}}
+          serviceAccountName: {{ .Release.Name }}
           tolerations:
             - effect: NoSchedule
               key: tools
