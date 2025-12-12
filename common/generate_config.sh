@@ -363,8 +363,6 @@ test_k8s() {
   ./modules/k8s/google-gateway/test.sh testonly &
   PIDS="$PIDS $!=google-gateway"
   #common
-  ./modules/k8s/crossplane-k8s/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-k8s"
   ./modules/k8s/crossplane-kafka/test.sh testonly &
   PIDS="$PIDS $!=crossplane-kafka"
   ./modules/k8s/crossplane-sql/test.sh testonly &

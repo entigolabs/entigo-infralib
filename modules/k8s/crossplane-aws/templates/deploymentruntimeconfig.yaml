@@ -1,6 +1,60 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
+  name: {{ .Release.Name }}-family
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '1'
+    helm.sh/resource-policy: keep
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      strategy: {}
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: tools
+                        operator: In
+                        values:
+                          - 'true'
+                  weight: 90
+          containers:
+            - name: package-runtime
+              args:
+                {{- with .Values.global.deploymentRuntimeConfig.args }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              resources:
+                requests:
+                  cpu: 3m
+                  memory: 250Mi
+                limits:
+                  cpu: 2000m
+                  memory: 1024Mi
+              securityContext: {}
+          securityContext:
+            fsGroup: 2000
+          serviceAccountName: {{ .Release.Name }}
+          tolerations:
+            - effect: NoSchedule
+              key: tools
+              operator: Equal
+              value: 'true'
+  serviceTemplate: {}
+  serviceAccountTemplate:
+    metadata:
+      name: {{ .Release.Name }}
+      annotations:
+        eks.amazonaws.com/role-arn: {{ .Values.global.aws.role }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
   name: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -29,6 +83,13 @@ spec:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
+              resources:
+                requests:
+                  cpu: 3m
+                  memory: 250Mi
+                limits:
+                  cpu: 2000m
+                  memory: 1024Mi
               securityContext: {}
           securityContext:
             fsGroup: 2000
@@ -39,8 +100,3 @@ spec:
               operator: Equal
               value: 'true'
   serviceTemplate: {}
-  serviceAccountTemplate:
-    metadata:
-      name: {{ .Release.Name }}
-      annotations:
-        eks.amazonaws.com/role-arn: {{ .Values.global.aws.role }}

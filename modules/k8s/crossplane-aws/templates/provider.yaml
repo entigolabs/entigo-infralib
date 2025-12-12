@@ -7,9 +7,9 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-family-aws:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.3.0
   runtimeConfigRef:
-    name: {{ .Release.Name }}
+    name: {{ .Release.Name }}-family
 
 # Build the final list of providers based on conditions
 {{- $allProviders := list }}
@@ -44,7 +44,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
-  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.3.0
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

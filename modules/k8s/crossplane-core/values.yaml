@@ -108,7 +108,7 @@ crossplane:
       # -- CPU resource requests for Crossplane.
       cpu: 10m
       # -- Memory resource requests for Crossplane.
-      memory: 128Mi
+      memory: 160Mi
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
@@ -140,7 +140,7 @@ crossplane:
       # -- CPU resource requests for RBAC Manager.
       cpu: 10m
       # -- Memory resource requests for RBAC Manager.
-      memory: 128Mi
+      memory: 32Mi
 
   securityContextRBACManager:
     # -- Run as user for RBAC Manager.
@@ -154,7 +154,7 @@ crossplane:
 
   metrics:
     # -- Expose Crossplane and RBAC Manager metrics endpoint.
-    enabled: false
+    enabled: true
 
   # -- List of extra environment variables to set in the Crossplane deployment.
   # Any `.` in variable names will be replaced with `_` (example: `SAMPLE.KEY=value1` becomes `SAMPLE_KEY=value1`).
@@ -229,9 +229,10 @@ crossplane:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.13.1"
+  tag: "v1.14.36"
   deleteUnusedCrds: false
   deleteInactiveProviderRevisions: false
+  deleteInactiveFunctionRevisions: false
 
 imageConfigs:
   hubProxy: docker.io/entigolabs
