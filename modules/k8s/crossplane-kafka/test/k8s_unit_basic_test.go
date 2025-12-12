@@ -10,19 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
+func TestK8sCrossplaneKafkaBiz(t *testing.T) {
+	testK8sCrossplaneKafka(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
 }
 
-func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplaneAWS(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
+func TestK8sCrossplaneKafkaPri(t *testing.T) {
+	testK8sCrossplaneKafka(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
 }
 
-func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
+func testK8sCrossplaneKafka(t *testing.T, contextName string, envName string) {
 	t.Parallel()
 
 	namespaceName := "crossplane-system"
-	releaseName := "crossplane-kafka"
+	releaseName := "contrib-provider-kafka"
 
 	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
 	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
@@ -33,7 +33,7 @@ func testK8sCrossplaneAWS(t *testing.T, contextName string, envName string) {
 	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
 	// Install AWS provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, "contrib-provider-kafka", 60, 1*time.Second)
+	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
 	require.NoError(t, err, "Provider aws error")
 	assert.NotNil(t, provider, "Provider aws is nil")
 	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
