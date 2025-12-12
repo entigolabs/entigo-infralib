@@ -1,3 +1,7 @@
+## Deprecated ##
+This module is no longer actively developed, please use crossplane v2.0+ native features. This module will be removed in future releases.
+
+
 ## Opinionated helm package for crossplane ##
 
 This module depends on: modules/k8s/crossplane-core
