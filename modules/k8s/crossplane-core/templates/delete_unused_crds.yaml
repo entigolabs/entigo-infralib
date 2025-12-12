@@ -11,7 +11,7 @@ metadata:
   name: {{ .Release.Name }}-cleanup
 rules:
 - apiGroups: ["pkg.crossplane.io"]
-  resources: ["providerrevisions"]
+  resources: ["providerrevisions", "functionrevisions"]
   verbs: ["*"]
 - apiGroups: ["apiextensions.crossplane.io"]
   resources: ["managedresourceactivationpolicies", "managedresourcedefinitions"]
