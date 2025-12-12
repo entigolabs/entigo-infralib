@@ -1,4 +1,4 @@
-{{- if or .Values.job.deleteUnusedCrds .Values.job.deleteInactiveProviderRevisions }}
+{{- if or .Values.job.deleteUnusedCrds .Values.job.deleteInactiveProviderRevisions .Values.job.deleteInactiveFunctionRevisions }}
 
 apiVersion: v1
 kind: ServiceAccount
@@ -11,7 +11,7 @@ metadata:
   name: {{ .Release.Name }}-cleanup
 rules:
 - apiGroups: ["pkg.crossplane.io"]
-  resources: ["providerrevisions"]
+  resources: ["providerrevisions", "functionrevisions"]
   verbs: ["*"]
 - apiGroups: ["apiextensions.crossplane.io"]
   resources: ["managedresourceactivationpolicies", "managedresourcedefinitions"]
@@ -100,6 +100,28 @@ spec:
                   kubectl delete providerrevisions.pkg.crossplane.io "$revision"
               done
               
+              echo ""
+              echo "ProviderRevision cleanup complete!"
+          fi
+{{- end }}
+{{- if .Values.job.deleteInactiveFunctionRevisions | default false }}
+          # Get all ProviderRevisions with desiredState = Inactive
+          INACTIVE_FREVISIONS=$(kubectl get functionrevisions.pkg.crossplane.io -o json | \
+          jq -r '.items[] | select(.spec.desiredState == "Inactive") | .metadata.name')
+
+          if [ -z "$INACTIVE_FREVISIONS" ]; then
+              echo "No inactive FunctionRevisions found."
+          else
+              echo "Found inactive FunctionRevisions to delete:"
+              echo "$INACTIVE_FREVISIONS"
+              echo ""
+
+              # Loop through and delete each inactive revision
+              for revision in $INACTIVE_FREVISIONS; do
+                  echo "Deleting FunctionRevision: $revision"
+                  kubectl delete functionrevisions.pkg.crossplane.io "$revision"
+              done
+
               echo ""
               echo "ProviderRevision cleanup complete!"
           fi

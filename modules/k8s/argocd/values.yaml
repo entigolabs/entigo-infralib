@@ -1,13 +1,15 @@
 global:
   cloudProvider: ""
   addPrometheusAnnotations: true
-
+  logging:
+    format: json
+    level: warn
 argocd-apps:
   enabled: true
 
 job:
   image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.13.1"
+  tag: "v1.14.36"
 
 argocd:
   crds:

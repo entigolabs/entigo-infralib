@@ -2,7 +2,7 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
-  name: contrib-provider-kafka
+  name: contrib-provider-sql
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -30,13 +30,13 @@ spec:
               resources:
                 requests:
                   cpu: 1m
-                  memory: 15Mi
+                  memory: 24Mi
                 limits:
                   cpu: 2000m
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
-          serviceAccountName: contrib-provider-kafka
+          serviceAccountName: contrib-provider-sql
           tolerations:
             - effect: NoSchedule
               key: tools
@@ -44,5 +44,5 @@ spec:
               value: "true"
   serviceAccountTemplate:
     metadata:
-      name: contrib-provider-kafka
+      name: contrib-provider-sql
   serviceTemplate: {}

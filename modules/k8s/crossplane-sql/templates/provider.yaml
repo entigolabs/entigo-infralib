@@ -8,3 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-sql:v0.13.0
+  runtimeConfigRef:
+    apiVersion: pkg.crossplane.io/v1beta1
+    kind: DeploymentRuntimeConfig
+    name: contrib-provider-sql

@@ -7,9 +7,9 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-family-gcp:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-family-gcp:v2.3.0
   runtimeConfigRef:
-    name: {{.Release.Name}}
+    name: {{.Release.Name}}-family
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
@@ -20,7 +20,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.3.0
   skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
@@ -34,7 +34,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.3.0
   skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
@@ -48,7 +48,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v2.2.0
+  package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v2.3.0
   skipDependencyResolution: true
   runtimeConfigRef:
     name: {{.Release.Name}}
