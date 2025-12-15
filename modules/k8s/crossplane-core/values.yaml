@@ -108,7 +108,7 @@ crossplane:
       # -- CPU resource requests for Crossplane.
       cpu: 10m
       # -- Memory resource requests for Crossplane.
-      memory: 196Mi
+      memory: 260Mi
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.

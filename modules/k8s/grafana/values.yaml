@@ -74,7 +74,7 @@ grafana:
         datasource: Prometheus
       crossplane:
         gnetId: 24549
-        revision: 2
+        revision: 3
         datasource: Prometheus
       pvc:
         gnetId: 13646
