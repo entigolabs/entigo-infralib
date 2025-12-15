@@ -70,11 +70,11 @@ grafana:
         datasource: Prometheus
       limitsrequests:
         gnetId: 22849
-        revision: 4
+        revision: 5
         datasource: Prometheus
       crossplane:
         gnetId: 24549
-        revision: 2
+        revision: 3
         datasource: Prometheus
       pvc:
         gnetId: 13646
@@ -109,7 +109,7 @@ grafana:
       ephemeral-storage: 1Gi
     requests:
       cpu: 10m
-      memory: 64Mi
+      memory: 192Mi
       ephemeral-storage: 100Mi
   networkPolicy:
     enabled: false
