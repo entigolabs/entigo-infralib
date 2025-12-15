@@ -1,11 +1,11 @@
 resource "random_integer" "subnet_third_octet" {
-  min = 16
-  max = 31
+  min = 0
+  max = 255
 }
 
 resource "random_integer" "subnet_fourth_octet_raw" {
   min = 0
-  max = 15 # We'll multiply this by 16 later to get alignment
+  max = 15
 }
 
 locals {
@@ -27,10 +27,9 @@ locals {
   )
 
   aligned_fourth_octet = random_integer.subnet_fourth_octet_raw.result * 16
-  subnet_cidr = format("172.%d.%d.%d/28",
+  subnet_cidr = format("172.16.%d.%d/28",
     random_integer.subnet_third_octet.result,
-    local.aligned_fourth_octet,
-    0
+    local.aligned_fourth_octet
   )
 
   google_compute_zones = join(",", data.google_compute_zones.this.names)
