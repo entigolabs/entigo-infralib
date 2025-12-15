@@ -137,7 +137,7 @@ resource "google_certificate_manager_certificate" "pub_cert" {
 
 resource "google_certificate_manager_certificate" "pub_cert_regional" {
   count    = var.create_public ? 1 : 0
-  name     = "${local.pub_zone}-regional"
+  name     = local.pub_zone
   location = data.google_client_config.this.region
   managed {
     domains            = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
