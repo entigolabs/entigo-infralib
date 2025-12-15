@@ -140,7 +140,7 @@ crossplane:
       # -- CPU resource requests for RBAC Manager.
       cpu: 10m
       # -- Memory resource requests for RBAC Manager.
-      memory: 32Mi
+      memory: 50Mi
 
   securityContextRBACManager:
     # -- Run as user for RBAC Manager.
@@ -231,8 +231,8 @@ job:
   image: docker.io/entigolabs/entigo-infralib-base
   tag: "v1.14.36"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: true
-  deleteInactiveFunctionRevisions: true
+  deleteInactiveProviderRevisions: false
+  deleteInactiveFunctionRevisions: false
 
 imageConfigs:
   hubProxy: docker.io/entigolabs
