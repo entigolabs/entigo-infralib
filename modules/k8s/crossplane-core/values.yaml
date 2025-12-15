@@ -231,8 +231,8 @@ job:
   image: docker.io/entigolabs/entigo-infralib-base
   tag: "v1.14.36"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: false
-  deleteInactiveFunctionRevisions: false
+  deleteInactiveProviderRevisions: true
+  deleteInactiveFunctionRevisions: true
 
 imageConfigs:
   hubProxy: docker.io/entigolabs
