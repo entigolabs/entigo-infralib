@@ -88,6 +88,15 @@ resource "google_dns_record_set" "pub_cert" {
   rrdatas      = [google_certificate_manager_dns_authorization.pub_cert[0].dns_resource_record[0].data]
 }
 
+resource "google_dns_record_set" "pub_cert_regional" {
+  count        = var.create_public ? 1 : 0
+  name         = google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].name
+  managed_zone = local.pub_zone
+  type         = google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].type
+  ttl          = 300
+  rrdatas      = [google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].data]
+}
+
 resource "google_dns_record_set" "int_cert" {
   count        = var.create_private ? 1 : 0
   name         = google_certificate_manager_dns_authorization.int_cert[0].dns_resource_record[0].name
