@@ -1,0 +1,38 @@
+FROM alpine:latest
+WORKDIR /app
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
+ENV PATH=/opt/venv/bin:$PATH
+
+#Install AWS SDK
+RUN apk --no-cache add \
+    ca-certificates \
+    python3 \
+    py3-pip \
+    yq \
+    git \
+    && rm -rf /var/cache/apk/* \
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir awscli \
+    && rm -rf \
+       /root/.cache/pip \
+       /opt/venv/bin/pip* \
+       /opt/venv/lib/python3.12/site-packages/awscli/examples \
+       /opt/venv/lib/python3.12/site-packages/pip \
+       /opt/venv/lib/python3.12/site-packages/setuptools \
+       /opt/venv/lib/python3.12/site-packages/wheel \
+       /opt/venv/lib/python3.12/site-packages/docutils \
+       /opt/venv/lib/python3.12/site-packages/*/tests \
+       /opt/venv/lib/python3.12/site-packages/*/test \
+       /opt/venv/lib/python3.12/site-packages/botocore/docs \
+       /opt/venv/lib/python3.12/site-packages/pip-* \
+    && find /opt/venv/lib/python3.12/site-packages/botocore/data -name examples-1.json -delete \
+    && find /opt/venv -type f -name "*.pyc" -delete \
+    && find /opt/venv -type f -name "*.pyo" -delete \
+    && apk del py3-pip
+
+# Copy stripped binaries from tools image
+COPY --from=entigolabs/entigo-infralib-base-tools:latest /entigo-bin/* /usr/bin/
+COPY --from=entigolabs/entigo-infralib-base-tools:latest /entigo-scripts/* /usr/bin/
+
+
+
