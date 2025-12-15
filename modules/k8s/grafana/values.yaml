@@ -109,7 +109,7 @@ grafana:
       ephemeral-storage: 1Gi
     requests:
       cpu: 10m
-      memory: 64Mi
+      memory: 192Mi
       ephemeral-storage: 100Mi
   networkPolicy:
     enabled: false

@@ -31,7 +31,7 @@ promtail:
       ephemeral-storage: 50Gi
     requests:
       cpu: 10m
-      memory: 32Mi
+      memory: 45Mi
       ephemeral-storage: 128Mi
 
   config:
