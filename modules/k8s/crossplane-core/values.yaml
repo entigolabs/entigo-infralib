@@ -103,12 +103,12 @@ crossplane:
       # -- CPU resource limits for Crossplane.
       cpu: 1000m
       # -- Memory resource limits for Crossplane.
-      memory: 512Mi
+      memory: 768Mi
     requests:
       # -- CPU resource requests for Crossplane.
       cpu: 10m
       # -- Memory resource requests for Crossplane.
-      memory: 160Mi
+      memory: 260Mi
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
@@ -231,8 +231,8 @@ job:
   image: docker.io/entigolabs/entigo-infralib-base
   tag: "v1.14.36"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: false
-  deleteInactiveFunctionRevisions: false
+  deleteInactiveProviderRevisions: true
+  deleteInactiveFunctionRevisions: true
 
 imageConfigs:
   hubProxy: docker.io/entigolabs
