@@ -424,7 +424,7 @@ argocd:
         ephemeral-storage: 1Gi
       requests:
         cpu: 70m
-        memory: 96Mi
+        memory: 144Mi
         ephemeral-storage: 100Mi
 
   applicationSet:
