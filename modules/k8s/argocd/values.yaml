@@ -219,7 +219,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 40m
+        cpu: 20m
         memory: 96Mi
         ephemeral-storage: 100Mi
     autoscaling:
@@ -252,7 +252,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 20Gi
       requests:
-        cpu: 10m
+        cpu: 4m
         memory: 48Mi
         ephemeral-storage: 2Gi
 
@@ -281,7 +281,7 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 30m
+        cpu: 10m
         memory: 32Mi
         ephemeral-storage: 100Mi
   redisSecretInit:
@@ -423,7 +423,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
+        cpu: 30m
         memory: 144Mi
         ephemeral-storage: 100Mi
 
@@ -452,7 +452,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
         ephemeral-storage: 100Mi
 

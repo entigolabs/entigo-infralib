@@ -222,8 +222,8 @@ prometheus:
         memory: 1Gi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
-        memory: 16Mi
+        cpu: 5m
+        memory: 14Mi
         ephemeral-storage: 10Mi
     networkPolicy:
       enabled: true
