@@ -219,8 +219,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 20m
-        memory: 96Mi
+        cpu: 10m
+        memory: 80Mi
         ephemeral-storage: 100Mi
     autoscaling:
       enabled: true
@@ -252,8 +252,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 20Gi
       requests:
-        cpu: 4m
-        memory: 48Mi
+        cpu: 2m
+        memory: 40Mi
         ephemeral-storage: 2Gi
 
   redis:
@@ -480,7 +480,7 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
         ephemeral-storage: 100Mi
 
