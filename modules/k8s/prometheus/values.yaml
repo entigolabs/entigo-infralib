@@ -108,7 +108,7 @@ prometheus:
           memory: 1Gi
           ephemeral-storage: 1Gi
         requests:
-          cpu: 5m
+          cpu: 3m
           memory: 16Mi
           ephemeral-storage: 10Mi
     statefulSet:
@@ -222,7 +222,7 @@ prometheus:
         memory: 1Gi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 5m
+        cpu: 3m
         memory: 14Mi
         ephemeral-storage: 10Mi
     networkPolicy:
