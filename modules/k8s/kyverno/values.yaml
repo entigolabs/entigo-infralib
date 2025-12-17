@@ -2,6 +2,11 @@ kyverno:
   global:
     image:
       registry: ghcr.io
+
+  features:
+    logging:
+      format: json
+      verbosity: 2
   crds:
     annotations:
       argocd.argoproj.io/sync-wave: "-1"
@@ -69,6 +74,7 @@ kyverno:
     networkPolicy:
       enabled: true
   backgroundController:
+    enabled: false
     podAnnotations:
       kube-score/ignore: pod-probes
     resources:
@@ -97,6 +103,7 @@ kyverno:
     networkPolicy:
       enabled: true
   cleanupController:
+    enabled: false
     resources:
       limits:
         memory: 128Mi
@@ -123,6 +130,7 @@ kyverno:
     networkPolicy:
       enabled: true
   reportsController:
+    enabled: false
     podAnnotations:
       kube-score/ignore: pod-probes
     resources:

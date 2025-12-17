@@ -108,7 +108,7 @@ prometheus:
           memory: 1Gi
           ephemeral-storage: 1Gi
         requests:
-          cpu: 5m
+          cpu: 3m
           memory: 16Mi
           ephemeral-storage: 10Mi
     statefulSet:
@@ -154,6 +154,9 @@ prometheus:
 
   kube-state-metrics:
     enabled: true
+    metricLabelsAllowlist:
+    - nodes=[eks.amazonaws.com/nodegroup,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,eks.amazonaws.com/capacityType,topology.kubernetes.io/zone]
+    - namespaces=[tenancy.entigo.com/zone]
     networkPolicy:
       enabled: true
       egress:
@@ -222,8 +225,8 @@ prometheus:
         memory: 1Gi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
-        memory: 16Mi
+        cpu: 3m
+        memory: 14Mi
         ephemeral-storage: 10Mi
     networkPolicy:
       enabled: true

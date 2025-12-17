@@ -185,6 +185,54 @@ argocd:
             end
 
             return health_status
+
+        "*.entigo.com/*":
+          health.lua: |
+            health_status = {
+            status = "Progressing",
+            message = "Provisioning ..."
+            }
+
+            local function contains (table, val)
+            for i, v in ipairs(table) do
+                if v == val then
+                return true
+                end
+            end
+            return false
+            end
+
+            if obj.status == nil or next(obj.status) == nil or obj.status.conditions == nil then
+            return health_status
+            end
+
+            for i, condition in ipairs(obj.status.conditions) do
+            if condition.type == "LastAsyncOperation" then
+                if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+                end
+            end
+
+            if condition.type == "Synced" then
+                if condition.status == "False" then
+                health_status.status = "Degraded"
+                health_status.message = condition.message
+                return health_status
+                end
+            end
+
+            if contains({"Ready", "Healthy", "Offered", "Established", "ValidPipeline", "RevisionHealthy"}, condition.type) then
+                if condition.status == "True" then
+                health_status.status = "Healthy"
+                health_status.message = "Resource is up-to-date."
+                return health_status
+                end
+            end
+            end
+
+            return health_status
       server.rbac.log.enforce.enable: "true"
       admin.enabled: "true"
       exec.enabled: "true"
@@ -219,8 +267,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 40m
-        memory: 96Mi
+        cpu: 10m
+        memory: 80Mi
         ephemeral-storage: 100Mi
     autoscaling:
       enabled: true
@@ -252,8 +300,8 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 20Gi
       requests:
-        cpu: 10m
-        memory: 48Mi
+        cpu: 2m
+        memory: 40Mi
         ephemeral-storage: 2Gi
 
   redis:
@@ -281,7 +329,7 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 30m
+        cpu: 10m
         memory: 32Mi
         ephemeral-storage: 100Mi
   redisSecretInit:
@@ -423,7 +471,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 70m
+        cpu: 30m
         memory: 144Mi
         ephemeral-storage: 100Mi
 
@@ -452,7 +500,7 @@ argocd:
         memory: 512Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
         ephemeral-storage: 100Mi
 
@@ -480,7 +528,7 @@ argocd:
         memory: 128Mi
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
         ephemeral-storage: 100Mi
 
