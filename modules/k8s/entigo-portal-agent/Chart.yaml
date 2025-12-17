@@ -8,5 +8,5 @@ appVersion: "0.2.12"
 
 dependencies:
 - name: developer-portal-agent
-  version: 0.2.12
+  version: 0.2.14
   repository: oci://ghcr.io/entigolabs
