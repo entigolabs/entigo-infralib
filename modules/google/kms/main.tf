@@ -20,6 +20,7 @@ locals {
       "serviceAccount:service-${data.google_project.this.number}@gcp-sa-cloud-sql.iam.gserviceaccount.com",
       "serviceAccount:service-${data.google_project.this.number}@gs-project-accounts.iam.gserviceaccount.com",
       "serviceAccount:service-${data.google_project.this.number}@cloud-redis.iam.gserviceaccount.com",
+      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-memorystore.iam.gserviceaccount.com",
       "serviceAccount:service-${data.google_project.this.number}@cloud-filer.iam.gserviceaccount.com",
       "serviceAccount:service-${data.google_project.this.number}@gcp-sa-artifactregistry.iam.gserviceaccount.com",
       "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com",
