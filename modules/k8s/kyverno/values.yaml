@@ -74,6 +74,7 @@ kyverno:
     networkPolicy:
       enabled: true
   backgroundController:
+    enabled: false
     podAnnotations:
       kube-score/ignore: pod-probes
     resources:
@@ -102,6 +103,7 @@ kyverno:
     networkPolicy:
       enabled: true
   cleanupController:
+    enabled: false
     resources:
       limits:
         memory: 128Mi
