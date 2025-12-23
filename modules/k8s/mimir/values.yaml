@@ -4,7 +4,6 @@ global:
   bucketName: "mimir"
   prefix: ""
 
-
 mimir-distributed:
   fullnameOverride: mimir
   serviceAccount:
@@ -193,6 +192,8 @@ mimir-distributed:
     replicas: 2
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
+    extraArgs:
+      log.level: warn
 
     resources:
       limits:
@@ -645,4 +646,3 @@ mimir-distributed:
     enabled: false
   continuous_test:
     enabled: false
-

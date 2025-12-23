@@ -1,4 +1,5 @@
 trivy-operator:
+  targetNamespaces: "argocd-ecr-updater-pri,argocd-pri,aws-alb-pri,aws-storageclass-pri,cluster-autoscaler-pri,crossplane-aws,crossplane-kafka,crossplane-sql,crossplane-system,default,entigo-portal-agent-pri,entigo-vulnerability-agent-pri,external-dns-pri,external-secrets-pri,grafana-pri,harbor-pri,hello-world-pri,istio-base-pri,istio-gateway-pri,istio-system,karpenter-pri,kiali-pri,kyverno-pri,loki-pri,metrics-server-pri,mimir-pri,platform-apis,pri,prometheus-pri,promtail-pri,rbac-bindings-pri,saml-proxy-pri,trivy-pri,wireguard-pri"
   trivyOperator:
     scanJobAffinity:
       nodeAffinity:
