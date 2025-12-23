@@ -589,6 +589,8 @@ mimir-distributed:
   gateway:
     enabledNonEnterprise: true
     replicas: 3
+    nginx:
+      verboseLogging: false # Disable HTTP 2xx and 3xx logging
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     resources:
