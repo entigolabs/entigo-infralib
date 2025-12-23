@@ -180,7 +180,7 @@ loki:
 
   gateway:
     enabled: true
-    verboseLogging: true
+    verboseLogging: false
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
