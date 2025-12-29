@@ -70,7 +70,7 @@ grafana:
         datasource: Prometheus
       limitsrequests:
         gnetId: 22849
-        revision: 8
+        revision: 9
         datasource: Prometheus
       crossplane:
         gnetId: 24549
