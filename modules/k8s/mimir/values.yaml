@@ -4,7 +4,6 @@ global:
   bucketName: "mimir"
   prefix: ""
 
-
 mimir-distributed:
   fullnameOverride: mimir
   serviceAccount:
@@ -193,6 +192,8 @@ mimir-distributed:
     replicas: 2
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
+    extraArgs:
+      log.level: warn
 
     resources:
       limits:
@@ -588,6 +589,8 @@ mimir-distributed:
   gateway:
     enabledNonEnterprise: true
     replicas: 3
+    nginx:
+      verboseLogging: false # Disable HTTP 2xx and 3xx logging
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     resources:
@@ -645,4 +648,3 @@ mimir-distributed:
     enabled: false
   continuous_test:
     enabled: false
-

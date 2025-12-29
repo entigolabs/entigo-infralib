@@ -26,3 +26,5 @@ trivy-operator:
                     - "true"
   operator:
     metricsVulnIdEnabled: true
+  trivy:
+    severity: MEDIUM,HIGH,CRITICAL
