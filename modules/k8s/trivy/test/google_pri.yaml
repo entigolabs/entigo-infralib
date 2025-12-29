@@ -1,5 +1,4 @@
 trivy-operator:
-  targetNamespaces: "argocd-pri,crossplane-google,crossplane-system,default,external-dns-pri,external-secrets-pri,google-gateway,grafana-pri,harbor-pri,hello-world-pri,istio-base-pri,istio-gateway-pri,istio-system,kiali-pri,kyverno-pri,loki-pri,mimir-pri,prometheus-pri,promtail-pri,trivy-pri,wireguard-pri"
   trivyOperator:
     scanJobAffinity:
       nodeAffinity:
