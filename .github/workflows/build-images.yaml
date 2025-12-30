@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Build ${{ inputs.name }}
+    name: Build image ${{ inputs.name }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code

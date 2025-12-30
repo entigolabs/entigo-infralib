@@ -1,4 +1,3 @@
-# .github/workflows/build-base-tools.yaml
 name: Build images/base-tools
 
 on:
