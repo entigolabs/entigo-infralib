@@ -8,7 +8,14 @@ RUN apk --no-cache add \
     yq \
     jq \
     git \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* && \
+    gcloud config set core/disable_usage_reporting true && \
+    gcloud config set component_manager/disable_update_check true && \
+    gcloud config set metrics/environment github_docker_image && \
+    gcloud components remove bq && \
+    gcloud components install -q beta && \
+    gcloud components install -q gke-gcloud-auth-plugin && \
+    gcloud components update
 
 # Copy stripped binaries from tools image
 COPY --from=tools /entigo-bin/* /usr/bin/
