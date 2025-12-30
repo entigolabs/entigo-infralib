@@ -1,6 +1,6 @@
 ARG TOOLS_TAG=latest
 FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
-FROM alpine:3
+FROM alpine:3.22
 WORKDIR /app
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
 ENV PATH=/opt/venv/bin:$PATH
