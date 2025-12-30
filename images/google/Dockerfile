@@ -14,5 +14,4 @@ RUN apk --no-cache add \
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo
-USER entigo
+USER cloudsdk
