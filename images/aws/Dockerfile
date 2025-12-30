@@ -1,3 +1,5 @@
+ARG TOOLS_TAG=latest
+FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM alpine:latest
 WORKDIR /app
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
@@ -31,8 +33,8 @@ RUN apk --no-cache add \
     && apk del py3-pip
 
 # Copy stripped binaries from tools image
-COPY --from=entigolabs/entigo-infralib-base-tools:latest /entigo-bin/* /usr/bin/
-COPY --from=entigolabs/entigo-infralib-base-tools:latest /entigo-scripts/* /usr/bin/
+COPY --from=tools /entigo-bin/* /usr/bin/
+COPY --from=tools /entigo-scripts/* /usr/bin/
 
 
 

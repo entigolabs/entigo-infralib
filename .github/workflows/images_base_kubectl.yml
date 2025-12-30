@@ -1,19 +1,19 @@
-name: Build images/base-kubectl
+name: Build images/kubectl
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'images/base-kubectl/**'
+      - 'images/kubectl/**'
   pull_request:
     branches:
       - main
     paths:
-      - 'images/base-kubectl/**'
+      - 'images/kubectl/**'
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build images/base-tools"]
+    workflows: ["Build images/tools"]
     types: [completed]
 
 
@@ -21,6 +21,6 @@ jobs:
   build:
     uses: ./.github/workflows/build-images.yaml
     with:
-      path: images/base-kubectl
-      name: entigo-infralib-base-kubectl
+      path: images/kubectl
+      name: entigo-infralib-kubectl
     secrets: inherit
