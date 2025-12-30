@@ -61,6 +61,8 @@ jobs:
         cd ${{ inputs.path }}
         docker buildx build --push --platform linux/arm64/v8,linux/amd64 \
           --build-arg TOOLS_TAG=${IMAGE_TAG} \
+          --sbom=true \
+          --provenance=mode=max \
           -t public.ecr.aws/entigolabs/${{ inputs.name }}:${VERSION_TAG} \
           -t public.ecr.aws/entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
           -t entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
