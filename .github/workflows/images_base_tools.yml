@@ -1,0 +1,23 @@
+# .github/workflows/build-base-tools.yaml
+name: Build images/base-tools
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/base-tools/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/base-tools/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-images.yaml
+    with:
+      path: images/base-tools
+      name: entigo-infralib-base-tools
+    secrets: inherit
