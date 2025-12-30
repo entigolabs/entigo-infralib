@@ -88,7 +88,7 @@ jobs:
     steps:
     - name: Free disk space
       run: |
-        # Remove large preinstalled base
+        # Remove large preinstalled tools
         sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/lib/android
         sudo docker image prune --all --force
     - name: Checkout code
@@ -229,10 +229,10 @@ jobs:
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ &&
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
-        docker buildx imagebase create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest &&
-        docker buildx imagebase create -t public.ecr.aws/entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-kubectl:latest &&
-        docker buildx imagebase create -t public.ecr.aws/entigolabs/entigo-infralib-aws:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-aws:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-aws:latest &&
-        docker buildx imagebase create -t public.ecr.aws/entigolabs/entigo-infralib-google:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-google:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-google:latest
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest &&
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-kubectl:latest &&
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-aws:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-aws:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-aws:latest &&
+        docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-google:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-google:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-google:latest
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Set up SSH key
