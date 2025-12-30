@@ -10,6 +10,7 @@ RUN apk --no-cache add \
     python3 \
     py3-pip \
     yq \
+    jq \
     git \
     bash \
     && rm -rf /var/cache/apk/* \
@@ -22,10 +23,8 @@ RUN apk --no-cache add \
        /opt/venv/lib/python3.12/site-packages/pip \
        /opt/venv/lib/python3.12/site-packages/setuptools \
        /opt/venv/lib/python3.12/site-packages/wheel \
-       /opt/venv/lib/python3.12/site-packages/docutils \
        /opt/venv/lib/python3.12/site-packages/*/tests \
        /opt/venv/lib/python3.12/site-packages/*/test \
-       /opt/venv/lib/python3.12/site-packages/botocore/docs \
        /opt/venv/lib/python3.12/site-packages/pip-* \
     && find /opt/venv/lib/python3.12/site-packages/botocore/data -name examples-1.json -delete \
     && find /opt/venv -type f -name "*.pyc" -delete \

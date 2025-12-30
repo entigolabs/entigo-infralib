@@ -24,10 +24,8 @@ RUN apk --no-cache add \
        /opt/venv/lib/python3.12/site-packages/pip \
        /opt/venv/lib/python3.12/site-packages/setuptools \
        /opt/venv/lib/python3.12/site-packages/wheel \
-       /opt/venv/lib/python3.12/site-packages/docutils \
        /opt/venv/lib/python3.12/site-packages/*/tests \
        /opt/venv/lib/python3.12/site-packages/*/test \
-       /opt/venv/lib/python3.12/site-packages/botocore/docs \
        /opt/venv/lib/python3.12/site-packages/pip-* \
     && find /opt/venv/lib/python3.12/site-packages/botocore/data -name examples-1.json -delete \
     && find /opt/venv -type f -name "*.pyc" -delete \
@@ -51,3 +49,4 @@ USER cloudsdk
 RUN cd /cache && terraform init && ls -l / && ls -l /cache/ && rm -rf /cache/*
 RUN export GOMAXPROCS=2 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m
 
+COPY --from=entigolabs/entigo-infralib-agent:latest /usr/bin/ei-agent /usr/bin/ei-agent
