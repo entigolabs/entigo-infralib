@@ -1,2 +1,3 @@
+ARG BASE_TAG=latest
 FROM alpine:latest
-COPY --from=entigolabs/entigo-infralib-base-tools:latest /entigo-bin/kubectl /usr/bin/
+COPY --from=entigolabs/entigo-infralib-base-tools:${BASE_TAG} /entigo-bin/kubectl /usr/bin/
