@@ -1,0 +1,29 @@
+name: Build images/aws
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/aws/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/aws/**'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build images/tools"]
+    types: [completed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-images.yaml
+    with:
+      path: images/aws
+      name: entigo-infralib-aws
+    secrets: inherit
