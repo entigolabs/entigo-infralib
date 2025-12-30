@@ -43,7 +43,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE="true"
 COPY --chown=cloudsdk:cloudsdk cache /cache
 COPY --chown=cloudsdk:cloudsdk test /app/test
-COPY common /common
+COPY --chown=root:root common /common
 
 RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && mkdir /plugin-cache /plan-json /go && chown -R cloudsdk:cloudsdk /plugin-cache /plan-json /cache /go
 
