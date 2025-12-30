@@ -6,6 +6,7 @@ ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 # Install additional tools
 RUN apk --no-cache add \
     yq \
+    jq \
     git \
     && rm -rf /var/cache/apk/*
 

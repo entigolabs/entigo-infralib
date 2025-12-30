@@ -10,6 +10,7 @@ RUN apk --no-cache add \
     python3 \
     py3-pip \
     yq \
+    jq \
     git \
     bash \
     && rm -rf /var/cache/apk/* \
