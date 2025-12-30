@@ -1,7 +1,6 @@
 ARG TOOLS_TAG=latest
 FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM alpine:3.22
-WORKDIR /app
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
 ENV PATH=/opt/venv/bin:$PATH
 
@@ -38,3 +37,4 @@ COPY --from=tools /entigo-scripts/* /usr/bin/
 
 RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo
 USER entigo
+WORKDIR /app
