@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3
 ARG TARGETARCH
 ENV KUBECTL_VERSION=v1.32.7 TERRAFORM_VERSION=1.7.5 HELM_VERSION=v3.18.4 ARGOCD_CLI=v2.14.11
 RUN apk --no-cache add \
@@ -30,3 +30,6 @@ RUN wget -O "terraform.zip" "https://releases.hashicorp.com/terraform/${TERRAFOR
 #RUN strip /entigo-bin/ei-agent
 
 COPY *.sh /entigo-scripts/
+
+RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo
+USER entigo
