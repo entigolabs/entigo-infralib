@@ -11,6 +11,7 @@ RUN apk --no-cache add \
     py3-pip \
     yq \
     git \
+    bash \
     && rm -rf /var/cache/apk/* \
     && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir awscli \
