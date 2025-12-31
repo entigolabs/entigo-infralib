@@ -5,17 +5,12 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ENV LOCAL_MODE=true ENTIGO_INFRALIB_DESTROY=false ENTIGO_INFRALIB_TEST_TIMEOUT=30m ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS=false ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS=false
 ENV GOPATH="/go"
-ENV PATH="/opt/venv/bin:${GOPATH}/bin:/usr/local/go/bin:${PATH}"
+ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 USER root
 #Install AWS SDK
 RUN apk --no-cache add \
-    ca-certificates \
-    python3 \
     py3-pip \
-    yq \
-    git \
     && rm -rf /var/cache/apk/* \
-    && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir awscli \
     && rm -rf \
        /root/.cache/pip \
