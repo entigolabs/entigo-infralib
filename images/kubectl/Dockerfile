@@ -9,8 +9,8 @@ RUN apk --no-cache add \
     bash \
     sudo \
     && rm -rf /var/cache/apk/* \
-    && echo "entigo ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/entigo
+    && echo "entigo ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/entigo \
+    && addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
 COPY --from=tools /entigo-bin/kubectl /usr/bin/
-RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
 USER entigo
 WORKDIR /app

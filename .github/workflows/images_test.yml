@@ -13,7 +13,7 @@ on:
       - 'images/test/**'
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build images/google","Build images/aws"]
+    workflows: ["Build images/google"]
     types: [completed]
 
 concurrency:

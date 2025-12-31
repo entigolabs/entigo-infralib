@@ -31,12 +31,12 @@ RUN apk --no-cache add \
     && find /opt/venv -type f -name "*.pyc" -delete \
     && find /opt/venv -type f -name "*.pyo" -delete \
     && apk del py3-pip \
-    && echo "entigo ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/entigo
+    && echo "entigo ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/entigo \
+    && addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
 
 # Copy stripped binaries from tools image
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
 USER entigo
 WORKDIR /app
