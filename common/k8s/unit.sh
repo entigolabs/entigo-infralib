@@ -132,7 +132,7 @@ fi
             export GOOGLE_PROJECT="entigo-infralib2"
           fi
 
-          docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
+          docker run --rm -v $CLOUDSDK_CONFIG:/home/cloudsdk/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
         elif [[ $testname == aws_spoke ]]
         then
@@ -194,6 +194,6 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e AWS_REGION="$AWS_REGION" \
 	-e COMMAND="test" \
 	-e APP_NAME="$APP_NAME" \
-  -v $CLOUDSDK_CONFIG:/root/.config/gcloud \
-	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(echo ~)/.kube":"/root/.kube" -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
+  -v $CLOUDSDK_CONFIG:/home/cloudsdk/.config/gcloud \
+	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(echo ~)/.kube":"/home/cloudsdk/.kube" -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
  
