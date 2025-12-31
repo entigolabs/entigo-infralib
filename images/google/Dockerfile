@@ -8,6 +8,7 @@ RUN apk --no-cache add \
     yq \
     jq \
     git \
+    sudo \
     && rm -rf /var/cache/apk/* && \
     gcloud config set core/disable_usage_reporting true && \
     gcloud config set component_manager/disable_update_check true && \
@@ -15,7 +16,9 @@ RUN apk --no-cache add \
     gcloud components install -q beta && \
     gcloud components install -q gke-gcloud-auth-plugin && \
     gcloud components update && \
-    git config --system credential.'https://source.developers.google.com'.helper gcloud.sh
+    git config --system credential.'https://source.developers.google.com'.helper gcloud.sh && \
+    echo "cloudsdk ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/cloudsdk && \
+    chown cloudsdk /usr/local/share/ca-certificates
 
 # Copy stripped binaries from tools image
 COPY --from=tools /entigo-bin/* /usr/bin/
