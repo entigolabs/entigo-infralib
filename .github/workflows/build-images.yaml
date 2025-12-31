@@ -71,7 +71,7 @@ jobs:
           .
 
     - name: Create Release
-      if: !inputs.is_dev
+      if: ${{ !inputs.is_dev }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_TAG: ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
@@ -89,7 +89,7 @@ jobs:
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
 
     - name: Slack Success Release Message
-      if: success() && !inputs.is_dev
+      if: ${{ success() && !inputs.is_dev }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
