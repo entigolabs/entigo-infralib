@@ -12,6 +12,10 @@ on:
         required: true
         type: string
         description: "Image name (e.g., entigo-infralib-base-tools)"
+      is_dev:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -53,7 +57,7 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        IMAGE_TAG: ${{ github.event_name == 'pull_request' && 'dev' || 'latest' }}
+        IMAGE_TAG: ${{ inputs.is_dev && 'dev' || 'latest' }}
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
@@ -67,7 +71,7 @@ jobs:
           .
 
     - name: Create Release
-      if: github.event_name == 'push'
+      if: ${{ !inputs.is_dev }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_TAG: ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
@@ -85,7 +89,7 @@ jobs:
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
 
     - name: Slack Success Release Message
-      if: success() && github.event_name == 'push'
+      if: ${{ success() && !inputs.is_dev }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'

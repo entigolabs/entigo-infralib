@@ -26,4 +26,5 @@ jobs:
     with:
       path: images/kubectl
       name: entigo-infralib-kubectl
+      is_dev: ${{ github.event_name == 'pull_request' || github.event.workflow_run.event == 'pull_request' }}
     secrets: inherit
