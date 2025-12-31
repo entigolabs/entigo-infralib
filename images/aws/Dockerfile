@@ -10,12 +10,13 @@ RUN apk --no-cache add \
     python3 \
     py3-pip \
     jq \
+    yq \
     git \
     sudo \
     bash \
     && rm -rf /var/cache/apk/* \
     && python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir awscli yq \
+    && /opt/venv/bin/pip install --no-cache-dir awscli \
     && rm -rf \
        /root/.cache/pip \
        /opt/venv/bin/pip* \
