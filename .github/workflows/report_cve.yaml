@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Create CVE report
-      id: k8s_tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
