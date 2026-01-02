@@ -5,7 +5,7 @@ global:
     bucket:
       location: "{{ .toutput.gke.region }}"
 job:
-  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   persistence:

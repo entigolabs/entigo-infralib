@@ -11,4 +11,4 @@ argocd:
     image:
       repository: '{{ .toptout.gar-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
 job:
-  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+  image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'

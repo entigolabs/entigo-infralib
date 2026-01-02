@@ -8,8 +8,8 @@ argocd-apps:
   enabled: true
 
 job:
-  image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.14.36"
+  image: docker.io/entigolabs/entigo-infralib-kubectl
+  tag: "v1.15.7"
 
 argocd:
   crds:
