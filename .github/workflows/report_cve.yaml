@@ -56,7 +56,7 @@ jobs:
         for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
         do
           ((total++)) || true
-          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-ecr) ]]
+          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-) ]]
           then
             echo "$image does not use Internal Registry"
             ((registry++)) || true
