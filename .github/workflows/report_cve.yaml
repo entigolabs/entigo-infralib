@@ -37,7 +37,7 @@ jobs:
         ./common/k8s/report_badpod.sh
         gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
         echo "### GOOGLE BIZ ####"
-        GOOGLE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
+        GOOGLE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-gar-proxy/pri-net-gar-proxy/g' | sort | uniq`
         ./common/k8s/report_cve.sh
         ./common/k8s/report_badpod.sh
         aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
@@ -56,7 +56,7 @@ jobs:
         for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
         do
           ((total++)) || true
-          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^oci\.external-secrets\.io|^xpkg\.upbound\.io) ]]
+          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-ecr) ]]
           then
             echo "$image does not use Internal Registry"
             ((registry++)) || true
