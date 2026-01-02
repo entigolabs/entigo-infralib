@@ -53,13 +53,13 @@ jobs:
         echo "Finding images withour registry proxy:"
         total=0
         registry=0
-        for image in $(echo "877483565445.dkr.ecr.eu-north-1.amazonaws.com/pri-net-ecr-proxy-hub/entigolabs/entigo-infralib-testing:latest 877483565445.dkr.ecr.eu-north-1.amazonaws.com/pri-net-ecr-proxy-hub/entigolabs/entigo-infralib-agent:latest $AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+        for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
         do
-          let total++
+          ((total++)) || true
           if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^oci\.external-secrets\.io|^xpkg\.upbound\.io) ]]
           then
             echo "$image does not use Internal Registry"
-            let registry++
+            ((registry++)) || true
           fi
         done
         echo "Total images $total, proxy registry issues $registry"
