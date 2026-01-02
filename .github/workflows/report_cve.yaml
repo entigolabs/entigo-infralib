@@ -25,12 +25,31 @@ jobs:
       id: create_report
       run: |
         echo "Assemble configuration"
-        pwd
-        find .
         source common/generate_config.sh
         google_auth_login
         gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        GOOGLE_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
         ./common/k8s/report_cve.sh
+        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+        GOOGLE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
+        ./common/k8s/report_cve.sh
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+        AWS_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
+        ./common/k8s/report_cve.sh
+        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        AWS_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-ecr-proxy/pri-net-ecr-proxy/g' | sort | uniq`
+        ./common/k8s/report_cve.sh
+
+        total=0
+        registry=0
+        for image in $(echo "877483565445.dkr.ecr.eu-north-1.amazonaws.com/pri-net-ecr-proxy-hub/entigolabs/entigo-infralib-testing:latest 877483565445.dkr.ecr.eu-north-1.amazonaws.com/pri-net-ecr-proxy-hub/entigolabs/entigo-infralib-agent:latest $AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+        do
+          let total++
+          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^oci\.external-secrets\.io|^xpkg\.upbound\.io) ]]
+          then
+            echo "$image does not use Internal Registry"
+            let registry++
+          fi
+        done
+
+        echo "Total images $total, proxy registry issues $registry"
