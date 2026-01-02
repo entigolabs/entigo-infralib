@@ -39,7 +39,7 @@ google_auth_login() {
       fi
     done
     gcloud config set account $gaccount
-    chown 1000:1000 -R $CLOUDSDK_CONFIG
+    sudo chown 1000:1000 -R $CLOUDSDK_CONFIG
   fi
 
 }
