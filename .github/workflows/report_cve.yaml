@@ -25,8 +25,8 @@ jobs:
       id: create_report
       run: |
         echo "Assemble configuration"
-        SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-        cd $SCRIPTPATH
+        pwd
+        find .
         source common/generate_config.sh
         google_auth_login
         gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
