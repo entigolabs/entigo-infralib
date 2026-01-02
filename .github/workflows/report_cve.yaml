@@ -1,0 +1,34 @@
+name: Report CVE
+
+on:
+  schedule:
+    - cron: "0 8 * * 2"
+  workflow_dispatch:
+
+jobs:
+  report:
+    name: Create CVE reports
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create CVE report
+      id: k8s_tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+      id: create_report
+      run: |
+        echo "Assemble configuration"
+        SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+        cd $SCRIPTPATH
+        source common/generate_config.sh
+        google_auth_login
+        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        ./common/k8s/report_cve.sh
