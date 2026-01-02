@@ -97,7 +97,7 @@ steps:" > agents/config.yaml
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
-        docker run --rm -v $CLOUDSDK_CONFIG:/home/cloudsdk/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
+        docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
   done
   FAIL=""
@@ -136,6 +136,6 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e GOOGLE_PROJECT="$GOOGLE_PROJECT" \
 	-e COMMAND="test" \
 	-e STEP_NAME="$STEP_NAME" \
-	-v $CLOUDSDK_CONFIG:/home/cloudsdk/.config/gcloud \
+	-v $CLOUDSDK_CONFIG:/root/.config/gcloud \
         $TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
  

@@ -27,13 +27,12 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     fi
 #SEE https://entigo.atlassian.net/browse/RD-76
 ENV TF_PLUGIN_CACHE_DIR=/plugin-cache TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE="true"
-COPY --chown=cloudsdk:cloudsdk cache /cache
-COPY --chown=cloudsdk:cloudsdk test /app/test
-COPY --chown=root:root common /common
+COPY cache /cache
+COPY test /app/test
+COPY common /common
 
-RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && mkdir /plugin-cache /plan-json /go && chown -R cloudsdk:cloudsdk /plugin-cache /plan-json /cache /go
+RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && mkdir /plugin-cache /plan-json /go
 
-USER cloudsdk
 RUN cd /cache && terraform init && ls -l / && ls -l /cache/ && rm -rf /cache/*
 RUN export GOMAXPROCS=2 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m && find /go/pkg/mod -type f -name examples-1.json -delete
 
