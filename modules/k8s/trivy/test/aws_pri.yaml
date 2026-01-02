@@ -24,3 +24,5 @@ trivy-operator:
                   operator: In
                   values:
                     - "true"
+  trivy:
+    severity: MEDIUM,HIGH,CRITICAL
