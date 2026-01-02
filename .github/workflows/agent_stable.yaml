@@ -101,10 +101,23 @@ jobs:
         # Remove large preinstalled tools
         sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/lib/android
         sudo docker image prune --all --force
-    - name: Checkout code
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
       uses: actions/checkout@v4
       with:
-        ref: main
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
     - name: Run k8s tests
       id: k8s_tests
       env:

@@ -5,28 +5,19 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ENV LOCAL_MODE=true ENTIGO_INFRALIB_DESTROY=false ENTIGO_INFRALIB_TEST_TIMEOUT=30m ENTIGO_INFRALIB_KUBECTL_EKS_CONTEXTS=false ENTIGO_INFRALIB_KUBECTL_GKE_CONTEXTS=false
 ENV GOPATH="/go"
-ENV PATH="/opt/venv/bin:${GOPATH}/bin:/usr/local/go/bin:${PATH}"
+ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 USER root
 #Install AWS SDK
 RUN apk --no-cache add \
-    python3 \
     py3-pip \
     && rm -rf /var/cache/apk/* \
-    && python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir awscli \
+    && pip install --no-cache-dir --break-system-packages awscli \
     && rm -rf \
        /root/.cache/pip \
-       /opt/venv/bin/pip* \
-       /opt/venv/lib/python3.12/site-packages/awscli/examples \
-       /opt/venv/lib/python3.12/site-packages/pip \
-       /opt/venv/lib/python3.12/site-packages/setuptools \
-       /opt/venv/lib/python3.12/site-packages/wheel \
-       /opt/venv/lib/python3.12/site-packages/*/tests \
-       /opt/venv/lib/python3.12/site-packages/*/test \
-       /opt/venv/lib/python3.12/site-packages/pip-* \
-    && find /opt/venv/lib/python3.12/site-packages/botocore/data -name examples-1.json -delete \
-    && find /opt/venv -type f -name "*.pyc" -delete \
-    && find /opt/venv -type f -name "*.pyo" -delete \
+       /usr/lib/python3.12/site-packages/awscli/examples \
+       /usr/lib/python3.12/site-packages/*/tests \
+    && find /usr/lib/python3.12 -type f -name examples-1.json -delete \
+    && find /usr/lib/python3.12 -type f -name "*.pyc" -delete \
     && apk del py3-pip
 #Install golang
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
@@ -44,6 +35,6 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
 
 USER cloudsdk
 RUN cd /cache && terraform init && ls -l / && ls -l /cache/ && rm -rf /cache/*
-RUN export GOMAXPROCS=2 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m
+RUN export GOMAXPROCS=2 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m && find /go/pkg/mod -type f -name examples-1.json -delete
 
 COPY --from=entigolabs/entigo-infralib-agent:latest /usr/bin/ei-agent /usr/bin/ei-agent
