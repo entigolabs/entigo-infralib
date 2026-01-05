@@ -50,7 +50,7 @@ fi
 
 if [ "$USE_ARGOCD_CLI" == "true" ]
 then
-  STATUS=`argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .requiresPruning == null and (.hook == null or .hook == false))) | length) else 0 end) RequiredPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
+  STATUS=$(argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .health.status != null and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiredPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
   if [ $? -ne 0 ]
   then
     echo "Failed to refresh ArgoCD Application $app_name!"
@@ -72,7 +72,7 @@ else
     done
   fi
 
-  STATUS=`kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .requiresPruning == null and (.hook == null or .hook == false))) | length) else 0 end) RequiredPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"'`
+  STATUS=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq -r '"Status:\(.status.sync.status) OutOfSync:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
   if [ $? -ne 0 ]
   then
     echo "Failed to get ArgoCD Application $app_name!"
