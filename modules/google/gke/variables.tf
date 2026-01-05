@@ -54,7 +54,7 @@ variable "enable_l4_ilb_subsetting" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.32."
+  default = "1.33."
 }
 
 variable "grant_registry_access" {
