@@ -8,7 +8,7 @@ aws-load-balancer-controller:
   image:
     repository: "602401143452.dkr.ecr.{{ .toutput.eks.region }}.amazonaws.com/amazon/aws-load-balancer-controller"
 job:
-  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 
 ingressClass:
   internal:

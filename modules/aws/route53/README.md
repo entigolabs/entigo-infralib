@@ -41,7 +41,7 @@ docker run --pull always -it --rm -v "$(pwd)":"/etc/ei-agent" -e AWS_ACCESS_KEY_
 
 Move the aws_acm_certificate, aws_route53_zone and aws_route53_record resources to new locations.
 ```
-docker run -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --entrypoint /bin/bash entigolabs/entigo-infralib-base
+docker run -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --entrypoint /bin/bash entigolabs/entigo-infralib-aws
 aws s3 cp s3://<CONFIG PREFIX>-<ACCOUNT NUMBER>-$AWS_REGION/steps/<CONFIG PREFIX>-<STEP NAME> ./tmp --recursive --exclude "*.terraform/*"
 cd ./tmp
 terraform init -input=false -backend-config=backend.conf

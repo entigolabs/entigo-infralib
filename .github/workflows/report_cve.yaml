@@ -1,0 +1,65 @@
+name: Report CVE
+
+on:
+  schedule:
+    - cron: "0 8 * * 2"
+  workflow_dispatch:
+
+jobs:
+  report:
+    name: Create CVE reports
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: google-github-actions/setup-gcloud@v2
+      with:
+        install_components: 'gke-gcloud-auth-plugin'
+    - name: Create CVE report
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
+        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
+        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+      id: create_report
+      run: |
+        echo "Assemble configuration"
+        source common/generate_config.sh
+        google_auth_login
+        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
+        echo "### GOOGLE PRI ####"
+        GOOGLE_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
+        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
+        echo "### GOOGLE BIZ ####"
+        GOOGLE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-gar-proxy/pri-net-gar-proxy/g' | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
+        echo "### AWS PRI ####"
+        AWS_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
+        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+        echo "### AWS BIZ ####"
+        AWS_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-ecr-proxy/pri-net-ecr-proxy/g' | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
+        echo "Finding images withour registry proxy:"
+        total=0
+        registry=0
+        for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+        do
+          ((total++)) || true
+          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-) ]]
+          then
+            echo "$image does not use Internal Registry"
+            ((registry++)) || true
+          fi
+        done
+        echo "Total images $total, proxy registry issues $registry"

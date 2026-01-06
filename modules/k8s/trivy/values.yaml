@@ -8,8 +8,6 @@ global:
 trivy-operator:
   serviceAccount:
     name: "trivy"
-  trivyOperator:
-    scanJobAutomountServiceAccountToken: true
   service:
     headless: true
     annotations:
@@ -17,7 +15,8 @@ trivy-operator:
       prometheus.io/port: "8080"
       prometheus.io/path: "/metrics"
   trivyOperator:
-    scanJobCompressLogs: false
+    scanJobAutomountServiceAccountToken: true
+    scanJobCompressLogs: true
     scanJobAffinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
@@ -46,17 +45,20 @@ trivy-operator:
         effect: "NoSchedule"
   trivy:
     slow: true
-    severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+    # severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+    severity: HIGH,CRITICAL
     resources:
       requests:
-        cpu: 100m
-        memory: 100M
+        cpu: 200m
+        memory: 400Mi
       limits:
-        cpu: 500m
-        memory: 500M
+        cpu: 1
+        memory: 2Gi
+
   operator:
-    scanJobsConcurrentLimit: 3
-    metricsFindingsEnabled: true
+    scanJobsConcurrentLimit: 1
+    scanJobTimeout: 20m
+    metricsFindingsEnabled: false
     metricsVulnIdEnabled: false
     exposedSecretScannerEnabled: false
     sbomGenerationEnabled: false
@@ -64,6 +66,13 @@ trivy-operator:
     rbacAssessmentScannerEnabled: false
     infraAssessmentScannerEnabled: false
     clusterComplianceEnabled: false
+    resources:
+      requests:
+        cpu: 5m
+        memory: 50Mi
+      limits:
+        cpu: 1
+        memory: 1Gi
 
   affinity:
     nodeAffinity:

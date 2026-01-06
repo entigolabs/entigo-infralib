@@ -1,0 +1,27 @@
+name: Build images/tools
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/tools/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/tools/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-images.yaml
+    with:
+      path: images/tools
+      name: entigo-infralib-tools
+      is_dev: ${{ github.event_name == 'pull_request' || github.event.workflow_run.event == 'pull_request' }}
+    secrets: inherit

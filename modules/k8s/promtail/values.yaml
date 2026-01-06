@@ -35,7 +35,7 @@ promtail:
       ephemeral-storage: 128Mi
 
   config:
-    logLevel: info
+    logLevel: warn
     serverPort: 3101
     clients:
       - url: http://loki-gateway.loki/loki/api/v1/push

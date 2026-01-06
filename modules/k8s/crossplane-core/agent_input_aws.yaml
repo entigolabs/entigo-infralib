@@ -11,7 +11,7 @@ global:
     ecrPolicy: "{{ .toptout.ecr-proxy.policy }}"
 
 job:
-  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 
 imageConfigs:
   hubProxy: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs'

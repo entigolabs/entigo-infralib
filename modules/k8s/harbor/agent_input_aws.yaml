@@ -5,7 +5,7 @@ global:
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
     
 job:
-  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-base'
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
     
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.route53.pub_domain }}"

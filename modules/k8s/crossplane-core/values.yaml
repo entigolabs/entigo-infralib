@@ -106,9 +106,9 @@ crossplane:
       memory: 768Mi
     requests:
       # -- CPU resource requests for Crossplane.
-      cpu: 10m
+      cpu: 30m
       # -- Memory resource requests for Crossplane.
-      memory: 260Mi
+      memory: 300Mi
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
@@ -228,8 +228,8 @@ crossplane:
         memory: 128Mi
 
 job:
-  image: docker.io/entigolabs/entigo-infralib-base
-  tag: "v1.14.36"
+  image: docker.io/entigolabs/entigo-infralib-kubectl
+  tag: "v1.15.7"
   deleteUnusedCrds: false
   deleteInactiveProviderRevisions: false
   deleteInactiveFunctionRevisions: false

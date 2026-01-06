@@ -1,0 +1,30 @@
+name: Build images/test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/test/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/test/**'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build images/google"]
+    types: [completed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-images.yaml
+    with:
+      path: images/test
+      name: entigo-infralib-test
+      is_dev: ${{ github.event_name == 'pull_request' || github.event.workflow_run.event == 'pull_request' }}
+    secrets: inherit

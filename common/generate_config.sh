@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-testing:v1.14.32-rc105"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.15.7"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
@@ -225,7 +225,7 @@ run_agents() {
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
 
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS  & 
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --pipeline-type=local $AGENT_OPTS  &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
@@ -267,6 +267,29 @@ run_agents() {
 
 }
 
+
+MAX_JOBS=5
+run_test() {
+    local script="$1"
+    local name=$(basename $(dirname "$script"))
+    $script testonly &
+    PIDS="$PIDS $!=$name"
+}
+
+wait_for_slot() {
+    # Count running PIDs from our PIDS list instead of using jobs -rp
+    while true; do
+        local running=0
+        for p in $PIDS; do
+            pid=$(echo $p | cut -d"=" -f1)
+            if kill -0 $pid 2>/dev/null; then
+                ((running++))
+            fi
+        done
+        [ $running -lt $MAX_JOBS ] && break
+        sleep 0.5
+    done
+}
 
 test_tf() {
   PIDS=""
@@ -346,85 +369,53 @@ test_k8s() {
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
   
+  TESTS=(
+      "./modules/k8s/hello-world/test.sh"
+      "./modules/k8s/crossplane-core/test.sh"
+      "./modules/k8s/crossplane-aws/test.sh"
+      "./modules/k8s/aws-alb/test.sh"
+      "./modules/k8s/aws-storageclass/test.sh"
+      "./modules/k8s/cluster-autoscaler/test.sh"
+      "./modules/k8s/entigo-portal-agent/test.sh"
+      "./modules/k8s/entigo-vulnerability-agent/test.sh"
+      "./modules/k8s/metrics-server/test.sh"
+      "./modules/k8s/crossplane-google/test.sh"
+      "./modules/k8s/google-gateway/test.sh"
+      "./modules/k8s/crossplane-kafka/test.sh"
+      "./modules/k8s/crossplane-sql/test.sh"
+      "./modules/k8s/external-dns/test.sh"
+      "./modules/k8s/external-secrets/test.sh"
+      "./modules/k8s/argocd/test.sh"
+      "./modules/k8s/istio-base/test.sh"
+      "./modules/k8s/istio-gateway/test.sh"
+      "./modules/k8s/istio-istiod/test.sh"
+      "./modules/k8s/karpenter/test.sh"
+      "./modules/k8s/kiali/test.sh"
+      "./modules/k8s/loki/test.sh"
+      "./modules/k8s/mimir/test.sh"
+      "./modules/k8s/prometheus/test.sh"
+      "./modules/k8s/promtail/test.sh"
+      "./modules/k8s/grafana/test.sh"
+      "./modules/k8s/harbor/test.sh"
+      "./modules/k8s/trivy/test.sh"
+  )
   PIDS=""
-  #common
-  ./modules/k8s/hello-world/test.sh testonly &
-  PIDS="$PIDS $!=hello-world"
-  ./modules/k8s/crossplane-core/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-core"
-  
-  #aws specific
-  ./modules/k8s/crossplane-aws/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-aws"
-  ./modules/k8s/aws-alb/test.sh testonly &
-  PIDS="$PIDS $!=aws-alb"
-  ./modules/k8s/aws-storageclass/test.sh testonly &
-  PIDS="$PIDS $!=aws-storageclass"
-  ./modules/k8s/cluster-autoscaler/test.sh testonly &
-  PIDS="$PIDS $!=cluster-autoscaler"
-  ./modules/k8s/entigo-portal-agent/test.sh testonly &
-  PIDS="$PIDS $!=entigo-portal-agent"
-  ./modules/k8s/entigo-vulnerability-agent/test.sh testonly &
-  PIDS="$PIDS $!=entigo-vulnerability-agent"
-  ./modules/k8s/metrics-server/test.sh testonly &
-  PIDS="$PIDS $!=metrics-server"
-  #google specific
-  ./modules/k8s/crossplane-google/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-google"
-  ./modules/k8s/google-gateway/test.sh testonly &
-  PIDS="$PIDS $!=google-gateway"
-  #common
-  ./modules/k8s/crossplane-kafka/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-kafka"
-  ./modules/k8s/crossplane-sql/test.sh testonly &
-  PIDS="$PIDS $!=crossplane-sql"
-  ./modules/k8s/external-dns/test.sh testonly &
-  PIDS="$PIDS $!=external-dns"
-  ./modules/k8s/external-secrets/test.sh testonly &
-  PIDS="$PIDS $!=external-secrets"
-  ./modules/k8s/argocd/test.sh testonly &
-  PIDS="$PIDS $!=argocd"
-  ./modules/k8s/istio-base/test.sh testonly &
-  PIDS="$PIDS $!=istio-base"
-  ./modules/k8s/istio-gateway/test.sh testonly &
-  PIDS="$PIDS $!=istio-gateway"
-  ./modules/k8s/istio-istiod/test.sh testonly &
-  PIDS="$PIDS $!=istio-istiod"
-  ./modules/k8s/karpenter/test.sh testonly &
-  PIDS="$PIDS $!=karpenter"
-  ./modules/k8s/kiali/test.sh testonly &
-  PIDS="$PIDS $!=kiali"
-  ./modules/k8s/loki/test.sh testonly &
-  PIDS="$PIDS $!=loki"
-  ./modules/k8s/mimir/test.sh testonly &
-  PIDS="$PIDS $!=mimir"
-  ./modules/k8s/prometheus/test.sh testonly &
-  PIDS="$PIDS $!=prometheus"
-  ./modules/k8s/promtail/test.sh testonly &
-  PIDS="$PIDS $!=promtail"
-  ./modules/k8s/grafana/test.sh testonly &
-  PIDS="$PIDS $!=grafana"
-  ./modules/k8s/harbor/test.sh testonly &
-  PIDS="$PIDS $!=harbor"
-  ./modules/k8s/trivy/test.sh testonly &
-  PIDS="$PIDS $!=trivy"
-  
   FAIL=""
+  for test in "${TESTS[@]}"; do
+      wait_for_slot
+      run_test "$test"
+  done
+
+  # Wait for all and collect results
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
       name=$(echo $p | cut -d"=" -f2)
-      wait $pid || FAIL="$FAIL $p"
-      if [[ $FAIL == *$p* ]]
-      then
-        echo "$p Failed"
-      else
-        echo "$p Done"
-      fi
+      wait $pid || FAIL="$FAIL $name"
   done
-  if [ "$FAIL" != "" ]
-  then
-    echo "FAILED K8S GOLANG TESTS $FAIL"
-    exit 2
+
+  if [ -n "$FAIL" ]; then
+      echo "FAILED K8S GOLANG TESTS:$FAIL"
+      exit 2
   fi
 }
 

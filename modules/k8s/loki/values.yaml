@@ -10,6 +10,13 @@ loki:
     create: false
     name: loki
 
+  global:
+    extraArgs:
+      - "-log.level=warn"
+  sidecar:
+    rules:
+      logLevel: WARN
+
   loki:
     auth_enabled: false
     limits_config:
@@ -173,7 +180,7 @@ loki:
 
   gateway:
     enabled: true
-    verboseLogging: true
+    verboseLogging: false
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
