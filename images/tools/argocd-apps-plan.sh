@@ -168,7 +168,7 @@ else
 fi
 
 echo "Status $app_name $STATUS"
-if [ "$STATUS" != "Status:Synced Missing:0 Changed:0 RequiredPruning:0" ]
+if [ "$STATUS" != "Status:Synced Missing:0 Changed:0 RequiresPruning:0" ]
 then
   touch $app_file.sync
   if [ "$APP_EXISTED" == "yes" -a "$USE_ARGOCD_CLI" == "true" ]
