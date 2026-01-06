@@ -111,11 +111,12 @@ argocd_plan() {
     wait_for_jobs
     print_job_logs
 
-    local ADD=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Missing:0" | wc -l)
-    local CHANGE=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Changed:0" | wc -l)
-    local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiresPruning:0" | wc -l)
+    local ADD=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Missing:0" | wc -l)
+    local CHANGE=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Changed:0" | wc -l)
+    local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "RequiresPruning:0" | wc -l)
 
     # Prevent agent from confirming first bootstrap when ArgoCD's own application will always show changes
+    echo "DEBUG: helm_bootstrap=$helm_bootstrap CHANGE=$CHANGE"
     if [ "$helm_bootstrap" == "true" -a $CHANGE -gt 0 ]; then
         CHANGE=$((CHANGE - 1))
     fi
