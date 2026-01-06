@@ -1,13 +1,13 @@
 locals {
   ami_release_version = {
-    "AL2023_x86_64_STANDARD"     = "1.32.9-20251029"
-    "AL2023_x86_64_NVIDIA"       = "1.32.9-20251108"
-    "AL2023_ARM_64_STANDARD"     = "1.32.9-20251108"
-    "AL2023_ARM_64_NVIDIA"       = "1.32.9-20251108"
-    "BOTTLEROCKET_x86_64"        = "1.50.0-80378023"
-    "BOTTLEROCKET_x86_64_NVIDIA" = "1.50.0-80378023"
-    "BOTTLEROCKET_ARM_64"        = "1.50.0-80378023"
-    "BOTTLEROCKET_ARM_64_NVIDIA" = "1.50.0-80378023"
+    "AL2023_x86_64_STANDARD"     = "1.33.5-20251217"
+    "AL2023_x86_64_NVIDIA"       = "1.33.5-20251217"
+    "AL2023_ARM_64_STANDARD"     = "1.33.5-20251217"
+    "AL2023_ARM_64_NVIDIA"       = "1.33.5-20251217"
+    "BOTTLEROCKET_x86_64"        = "1.52.0-b7ac6e1a"
+    "BOTTLEROCKET_x86_64_NVIDIA" = "1.52.0-b7ac6e1a"
+    "BOTTLEROCKET_ARM_64"        = "1.52.0-b7ac6e1a"
+    "BOTTLEROCKET_ARM_64_NVIDIA" = "1.52.0-b7ac6e1a"
   }
 }
 
@@ -15,7 +15,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "21.6.1"
+  version = "21.8.0"
   use_name_prefix = true
   name                    = substr(var.prefix, 0, 35)
   iam_role_use_name_prefix = true

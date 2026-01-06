@@ -11,7 +11,7 @@ variable "cluster_name" {
 variable "cluster_version" {
   type     = string
   nullable = false
-  default  = "1.30"
+  default  = "1.33"
 }
 
 variable "subnets" {
