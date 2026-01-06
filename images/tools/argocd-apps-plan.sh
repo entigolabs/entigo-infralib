@@ -79,16 +79,7 @@ else
     done
   fi
 
-  resources=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq -r '
-  .status.resources[]
-  | select(.status == "OutOfSync" and .requiresPruning != true and (.hook == null or .hook == false))
-  | [.group // "", .version, .kind, .namespace // "", .name] | @tsv
-')
-  if [ $? -ne 0 ]
-  then
-    echo "Failed to get ArgoCD Application missing and changed objects $app_name!"
-    exit 26
-  fi
+
   # Build API resources lookup map once: "kind.group" -> "resourcename.group"
   declare -A api_map
   while IFS= read -r line; do
@@ -110,21 +101,34 @@ else
           api_map["${kind}"]="${name}"
       fi
   done < <(kubectl api-resources --no-headers)
+
   MISSING=0
   CHANGED=0
-  while IFS=$'\t' read -r group kind namespace name; do
+
+  resources=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq -r '
+  .status.resources[]
+  | select(.status == "OutOfSync" and .requiresPruning != true and (.hook == null or .hook == false))
+  | [.group // "", .version, .kind, .namespace // "", .name] | @tsv
+')
+  if [ $? -ne 0 ]
+  then
+    echo "Failed to get ArgoCD Application missing and changed objects $app_name!"
+    exit 26
+  fi
+  while IFS=$'\t' read -r group version kind namespace name; do
     [[ -z "$kind" ]] && continue
 
-    # Lookup resource type from api map
+    # Build apiversion key to match api_map format
     if [[ -n "$group" ]]; then
-        resource_type="${api_map["${kind}.${group}"]}"
+        apiversion="${group}/${version}"
     else
-        resource_type="${api_map["${kind}"]}"
+        apiversion="${version}"
     fi
 
-    # Skip if resource type not found
+    resource_type="${api_map["${kind}.${apiversion}"]}"
+
+    # Skip if resource type not found - consider it missing
     if [[ -z "$resource_type" ]]; then
-        echo "Warning: Unknown resource type ${kind}.${group}" >&2
         ((MISSING++))
         continue
     fi
@@ -141,7 +145,7 @@ else
     else
         ((MISSING++))
     fi
-done <<< "$resources"
+  done <<< "$resources"
   # Get RequiresPruning count
   PRUNE=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq '
     [.status.resources[] | select(.requiresPruning == true and (.hook == null or .hook == false))] | length
