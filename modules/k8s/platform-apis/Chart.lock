@@ -1,6 +1,6 @@
 dependencies:
 - name: platform-apis
   repository: oci://ghcr.io/entigolabs
-  version: 0.1.282
-digest: sha256:98555023ba68cf541f10c12bd88258ac9d829d4bdab9ad1d0b833bebe4433634
-generated: "2025-12-29T15:59:47.11927198+02:00"
+  version: 0.1.288
+digest: sha256:aefbc9d484d5cde024e2fe695048c28d4f4a52e59f385e34258ba7c57d13de16
+generated: "2026-01-06T16:02:31.807083299+02:00"
