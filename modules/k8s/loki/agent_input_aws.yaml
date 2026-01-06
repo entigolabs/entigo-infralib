@@ -26,8 +26,8 @@ loki:
     structuredConfig:
       storage_config:
         aws:
-          bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
           region: "{{ .toutput.eks.region }}"
+          bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   sidecar:
