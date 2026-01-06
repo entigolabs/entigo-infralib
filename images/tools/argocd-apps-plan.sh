@@ -86,7 +86,6 @@ else
       name=$(echo "$line" | awk '{print $1}')
       kind=$(echo "$line" | awk '{print $NF}')
       apiversion=$(echo "$line" | awk '{print $(NF-2)}')
-
       api_map["${kind}.${apiversion}"]="${name}"
   done < <(kubectl api-resources --no-headers)
 
@@ -112,9 +111,7 @@ else
     else
         apiversion="${version}"
     fi
-    echo "${kind}.${apiversion}"
     resource_type="${api_map["${kind}.${apiversion}"]}"
-    echo $resource_type
     # Skip if resource type not found - consider it missing
     if [[ -z "$resource_type" ]]; then
         ((MISSING++))
@@ -123,13 +120,12 @@ else
 
     # Check if resource exists
     if [[ -n "$namespace" ]]; then
-        kubectl get "${resource_type}.${group}" "${name}" -n "${namespace}"
+        kubectl get "${resource_type}.${group}" "${name}" -n "${namespace}" &>/dev/null
     else
-        kubectl get "${resource_type}.${group}" "${name}"
+        kubectl get "${resource_type}.${group}" "${name}" &>/dev/null
     fi
 
     if [[ $? -eq 0 ]]; then
-        echo "Changed"
         ((CHANGED++))
     else
         ((MISSING++))
