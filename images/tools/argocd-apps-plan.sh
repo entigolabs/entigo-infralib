@@ -83,23 +83,11 @@ else
   # Build API resources lookup map once: "kind.group" -> "resourcename.group"
   declare -A api_map
   while IFS= read -r line; do
-      # kubectl api-resources --no-headers output varies:
-      # NAME SHORTNAMES APIVERSION NAMESPACED KIND
-      # or NAME APIVERSION NAMESPACED KIND (no shortnames)
       name=$(echo "$line" | awk '{print $1}')
       kind=$(echo "$line" | awk '{print $NF}')
-      group=$(echo "$line" | awk '{print $(NF-2)}' | cut -d'/' -f1)
+      apiversion=$(echo "$line" | awk '{print $(NF-2)}')
 
-      # Handle core API (no group)
-      if [[ "$group" == "true" || "$group" == "false" ]]; then
-          group=""
-      fi
-
-      if [[ -n "$group" ]]; then
-          api_map["${kind}.${group}"]="${name}.${group}"
-      else
-          api_map["${kind}"]="${name}"
-      fi
+      api_map["${kind}.${apiversion}"]="${name}"
   done < <(kubectl api-resources --no-headers)
 
   MISSING=0
@@ -124,9 +112,9 @@ else
     else
         apiversion="${version}"
     fi
-
+    echo "${kind}.${apiversion}"
     resource_type="${api_map["${kind}.${apiversion}"]}"
-
+    echo $resource_type
     # Skip if resource type not found - consider it missing
     if [[ -z "$resource_type" ]]; then
         ((MISSING++))
@@ -135,12 +123,13 @@ else
 
     # Check if resource exists
     if [[ -n "$namespace" ]]; then
-        kubectl get "${resource_type}" "${name}" -n "${namespace}" &>/dev/null
+        kubectl get "${resource_type}.${group}" "${name}" -n "${namespace}"
     else
-        kubectl get "${resource_type}" "${name}" &>/dev/null
+        kubectl get "${resource_type}.${group}" "${name}"
     fi
 
     if [[ $? -eq 0 ]]; then
+        echo "Changed"
         ((CHANGED++))
     else
         ((MISSING++))
