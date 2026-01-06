@@ -79,12 +79,60 @@ else
     done
   fi
 
-  STATUS=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq -r '"Status:\(.status.sync.status) Missing:0 OutOfSync:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
+  resources=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq -r '
+  .status.resources[]
+  | select(.status == "OutOfSync" and .requiresPruning != true and (.hook == null or .hook == false))
+  | [.group // "", .version, .kind, .namespace // "", .name] | @tsv
+')
+  if [ $? -ne 0 ]
+  then
+    echo "Failed to get ArgoCD Application missing and changed objects $app_name!"
+    exit 26
+  fi
+
+  MISSING=0
+  CHANGED=0
+  while IFS=$'\t' read -r group version kind namespace name; do
+      [[ -z "$kind" ]] && continue
+      # Build resource type (group/version/kind or just kind)
+      if [[ -n "$group" ]]; then
+          resource_type="${kind}.${group}"
+      else
+          resource_type="${kind}"
+      fi
+
+      # Check if resource exists
+      if [[ -n "$namespace" ]]; then
+          kubectl get "${resource_type}" "${name}" -n "${namespace}" &>/dev/null
+      else
+          kubectl get "${resource_type}" "${name}" &>/dev/null
+      fi
+
+      if [[ $? -eq 0 ]]; then
+          ((CHANGED++))
+      else
+          ((MISSING++))
+      fi
+  done <<< "$resources"
+  # Get RequiresPruning count
+  PRUNE=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq '
+    [.status.resources[] | select(.requiresPruning == true and (.hook == null or .hook == false))] | length
+  ')
+  if [ $? -ne 0 ]
+  then
+    echo "Failed to get ArgoCD Application pruned objects $app_name!"
+    exit 26
+  fi
+
+  # Get sync status
+  SYNC_STATUS=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o jsonpath='{.status.sync.status}')
   if [ $? -ne 0 ]
   then
     echo "Failed to get ArgoCD Application $app_name!"
     exit 26
   fi
+
+  STATUS=$(echo "Status:${SYNC_STATUS} Missing:${MISSING} Changed:${CHANGED} RequiresPruning:${PRUNE}")
 fi
 
 echo "Status $app_name $STATUS"

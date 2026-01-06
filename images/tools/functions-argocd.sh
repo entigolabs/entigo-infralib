@@ -116,9 +116,8 @@ argocd_plan() {
     local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning:0" | wc -l)
 
     # Prevent agent from confirming first bootstrap when ArgoCD's own application will always show changes
-    if [[ "$helm_bootstrap" == "true" && $CHANGE -gt 0 && $ADD -eq 0 ]]; then
-        ADD=$CHANGE
-        CHANGE=0
+    if [ "$helm_bootstrap" == "true" -a $CHANGE -gt 0 ]; then
+        CHANGE=$((CHANGE - 1))
     fi
 
     echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
