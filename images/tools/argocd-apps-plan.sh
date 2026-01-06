@@ -89,31 +89,59 @@ else
     echo "Failed to get ArgoCD Application missing and changed objects $app_name!"
     exit 26
   fi
+  # Build API resources lookup map once: "kind.group" -> "resourcename.group"
+  declare -A api_map
+  while IFS= read -r line; do
+      # kubectl api-resources --no-headers output varies:
+      # NAME SHORTNAMES APIVERSION NAMESPACED KIND
+      # or NAME APIVERSION NAMESPACED KIND (no shortnames)
+      name=$(echo "$line" | awk '{print $1}')
+      kind=$(echo "$line" | awk '{print $NF}')
+      group=$(echo "$line" | awk '{print $(NF-2)}' | cut -d'/' -f1)
 
+      # Handle core API (no group)
+      if [[ "$group" == "true" || "$group" == "false" ]]; then
+          group=""
+      fi
+
+      if [[ -n "$group" ]]; then
+          api_map["${kind}.${group}"]="${name}.${group}"
+      else
+          api_map["${kind}"]="${name}"
+      fi
+  done < <(kubectl api-resources --no-headers)
   MISSING=0
   CHANGED=0
-  while IFS=$'\t' read -r group version kind namespace name; do
-      [[ -z "$kind" ]] && continue
-      # Build resource type (group/version/kind or just kind)
-      if [[ -n "$group" ]]; then
-          resource_type="${kind}.${group}"
-      else
-          resource_type="${kind}"
-      fi
+  while IFS=$'\t' read -r group kind namespace name; do
+    [[ -z "$kind" ]] && continue
 
-      # Check if resource exists
-      if [[ -n "$namespace" ]]; then
-          kubectl get "${resource_type}" "${name}" -n "${namespace}" &>/dev/null
-      else
-          kubectl get "${resource_type}" "${name}" &>/dev/null
-      fi
+    # Lookup resource type from api map
+    if [[ -n "$group" ]]; then
+        resource_type="${api_map["${kind}.${group}"]}"
+    else
+        resource_type="${api_map["${kind}"]}"
+    fi
 
-      if [[ $? -eq 0 ]]; then
-          ((CHANGED++))
-      else
-          ((MISSING++))
-      fi
-  done <<< "$resources"
+    # Skip if resource type not found
+    if [[ -z "$resource_type" ]]; then
+        echo "Warning: Unknown resource type ${kind}.${group}" >&2
+        ((MISSING++))
+        continue
+    fi
+
+    # Check if resource exists
+    if [[ -n "$namespace" ]]; then
+        kubectl get "${resource_type}" "${name}" -n "${namespace}" &>/dev/null
+    else
+        kubectl get "${resource_type}" "${name}" &>/dev/null
+    fi
+
+    if [[ $? -eq 0 ]]; then
+        ((CHANGED++))
+    else
+        ((MISSING++))
+    fi
+done <<< "$resources"
   # Get RequiresPruning count
   PRUNE=$(kubectl get applications.argoproj.io -n ${ARGOCD_NAMESPACE} ${app_name} -o json | jq '
     [.status.resources[] | select(.requiresPruning == true and (.hook == null or .hook == false))] | length
