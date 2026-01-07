@@ -9,20 +9,35 @@ resource "random_integer" "subnet_fourth_octet_raw" {
 }
 
 locals {
-  node_pool_name = "main"
-
   latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
   valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
 
   # Get node pools only if cluster data was read
   cluster_node_pools                    = var.preserve_kubernetes_version ? try(data.google_container_cluster.this[0].node_pool, []) : []
-  existing_node_pool                    = try([for pool in local.cluster_node_pools : pool if pool.name == local.node_pool_name][0], null)
-  existing_node_pool_kubernetes_version = try(local.existing_node_pool.version, "")
+  existing_node_pool_main               = try([for pool in local.cluster_node_pools : pool if pool.name == "main"][0], null)
+  existing_node_pool_mon                = try([for pool in local.cluster_node_pools : pool if pool.name == "mon"][0], null)
+  existing_node_pool_tools              = try([for pool in local.cluster_node_pools : pool if pool.name == "tools"][0], null)
+
+  existing_node_pool_kubernetes_version_main = try(local.existing_node_pool_main.version, "")
+  existing_node_pool_kubernetes_version_mon  = try(local.existing_node_pool_mon.version, "")
+  existing_node_pool_kubernetes_version_tools = try(local.existing_node_pool_tools.version, "")
 
   # Determine version: preserve existing if valid and flag is true, otherwise use stable
-  kubernetes_version = (
-    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version)
-    ? local.existing_node_pool_kubernetes_version
+  kubernetes_version_main = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_main != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_main)
+    ? local.existing_node_pool_kubernetes_version_main
+    : local.latest_stable_version
+  )
+
+  kubernetes_version_mon = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_mon != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_mon)
+    ? local.existing_node_pool_kubernetes_version_mon
+    : local.latest_stable_version
+  )
+
+  kubernetes_version_tools = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_tools != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_tools)
+    ? local.existing_node_pool_kubernetes_version_tools
     : local.latest_stable_version
   )
 
@@ -58,7 +73,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_main_max_surge
       max_unavailable    = 0
-      version            = local.kubernetes_version
+      version            = local.kubernetes_version_main
     },
     {
       name               = "mon"
@@ -79,7 +94,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_mon_max_surge
       max_unavailable    = 0
-      version            = local.kubernetes_version
+      version            = local.kubernetes_version_mon
     },
     {
       name               = "tools"
@@ -100,7 +115,7 @@ locals {
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_tools_max_surge
       max_unavailable    = 0
-      version            = local.kubernetes_version
+      version            = local.kubernetes_version_tools
     }
   ]
 

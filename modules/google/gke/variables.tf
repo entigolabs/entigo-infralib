@@ -160,7 +160,7 @@ variable "gke_main_volume_type" {
 
 variable "gke_main_max_surge" {
   type    = number
-  default = 3
+  default = 1
 }
 
 variable "gke_mon_min_size" {
@@ -212,7 +212,7 @@ variable "gke_mon_volume_type" {
 
 variable "gke_mon_max_surge" {
   type    = number
-  default = 3
+  default = 1
 }
 
 variable "gke_tools_min_size" {
@@ -264,7 +264,7 @@ variable "gke_tools_volume_type" {
 
 variable "gke_tools_max_surge" {
   type    = number
-  default = 3
+  default = 1
 }
 
 variable "gke_managed_node_groups_extra" {
