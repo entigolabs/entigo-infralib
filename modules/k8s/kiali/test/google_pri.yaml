@@ -1,9 +1,4 @@
-global:
-  google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
 kiali-server:
-  server:
-    web_fqdn: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   auth:
     strategy: openid
     openid:

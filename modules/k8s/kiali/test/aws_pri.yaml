@@ -1,6 +1,4 @@
 kiali-server:
-  server:
-    web_fqdn: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
   auth:
     strategy: openid
     openid:
