@@ -1,4 +1,6 @@
 kiali-server:
+  server:
+    web_fqdn: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   auth:
     strategy: openid
     openid:
@@ -9,5 +11,6 @@ kiali-server:
       username_claim: "email"
 global:
   google:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
     gateway:
       name: "google-gateway-external"
