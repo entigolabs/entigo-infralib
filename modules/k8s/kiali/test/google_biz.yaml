@@ -1,3 +1,16 @@
 kiali-server:
+  server:
+    web_fqdn: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   auth:
-    strategy: anonymous
+    strategy: openid
+    openid:
+      client_id: "343161092010274846"
+      disable_rbac: true
+      issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
+      scopes: ["openid", "profile", "email", "roles"]
+      username_claim: "email"
+global:
+  google:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+    gateway:
+      name: "google-gateway-external"
