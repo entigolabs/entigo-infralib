@@ -123,7 +123,7 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+  name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
   namespace: {{ $.Values.global.aws.createECRNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "6"
@@ -131,16 +131,16 @@ metadata:
 spec:
   refreshInterval: 30m
   target:
-    name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+    name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
     template:
       metadata:
         labels:
           argocd.argoproj.io/secret-type: repository
       data:
-        name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+        name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
         type: helm
         enableOCI: "true"
-        url: {{ .accountNumber }}.dkr.ecr.{{ .acocuntRegion }}.amazonaws.com
+        url: {{ .accountNumber }}.dkr.ecr.{{ .accountRegion }}.amazonaws.com
         password: "{{`{{ .password }}`}}"
         username: "{{`{{ .username }}`}}"
   dataFrom:
