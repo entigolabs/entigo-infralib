@@ -50,7 +50,7 @@ jobs:
         AWS_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-ecr-proxy/pri-net-ecr-proxy/g' | sort | uniq`
         ./common/k8s/report_cve.sh
         ./common/k8s/report_badpod.sh
-        echo "Finding images withour registry proxy:"
+        echo "Finding images without registry proxy:"
         total=0
         registry=0
         for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')

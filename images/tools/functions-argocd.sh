@@ -30,19 +30,19 @@ argocd_helm_bootstrap() {
     fi
 
     git_login
-    echo "Detecting ArgoCD modules."
+    echo "Detecting ArgoCD modules." >&2
     local did_bootstrap="false"
 
     for app_file in ./*.yaml; do
         if yq -r '.spec.sources[0].path' $app_file | grep -q "modules/k8s/argocd"; then
-            echo "Found $app_file, installing using helm."
+            echo "Found $app_file, installing using helm." >&2
             local app=$(yq -r '.metadata.name' $app_file)
             yq -r '.spec.sources[0].helm.values' $app_file > values-$app.yaml
             local namespace=$(yq -r '.spec.destination.namespace' $app_file)
             local version=$(yq -r '.spec.sources[0].targetRevision' $app_file)
             local repo=$(yq -r '.spec.sources[0].repoURL' $app_file)
             local path=$(yq -r '.spec.sources[0].path' $app_file)
-            git clone --depth 1 --single-branch --branch $version $repo git-$app
+            git clone --depth 1 --single-branch --branch $version $repo git-$app >&2
 
             # Create bootstrap value file that is only used first time ArgoCD is created
             if compgen -A variable | grep -q "^GIT_AUTH_SOURCE_"; then
@@ -80,8 +80,8 @@ argocd:
                 --set argocd.applicationSet.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-applicationset-controller \
                 --set argocd.notifications.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-notifications-controller \
                 --set argocd.controller.statefulsetAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/StatefulSet:$app/$app-application-controller \
-                --set argocd-apps.enabled=false $app git-$app/$path
-            rm -rf values-$app.yaml git-$app
+                --set argocd-apps.enabled=false $app git-$app/$path >&2
+            rm -rf values-$app.yaml git-$app >&2
             did_bootstrap="true"
         fi
     done
@@ -111,9 +111,9 @@ argocd_plan() {
     wait_for_jobs
     print_job_logs
 
-    local ADD=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Missing:0" | wc -l)
-    local CHANGE=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "Changed:0" | wc -l)
-    local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status: Synced" | grep -ve "RequiredPruning:0" | wc -l)
+    local ADD=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Missing:0" | wc -l)
+    local CHANGE=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Changed:0" | wc -l)
+    local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "RequiresPruning:0" | wc -l)
 
     # Prevent agent from confirming first bootstrap when ArgoCD's own application will always show changes
     if [ "$helm_bootstrap" == "true" -a $CHANGE -gt 0 ]; then
