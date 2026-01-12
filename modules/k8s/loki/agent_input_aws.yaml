@@ -23,10 +23,11 @@ loki:
         chunks: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
         ruler: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
         admin: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
-    storage_config:
-      aws:
-        region: "{{ .toutput.eks.region }}"
-        bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+    structuredConfig:
+      storage_config:
+        aws:
+          region: "{{ .toutput.eks.region }}"
+          bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   sidecar:

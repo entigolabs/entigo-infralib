@@ -11,3 +11,5 @@ kiali-server:
   deployment:
     ingress:
       enabled: false
+  server:
+    port: 443
