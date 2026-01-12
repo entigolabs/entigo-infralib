@@ -13,7 +13,6 @@ fi
 
 app_file=$1
 app_name=`yq -r '.metadata.name' $app_file`
-
 if [ "$app_name" == "" ]
 then
   echo "Unable to find .metadata.name in $app_file."

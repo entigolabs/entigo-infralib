@@ -13,7 +13,6 @@ fi
 
 app_file=$1
 app_name=`yq -r '.metadata.name' $app_file`
-
 if [ "$app_name" == "" ]
 then
   echo "Unable to find .metadata.name in $app_file."
@@ -21,7 +20,6 @@ then
 fi
 
 app_namespace=`yq -r '.metadata.namespace' $app_file`
-
 if [ "$app_namespace" != "" ]
 then
   echo "Found .metadata.namespace in $app_file. Overriding ARGOCD_NAMESPACE to $app_namespace"
