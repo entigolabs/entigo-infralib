@@ -109,7 +109,7 @@ apiVersion: generators.external-secrets.io/v1alpha1
 kind: ECRAuthorizationToken
 metadata:
   name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
-  namespace: {{ .Values.global.aws.createECRNamespace }}
+  namespace: {{ $.Values.global.aws.createECRNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
