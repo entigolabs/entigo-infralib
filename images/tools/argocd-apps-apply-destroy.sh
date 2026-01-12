@@ -20,6 +20,13 @@ then
   exit 27
 fi
 
+if [ "$app_namespace" != "" ]
+then
+  echo "Found .metadata.namespace in $app_file. Overriding ARGOCD_NAMESPACE to $app_namespace"
+else
+  app_namespace=$ARGOCD_NAMESPACE
+fi
+
 if [ ! -f "${app_file}.sync-destroy" ] #In plan stage we mark the apps that are not synced so we would only sync the ones we need to sync.
 then
   echo "Skip $app_name"
@@ -35,13 +42,13 @@ fi
 
 if yq -r '.spec.sources[0].path' $app_file | grep -vEq "modules/k8s/argocd"
 then
-  kubectl patch applications.argoproj.io $app_name -n ${ARGOCD_NAMESPACE} -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
-  kubectl delete --grace-period=600 applications.argoproj.io $app_name -n ${ARGOCD_NAMESPACE}
+  kubectl patch applications.argoproj.io $app_name -n $app_namespace -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
+  kubectl delete --grace-period=600 applications.argoproj.io $app_name -n $app_namespace
   kubectl delete --grace-period=600 ns $app_name
 else  
   echo "For ArgoCD we only remove Ingress"
-  kubectl delete --grace-period=600 applications.argoproj.io $app_name -n ${ARGOCD_NAMESPACE}
-  kubectl delete ingress -n ${ARGOCD_NAMESPACE} --all
+  kubectl delete --grace-period=600 applications.argoproj.io $app_name -n $app_namespace
+  kubectl delete ingress -n $app_namespace --all
 fi
 
 
