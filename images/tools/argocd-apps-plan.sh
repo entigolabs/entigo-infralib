@@ -23,6 +23,11 @@ app_namespace=$(yq -r '.metadata.namespace // ""' "$app_file")
 if [ -n "$app_namespace" ]
 then
   echo "Found .metadata.namespace in $app_file. Overriding ARGOCD_NAMESPACE to $app_namespace"
+  # Create namespace if it doesn't exist
+  if ! kubectl get namespace "$app_namespace" &>/dev/null; then
+    echo "Namespace $app_namespace does not exist. Creating..."
+    kubectl create namespace "$app_namespace"
+  fi
 else
   app_namespace=$ARGOCD_NAMESPACE
 fi
