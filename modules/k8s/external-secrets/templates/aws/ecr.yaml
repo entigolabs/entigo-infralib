@@ -102,24 +102,24 @@ metadata:
   name: ecr-token
   namespace: {{ .Values.global.aws.createECRNamespace }}
 ---
+
+  {{- range .Values.global.aws.createECRAccounts }}
+
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: ECRAuthorizationToken
 metadata:
-  name: ecr-token
+  name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
   namespace: {{ .Values.global.aws.createECRNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  region: {{ .Values.global.aws.region }}
+  region: {{ .accountRegion }}
   auth:
     jwt:
       serviceAccountRef:
         name: "ecr-token"
 ---
-
-  {{- range .Values.global.aws.createECRAccounts }}
-
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -148,7 +148,7 @@ spec:
         generatorRef:
           apiVersion: generators.external-secrets.io/v1alpha1
           kind: ECRAuthorizationToken
-          name: ecr-token
+          name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
           
 ---
 
