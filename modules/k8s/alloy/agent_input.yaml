@@ -1,0 +1,62 @@
+alloy:
+  alloy:
+    priorityClassName: "{{ .module.name }}"
+    configMap:
+      content: |
+        logging {
+          level  = "warn"
+          format = "json"
+        }
+
+        // Discover log files on disk
+        local.file_match "pods" {
+          path_targets = [{
+            __path__ = "/var/log/pods/*/*/*.log",
+          }]
+        }
+
+        // Extract labels from file path
+        discovery.relabel "pods" {
+          targets = local.file_match.pods.targets
+
+          // Extract namespace, pod name, pod uid from directory
+          rule {
+            source_labels = ["__path__"]
+            regex         = "/var/log/pods/(.+)_(.+)_(.+)/(.+)/.*\\.log"
+            target_label  = "namespace"
+            replacement   = "$1"
+          }
+          rule {
+            source_labels = ["__path__"]
+            regex         = "/var/log/pods/(.+)_(.+)_(.+)/(.+)/.*\\.log"
+            target_label  = "pod"
+            replacement   = "$2"
+          }
+          rule {
+            source_labels = ["__path__"]
+            regex         = "/var/log/pods/(.+)_(.+)_(.+)/(.+)/.*\\.log"
+            target_label  = "container"
+            replacement   = "$4"
+          }
+        }
+
+        // Collect log files
+        loki.source.file "pods" {
+          targets       = discovery.relabel.pods.output
+          forward_to    = [loki.process.pods.receiver]
+          tail_from_end = true
+        }
+
+        // Parse CRI format (containerd)
+        loki.process "pods" {
+          forward_to = [loki.write.default.receiver]
+
+          stage.cri {}
+        }
+
+        // Send to Loki
+        loki.write "default" {
+          endpoint {
+            url = "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
+          }
+        }
