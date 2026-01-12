@@ -31,16 +31,11 @@ alloy:
       timeoutSeconds: 5
       failureThreshold: 3
 
-    readinessProbe:
-      httpGet:
-        path: /-/ready
-        port: 12345
-      initialDelaySeconds: 10
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
-
+    enableHttpServerPort: false
     enableReporting: false
+
+  service:
+    enabled: false
 
   serviceAccount:
     create: true
