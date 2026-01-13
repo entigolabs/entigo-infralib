@@ -9,17 +9,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestK8sAlloyAWSBiz(t *testing.T) {
-// 	testK8sAlloy(t, "aws", "biz")
-// }
+func TestK8sAlloyAWSBiz(t *testing.T) {
+	testK8sAlloy(t, "aws", "biz")
+}
 
 func TestK8sAlloyAWSPri(t *testing.T) {
 	testK8sAlloy(t, "aws", "pri")
 }
 
-// func TestK8sAlloyGoogleBiz(t *testing.T) {
-// 	testK8sAlloy(t, "google", "biz")
-// }
+func TestK8sAlloyGoogleBiz(t *testing.T) {
+	testK8sAlloy(t, "google", "biz")
+}
 
 func TestK8sAlloyGooglePri(t *testing.T) {
 	testK8sAlloy(t, "google", "pri")
