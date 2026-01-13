@@ -8,10 +8,8 @@ alloy:
     configMap:
       create: true
       content: ""
-
     mounts:
       varlog: true
-
     resources:
       requests:
         cpu: "50m"
@@ -21,7 +19,6 @@ alloy:
         cpu: "500m"
         memory: "512Mi"
         ephemeral-storage: "50Gi"
-
     livenessProbe:
       httpGet:
         path: /-/healthy
@@ -30,7 +27,6 @@ alloy:
       periodSeconds: 10
       timeoutSeconds: 5
       failureThreshold: 3
-
     enableHttpServerPort: false
     enableReporting: false
 
@@ -39,7 +35,6 @@ alloy:
 
   serviceAccount:
     create: true
-    annotations: {}
 
   configReloader:
     enabled: true
@@ -55,7 +50,6 @@ alloy:
 
   networkPolicy:
     enabled: true
-    flavor: kubernetes
     policyTypes:
       - Ingress
       - Egress
@@ -81,25 +75,10 @@ alloy:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      - ports:
-          - port: 443
-            protocol: TCP
-        to:
-          - ipBlock:
-              cidr: 172.20.0.1/32
 
   controller:
     type: "daemonset"
     replicas: 1
     tolerations:
-      - key: "node-group"
-        operator: "Exists"
-        effect: "NoSchedule"
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
       - effect: NoSchedule
         operator: Exists

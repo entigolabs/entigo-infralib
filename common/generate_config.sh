@@ -383,7 +383,6 @@ test_k8s() {
       "./modules/k8s/loki/test.sh"
       "./modules/k8s/mimir/test.sh"
       "./modules/k8s/prometheus/test.sh"
-      "./modules/k8s/promtail/test.sh"
       "./modules/k8s/alloy/test.sh"
       "./modules/k8s/grafana/test.sh"
       "./modules/k8s/harbor/test.sh"
