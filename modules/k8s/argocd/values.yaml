@@ -9,7 +9,7 @@ argocd-apps:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "dev"
+  tag: "v1.17.0"
 
 argocd:
   crds:
