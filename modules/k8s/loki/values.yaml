@@ -16,6 +16,13 @@ loki:
   sidecar:
     rules:
       logLevel: WARN
+    resources:
+      requests:
+        cpu: 10m
+        memory: 20Mi
+      limits:
+        cpu: 100m
+        memory: 100Mi
 
   loki:
     auth_enabled: false
