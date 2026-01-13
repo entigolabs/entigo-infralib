@@ -102,28 +102,28 @@ metadata:
   name: ecr-token
   namespace: {{ .Values.global.aws.createECRNamespace }}
 ---
+
+  {{- range .Values.global.aws.createECRAccounts }}
+
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: ECRAuthorizationToken
 metadata:
-  name: ecr-token
-  namespace: {{ .Values.global.aws.createECRNamespace }}
+  name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
+  namespace: {{ $.Values.global.aws.createECRNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  region: {{ .Values.global.aws.region }}
+  region: {{ .accountRegion }}
   auth:
     jwt:
       serviceAccountRef:
         name: "ecr-token"
 ---
-
-  {{- range .Values.global.aws.createECRAccounts }}
-
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+  name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
   namespace: {{ $.Values.global.aws.createECRNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "6"
@@ -131,16 +131,16 @@ metadata:
 spec:
   refreshInterval: 30m
   target:
-    name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+    name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
     template:
       metadata:
         labels:
           argocd.argoproj.io/secret-type: repository
       data:
-        name: "repo-{{ .accountNumber }}-{{ .acocuntRegion }}"
+        name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
         type: helm
         enableOCI: "true"
-        url: {{ .accountNumber }}.dkr.ecr.{{ .acocuntRegion }}.amazonaws.com
+        url: {{ .accountNumber }}.dkr.ecr.{{ .accountRegion }}.amazonaws.com
         password: "{{`{{ .password }}`}}"
         username: "{{`{{ .username }}`}}"
   dataFrom:
@@ -148,7 +148,7 @@ spec:
         generatorRef:
           apiVersion: generators.external-secrets.io/v1alpha1
           kind: ECRAuthorizationToken
-          name: ecr-token
+          name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
           
 ---
 

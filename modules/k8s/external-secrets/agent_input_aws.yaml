@@ -3,10 +3,10 @@ global:
     region: "{{ .toutput.eks.region }}"
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
-    #createECRNamespace: "{{ .tmodule.argocd }}"
+    createECRNamespace: "{{ .tmodule.argocd }}"
     createECRAccounts: 
     - accountNumber: "{{ .toutput.eks.account }}"
-      acocuntRegion: "{{ .toutput.eks.region }}"
+      accountRegion: "{{ .toutput.eks.region }}"
 external-secrets:
   image:
     repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
