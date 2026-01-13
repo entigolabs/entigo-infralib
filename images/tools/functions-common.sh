@@ -202,7 +202,8 @@ handle_failed_jobs() {
 git_login() {
     for var in "${!GIT_AUTH_SOURCE_@}"; do
       printf 'Configure git credentials for %s=%s\n' "$var" "${!var}"
-            SOURCE="$(echo ${!var} | grep -oP '(?<=://)[^/]+')"
+            #SOURCE="$(echo ${!var} | grep -oP '(?<=://)[^/]+')"
+            SOURCE="$(echo ${!var} | sed -n 's|.*://\([^/]*\).*|\1|p')"
             PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
             USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
             git config --global url."https://${!USERNAME}:${!PASSWORD}@${SOURCE}".insteadOf https://${SOURCE}

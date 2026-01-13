@@ -3,4 +3,4 @@ global:
   kmsKeyId: ""
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.15.7"
+  tag: "v1.17.0"
