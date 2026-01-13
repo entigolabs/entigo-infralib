@@ -19,8 +19,8 @@ trivy-operator:
       cpu: 5m
       memory: 50Mi
     limits:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 500m
+      memory: 500Mi
   trivyOperator:
     scanJobAutomountServiceAccountToken: true
     scanJobCompressLogs: true
