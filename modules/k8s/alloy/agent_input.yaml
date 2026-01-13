@@ -8,79 +8,67 @@ alloy:
           format = "json"
         }
 
-        # Discover pods from Kubernetes API
-        discovery.kubernetes "pod" {
+        discovery.kubernetes "kubernetes_pods" {
           role = "pod"
           selectors {
             role  = "pod"
-            field = "spec.nodeName=" + env("HOSTNAME")
+            field = "spec.nodeName=" + sys.env("HOSTNAME")
           }
         }
 
-        # Extract labels from Kubernetes metadata (matches Promtail defaults)
-        discovery.relabel "pod_logs" {
-          targets = discovery.kubernetes.pod.targets
+        discovery.relabel "kubernetes_pods" {
+          targets = discovery.kubernetes.kubernetes_pods.targets
 
-          # Extract controller name for app label fallback
           rule {
             source_labels = ["__meta_kubernetes_pod_controller_name"]
             regex         = "([0-9a-z-.]+?)(-[0-9a-f]{8,10})?"
             target_label  = "__tmp_controller_name"
           }
 
-          # app label: app.kubernetes.io/name -> app -> controller name -> pod name
           rule {
             source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app", "__tmp_controller_name", "__meta_kubernetes_pod_name"]
             regex         = "^;*([^;]+)(;.*)?$"
             target_label  = "app"
           }
 
-          # instance label: app.kubernetes.io/instance -> instance
           rule {
             source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_instance"]
             regex         = "^;*([^;]+)(;.*)?$"
             target_label  = "instance"
           }
 
-          # component label: app.kubernetes.io/component -> component
           rule {
             source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_label_component"]
             regex         = "^;*([^;]+)(;.*)?$"
             target_label  = "component"
           }
 
-          # node_name label
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
             target_label  = "node_name"
           }
 
-          # namespace label
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
           }
 
-          # job label: namespace/app
           rule {
             source_labels = ["namespace", "app"]
             separator     = "/"
             target_label  = "job"
           }
 
-          # pod label
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
           }
 
-          # container label
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
           }
 
-          # __path__ for regular pods
           rule {
             source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
             separator     = "/"
@@ -88,31 +76,36 @@ alloy:
             replacement   = "/var/log/pods/*$1/*.log"
           }
 
-          # __path__ override for static pods (kube-system)
           rule {
             source_labels = ["__meta_kubernetes_pod_annotationpresent_kubernetes_io_config_hash", "__meta_kubernetes_pod_annotation_kubernetes_io_config_hash", "__meta_kubernetes_pod_container_name"]
             regex         = "true/(.*)"
+            replacement   = "/var/log/pods/*$1/*.log"
             separator     = "/"
             target_label  = "__path__"
-            replacement   = "/var/log/pods/*$1/*.log"
           }
         }
 
-        # Tail logs from disk
-        loki.source.file "pod_logs" {
-          targets       = discovery.relabel.pod_logs.output
-          forward_to    = [loki.process.pod_logs.receiver]
+        local.file_match "kubernetes_pods" {
+          path_targets = discovery.relabel.kubernetes_pods.output
+        }
+
+        local.file_match "all_container_logs" {
+          path_targets = [{
+            __path__ = "/var/log/containers/*.log",
+          }]
+        }
+
+        loki.source.file "kubernetes_pods" {
+          targets       = array.concat(local.file_match.kubernetes_pods.targets, local.file_match.all_container_logs.targets)
+          forward_to    = [loki.process.kubernetes_pods.receiver]
           tail_from_end = true
         }
 
-        # Process logs
-        loki.process "pod_logs" {
-          # Parse CRI format (containerd/cri-o)
-          stage.cri {}
+        loki.process "kubernetes_pods" {
           forward_to = [loki.write.default.receiver]
+          stage.cri { }
         }
 
-        # Send to Loki
         loki.write "default" {
           endpoint {
             url = "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"

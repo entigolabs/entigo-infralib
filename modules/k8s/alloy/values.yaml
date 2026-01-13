@@ -46,7 +46,7 @@ alloy:
     resources:
       requests:
         cpu: "10m"
-        memory: "32Mi"
+        memory: "16Mi"
         ephemeral-storage: "50Mi"
       limits:
         cpu: "100m"
@@ -81,6 +81,12 @@ alloy:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
 
   controller:
     type: "daemonset"
