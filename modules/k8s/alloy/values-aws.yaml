@@ -2,7 +2,7 @@ global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
 
-alloy:
+logs:
   networkPolicy:
     egress:
       - ports:

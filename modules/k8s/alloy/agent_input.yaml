@@ -1,4 +1,4 @@
-alloy:
+logs:
   alloy:
     priorityClassName: "{{ .module.name }}"
     configMap:

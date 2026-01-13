@@ -1,4 +1,4 @@
-alloy:
+logs:
   crds:
     create: false
 
