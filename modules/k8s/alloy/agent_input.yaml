@@ -1,6 +1,7 @@
 logs:
-  alloy:
+  controller:
     priorityClassName: "{{ .module.name }}"
+  alloy:
     configMap:
       content: |
         logging {

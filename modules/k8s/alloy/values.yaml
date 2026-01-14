@@ -2,8 +2,6 @@ logs:
   crds:
     create: false
 
-  priorityClassName: "alloy"
-
   alloy:
     configMap:
       create: true
@@ -79,6 +77,7 @@ logs:
   controller:
     type: "daemonset"
     replicas: 1
+    priorityClassName: "alloy"
     tolerations:
       - effect: NoSchedule
         operator: Exists
