@@ -16,6 +16,6 @@ spec:
     - tags:
         karpenter.sh/discovery: {{ .Values.karpenter.settings.clusterName }}
   amiSelectorTerms:
-    - alias: al2023@v20250123
+    - alias: al2023@v20260107
     
 {{- end }}
