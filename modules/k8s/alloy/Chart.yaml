@@ -1,0 +1,12 @@
+apiVersion: v2
+name: alloy
+description: An Alloy chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: alloy
+    alias: logs
+    version: 1.5.1
+    repository: https://grafana.github.io/helm-charts

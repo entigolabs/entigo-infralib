@@ -1,0 +1,6 @@
+logs:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
