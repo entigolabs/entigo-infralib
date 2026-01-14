@@ -1,7 +1,7 @@
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
-  name: {{.Values.logs.priorityClassName}}
+  name: {{.Values.logs.controller.priorityClassName}}
 value: 1000000
 preemptionPolicy: PreemptLowerPriority
 globalDefault: false
