@@ -1,0 +1,83 @@
+logs:
+  crds:
+    create: false
+
+  alloy:
+    configMap:
+      create: true
+      content: ""
+    mounts:
+      varlog: true
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+        ephemeral-storage: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+        ephemeral-storage: "50Gi"
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    enableHttpServerPort: false
+    enableReporting: false
+
+  service:
+    enabled: false
+
+  serviceAccount:
+    create: true
+
+  configReloader:
+    enabled: true
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
+        ephemeral-storage: "50Mi"
+      limits:
+        cpu: "100m"
+        memory: "128Mi"
+        ephemeral-storage: "100Mi"
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress: []
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+
+  controller:
+    type: "daemonset"
+    replicas: 1
+    priorityClassName: "alloy"
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
