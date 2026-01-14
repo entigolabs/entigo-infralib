@@ -9,32 +9,28 @@ This module is no longer actively developed. Please use k8s/alloy module instead
    Before:
 
    ```yaml
-   - name: apps
-   type: argocd-apps
-   modules:
-       - name: ...
-       source: ...
-       - name: promtail
-       source: promtail
-       - name: ...
-       source: ...
+      - name: apps
+        type: argocd-apps
+        modules:
+            ...
+            - name: promtail
+              source: promtail
+            ...
    ```
 
    After:
 
    ```yaml
-   - name: apps
-   type: argocd-apps
-   modules:
-       - name: ...
-       source: ...
-       - name: alloy
-       source: alloy
-       - name: ...
-       source: ...
+      - name: apps
+        type: argocd-apps
+        modules:
+            ...
+            - name: alloy
+              source: alloy
+            ...
    ```
 
-2. Run the apps step. Verify that the pipeline is successful.
+2. Run the infralib agent. Verify that the pipeline is successful.
 
 3. Verify Alloy starts up successfully by checking the Alloy app in ArgoCD UI. Verify that pods are running and there are no errors in the logs.
 
