@@ -11,6 +11,7 @@ kiali-server:
     image_pull_policy: "IfNotPresent"
     instance_name: "kiali"
     security_context:
+      runAsNonRoot: true
       seccompProfile:
         type: RuntimeDefault
     pod_annotations:
