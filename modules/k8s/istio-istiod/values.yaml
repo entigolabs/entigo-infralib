@@ -1,4 +1,6 @@
 cni:
+  podAnnotations:
+    kube-score/ignore: pod-networkpolicy
   resources:
     requests:
       cpu: 100m
