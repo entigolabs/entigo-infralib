@@ -10,6 +10,9 @@ kiali-server:
   deployment:
     image_pull_policy: "IfNotPresent"
     instance_name: "kiali"
+    security_context:
+      seccompProfile:
+        type: RuntimeDefault
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     affinity:
