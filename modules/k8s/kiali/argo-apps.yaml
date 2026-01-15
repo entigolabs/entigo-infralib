@@ -7,3 +7,8 @@ spec:
     - '/spec/template/metadata/annotations/checksum~1config'
     kind: Deployment
     group: apps
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/warn: baseline

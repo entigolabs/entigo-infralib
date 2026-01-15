@@ -14,5 +14,5 @@ RUN apk --no-cache add \
     && addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
 COPY --from=tools /entigo-bin/kubectl /usr/bin/
 COPY --from=tools /entigo-bin/argocd /usr/bin/
-USER entigo
+USER 1000
 WORKDIR /app

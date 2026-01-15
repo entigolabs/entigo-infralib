@@ -38,5 +38,5 @@ RUN apk --no-cache add \
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-USER entigo
+USER 1000
 WORKDIR /app

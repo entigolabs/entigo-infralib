@@ -12,6 +12,10 @@ spec:
   completions: 1
   template:
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -30,6 +34,11 @@ spec:
       containers:
       - name: kubectl
         image: {{ .Values.job.image }}:{{ .Values.job.tag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         envFrom:
         - secretRef:
             name: {{ .Release.Name }}-core
