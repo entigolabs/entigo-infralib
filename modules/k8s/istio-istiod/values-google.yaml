@@ -1,0 +1,4 @@
+global:
+  platform: gke
+cni:
+  cniBinDir: /home/kubernetes/bin
