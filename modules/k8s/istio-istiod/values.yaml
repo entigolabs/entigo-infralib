@@ -1,4 +1,14 @@
-     
+cni:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+      ephemeral-storage: 10Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+      ephemeral-storage: 1Gi
+
 istiod:
   global:
     imagePullPolicy: "IfNotPresent"

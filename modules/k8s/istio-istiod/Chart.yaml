@@ -11,3 +11,4 @@ dependencies:
   - name: cni
     version: 1.28.2
     repository: https://istio-release.storage.googleapis.com/charts
+    condition: istiod.pilot.cni.enabled
