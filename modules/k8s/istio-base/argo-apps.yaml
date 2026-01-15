@@ -15,3 +15,6 @@ spec:
     kind: CustomResourceDefinition
     jqPathExpressions:
     - .spec.conversion.webhook.clientConfig.service.name
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
