@@ -48,7 +48,7 @@ argocd-apps:
                         - values.yaml
                     values: |
                       image:
-                        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/nginx'
+                        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged'
                 path: modules/k8s/hello-world
                 repoURL: https://github.com/entigolabs/entigo-infralib-release.git
                 targetRevision: main
@@ -56,3 +56,7 @@ argocd-apps:
                 automated: {}
                 syncOptions:
                     - CreateNamespace=true
+                managedNamespaceMetadata:
+                  labels:
+                    pod-security.kubernetes.io/enforce: restricted
+                    pod-security.kubernetes.io/warn: restricted

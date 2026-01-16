@@ -1,5 +1,17 @@
 
 cluster-autoscaler:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
