@@ -37,6 +37,10 @@ kyverno:
           value: "true"
           effect: "NoSchedule"
   admissionController:
+    podSecurityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
     initContainer:
       resources:
         limits:
