@@ -36,4 +36,4 @@ RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a
 RUN cd /cache && terraform init && ls -l / && ls -l /cache/ && rm -rf /cache/*
 RUN export GOMAXPROCS=2 && cd /common && go mod download -x && cd /app && go mod init github.com/entigolabs/entigo-infralib && go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common && go mod tidy && cd test && go test -timeout 5m && find /go/pkg/mod -type f -name examples-1.json -delete
 
-COPY --from=entigolabs/entigo-infralib-agent:latest /usr/bin/ei-agent /usr/bin/ei-agent
+COPY --from=entigolabs/entigo-infralib-agent:v1.10.2-alpha1 /usr/bin/ei-agent /usr/bin/ei-agent
