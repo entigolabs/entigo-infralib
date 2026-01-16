@@ -1,6 +1,6 @@
 dependencies:
 - name: developer-portal-agent
   repository: oci://ghcr.io/entigolabs
-  version: 0.2.21
-digest: sha256:8b9804d0c3aae95261844d94d75fc3b26bba1d7418ea780ada8d2325a02fa678
-generated: "2026-01-16T09:58:17.552325943+02:00"
+  version: 0.2.22
+digest: sha256:183bea23fe3b3ceebbed2eef42ed82ed6d138f3a0e95753b454f755049f7e51a
+generated: "2026-01-16T10:48:45.837888979+02:00"
