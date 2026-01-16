@@ -2,6 +2,7 @@ spec:
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
+    - CreateNamespace=false
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: restricted
