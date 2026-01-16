@@ -4,7 +4,6 @@ metadata:
 spec:
   syncPolicy:
     syncOptions:
-    - CreateNamespace=false
     - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
