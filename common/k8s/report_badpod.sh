@@ -14,6 +14,13 @@ printf "%-40s %-12s %-12s\n" "---------" "-------" "----"
 
 kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "kube-system") |
+  select(.metadata.name != "kube-public") |
+  select(.metadata.name != "default") |
+  select(.metadata.name != "kube-node-lease") |
+  select(.metadata.name != "biz") |
+  select(.metadata.name != "pri") |
+  select(.metadata.name != "gke-managed-system") |
+  select(.metadata.name != "gke-managed-volumepopulator") |
   (.metadata.labels["pod-security.kubernetes.io/enforce"] // "privileged") as $enforce |
   (.metadata.labels["pod-security.kubernetes.io/warn"] // "privileged") as $warn |
   select($enforce != "restricted" or $warn != "restricted") |
