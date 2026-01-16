@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.17.4"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.17.5"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
