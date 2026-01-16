@@ -1,6 +1,6 @@
 dependencies:
 - name: argocd-ecr-updater
   repository: https://karlderkaefer.github.io/argocd-ecr-updater
-  version: 0.3.30
-digest: sha256:5f9caa700d8d6061e00c8ca0641c2ab14d6df7455abbdf04dd7770d67d405af5
-generated: "2025-03-27T10:56:06.820358317+02:00"
+  version: 0.3.34
+digest: sha256:3999752b80a0671a9d9987c66c43b162479eb17fe9d2c582402d475b84ee152e
+generated: "2026-01-16T09:06:01.850204014+02:00"
