@@ -7,7 +7,10 @@ wireguard:
     image:
       repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/curium-rocks/wg-kubectl'
   metrics:
-    repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
+  healthSideCar:
+    image:
+      repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/http-healthcheck-sidecar'
   service:
     annotations: 
       external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
