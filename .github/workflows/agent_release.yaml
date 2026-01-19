@@ -227,7 +227,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         aws-region: us-east-1
       run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && cd images/base/ &&
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && 
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs &&
         docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-base:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-base:latest &&
         docker buildx imagetools create -t public.ecr.aws/entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} -t entigolabs/entigo-infralib-kubectl:${{ steps.get_latest_release.outputs.new_version }} public.ecr.aws/entigolabs/entigo-infralib-kubectl:latest &&
