@@ -115,7 +115,9 @@ logs:
         loki.process "kubernetes_pods" {
           forward_to = [loki.write.default.receiver]
           stage.cri { }
+          {{- if .Values.extraProcessStages }}
           {{- .Values.extraProcessStages | nindent 2 }}
+          {{- end }}
         }
 
         loki.write "default" {
