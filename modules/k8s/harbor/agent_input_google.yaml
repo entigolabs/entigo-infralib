@@ -42,3 +42,6 @@ harbor:
   exporter:
     image:
       repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'
+  nginx:
+    image:
+      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/nginx-photon'
