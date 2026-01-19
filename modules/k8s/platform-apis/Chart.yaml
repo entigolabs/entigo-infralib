@@ -2,11 +2,11 @@ apiVersion: v2
 name: platform-apis
 description: Platform APIs
 
-version: 0.1.320
+version: 0.1.324
 
-appVersion: "0.1.320"
+appVersion: "0.1.324"
 
 dependencies:
   - name: platform-apis
-    version: 0.1.320
+    version: 0.1.324
     repository: oci://ghcr.io/entigolabs
