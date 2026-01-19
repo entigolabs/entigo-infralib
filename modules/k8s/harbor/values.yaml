@@ -5,7 +5,7 @@ global:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.17.3"
+  tag: "v1.17.8"
 
 harbor:
   ipFamily:
