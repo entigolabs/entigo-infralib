@@ -1,5 +1,6 @@
 platform-apis:
   zone:
+    kyvernoNamespace: "{{ .tmodule.kyverno }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
   database:
