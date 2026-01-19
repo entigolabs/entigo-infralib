@@ -1,10 +1,5 @@
-metadata:
-  annotations:
-    infralib.entigo.io/sync-wave: "2"
 spec:
   syncPolicy:
-    syncOptions:
-    - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: restricted

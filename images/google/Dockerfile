@@ -28,5 +28,5 @@ RUN apk --no-cache add \
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-USER cloudsdk
+USER 1000
 WORKDIR /app

@@ -19,6 +19,11 @@ karpenter:
     create: false
     name: karpenter
   replicas: 1
+  podSecurityContext:
+    fsGroup: 65532
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   controller:
     resources:
       requests:

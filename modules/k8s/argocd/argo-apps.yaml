@@ -1,3 +1,9 @@
 metadata:
   annotations:
     infralib.entigo.io/sync-wave: "3"
+spec:
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/warn: restricted

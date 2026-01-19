@@ -10,12 +10,12 @@ logs:
       varlog: true
     resources:
       requests:
-        cpu: "50m"
-        memory: "128Mi"
-        ephemeral-storage: "128Mi"
+        cpu: "10m"
+        memory: "45Mi"
+        ephemeral-storage: "100Mi"
       limits:
         cpu: "500m"
-        memory: "512Mi"
+        memory: "500Mi"
         ephemeral-storage: "50Gi"
     livenessProbe:
       httpGet:
@@ -35,16 +35,7 @@ logs:
     create: true
 
   configReloader:
-    enabled: true
-    resources:
-      requests:
-        cpu: "10m"
-        memory: "16Mi"
-        ephemeral-storage: "50Mi"
-      limits:
-        cpu: "100m"
-        memory: "128Mi"
-        ephemeral-storage: "100Mi"
+    enabled: false
 
   networkPolicy:
     enabled: true

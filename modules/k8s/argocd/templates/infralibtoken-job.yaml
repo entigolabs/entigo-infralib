@@ -68,9 +68,17 @@ spec:
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
-
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: kubectl
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         image: {{ .Values.job.image }}:{{ .Values.job.tag }}
         resources:
           limits:

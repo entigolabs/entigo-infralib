@@ -1,4 +1,8 @@
 metrics-server:
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
   resources:
