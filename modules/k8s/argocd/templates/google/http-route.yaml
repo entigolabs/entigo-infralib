@@ -8,6 +8,7 @@ metadata:
 spec:
   parentRefs:
     - kind: Gateway
+      group: gateway.networking.k8s.io
       name: {{ .Values.global.google.gateway.name }}
       sectionName: https
       namespace: {{ .Values.global.google.gateway.namespace }}
@@ -17,5 +18,11 @@ spec:
     - backendRefs:
         - name: {{ .Release.Name }}-server
           port: 443
-        
+          group: ''
+          kind: Service
+          weight: 1
+      matches:
+      - path:
+          type: PathPrefix
+          value: /
 {{- end }}
