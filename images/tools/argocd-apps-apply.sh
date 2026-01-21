@@ -36,13 +36,13 @@ then
     exit 0
   fi
 
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app sync --prune --app-namespace $app_namespace $app_name
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app sync --prune --app-namespace $app_namespace $app_name
   if [ $? -ne 0 ]
   then
     echo "Failed $app_name sync"
     exit 24
   fi
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app wait --timeout 600 --health --sync --operation --app-namespace $app_namespace $app_name
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app wait --timeout 600 --health --sync --operation --app-namespace $app_namespace $app_name
   if [ $? -ne 0 ]
   then
     echo "Failed $app_name wait"
