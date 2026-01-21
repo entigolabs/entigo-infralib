@@ -1,0 +1,17 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::{{ .Values.global.aws.account }}:policy/{{ .Release.Name }}
+    roleRef:
+      name: {{ .Release.Name }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}

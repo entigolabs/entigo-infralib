@@ -36,13 +36,10 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
-          serviceAccountName: contrib-provider-kafka
+          serviceAccountName: {{ .Values.global.serviceAccount }}
           tolerations:
             - effect: NoSchedule
               key: tools
               operator: Equal
               value: "true"
-  serviceAccountTemplate:
-    metadata:
-      name: contrib-provider-kafka
   serviceTemplate: {}
