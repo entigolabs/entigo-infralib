@@ -62,14 +62,14 @@ fi
 
 if [ "$USE_ARGOCD_CLI" == "true" ]
 then
-  argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --refresh --app-namespace $app_namespace ${app_name} > /dev/null
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --refresh --app-namespace $app_namespace ${app_name} > /dev/null
   if [ $? -ne 0 ]
   then
     echo "Failed to refresh ArgoCD Application $app_name!"
     exit 25
   fi
 
-  STATUS=$(argocd --server ${ARGOCD_HOSTNAME} --grpc-web app get --app-namespace $app_namespace $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .health.status != null and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
+  STATUS=$(argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --app-namespace $app_namespace $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .health.status != null and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
   if [ $? -ne 0 ]
   then
     echo "Failed to get ArgoCD Application $app_name!"
@@ -169,7 +169,7 @@ then
   touch $app_file.sync
   if [ "$APP_EXISTED" == "yes" -a "$USE_ARGOCD_CLI" == "true" ]
   then
-    argocd --server ${ARGOCD_HOSTNAME} --grpc-web app diff --exit-code=false --app-namespace $app_namespace $app_name
+    argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app diff --exit-code=false --app-namespace $app_namespace $app_name
   fi
 fi
 echo "###############"
