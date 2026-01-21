@@ -263,7 +263,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.8.0"
+  version = "21.11.0"
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
