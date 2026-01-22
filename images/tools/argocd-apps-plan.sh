@@ -68,13 +68,22 @@ then
     echo "Failed to refresh ArgoCD Application $app_name!"
     exit 25
   fi
+  # Retry logic for inconsistent OutOfSync state
+  MAX_RETRIES=5
+  RETRY_DELAY=2
+  for i in $(seq 1 $MAX_RETRIES); do
+    STATUS=$(argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --app-namespace $app_namespace $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and (.health == null or .health.status != "Missing") and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
+    if [ $? -ne 0 ]; then
+      echo "Failed to get ArgoCD Application $app_name!"
+      exit 25
+    fi
+    # Check for illogical state: OutOfSync but no resources to sync
+    if [ "$STATUS" == "Status:OutOfSync Missing:0 Changed:0 RequiresPruning:0" ]; then
+      [ $i -lt $MAX_RETRIES ] && echo "Inconsistent state, retrying in ${RETRY_DELAY}s... ($i/$MAX_RETRIES)" && sleep $RETRY_DELAY && continue
+    fi
+    break
+  done
 
-  STATUS=$(argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --app-namespace $app_namespace $app_name -o json | jq -r '"Status:\(.status.sync.status) Missing:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status == "Missing" and (.hook == null or .hook == false))) | length) else 0 end) Changed:\(if .status.resources then (.status.resources | map(select(.status == "OutOfSync" and .health.status != "Missing" and .health.status != null and .requiresPruning != true and (.hook == null or .hook == false))) | length) else 0 end) RequiresPruning:\(if .status.resources then (.status.resources | map(select(.requiresPruning == true and (.hook == null or .hook == false))) | length) else 0 end)"')
-  if [ $? -ne 0 ]
-  then
-    echo "Failed to get ArgoCD Application $app_name!"
-    exit 25
-  fi
 else
   if [ $APP_EXISTED == "no" ]
   then
