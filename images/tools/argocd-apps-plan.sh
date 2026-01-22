@@ -68,7 +68,6 @@ then
     echo "Failed to refresh ArgoCD Application $app_name!"
     exit 25
   fi
-  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app diff --exit-code=false --app-namespace $app_namespace $app_name > /dev/null
   # Retry logic for inconsistent OutOfSync state
   MAX_RETRIES=5
   RETRY_DELAY=2
