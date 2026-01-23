@@ -155,10 +155,14 @@ prometheus:
   kube-state-metrics:
     enabled: true
     metricLabelsAllowlist:
-    - nodes=[eks.amazonaws.com/nodegroup,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,eks.amazonaws.com/capacityType,topology.kubernetes.io/zone]
-    - namespaces=[tenancy.entigo.com/zone]
+      - nodes=[eks.amazonaws.com/nodegroup,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,eks.amazonaws.com/capacityType,topology.kubernetes.io/zone]
+      - namespaces=[tenancy.entigo.com/zone]
     networkPolicy:
       enabled: true
+      ingress:
+        - ports:
+            - port: http
+            - port: metrics
       egress:
         - to:
             - ipBlock:
