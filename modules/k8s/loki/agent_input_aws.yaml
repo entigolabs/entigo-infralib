@@ -32,7 +32,7 @@ loki:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   sidecar:
     image:
-      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/kiwigrid/k8s-sidecar'
+      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   memcached:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/memcached'
