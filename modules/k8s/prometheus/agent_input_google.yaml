@@ -19,7 +19,7 @@ prometheus:
       repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/alertmanager'
     configmapReload:
       image:
-        repository: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
+        repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
   configmapReload:
     prometheus:
       image:
