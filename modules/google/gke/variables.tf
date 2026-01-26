@@ -29,12 +29,6 @@ variable "master_global_access_enabled" {
   default  = false
 }
 
-variable "network_tier_config" {
-  description = "Network tier (NETWORK_TIER_STANDARD or NETWORK_TIER_PREMIUM). Defaults to project default."
-  type    = string
-  default = null
-}
-
 variable "datapath_provider" {
   description = "ADVANCED_DATAPATH (Dataplane V2) or DATAPATH_PROVIDER_UNSPECIFIED (legacy)"
   type        = string

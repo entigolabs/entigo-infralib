@@ -110,7 +110,6 @@ module "gke" {
   deletion_protection                    = false
   gateway_api_channel                    = "CHANNEL_STANDARD"
   insecure_kubelet_readonly_port_enabled = false
-  network_tier_config                    = var.network_tier_config
 
   logging_enabled_components              = var.logging_enabled_components
   monitoring_enabled_components           = var.monitoring_enabled_components
