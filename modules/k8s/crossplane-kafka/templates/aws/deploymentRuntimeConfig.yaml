@@ -1,3 +1,4 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
 ---
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
@@ -48,3 +49,4 @@ spec:
       name: {{ .Values.global.serviceAccount }}
       annotations:
         eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}
+{{- end }}
