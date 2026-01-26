@@ -8,6 +8,7 @@ master_authorized_networks: |
 
 datapath_provider: "DATAPATH_PROVIDER_UNSPECIFIED"
 network_policy: true
+network_tier_config: NETWORK_TIER_STANDARD
 
 enable_l4_ilb_subsetting: true
 deploy_using_private_endpoint: false

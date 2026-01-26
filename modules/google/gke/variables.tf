@@ -30,7 +30,7 @@ variable "master_global_access_enabled" {
 }
 
 variable "network_tier_config" {
-  description = "network_tier_config"
+  description = "Network tier (NETWORK_TIER_STANDARD or NETWORK_TIER_PREMIUM). Defaults to project default."
   type    = string
   default = null
 }
