@@ -1,0 +1,8 @@
+gateway:
+  topologySpreadConstraints:
+    - maxSkew: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app: istio-gateway
