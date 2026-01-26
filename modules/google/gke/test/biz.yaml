@@ -10,6 +10,8 @@ enable_l4_ilb_subsetting: true
 deploy_using_private_endpoint: false
 enable_private_endpoint: false
 
+enable_cilium_clusterwide_network_policy: true
+
 gke_main_min_size: 3
 gke_main_max_size: 6
 gke_main_spot_nodes: true

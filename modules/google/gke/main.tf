@@ -91,7 +91,6 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
 
-  # istio                              = false //only in beta module
   service_account_name                   = var.prefix
   grant_registry_access                  = var.grant_registry_access
   registry_project_ids                   = var.registry_project_ids
@@ -110,10 +109,19 @@ module "gke" {
   enable_vertical_pod_autoscaling        = false
   deletion_protection                    = false
   gateway_api_channel                    = "CHANNEL_STANDARD"
-  monitoring_enable_managed_prometheus   = var.monitoring_enable_managed_prometheus
-  monitoring_enabled_components          = var.monitoring_enabled_components
-  logging_enabled_components             = var.logging_enabled_components
   insecure_kubelet_readonly_port_enabled = false
+  network_tier_config                    = var.network_tier_config
+
+  logging_enabled_components              = var.logging_enabled_components
+  monitoring_enabled_components           = var.monitoring_enabled_components
+  monitoring_enable_managed_prometheus    = var.monitoring_enable_managed_prometheus
+  monitoring_enable_observability_metrics = var.monitoring_enable_observability_metrics
+  monitoring_enable_observability_relay   = var.monitoring_enable_observability_relay
+
+  datapath_provider                        = var.datapath_provider
+  network_policy                           = var.network_policy
+  network_policy_provider                  = "CALICO"
+  enable_cilium_clusterwide_network_policy = var.enable_cilium_clusterwide_network_policy
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {
