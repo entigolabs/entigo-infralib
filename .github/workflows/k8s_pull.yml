@@ -1,11 +1,11 @@
 name: PR modules/k8s
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'modules/k8s/**'
+#  pull_request:
+#    branches:
+#      - main
+#    paths:
+#      - 'modules/k8s/**'
   workflow_dispatch:
 
 concurrency:
