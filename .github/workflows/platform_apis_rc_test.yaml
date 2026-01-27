@@ -1,0 +1,137 @@
+name: Platform APIs RC Test
+
+on:
+  push:
+    branches:
+      - platform-apis-tests
+    paths:
+      - 'modules/k8s/platform-apis/**'
+  pull_request:
+    paths:
+      - 'modules/k8s/platform-apis/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_platform_apis_rc:
+    name: Test Platform APIs RC
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Extract RC version from package
+      id: extract_version
+      run: |
+        # Find the RC package
+        RC_PACKAGE=$(ls modules/k8s/platform-apis/charts/platform-apis-*.tgz 2>/dev/null | head -1)
+        if [ -z "$RC_PACKAGE" ]; then
+          echo "No RC package found"
+          exit 1
+        fi
+        echo "RC_PACKAGE=$RC_PACKAGE" >> $GITHUB_OUTPUT
+
+        # Extract version from filename (e.g., platform-apis-0.1.353-rc.31aa57c.tgz -> 0.1.353-rc.31aa57c)
+        VERSION=$(basename "$RC_PACKAGE" .tgz | sed 's/platform-apis-//')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+        # Create safe suffix for resource names (e.g., -rc-31aa57c)
+        SUFFIX=$(echo "$VERSION" | grep -oE 'rc\.[a-z0-9]+' | tr '.' '-')
+        if [ -z "$SUFFIX" ]; then
+          SUFFIX="rc-test"
+        fi
+        echo "SUFFIX=-$SUFFIX" >> $GITHUB_OUTPUT
+        echo "Using suffix: -$SUFFIX"
+
+    - name: Modify package with name suffix support
+      run: |
+        RC_PACKAGE="${{ steps.extract_version.outputs.RC_PACKAGE }}"
+        VERSION="${{ steps.extract_version.outputs.VERSION }}"
+
+        # Extract package
+        mkdir -p /tmp/platform-apis-mod
+        tar -xzf "$RC_PACKAGE" -C /tmp/platform-apis-mod
+
+        # Add nameSuffix support to values.yaml (default empty)
+        echo "" >> /tmp/platform-apis-mod/platform-apis/values.yaml
+        echo "# Name suffix for RC testing" >> /tmp/platform-apis-mod/platform-apis/values.yaml
+        echo "nameSuffix: \"\"" >> /tmp/platform-apis-mod/platform-apis/values.yaml
+
+        # Modify templates to append nameSuffix to ALL resource names and references
+        for template in /tmp/platform-apis-mod/platform-apis/templates/*.yaml; do
+          sed -i -E \
+            's/^([[:space:]]+)(name: )([a-z][-a-z0-9]*)$/\1\2\3{{ .Values.nameSuffix | default "" }}/' \
+            "$template"
+        done
+
+        # Repackage with same name
+        cd /tmp/platform-apis-mod
+        tar -czf "platform-apis-$VERSION.tgz" platform-apis/
+
+        # Replace original package
+        cp "platform-apis-$VERSION.tgz" "$GITHUB_WORKSPACE/$RC_PACKAGE"
+
+        echo "Modified package created with nameSuffix support"
+
+    - name: Update test config with nameSuffix
+      run: |
+        SUFFIX="${{ steps.extract_version.outputs.SUFFIX }}"
+
+        # Add nameSuffix to test configs
+        for config in modules/k8s/platform-apis/test/aws_*.yaml; do
+          echo "platform-apis:" > "$config"
+          echo "  nameSuffix: \"$SUFFIX\"" >> "$config"
+        done
+
+        echo "Updated test configs with nameSuffix: $SUFFIX"
+
+    - name: Run platform-apis tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        PR_BRANCH: ${{ github.head_ref || github.ref_name }}
+        ENTIGO_INFRALIB_DESTROY: true
+      run: |
+        modules/k8s/platform-apis/test.sh
+
+    - name: Cleanup RC resources
+      if: always()
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+        SUFFIX="${{ steps.extract_version.outputs.SUFFIX }}"
+
+        # Get kubeconfig for clusters
+        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks || true
+
+        # Delete all resources with the RC suffix
+        echo "Cleaning up resources with suffix: $SUFFIX"
+
+        for resource in functions.pkg.crossplane.io deploymentruntimeconfigs.pkg.crossplane.io environmentconfigs.apiextensions.crossplane.io; do
+          kubectl get $resource -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
+        done
+
+        kubectl get clusterroles -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
+        kubectl get clusterrolebindings -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
+        kubectl get all -A -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
+
+        echo "Cleanup completed"
+
+      #- name: Slack Failed Message
+      #if: ${{ failure() }}
+      #uses: rtCamp/action-slack-notify@v2
+        #env:
+        #SLACK_COLOR: 'failure'
+        #SLACK_MESSAGE: 'Platform APIs RC test failed'
+        #SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        #SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        #SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+      #SLACK_FOOTER: ""
