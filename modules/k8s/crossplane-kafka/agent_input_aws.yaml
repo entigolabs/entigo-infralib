@@ -1,0 +1,5 @@
+global:
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    crossplaneSystemNamespace: "{{ .tmodule.crossplane-core }}"
