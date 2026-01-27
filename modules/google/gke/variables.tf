@@ -29,6 +29,51 @@ variable "master_global_access_enabled" {
   default  = false
 }
 
+variable "datapath_provider" {
+  description = "ADVANCED_DATAPATH (Dataplane V2) or DATAPATH_PROVIDER_UNSPECIFIED (legacy)"
+  type        = string
+  default     = "ADVANCED_DATAPATH"
+}
+
+variable "network_policy" {
+  description = "Enable Calico network policy (requires datapath_provider = DATAPATH_PROVIDER_UNSPECIFIED)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cilium_clusterwide_network_policy" {
+  description = "Enable Cilium network policy (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_observability_metrics" {
+  description = "Enable Dataplane V2 Metrics (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_observability_relay" {
+  description = "Enable Dataplane V2 Observability (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_managed_prometheus" {
+  type    = bool
+  default = false
+}
+
+variable "monitoring_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
+}
+
+variable "logging_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
+}
+
 variable "dns_allow_external_traffic" {
   type     = bool
   nullable = false
@@ -82,21 +127,6 @@ variable "master_authorized_networks" {
       cidr_block   = "13.53.208.166/32"
     }
   ]
-}
-
-variable "monitoring_enable_managed_prometheus" {
-  type    = bool
-  default = false
-}
-
-variable "monitoring_enabled_components" {
-  type    = list(string)
-  default = ["SYSTEM_COMPONENTS"]
-}
-
-variable "logging_enabled_components" {
-  type    = list(string)
-  default = ["SYSTEM_COMPONENTS"]
 }
 
 variable "gke_main_min_size" {

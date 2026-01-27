@@ -13,6 +13,25 @@ prometheus:
   kube-state-metrics:
     image:
       registry: '{{ .toptout.gar-proxy.k8s_registry | "registry.k8s.io" }}'
+    networkPolicy:
+      egress:
+        - to:
+            - ipBlock:
+                cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+          ports:
+            - port: 443
+        - to:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: kube-system
+              podSelector:
+                matchLabels:
+                  k8s-app: kube-dns
+          ports:
+            - protocol: UDP
+              port: 53
+            - protocol: TCP
+              port: 53
 
   alertmanager:
     image:
