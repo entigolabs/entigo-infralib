@@ -34,13 +34,12 @@ accounts:
   entigo-infralib2:
     filters:
       IAMServiceAccount:
-        - "github-644@entigo-infralib2.iam.gserviceaccount.com"
-        - "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+        - type: contains
+          value: "github"
       IAMServiceAccountKey:
         - property: ServiceAccountEmail
-          value: "github-644@entigo-infralib2.iam.gserviceaccount.com"
-        - property: ServiceAccountEmail
-          value: "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+          type: contains
+          value: "github"
       DNSManagedZone:
         - "gcp-infralib-entigo-io"
       IAMPolicyBinding:
@@ -48,12 +47,21 @@ accounts:
           type: contains
           value: "@entigo.com"
         - property: Member
-          value: "github-644@entigo-infralib2.iam.gserviceaccount.com"
+          type: contains
+          value: "github"
         - property: Member
-          value: "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+          type: contains
+          value: "infralib-agent"
       DNSRecordSet:
         - property: Name
           value: "agent.gcp.infralib.entigo.io"
       ArtifactRegistryRepository:
         - property: Name
           value: "entigolabs"
+      SecretManagerSecret:
+        - property: Name
+          type: contains
+          value: "gar-proxy-"
+        - property: Name
+          type: glob
+          value: "argocd-*_clientSecret"
