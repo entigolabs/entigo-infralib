@@ -25,79 +25,58 @@ jobs:
     name: Test Platform APIs RC
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Setup Helm
-      uses: azure/setup-helm@v3
-
-    - name: Setup RC test module
-      id: setup
+    - name: Modify RC package with suffix
       run: |
         set -e
 
-        # Find RC package
         RC_PKG=$(ls modules/k8s/platform-apis/charts/platform-apis-*.tgz 2>/dev/null | head -1)
         [[ -z "$RC_PKG" ]] && echo "No RC package found" && exit 1
 
-        # Extract version and create suffix (e.g., 0.1.353-rc.31aa57c -> rc-31aa57c)
         VERSION=$(basename "$RC_PKG" .tgz | sed 's/platform-apis-//')
         SUFFIX=$(echo "$VERSION" | grep -oE 'rc\.[a-z0-9]+' | tr '.' '-')
         [[ -z "$SUFFIX" ]] && SUFFIX="rc-test"
 
-        CHART_NAME="platform-apis-${SUFFIX}"
-        MODULE_DIR="modules/k8s/${CHART_NAME}"
+        echo "VERSION=$VERSION SUFFIX=$SUFFIX"
+        echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
 
-        echo "VERSION=$VERSION CHART_NAME=$CHART_NAME MODULE_DIR=$MODULE_DIR"
-
-        # Extract and rename chart
+        # Extract package
         mkdir -p /tmp/chart-work
         tar -xzf "$RC_PKG" -C /tmp/chart-work
-        mv /tmp/chart-work/platform-apis "/tmp/chart-work/${CHART_NAME}"
-        sed -i "s/^name: platform-apis$/name: ${CHART_NAME}/" "/tmp/chart-work/${CHART_NAME}/Chart.yaml"
-        tar -czf "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" -C /tmp/chart-work "${CHART_NAME}/"
 
-        # Create test module (clean slate)
-        cp -r modules/k8s/platform-apis "$MODULE_DIR"
-        rm -f "${MODULE_DIR}/Chart.lock"
-        rm -rf "${MODULE_DIR}/charts"
-        mkdir -p "${MODULE_DIR}/charts"
-        cp "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" "${MODULE_DIR}/charts/"
+        # Add suffix to chart name
+        sed -i "s/^name: platform-apis$/name: platform-apis-${SUFFIX}/" /tmp/chart-work/platform-apis/Chart.yaml
 
-        # Generate Chart.yaml
-        printf '%s\n' \
-          "apiVersion: v2" \
-          "name: ${CHART_NAME}" \
-          "description: Platform APIs RC Test" \
-          "version: ${VERSION}" \
-          "appVersion: \"${VERSION}\"" \
-          "dependencies:" \
-          "  - name: ${CHART_NAME}" \
-          "    version: ${VERSION}" \
-          "    repository: \"file://charts\"" \
-          > "${MODULE_DIR}/Chart.yaml"
-
-        # Update values references
-        [[ -f "${MODULE_DIR}/values.yaml" ]] && sed -i "s/^platform-apis:/${CHART_NAME}:/" "${MODULE_DIR}/values.yaml"
-        for cfg in ${MODULE_DIR}/test/aws_*.yaml; do
-          echo "${CHART_NAME}: {}" > "$cfg"
+        # Add suffix to all resource names in templates
+        for tpl in /tmp/chart-work/platform-apis/templates/*.yaml; do
+          sed -i "s/name: platform-apis/name: platform-apis-${SUFFIX}/g" "$tpl"
         done
 
-        # Build dependencies
-        helm dependency update "${MODULE_DIR}"
+        # Repackage
+        tar -czf "$RC_PKG" -C /tmp/chart-work platform-apis/
 
-        # Export for other steps
-        echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
-        echo "CHART_NAME=${CHART_NAME}" >> $GITHUB_ENV
-        echo "MODULE_DIR=${MODULE_DIR}" >> $GITHUB_ENV
+        # Update wrapper Chart.yaml dependency name
+        sed -i "s/name: platform-apis$/name: platform-apis-${SUFFIX}/" modules/k8s/platform-apis/Chart.yaml
+
+        # Update values.yaml key if exists
+        [[ -f modules/k8s/platform-apis/values.yaml ]] && \
+          sed -i "s/^platform-apis:/platform-apis-${SUFFIX}:/" modules/k8s/platform-apis/values.yaml
+
+        # Update test configs
+        for cfg in modules/k8s/platform-apis/test/aws_*.yaml; do
+          sed -i "s/^platform-apis:/platform-apis-${SUFFIX}:/" "$cfg"
+        done
+
+        rm -rf /tmp/chart-work
 
     - name: Run tests
       env:
         PR_BRANCH: ${{ github.head_ref || github.ref_name }}
         ENTIGO_INFRALIB_DESTROY: true
-      run: ${MODULE_DIR}/test.sh
+      run: modules/k8s/platform-apis/test.sh
 
 #    - name: Cleanup
 #      if: always()
