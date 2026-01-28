@@ -67,18 +67,17 @@ jobs:
         cp "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" "${MODULE_DIR}/charts/"
 
         # Generate Chart.yaml
-        cat > "${MODULE_DIR}/Chart.yaml" << EOF
-        apiVersion: v2
-        name: ${CHART_NAME}
-        description: Platform APIs RC Test
-        version: ${VERSION}
-        appVersion: "${VERSION}"
-        dependencies:
-          - name: ${CHART_NAME}
-            version: ${VERSION}
-            repository: "file://charts"
-        EOF
-        sed -i 's/^        //' "${MODULE_DIR}/Chart.yaml"
+        cat > "${MODULE_DIR}/Chart.yaml" <<EOF
+apiVersion: v2
+name: ${CHART_NAME}
+description: Platform APIs RC Test
+version: ${VERSION}
+appVersion: "${VERSION}"
+dependencies:
+  - name: ${CHART_NAME}
+    version: ${VERSION}
+    repository: "file://charts"
+EOF
 
         # Update values references
         [[ -f "${MODULE_DIR}/values.yaml" ]] && sed -i "s/^platform-apis:/${CHART_NAME}:/" "${MODULE_DIR}/values.yaml"
