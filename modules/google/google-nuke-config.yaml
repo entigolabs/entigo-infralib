@@ -17,6 +17,7 @@ resource-types:
     - DataflowJob
     - DataprocCluster
     - DataprocJob
+    - FirestoreDatabase
     - FirebaseAuthProvider
     - FirebaseOAuthProvider
     - FirebaseRealtimeDatabase
@@ -26,6 +27,7 @@ resource-types:
     - VertexAIEndpoint
     - VertexAIModel
     - VertexAIPipelineJob
+    - MemorystoreMemcachedInstance
 
 blocklist:
   - taivo-test
@@ -54,7 +56,7 @@ accounts:
           value: "infralib-agent"
       DNSRecordSet:
         - property: Name
-          value: "agent.gcp.infralib.entigo.io"
+          value: "agent.gcp.infralib.entigo.io."
       ArtifactRegistryRepository:
         - property: Name
           value: "entigolabs"
