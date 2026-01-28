@@ -93,20 +93,40 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        [[ -z "${SUFFIX}" ]] && exit 0
+        [[ -z "${SUFFIX}" ]] && echo "SUFFIX not set, skipping cleanup" && exit 0
 
-        echo "Cleaning up resources with suffix: ${SUFFIX}"
+        echo "Cleaning up all resources containing suffix: ${SUFFIX}"
 
         for cluster in pri-infra-eks biz-infra-eks; do
           aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
+          echo "Connected to $cluster"
 
+          # Delete ArgoCD applications containing suffix
           for ns in argocd-pri argocd-biz; do
-            kubectl get applications -n $ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
-              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
+            echo "Checking ArgoCD apps in $ns..."
+            kubectl get applications -n $ns -o name 2>/dev/null | grep -F "${SUFFIX}" | while read app; do
+              echo "Deleting $app"
+              kubectl delete $app -n $ns --wait=false 2>/dev/null || true
+            done
           done
 
-          kubectl get ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
-            xargs -r kubectl delete --wait=false 2>/dev/null || true
+          # Delete Helm releases containing suffix
+          echo "Checking Helm releases..."
+          for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+            helm list -n $ns -q 2>/dev/null | grep -F "${SUFFIX}" | while read release; do
+              echo "Uninstalling Helm release: $release in $ns"
+              helm uninstall $release -n $ns 2>/dev/null || true
+            done
+          done
+
+          # Delete namespaces containing suffix
+          echo "Checking namespaces..."
+          kubectl get ns -o name 2>/dev/null | grep -F "${SUFFIX}" | while read ns; do
+            echo "Deleting $ns"
+            kubectl delete $ns --wait=false 2>/dev/null || true
+          done
         done
 
+        # Cleanup local module directory
         [[ -n "${MODULE_DIR}" ]] && rm -rf "${MODULE_DIR}"
+        echo "Cleanup completed"
