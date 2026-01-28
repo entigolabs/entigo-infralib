@@ -30,8 +30,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Extract RC version from package
-      id: extract_version
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+
+    - name: Setup RC test module
+      id: setup
       run: |
         set -e
 
@@ -47,7 +50,7 @@ jobs:
         CHART_NAME="platform-apis-${SUFFIX}"
         MODULE_DIR="modules/k8s/${CHART_NAME}"
 
-        echo "VERSION=$VERSION CHART_NAME=$CHART_NAME"
+        echo "VERSION=$VERSION CHART_NAME=$CHART_NAME MODULE_DIR=$MODULE_DIR"
 
         # Extract and rename chart
         mkdir -p /tmp/chart-work
@@ -56,7 +59,7 @@ jobs:
         sed -i "s/^name: platform-apis$/name: ${CHART_NAME}/" "/tmp/chart-work/${CHART_NAME}/Chart.yaml"
         tar -czf "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" -C /tmp/chart-work "${CHART_NAME}/"
 
-        # Create test module
+        # Create test module (clean slate)
         cp -r modules/k8s/platform-apis "$MODULE_DIR"
         rm -f "${MODULE_DIR}/Chart.lock"
         rm -rf "${MODULE_DIR}/charts"
@@ -64,7 +67,7 @@ jobs:
         cp "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" "${MODULE_DIR}/charts/"
 
         # Generate Chart.yaml
-        cat > "${MODULE_DIR}/Chart.yaml" <<EOF
+        cat > "${MODULE_DIR}/Chart.yaml" << EOF
         apiVersion: v2
         name: ${CHART_NAME}
         description: Platform APIs RC Test
@@ -83,9 +86,11 @@ jobs:
           echo "${CHART_NAME}: {}" > "$cfg"
         done
 
-        # Build dependencies so helm lint passes
+        # Build dependencies
         helm dependency update "${MODULE_DIR}"
 
+        # Export for other steps
+        echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
         echo "CHART_NAME=${CHART_NAME}" >> $GITHUB_ENV
         echo "MODULE_DIR=${MODULE_DIR}" >> $GITHUB_ENV
 
@@ -95,31 +100,40 @@ jobs:
         ENTIGO_INFRALIB_DESTROY: true
       run: ${MODULE_DIR}/test.sh
 
-    - name: Cleanup
-      if: always()
-      run: |
-        echo "Cleaning up ${CHART_NAME}..."
+#    - name: Cleanup
+#      if: always()
+#      run: |
+#        # Skip cleanup if SUFFIX is not set
+#        if [[ -z "${SUFFIX}" ]]; then
+#          echo "Skipping cleanup: SUFFIX not set"
+#          exit 0
+#        fi
+#
+#        echo "Cleaning up resources with suffix: ${SUFFIX}"
+#
+#        for cluster in pri-infra-eks biz-infra-eks; do
+#          aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
+#          echo "Connected to $cluster"
 
-        for cluster in pri-infra-eks biz-infra-eks; do
-          aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
-          echo "Connected to $cluster"
+#          # Delete ArgoCD apps with suffix
+#          for ns in argocd-pri argocd-biz; do
+#            kubectl get applications -n $ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
+#              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
+#          done
 
-          # Delete ArgoCD apps
-          for ns in argocd-pri argocd-biz; do
-            kubectl get applications -n $ns -o name 2>/dev/null | grep "${CHART_NAME}" | \
-              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
-          done
+#          # Delete namespaces with suffix
+#          kubectl get ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
+#            xargs -r kubectl delete --wait=false 2>/dev/null || true
 
-          # Delete namespaces
-          kubectl get ns -o name 2>/dev/null | grep "${CHART_NAME}" | \
-            xargs -r kubectl delete --wait=false 2>/dev/null || true
+#          # Delete Helm releases with suffix
+#          for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+#            helm list -n $ns -q 2>/dev/null | grep -F "${SUFFIX}" | \
+#              xargs -r -I{} helm uninstall {} -n $ns 2>/dev/null || true
+#          done
+#        done
 
-          # Delete Helm releases
-          for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
-            helm list -n $ns -q 2>/dev/null | grep "${CHART_NAME}" | \
-              xargs -r -I{} helm uninstall {} -n $ns 2>/dev/null || true
-          done
-        done
+#        # Cleanup local files
+#        [[ -n "${MODULE_DIR}" ]] && rm -rf "${MODULE_DIR}"
+#        rm -rf /tmp/chart-work
 
-        rm -rf "${MODULE_DIR}" /tmp/chart-work
-        echo "Cleanup completed"
+#        echo "Cleanup completed"
