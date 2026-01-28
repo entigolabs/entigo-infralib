@@ -15,6 +15,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
 jobs:
   test_platform_apis_rc:
     name: Test Platform APIs RC
@@ -28,85 +33,88 @@ jobs:
     - name: Extract RC version from package
       id: extract_version
       run: |
-        # Find the RC package
-        RC_PACKAGE=$(ls modules/k8s/platform-apis/charts/platform-apis-*.tgz 2>/dev/null | head -1)
-        if [ -z "$RC_PACKAGE" ]; then
-          echo "No RC package found"
-          exit 1
-        fi
-        echo "RC_PACKAGE=$RC_PACKAGE" >> $GITHUB_OUTPUT
+        set -e
 
-        # Extract version from filename (e.g., platform-apis-0.1.353-rc.31aa57c.tgz -> 0.1.353-rc.31aa57c)
-        VERSION=$(basename "$RC_PACKAGE" .tgz | sed 's/platform-apis-//')
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        # Find RC package
+        RC_PKG=$(ls modules/k8s/platform-apis/charts/platform-apis-*.tgz 2>/dev/null | head -1)
+        [[ -z "$RC_PKG" ]] && echo "No RC package found" && exit 1
 
-        # Create safe suffix for resource names (e.g., -rc-31aa57c)
+        # Extract version and create suffix (e.g., 0.1.353-rc.31aa57c -> rc-31aa57c)
+        VERSION=$(basename "$RC_PKG" .tgz | sed 's/platform-apis-//')
         SUFFIX=$(echo "$VERSION" | grep -oE 'rc\.[a-z0-9]+' | tr '.' '-')
-        if [ -z "$SUFFIX" ]; then
-          SUFFIX="rc-test"
-        fi
-        echo "SUFFIX=-$SUFFIX" >> $GITHUB_OUTPUT
-        echo "Using suffix: -$SUFFIX"
+        [[ -z "$SUFFIX" ]] && SUFFIX="rc-test"
 
-    - name: Modify package with name suffix support
-      run: |
-        RC_PACKAGE="${{ steps.extract_version.outputs.RC_PACKAGE }}"
-        VERSION="${{ steps.extract_version.outputs.VERSION }}"
+        CHART_NAME="platform-apis-${SUFFIX}"
+        MODULE_DIR="modules/k8s/${CHART_NAME}"
 
-        # Extract package
-        mkdir -p /tmp/platform-apis-mod
-        tar -xzf "$RC_PACKAGE" -C /tmp/platform-apis-mod
+        echo "VERSION=$VERSION CHART_NAME=$CHART_NAME"
 
-        # Add nameSuffix support to values.yaml (default empty)
-        echo "" >> /tmp/platform-apis-mod/platform-apis/values.yaml
-        echo "# Name suffix for RC testing" >> /tmp/platform-apis-mod/platform-apis/values.yaml
-        echo "nameSuffix: \"\"" >> /tmp/platform-apis-mod/platform-apis/values.yaml
+        # Extract and rename chart
+        mkdir -p /tmp/chart-work
+        tar -xzf "$RC_PKG" -C /tmp/chart-work
+        mv /tmp/chart-work/platform-apis "/tmp/chart-work/${CHART_NAME}"
+        sed -i "s/^name: platform-apis$/name: ${CHART_NAME}/" "/tmp/chart-work/${CHART_NAME}/Chart.yaml"
+        tar -czf "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" -C /tmp/chart-work "${CHART_NAME}/"
 
-        # Modify templates to append nameSuffix to ALL resource names and references
-        for template in /tmp/platform-apis-mod/platform-apis/templates/*.yaml; do
-          sed -i -E \
-            's/^([[:space:]]+)(name: )([a-z][-a-z0-9]*)$/\1\2\3{{ .Values.nameSuffix | default "" }}/' \
-            "$template"
+        # Create test module
+        cp -r modules/k8s/platform-apis "$MODULE_DIR"
+        mkdir -p "${MODULE_DIR}/charts"
+        cp "/tmp/chart-work/${CHART_NAME}-${VERSION}.tgz" "${MODULE_DIR}/charts/"
+
+        # Generate Chart.yaml
+        cat > "${MODULE_DIR}/Chart.yaml" <<EOF
+        apiVersion: v2
+        name: ${CHART_NAME}
+        description: Platform APIs RC Test
+        version: ${VERSION}
+        appVersion: "${VERSION}"
+        dependencies:
+          - name: ${CHART_NAME}
+            version: ${VERSION}
+            repository: "file://charts"
+        EOF
+        sed -i 's/^        //' "${MODULE_DIR}/Chart.yaml"
+
+        # Update values references
+        [[ -f "${MODULE_DIR}/values.yaml" ]] && sed -i "s/^platform-apis:/${CHART_NAME}:/" "${MODULE_DIR}/values.yaml"
+        for cfg in ${MODULE_DIR}/test/aws_*.yaml; do
+          echo "${CHART_NAME}: {}" > "$cfg"
         done
 
-        # Repackage with same name
-        cd /tmp/platform-apis-mod
-        tar -czf "platform-apis-$VERSION.tgz" platform-apis/
+        echo "CHART_NAME=${CHART_NAME}" >> $GITHUB_ENV
+        echo "MODULE_DIR=${MODULE_DIR}" >> $GITHUB_ENV
 
-        # Replace original package
-        cp "platform-apis-$VERSION.tgz" "$GITHUB_WORKSPACE/$RC_PACKAGE"
-
-        echo "Modified package created with nameSuffix support"
-
-    - name: Update test config with nameSuffix
-      run: |
-        SUFFIX="${{ steps.extract_version.outputs.SUFFIX }}"
-
-        # Add nameSuffix to test configs
-        for config in modules/k8s/platform-apis/test/aws_*.yaml; do
-          echo "platform-apis:" > "$config"
-          echo "  nameSuffix: \"$SUFFIX\"" >> "$config"
-        done
-
-        echo "Updated test configs with nameSuffix: $SUFFIX"
-
-    - name: Run platform-apis tests
+    - name: Run tests
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
         PR_BRANCH: ${{ github.head_ref || github.ref_name }}
         ENTIGO_INFRALIB_DESTROY: true
-      run: |
-        modules/k8s/platform-apis/test.sh
+      run: ${MODULE_DIR}/test.sh
 
-      #- name: Slack Failed Message
-      #if: ${{ failure() }}
-      #uses: rtCamp/action-slack-notify@v2
-        #env:
-        #SLACK_COLOR: 'failure'
-        #SLACK_MESSAGE: 'Platform APIs RC test failed'
-        #SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        #SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        #SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-      #SLACK_FOOTER: ""
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "Cleaning up ${CHART_NAME}..."
+
+        for cluster in pri-infra-eks biz-infra-eks; do
+          aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
+          echo "Connected to $cluster"
+
+          # Delete ArgoCD apps
+          for ns in argocd-pri argocd-biz; do
+            kubectl get applications -n $ns -o name 2>/dev/null | grep "${CHART_NAME}" | \
+              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
+          done
+
+          # Delete namespaces
+          kubectl get ns -o name 2>/dev/null | grep "${CHART_NAME}" | \
+            xargs -r kubectl delete --wait=false 2>/dev/null || true
+
+          # Delete Helm releases
+          for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+            helm list -n $ns -q 2>/dev/null | grep "${CHART_NAME}" | \
+              xargs -r -I{} helm uninstall {} -n $ns 2>/dev/null || true
+          done
+        done
+
+        rm -rf "${MODULE_DIR}" /tmp/chart-work
+        echo "Cleanup completed"
