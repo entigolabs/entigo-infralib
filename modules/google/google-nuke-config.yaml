@@ -1,0 +1,59 @@
+regions:
+  - global
+  - europe-north1
+  - europe-west1
+
+resource-types:
+  excludes:
+    - StorageBucketObject
+    - AlloyDBCluster
+    - AlloyDBInstance
+    - BigtableInstance
+    - BigtableTable
+    - CloudFunction
+    - CloudFunction2
+    - CloudTasksQueue
+    - ComposerEnvironment
+    - DataflowJob
+    - DataprocCluster
+    - DataprocJob
+    - FirebaseAuthProvider
+    - FirebaseOAuthProvider
+    - FirebaseRealtimeDatabase
+    - FirebaseWebApp
+    - SpannerDatabase
+    - SpannerInstance
+    - VertexAIEndpoint
+    - VertexAIModel
+    - VertexAIPipelineJob
+
+blocklist:
+  - taivo-test
+
+accounts:
+  entigo-infralib2:
+    filters:
+      IAMServiceAccount:
+        - "github-644@entigo-infralib2.iam.gserviceaccount.com"
+        - "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+      IAMServiceAccountKey:
+        - property: ServiceAccountEmail
+          value: "github-644@entigo-infralib2.iam.gserviceaccount.com"
+        - property: ServiceAccountEmail
+          value: "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+      DNSManagedZone:
+        - "gcp-infralib-entigo-io"
+      IAMPolicyBinding:
+        - property: Member
+          type: contains
+          value: "@entigo.com"
+        - property: Member
+          value: "github-644@entigo-infralib2.iam.gserviceaccount.com"
+        - property: Member
+          value: "github-gar-writer@entigo-infralib2.iam.gserviceaccount.com"
+      DNSRecordSet:
+        - property: Name
+          value: "agent.gcp.infralib.entigo.io"
+      ArtifactRegistryRepository:
+        - property: Name
+          value: "entigolabs"
