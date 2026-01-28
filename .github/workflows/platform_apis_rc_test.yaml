@@ -100,31 +100,6 @@ jobs:
       run: |
         modules/k8s/platform-apis/test.sh
 
-    - name: Cleanup RC resources
-      if: always()
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-      run: |
-        SUFFIX="${{ steps.extract_version.outputs.SUFFIX }}"
-
-        # Get kubeconfig for clusters
-        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks || true
-
-        # Delete all resources with the RC suffix
-        echo "Cleaning up resources with suffix: $SUFFIX"
-
-        for resource in functions.pkg.crossplane.io deploymentruntimeconfigs.pkg.crossplane.io environmentconfigs.apiextensions.crossplane.io; do
-          kubectl get $resource -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
-        done
-
-        kubectl get clusterroles -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
-        kubectl get clusterrolebindings -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
-        kubectl get all -A -o name 2>/dev/null | grep -- "$SUFFIX" | xargs -r kubectl delete || true
-
-        echo "Cleanup completed"
-
       #- name: Slack Failed Message
       #if: ${{ failure() }}
       #uses: rtCamp/action-slack-notify@v2
