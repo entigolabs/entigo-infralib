@@ -2,13 +2,10 @@ name: Platform APIs RC Test
 
 on:
   push:
-    branches:
-      - platform-apis-tests
-    paths:
-      - 'modules/k8s/platform-apis/**'
+    branches: [platform-apis-tests]
+    paths: ['modules/k8s/platform-apis/**']
   pull_request:
-    paths:
-      - 'modules/k8s/platform-apis/**'
+    paths: ['modules/k8s/platform-apis/**']
   workflow_dispatch:
 
 concurrency:
@@ -29,7 +26,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Modify RC package with suffix
+    - name: Setup RC test module
       run: |
         set -e
 
@@ -40,78 +37,76 @@ jobs:
         SUFFIX=$(echo "$VERSION" | grep -oE 'rc\.[a-z0-9]+' | tr '.' '-')
         [[ -z "$SUFFIX" ]] && SUFFIX="rc-test"
 
-        echo "VERSION=$VERSION SUFFIX=$SUFFIX"
+        NEW_MODULE="platform-apis-${SUFFIX}"
+        MODULE_DIR="modules/k8s/${NEW_MODULE}"
+
+        echo "VERSION=$VERSION SUFFIX=$SUFFIX NEW_MODULE=$NEW_MODULE"
         echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+        echo "MODULE_DIR=${MODULE_DIR}" >> $GITHUB_ENV
 
-        # Extract package
+        # Copy module to new directory
+        cp -r modules/k8s/platform-apis "$MODULE_DIR"
+
+        # Remove Chart.lock to avoid dependency conflicts
+        rm -f "${MODULE_DIR}/Chart.lock"
+
+        # Update Chart.yaml: change chart name and dependency name
+        sed -i "s/^name: platform-apis$/name: ${NEW_MODULE}/" "${MODULE_DIR}/Chart.yaml"
+        sed -i "s/^  - name: platform-apis$/  - name: ${NEW_MODULE}/" "${MODULE_DIR}/Chart.yaml"
+
+        # Extract, rename, and repackage the dependency
         mkdir -p /tmp/chart-work
-        tar -xzf "$RC_PKG" -C /tmp/chart-work
+        tar -xzf "${MODULE_DIR}/charts/"*.tgz -C /tmp/chart-work
 
-        # Add suffix to chart name
-        sed -i "s/^name: platform-apis$/name: platform-apis-${SUFFIX}/" /tmp/chart-work/platform-apis/Chart.yaml
+        # Rename chart name inside package
+        sed -i "s/^name: platform-apis$/name: ${NEW_MODULE}/" /tmp/chart-work/platform-apis/Chart.yaml
 
-        # Add suffix to all resource names in templates
+        # Add suffix to resource names in templates
         for tpl in /tmp/chart-work/platform-apis/templates/*.yaml; do
-          sed -i "s/name: platform-apis/name: platform-apis-${SUFFIX}/g" "$tpl"
+          sed -i "s/name: platform-apis/name: ${NEW_MODULE}/g" "$tpl"
         done
 
-        # Repackage
-        tar -czf "$RC_PKG" -C /tmp/chart-work platform-apis/
+        # Rename directory and repackage
+        mv /tmp/chart-work/platform-apis "/tmp/chart-work/${NEW_MODULE}"
+        rm -rf "${MODULE_DIR}/charts"
+        mkdir -p "${MODULE_DIR}/charts"
+        tar -czf "${MODULE_DIR}/charts/${NEW_MODULE}-${VERSION}.tgz" -C /tmp/chart-work "${NEW_MODULE}/"
 
-        # Update wrapper Chart.yaml dependency name
-        sed -i "s/name: platform-apis$/name: platform-apis-${SUFFIX}/" modules/k8s/platform-apis/Chart.yaml
-
-        # Update values.yaml key if exists
-        [[ -f modules/k8s/platform-apis/values.yaml ]] && \
-          sed -i "s/^platform-apis:/platform-apis-${SUFFIX}:/" modules/k8s/platform-apis/values.yaml
+        # Update values.yaml key
+        [[ -s "${MODULE_DIR}/values.yaml" ]] && \
+          sed -i "s/^platform-apis:/platform-apis-${SUFFIX}:/" "${MODULE_DIR}/values.yaml"
 
         # Update test configs
-        for cfg in modules/k8s/platform-apis/test/aws_*.yaml; do
+        for cfg in ${MODULE_DIR}/test/aws_*.yaml; do
           sed -i "s/^platform-apis:/platform-apis-${SUFFIX}:/" "$cfg"
         done
 
         rm -rf /tmp/chart-work
+        echo "Created test module: ${MODULE_DIR}"
 
     - name: Run tests
       env:
         PR_BRANCH: ${{ github.head_ref || github.ref_name }}
         ENTIGO_INFRALIB_DESTROY: true
-      run: modules/k8s/platform-apis/test.sh
+      run: ${MODULE_DIR}/test.sh
 
-#    - name: Cleanup
-#      if: always()
-#      run: |
-#        # Skip cleanup if SUFFIX is not set
-#        if [[ -z "${SUFFIX}" ]]; then
-#          echo "Skipping cleanup: SUFFIX not set"
-#          exit 0
-#        fi
-#
-#        echo "Cleaning up resources with suffix: ${SUFFIX}"
-#
-#        for cluster in pri-infra-eks biz-infra-eks; do
-#          aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
-#          echo "Connected to $cluster"
+    - name: Cleanup
+      if: always()
+      run: |
+        [[ -z "${SUFFIX}" ]] && exit 0
 
-#          # Delete ArgoCD apps with suffix
-#          for ns in argocd-pri argocd-biz; do
-#            kubectl get applications -n $ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
-#              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
-#          done
+        echo "Cleaning up resources with suffix: ${SUFFIX}"
 
-#          # Delete namespaces with suffix
-#          kubectl get ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
-#            xargs -r kubectl delete --wait=false 2>/dev/null || true
+        for cluster in pri-infra-eks biz-infra-eks; do
+          aws eks update-kubeconfig --region $AWS_REGION --name $cluster 2>/dev/null || continue
 
-#          # Delete Helm releases with suffix
-#          for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
-#            helm list -n $ns -q 2>/dev/null | grep -F "${SUFFIX}" | \
-#              xargs -r -I{} helm uninstall {} -n $ns 2>/dev/null || true
-#          done
-#        done
+          for ns in argocd-pri argocd-biz; do
+            kubectl get applications -n $ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
+              xargs -r kubectl delete -n $ns --wait=false 2>/dev/null || true
+          done
 
-#        # Cleanup local files
-#        [[ -n "${MODULE_DIR}" ]] && rm -rf "${MODULE_DIR}"
-#        rm -rf /tmp/chart-work
+          kubectl get ns -o name 2>/dev/null | grep -F "${SUFFIX}" | \
+            xargs -r kubectl delete --wait=false 2>/dev/null || true
+        done
 
-#        echo "Cleanup completed"
+        [[ -n "${MODULE_DIR}" ]] && rm -rf "${MODULE_DIR}"
