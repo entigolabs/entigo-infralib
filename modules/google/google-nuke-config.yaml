@@ -1,7 +1,6 @@
 regions:
-  - global
   - europe-north1
-  - europe-west1
+  - global
 
 resource-types:
   excludes:
