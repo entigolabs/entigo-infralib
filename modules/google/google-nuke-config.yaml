@@ -29,7 +29,7 @@ resource-types:
     - MemorystoreMemcachedInstance
 
 blocklist:
-  - taivo-test
+  - entigo-infralib-agent
 
 accounts:
   entigo-infralib2:
