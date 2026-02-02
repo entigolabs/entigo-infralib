@@ -28,6 +28,20 @@ resource-types:
     - VertexAIPipelineJob
     - MemorystoreMemcachedInstance
 
+settings:
+  CloudSQLInstance:
+    DisableDeletionProtection: true
+  FilestoreInstance:
+    DisableDeletionProtection: true
+  ComputeInstance:
+    DisableDeletionProtection: true
+  StorageBucket:
+    DisableDeletionProtection: true
+  MemorystoreCluster:
+    DisableDeletionProtection: true
+  MemorystoreValkeyInstance:
+    DisableDeletionProtection: true
+
 blocklist:
   - entigo-infralib-agent
 
