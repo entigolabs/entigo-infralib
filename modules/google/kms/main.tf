@@ -29,7 +29,11 @@ locals {
   data_key_decrypters = { for v in var.data_key_additional_decrypters : v => v }
   data_key_encrypters_decrypters = merge(
     { for v in var.data_key_additional_encrypters_decrypters : v => v },
-    { for service in local.data_key_encrypter_decrypter_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
+    {
+      for service in local.data_key_encrypter_decrypter_services :
+      service => "serviceAccount:${var.service_agent_emails[service]}"
+      if contains(keys(var.service_agent_emails), service)
+    }
   )
 
   # KMS Config key
@@ -37,7 +41,11 @@ locals {
   config_key_decrypters = { for v in var.config_key_additional_decrypters : v => v }
   config_key_encrypters_decrypters = merge(
     { for v in var.config_key_additional_encrypters_decrypters : v => v },
-    { for service in local.config_key_encrypter_decrypter_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
+    {
+      for service in local.config_key_encrypter_decrypter_services :
+      service => "serviceAccount:${var.service_agent_emails[service]}"
+      if contains(keys(var.service_agent_emails), service)
+    }
   )
 
   # KMS Telemetry key
@@ -45,7 +53,11 @@ locals {
   telemetry_key_decrypters = { for v in var.telemetry_key_additional_decrypters : v => v }
   telemetry_key_encrypters_decrypters = merge(
     { for v in var.telemetry_key_additional_encrypters_decrypters : v => v },
-    { for service in local.telemetry_key_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
+    {
+      for service in local.telemetry_key_encrypter_decrypter_services :
+      service => "serviceAccount:${var.service_agent_emails[service]}"
+      if contains(keys(var.service_agent_emails), service)
+    }
   )
 }
 
