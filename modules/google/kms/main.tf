@@ -1,48 +1,51 @@
 locals {
   labels = merge(var.labels, { created-by = "entigo-infralib" })
 
-  location           = var.location != "" ? var.location : data.google_client_config.this.region
-  key_ring           = var.create_key_ring ? google_kms_key_ring.this[0].id : data.google_kms_key_ring.this[0].id
+  location = var.location != "" ? var.location : data.google_client_config.this.region
+  key_ring = var.create_key_ring ? google_kms_key_ring.this[0].id : data.google_kms_key_ring.this[0].id
 
   key_ring_name      = var.key_ring_name != "" ? var.key_ring_name : "${var.prefix}-${random_string.suffix.result}"
   data_key_name      = "${var.prefix}-data-${random_string.suffix.result}"
   config_key_name    = "${var.prefix}-config-${random_string.suffix.result}"
   telemetry_key_name = "${var.prefix}-telemetry-${random_string.suffix.result}"
 
+  # Services for each key type
+  data_key_encrypter_decrypter_services = [
+    "compute.googleapis.com",
+    "container.googleapis.com",
+    "sqladmin.googleapis.com",
+    "storage.googleapis.com",
+    "redis.googleapis.com",
+    "memorystore.googleapis.com",
+    "file.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "pubsub.googleapis.com",
+  ]
+  config_key_encrypter_decrypter_services    = ["secretmanager.googleapis.com"]
+  telemetry_key_encrypter_decrypter_services = ["storage.googleapis.com"]
+
   # KMS Data key
-  data_key_encrypters = setunion(toset(var.data_key_additional_encrypters), toset([]))
-  data_key_decrypters = setunion(toset(var.data_key_additional_decrypters), toset([]))
-  data_key_encrypters_decrypters = setunion(
-    toset(var.data_key_additional_encrypters_decrypters),
-    toset([
-      "serviceAccount:service-${data.google_project.this.number}@compute-system.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@container-engine-robot.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-cloud-sql.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@gs-project-accounts.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@cloud-redis.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-memorystore.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@cloud-filer.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-artifactregistry.iam.gserviceaccount.com",
-      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com",
-    ])
+  data_key_encrypters = { for v in var.data_key_additional_encrypters : v => v }
+  data_key_decrypters = { for v in var.data_key_additional_decrypters : v => v }
+  data_key_encrypters_decrypters = merge(
+    { for v in var.data_key_additional_encrypters_decrypters : v => v },
+    { for service in local.data_key_encrypter_decrypter_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
   )
 
   # KMS Config key
-  config_key_encrypters = setunion(toset(var.config_key_additional_encrypters), toset([]))
-  config_key_decrypters = setunion(toset(var.config_key_additional_decrypters), toset([]))
-  config_key_encrypters_decrypters = setunion(
-    toset(var.config_key_additional_encrypters_decrypters),
-    toset([
-      "serviceAccount:service-${data.google_project.this.number}@gcp-sa-secretmanager.iam.gserviceaccount.com",
-    ])
+  config_key_encrypters = { for v in var.config_key_additional_encrypters : v => v }
+  config_key_decrypters = { for v in var.config_key_additional_decrypters : v => v }
+  config_key_encrypters_decrypters = merge(
+    { for v in var.config_key_additional_encrypters_decrypters : v => v },
+    { for service in local.config_key_encrypter_decrypter_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
   )
 
   # KMS Telemetry key
-  telemetry_key_encrypters = setunion(toset(var.telemetry_key_additional_encrypters), toset([]))
-  telemetry_key_decrypters = setunion(toset(var.telemetry_key_additional_decrypters), toset([]))
-  telemetry_key_encrypters_decrypters = setunion(toset(var.telemetry_key_additional_encrypters_decrypters),toset([
-      "serviceAccount:service-${data.google_project.this.number}@gs-project-accounts.iam.gserviceaccount.com",
-  ])
+  telemetry_key_encrypters = { for v in var.telemetry_key_additional_encrypters : v => v }
+  telemetry_key_decrypters = { for v in var.telemetry_key_additional_decrypters : v => v }
+  telemetry_key_encrypters_decrypters = merge(
+    { for v in var.telemetry_key_additional_encrypters_decrypters : v => v },
+    { for service in local.telemetry_key_services : service => "serviceAccount:${var.service_agent_emails[service]}" }
   )
 }
 

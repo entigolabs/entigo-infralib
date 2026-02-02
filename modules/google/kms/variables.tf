@@ -2,6 +2,11 @@ variable "prefix" {
   type = string
 }
 
+variable "service_agent_emails" {
+  type    = map(string)
+  default = {}
+}
+
 variable "labels" {
   type    = map(string)
   default = {}
