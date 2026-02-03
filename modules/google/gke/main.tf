@@ -176,6 +176,17 @@ module "gke" {
   network_policy_provider                  = "CALICO"
   enable_cilium_clusterwide_network_policy = var.enable_cilium_clusterwide_network_policy
 
+  logging_enabled_components              = var.logging_enabled_components
+  monitoring_enabled_components           = var.monitoring_enabled_components
+  monitoring_enable_managed_prometheus    = var.monitoring_enable_managed_prometheus
+  monitoring_enable_observability_metrics = var.monitoring_enable_observability_metrics
+  monitoring_enable_observability_relay   = var.monitoring_enable_observability_relay
+
+  datapath_provider                        = var.datapath_provider
+  network_policy                           = var.network_policy
+  network_policy_provider                  = "CALICO"
+  enable_cilium_clusterwide_network_policy = var.enable_cilium_clusterwide_network_policy
+
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {
     all   = {}
