@@ -26,3 +26,7 @@ output "master_ipv4_cidr_block" {
   description = "Kubernetes API ipv4 cidr block"
   value       = module.gke.master_ipv4_cidr_block
 }
+
+output "kubernetes_version" {
+  value = var.kubernetes_version
+}

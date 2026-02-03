@@ -122,6 +122,7 @@ locals {
   gke_managed_node_groups = concat(local.gke_managed_node_groups_all, var.gke_managed_node_groups_extra)
 }
 
+# https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/private-cluster
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
   version = "43.0.0"

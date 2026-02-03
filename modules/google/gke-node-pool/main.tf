@@ -17,6 +17,7 @@ locals {
   )
 }
 
+# https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/gke-node-pool
 module "gke_node_pool" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/gke-node-pool"
   version = "43.0.0"
