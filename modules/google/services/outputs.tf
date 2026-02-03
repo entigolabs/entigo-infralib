@@ -1,5 +1,5 @@
-output "services" {
-  value = "Services for ${var.prefix}!"
+output "prefix" {
+  value = var.prefix
 }
 
 output "service_agent_emails" {
