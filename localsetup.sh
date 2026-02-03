@@ -1,4 +1,4 @@
-gcloud container clusters get-credentials pri-infra-gke --region europe-north1
+gcloud container clusters get-credentials pri-infra-gke --region europe-north1 --project entigo-infralib2
 if [ $? -eq 0 ]
 then
 	echo "---"
@@ -8,7 +8,7 @@ then
 	echo ""
 	echo "kubectl --context='gke_entigo-infralib2_europe-north1_pri-infra-gke' -n $(kubectl get namespaces -o custom-columns=':metadata.name' | grep ^argocd) get applications"
 fi
-gcloud container clusters get-credentials biz-infra-gke --region europe-north1
+gcloud container clusters get-credentials biz-infra-gke --region europe-north1 --project entigo-infralib2
 if [ $? -eq 0 ]
 then
         echo "---"

@@ -1,0 +1,4 @@
+create_key_ring: false
+key_ring_name: "taivotest"
+key_rotation_period: 7776000s
+key_destroy_scheduled_duration: 86400s

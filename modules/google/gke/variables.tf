@@ -2,6 +2,17 @@ variable "prefix" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.33."
+}
+
+variable "preserve_kubernetes_version" {
+  type        = bool
+  default     = false
+  description = "Preserve existing node pool Kubernetes version if valid, otherwise use latest stable version. Must be false if cluster does not exist yet."
+}
+
 variable "master_ipv4_cidr_block" {
   type    = string
   default = ""
@@ -91,15 +102,16 @@ variable "enable_private_endpoint" {
   default  = true
 }
 
-variable "enable_l4_ilb_subsetting" {
+variable "gcp_public_cidrs_access_enabled" {
   type     = bool
   nullable = false
   default  = false
 }
 
-variable "kubernetes_version" {
-  type    = string
-  default = "1.33."
+variable "enable_l4_ilb_subsetting" {
+  type     = bool
+  nullable = false
+  default  = false
 }
 
 variable "grant_registry_access" {
@@ -176,6 +188,11 @@ variable "gke_main_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_main_max_surge" {
+  type    = number
+  default = 1
+}
+
 variable "gke_mon_min_size" {
   type     = number
   nullable = false
@@ -221,6 +238,11 @@ variable "gke_mon_max_pods" {
 variable "gke_mon_volume_type" {
   type    = string
   default = "pd-standard"
+}
+
+variable "gke_mon_max_surge" {
+  type    = number
+  default = 1
 }
 
 variable "gke_tools_min_size" {
@@ -270,8 +292,33 @@ variable "gke_tools_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_tools_max_surge" {
+  type    = number
+  default = 1
+}
+
 variable "gke_managed_node_groups_extra" {
   type     = list(any)
   nullable = false
   default  = []
+}
+
+variable "boot_disk_kms_key" {
+  type    = string
+  default = ""
+}
+
+variable "gce_pd_csi_driver" {
+  type    = bool
+  default = true
+}
+
+variable "gcs_fuse_csi_driver" {
+  type    = bool
+  default = false
+}
+
+variable "filestore_csi_driver" {
+  type    = bool
+  default = false
 }

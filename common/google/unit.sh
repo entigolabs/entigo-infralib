@@ -27,7 +27,7 @@ cd $SCRIPTPATH/../..
 source common/generate_config.sh
 
 get_branch_name
-get_step_name_tf
+get_step_name_tf_google
 
 google_auth_login
 

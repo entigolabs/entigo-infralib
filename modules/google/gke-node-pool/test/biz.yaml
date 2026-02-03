@@ -1,0 +1,25 @@
+spot_nodes: true
+min_size: 0
+max_size: 1
+location_policy: "ANY"
+preserve_kubernetes_version: true
+
+taints: |
+  [
+    {
+      "key": "spot",
+      "value": "true",
+      "effect": "NO_SCHEDULE"
+    }
+  ]
+
+labels: |
+  {
+    "foo": "bar",
+    "spot": "true"
+  }
+
+tags: |
+  [
+    "foo"
+  ]

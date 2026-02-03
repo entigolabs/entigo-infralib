@@ -1,0 +1,6 @@
+spot_nodes: true
+min_size: 0
+max_size: 1
+node_locations: |
+  ["europe-north1-a", "europe-north1-b"]
+instance_type: "n2-standard-2"
