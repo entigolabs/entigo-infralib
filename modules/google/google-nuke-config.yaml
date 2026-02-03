@@ -1,0 +1,82 @@
+regions:
+  - europe-north1
+  - global
+
+resource-types:
+  excludes:
+    - StorageBucketObject
+    - AlloyDBCluster
+    - AlloyDBInstance
+    - BigtableInstance
+    - BigtableTable
+    - CloudFunction
+    - CloudFunction2
+    - CloudTasksQueue
+    - ComposerEnvironment
+    - DataflowJob
+    - DataprocCluster
+    - DataprocJob
+    - FirestoreDatabase
+    - FirebaseAuthProvider
+    - FirebaseOAuthProvider
+    - FirebaseRealtimeDatabase
+    - FirebaseWebApp
+    - SpannerDatabase
+    - SpannerInstance
+    - VertexAIEndpoint
+    - VertexAIModel
+    - VertexAIPipelineJob
+    - MemorystoreMemcachedInstance
+
+settings:
+  CloudSQLInstance:
+    DisableDeletionProtection: true
+  FilestoreInstance:
+    DisableDeletionProtection: true
+  ComputeInstance:
+    DisableDeletionProtection: true
+  StorageBucket:
+    DisableDeletionProtection: true
+  MemorystoreCluster:
+    DisableDeletionProtection: true
+  MemorystoreValkeyInstance:
+    DisableDeletionProtection: true
+
+blocklist:
+  - entigo-infralib-agent
+
+accounts:
+  entigo-infralib2:
+    filters:
+      IAMServiceAccount:
+        - type: contains
+          value: "github"
+      IAMServiceAccountKey:
+        - property: ServiceAccountEmail
+          type: contains
+          value: "github"
+      DNSManagedZone:
+        - "gcp-infralib-entigo-io"
+      IAMPolicyBinding:
+        - property: Member
+          type: contains
+          value: "@entigo.com"
+        - property: Member
+          type: contains
+          value: "github"
+        - property: Member
+          type: contains
+          value: "infralib-agent"
+      DNSRecordSet:
+        - property: Name
+          value: "agent.gcp.infralib.entigo.io."
+      ArtifactRegistryRepository:
+        - property: Name
+          value: "entigolabs"
+      SecretManagerSecret:
+        - property: Name
+          type: contains
+          value: "gar-proxy-"
+        - property: Name
+          type: glob
+          value: "argocd-*_clientSecret"
