@@ -7,17 +7,6 @@ kyverno:
     logging:
       format: json
       verbosity: 2
-    reporting:
-      # -- Enables the feature
-      validate: false
-      # -- Enables the feature
-      mutate: false
-      # -- Enables the feature
-      mutateExisting: false
-      # -- Enables the feature
-      imageVerify: false
-      # -- Enables the feature
-      generate: false
   crds:
     annotations:
       argocd.argoproj.io/sync-wave: "-1"
