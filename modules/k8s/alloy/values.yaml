@@ -2,6 +2,7 @@ logs:
   crds:
     create: false
   lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
+  lokiTenantID: ""
   extraProcessStages: ""
   # extraProcessStages: |
   #   stage.multiline {
@@ -123,6 +124,9 @@ logs:
         loki.write "default" {
           endpoint {
             url = {{ .Values.lokiEndpoint | quote }}
+            {{- if .Values.lokiTenantID }}
+            tenant_id = {{ .Values.lokiTenantID | quote }}
+            {{- end }}
           }
         }
 
