@@ -8,5 +8,5 @@ appVersion: "0.1.356"
 
 dependencies:
   - name: platform-apis
-    version: 0.1.9-rc.97.9.1
+    version: 0.1.1-rc.97.26.1
     repository: oci://ghcr.io/entigolabs
