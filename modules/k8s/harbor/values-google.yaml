@@ -10,6 +10,7 @@ global:
       namespace: google-gateway
     bucket:
       location: ""
+      kmsKeyId: ""
 
 harbor:
   expose:
