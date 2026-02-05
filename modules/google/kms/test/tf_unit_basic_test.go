@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/entigolabs/entigo-infralib-common/google"
@@ -17,6 +18,8 @@ func testTerraformKmsBiz(t *testing.T) {
 	t.Parallel()
 	outputs := google.GetTFOutputs(t, "biz")
 
+	projectID := os.Getenv("GOOGLE_PROJECT")
+
 	prefix := tf.GetStringValue(t, outputs, "kms__prefix")
 	assert.NotEmpty(t, prefix)
 
@@ -27,14 +30,14 @@ func testTerraformKmsBiz(t *testing.T) {
 	assert.NotEmpty(t, keyRingName)
 
 	keyRingId := tf.GetStringValue(t, outputs, "kms__key_ring_id")
-	assert.Contains(t, keyRingId, fmt.Sprintf("/locations/%s/keyRings/%s", location, keyRingName))
+	assert.Contains(t, keyRingId, fmt.Sprintf("projects/%s/locations/%s/keyRings/%s", projectID, location, keyRingName))
 
 	dataKeyId := tf.GetStringValue(t, outputs, "kms__data_key_id")
-	assert.Contains(t, dataKeyId, fmt.Sprintf("/locations/%s/keyRings/%s/cryptoKeys/%s-data-", location, keyRingName, prefix))
+	assert.Contains(t, dataKeyId, fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s-data-", projectID, location, keyRingName, prefix))
 
 	configKeyId := tf.GetStringValue(t, outputs, "kms__config_key_id")
-	assert.Contains(t, configKeyId, fmt.Sprintf("/locations/%s/keyRings/%s/cryptoKeys/%s-config-", location, keyRingName, prefix))
+	assert.Contains(t, configKeyId, fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s-config-", projectID, location, keyRingName, prefix))
 
 	telemetryKeyId := tf.GetStringValue(t, outputs, "kms__telemetry_key_id")
-	assert.Contains(t, telemetryKeyId, fmt.Sprintf("/locations/%s/keyRings/%s/cryptoKeys/%s-telemetry-", location, keyRingName, prefix))
+	assert.Contains(t, telemetryKeyId, fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s-telemetry-", projectID, location, keyRingName, prefix))
 }
