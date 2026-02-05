@@ -1,5 +1,5 @@
 locals {
-  node_pool_name = substr(var.prefix, 0, 40)
+  node_pool_name = replace(substr(var.prefix, 0, 40), "/-+$/", "")
 
   latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
   valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
