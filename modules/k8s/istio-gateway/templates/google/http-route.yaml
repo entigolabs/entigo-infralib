@@ -13,7 +13,9 @@ spec:
   hostnames: [ "*.{{ .Values.global.google.hostname }}", {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: {{ .Values.gateway.name }}
+        - group: ''
+          kind: Service
+          name: {{ .Values.gateway.name }}
           port: 80
 
 {{- end }}

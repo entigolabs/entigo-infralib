@@ -14,7 +14,14 @@ spec:
   hostnames: [ {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: {{ .Values.loki.fullnameOverride }}-gateway
+        - group: ''
+          kind: Service
+          name: {{ .Values.loki.fullnameOverride }}-gateway
           port: 80
+          weight: 1
+      matches:
+      - path:
+          type: PathPrefix
+          value: /
 
 {{- end }}
