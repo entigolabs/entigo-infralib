@@ -1,0 +1,36 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}"
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    tags:
+      created-by: entigo-infralib
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+                "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Values.global.aws.crossplaneSystemNamespace }}:{{ .Values.global.serviceAccount }}"
+              }
+            }
+          }
+        ]
+      }
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}
