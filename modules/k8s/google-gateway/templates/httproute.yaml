@@ -7,7 +7,8 @@ metadata:
   namespace: {{ .Release.Name }}
 spec:
   parentRefs:
-  - kind: Gateway
+  - group: gateway.networking.k8s.io
+    kind: Gateway
     name: {{ .Release.Name }}-external
     sectionName: http
   rules:
@@ -28,7 +29,8 @@ metadata:
   namespace: {{ .Release.Name }}
 spec:
   parentRefs:
-  - kind: Gateway
+  - group: gateway.networking.k8s.io
+    kind: Gateway
     name: {{ .Release.Name }}-internal
     sectionName: http
   rules:
