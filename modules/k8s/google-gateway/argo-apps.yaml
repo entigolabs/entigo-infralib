@@ -3,8 +3,6 @@ metadata:
     infralib.entigo.io/sync-wave: "2"
 spec:
   syncPolicy:
-    syncOptions:
-    - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
         tenancy.entigo.com/zone: infralib
