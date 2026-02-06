@@ -51,13 +51,13 @@ then
       aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
       if [ $? -ne 0 ]
       then
-        echo "Failed to get context for AWS pri-infra-gke"
+        echo "Failed to get context for AWS pri-infra-eks"
         exit 1
       fi
       aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
       if [ $? -ne 0 ]
       then
-        echo "Failed to get context for AWS biz-infra-gke"
+        echo "Failed to get context for AWS biz-infra-eks"
         exit 1
       fi
     fi
