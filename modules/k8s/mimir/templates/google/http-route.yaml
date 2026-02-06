@@ -14,7 +14,13 @@ spec:
   hostnames: [ {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: mimir-gateway
+        - group: ''
+          kind: Service
+          name: mimir-gateway
           port: 80
-
+          weight: 1
+      matches:
+      - path:
+          type: PathPrefix
+          value: /
 {{- end }}

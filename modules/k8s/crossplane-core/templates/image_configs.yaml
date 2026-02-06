@@ -8,6 +8,7 @@ metadata:
 spec:
   matchImages:
     - prefix: xpkg.upbound.io/upbound
+      type: Prefix
   rewriteImage:
     prefix: {{ .Values.imageConfigs.hubProxy }}
 ---
@@ -21,6 +22,7 @@ metadata:
 spec:
   matchImages:
     - prefix: xpkg.upbound.io/crossplane-contrib
+      type: Prefix
   rewriteImage:
     prefix: {{ .Values.imageConfigs.hubProxy }}
 
@@ -36,6 +38,7 @@ metadata:
 spec:
   matchImages:
     - prefix: docker.io/entigolabs
+      type: Prefix
   rewriteImage:
     prefix: {{ .Values.imageConfigs.hubProxy }}
 {{- end }}
@@ -52,6 +55,7 @@ metadata:
 spec:
   matchImages:
     - prefix: ghcr.io/entigolabs
+      type: Prefix
   rewriteImage:
     prefix: {{ .Values.imageConfigs.ghcrProxy }}
 {{- end }}

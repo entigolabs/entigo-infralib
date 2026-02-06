@@ -10,3 +10,9 @@ spec:
     name: grafana
     kind: Deployment
     group: apps
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        tenancy.entigo.com/zone: infralib

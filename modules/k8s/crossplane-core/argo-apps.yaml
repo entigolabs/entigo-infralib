@@ -7,3 +7,9 @@ spec:
     kind: Job
     jsonPointers:
     - /spec/template/spec
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        tenancy.entigo.com/zone: infralib
