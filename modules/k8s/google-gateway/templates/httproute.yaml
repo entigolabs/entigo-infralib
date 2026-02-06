@@ -17,6 +17,10 @@ spec:
       requestRedirect:
         scheme: https
         statusCode: 301
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
 
 {{- end }}
 ---
@@ -39,5 +43,8 @@ spec:
       requestRedirect:
         scheme: https
         statusCode: 301
-
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
 {{- end }}
