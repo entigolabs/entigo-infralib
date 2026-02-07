@@ -9,6 +9,8 @@ global:
     args:
       - --enable-management-policies
 
-  registry: docker.io
-
   extraProviders: []
+  observerProviders: []
+  requiredProviders: ["cloudplatform", "storage", "secretmanager"]
+  createObservers: false
+  createNamespacedObservers: false
