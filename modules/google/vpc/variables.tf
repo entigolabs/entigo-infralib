@@ -59,3 +59,9 @@ variable "enable_nat_gateway" {
   nullable = false
   default  = true
 }
+
+variable "nat_static_ip_count" {
+  type     = number
+  nullable = false
+  default  = 0
+}
