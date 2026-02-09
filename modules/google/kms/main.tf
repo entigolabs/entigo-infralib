@@ -21,8 +21,13 @@ locals {
     "artifactregistry.googleapis.com",
     "pubsub.googleapis.com",
   ]
-  config_key_encrypter_decrypter_services    = ["secretmanager.googleapis.com"]
-  telemetry_key_encrypter_decrypter_services = ["storage.googleapis.com"]
+  config_key_encrypter_decrypter_services = [
+    "secretmanager.googleapis.com",
+    "container.googleapis.com",
+  ]
+  telemetry_key_encrypter_decrypter_services = [
+    "storage.googleapis.com",
+  ]
 
   # KMS Data key
   data_key_encrypters = { for v in var.data_key_additional_encrypters : v => v }

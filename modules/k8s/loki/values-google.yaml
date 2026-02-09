@@ -8,6 +8,7 @@ global:
     projectID: ""
     hostname: ""
     gateway:
+      enabled: true
       name: google-gateway-internal
       namespace: google-gateway
     bucket:

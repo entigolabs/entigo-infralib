@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "google" }}
+{{- if and (eq .Values.global.cloudProvider "google") .Values.global.google.gateway.enabled }}
 
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1beta1

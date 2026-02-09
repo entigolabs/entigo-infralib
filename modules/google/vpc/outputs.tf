@@ -61,3 +61,7 @@ output "router_id" {
 output "nat_name" {
   value = module.cloud_nat[0].name
 }
+
+output "nat_static_ips" {
+  value = google_compute_address.cloud_nat[*].address
+}

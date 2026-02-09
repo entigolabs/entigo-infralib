@@ -12,5 +12,18 @@ spec:
   credentials:
     source: InjectedIdentity
   projectID: {{ .Values.global.google.projectID }}
+---
+apiVersion: gcp.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  credentials:
+    source: InjectedIdentity
+  projectID: {{ .Values.global.google.projectID }}
 
 {{- end }}
