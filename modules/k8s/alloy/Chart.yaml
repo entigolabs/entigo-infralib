@@ -8,5 +8,5 @@ appVersion: "1.0"
 dependencies:
   - name: alloy
     alias: logs
-    version: 1.5.1
+    version: 1.6.0
     repository: https://grafana.github.io/helm-charts
