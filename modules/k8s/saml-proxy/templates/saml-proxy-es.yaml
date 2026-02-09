@@ -11,4 +11,7 @@ spec:
     creationPolicy: Owner
   dataFrom:
     - extract:
+        conversionStrategy: Default
+        decodingStrategy: None
         key: {{ .Release.Name }}
+        metadataPolicy: None
