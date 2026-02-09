@@ -3,71 +3,48 @@ kind: Provider
 metadata:
   name: upbound-provider-family-gcp
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: '2'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/upbound/provider-family-gcp:v2.3.0
   runtimeConfigRef:
-    name: {{.Release.Name}}-family
----
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: provider-gcp-cloudplatform
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-    helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-cloudplatform:v2.3.0
-  skipDependencyResolution: true
-  runtimeConfigRef:
-    name: {{.Release.Name}}
----
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: provider-gcp-storage
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-    helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-storage:v2.3.0
-  skipDependencyResolution: true
-  runtimeConfigRef:
-    name: {{.Release.Name}}
----
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: provider-gcp-secretmanager
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-    helm.sh/resource-policy: keep
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-secretmanager:v2.3.0
-  skipDependencyResolution: true
-  runtimeConfigRef:
-    name: {{.Release.Name}}
+    name: {{ .Release.Name }}-family
 
-{{- if .Values.global.extraProviders }}
-{{- range .Values.global.extraProviders }}
+# Build the final list of providers based on conditions
+{{- $allProviders := list }}
+
+# Always include requiredProviders and extraProviders
+{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
+{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+
+# Add observerProviders if observers are enabled
+{{- if or .Values.global.createObservers .Values.global.createNamespacedObservers }}
+  {{- $allProviders = concat $allProviders .Values.global.observerProviders }}
+{{- end }}
+
+# Deduplicate the list
+{{- $uniqueProviders := list }}
+{{- range $provider := $allProviders }}
+  {{- if not (has $provider $uniqueProviders) }}
+    {{- $uniqueProviders = append $uniqueProviders $provider }}
+  {{- end }}
+{{- end }}
+
+# Create Provider resources for each unique provider
+{{- range $index, $provider := $uniqueProviders }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: {{ .name }}
+  name: provider-gcp-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 5) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: {{ .package }}
-  skipDependencyResolution: {{ .skipDependencyResolution }}
+  skipDependencyResolution: true
+  package: xpkg.upbound.io/upbound/provider-gcp-{{ $provider }}:v2.3.0
   runtimeConfigRef:
     name: {{ $.Release.Name }}
-{{- end }}
 {{- end }}

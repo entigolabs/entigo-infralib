@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "google" }}
+{{- if and (eq .Values.global.cloudProvider "google") .Values.global.google.gateway.enabled }}
 
 apiVersion: networking.gke.io/v1
 kind: HealthCheckPolicy

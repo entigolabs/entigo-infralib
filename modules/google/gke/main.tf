@@ -47,6 +47,14 @@ locals {
     local.aligned_fourth_octet
   )
 
+  database_encryption = var.database_encryption_kms_key != "" ? [{
+    state    = "ENCRYPTED"
+    key_name = var.database_encryption_kms_key
+  }] : [{
+    state    = "DECRYPTED"
+    key_name = ""
+  }]
+
   google_compute_zones = join(",", data.google_compute_zones.this.names)
 
   gke_main_node_locations  = var.gke_main_node_locations != "" ? var.gke_main_node_locations : local.google_compute_zones
@@ -158,8 +166,9 @@ module "gke" {
   deletion_protection                    = false
   gateway_api_channel                    = "CHANNEL_STANDARD"
   insecure_kubelet_readonly_port_enabled = false
-  boot_disk_kms_key                      = var.boot_disk_kms_key
   initial_node_count                     = 0
+  boot_disk_kms_key                      = var.boot_disk_kms_key
+  database_encryption                    = local.database_encryption
 
   gce_pd_csi_driver    = var.gce_pd_csi_driver
   gcs_fuse_csi_driver  = var.gcs_fuse_csi_driver

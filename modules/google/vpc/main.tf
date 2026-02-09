@@ -61,6 +61,11 @@ resource "google_compute_subnetwork" "database" {
   ip_cidr_range = local.database_subnets[count.index]
 }
 
+resource "google_compute_address" "cloud_nat" {
+  count = var.enable_nat_gateway ? var.nat_static_ip_count : 0
+  name  = "${var.prefix}-nat-gateway-${count.index}"
+}
+
 module "cloud_nat" {
   count                              = var.enable_nat_gateway ? 1 : 0
   source                             = "terraform-google-modules/cloud-nat/google"
@@ -70,6 +75,7 @@ module "cloud_nat" {
   router                             = google_compute_router.router.name
   name                               = var.prefix
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  nat_ips                            = google_compute_address.cloud_nat[*].self_link
 }
 
 resource "google_compute_router" "router" {

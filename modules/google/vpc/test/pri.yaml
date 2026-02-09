@@ -3,3 +3,4 @@ intra_subnets: |
   ["10.29.40.0/22"]
 public_subnets: |
   ["10.29.32.0/21"]
+nat_static_ip_count: 1

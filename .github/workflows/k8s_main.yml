@@ -13,6 +13,11 @@ jobs:
     name: Test modules/k8s
     runs-on: ubuntu-latest
     steps:
+    - name: Free disk space
+      run: |
+        # Remove large preinstalled tools
+        sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/lib/android
+        sudo docker image prune --all --force
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0

@@ -308,6 +308,11 @@ variable "boot_disk_kms_key" {
   default = ""
 }
 
+variable "database_encryption_kms_key" {
+  type    = string
+  default = ""
+}
+
 variable "gce_pd_csi_driver" {
   type    = bool
   default = true

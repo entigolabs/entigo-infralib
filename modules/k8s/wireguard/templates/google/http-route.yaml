@@ -6,14 +6,22 @@ metadata:
   name: {{ .Release.Name }}-pubkey
 spec:
   parentRefs:
-    - kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
       name: {{ .Values.global.google.gateway.name }}
       sectionName: https
       namespace: {{ .Values.global.google.gateway.namespace }}
   hostnames: [ {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: {{ .Release.Name }}-pubkey
+        - group: ''
+          kind: Service
+          name: {{ .Release.Name }}-pubkey
           port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
 
 {{- end }}
