@@ -1,3 +1,9 @@
 operational_best_practices_conformance_pack_enabled: true
 iam_password_policy_enabled: true
 multi_region_cloudtrail_enabled: true
+recording_mode_override: |
+  {
+    description         = "Record EC2 instances daily"
+    resource_types      = ["AWS::EC2::Instance"]
+    recording_frequency = "DAILY"
+  }
