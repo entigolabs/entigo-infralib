@@ -9,3 +9,22 @@ loki:
   backend:
     persistence:
       size: 3Gi
+
+  extraObjects:
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: health-check-egress
+      spec:
+        podSelector:
+          matchLabels:
+            health-check: "true"
+        policyTypes:
+          - Egress
+        egress:
+          - to:
+              - ipBlock:
+                  cidr: 0.0.0.0/0
+            ports:
+              - protocol: TCP
+                port: 443

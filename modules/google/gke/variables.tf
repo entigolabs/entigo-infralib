@@ -2,6 +2,17 @@ variable "prefix" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "1.33."
+}
+
+variable "preserve_kubernetes_version" {
+  type        = bool
+  default     = false
+  description = "Preserve existing node pool Kubernetes version if valid, otherwise use latest stable version. Must be false if cluster does not exist yet."
+}
+
 variable "master_ipv4_cidr_block" {
   type    = string
   default = ""
@@ -29,6 +40,51 @@ variable "master_global_access_enabled" {
   default  = false
 }
 
+variable "datapath_provider" {
+  description = "ADVANCED_DATAPATH (Dataplane V2) or DATAPATH_PROVIDER_UNSPECIFIED (legacy)"
+  type        = string
+  default     = "ADVANCED_DATAPATH"
+}
+
+variable "network_policy" {
+  description = "Enable Calico network policy (requires datapath_provider = DATAPATH_PROVIDER_UNSPECIFIED)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cilium_clusterwide_network_policy" {
+  description = "Enable Cilium network policy (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_observability_metrics" {
+  description = "Enable Dataplane V2 Metrics (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_observability_relay" {
+  description = "Enable Dataplane V2 Observability (requires datapath_provider = ADVANCED_DATAPATH)"
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_enable_managed_prometheus" {
+  type    = bool
+  default = false
+}
+
+variable "monitoring_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
+}
+
+variable "logging_enabled_components" {
+  type    = list(string)
+  default = ["SYSTEM_COMPONENTS"]
+}
+
 variable "dns_allow_external_traffic" {
   type     = bool
   nullable = false
@@ -46,15 +102,16 @@ variable "enable_private_endpoint" {
   default  = true
 }
 
-variable "enable_l4_ilb_subsetting" {
+variable "gcp_public_cidrs_access_enabled" {
   type     = bool
   nullable = false
   default  = false
 }
 
-variable "kubernetes_version" {
-  type    = string
-  default = "1.33."
+variable "enable_l4_ilb_subsetting" {
+  type     = bool
+  nullable = false
+  default  = false
 }
 
 variable "grant_registry_access" {
@@ -82,21 +139,6 @@ variable "master_authorized_networks" {
       cidr_block   = "13.53.208.166/32"
     }
   ]
-}
-
-variable "monitoring_enable_managed_prometheus" {
-  type    = bool
-  default = false
-}
-
-variable "monitoring_enabled_components" {
-  type    = list(string)
-  default = ["SYSTEM_COMPONENTS"]
-}
-
-variable "logging_enabled_components" {
-  type    = list(string)
-  default = ["SYSTEM_COMPONENTS"]
 }
 
 variable "gke_main_min_size" {
@@ -146,6 +188,11 @@ variable "gke_main_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_main_max_surge" {
+  type    = number
+  default = 1
+}
+
 variable "gke_mon_min_size" {
   type     = number
   nullable = false
@@ -191,6 +238,11 @@ variable "gke_mon_max_pods" {
 variable "gke_mon_volume_type" {
   type    = string
   default = "pd-standard"
+}
+
+variable "gke_mon_max_surge" {
+  type    = number
+  default = 1
 }
 
 variable "gke_tools_min_size" {
@@ -240,8 +292,33 @@ variable "gke_tools_volume_type" {
   default = "pd-standard"
 }
 
+variable "gke_tools_max_surge" {
+  type    = number
+  default = 1
+}
+
 variable "gke_managed_node_groups_extra" {
   type     = list(any)
   nullable = false
   default  = []
+}
+
+variable "boot_disk_kms_key" {
+  type    = string
+  default = ""
+}
+
+variable "gce_pd_csi_driver" {
+  type    = bool
+  default = true
+}
+
+variable "gcs_fuse_csi_driver" {
+  type    = bool
+  default = false
+}
+
+variable "filestore_csi_driver" {
+  type    = bool
+  default = false
 }

@@ -292,3 +292,12 @@ harbor:
         operator: "Equal"
         value: "true"
         effect: "NoSchedule"
+
+  nginx:
+    resources:
+      requests:
+        memory: 5Mi
+        cpu: 5m
+      limits:
+        memory: 256Mi
+        cpu: 100m

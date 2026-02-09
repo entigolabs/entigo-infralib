@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.17.14"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.18.1"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
@@ -59,9 +59,16 @@ get_branch_name() {
   fi
 }
 
-get_step_name_tf() {
+get_step_name_tf_aws() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
-  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ] || [ "$MODULE_NAME" == "dns" ]; then
+  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ]; then
+    STEP_NAME="net"
+  fi
+}
+
+get_step_name_tf_google() {
+  STEP_NAME="${BRANCH}-${MODULE_NAME}"
+  if [ "$MODULE_NAME" == "dns" ] || [ "$MODULE_NAME" == "kms" ]; then
     STEP_NAME="net"
   fi
 }
@@ -324,8 +331,12 @@ test_tf() {
     PIDS="$PIDS $!=vpc"
     ./modules/google/dns/test.sh testonly &
     PIDS="$PIDS $!=dns"
+    ./modules/google/kms/test.sh testonly &
+    PIDS="$PIDS $!=kms"
     ./modules/google/gke/test.sh testonly &
     PIDS="$PIDS $!=gke"
+    ./modules/google/gke-node-pool/test.sh testonly &
+    PIDS="$PIDS $!=gke-node-pool"
     ./modules/google/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
   fi
@@ -415,8 +426,8 @@ default_aws_conf() {
 }
 
 default_google_conf() {
-  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy"
-  generate_config "google" "infra" "google/gke" "google/crossplane"
+  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" "google/kms"
+  generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane"
 }
 
 full_k8s_conf() {

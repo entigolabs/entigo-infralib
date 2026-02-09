@@ -1,0 +1,25 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ .Release.Name }}-pubkey
+spec:
+  default:
+    checkIntervalSec: 5
+    timeoutSec: 5
+    healthyThreshold: 3
+    unhealthyThreshold: 3
+    logConfig:
+      enabled: true
+    config:
+      type: HTTP
+      httpHealthCheck:
+        requestPath: /
+        port: 8080
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Release.Name }}-pubkey
+
+{{- end }}

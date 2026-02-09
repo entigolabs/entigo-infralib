@@ -1,0 +1,17 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-pubkey
+spec:
+  selector:
+    app: {{.Release.Name}}-wireguard
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  type: ClusterIP
+
+{{- end }}

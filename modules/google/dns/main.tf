@@ -77,7 +77,6 @@ resource "google_dns_record_set" "int_ns" {
   ttl          = 300
   managed_zone = var.parent_zone_id
   rrdatas      = concat(google_dns_managed_zone.int[0].name_servers, google_dns_managed_zone.int_cert[0].name_servers)
-
 }
 
 resource "google_dns_record_set" "pub_cert" {
@@ -87,6 +86,15 @@ resource "google_dns_record_set" "pub_cert" {
   type         = google_certificate_manager_dns_authorization.pub_cert[0].dns_resource_record[0].type
   ttl          = 300
   rrdatas      = [google_certificate_manager_dns_authorization.pub_cert[0].dns_resource_record[0].data]
+}
+
+resource "google_dns_record_set" "pub_cert_regional" {
+  count        = var.create_public ? 1 : 0
+  name         = google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].name
+  managed_zone = local.pub_zone
+  type         = google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].type
+  ttl          = 300
+  rrdatas      = [google_certificate_manager_dns_authorization.pub_cert_regional[0].dns_resource_record[0].data]
 }
 
 resource "google_dns_record_set" "int_cert" {
@@ -104,6 +112,13 @@ resource "google_certificate_manager_dns_authorization" "pub_cert" {
   domain = trimsuffix(local.pub_domain, ".")
 }
 
+resource "google_certificate_manager_dns_authorization" "pub_cert_regional" {
+  count    = var.create_public ? 1 : 0
+  name     = local.pub_zone
+  location = data.google_client_config.this.region
+  domain   = trimsuffix(local.pub_domain, ".")
+}
+
 resource "google_certificate_manager_dns_authorization" "int_cert" {
   count    = var.create_private ? 1 : 0
   name     = local.int_zone
@@ -117,6 +132,16 @@ resource "google_certificate_manager_certificate" "pub_cert" {
   managed {
     domains            = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
     dns_authorizations = [google_certificate_manager_dns_authorization.pub_cert[0].id]
+  }
+}
+
+resource "google_certificate_manager_certificate" "pub_cert_regional" {
+  count    = var.create_public ? 1 : 0
+  name     = local.pub_zone
+  location = data.google_client_config.this.region
+  managed {
+    domains            = [trimsuffix(local.pub_domain, "."), "*.${trimsuffix(local.pub_domain, ".")}"]
+    dns_authorizations = [google_certificate_manager_dns_authorization.pub_cert_regional[0].id]
   }
 }
 

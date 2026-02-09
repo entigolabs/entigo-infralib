@@ -1,0 +1,2 @@
+vpc_ids: |
+  [ "{{ .toutput.vpc.vpc_id }}" ]

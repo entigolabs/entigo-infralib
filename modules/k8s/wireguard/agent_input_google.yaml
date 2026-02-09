@@ -1,3 +1,7 @@
+global:
+  google:
+    hostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
+
 wireguard:
   image:
     repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/wireguard'
@@ -12,6 +16,20 @@ wireguard:
     image:
       repository: '{{ .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/http-healthcheck-sidecar'
   service:
-    annotations: 
+    annotations:
       external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
       hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+  extraSideCars:
+    - name: pubkey
+      image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.27-alpine'
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumeMounts:
+        - name: pubkey
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: publickey
+  volumes:
+    - name: pubkey
+      secret:
+        secretName: "{{ .module.name }}-wg-generated-public"

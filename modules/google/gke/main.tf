@@ -1,19 +1,50 @@
 resource "random_integer" "subnet_third_octet" {
-  min = 16
-  max = 31
+  min = 0
+  max = 255
 }
 
 resource "random_integer" "subnet_fourth_octet_raw" {
   min = 0
-  max = 15 # We'll multiply this by 16 later to get alignment
+  max = 15
 }
 
 locals {
+  latest_stable_version = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  valid_node_versions   = data.google_container_engine_versions.this.valid_node_versions
+
+  # Get node pools only if cluster data was read
+  cluster_node_pools                    = var.preserve_kubernetes_version ? try(data.google_container_cluster.this[0].node_pool, []) : []
+  existing_node_pool_main               = try([for pool in local.cluster_node_pools : pool if pool.name == "main"][0], null)
+  existing_node_pool_mon                = try([for pool in local.cluster_node_pools : pool if pool.name == "mon"][0], null)
+  existing_node_pool_tools              = try([for pool in local.cluster_node_pools : pool if pool.name == "tools"][0], null)
+
+  existing_node_pool_kubernetes_version_main = try(local.existing_node_pool_main.version, "")
+  existing_node_pool_kubernetes_version_mon  = try(local.existing_node_pool_mon.version, "")
+  existing_node_pool_kubernetes_version_tools = try(local.existing_node_pool_tools.version, "")
+
+  # Determine version: preserve existing if valid and flag is true, otherwise use stable
+  kubernetes_version_main = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_main != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_main)
+    ? local.existing_node_pool_kubernetes_version_main
+    : local.latest_stable_version
+  )
+
+  kubernetes_version_mon = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_mon != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_mon)
+    ? local.existing_node_pool_kubernetes_version_mon
+    : local.latest_stable_version
+  )
+
+  kubernetes_version_tools = (
+    var.preserve_kubernetes_version && local.existing_node_pool_kubernetes_version_tools != "" && contains(local.valid_node_versions, local.existing_node_pool_kubernetes_version_tools)
+    ? local.existing_node_pool_kubernetes_version_tools
+    : local.latest_stable_version
+  )
+
   aligned_fourth_octet = random_integer.subnet_fourth_octet_raw.result * 16
-  subnet_cidr = format("172.%d.%d.%d/28",
+  subnet_cidr = format("172.16.%d.%d/28",
     random_integer.subnet_third_octet.result,
-    local.aligned_fourth_octet,
-    0
+    local.aligned_fourth_octet
   )
 
   google_compute_zones = join(",", data.google_compute_zones.this.names)
@@ -28,9 +59,10 @@ locals {
       machine_type       = var.gke_main_instance_type
       node_locations     = local.gke_main_node_locations
       location_policy    = var.gke_main_location_policy
-      initial_node_count = var.gke_main_min_size
-      min_count          = var.gke_main_min_size
-      max_count          = var.gke_main_max_size
+      node_count         = null
+      initial_node_count = ceil(var.gke_main_min_size / length(split(",", local.gke_main_node_locations)))
+      total_min_count    = var.gke_main_min_size
+      total_max_count    = var.gke_main_max_size
       max_pods_per_node  = var.gke_main_max_pods
       disk_size_gb       = var.gke_main_volume_size
       disk_type          = var.gke_main_volume_type
@@ -38,15 +70,20 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_main_spot_nodes
+      boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_main_max_surge
+      max_unavailable    = 0
+      version            = local.kubernetes_version_main
     },
     {
       name               = "mon"
       machine_type       = var.gke_mon_instance_type
       node_locations     = local.gke_mon_node_locations
       location_policy    = var.gke_mon_location_policy
-      initial_node_count = var.gke_mon_min_size
-      min_count          = var.gke_mon_min_size
-      max_count          = var.gke_mon_max_size
+      node_count         = null
+      initial_node_count = ceil(var.gke_mon_min_size / length(split(",", local.gke_mon_node_locations)))
+      total_min_count    = var.gke_mon_min_size
+      total_max_count    = var.gke_mon_max_size
       max_pods_per_node  = var.gke_mon_max_pods
       disk_size_gb       = var.gke_mon_volume_size
       disk_type          = var.gke_mon_volume_type
@@ -54,15 +91,20 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_mon_spot_nodes
+      boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_mon_max_surge
+      max_unavailable    = 0
+      version            = local.kubernetes_version_mon
     },
     {
       name               = "tools"
       machine_type       = var.gke_tools_instance_type
       node_locations     = local.gke_tools_node_locations
       location_policy    = var.gke_tools_location_policy
-      initial_node_count = var.gke_tools_min_size
-      min_count          = var.gke_tools_min_size
-      max_count          = var.gke_tools_max_size
+      initial_node_count = ceil(var.gke_tools_min_size / length(split(",", local.gke_tools_node_locations)))
+      node_count         = null
+      total_min_count    = var.gke_tools_min_size
+      total_max_count    = var.gke_tools_max_size
       max_pods_per_node  = var.gke_tools_max_pods
       disk_size_gb       = var.gke_tools_volume_size
       disk_type          = var.gke_tools_volume_type
@@ -70,19 +112,24 @@ locals {
       auto_repair        = true
       auto_upgrade       = false
       spot               = var.gke_tools_spot_nodes
+      boot_disk_kms_key  = var.boot_disk_kms_key
+      max_surge          = var.gke_tools_max_surge
+      max_unavailable    = 0
+      version            = local.kubernetes_version_tools
     }
   ]
 
   gke_managed_node_groups = concat(local.gke_managed_node_groups_all, var.gke_managed_node_groups_extra)
 }
 
+# https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/private-cluster
 module "gke" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
   version = "43.0.0"
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
-  kubernetes_version     = data.google_container_engine_versions.this.release_channel_latest_version["STABLE"]
+  kubernetes_version     = local.latest_stable_version
   release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
   region                 = data.google_client_config.this.region
   network                = var.network
@@ -91,7 +138,6 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
 
-  # istio                              = false //only in beta module
   service_account_name                   = var.prefix
   grant_registry_access                  = var.grant_registry_access
   registry_project_ids                   = var.registry_project_ids
@@ -101,6 +147,7 @@ module "gke" {
   dns_allow_external_traffic             = var.dns_allow_external_traffic
   deploy_using_private_endpoint          = var.deploy_using_private_endpoint
   enable_private_endpoint                = var.enable_private_endpoint
+  gcp_public_cidrs_access_enabled        = var.gcp_public_cidrs_access_enabled
   enable_private_nodes                   = true
   remove_default_node_pool               = true
   enable_shielded_nodes                  = false
@@ -110,10 +157,24 @@ module "gke" {
   enable_vertical_pod_autoscaling        = false
   deletion_protection                    = false
   gateway_api_channel                    = "CHANNEL_STANDARD"
-  monitoring_enable_managed_prometheus   = var.monitoring_enable_managed_prometheus
-  monitoring_enabled_components          = var.monitoring_enabled_components
-  logging_enabled_components             = var.logging_enabled_components
   insecure_kubelet_readonly_port_enabled = false
+  boot_disk_kms_key                      = var.boot_disk_kms_key
+  initial_node_count                     = 0
+
+  gce_pd_csi_driver    = var.gce_pd_csi_driver
+  gcs_fuse_csi_driver  = var.gcs_fuse_csi_driver
+  filestore_csi_driver = var.filestore_csi_driver
+
+  logging_enabled_components              = var.logging_enabled_components
+  monitoring_enabled_components           = var.monitoring_enabled_components
+  monitoring_enable_managed_prometheus    = var.monitoring_enable_managed_prometheus
+  monitoring_enable_observability_metrics = var.monitoring_enable_observability_metrics
+  monitoring_enable_observability_relay   = var.monitoring_enable_observability_relay
+
+  datapath_provider                        = var.datapath_provider
+  network_policy                           = var.network_policy
+  network_policy_provider                  = "CALICO" # Only used if datapath_provider = "DATAPATH_PROVIDER_UNSPECIFIED"
+  enable_cilium_clusterwide_network_policy = var.enable_cilium_clusterwide_network_policy
 
   node_pools = local.gke_managed_node_groups
   node_pools_labels = {
@@ -148,4 +209,11 @@ module "gke" {
   }
 
   master_authorized_networks = var.master_authorized_networks
+}
+
+resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypter_decrypter" {
+  count         = var.boot_disk_kms_key == "" ? 0 : 1
+  crypto_key_id = var.boot_disk_kms_key
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "serviceAccount:${module.gke.service_account}"
 }
