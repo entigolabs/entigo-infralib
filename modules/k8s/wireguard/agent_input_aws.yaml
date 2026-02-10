@@ -23,6 +23,15 @@ wireguard:
     - name: pubkey
       mountPath: /usr/share/nginx/html/index.html
       subPath: publickey
+    resources:
+      requests:
+        cpu: 1m
+        memory: 1Mi
+        ephemeral-storage: 4Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+        ephemeral-storage: 128Mi
   volumes:
   - name: pubkey
     secret:

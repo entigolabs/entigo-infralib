@@ -15,7 +15,13 @@ grafana:
     netpol-loki: "loki"
   annotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
-
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 472
+    runAsGroup: 472
+    fsGroup: 472
+    seccompProfile:
+      type: RuntimeDefault
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -159,6 +165,7 @@ grafana:
       enabled: true
 
   initChownData:
+    enabled: false
     resources:
       limits:
         cpu: 1000m

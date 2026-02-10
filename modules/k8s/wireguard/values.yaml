@@ -53,3 +53,7 @@ wireguard:
       pullPolicy: IfNotPresent
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
+    containerSecurityContext:
+      capabilities:
+        drop:
+         - ALL

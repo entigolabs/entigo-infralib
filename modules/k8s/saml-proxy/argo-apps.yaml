@@ -4,4 +4,6 @@ spec:
     - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/warn: baseline
         tenancy.entigo.com/zone: infralib
