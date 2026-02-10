@@ -12,4 +12,7 @@ spec:
     - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
+        #Istio CNI needs privileged pods with hostPath
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/warn: privileged
         tenancy.entigo.com/zone: infralib
