@@ -10,6 +10,7 @@ spec:
   syncPolicy:
     managedNamespaceMetadata:
       labels:
+        #Chart did not offer needed values to go to restricted. Can be done once chart supports it.
         pod-security.kubernetes.io/enforce: baseline
         pod-security.kubernetes.io/warn: baseline
         tenancy.entigo.com/zone: infralib

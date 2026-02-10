@@ -119,6 +119,9 @@ crossplane:
     allowPrivilegeEscalation: false
     # -- ReadOnly root filesystem for Crossplane.
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+      - ALL
 
   packageCache:
     # -- Storage medium for package cache. `Memory` means volume will be backed by tmpfs, which can be useful for development.
@@ -151,7 +154,9 @@ crossplane:
     allowPrivilegeEscalation: false
     # -- ReadOnly root filesystem for RBAC Manager.
     readOnlyRootFilesystem: true
-
+    capabilities:
+      drop:
+      - ALL
   metrics:
     # -- Expose Crossplane and RBAC Manager metrics endpoint.
     enabled: true
@@ -165,10 +170,16 @@ crossplane:
   extraEnvVarsRBACManager: {}
 
   # -- PodSecurityContext for Crossplane.
-  podSecurityContextCrossplane: {}
+  podSecurityContextCrossplane:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
 
   # -- PodSecurityContext for RBAC Manager.
-  podSecurityContextRBACManager: {}
+  podSecurityContextRBACManager:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
 
   # -- List of extra Volumes to add to Crossplane.
   extraVolumesCrossplane: {}

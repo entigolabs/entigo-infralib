@@ -12,4 +12,7 @@ spec:
     - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
+        #providers and functions need to be changed before this will work.
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/warn: baseline
         tenancy.entigo.com/zone: infralib

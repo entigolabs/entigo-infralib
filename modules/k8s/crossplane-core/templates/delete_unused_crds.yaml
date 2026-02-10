@@ -50,6 +50,10 @@ spec:
   template:
     spec:
       serviceAccountName: {{ .Release.Name }}-cleanup
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -68,6 +72,11 @@ spec:
       containers:
       - name: kubectl
         image: {{ .Values.job.image }}:{{ .Values.job.tag }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         resources:
           limits:
             cpu: 1000m

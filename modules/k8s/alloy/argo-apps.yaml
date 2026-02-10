@@ -4,4 +4,7 @@ spec:
     - ServerSideApply=true
     managedNamespaceMetadata:
       labels:
+        #Alloy needs to use hostPath to get logs.
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/warn: privileged
         tenancy.entigo.com/zone: infralib

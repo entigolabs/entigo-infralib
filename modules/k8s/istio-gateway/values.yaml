@@ -20,7 +20,15 @@ gateway:
       labelSelector:
         matchLabels:
           app: istio-gateway
-
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
   resources:
     requests:
       cpu: 100m
