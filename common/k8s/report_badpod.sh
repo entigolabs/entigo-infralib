@@ -24,6 +24,7 @@ kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "wireguard-pri") |
   select(.metadata.name != "alloy-pri") |
   select(.metadata.name != "alloy-biz") |
+  select(.metadata.name != "istio-system") |
   select(.metadata.name != "gke-managed-system") |
   select(.metadata.name != "gke-managed-volumepopulator") |
   (.metadata.labels["pod-security.kubernetes.io/enforce"] // "privileged") as $enforce |
