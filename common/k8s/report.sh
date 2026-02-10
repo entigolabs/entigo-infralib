@@ -31,3 +31,20 @@ do
   done
 
 done
+
+for providerfile in $(find modules/k8s/ -name provider.yaml | sort)
+do
+  cat $providerfile | grep xpkg.upbound.io | grep -ve"\$provider" | cut -d"/" -f2- | while read provider
+  do
+    old_version=$(echo $provider | cut -d":" -f2)
+    provider_path=$(echo $provider | cut -d":" -f1)
+    latest_version=$(curl -s https://marketplace.upbound.io/providers/$provider_path | cut -d"/" -f5)
+    if [ "$latest_version" == "" ]
+    then
+      echo "$provider_path crossplane provider package latest version https://marketplace.upbound.io/providers/$provider_path not found"
+    elif [ "$old_version" != "$latest_version" ]
+    then
+      echo "$provider_path newer version $latest_version, current $old_version ($providerfile)"
+    fi
+  done
+done
