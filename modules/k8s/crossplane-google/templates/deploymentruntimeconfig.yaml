@@ -26,8 +26,8 @@ spec:
           containers:
             - name: package-runtime
               securityContext:
-                runAsNonRoot: true
-                seccompProfile:
+                runAsNonRoot: true	
+                seccompProfile:	
                   type: RuntimeDefault
               args:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
@@ -42,8 +42,8 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
-            runAsNonRoot: true
-            seccompProfile:
+            runAsNonRoot: true	
+            seccompProfile:	
               type: RuntimeDefault
           serviceAccountName: {{ .Release.Name }}
           tolerations:
@@ -86,8 +86,8 @@ spec:
           containers:
             - name: package-runtime
               securityContext:
-                runAsNonRoot: true
-                seccompProfile:
+                runAsNonRoot: true	
+                seccompProfile:	
                   type: RuntimeDefault
               args:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
@@ -102,8 +102,8 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
-            runAsNonRoot: true
-            seccompProfile:
+            runAsNonRoot: true	
+            seccompProfile:	
               type: RuntimeDefault
           serviceAccountName: {{ .Release.Name }}
           tolerations:
