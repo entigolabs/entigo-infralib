@@ -12,8 +12,8 @@ The Helm package is made up of 2 ArgoCD sync waves.
 
 ```
     modules:
-      - name: crossplane-k8s
-        source: crossplane-k8s
+      - name: crossplane-google
+        source: crossplane-google
 
 ```
 
