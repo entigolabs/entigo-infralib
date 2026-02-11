@@ -1,0 +1,10 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLInstance
+metadata:
+  name: postgresql-instance-test
+  namespace: test-namespace
+spec:
+  allocatedStorage: 20
+  engineVersion: "17.2"
+  instanceType: db.t3.micro
+  deleteProtection: false
