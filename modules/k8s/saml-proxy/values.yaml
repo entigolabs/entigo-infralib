@@ -15,7 +15,7 @@ secretStore:
 
 image:
   registry: docker.io/priitrent/saml-proxy
-  tag: "40-20240809-1"
+  tag: "43-20260211-1"
 
 affinity:
   nodeAffinity:

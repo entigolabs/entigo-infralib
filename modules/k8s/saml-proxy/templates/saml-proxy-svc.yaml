@@ -7,5 +7,8 @@ spec:
     - name: http
       port: 80
       targetPort: http-service
+    - name: https
+      port: 443
+      targetPort: https-service
   selector:
     app: {{ .Release.Name }}
