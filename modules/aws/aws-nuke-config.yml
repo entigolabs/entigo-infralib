@@ -125,12 +125,18 @@ accounts:
       IAMUser:
       - "github"
       - "eks-test"
-      - "eks-test2"
+      - "maintainer"
+      - "contributor"
       IAMUserPolicyAttachment:
       - "github -> AdministratorAccess"
+      IAMUserPolicy:
+      - "maintainer -> maintainer"
+      - "contributor -> contributor"
       IAMUserAccessKey:
       - "github -> AKIA4YTQYUGC4RTLXD6W"
       - "github -> AKIA4YTQYUGCUQMU3R4L"
+      - "maintainer -> AKIA4YTQYUGCXECEMVON"
+      - "contributor -> AKIA4YTQYUGCXBN2REI6"
       EC2TGW:
       - "tgw-092384f97967bfffe"
       IAMRole:
