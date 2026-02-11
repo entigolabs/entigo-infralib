@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}
-  labels:
-    version: "latest"
 spec:
   strategy:
     rollingUpdate:
@@ -19,7 +17,6 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        version: "latest"
       annotations:
         kube-score/ignore: pod-probes,pod-networkpolicy
     spec:
@@ -32,10 +29,17 @@ spec:
       - name: saml-proxy
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
         image: {{ .Values.image.registry }}:{{ .Values.image.tag }}
         ports:
         - name: http-service
-          containerPort: 80
+          containerPort: 8080
+        - name: https-service
+          containerPort: 8443
         livenessProbe:
            tcpSocket:
              port: http-service
