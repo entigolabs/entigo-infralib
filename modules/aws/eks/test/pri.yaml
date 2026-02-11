@@ -35,3 +35,19 @@ cluster_identity_providers: |
       username_prefix = "oidc:"
     }
   }
+
+additional_access_entries: |
+  {
+    maintainer = {
+      principal_arn = "arn:aws:iam::877483565445:user/maintainer"
+      user_name = "maintainer"
+      kubernetes_groups = [ "maintainer" ]
+      policy_associations = {}
+    }
+    contributor = {
+      principal_arn = "arn:aws:iam::877483565445:user/contributor"
+      user_name = "contributor"
+      kubernetes_groups = [ "contributor" ]
+      policy_associations = {}
+    }
+  }
