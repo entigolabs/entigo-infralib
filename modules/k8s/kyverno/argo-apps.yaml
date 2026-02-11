@@ -1,4 +1,10 @@
 spec:
+  ignoreDifferences:
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+    jsonPointers:
+      - /metadata/annotations
+      - /metadata/labels
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
