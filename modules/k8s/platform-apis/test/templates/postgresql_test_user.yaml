@@ -1,0 +1,12 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLUser
+metadata:
+  name: test-user
+  namespace: test-namespace
+spec:
+  name: test_user
+  instanceRef:
+    name: postgresql-instance-test
+  grant:
+    roles:
+      - test_admin
