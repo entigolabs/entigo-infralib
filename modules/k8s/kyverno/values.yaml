@@ -4,6 +4,10 @@ kyverno:
       registry: ghcr.io
 
   features:
+    generateValidatingAdmissionPolicy:
+      enabled: false
+    generateMutatingAdmissionPolicy:
+      enabled: false
     logging:
       format: json
       verbosity: 2
