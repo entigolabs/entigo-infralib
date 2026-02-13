@@ -1,0 +1,13 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: database-test
+  namespace: test-postgresql
+spec:
+  owner: test_admin
+  encoding: "UTF8"
+  lcCType: "et_EE.UTF-8"
+  lcCollate: "et_EE.UTF-8"
+  dbTemplate: template0
+  instanceRef:
+    name: postgresql-instance-test
