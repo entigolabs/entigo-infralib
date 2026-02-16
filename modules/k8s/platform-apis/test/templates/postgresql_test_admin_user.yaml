@@ -1,0 +1,12 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLUser
+metadata:
+  name: test-admin
+  namespace: test-postgresql
+spec:
+  name: test_admin
+  instanceRef:
+    name: postgresql-instance-test
+  login: true
+  createDb: true
+  createRole: true
