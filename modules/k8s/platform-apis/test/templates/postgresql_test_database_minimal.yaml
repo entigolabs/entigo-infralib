@@ -1,0 +1,9 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: database-minimal-test
+  namespace: test-postgresql
+spec:
+  owner: test-user
+  instanceRef:
+    name: postgresql-instance-test
