@@ -1,3 +1,4 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
 ---
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
@@ -43,13 +44,16 @@ spec:
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
-          serviceAccountName: contrib-provider-kafka
+          serviceAccountName: {{ .Values.global.serviceAccount }}
           tolerations:
             - effect: NoSchedule
               key: tools
               operator: Equal
               value: "true"
+  serviceTemplate: {}
   serviceAccountTemplate:
     metadata:
-      name: contrib-provider-kafka
-  serviceTemplate: {}
+      name: {{ .Values.global.serviceAccount }}
+      annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.global.aws.account }}:role/{{ .Release.Name }}
+{{- end }}

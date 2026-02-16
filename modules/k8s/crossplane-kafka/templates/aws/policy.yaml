@@ -1,0 +1,72 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}"
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    tags:
+      created-by: "entigo-infralib"
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+              "Sid": "KafkaClusterAccess",
+              "Action": "kafka-cluster:*",
+              "Effect": "Allow",
+              "Resource": "arn:aws:kafka:*"
+          },
+          {
+              "Sid": "SecretsManagerAccess",
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:CreateSecret",
+                "secretsmanager:UpdateSecret",
+                "secretsmanager:DeleteSecret",
+                "secretsmanager:PutSecretValue",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:PutResourcePolicy",
+                "secretsmanager:DeleteResourcePolicy",
+                "secretsmanager:TagResource",
+                "secretsmanager:UntagResource"
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:secretsmanager:*:*:secret:AmazonMSK_*"
+          },
+          {
+              "Sid": "MSKClusterAccess",
+              "Action": [
+                "kafka:DescribeCluster",
+                "kafka:DescribeClusterV2",
+                "kafka:GetBootstrapBrokers",
+                "kafka:ListScramSecrets",
+                "kafka:BatchAssociateScramSecret",
+                "kafka:BatchDisassociateScramSecret"
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:kafka:*:*:cluster/*"
+          },
+          {
+              "Sid": "KMSAccess",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:DescribeKey"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}
