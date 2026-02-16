@@ -1,0 +1,10 @@
+spec:
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        #Wireguard needs sysctl capabilities NET_ADMIN, NET_RAW, SETGID, SETUID
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/warn: privileged
+        tenancy.entigo.com/zone: infralib

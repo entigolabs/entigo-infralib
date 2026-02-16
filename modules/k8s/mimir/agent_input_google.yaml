@@ -5,6 +5,7 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"
+      kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
 mimir-distributed:
   gateway:
     nginx:

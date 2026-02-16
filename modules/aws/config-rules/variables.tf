@@ -53,3 +53,18 @@ variable "aggregate_authorization_authorized_aws_region" {
   type    = string
   default = ""
 }
+
+variable "recording_frequency" {
+  description = "Default recording frequency. CONTINUOUS or DAILY."
+  type    = string
+  default = "CONTINUOUS"
+}
+
+variable "recording_mode_override" {
+  type = object({
+    description         = string
+    resource_types      = list(string)
+    recording_frequency = string
+  })
+  default = null
+}

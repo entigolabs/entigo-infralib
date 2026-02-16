@@ -10,3 +10,11 @@ spec:
     name: grafana
     kind: Deployment
     group: apps
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/warn: restricted
+        tenancy.entigo.com/zone: infralib

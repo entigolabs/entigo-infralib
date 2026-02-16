@@ -1,5 +1,0 @@
-installProviderConfig: true
-
-global:
-  cloudProvider: ""
-  registry: docker.io

@@ -4,6 +4,7 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"
+      kmsKeyId: "{{ .toptout.kms.data_key_id }}"
 job:
   image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 harbor:

@@ -40,16 +40,18 @@ delete_versions_in_batch() {
 }
 
 # List and process all buckets
-echo "Listing and preparing to delete all versions from S3 buckets:"
-aws s3 ls | while read -r line; do
+if [ "$GITHUB_ACTION" != "" ]
+then
+  echo "Listing and preparing to delete all versions from S3 buckets:"
+  aws s3 ls | while read -r line; do
     # Extract bucket name (3rd column in the ls output)
     bucket=$(echo "$line" | awk '{print $3}')
     
     # Confirm before processing each bucket
     echo "Delete ALL versions from bucket $bucket"
     delete_versions_in_batch "$bucket"
-done
-
+  done
+fi
 # delete_ecr_repository() {
 #     local repository_name="$1"
 #     local region="${2}"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.17.5"
+export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.18.1"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
@@ -59,9 +59,16 @@ get_branch_name() {
   fi
 }
 
-get_step_name_tf() {
+get_step_name_tf_aws() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
-  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ] || [ "$MODULE_NAME" == "dns" ]; then
+  if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ]; then
+    STEP_NAME="net"
+  fi
+}
+
+get_step_name_tf_google() {
+  STEP_NAME="${BRANCH}-${MODULE_NAME}"
+  if [ "$MODULE_NAME" == "dns" ] || [ "$MODULE_NAME" == "kms" ]; then
     STEP_NAME="net"
   fi
 }
@@ -82,7 +89,7 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "istio-istiod" ]
         then
           APP_NAME="istio-system"  
-        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-k8s" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" -o "$MODULE_NAME" == "crossplane-kafka" ]
+        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" -o "$MODULE_NAME" == "crossplane-kafka" ]
         then
           APP_NAME=$MODULE_NAME
         elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" ]
@@ -324,8 +331,12 @@ test_tf() {
     PIDS="$PIDS $!=vpc"
     ./modules/google/dns/test.sh testonly &
     PIDS="$PIDS $!=dns"
+    ./modules/google/kms/test.sh testonly &
+    PIDS="$PIDS $!=kms"
     ./modules/google/gke/test.sh testonly &
     PIDS="$PIDS $!=gke"
+    ./modules/google/gke-node-pool/test.sh testonly &
+    PIDS="$PIDS $!=gke-node-pool"
     ./modules/google/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
   fi
@@ -415,8 +426,8 @@ default_aws_conf() {
 }
 
 default_google_conf() {
-  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy"
-  generate_config "google" "infra" "google/gke" "google/crossplane"
+  generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" "google/kms"
+  generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane"
 }
 
 full_k8s_conf() {

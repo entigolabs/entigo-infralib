@@ -5,6 +5,7 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"
+      kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
 loki:
   gateway:
     image:
@@ -19,7 +20,23 @@ loki:
       registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   sidecar:
     image:
-      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/kiwigrid/k8s-sidecar'
+      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   memcached:
     image:
       repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/library/memcached'
+  networkPolicy:
+    externalStorage:
+      cidrs:
+        - "0.0.0.0/0"
+    ingress:
+      namespaceSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: Exists
+      podSelector:
+        matchExpressions:
+          - key: netpol-loki
+            operator: In
+            values:
+              - "loki"
+              - "{{ .module.name }}"

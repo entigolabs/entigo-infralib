@@ -15,7 +15,8 @@ spec:
       port: 443
       allowedRoutes:
         kinds:
-          - kind: HTTPRoute
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
         namespaces:
           from: All
     - name: http
@@ -23,7 +24,8 @@ spec:
       port: 80
       allowedRoutes:
         kinds:
-          - kind: HTTPRoute
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
 
 {{- end }}
 ---
@@ -42,7 +44,8 @@ spec:
       port: 443
       allowedRoutes:
         kinds:
-          - kind: HTTPRoute
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
         namespaces:
           from: All
       tls:
@@ -54,6 +57,7 @@ spec:
       port: 80
       allowedRoutes:
         kinds:
-          - kind: HTTPRoute
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
 
 {{- end }}

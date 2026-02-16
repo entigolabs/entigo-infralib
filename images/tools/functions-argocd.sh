@@ -13,7 +13,7 @@ init_argocd_connection() {
     export USE_ARGOCD_CLI="false"
 
     if [ "$ARGOCD_AUTH_TOKEN" != "" -a "$ARGOCD_HOSTNAME" != "" ]; then
-        TES_CONNECTION=$(argocd --server ${ARGOCD_HOSTNAME} --grpc-web app list)
+        TES_CONNECTION=$(argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app list)
         if [ $? -eq 0 ]; then
             echo "Connected to ArgoCD successfully."
             export USE_ARGOCD_CLI="true"

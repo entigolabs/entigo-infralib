@@ -7,14 +7,21 @@ metadata:
   namespace: {{ .Release.Name }}
 spec:
   parentRefs:
-    - kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
       name: {{ .Values.global.google.gateway.name }}
       sectionName: https
       namespace: {{ .Values.global.google.gateway.namespace }}
   hostnames: [ {{ .Values.global.google.hostname }} ]
   rules:
     - backendRefs:
-        - name: grafana
+        - group: ''
+          kind: Service
+          name: grafana
           port: 80
-
+          weight: 1
+      matches:
+      - path:
+          type: PathPrefix
+          value: /
 {{- end }}

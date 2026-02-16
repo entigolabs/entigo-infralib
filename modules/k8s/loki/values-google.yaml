@@ -8,6 +8,7 @@ global:
     projectID: ""
     hostname: ""
     gateway:
+      enabled: true
       name: google-gateway-internal
       namespace: google-gateway
     bucket:
@@ -44,3 +45,16 @@ loki:
   gateway:
     ingress:
       enabled: false
+
+  networkPolicy:
+    externalStorage:
+      ports:
+        - 443
+    discovery:
+      port: 53
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system

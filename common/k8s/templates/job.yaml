@@ -4,6 +4,9 @@ metadata:
   name: health-check
 spec:
   template:
+    metadata:
+      labels:
+        health-check: "true"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -17,7 +20,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
           command: ["/bin/sh", "-c"]
           args:
             - |

@@ -25,7 +25,10 @@ spec:
                   weight: 90
           containers:
             - name: package-runtime
-              securityContext: {}
+              securityContext:
+                runAsNonRoot: true	
+                seccompProfile:	
+                  type: RuntimeDefault
               args:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
@@ -39,6 +42,9 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
+            runAsNonRoot: true	
+            seccompProfile:	
+              type: RuntimeDefault
           serviceAccountName: {{ .Release.Name }}
           tolerations:
             - effect: NoSchedule
@@ -79,7 +85,10 @@ spec:
                   weight: 90
           containers:
             - name: package-runtime
-              securityContext: {}
+              securityContext:
+                runAsNonRoot: true	
+                seccompProfile:	
+                  type: RuntimeDefault
               args:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
@@ -93,6 +102,9 @@ spec:
                   memory: 1024Mi
           securityContext:
             fsGroup: 2000
+            runAsNonRoot: true	
+            seccompProfile:	
+              type: RuntimeDefault
           serviceAccountName: {{ .Release.Name }}
           tolerations:
             - effect: NoSchedule

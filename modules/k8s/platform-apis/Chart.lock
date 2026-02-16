@@ -3,4 +3,4 @@ dependencies:
   repository: oci://ghcr.io/entigolabs
   version: 0.2.4
 digest: sha256:c23931dc496dafcf0f1f1d7182b6be217fd8c8bcd0728d298f1286ee60d3aeef
-generated: "2026-02-16T11:23:49.786532+02:00"
+generated: "2026-02-10T13:28:33.218652504Z"

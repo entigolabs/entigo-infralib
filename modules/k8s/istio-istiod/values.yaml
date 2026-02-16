@@ -12,6 +12,8 @@ cni:
       ephemeral-storage: 1Gi
 
 istiod:
+  seccompProfile:
+    type: RuntimeDefault
   global:
     imagePullPolicy: "IfNotPresent"
     defaultResources:

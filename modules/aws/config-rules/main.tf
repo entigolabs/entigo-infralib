@@ -1,9 +1,6 @@
 resource "aws_config_aggregate_authorization" "config_rules" {
   count                 = (var.aggregate_authorization_account_id != "" && var.aggregate_authorization_authorized_aws_region != "") ? 1 : 0
   account_id            = var.aggregate_authorization_account_id
-  #region                = var.aggregate_authorization_authorized_aws_region
-  # Starting from provider version 6.0.0 "region" is deprecated and "authorized_aws_region" must be used
-  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/config_aggregate_authorization
   authorized_aws_region = var.aggregate_authorization_authorized_aws_region
   tags = {
     created-by = "entigo-infralib"
@@ -29,6 +26,19 @@ resource "aws_config_configuration_recorder" "config_rules" {
       use_only = length(var.resource_types_to_exclude) == 0 ? "ALL_SUPPORTED_RESOURCE_TYPES" : "EXCLUSION_BY_RESOURCE_TYPES"
     }
   }
+
+  recording_mode {
+    recording_frequency = var.recording_frequency
+    dynamic "recording_mode_override" {
+      for_each = var.recording_mode_override != null ? [var.recording_mode_override] : []
+      content {
+        description         = recording_mode_override.value.description
+        resource_types      = recording_mode_override.value.resource_types
+        recording_frequency = recording_mode_override.value.recording_frequency
+      }
+    }
+  }
+  
 }
 
 resource "aws_config_delivery_channel" "config_rules" {
