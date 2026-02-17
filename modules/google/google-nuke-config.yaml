@@ -27,6 +27,7 @@ resource-types:
     - VertexAIModel
     - VertexAIPipelineJob
     - MemorystoreMemcachedInstance
+    - IAMWorkloadIdentityPool
 
 settings:
   CloudSQLInstance:
