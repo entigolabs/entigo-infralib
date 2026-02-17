@@ -1,6 +1,12 @@
 #!/bin/bash
+if [ "$PR_BRANCH" != "" ]
+then
+  #Use dev tag when we are in a PR and Github.
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:dev"
+else
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.18.1"
+fi
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:dev"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
