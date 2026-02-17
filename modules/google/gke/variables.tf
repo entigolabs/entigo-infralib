@@ -4,7 +4,7 @@ variable "prefix" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.33."
+  default = "1.34."
 }
 
 variable "preserve_kubernetes_version" {

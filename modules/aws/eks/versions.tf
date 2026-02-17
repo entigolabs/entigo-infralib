@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.28.0"
+      version = "6.32.1"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -19,7 +19,7 @@ terraform {
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "4.1.0"
+      version = "4.2.1"
     }
     time = {
       source  = "hashicorp/time"
