@@ -1,6 +1,12 @@
 #!/bin/bash
+if [ "$PR_BRANCH" != "" ]
+then
+  #Use dev tag when we are in a PR and Github.
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:dev"
+else
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.18.1"
+fi
 
-export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.18.1"
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
@@ -370,6 +376,7 @@ test_k8s() {
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
   
   TESTS=(
+      "./modules/k8s/platform-apis/test.sh"
       "./modules/k8s/hello-world/test.sh"
       "./modules/k8s/crossplane-core/test.sh"
       "./modules/k8s/crossplane-aws/test.sh"
@@ -398,6 +405,10 @@ test_k8s() {
       "./modules/k8s/grafana/test.sh"
       "./modules/k8s/harbor/test.sh"
       "./modules/k8s/trivy/test.sh"
+      "./modules/k8s/kyverno/test.sh"
+      "./modules/k8s/rbac-bindings/test.sh"
+      "./modules/k8s/saml-proxy/test.sh"
+      "./modules/k8s/wireguard/test.sh"
   )
   PIDS=""
   FAIL=""
