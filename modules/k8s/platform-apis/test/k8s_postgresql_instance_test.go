@@ -22,96 +22,88 @@ const (
 	ProviderConfigExpectedName = PostgresqlInstanceName + "-providerconfig"
 )
 
-func runPostgresqlInstanceTests(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	testPostgresqlInstanceApplied(t, argocdNamespace, namespaceOptions)
-	testPostgresqlInstanceSyncedAndReady(t, argocdNamespace, namespaceOptions)
-	testSecurityGroupRulesSyncedAndReady(t, argocdNamespace, namespaceOptions)
-	testSecurityGroupSyncedAndReady(t, argocdNamespace, namespaceOptions)
-	testExternalSecretReady(t, argocdNamespace, namespaceOptions)
-	testProviderConfigExists(t, argocdNamespace, namespaceOptions)
-	testRdsInstanceSyncedAndReady(t, argocdNamespace, namespaceOptions)
-	testRdsInstanceFieldsVerified(t, argocdNamespace, namespaceOptions)
-	testDeletionProtectionToggle(t, argocdNamespace, namespaceOptions)
-}
-
-func testPostgresqlInstanceApplied(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Applying PostgreSQL Instance '%s' to namespace '%s'\n", argocdNamespace, PostgresqlInstanceName, PostgresqlNamespaceName)
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_instance.yaml", "-n", PostgresqlNamespaceName)
-	require.NoError(t, err, fmt.Sprintf("[%s] Applying PostgreSQL error", argocdNamespace))
-	fmt.Printf("[%s] TEST PASSED - PostgreSQL applied with deletionProtection=false\n", argocdNamespace)
-}
-
-func testPostgresqlInstanceSyncedAndReady(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Waiting for PostgreSQL Instance '%s' to be Synced and Ready\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for PostgreSQL Instance '%s' to be Synced and Ready", argocdNamespace, PostgresqlInstanceName), 90, 10*time.Second, func() (string, error) {
-		syncStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", `jsonpath={.status.conditions[?(@.type=="Synced")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if syncStatus != "True" {
-			return "", fmt.Errorf("PostgreSQL Instance '%s' not synced yet, condition: %s", PostgresqlInstanceName, syncStatus)
-		}
-		readyStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if readyStatus != "True" {
-			return "", fmt.Errorf("PostgreSQL Instance '%s' not ready yet, condition: %s", PostgresqlInstanceName, readyStatus)
-		}
-		return "Synced+Ready", nil
+func runPostgresqlInstanceTests(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	testPostgresqlInstanceApplied(t, namespaceOptions)
+	t.Run("sub-resources", func(t *testing.T) {
+		t.Run("security-group-rules", func(t *testing.T) {
+			t.Parallel()
+			testSecurityGroupRulesSyncedAndReady(t, namespaceOptions)
+		})
+		t.Run("security-group", func(t *testing.T) {
+			t.Parallel()
+			testSecurityGroupSyncedAndReady(t, namespaceOptions)
+		})
+		t.Run("external-secret", func(t *testing.T) {
+			t.Parallel()
+			testExternalSecretReady(t, namespaceOptions)
+		})
+		t.Run("provider-config", func(t *testing.T) {
+			t.Parallel()
+			testProviderConfigExists(t, namespaceOptions)
+		})
+		t.Run("rds-instance", func(t *testing.T) {
+			t.Parallel()
+			testRdsInstanceSyncedAndReady(t, namespaceOptions)
+		})
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] PostgreSQL Instance '%s' failed to become Synced and Ready", argocdNamespace, PostgresqlInstanceName))
-	fmt.Printf("[%s] TEST PASSED - PostgreSQL Instance '%s' is Synced and Ready\n", argocdNamespace, PostgresqlInstanceName)
+
+	if t.Failed() {
+		return
+	}
+	testPostgresqlInstanceSyncedAndReady(t, namespaceOptions)
+	testRdsInstanceFieldsVerified(t, namespaceOptions)
+	testDeletionProtectionToggle(t, namespaceOptions)
 }
 
-func testSecurityGroupSyncedAndReady(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Waiting for SecurityGroup related to '%s' to be Synced and Ready\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for SecurityGroup related to '%s'", argocdNamespace, PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
-		sgName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
+func testPostgresqlInstanceApplied(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_instance.yaml", "-n", PostgresqlNamespaceName)
+	require.NoError(t, err, "applying PostgreSQL Instance error")
+}
+
+func testPostgresqlInstanceSyncedAndReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	waitSyncedAndReady(t, namespaceOptions, PostgresqlInstanceKind, PostgresqlInstanceName, 90, 10*time.Second)
+}
+
+func testSecurityGroupSyncedAndReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for SecurityGroup (composite=%s)", PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
+		sgName, err := getFirstByLabel(t, namespaceOptions, SecurityGroupKind, PostgresqlInstanceName)
 		if err != nil {
 			return "", err
 		}
 		if sgName == "" {
-			return "", fmt.Errorf("no SecurityGroup found for composite '%s'", PostgresqlInstanceName)
+			return "", fmt.Errorf("no SecurityGroup found for composite=%s", PostgresqlInstanceName)
 		}
 		expectedPrefix := PostgresqlInstanceName + "-sg-"
 		if !strings.HasPrefix(sgName, expectedPrefix) {
 			return "", fmt.Errorf("SecurityGroup name '%s' does not start with expected prefix '%s'", sgName, expectedPrefix)
 		}
-		syncStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupKind, sgName, "-o", `jsonpath={.status.conditions[?(@.type=="Synced")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if syncStatus != "True" {
-			return "", fmt.Errorf("SecurityGroup '%s' not synced yet, condition: %s", sgName, syncStatus)
-		}
-		readyStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupKind, sgName, "-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if readyStatus != "True" {
-			return "", fmt.Errorf("SecurityGroup '%s' not ready yet, condition: %s", sgName, readyStatus)
+		for _, condType := range []string{"Synced", "Ready"} {
+			status, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupKind, sgName, "-o",
+				fmt.Sprintf(`jsonpath={.status.conditions[?(@.type=="%s")].status}`, condType))
+			if err != nil {
+				return "", err
+			}
+			if status != "True" {
+				return "", fmt.Errorf("SecurityGroup '%s': %s=%s", sgName, condType, status)
+			}
 		}
 		return sgName, nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] SecurityGroup for '%s' failed to become Synced and Ready", argocdNamespace, PostgresqlInstanceName))
-	fmt.Printf("[%s] TEST PASSED - SecurityGroup is Synced and Ready\n", argocdNamespace)
+	require.NoError(t, err, fmt.Sprintf("SecurityGroup for '%s' failed to become Synced and Ready", PostgresqlInstanceName))
 }
 
-func testSecurityGroupRulesSyncedAndReady(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Waiting for SecurityGroupRules related to '%s' to be Synced and Ready\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for SecurityGroupRules related to '%s'", argocdNamespace, PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
+func testSecurityGroupRulesSyncedAndReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for SecurityGroupRules (composite=%s)", PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
 		ruleNames, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupRuleKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[*].metadata.name}")
 		if err != nil {
 			return "", err
 		}
 		names := strings.Fields(ruleNames)
 		if len(names) < 2 {
-			return "", fmt.Errorf("expected at least 2 SecurityGroupRules for composite '%s', found %d", PostgresqlInstanceName, len(names))
+			return "", fmt.Errorf("expected at least 2 SecurityGroupRules for composite=%s, found %d", PostgresqlInstanceName, len(names))
 		}
 
-		foundIngress := false
-		foundEgress := false
+		foundIngress, foundEgress := false, false
 		for _, name := range names {
 			if strings.Contains(name, "-sg-ingress-") {
 				foundIngress = true
@@ -121,43 +113,37 @@ func testSecurityGroupRulesSyncedAndReady(t *testing.T, argocdNamespace string, 
 			}
 		}
 		if !foundIngress {
-			return "", fmt.Errorf("no ingress SecurityGroupRule found (expected name containing '-sg-ingress-')")
+			return "", fmt.Errorf("no ingress SecurityGroupRule found")
 		}
 		if !foundEgress {
-			return "", fmt.Errorf("no egress SecurityGroupRule found (expected name containing '-sg-egress-')")
+			return "", fmt.Errorf("no egress SecurityGroupRule found")
 		}
 
 		for _, name := range names {
-			syncStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupRuleKind, name, "-o", `jsonpath={.status.conditions[?(@.type=="Synced")].status}`)
-			if err != nil {
-				return "", err
-			}
-			if syncStatus != "True" {
-				return "", fmt.Errorf("SecurityGroupRule '%s' not synced yet, condition: %s", name, syncStatus)
-			}
-			readyStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupRuleKind, name, "-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
-			if err != nil {
-				return "", err
-			}
-			if readyStatus != "True" {
-				return "", fmt.Errorf("SecurityGroupRule '%s' not ready yet, condition: %s", name, readyStatus)
+			for _, condType := range []string{"Synced", "Ready"} {
+				status, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SecurityGroupRuleKind, name, "-o",
+					fmt.Sprintf(`jsonpath={.status.conditions[?(@.type=="%s")].status}`, condType))
+				if err != nil {
+					return "", err
+				}
+				if status != "True" {
+					return "", fmt.Errorf("SecurityGroupRule '%s': %s=%s", name, condType, status)
+				}
 			}
 		}
 		return "Synced+Ready", nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] SecurityGroupRules for '%s' failed to become Synced and Ready", argocdNamespace, PostgresqlInstanceName))
-	fmt.Printf("[%s] TEST PASSED - SecurityGroupRules (ingress + egress) are Synced and Ready\n", argocdNamespace)
+	require.NoError(t, err, fmt.Sprintf("SecurityGroupRules for '%s' failed to become Synced and Ready", PostgresqlInstanceName))
 }
 
-func testExternalSecretReady(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Waiting for ExternalSecret related to '%s' to be Ready\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for ExternalSecret related to '%s'", argocdNamespace, PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
-		esName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", ExternalSecretKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
+func testExternalSecretReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for ExternalSecret (composite=%s)", PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
+		esName, err := getFirstByLabel(t, namespaceOptions, ExternalSecretKind, PostgresqlInstanceName)
 		if err != nil {
 			return "", err
 		}
 		if esName == "" {
-			return "", fmt.Errorf("no ExternalSecret found for composite '%s'", PostgresqlInstanceName)
+			return "", fmt.Errorf("no ExternalSecret found for composite=%s", PostgresqlInstanceName)
 		}
 		expectedPrefix := PostgresqlInstanceName + "-es-"
 		if !strings.HasPrefix(esName, expectedPrefix) {
@@ -172,22 +158,18 @@ func testExternalSecretReady(t *testing.T, argocdNamespace string, namespaceOpti
 		}
 		return esName, nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] ExternalSecret for '%s' failed to become Ready", argocdNamespace, PostgresqlInstanceName))
+	require.NoError(t, err, fmt.Sprintf("ExternalSecret for '%s' failed to become Ready", PostgresqlInstanceName))
 
-	// Verify ExternalSecret target template contains the username key (non-password key)
-	esName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", ExternalSecretKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to find ExternalSecret", argocdNamespace))
+	esName, err := getFirstByLabel(t, namespaceOptions, ExternalSecretKind, PostgresqlInstanceName)
+	require.NoError(t, err, "failed to find ExternalSecret")
 
 	username, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", ExternalSecretKind, esName, "-o", "jsonpath={.spec.target.template.data.username}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get ExternalSecret target.template.data.username", argocdNamespace))
-	require.Equal(t, "dbadmin", username, fmt.Sprintf("[%s] ExternalSecret '%s' username mismatch", argocdNamespace, esName))
-
-	fmt.Printf("[%s] TEST PASSED - ExternalSecret '%s' is Ready, username=dbadmin\n", argocdNamespace, esName)
+	require.NoError(t, err, "failed to get ExternalSecret username field")
+	require.Equal(t, "dbadmin", username, fmt.Sprintf("ExternalSecret '%s' username mismatch", esName))
 }
 
-func testProviderConfigExists(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Verifying ProviderConfig '%s' exists\n", argocdNamespace, ProviderConfigExpectedName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for ProviderConfig '%s'", argocdNamespace, ProviderConfigExpectedName), 60, 10*time.Second, func() (string, error) {
+func testProviderConfigExists(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for ProviderConfig '%s'", ProviderConfigExpectedName), 60, 10*time.Second, func() (string, error) {
 		output, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlProviderConfigKind, ProviderConfigExpectedName, "-o", "jsonpath={.metadata.name}")
 		if err != nil {
 			return "", err
@@ -197,87 +179,54 @@ func testProviderConfigExists(t *testing.T, argocdNamespace string, namespaceOpt
 		}
 		return output, nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] ProviderConfig '%s' not found", argocdNamespace, ProviderConfigExpectedName))
-	fmt.Printf("[%s] TEST PASSED - ProviderConfig '%s' exists\n", argocdNamespace, ProviderConfigExpectedName)
+	require.NoError(t, err, fmt.Sprintf("ProviderConfig '%s' not found", ProviderConfigExpectedName))
 }
 
-func testRdsInstanceSyncedAndReady(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Waiting for RDS Instance related to '%s' to be Synced and Ready\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for RDS Instance related to '%s'", argocdNamespace, PostgresqlInstanceName), 60, 10*time.Second, func() (string, error) {
-		rdsName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
+func testRdsInstanceSyncedAndReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	waitSyncedAndReadyByLabel(t, namespaceOptions, RdsInstanceKind, PostgresqlInstanceName, 60, 10*time.Second)
+}
+
+func testRdsInstanceFieldsVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	rdsName, err := getFirstByLabel(t, namespaceOptions, RdsInstanceKind, PostgresqlInstanceName)
+	require.NoError(t, err, "failed to find RDS Instance")
+	require.NotEmpty(t, rdsName, fmt.Sprintf("no RDS Instance found for composite '%s'", PostgresqlInstanceName))
+
+	allocatedStorage, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.allocatedStorage}")
+	require.NoError(t, err, "failed to get allocatedStorage")
+	require.Equal(t, "20", allocatedStorage, fmt.Sprintf("RDS Instance '%s' allocatedStorage mismatch", rdsName))
+
+	engineVersion, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.engineVersion}")
+	require.NoError(t, err, "failed to get engineVersion")
+	require.Equal(t, "17.2", engineVersion, fmt.Sprintf("RDS Instance '%s' engineVersion mismatch", rdsName))
+
+	instanceClass, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.instanceClass}")
+	require.NoError(t, err, "failed to get instanceClass")
+	require.Equal(t, "db.t3.micro", instanceClass, fmt.Sprintf("RDS Instance '%s' instanceClass mismatch", rdsName))
+
+	deletionProtection, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
+	require.NoError(t, err, "failed to get deletionProtection")
+	require.Equal(t, "false", deletionProtection, fmt.Sprintf("RDS Instance '%s' deletionProtection should be false", rdsName))
+
+	endpointAddress, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.address}")
+	require.NoError(t, err, "failed to get endpoint address from PostgreSQLInstance status")
+	require.NotEmpty(t, endpointAddress, fmt.Sprintf("PostgreSQLInstance '%s' status endpoint address is empty", PostgresqlInstanceName))
+
+	endpointPort, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.port}")
+	require.NoError(t, err, "failed to get endpoint port from PostgreSQLInstance status")
+	require.NotEmpty(t, endpointPort, fmt.Sprintf("PostgreSQLInstance '%s' status endpoint port is empty", PostgresqlInstanceName))
+}
+
+func testDeletionProtectionToggle(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "patch", PostgresqlInstanceKind, PostgresqlInstanceName, "-n", PostgresqlNamespaceName, "--type", "merge", "-p", `{"spec":{"deletionProtection":true}}`)
+	require.NoError(t, err, "failed to patch deletionProtection to true")
+
+	_, err = retry.DoWithRetryE(t, "waiting for RDS deletionProtection=true", 30, 10*time.Second, func() (string, error) {
+		rdsName, err := getFirstByLabel(t, namespaceOptions, RdsInstanceKind, PostgresqlInstanceName)
 		if err != nil {
 			return "", err
 		}
 		if rdsName == "" {
-			return "", fmt.Errorf("no RDS Instance found for composite '%s'", PostgresqlInstanceName)
-		}
-		syncStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", `jsonpath={.status.conditions[?(@.type=="Synced")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if syncStatus != "True" {
-			return "", fmt.Errorf("RDS Instance '%s' not synced yet, condition: %s", rdsName, syncStatus)
-		}
-		readyStatus, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
-		if err != nil {
-			return "", err
-		}
-		if readyStatus != "True" {
-			return "", fmt.Errorf("RDS Instance '%s' not ready yet, condition: %s", rdsName, readyStatus)
-		}
-		return "Synced+Ready", nil
-	})
-	require.NoError(t, err, fmt.Sprintf("[%s] RDS Instance for '%s' failed to become Synced and Ready", argocdNamespace, PostgresqlInstanceName))
-	fmt.Printf("[%s] TEST PASSED - RDS Instance is Synced and Ready\n", argocdNamespace)
-}
-
-func testRdsInstanceFieldsVerified(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] TEST: Verifying RDS Instance fields for '%s'\n", argocdNamespace, PostgresqlInstanceName)
-	rdsName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to find RDS Instance", argocdNamespace))
-	require.NotEmpty(t, rdsName, fmt.Sprintf("[%s] No RDS Instance found for composite '%s'", argocdNamespace, PostgresqlInstanceName))
-
-	allocatedStorage, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.allocatedStorage}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get allocatedStorage", argocdNamespace))
-	require.Equal(t, "20", allocatedStorage, fmt.Sprintf("[%s] RDS Instance '%s' allocatedStorage mismatch", argocdNamespace, rdsName))
-
-	engineVersion, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.engineVersion}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get engineVersion", argocdNamespace))
-	require.Equal(t, "17.2", engineVersion, fmt.Sprintf("[%s] RDS Instance '%s' engineVersion mismatch", argocdNamespace, rdsName))
-
-	instanceClass, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.instanceClass}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get instanceClass", argocdNamespace))
-	require.Equal(t, "db.t3.micro", instanceClass, fmt.Sprintf("[%s] RDS Instance '%s' instanceClass mismatch", argocdNamespace, rdsName))
-
-	// Verify deletionProtection is false
-	deletionProtection, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get deletionProtection", argocdNamespace))
-	require.Equal(t, "false", deletionProtection, fmt.Sprintf("[%s] RDS Instance '%s' deletionProtection should be false", argocdNamespace, rdsName))
-
-	// Verify Status fields propagation on PostgreSQLInstance (endpoint address and port)
-	endpointAddress, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.address}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get endpoint address from PostgreSQLInstance status", argocdNamespace))
-	require.NotEmpty(t, endpointAddress, fmt.Sprintf("[%s] PostgreSQLInstance '%s' status endpoint address is empty", argocdNamespace, PostgresqlInstanceName))
-
-	endpointPort, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.port}")
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to get endpoint port from PostgreSQLInstance status", argocdNamespace))
-	require.NotEmpty(t, endpointPort, fmt.Sprintf("[%s] PostgreSQLInstance '%s' status endpoint port is empty", argocdNamespace, PostgresqlInstanceName))
-
-	fmt.Printf("[%s] TEST PASSED - RDS Instance fields verified (allocatedStorage=20, engineVersion=17.2, instanceClass=db.t3.micro, deletionProtection=false), status propagation OK (endpoint=%s, port=%s)\n", argocdNamespace, endpointAddress, endpointPort)
-}
-
-func testDeletionProtectionToggle(t *testing.T, argocdNamespace string, namespaceOptions *terrak8s.KubectlOptions) {
-	// Step 1: Patch PostgreSQLInstance deletionProtection to true
-	fmt.Printf("[%s] TEST: Patching PostgreSQL Instance '%s' deletionProtection to true\n", argocdNamespace, PostgresqlInstanceName)
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "patch", PostgresqlInstanceKind, PostgresqlInstanceName, "-n", PostgresqlNamespaceName, "--type", "merge", "-p", `{"spec":{"deletionProtection":true}}`)
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to patch deletionProtection to true", argocdNamespace))
-
-	// Step 2: Wait for RDS Instance deletionProtection to become true
-	fmt.Printf("[%s] TEST: Waiting for RDS Instance deletionProtection to propagate to true\n", argocdNamespace)
-	_, err = retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for RDS deletionProtection=true", argocdNamespace), 30, 10*time.Second, func() (string, error) {
-		rdsName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
-		if err != nil {
-			return "", err
+			return "", fmt.Errorf("no RDS Instance found for composite=%s", PostgresqlInstanceName)
 		}
 		dp, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
 		if err != nil {
@@ -288,21 +237,20 @@ func testDeletionProtectionToggle(t *testing.T, argocdNamespace string, namespac
 		}
 		return "true", nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] RDS Instance deletionProtection failed to propagate to true", argocdNamespace))
-	fmt.Printf("[%s] TEST PASSED - RDS Instance deletionProtection propagated to true\n", argocdNamespace)
+	require.NoError(t, err, "RDS Instance deletionProtection failed to propagate to true")
 
-	// Step 3: Patch PostgreSQLInstance deletionProtection back to false
-	fmt.Printf("[%s] TEST: Patching PostgreSQL Instance '%s' deletionProtection back to false\n", argocdNamespace, PostgresqlInstanceName)
 	_, err = terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "patch", PostgresqlInstanceKind, PostgresqlInstanceName, "-n", PostgresqlNamespaceName, "--type", "merge", "-p", `{"spec":{"deletionProtection":false}}`)
-	require.NoError(t, err, fmt.Sprintf("[%s] Failed to patch deletionProtection to false", argocdNamespace))
+	require.NoError(t, err, "failed to patch deletionProtection to false")
 
-	// Wait for RDS Instance deletionProtection to propagate back to false
-	_, err = retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for RDS deletionProtection=false", argocdNamespace), 30, 10*time.Second, func() (string, error) {
-		currentRdsName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", PostgresqlInstanceName), "-o", "jsonpath={.items[0].metadata.name}")
+	_, err = retry.DoWithRetryE(t, "waiting for RDS deletionProtection=false", 30, 10*time.Second, func() (string, error) {
+		rdsName, err := getFirstByLabel(t, namespaceOptions, RdsInstanceKind, PostgresqlInstanceName)
 		if err != nil {
 			return "", err
 		}
-		dp, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, currentRdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
+		if rdsName == "" {
+			return "", fmt.Errorf("no RDS Instance found for composite=%s", PostgresqlInstanceName)
+		}
+		dp, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
 		if err != nil {
 			return "", err
 		}
@@ -311,7 +259,5 @@ func testDeletionProtectionToggle(t *testing.T, argocdNamespace string, namespac
 		}
 		return "false", nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] RDS Instance deletionProtection failed to propagate back to false", argocdNamespace))
-
-	fmt.Printf("[%s] TEST PASSED - Deletion protection toggle verified (false -> true -> false)\n", argocdNamespace)
+	require.NoError(t, err, "RDS Instance deletionProtection failed to propagate back to false")
 }
