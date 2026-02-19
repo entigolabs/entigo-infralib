@@ -4,6 +4,10 @@ kyverno:
       registry: ghcr.io
 
   features:
+    generateValidatingAdmissionPolicy:
+      enabled: false
+    generateMutatingAdmissionPolicy:
+      enabled: false
     logging:
       format: json
       verbosity: 2
@@ -65,12 +69,12 @@ kyverno:
     container:
       resources:
         limits:
-          memory: 384Mi
+          memory: 1Gi
           cpu: 1000m
           ephemeral-storage: 1Gi
         requests:
-          cpu: 50m
-          memory: 128Mi
+          cpu: 60m
+          memory: 192Mi
           ephemeral-storage: 24Mi
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -94,12 +98,12 @@ kyverno:
       kube-score/ignore: pod-probes
     resources:
       limits:
-        memory: 128Mi
+        memory: 1Gi
         cpu: 1000m
         ephemeral-storage: 1Gi
       requests:
-        cpu: 10m
-        memory: 64Mi
+        cpu: 20m
+        memory: 128Mi
         ephemeral-storage: 24Mi
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
