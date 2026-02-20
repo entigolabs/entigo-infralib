@@ -252,6 +252,8 @@ loki:
 
   backend:
     replicas: 2
+    persistence:
+      enableStatefulSetAutoDeletePVC: false
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
