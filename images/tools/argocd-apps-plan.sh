@@ -77,6 +77,13 @@ then
       echo "Failed to get ArgoCD Application $app_name!"
       exit 25
     fi
+    # Check for Unknown/null status (fatal after retries exhausted)
+    if echo "$STATUS" | grep -q "^Status:Unknown \|^Status:null "; then
+      [ $i -lt $MAX_RETRIES ] && echo "Status is Unknown/null, retrying in ${RETRY_DELAY}s... ($i/$MAX_RETRIES)" && sleep $RETRY_DELAY && continue
+      echo "ArgoCD Application $app_name status remained Unknown/null after $MAX_RETRIES retries!"
+      exit 30
+    fi
+
     # Check for illogical state: OutOfSync but no resources to sync
     if [ "$STATUS" == "Status:OutOfSync Missing:0 Changed:0 RequiresPruning:0" ]; then
       [ $i -lt $MAX_RETRIES ] && echo "Inconsistent state, retrying in ${RETRY_DELAY}s... ($i/$MAX_RETRIES)" && sleep $RETRY_DELAY && continue
@@ -91,10 +98,10 @@ else
     while [ $retry_count -lt 50 ]; do
       APPSTATUS=$(kubectl get applications.argoproj.io -n $app_namespace $app_name -o json | jq -r '.status.sync.status // "null"')
       # Check if the result is not "null"
-      if [ "$APPSTATUS" != "null" ] && [ -n "$APPSTATUS" ]; then
+      if [ "$APPSTATUS" != "null" ] && [ "$APPSTATUS" != "Unknown" ] && [ -n "$APPSTATUS" ]; then
         break
       fi    
-      echo "Waiting for ArgoCD to process $app_name application. Status is Null."
+      echo "Waiting for ArgoCD to process $app_name application. Status is Null or Unknown."
       sleep 6
       retry_count=$((retry_count + 1))
     done
@@ -168,7 +175,11 @@ else
     echo "Failed to get ArgoCD Application $app_name!"
     exit 26
   fi
-
+  if [ "$SYNC_STATUS" == "Unknown" ]
+  then
+    echo "ArgoCD Application $app_name status is Unknown!"
+    exit 30
+  fi
   STATUS=$(echo "Status:${SYNC_STATUS} Missing:${MISSING} Changed:${CHANGED} RequiresPruning:${PRUNE}")
 fi
 

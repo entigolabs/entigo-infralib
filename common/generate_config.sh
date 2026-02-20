@@ -376,6 +376,7 @@ test_k8s() {
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
   
   TESTS=(
+      "./modules/k8s/platform-apis/test.sh"
       "./modules/k8s/hello-world/test.sh"
       "./modules/k8s/crossplane-core/test.sh"
       "./modules/k8s/crossplane-aws/test.sh"
@@ -404,6 +405,10 @@ test_k8s() {
       "./modules/k8s/grafana/test.sh"
       "./modules/k8s/harbor/test.sh"
       "./modules/k8s/trivy/test.sh"
+      "./modules/k8s/kyverno/test.sh"
+      "./modules/k8s/rbac-bindings/test.sh"
+      "./modules/k8s/saml-proxy/test.sh"
+      "./modules/k8s/wireguard/test.sh"
   )
   PIDS=""
   FAIL=""
