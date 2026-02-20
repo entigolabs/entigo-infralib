@@ -39,8 +39,9 @@ func testPlatformApisZone(t *testing.T, argocdNamespace string, clusterOptions *
 
 	setupFailed = false
 	testZoneResourcesParallel(t, clusterOptions, signalZonesReady)
-	//test8NamespaceCreated(t, argocdNamespace, clusterOptions)
-	//test9NamespaceHasValidZoneLabel(t, argocdNamespace, clusterOptions)
+	testNamespaceCreated(t, clusterOptions)
+	testNamespaceHasValidZoneLabel(t, clusterOptions)
+	testZoneApps(t, argocdNamespace, argocdOptions, clusterOptions)
 }
 
 func test1AppProjectExists(t *testing.T, argocdNamespace string, argocdOptions *terrak8s.KubectlOptions) {
@@ -133,19 +134,16 @@ func test7ZoneHasNodegroupAndItIsReady(t *testing.T, clusterOptions *terrak8s.Ku
 	require.NoError(t, err, fmt.Sprintf("zone '%s' NodeGroup not ready", zone))
 }
 
-func test8NamespaceCreated(t *testing.T, argocdNamespace string, clusterOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] Step 9: Creating namespace '%s'\n", argocdNamespace, ZoneNamespaceName)
+func testNamespaceCreated(t *testing.T, clusterOptions *terrak8s.KubectlOptions) {
 	_, err := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "create", "namespace", ZoneNamespaceName)
 	if err != nil {
 		_, err = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", ZoneNamespaceName)
-		require.NoError(t, err, fmt.Sprintf("[%s] Namespace '%s' not found", argocdNamespace, ZoneNamespaceName))
+		require.NoError(t, err, fmt.Sprintf("Namespace '%s' not found", ZoneNamespaceName))
 	}
-	fmt.Printf("[%s] Step 9: PASSED - Namespace created\n", argocdNamespace)
 }
 
-func test9NamespaceHasValidZoneLabel(t *testing.T, argocdNamespace string, clusterOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] Step 9: Verifying namespace '%s' has label %s=%s\n", argocdNamespace, ZoneNamespaceName, NamespaceZoneLabelKey, ZoneAName)
-	_, err := retry.DoWithRetryE(t, fmt.Sprintf("[%s] Waiting for namespace label", argocdNamespace), 30, 10*time.Second, func() (string, error) {
+func testNamespaceHasValidZoneLabel(t *testing.T, clusterOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, "Waiting for namespace label", 30, 10*time.Second, func() (string, error) {
 		label, err := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", ZoneNamespaceName, "-o", "jsonpath={.metadata.labels.tenancy\\.entigo\\.com/zone}")
 		if err != nil {
 			return "", err
@@ -155,24 +153,17 @@ func test9NamespaceHasValidZoneLabel(t *testing.T, argocdNamespace string, clust
 		}
 		return label, nil
 	})
-	require.NoError(t, err, fmt.Sprintf("[%s] Namespace '%s' label %s != '%s'", argocdNamespace, ZoneNamespaceName, NamespaceZoneLabelKey, ZoneAName))
-	fmt.Printf("[%s] Step 9: PASSED - Namespace label verified (%s=%s)\n", argocdNamespace, NamespaceZoneLabelKey, ZoneAName)
+	require.NoError(t, err, fmt.Sprintf("Namespace '%s' label %s != '%s'", ZoneNamespaceName, NamespaceZoneLabelKey, ZoneAName))
 }
 
 //---- CLEANUP FUNCTIONS ----
 
 func cleanupZoneResources(t *testing.T, argocdNamespace string, argocdOptions *terrak8s.KubectlOptions, clusterOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] Cleanup: deleting namespace '%s'\n", argocdNamespace, ZoneNamespaceName)
+	cleanupZoneApps(t, argocdNamespace, argocdOptions)
 	_, _ = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "delete", "namespace", ZoneNamespaceName, "--ignore-not-found")
-
-	fmt.Printf("[%s] Cleanup: deleting Zone Application '%s'\n", argocdNamespace, ZoneApplicationName)
 	_, _ = terrak8s.RunKubectlAndGetOutputE(t, argocdOptions, "delete", "application", ZoneApplicationName, "-n", argocdNamespace, "--ignore-not-found")
 }
 
-//apply apps in zones a and b
-//check apps
-//check pods
-//check pods nodeselectors
 //create users
 //check user rights
 //now cleanup all created resources... PostgresqlInstance and RdsInstance have deletionProtection... change it to false first...

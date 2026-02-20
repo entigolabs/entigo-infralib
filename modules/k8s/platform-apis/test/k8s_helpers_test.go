@@ -76,6 +76,28 @@ func waitSyncedAndReadyByLabel(t *testing.T, opts *terrak8s.KubectlOptions, kind
 	return name
 }
 
+func waitArgoCDAppSyncedAndHealthy(t *testing.T, opts *terrak8s.KubectlOptions, appName string, retries int, interval time.Duration) {
+	t.Helper()
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for ArgoCD app '%s'", appName), retries, interval, func() (string, error) {
+		syncStatus, err := terrak8s.RunKubectlAndGetOutputE(t, opts, "get", "application", appName, "-o", "jsonpath={.status.sync.status}")
+		if err != nil {
+			return "", err
+		}
+		if syncStatus != "Synced" {
+			return "", fmt.Errorf("app '%s' sync status: %s", appName, syncStatus)
+		}
+		healthStatus, err := terrak8s.RunKubectlAndGetOutputE(t, opts, "get", "application", appName, "-o", "jsonpath={.status.health.status}")
+		if err != nil {
+			return "", err
+		}
+		if healthStatus != "Healthy" {
+			return "", fmt.Errorf("app '%s' health status: %s", appName, healthStatus)
+		}
+		return "Synced+Healthy", nil
+	})
+	require.NoError(t, err)
+}
+
 func waitCrossplanePackageReady(t *testing.T, opts *terrak8s.KubectlOptions, kind, name string) {
 	t.Helper()
 	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for %s/%s", kind, name), 40, 6*time.Second, func() (string, error) {

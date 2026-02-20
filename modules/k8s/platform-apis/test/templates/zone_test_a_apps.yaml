@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: a-apps
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: a-apps
+  project: a
+  source:
+    path: a/apps
+    repoURL: https://github.com/martivo/yaml.git
+    targetRevision: HEAD
