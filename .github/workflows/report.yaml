@@ -16,6 +16,10 @@ jobs:
         ref: main
     - name: Create Reports
       id: create_report
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION:  ${{ secrets.AWS_REGION }}
       run: |
         echo "K8S"
         K_OUT=$(./common/k8s/report.sh)
