@@ -7,14 +7,17 @@ locals {
   #}] : []
 
   ami_release_version = {
-    "AL2023_x86_64_STANDARD"     = "1.33.5-20251217"
-    "AL2023_x86_64_NVIDIA"       = "1.33.5-20251217"
-    "AL2023_ARM_64_STANDARD"     = "1.33.5-20251217"
-    "AL2023_ARM_64_NVIDIA"       = "1.33.5-20251217"
-    "BOTTLEROCKET_x86_64"        = "1.52.0-b7ac6e1a"
-    "BOTTLEROCKET_x86_64_NVIDIA" = "1.52.0-b7ac6e1a"
-    "BOTTLEROCKET_ARM_64"        = "1.52.0-b7ac6e1a"
-    "BOTTLEROCKET_ARM_64_NVIDIA" = "1.52.0-b7ac6e1a"
+     "AL2023_ARM_64_NVIDIA"       = "1.34.3-20260209"
+     "AL2023_ARM_64_STANDARD"     = "1.34.3-20260209"
+     "AL2023_x86_64_NEURON"       = "1.34.3-20260209"
+     "AL2023_x86_64_NVIDIA"       = "1.34.3-20260209"
+     "AL2023_x86_64_STANDARD"     = "1.34.3-20260209"
+     "BOTTLEROCKET_ARM_64"        = "1.55.0-d93bb1b1"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.55.0-d93bb1b1"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.55.0-d93bb1b1"
+     "BOTTLEROCKET_x86_64"        = "1.55.0-d93bb1b1"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.55.0-d93bb1b1"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.55.0-d93bb1b1"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
@@ -195,7 +198,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.3.0"
+  version               = "6.4.0"
   name                  = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_arns  = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -218,7 +221,7 @@ module "ebs_csi_irsa_role" {
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.3.0"
+  version               = "6.4.0"
   name                  = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -239,7 +242,7 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.3.0"
+  version               = "6.4.0"
   name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true

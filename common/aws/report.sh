@@ -49,3 +49,18 @@ do
      echo "$name newer version $latestversion, current $currentversion"
   fi
 done | sort | uniq
+
+
+AL2023_CURRENT=$(cat modules/aws/eks/main.tf | grep '"AL2023_x86_64_STANDARD"' | cut -d'"' -f4)
+AL2023_LATEST=$(aws ssm get-parameter   --name "/aws/service/eks/optimized-ami/1.34/amazon-linux-2023/arm64/standard/recommended/release_version"   --region eu-north-1 --query "Parameter.Value" --output text)
+if [ "$AL2023_CURRENT" != "$AL2023_LATEST" ]
+then
+  echo "EKS AL2023_* newer version $AL2023_LATEST, current $AL2023_CURRENT"
+fi
+
+BOTTLE_CURRENT=$(cat modules/aws/eks/main.tf | grep '"BOTTLEROCKET_x86_64"' | cut -d'"' -f4)
+BOTTLE_LATEST=$(aws ssm get-parameter   --name "/aws/service/bottlerocket/aws-k8s-1.34/x86_64/latest/image_version"   --region eu-north-1 --query "Parameter.Value" --output text)
+if [ "$BOTTLE_CURRENT" != "$BOTTLE_LATEST" ]
+then
+  echo "EKS AL2023_* newer version $BOTTLE_LATEST, current $BOTTLE_CURRENT"
+fi
