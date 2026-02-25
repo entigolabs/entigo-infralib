@@ -14,7 +14,6 @@ echo $line
 
 done | sort | uniq | while read line
 do
-  echo $line
   namespace=$(echo $line | cut -d"/" -f1)
   name=$(echo $line | cut -d"/" -f2 | cut -d"=" -f1)
   currentversion=$(echo $line | cut -d"=" -f2-)
