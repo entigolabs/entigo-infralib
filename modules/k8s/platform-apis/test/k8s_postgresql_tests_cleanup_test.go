@@ -155,5 +155,15 @@ func cleanupNamespace(t *testing.T, pgNsOptions *terrak8s.KubectlOptions, cluste
 		_, _ = terrak8s.RunKubectlAndGetOutputE(t, pgNsOptions, "delete", "all", "--all", "-n", PostgresqlNamespaceName, "--cascade=foreground", "--wait=false", "--ignore-not-found")
 		time.Sleep(10 * time.Second)
 	}
-	_, _ = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "delete", "namespace", PostgresqlNamespaceName, "--ignore-not-found", "--wait=true")
+	_, _ = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "delete", "namespace", PostgresqlNamespaceName, "--ignore-not-found", "--wait=false")
+	_, _ = retry.DoWithRetryE(t, fmt.Sprintf("waiting for namespace %s deletion", PostgresqlNamespaceName), 60, 10*time.Second, func() (string, error) {
+		output, err := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", PostgresqlNamespaceName, "--ignore-not-found", "-o", "jsonpath={.metadata.name}")
+		if err != nil {
+			return "", err
+		}
+		if output != "" {
+			return "", fmt.Errorf("namespace %s still exists", PostgresqlNamespaceName)
+		}
+		return "deleted", nil
+	})
 }
