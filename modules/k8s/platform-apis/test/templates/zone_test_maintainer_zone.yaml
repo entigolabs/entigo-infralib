@@ -1,0 +1,10 @@
+apiVersion: tenancy.entigo.com/v1alpha1
+kind: Zone
+metadata:
+  name: maintainer-test-zone
+spec:
+  pools:
+    - name: default
+      requirements:
+        - key: max-size
+          value: "3"

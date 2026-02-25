@@ -207,6 +207,10 @@ func testRdsInstanceFieldsVerified(t *testing.T, namespaceOptions *terrak8s.Kube
 	require.NoError(t, err, "failed to get deletionProtection")
 	require.Equal(t, "false", deletionProtection, fmt.Sprintf("RDS Instance '%s' deletionProtection should be false", rdsName))
 
+	//skipFinalSnapshot, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.skipFinalSnapshot}")
+	//require.NoError(t, err, "failed to get skipFinalSnapshot")
+	//require.Equal(t, "true", skipFinalSnapshot, fmt.Sprintf("RDS Instance '%s' skipFinalSnapshot should be true (backupBeforeDeletion: false in environmentConfig)", rdsName))
+
 	endpointAddress, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.address}")
 	require.NoError(t, err, "failed to get endpoint address from PostgreSQLInstance status")
 	require.NotEmpty(t, endpointAddress, fmt.Sprintf("PostgreSQLInstance '%s' status endpoint address is empty", PostgresqlInstanceName))

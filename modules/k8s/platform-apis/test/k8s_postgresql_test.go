@@ -7,6 +7,7 @@ import (
 	"time"
 
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,9 +43,16 @@ func testPlatformApisPostgresql(t *testing.T, clusterOptions *terrak8s.KubectlOp
 }
 
 func testTestNamespaceCreated(t *testing.T, clusterOptions *terrak8s.KubectlOptions) {
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "create", "namespace", PostgresqlNamespaceName)
-	if err != nil {
-		_, err = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", PostgresqlNamespaceName)
-		require.NoError(t, err, "namespace "+PostgresqlNamespaceName+" not found")
-	}
+	_, err := retry.DoWithRetryE(t, "create namespace "+PostgresqlNamespaceName, 10, 15*time.Second, func() (string, error) {
+		_, createErr := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "create", "namespace", PostgresqlNamespaceName)
+		if createErr == nil {
+			return "created", nil
+		}
+		_, getErr := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", PostgresqlNamespaceName)
+		if getErr == nil {
+			return "already exists", nil
+		}
+		return "", createErr
+	})
+	require.NoError(t, err, "namespace "+PostgresqlNamespaceName+" not found")
 }
