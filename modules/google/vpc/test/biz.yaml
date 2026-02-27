@@ -7,3 +7,6 @@ database_subnets: |
   ["10.149.16.0/22", "10.149.20.0/22"]
 intra_subnets: |
   []
+nat_enable_dynamic_port_allocation: true
+nat_min_ports_per_vm: 4096
+nat_max_ports_per_vm: 65536
