@@ -39,7 +39,7 @@ func testPlatformApisZone(t *testing.T, argocdNamespace string, clusterOptions *
 
 	setupFailed = false
 	testZoneResourcesParallel(t, clusterOptions, signalZonesReady)
-	//test8NamespaceCreated(t, argocdNamespace, clusterOptions)
+	//test8NamespaceCreated(t, clusterOptions)
 	//test9NamespaceHasValidZoneLabel(t, argocdNamespace, clusterOptions)
 }
 
@@ -133,14 +133,19 @@ func test7ZoneHasNodegroupAndItIsReady(t *testing.T, clusterOptions *terrak8s.Ku
 	require.NoError(t, err, fmt.Sprintf("zone '%s' NodeGroup not ready", zone))
 }
 
-func test8NamespaceCreated(t *testing.T, argocdNamespace string, clusterOptions *terrak8s.KubectlOptions) {
-	fmt.Printf("[%s] Step 9: Creating namespace '%s'\n", argocdNamespace, ZoneNamespaceName)
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "create", "namespace", ZoneNamespaceName)
-	if err != nil {
-		_, err = terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", ZoneNamespaceName)
-		require.NoError(t, err, fmt.Sprintf("[%s] Namespace '%s' not found", argocdNamespace, ZoneNamespaceName))
-	}
-	fmt.Printf("[%s] Step 9: PASSED - Namespace created\n", argocdNamespace)
+func test8NamespaceCreated(t *testing.T, clusterOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, "create namespace "+ZoneNamespaceName, 10, 15*time.Second, func() (string, error) {
+		_, createErr := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "create", "namespace", ZoneNamespaceName)
+		if createErr == nil {
+			return "created", nil
+		}
+		_, getErr := terrak8s.RunKubectlAndGetOutputE(t, clusterOptions, "get", "namespace", ZoneNamespaceName)
+		if getErr == nil {
+			return "already exists", nil
+		}
+		return "", createErr
+	})
+	require.NoError(t, err, "namespace "+ZoneNamespaceName+" not found")
 }
 
 func test9NamespaceHasValidZoneLabel(t *testing.T, argocdNamespace string, clusterOptions *terrak8s.KubectlOptions) {
