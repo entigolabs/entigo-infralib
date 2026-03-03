@@ -1,3 +1,4 @@
+# PR modules/aws - dynamic matrix with sequential execution
 name: PR modules/aws
 
 on:
@@ -7,47 +8,83 @@ on:
     paths:
       - 'modules/aws/**'
       - 'modules/aws-v2/**'
-  workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module path to test (e.g. modules/aws/my-module or modules/aws-v2/my-module)'
+        required: true
+        type: string
 
 jobs:
-  build:
-    name: PR modules/aws
+  detect:
+    name: Detect changed modules
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_modules: ${{ steps.set-matrix.outputs.has_modules }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha }}
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
     - name: Get changed files
+      if: github.event_name == 'pull_request'
       id: changed-files
       uses: tj-actions/changed-files@v42
       with:
         base_sha: ${{ github.event.pull_request.base.sha }}
         sha: ${{ github.event.pull_request.head.sha }}
-    
-    - name: Run tests
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-        ENTIGO_INFRALIB_DESTROY: true
-      run: | 
-        echo "Changed modules:"
-        for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
-            echo "$file" | grep -e "modules/aws\|modules/aws-v2" | grep -ve"nuke\.sh\|aws-nuke-config\.yml" | cut -d'/' -f1-3
-        done | sort -u )
-        do
-          ${module}/test.sh
-          if [ $? -ne 0 ]
-          then
-            echo "Failed ${module}"
-            exit 2
-          fi
-        done
 
+    - name: Build matrix
+      id: set-matrix
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          # Use the manually provided module path
+          MODULES='["${{ inputs.module }}"]'
+        else
+          # Extract unique module paths, excluding nuke files
+          MODULES=$(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
+            echo "$file" | grep -e "modules/aws\|modules/aws-v2" | grep -ve"nuke\.sh\|aws-nuke-config\.yml" | cut -d'/' -f1-3
+          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+        fi
+
+        echo "Detected modules: $MODULES"
+
+        if [ "$MODULES" == "[]" ] || [ -z "$MODULES" ]; then
+          echo "has_modules=false" >> $GITHUB_OUTPUT
+          echo "matrix={\"module\":[]}" >> $GITHUB_OUTPUT
+        else
+          echo "has_modules=true" >> $GITHUB_OUTPUT
+          echo "matrix={\"module\":$MODULES}" >> $GITHUB_OUTPUT
+        fi
+
+  test:
+    name: Test ${{ matrix.module }}
+    needs: detect
+    if: needs.detect.outputs.has_modules == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pr-modules-test
+      cancel-in-progress: false
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      max-parallel: 1
+      fail-fast: false
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+      ENTIGO_INFRALIB_DESTROY: true
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+    - name: Run test
+      run: |
+        echo "Testing module: ${{ matrix.module }}"
+        ${{ matrix.module }}/test.sh

@@ -21,7 +21,7 @@ wireguard:
       hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   extraSideCars:
     - name: pubkey
-      image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.27-alpine'
+      image: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
       ports:
         - containerPort: 8080
           protocol: TCP

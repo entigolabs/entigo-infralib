@@ -94,6 +94,9 @@ jobs:
   testk8s:   
     runs-on: ubuntu-latest
     needs: [install_stable_aws,install_stable_google]
+    concurrency:
+      group: pr-modules-test
+      cancel-in-progress: false
     name: Release
     steps:
     - name: Free disk space

@@ -18,7 +18,7 @@ wireguard:
       service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "{{ .toutput.route53.pub_cert_arn }}"
   extraSideCars:
   - name: pubkey
-    image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.27-alpine'
+    image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
     volumeMounts:
     - name: pubkey
       mountPath: /usr/share/nginx/html/index.html
