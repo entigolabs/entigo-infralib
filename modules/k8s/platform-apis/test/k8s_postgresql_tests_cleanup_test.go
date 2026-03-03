@@ -15,12 +15,17 @@ func cleanupPostgresqlResources(t *testing.T, clusterOptions *terrak8s.KubectlOp
 	pgNsOptions := terrak8s.NewKubectlOptions(clusterOptions.ContextName, clusterOptions.ConfigPath, PostgresqlNamespaceName)
 
 	cleanupDeleteForeground(t, pgNsOptions, PostgresqlDatabaseKind, PostgresqlDatabaseName)
+	cleanupDeleteForeground(t, pgNsOptions, PostgresqlDatabaseKind, DatabaseTwoName)
 	cleanupDeleteForeground(t, pgNsOptions, PostgresqlDatabaseKind, MinimalDatabaseName)
 	var wgDbs sync.WaitGroup
-	wgDbs.Add(2)
+	wgDbs.Add(3)
 	go func() {
 		defer wgDbs.Done()
 		cleanupWaitForDeletion(t, pgNsOptions, PostgresqlDatabaseKind, PostgresqlDatabaseName, 30)
+	}()
+	go func() {
+		defer wgDbs.Done()
+		cleanupWaitForDeletion(t, pgNsOptions, PostgresqlDatabaseKind, DatabaseTwoName, 30)
 	}()
 	go func() {
 		defer wgDbs.Done()

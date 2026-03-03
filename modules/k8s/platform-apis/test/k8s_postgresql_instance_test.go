@@ -191,21 +191,29 @@ func testRdsInstanceFieldsVerified(t *testing.T, namespaceOptions *terrak8s.Kube
 	require.NoError(t, err, "failed to find RDS Instance")
 	require.NotEmpty(t, rdsName, fmt.Sprintf("no RDS Instance found for composite '%s'", PostgresqlInstanceName))
 
-	allocatedStorage, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.allocatedStorage}")
+	allocatedStorage, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.allocatedStorage}")
 	require.NoError(t, err, "failed to get allocatedStorage")
 	require.Equal(t, "20", allocatedStorage, fmt.Sprintf("RDS Instance '%s' allocatedStorage mismatch", rdsName))
 
-	engineVersion, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.engineVersion}")
+	engineVersion, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.engineVersion}")
 	require.NoError(t, err, "failed to get engineVersion")
 	require.Equal(t, "17.2", engineVersion, fmt.Sprintf("RDS Instance '%s' engineVersion mismatch", rdsName))
 
-	instanceClass, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.instanceClass}")
+	instanceClass, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.instanceClass}")
 	require.NoError(t, err, "failed to get instanceClass")
 	require.Equal(t, "db.t3.micro", instanceClass, fmt.Sprintf("RDS Instance '%s' instanceClass mismatch", rdsName))
 
-	deletionProtection, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.spec.forProvider.deletionProtection}")
+	deletionProtection, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.deletionProtection}")
 	require.NoError(t, err, "failed to get deletionProtection")
 	require.Equal(t, "false", deletionProtection, fmt.Sprintf("RDS Instance '%s' deletionProtection should be false", rdsName))
+
+	backupWindow, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.backupWindow}")
+	require.NoError(t, err, "failed to get backupWindow")
+	require.NotEmpty(t, backupWindow, fmt.Sprintf("RDS Instance '%s' backupWindow not set", rdsName))
+
+	backupRetentionPeriod, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", RdsInstanceKind, rdsName, "-o", "jsonpath={.status.atProvider.backupRetentionPeriod}")
+	require.NoError(t, err, "failed to get backupRetentionPeriod")
+	require.Equal(t, "14", backupRetentionPeriod, fmt.Sprintf("RDS Instance '%s' backupRetentionPeriod mismatch", rdsName))
 
 	endpointAddress, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", PostgresqlInstanceKind, PostgresqlInstanceName, "-o", "jsonpath={.status.endpoint.address}")
 	require.NoError(t, err, "failed to get endpoint address from PostgreSQLInstance status")
