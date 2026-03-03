@@ -11,24 +11,28 @@ import (
 )
 
 const (
-	PostgresqlAdminUserName       = "test-admin"
+	PostgresqlAdminUserName       = "test-owner"
 	PostgresqlAdminUserKind       = "postgresqluser.database.entigo.com"
-	PostgresqlAdminUserSpecName   = "test_admin"
+	PostgresqlAdminUserSpecName   = "test_owner"
 	PostgresqlRegularUserName     = "test-user"
 	SqlGrantKind                  = "grant.postgresql.sql.m.crossplane.io"
-	RegularUserExpectedGrantName  = "grant-" + PostgresqlRegularUserName + "-test-admin-" + PostgresqlInstanceName
+	RegularUserExpectedGrantName  = "grant-" + PostgresqlRegularUserName + "-test-owner-" + PostgresqlInstanceName
 	RegularUserExpectedUsageName  = "usage-" + RegularUserExpectedGrantName
 	RegularUserExpectedSecretName = PostgresqlInstanceName + "-" + PostgresqlRegularUserName
 
-	PostgresqlDatabaseName           = "database-test"
+	PostgresqlDatabaseName           = "database-one-test"
 	PostgresqlDatabaseKind           = "postgresqldatabase.database.entigo.com"
 	SqlDatabaseKind                  = "database.postgresql.sql.m.crossplane.io"
 	SqlRoleKind                      = "role.postgresql.sql.m.crossplane.io"
+	SqlExtensionKind                 = "extension.postgresql.sql.m.crossplane.io"
 	UsageKind                        = "usage.protection.crossplane.io"
 	MinimalDatabaseName              = "database-minimal-test"
-	DatabaseGrantExpectedName        = "test-admin-to-dbadmin-grant"
+	DatabaseGrantExpectedName        = PostgresqlDatabaseName + "-grant-owner-to-dbadmin"
 	DatabaseUsageExpectedName        = PostgresqlDatabaseName + "-grant-usage"
 	MinimalDatabaseUsageExpectedName = MinimalDatabaseName + "-grant-usage"
+	DatabaseTwoName                  = "database-two-test"
+	DatabaseTwoGrantExpectedName     = DatabaseTwoName + "-grant-owner-to-dbadmin"
+	DatabaseTwoUsageExpectedName     = DatabaseTwoName + "-grant-usage"
 )
 
 // runPostgresqlUserAndDatabaseTests orchestrates user and database tests.
@@ -59,7 +63,17 @@ func runPostgresqlUserAndDatabaseTests(t *testing.T, namespaceOptions *terrak8s.
 			testDatabaseGrantOwnerToDbadmin(t, namespaceOptions)
 			testDatabaseOwnerFieldVerified(t, namespaceOptions)
 			testDatabaseFieldsVerified(t, namespaceOptions)
+			testDatabaseExtensionsVerified(t, namespaceOptions)
 			testDatabaseUsageVerified(t, namespaceOptions)
+		})
+		t.Run("database-two", func(t *testing.T) {
+			t.Parallel()
+			testDatabaseTwoApplied(t, namespaceOptions)
+			testDatabaseTwoSyncedAndReady(t, namespaceOptions)
+			testDatabaseTwoGrantOwnerToDbadmin(t, namespaceOptions)
+			testDatabaseTwoOwnerFieldVerified(t, namespaceOptions)
+			testDatabaseTwoFieldsVerified(t, namespaceOptions)
+			testDatabaseTwoUsageVerified(t, namespaceOptions)
 		})
 	})
 
@@ -76,7 +90,7 @@ func runPostgresqlUserAndDatabaseTests(t *testing.T, namespaceOptions *terrak8s.
 }
 
 func testAdminUserApplied(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_admin_user.yaml", "-n", PostgresqlNamespaceName)
+	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_owner_user.yaml", "-n", PostgresqlNamespaceName)
 	require.NoError(t, err, "applying PostgreSQL Admin User error")
 }
 
@@ -135,7 +149,7 @@ func testRegularUserGrantVerified(t *testing.T, namespaceOptions *terrak8s.Kubec
 	require.NoError(t, err, "failed to get Grant role")
 	require.Equal(t, PostgresqlRegularUserName, role, fmt.Sprintf("Grant '%s' role mismatch", RegularUserExpectedGrantName))
 
-	// Verify Grant forProvider.memberOf = test_admin (the PostgreSQL role name)
+	// Verify Grant forProvider.memberOf = test_owner (the PostgreSQL role name)
 	memberOf, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, RegularUserExpectedGrantName, "-o", "jsonpath={.spec.forProvider.memberOf}")
 	require.NoError(t, err, "failed to get Grant memberOf")
 	require.Equal(t, PostgresqlAdminUserSpecName, memberOf, fmt.Sprintf("Grant '%s' memberOf mismatch", RegularUserExpectedGrantName))
@@ -238,7 +252,7 @@ func testUserUsagePreventsRoleDeletion(t *testing.T, namespaceOptions *terrak8s.
 }
 
 func testDatabaseApplied(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
-	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_database.yaml", "-n", PostgresqlNamespaceName)
+	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_database_one.yaml", "-n", PostgresqlNamespaceName)
 	require.NoError(t, err, "applying PostgreSQL Database error")
 }
 
@@ -365,8 +379,7 @@ func testDatabaseUsageVerified(t *testing.T, namespaceOptions *terrak8s.KubectlO
 }
 
 func testMinimalDatabaseUsageVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
-	// Minimal database owner is "test-user", so grant name is "test-user-to-dbadmin-grant"
-	expectedGrantName := "test-user-to-dbadmin-grant"
+	expectedGrantName := MinimalDatabaseName + "-grant-owner-to-dbadmin"
 
 	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for Usage '%s'", MinimalDatabaseUsageExpectedName), 30, 10*time.Second, func() (string, error) {
 		name, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, MinimalDatabaseUsageExpectedName, "-o", "jsonpath={.metadata.name}")
@@ -396,4 +409,144 @@ func testDatabaseUsagePreventsGrantDeletion(t *testing.T, namespaceOptions *terr
 	grantName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, DatabaseGrantExpectedName, "--ignore-not-found", "-o", "jsonpath={.metadata.name}")
 	require.NoError(t, err, "failed to check Grant existence")
 	require.Equal(t, DatabaseGrantExpectedName, grantName, fmt.Sprintf("Grant '%s' was deleted despite Usage protection", DatabaseGrantExpectedName))
+}
+
+func testDatabaseExtensionsVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	type extExpectation struct {
+		k8sName string
+		extName string
+		schema  string
+	}
+	expected := []extExpectation{
+		{PostgresqlDatabaseName + "-postgis", "postgis", ""},
+		{PostgresqlDatabaseName + "-postgis-topology", "postgis_topology", "topology"},
+		{PostgresqlDatabaseName + "-fuzzystrmatch", "fuzzystrmatch", ""},
+		{PostgresqlDatabaseName + "-postgis-tiger-geocoder", "postgis_tiger_geocoder", "tiger"},
+		{PostgresqlDatabaseName + "-uuid-ossp", "uuid-ossp", ""},
+		{PostgresqlDatabaseName + "-btree-gist", "btree_gist", ""},
+	}
+
+	for _, ext := range expected {
+		ext := ext
+		extName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlExtensionKind, ext.k8sName, "--ignore-not-found", "-o", "jsonpath={.metadata.name}")
+		require.NoError(t, err, fmt.Sprintf("failed to get extension '%s'", ext.k8sName))
+		require.Equal(t, ext.k8sName, extName, fmt.Sprintf("extension '%s' not found", ext.k8sName))
+
+		forProvider, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlExtensionKind, ext.k8sName, "-o", "jsonpath={.spec.forProvider.extension}")
+		require.NoError(t, err, fmt.Sprintf("failed to get forProvider.extension for '%s'", ext.k8sName))
+		require.Equal(t, ext.extName, forProvider, fmt.Sprintf("extension '%s' forProvider.extension mismatch", ext.k8sName))
+
+		if ext.schema != "" {
+			schema, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlExtensionKind, ext.k8sName, "-o", "jsonpath={.spec.forProvider.schema}")
+			require.NoError(t, err, fmt.Sprintf("failed to get schema for extension '%s'", ext.k8sName))
+			require.Equal(t, ext.schema, schema, fmt.Sprintf("extension '%s' schema mismatch", ext.k8sName))
+		}
+	}
+}
+
+func testDatabaseTwoApplied(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "apply", "-f", "./templates/postgresql_test_database_two.yaml", "-n", PostgresqlNamespaceName)
+	require.NoError(t, err, "applying PostgreSQL Database Two error")
+}
+
+func testDatabaseTwoSyncedAndReady(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	waitSyncedAndReady(t, namespaceOptions, PostgresqlDatabaseKind, DatabaseTwoName, 60, 10*time.Second)
+}
+
+func testDatabaseTwoGrantOwnerToDbadmin(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for Grant '%s'", DatabaseTwoGrantExpectedName), 60, 10*time.Second, func() (string, error) {
+		grantName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, DatabaseTwoGrantExpectedName, "-o", "jsonpath={.metadata.name}")
+		if err != nil {
+			return "", err
+		}
+		if grantName == "" {
+			return "", fmt.Errorf("Grant '%s' not found", DatabaseTwoGrantExpectedName)
+		}
+		for _, condType := range []string{"Synced", "Ready"} {
+			status, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, DatabaseTwoGrantExpectedName, "-o",
+				fmt.Sprintf(`jsonpath={.status.conditions[?(@.type=="%s")].status}`, condType))
+			if err != nil {
+				return "", err
+			}
+			if status != "True" {
+				return "", fmt.Errorf("Grant '%s': %s=%s", DatabaseTwoGrantExpectedName, condType, status)
+			}
+		}
+		return "Synced+Ready", nil
+	})
+	require.NoError(t, err, fmt.Sprintf("Grant '%s' failed to become Synced and Ready", DatabaseTwoGrantExpectedName))
+
+	role, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, DatabaseTwoGrantExpectedName, "-o", "jsonpath={.spec.forProvider.role}")
+	require.NoError(t, err, "failed to get Grant role")
+	require.Equal(t, "dbadmin", role, fmt.Sprintf("Grant '%s' role mismatch", DatabaseTwoGrantExpectedName))
+
+	memberOf, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlGrantKind, DatabaseTwoGrantExpectedName, "-o", "jsonpath={.spec.forProvider.memberOf}")
+	require.NoError(t, err, "failed to get Grant memberOf")
+	require.Equal(t, PostgresqlAdminUserSpecName, memberOf, fmt.Sprintf("Grant '%s' memberOf mismatch", DatabaseTwoGrantExpectedName))
+}
+
+func testDatabaseTwoOwnerFieldVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	dbName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", DatabaseTwoName), "-o", "jsonpath={.items[0].metadata.name}")
+	require.NoError(t, err, "failed to find SQL Database Two")
+	require.NotEmpty(t, dbName, fmt.Sprintf("no SQL Database found for composite '%s'", DatabaseTwoName))
+
+	owner, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, dbName, "-o", "jsonpath={.spec.forProvider.owner}")
+	require.NoError(t, err, "failed to get owner")
+	require.Equal(t, PostgresqlAdminUserSpecName, owner, fmt.Sprintf("SQL Database '%s' owner mismatch", dbName))
+}
+
+func testDatabaseTwoFieldsVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	dbName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, "-l", fmt.Sprintf("crossplane.io/composite=%s", DatabaseTwoName), "-o", "jsonpath={.items[0].metadata.name}")
+	require.NoError(t, err, "failed to find SQL Database Two")
+	require.NotEmpty(t, dbName, fmt.Sprintf("no SQL Database found for composite '%s'", DatabaseTwoName))
+
+	encoding, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, dbName, "-o", "jsonpath={.spec.forProvider.encoding}")
+	require.NoError(t, err, "failed to get encoding")
+	require.Equal(t, "UTF8", encoding, fmt.Sprintf("SQL Database '%s' encoding mismatch", dbName))
+
+	lcCType, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, dbName, "-o", "jsonpath={.spec.forProvider.lcCType}")
+	require.NoError(t, err, "failed to get lcCType")
+	require.Equal(t, "et_EE.UTF-8", lcCType, fmt.Sprintf("SQL Database '%s' lcCType mismatch", dbName))
+
+	lcCollate, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, dbName, "-o", "jsonpath={.spec.forProvider.lcCollate}")
+	require.NoError(t, err, "failed to get lcCollate")
+	require.Equal(t, "et_EE.UTF-8", lcCollate, fmt.Sprintf("SQL Database '%s' lcCollate mismatch", dbName))
+
+	template, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", SqlDatabaseKind, dbName, "-o", "jsonpath={.spec.forProvider.template}")
+	require.NoError(t, err, "failed to get template")
+	require.Equal(t, "template0", template, fmt.Sprintf("SQL Database '%s' template mismatch", dbName))
+}
+
+func testDatabaseTwoUsageVerified(t *testing.T, namespaceOptions *terrak8s.KubectlOptions) {
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("waiting for Usage '%s'", DatabaseTwoUsageExpectedName), 30, 10*time.Second, func() (string, error) {
+		name, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.metadata.name}")
+		if err != nil {
+			return "", err
+		}
+		if name == "" {
+			return "", fmt.Errorf("Usage '%s' not found", DatabaseTwoUsageExpectedName)
+		}
+		return name, nil
+	})
+	require.NoError(t, err, fmt.Sprintf("Usage '%s' not found", DatabaseTwoUsageExpectedName))
+
+	ofKind, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.spec.of.kind}")
+	require.NoError(t, err)
+	require.Equal(t, "Grant", ofKind)
+
+	ofName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.spec.of.resourceRef.name}")
+	require.NoError(t, err)
+	require.Equal(t, DatabaseTwoGrantExpectedName, ofName)
+
+	byKind, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.spec.by.kind}")
+	require.NoError(t, err)
+	require.Equal(t, "Database", byKind)
+
+	byName, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.spec.by.resourceRef.name}")
+	require.NoError(t, err)
+	require.Equal(t, DatabaseTwoName, byName)
+
+	replayDeletion, err := terrak8s.RunKubectlAndGetOutputE(t, namespaceOptions, "get", UsageKind, DatabaseTwoUsageExpectedName, "-o", "jsonpath={.spec.replayDeletion}")
+	require.NoError(t, err)
+	require.Equal(t, "true", replayDeletion)
 }
