@@ -62,12 +62,20 @@ fi
 
 if [ "$USE_ARGOCD_CLI" == "true" ]
 then
-  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --refresh --app-namespace $app_namespace ${app_name} > /dev/null
-  if [ $? -ne 0 ]
-  then
-    echo "Failed to refresh ArgoCD Application $app_name!"
-    exit 25
-  fi
+  # Retry logic for app refresh
+  MAX_RETRIES=5
+  RETRY_DELAY=3
+  for i in $(seq 1 $MAX_RETRIES); do
+    argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app get --refresh --app-namespace $app_namespace ${app_name} > /dev/null && break
+    # Exit if retries exhausted
+    if [ $i -eq $MAX_RETRIES ]; then
+      echo "Failed to refresh ArgoCD Application $app_name!"
+      exit 25
+    fi
+    echo "Refresh attempt $i/$MAX_RETRIES failed, retrying in ${RETRY_DELAY}s..."
+    sleep $RETRY_DELAY
+  done
+
   # Retry logic for inconsistent OutOfSync state
   MAX_RETRIES=5
   RETRY_DELAY=2
