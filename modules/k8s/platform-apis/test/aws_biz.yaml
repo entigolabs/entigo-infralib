@@ -5,4 +5,4 @@ platform-apis:
   database:
     environmentConfig:
       backupBeforeDeletion: false
-      backupRetentionPeriod: 14
+      backupRetentionPeriod: 0
