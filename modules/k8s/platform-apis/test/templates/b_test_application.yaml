@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: b-apps
+  namespace: b-apps
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: b-apps
+  project: b
+  source:
+    chart: platform-apis-test-b-apps
+    repoURL: ghcr.io/entigolabs
+    targetRevision: '*.*.*-0'
+    helm:
+      releaseName: platform-apis-test-b-apps
