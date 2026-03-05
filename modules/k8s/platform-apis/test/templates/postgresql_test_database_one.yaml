@@ -1,0 +1,25 @@
+apiVersion: database.entigo.com/v1alpha1
+kind: PostgreSQLDatabase
+metadata:
+  name: database-one-test
+  namespace: test-postgresql
+spec:
+  owner: test_owner
+  encoding: "UTF8"
+  lcCType: "et_EE.UTF-8"
+  lcCollate: "et_EE.UTF-8"
+  dbTemplate: template0
+  instanceRef:
+    name: postgresql-instance-test
+  extensions:
+    - postgis
+    - postgis_topology
+    - fuzzystrmatch
+    - postgis_tiger_geocoder
+    - uuid-ossp
+    - btree_gist
+  extensionConfig:
+    postgis_topology:
+      schema: topology
+    postgis_tiger_geocoder:
+      schema: tiger
