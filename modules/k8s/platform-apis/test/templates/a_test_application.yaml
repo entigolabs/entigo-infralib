@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: a-apps
+  annotations:
+    tenancy.entigo.com/zone: a
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: a-apps
+  namespace: a-apps
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: a-apps
+  project: a
+  source:
+    chart: platform-apis-test-a-apps
+    repoURL: ghcr.io/entigolabs
+    targetRevision: '*.*.*-0'
+    helm:
+      releaseName: platform-apis-test-a-apps
