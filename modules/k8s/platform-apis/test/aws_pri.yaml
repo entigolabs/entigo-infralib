@@ -1,0 +1,8 @@
+platform-apis:
+  zone:
+    environmentConfig:
+      granularEgress: true
+  database:
+    environmentConfig:
+      backupBeforeDeletion: false
+      backupRetentionPeriod: 0
