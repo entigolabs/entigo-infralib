@@ -3,9 +3,9 @@ name: grafana
 description: A umbrella chart for Grafana
 type: application
 version: 0.2.0
-appVersion: "12.1.0"
+appVersion: "12.4.0"
 
 dependencies:
   - name: grafana
-    version: 10.5.3
+    version: 11.3.0
     repository: https://grafana-community.github.io/helm-charts
