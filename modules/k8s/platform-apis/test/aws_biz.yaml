@@ -1,8 +1,16 @@
 platform-apis:
   zone:
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
     environmentConfig:
       granularEgress: true
+      appProject:
+        namespaceResourceBlacklist: []
+        namespaceResourceWhitelist:
+        - group: '*'
+          kind: '*'
   database:
     environmentConfig:
       backupBeforeDeletion: false
-      backupRetentionPeriod: 14
+      backupRetentionPeriod: 0
