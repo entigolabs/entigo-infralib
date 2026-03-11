@@ -94,7 +94,7 @@ get_app_name() {
           APP_NAME="crossplane-system"
         elif [ "$MODULE_NAME" == "istio-istiod" ]
         then
-          APP_NAME="istio-system"  
+          APP_NAME="istio-system"
         elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" ]
         then
           APP_NAME=$MODULE_NAME
@@ -119,7 +119,7 @@ generate_config() {
     do
       module_name=$(basename $module)
       for test in $(ls -1 ./modules/$module/test/*.yaml)
-      do 
+      do
         testname=`basename $test | sed 's/\.yaml$//'`
         if [ ! -f agents/${cloud}_$testname/config.yaml ]
         then
@@ -164,12 +164,12 @@ generate_config_k8s() {
     local existing_step=""
     BRANCH="main"
     for test in $(find $MODULE_PATHS  -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
-    do 
+    do
       MODULE_NAME=`basename $test`
-      
+
       if [ ${#modules[@]} -eq 0 ] || [[ " ${modules[*]} " =~ " $MODULE_NAME " ]]
       then
-      
+
       for cloud in $(find agents  -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
       do
         prefix="$(echo ${cloud} | cut -d'_' -f2)"
@@ -201,7 +201,7 @@ generate_config_k8s() {
 
 run_agents() {
   google_auth_login
-  
+
   local only_steps="$1"
   AGENT_OPTS=""
   if [ "$only_steps" != "" ]
@@ -316,6 +316,8 @@ test_tf() {
     PIDS="$PIDS $!=route53"
     ./modules/aws/route53-resolver-associate/test.sh testonly &
     PIDS="$PIDS $!=route53-resolver-associate"
+    ./modules/aws/efs/test.sh testonly &
+    PIDS="$PIDS $!=efs"
     ./modules/aws/eks/test.sh testonly &
     PIDS="$PIDS $!=eks"
     ./modules/aws/eks-node-group/test.sh testonly &
@@ -346,7 +348,7 @@ test_tf() {
     ./modules/google/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
   fi
-  
+
   FAIL=""
   for p in $PIDS; do
       pid=$(echo $p | cut -d"=" -f1)
@@ -369,12 +371,12 @@ test_tf() {
 
 test_k8s() {
   google_auth_login
-  
+
   gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
   gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-  
+
   TESTS=(
       "./modules/k8s/platform-apis/test.sh"
       "./modules/k8s/hello-world/test.sh"
@@ -433,7 +435,7 @@ test_k8s() {
 
 default_aws_conf() {
   generate_config "aws" "net" "aws/kms" "aws/cost-alert" "aws/hello-world" "aws/vpc" "aws/tgw-attach" "aws-v2/route53" "aws/route53-resolver-associate" "aws/ecr-proxy" "aws/config-rules"
-  generate_config "aws" "infra" "aws/eks" "aws/eks-node-group" "aws/crossplane" "aws/ec2" "aws/karpenter-node-role"
+  generate_config "aws" "infra" "aws/efs" "aws/eks" "aws/eks-node-group" "aws/crossplane" "aws/ec2" "aws/karpenter-node-role"
 }
 
 default_google_conf() {
