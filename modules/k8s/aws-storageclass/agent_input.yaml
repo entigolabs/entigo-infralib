@@ -1,2 +1,8 @@
 global:
   kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
+  efsId: |
+    {{ .toptout.efs.id }}
+  efsNames: |
+    {{ .toptout.efs.efs_volumes }}
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
