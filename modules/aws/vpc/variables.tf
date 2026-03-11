@@ -186,6 +186,12 @@ variable "create_endpoint_sts" {
   default  = false
 }
 
+variable "create_endpoint_efs" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "endpoints_sg_extra_rules" {
   type     = list(string)
   nullable = false
