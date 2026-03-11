@@ -58,7 +58,10 @@ variable "lifecycle_policy" {
     transition_to_archive               = optional(string)
     transition_to_primary_storage_class = optional(string)
   })
-  default  = {}
+  default  = {
+    transition_to_ia = "AFTER_90_DAYS"
+    transition_to_primary_storage_class = "AFTER_1_ACCESS"
+  }
   nullable = false
 }
 

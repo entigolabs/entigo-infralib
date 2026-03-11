@@ -39,6 +39,9 @@ module "efs" {
   security_group_vpc_id      = var.security_group_vpc_id
   create_security_group      = var.create_security_group
 
+
+  security_group_use_name_prefix = var.security_group_use_name_prefix
+
   # Generate per-CIDR ingress rules and merge with user-provided ones
   security_group_ingress_rules = merge(
     {
@@ -49,20 +52,9 @@ module "efs" {
     },
     var.security_group_ingress_rules
   )
-  security_group_use_name_prefix = var.security_group_use_name_prefix
-  # Generate per-CIDR egress rules and merge with user-provided ones
-  security_group_egress_rules = merge(
-    {
-      for idx, cidr in var.security_group_cidrs : "egress_${idx}" => {
-        description = "egress for datasync"
-        from_port   = 1024
-        to_port     = 65535
-        ip_protocol = "tcp"
-        cidr_ipv4   = cidr
-      }
-    },
-    var.security_group_egress_rules
-  )
+
+  security_group_egress_rules = var.security_group_egress_rules
+
   performance_mode = var.performance_mode
   lifecycle_policy = var.lifecycle_policy
   provisioned_throughput_in_mibps = var.provisioned_throughput_in_mibps
