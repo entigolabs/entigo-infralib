@@ -1,0 +1,2 @@
+efs_volumes: |
+  ["shared-a", "shared-b"]

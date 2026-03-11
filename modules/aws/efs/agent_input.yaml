@@ -1,0 +1,7 @@
+kms_key_arn: "{{ .toptout.kms.data_key_arn }}"
+security_group_vpc_id: "{{ .toutput.vpc.vpc_id }}"
+mount_targets_subnet_id: |
+  flatten([{{ .toutput.vpc.compute_subnets }}])
+security_group_cidrs: |
+  flatten([{{ .toutput.vpc.compute_subnets_cidr_blocks }}])
+efs_csi_service_account_role_arn: "{{ .toptout.eks.efs_csi_service_account_role_arn }}"
