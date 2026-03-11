@@ -25,25 +25,6 @@ module "efs" {
         ]
       }
     } : {},
-    {
-      AllowSourceAccountReplicationActions = {
-        sid    = "AllowSourceAccountReplicationActions"
-        effect = "Allow"
-        actions = [
-          "elasticfilesystem:DescribeFileSystems",
-          "elasticfilesystem:CreateReplicationConfiguration",
-          "elasticfilesystem:DescribeReplicationConfigurations",
-          "elasticfilesystem:DeleteReplicationConfiguration",
-          "elasticfilesystem:ReplicationWrite"
-        ]
-        principals = [
-          {
-            type        = "AWS"
-            identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-          }
-        ]
-      }
-    },
     var.policy_statements != null ? var.policy_statements : {}
   )
 
