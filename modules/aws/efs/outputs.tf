@@ -16,6 +16,11 @@ output "dns_name" {
   value       = [for k, v in module.efs : v.dns_name]
 }
 
+output "efs_volumes" {
+  description = "List of EFS volume names"
+  value       = [for k, v in module.efs : k]
+}
+
 
 ################################################################################
 # Mount Target(s)
