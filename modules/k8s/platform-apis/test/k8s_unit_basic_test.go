@@ -14,8 +14,6 @@ func TestK8sPlatformApisAWSPri(t *testing.T) {
 }
 
 func testK8sPlatformApis(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
+	t.Parallel()
 	_, _ = k8s.CheckKubectlConnection(t, cloudName, envName)
-
-
 }
