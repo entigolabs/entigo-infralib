@@ -56,9 +56,9 @@ module "vpc_endpoints" {
       }
     } : {}, var.create_endpoint_efs ? {
       efs = {
-        service             = "efs"
+        service             = "elasticfilesystem"
         private_dns_enabled = true
-        tags                = { Name = "${var.prefix}-efs.vpc-endpoint" }
+        tags                = { Name = "${var.prefix}-elasticfilesystem.vpc-endpoint" }
       }
     } : {})
 
