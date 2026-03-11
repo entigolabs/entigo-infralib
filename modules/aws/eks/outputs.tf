@@ -124,6 +124,11 @@ output "cluster_addons" {
   value = module.eks.cluster_addons
 }
 
+output "efs_csi_service_account_role_arn" {
+  description = "AWS EKS EFS CSI Service Account Role ARN"
+  value       = var.enable_efs_csi ? module.eks.cluster_addons["aws-efs-csi-driver"].service_account_role_arn : ""
+}
+
 output "cluster_identity_providers" {
   description = "Map of attribute maps for all EKS identity providers enabled"
   value = module.eks.cluster_identity_providers
