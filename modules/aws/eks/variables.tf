@@ -320,7 +320,7 @@ variable "coredns_addon_version" {
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.34.3-eksbuild.2"
+  default = "v1.34.3-eksbuild.5"
 }
 
 variable "vpc_cni_addon_version" {
@@ -330,12 +330,12 @@ variable "vpc_cni_addon_version" {
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.55.0-eksbuild.2"
+  default = "v1.56.0-eksbuild.1"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v2.2.0-eksbuild.1"
+  default = "v2.3.0-eksbuild.2"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {
