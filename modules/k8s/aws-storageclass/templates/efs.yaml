@@ -1,0 +1,48 @@
+{{- if .Values.global.efsId }}
+{{- $ids := splitList "," .Values.global.efsId }}
+{{- $names := splitList "," .Values.global.efsNames }}
+
+{{- range $i, $value := $ids }}
+{{- $name := index $names $i }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: {{ $.Values.global.sc_prefix }}{{ $name }}
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: {{ $value }}
+  directoryPerms: "700"
+
+provisioner: efs.csi.aws.com
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: {{ $.Values.global.sc_prefix }}{{ $name }}-no-retain
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: {{ $value }}
+  directoryPerms: "700"
+
+provisioner: efs.csi.aws.com
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+
+{{- end }}
+{{- end }}
+
+
+
