@@ -1,2 +1,4 @@
 efs_volumes: |
   ["shared-a", "shared-b"]
+create_backup_policy: false
+enable_backup_policy: false
