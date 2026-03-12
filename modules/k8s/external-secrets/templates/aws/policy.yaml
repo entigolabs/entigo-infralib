@@ -22,7 +22,9 @@ spec:
 {{- if .Values.global.enableWriteForClusterSecretStore }}
               "secretsmanager:ListSecrets",
               "secretsmanager:CreateSecret",
+              "secretsmanager:PutSecretValue",
               "secretsmanager:DeleteSecret",
+              "secretsmanager:DeleteResourcePolicy",
               "secretsmanager:TagResource",
 {{- end }}
               "secretsmanager:GetResourcePolicy",
