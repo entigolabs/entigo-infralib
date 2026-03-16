@@ -10,6 +10,15 @@ kiali-server:
   deployment:
     image_pull_policy: "IfNotPresent"
     instance_name: "kiali"
+
+    security_context:
+      runAsNonRoot: true
+      seccompProfile:
+        type: "RuntimeDefault"
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
     pod_annotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
     affinity:
