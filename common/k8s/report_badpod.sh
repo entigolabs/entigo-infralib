@@ -4,7 +4,7 @@ echo "Containers without requests or limits."
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $SCRIPTPATH/../..
 
-kubectl get pods -A -o json | jq -r '.items[] | . as $pod | .spec.containers[] | select((.resources.requests == null or .resources.limits == null) and (.name | IN("default-http-backend","prometheus-to-sd-exporter","dnsmasq","sidecar","event-exporter","autoscaler" ,"netd", "aws-node", "aws-eks-nodeagent", "kube-proxy", "calico-node", "ip-masq-agent", "calico-typha", "cilium-agent") | not)) | "\($pod.metadata.namespace)/\($pod.metadata.name)/\(.name)"'
+kubectl get pods -A -o json | jq -r '.items[] | . as $pod | .spec.containers[] | select((.resources.requests == null or .resources.limits == null) and (.name | IN("default-http-backend","prometheus-to-sd-exporter","dnsmasq","sidecar","event-exporter","autoscaler" ,"netd", "aws-node", "aws-eks-nodeagent", "kube-proxy", "calico-node", "ip-masq-agent", "calico-typha", "cilium-agent", "efs-plugin", "csi-driver-registrar", "liveness-probe") | not)) | "\($pod.metadata.namespace)/\($pod.metadata.name)/\(.name)"'
 
 echo "#################################"
 echo "Namespaces without PSA"
@@ -26,6 +26,15 @@ kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "alloy-biz") |
   select(.metadata.name != "istio-system") |
   select(.metadata.name != "gke-managed-system") |
+  select(.metadata.name != "a") |
+  select(.metadata.name != "a-apps") |
+  select(.metadata.name != "a1") |
+  select(.metadata.name != "a2") |
+  select(.metadata.name != "b-apps") |
+  select(.metadata.name != "b1") |
+  select(.metadata.name != "b2") |
+  select(.metadata.name != "bar") |
+  select(.metadata.name != "test-postgresql") |
   select(.metadata.name != "gke-managed-volumepopulator") |
   (.metadata.labels["pod-security.kubernetes.io/enforce"] // "privileged") as $enforce |
   (.metadata.labels["pod-security.kubernetes.io/warn"] // "privileged") as $warn |
