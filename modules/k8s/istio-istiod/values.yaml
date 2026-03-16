@@ -15,6 +15,9 @@ istiod:
   seccompProfile:
     type: RuntimeDefault
   global:
+    proxy:
+      seccompProfile:
+        type: RuntimeDefault
     imagePullPolicy: "IfNotPresent"
     defaultResources:
       requests:
