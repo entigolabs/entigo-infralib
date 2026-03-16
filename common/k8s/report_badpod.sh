@@ -26,6 +26,15 @@ kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "alloy-biz") |
   select(.metadata.name != "istio-system") |
   select(.metadata.name != "gke-managed-system") |
+  select(.metadata.name != "a") |
+  select(.metadata.name != "a-apps") |
+  select(.metadata.name != "a1") |
+  select(.metadata.name != "a2") |
+  select(.metadata.name != "b-apps") |
+  select(.metadata.name != "b1") |
+  select(.metadata.name != "b2") |
+  select(.metadata.name != "bar") |
+  select(.metadata.name != "test-postgresql") |
   select(.metadata.name != "gke-managed-volumepopulator") |
   (.metadata.labels["pod-security.kubernetes.io/enforce"] // "privileged") as $enforce |
   (.metadata.labels["pod-security.kubernetes.io/warn"] // "privileged") as $warn |
