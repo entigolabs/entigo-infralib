@@ -79,7 +79,7 @@ variable "volume_size" {
 
 variable "max_pods_per_node" {
   type    = number
-  default = null
+  default = 64
 }
 
 variable "volume_type" {
