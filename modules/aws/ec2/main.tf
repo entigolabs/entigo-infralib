@@ -62,6 +62,7 @@ resource "aws_instance" "ec2" {
   user_data_base64 = var.user_data_base64 != "" ? var.user_data_base64 : base64encode(var.user_data)
   vpc_security_group_ids = concat([aws_security_group.ec2.id], var.extra_security_group_ids)
   associate_public_ip_address = var.eip || var.public_ip_address ? true : false
+  private_ip = var.private_ip != "" ? var.private_ip : null
   key_name = var.key_name
   iam_instance_profile = var.iam_instance_profile
 
