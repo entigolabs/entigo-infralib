@@ -2,8 +2,6 @@ platform-apis:
   zone:
     environmentConfig:
       granularEgress: true
-      appProject:
-        maintainerGroups: ["web-read-only-343159627493470238"]
   database:
     environmentConfig:
       backupBeforeDeletion: false
