@@ -4,3 +4,4 @@ global:
   extraProviders:
     - networkfirewall
     - ram
+    - kafka
