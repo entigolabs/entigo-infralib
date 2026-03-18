@@ -51,6 +51,11 @@ variable "public_ip_address" {
   default = false
 }
 
+variable "private_ip" {
+  type    = string
+  default = ""
+}
+
 variable "route53_zone_id" {
   type = string
   default = ""
