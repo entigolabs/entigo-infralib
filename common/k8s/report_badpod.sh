@@ -26,6 +26,7 @@ kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "alloy-biz") |
   select(.metadata.name != "istio-system") |
   select(.metadata.name != "gke-managed-system") |
+  select(.metadata.name != "gke-managed-networking-dra-driver") |
   select(.metadata.name != "a") |
   select(.metadata.name != "a-apps") |
   select(.metadata.name != "a1") |
