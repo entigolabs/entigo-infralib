@@ -71,7 +71,7 @@ trivy-operator:
   operator:
     scanJobsConcurrentLimit: 1
     scanJobTimeout: 20m
-    metricsFindingsEnabled: false
+    metricsFindingsEnabled: true
     metricsVulnIdEnabled: false
     exposedSecretScannerEnabled: false
     sbomGenerationEnabled: false
