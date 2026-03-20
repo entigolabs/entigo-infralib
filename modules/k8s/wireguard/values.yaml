@@ -12,7 +12,9 @@ wireguard:
   initContainer:
     image:
       tag: "1.37.0"
-  replicaCount: 1
+  replicaCount: 2
+  disruptionBudget:
+    minAvailable: 1
   autoscaling:
     enabled: false
   metrics:
@@ -39,7 +41,7 @@ wireguard:
       cpu: 10m
       memory: 32Mi
       ephemeral-storage: 8Mi
-    limits:     
+    limits:
       cpu: 1000m
       memory: 128Mi
       ephemeral-storage: 128Mi
@@ -56,4 +58,30 @@ wireguard:
     containerSecurityContext:
       capabilities:
         drop:
-         - ALL
+          - ALL
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+        - weight: 10
+          preference:
+            matchExpressions:
+              - key: mon
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
