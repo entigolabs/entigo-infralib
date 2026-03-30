@@ -1,6 +1,6 @@
 // crossplane-core service account
 locals {
-  crossplane_service_account_id = var.crossplane_service_account_id != "" ? substr(var.crossplane_service_account_id, 0, 28) : substr(var.prefix, 0, 28)
+  crossplane_service_account_id = var.crossplane_service_account_id != "" ? replace(substr(var.crossplane_service_account_id, 0, 28), "/-+$/", "") : replace(substr(var.prefix, 0, 28), "/-+$/", "")
 }
 
 resource "google_project_iam_member" "crossplane_core" {
