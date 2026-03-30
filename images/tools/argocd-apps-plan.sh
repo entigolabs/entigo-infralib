@@ -43,6 +43,11 @@ then
   -l app.kubernetes.io/component=repo-server \
   --field-selector=status.phase=Running \
   -o json | jq -r '[.items[] | select(.status.conditions[] | select(.type=="Ready" and .status=="True"))] | .[0].metadata.name')
+  if [ $? -ne 0 ] || [ -z "$repopod" ] || [ "$repopod" == "null" ]
+  then
+    echo "Unable to use local execution, not able to find ArgoCD repo-server Pod."
+    exit 31
+  fi
   kubectl exec -c repo-server -n $ARGOCD_NAMESPACE $repopod -- bash -c "mkdir -p /tmp/conf/modules/k8s && rm -rf /tmp/conf/$path"
   kubectl cp /conf/$path ${ARGOCD_NAMESPACE}/${repopod}:/tmp/conf/modules/k8s
   kubectl exec -it -c repo-server -n ${ARGOCD_NAMESPACE} $repopod -- bash -c "cd /tmp/conf/ && git init; git add . && git config user.email 'agent@entigo.com' && git config user.name 'agent' && git commit -a -m'updates'"
