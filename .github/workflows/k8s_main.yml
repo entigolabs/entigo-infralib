@@ -65,6 +65,7 @@ jobs:
         do
           ${module}/test.sh
           if [ $? -ne 0 ]
+          then
             echo "${module} Failed"
             exit 1
           fi
