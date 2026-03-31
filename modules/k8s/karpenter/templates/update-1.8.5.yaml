@@ -1,6 +1,6 @@
 # Patches Karpenter CRDs to remove stale conversion webhook config
 # that blocks ArgoCD sync when upgrading from 1.0.x
-# Runs in sync wave -1 so it executes before Karpenter chart resources
+# Runs as PreSync hook so it executes before Karpenter chart resources
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -61,9 +61,31 @@ spec:
     spec:
       serviceAccountName: {{ .Release.Name }}-crd-patch
       restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: patch
-          image: bitnami/kubectl:latest
+          image: {{ .Values.job.image }}:{{ .Values.job.tag }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+              ephemeral-storage: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+              ephemeral-storage: 64Mi
           command:
             - /bin/sh
             - -c
