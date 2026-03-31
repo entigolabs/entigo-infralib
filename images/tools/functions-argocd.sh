@@ -66,7 +66,17 @@ argocd:
                 touch git-$app/$path/extra_repos.yaml
             fi
 
-            helm upgrade --create-namespace --install -n $namespace \
+            # Apply namespace manifest with labels
+            echo "apiVersion: v1
+            kind: Namespace
+            metadata:
+              labels:
+                pod-security.kubernetes.io/enforce: restricted
+                pod-security.kubernetes.io/warn: restricted
+                tenancy.entigo.com/zone: infralib
+              name: $namespace" | kubectl apply -f - || { echo "Failed to create namespace $namespace"; exit 22; }
+
+            helm upgrade --install -n $namespace \
                 -f git-$app/$path/values.yaml \
                 -f git-$app/$path/values-${PROVIDER}.yaml \
                 -f values-$app.yaml \
@@ -80,7 +90,7 @@ argocd:
                 --set argocd.applicationSet.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-applicationset-controller \
                 --set argocd.notifications.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-notifications-controller \
                 --set argocd.controller.statefulsetAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/StatefulSet:$app/$app-application-controller \
-                --set argocd-apps.enabled=false $app git-$app/$path >&2
+                --set argocd-apps.enabled=false $app git-$app/$path >&2 || { echo "Helm install failed for $app in namespace $namespace"; exit 23; }
             rm -rf values-$app.yaml git-$app >&2
             did_bootstrap="true"
         fi
