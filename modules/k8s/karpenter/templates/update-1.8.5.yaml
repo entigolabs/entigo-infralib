@@ -90,13 +90,21 @@ spec:
             - /bin/sh
             - -c
             - |
+
               #!/bin/sh
-              set -e
               CRDS="nodepools.karpenter.sh nodeclaims.karpenter.sh ec2nodeclasses.karpenter.k8s.aws"
               for crd in ${CRDS}; do
-                echo "Patching ${crd}..."
-                kubectl patch crd "${crd}" --type=json \
-                  -p='[{"op":"remove","path":"/spec/conversion"}]' && \
-                  echo "OK: ${crd}" || echo "SKIP: ${crd} (no conversion field or already removed)"
+                if ! kubectl get crd "${crd}" > /dev/null 2>&1; then
+                  echo "SKIP: ${crd} (CRD does not exist)"
+                  continue
+                fi
+                # Check if conversion field exists before patching
+                if kubectl get crd "${crd}" -o jsonpath='{.spec.conversion}' 2>/dev/null | grep -q .; then
+                  kubectl patch crd "${crd}" --type=json \
+                    -p='[{"op":"remove","path":"/spec/conversion"}]' && \
+                    echo "OK: ${crd} patched" || echo "FAIL: ${crd} patch failed"
+                else
+                  echo "SKIP: ${crd} (no conversion field)"
+                fi
               done
               echo "Done."
