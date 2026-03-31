@@ -68,13 +68,13 @@ argocd:
 
             # Apply namespace manifest with labels
             echo "apiVersion: v1
-            kind: Namespace
-            metadata:
-              labels:
-                pod-security.kubernetes.io/enforce: restricted
-                pod-security.kubernetes.io/warn: restricted
-                tenancy.entigo.com/zone: infralib
-              name: $namespace" | kubectl apply -f - || { echo "Failed to create namespace $namespace"; exit 22; }
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    tenancy.entigo.com/zone: infralib
+  name: $namespace" | kubectl apply -f - || { echo "Failed to create namespace $namespace"; exit 22; }
 
             helm upgrade --install -n $namespace \
                 -f git-$app/$path/values.yaml \
