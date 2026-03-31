@@ -81,7 +81,7 @@ jobs:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: Wait for other workflow runs
-      uses: softprops/turnstyle@v2
+      uses: softprops/turnstyle@v3
       with:
         # Abort if waiting longer than 30 minutes
         abort-after-seconds: 3600
