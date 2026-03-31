@@ -13,9 +13,6 @@ jobs:
   build:
     name: Test modules/aws
     runs-on: ubuntu-latest
-    concurrency:
-      group: pr-modules-test
-      cancel-in-progress: false
     steps:
     - uses: actions/checkout@v4
       with:
@@ -24,7 +21,15 @@ jobs:
     - name: Get changed files
       id: changed-files
       uses: tj-actions/changed-files@v42
-    
+
+    - name: Wait for other workflow runs
+      uses: softprops/turnstyle@v3
+      with:
+        # Abort if waiting longer than 30 minutes
+        abort-after-seconds: 3600
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Run tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
