@@ -49,15 +49,6 @@ jobs:
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
-        source common/generate_config.sh
-        docker pull $ENTIGO_INFRALIB_IMAGE
-        docker pull $KUBESCORE_IMAGE
-        google_auth_login
-        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-        
         echo "Changed modules:"
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
             echo "$file" | grep "modules/k8s" | cut -d'/' -f1-3
