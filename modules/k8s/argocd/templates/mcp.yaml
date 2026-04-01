@@ -29,7 +29,7 @@ spec:
               type: RuntimeDefault
           env:
             - name: ARGOCD_BASE_URL
-              value: "http://{{ .Release.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
+              value: "https://{{ .Release.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
             - name: NODE_TLS_REJECT_UNAUTHORIZED
               value: "0"
             - name: ARGOCD_API_TOKEN
