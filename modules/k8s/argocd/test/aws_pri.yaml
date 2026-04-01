@@ -2,6 +2,8 @@ argocd:
   repoServer:
     autoscaling:
       maxReplicas: 1
+  mcp:
+    enabled: true
   server:
     ingress:
       annotations:

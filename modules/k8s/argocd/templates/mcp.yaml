@@ -1,0 +1,43 @@
+{{- if .Values.mcp.enabled }}
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-for-argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-for-argocd
+  template:
+    metadata:
+      labels:
+        app: mcp-for-argocd
+    spec:
+      containers:
+        - name: mcp-for-argocd
+          image: {{ .Values.mcp.image }}:{{ .Values.mcp.tag }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: ARGOCD_BASE_URL
+              value: "http://{{ .Release.Name }}-server.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+            - name: ARGOCD_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-infralib-token
+                  key: token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-for-argocd
+spec:
+  selector:
+    app: mcp-for-argocd
+  ports:
+    - port: 3000
+      targetPort: 3000
+{{- end }}

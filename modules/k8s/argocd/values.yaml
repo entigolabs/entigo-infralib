@@ -7,6 +7,11 @@ global:
 argocd-apps:
   enabled: true
 
+mcp:
+  enabled: false
+  image: entigolabs/mcp-for-argocd
+  tag: "0.0.3"
+
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.19.20"
