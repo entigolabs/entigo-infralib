@@ -13,5 +13,6 @@ platform-apis:
           kind: '*'
   database:
     environmentConfig:
-      backupBeforeDeletion: false
+      postgresBackupBeforeDeletion: false
+      valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
