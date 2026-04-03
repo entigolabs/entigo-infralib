@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-valkey
+  labels:
+    tenancy.entigo.com/zone: a
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-valkey
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-valkey
+  project: a
+  source:
+    chart: platform-apis-test-valkey
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.8'
+    helm:
+      releaseName: valkey
+      values: |
+        targetRevision: 'v0.2.8'
+  ignoreDifferences:
+    - group: "database.entigo.com"
+      kind: ValkeyInstance
+      jsonPointers:
+        - /spec/deletionProtection
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
