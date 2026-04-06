@@ -4,7 +4,7 @@ then
   #Use dev tag when we are in a PR and Github.
   export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:dev"
 else
-  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.19.20"
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.19.22"
 fi
 
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
