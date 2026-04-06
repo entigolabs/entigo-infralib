@@ -64,9 +64,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_modules == 'true'
     runs-on: ubuntu-latest
-    concurrency:
-      group: pr-modules-test
-      cancel-in-progress: false
     strategy:
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
       max-parallel: 1
@@ -83,7 +80,13 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
+    - name: Wait for other workflow runs
+      uses: softprops/turnstyle@v3
+      with:
+        # Abort if waiting longer than 30 minutes
+        abort-after-seconds: 3600
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Run test
       run: |
         echo "Testing module: ${{ matrix.module }}"
