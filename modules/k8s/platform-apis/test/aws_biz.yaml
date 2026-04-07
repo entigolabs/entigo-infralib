@@ -11,7 +11,14 @@ platform-apis:
         namespaceResourceWhitelist:
         - group: '*'
           kind: '*'
+  kafka:
+    install: true
+    environmentConfig:
+      awsProvider: crossplane-aws
+      configKMSKey: config
+      kafkaNamespace: crossplane-kafka-biz
   database:
     environmentConfig:
-      backupBeforeDeletion: false
+      postgresBackupBeforeDeletion: false
+      valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
