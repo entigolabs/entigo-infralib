@@ -1,0 +1,58 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: platform-apis-test-kafka
+spec:
+  activate:
+    - clusters.kafka.aws.upbound.io
+---
+apiVersion: kafka.aws.upbound.io/v1beta2
+kind: Cluster
+metadata:
+  name: test-kafka-cluster
+spec:
+  providerConfigRef:
+    name: crossplane-aws
+  forProvider:
+    region: eu-north-1
+    clusterName: test-kafka-cluster
+    kafkaVersion: "3.9.0"
+    numberOfBrokerNodes: 2
+    brokerNodeGroupInfo:
+      instanceType: kafka.t3.small
+    clientAuthentication:
+      sasl:
+        iam: true
+        scram: true
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-kafka
+  labels:
+    tenancy.entigo.com/zone: a
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-kafka
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-kafka
+  project: a
+  source:
+    chart: platform-apis-test-kafka
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.12-rc.149.101.1'
+    helm:
+      releaseName: kafka
+      values: |
+        targetRevision: 'v0.2.12-rc.149.101.1'
+        clusterARN: ""  # Override with the MSK cluster ARN for the target environment
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
