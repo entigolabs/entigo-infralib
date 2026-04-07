@@ -8,3 +8,9 @@ platform-apis:
     environmentConfig:
       backupBeforeDeletion: false
       backupRetentionPeriod: 0
+  kafka:
+    install: true
+    environmentConfig:
+      awsProvider: crossplane-aws
+      configKMSKey: config
+      kafkaNamespace: crossplane-kafka-pri
