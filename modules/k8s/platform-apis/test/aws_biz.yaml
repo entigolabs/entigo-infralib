@@ -11,7 +11,11 @@ platform-apis:
         namespaceResourceWhitelist:
         - group: '*'
           kind: '*'
+      tags:
+        etag: etest
+        eutag: eutest
   database:
     environmentConfig:
-      backupBeforeDeletion: false
+      postgresBackupBeforeDeletion: false
+      valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
