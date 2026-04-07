@@ -43,12 +43,28 @@ data "aws_eks_node_group" "all" {
   node_group_name = each.value
 }
 
-data "aws_eks_addons" "all" {
+data "aws_eks_addon" "coredns" {
   cluster_name = var.cluster_name
+  addon_name   = "coredns"
 }
 
-data "aws_eks_addon" "all" {
-  for_each     = toset(data.aws_eks_addons.all.addons)
+data "aws_eks_addon" "kube_proxy" {
   cluster_name = var.cluster_name
-  addon_name   = each.value
+  addon_name   = "kube-proxy"
+}
+
+data "aws_eks_addon" "vpc_cni" {
+  cluster_name = var.cluster_name
+  addon_name   = "vpc-cni"
+}
+
+data "aws_eks_addon" "ebs_csi" {
+  cluster_name = var.cluster_name
+  addon_name   = "aws-ebs-csi-driver"
+}
+
+data "aws_eks_addon" "efs_csi" {
+  count        = var.enable_efs_csi ? 1 : 0
+  cluster_name = var.cluster_name
+  addon_name   = "aws-efs-csi-driver"
 }

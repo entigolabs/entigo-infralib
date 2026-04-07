@@ -75,7 +75,7 @@ output "cluster_security_group_id" {
 
 output "cluster_service_cidr" {
   description = "The CIDR block where Kubernetes pod and service IP addresses are assigned from"
-  value       = data.aws_eks_cluster.this.kubernetes_network_config[0].service_cidr
+  value       = data.aws_eks_cluster.this.kubernetes_network_config[0].service_ipv4_cidr
 }
 
 output "node_security_group_arn" {
@@ -120,12 +120,20 @@ output "cluster_iam_role_unique_id" {
 
 output "cluster_addons" {
   description = "Map of attribute maps for all EKS cluster addons enabled"
-  value       = data.aws_eks_addon.all
+  value = merge(
+    {
+      coredns              = data.aws_eks_addon.coredns
+      "kube-proxy"         = data.aws_eks_addon.kube_proxy
+      "vpc-cni"            = data.aws_eks_addon.vpc_cni
+      "aws-ebs-csi-driver" = data.aws_eks_addon.ebs_csi
+    },
+    var.enable_efs_csi ? { "aws-efs-csi-driver" = data.aws_eks_addon.efs_csi[0] } : {}
+  )
 }
 
 output "efs_csi_service_account_role_arn" {
   description = "AWS EKS EFS CSI Service Account Role ARN"
-  value       = try(data.aws_eks_addon.all["aws-efs-csi-driver"].service_account_role_arn, "")
+  value       = var.enable_efs_csi ? data.aws_eks_addon.efs_csi[0].service_account_role_arn : ""
 }
 
 output "cluster_identity_providers" {
@@ -188,5 +196,5 @@ output "account" {
 
 output "region" {
   description = "Cluster region"
-  value       = data.aws_region.current.name
+  value       = data.aws_region.current.id
 }
