@@ -10,7 +10,7 @@
 #   ./prompts.sh login            # Re-authenticate only
 #   ./prompts.sh <name>           # Run prompts/<name>.md
 #
-# Cron: 0 8 * * * /home/martivo/bin/prompts.sh update >> /tmp/update-deps.log 2>&1
+
 
 set -euo pipefail
 
