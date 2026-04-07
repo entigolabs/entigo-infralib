@@ -40,7 +40,7 @@ CLAUDE_JSON="${HOME}/.claude-docker.json"
 [ -f "$CLAUDE_JSON" ] || echo '{}' > "$CLAUDE_JSON"
 
 # Build the image if needed
-$DOCKER build -t "$IMAGE_NAME" -f "${SCRIPT_DIR}/images/claude/Dockerfile.claude" "$SCRIPT_DIR"
+$DOCKER build -t "$IMAGE_NAME" -f "${SCRIPT_DIR}/images/claude/Dockerfile" "$SCRIPT_DIR"
 
 # Container home dir matches the user inside the container
 C_HOME="/home/node"
