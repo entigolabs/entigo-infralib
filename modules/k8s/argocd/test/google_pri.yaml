@@ -20,14 +20,17 @@ argocd:
         p, infralib, projects, get, *, allow
       policy.default: role:readonly
     cm:
-      oidc.config: |
-        name: Zitadel
-        issuer: https://entigo-dev-if3upz.zitadel.cloud
-        clientID: "343161107176783665"
-        clientSecret: "{{ .output-custom.argocd-pri_clientSecret }}"
-        requestedScopes:
-          - openid
-          - profile
-          - email
-          - groups
-        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
+      dex.config: |
+        connectors:
+          - type: oidc
+            id: zitadel
+            name: Zitadel
+            config:
+              issuer: https://entigo-dev-if3upz.zitadel.cloud
+              clientID: "343161107176783665"
+              clientSecret: "{{ .output-custom./argocd-pri/clientSecret }}"
+              scopes:
+                - openid
+                - profile
+                - email
+                - groups
