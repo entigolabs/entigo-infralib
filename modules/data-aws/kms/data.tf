@@ -1,23 +1,32 @@
 data "aws_kms_alias" "telemetry" {
-  name = "alias/${var.prefix}/telemetry"
+  count = var.telemetry_key_id == null ? 1 : 0
+  name  = "alias/${var.prefix}/telemetry"
 }
 
 data "aws_kms_alias" "config" {
-  name = "alias/${var.prefix}/config"
+  count = var.config_key_id == null ? 1 : 0
+  name  = "alias/${var.prefix}/config"
 }
 
 data "aws_kms_alias" "data" {
-  name = "alias/${var.prefix}/data"
+  count = var.data_key_id == null ? 1 : 0
+  name  = "alias/${var.prefix}/data"
+}
+
+locals {
+  telemetry_key_id = var.telemetry_key_id != null ? var.telemetry_key_id : data.aws_kms_alias.telemetry[0].target_key_id
+  config_key_id    = var.config_key_id != null ? var.config_key_id : data.aws_kms_alias.config[0].target_key_id
+  data_key_id      = var.data_key_id != null ? var.data_key_id : data.aws_kms_alias.data[0].target_key_id
 }
 
 data "aws_kms_key" "telemetry" {
-  key_id = data.aws_kms_alias.telemetry.target_key_id
+  key_id = local.telemetry_key_id
 }
 
 data "aws_kms_key" "config" {
-  key_id = data.aws_kms_alias.config.target_key_id
+  key_id = local.config_key_id
 }
 
 data "aws_kms_key" "data" {
-  key_id = data.aws_kms_alias.data.target_key_id
+  key_id = local.data_key_id
 }
