@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-kafka
+  labels:
+    tenancy.entigo.com/zone: a
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-kafka
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-kafka
+  project: a
+  source:
+    chart: platform-apis-test-kafka
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.12-rc.149.114.1'
+    helm:
+      releaseName: kafka
+      values: |
+        targetRevision: 'v0.2.12-rc.149.114.1'
+        clusterName: test-kafka-cluster
+        clusterARN: ""  # Populated by the test after MSK cluster creation
+        renderCompositions: true
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
