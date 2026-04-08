@@ -12,6 +12,8 @@ argocd:
     domain: |
       {{ .module.name }}.{{ .toutput.dns.pub_domain }}
   configs:
+    params:
+      server.dex.server: ""
     rbac:
       policy.csv: |
         g, web-admin-258953744228679165, role:admin
