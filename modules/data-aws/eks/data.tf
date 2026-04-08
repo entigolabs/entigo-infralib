@@ -23,15 +23,20 @@ data "aws_security_group" "cluster" {
 }
 
 data "aws_security_groups" "node" {
+  count = var.node_security_group_id == null ? 1 : 0
   filter {
     name   = "tag:karpenter.sh/discovery"
     values = [var.cluster_name]
   }
 }
 
+locals {
+  node_sg_ids = var.node_security_group_id != null ? [var.node_security_group_id] : (length(data.aws_security_groups.node) > 0 ? data.aws_security_groups.node[0].ids : [])
+}
+
 data "aws_security_group" "node" {
-  count = length(data.aws_security_groups.node.ids) > 0 ? 1 : 0
-  id    = length(data.aws_security_groups.node.ids) > 0 ? tolist(data.aws_security_groups.node.ids)[0] : null
+  count = length(local.node_sg_ids) > 0 ? 1 : 0
+  id    = length(local.node_sg_ids) > 0 ? local.node_sg_ids[0] : null
 }
 
 data "aws_cloudwatch_log_group" "this" {
