@@ -30,6 +30,7 @@ argocd:
               clientID: "343161107176783665"
               clientSecret: "{{ .output-custom./argocd-pri/clientSecret }}"
               insecureEnableGroups: true
+              getUserInfo: true
               scopes:
                 - openid
                 - profile
