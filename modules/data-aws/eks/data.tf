@@ -22,11 +22,16 @@ data "aws_security_group" "cluster" {
   id    = tolist(data.aws_eks_cluster.this.vpc_config[0].security_group_ids)[0]
 }
 
-data "aws_security_group" "node" {
+data "aws_security_groups" "node" {
   filter {
     name   = "tag:karpenter.sh/discovery"
     values = [var.cluster_name]
   }
+}
+
+data "aws_security_group" "node" {
+  count = length(data.aws_security_groups.node.ids) > 0 ? 1 : 0
+  id    = length(data.aws_security_groups.node.ids) > 0 ? tolist(data.aws_security_groups.node.ids)[0] : null
 }
 
 data "aws_cloudwatch_log_group" "this" {

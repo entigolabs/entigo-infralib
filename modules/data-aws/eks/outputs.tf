@@ -80,12 +80,12 @@ output "cluster_service_cidr" {
 
 output "node_security_group_arn" {
   description = "Amazon Resource Name (ARN) of the node shared security group"
-  value       = data.aws_security_group.node.arn
+  value       = length(data.aws_security_group.node) > 0 ? data.aws_security_group.node[0].arn : ""
 }
 
 output "node_security_group_id" {
   description = "ID of the node shared security group"
-  value       = data.aws_security_group.node.id
+  value       = length(data.aws_security_group.node) > 0 ? data.aws_security_group.node[0].id : ""
 }
 
 output "oidc_provider" {
