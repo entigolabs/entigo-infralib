@@ -1,4 +1,6 @@
 argocd:
+  dex:
+    enabled: false
   repoServer:
     autoscaling:
       maxReplicas: 1
@@ -21,19 +23,14 @@ argocd:
         p, infralib, projects, get, *, allow
       policy.default: role:readonly
     cm:
-      dex.config: |
-        connectors:
-          - type: oidc
-            id: zitadel
-            name: Zitadel
-            config:
-              issuer: https://entigo-dev-if3upz.zitadel.cloud
-              clientID: "343161107176783665"
-              clientSecret: "{{ .output-custom./argocd-pri/clientSecret }}"
-              insecureEnableGroups: true
-              getUserInfo: true
-              scopes:
-                - openid
-                - profile
-                - email
-                - groups
+      oidc.config: |
+        name: Zitadel
+        issuer: https://entigo-dev-if3upz.zitadel.cloud
+        clientID: "343161107176783665"
+        clientSecret: "{{ .output-custom./argocd-pri/clientSecret }}"
+        requestedScopes:
+          - openid
+          - profile
+          - email
+          - groups
+        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
