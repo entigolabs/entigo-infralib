@@ -58,9 +58,12 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	if err != nil {
 		t.Fatal("argocd-applicationset-controller deployment error:", err)
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("argocd-dex-server deployment error:", err)
+	// Dex is only deployed in "biz" environments; "pri" uses direct OIDC
+	if envName != "pri" {
+		err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 20, 6*time.Second)
+		if err != nil {
+			t.Fatal("argocd-dex-server deployment error:", err)
+		}
 	}
 
 	successResponseCode := "301"
