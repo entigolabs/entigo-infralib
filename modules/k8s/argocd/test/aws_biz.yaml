@@ -30,6 +30,7 @@ argocd:
               issuer: https://entigo-dev-if3upz.zitadel.cloud
               clientID: "343161091574001694"
               clientSecret: "{{ .output-custom./argocd-biz/clientSecret }}"
+              insecureEnableGroups: true
               scopes:
                 - openid
                 - profile
