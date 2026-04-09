@@ -65,5 +65,5 @@ output "elasticache_subnet_group_name" {
 
 output "default_security_group_id" {
   description = "The ID of the security group created by default on VPC creation"
-  value       = data.aws_vpc.this.default_security_group_id
+  value       = var.default_security_group_id
 }
