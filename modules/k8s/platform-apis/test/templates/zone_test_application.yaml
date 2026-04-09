@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-zones
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: zone
+  source:
+    chart: platform-apis-test-zones
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.12-rc.149.120.1'
+    helm:
+      releaseName: platform-apis-test-zones
+      values: |
+        targetRevision: 'v0.2.12-rc.149.120.1'
+  syncPolicy: {}
