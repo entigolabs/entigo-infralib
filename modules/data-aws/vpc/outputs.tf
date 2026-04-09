@@ -67,3 +67,8 @@ output "default_security_group_id" {
   description = "The ID of the security group created by default on VPC creation"
   value       = var.default_security_group_id
 }
+
+output "pipeline_security_group" {
+  description = "The ID of the security group used by the infralib pipeline (CodeBuild) for VPC access"
+  value       = var.pipeline_security_group_id
+}
