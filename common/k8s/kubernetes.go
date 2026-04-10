@@ -199,8 +199,39 @@ func DeleteK8SObject(t testing.TestingT, options *k8s.KubectlOptions, name strin
 	return deleteObject(t, options, name, "", resource)
 }
 
+func CreateK8SGatewayClass(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating GatewayClass %s", object.GetName())
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gatewayclasses"}
+	return CreateObject(t, options, object, "", resource)
+}
+
+func DeleteK8SGatewayClass(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting GatewayClass %s", name)
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gatewayclasses"}
+	return deleteObject(t, options, name, "", resource)
+}
+
+func CreateK8SGateway(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating Gateway %s", object.GetName())
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gateways"}
+	return CreateObject(t, options, object, options.Namespace, resource)
+}
+
+func DeleteK8SGateway(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting Gateway %s", name)
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gateways"}
+	return deleteObject(t, options, name, options.Namespace, resource)
+}
+
+func WaitUntilK8SGatewayDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gateways"}
+	namespacedObject := defaultNamespacedObject(name, resource)
+	namespacedObject.namespace = options.Namespace
+	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
 func WaitUntilK8SGatewayAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
-	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1beta1", Resource: "gateways"}
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gateways"}
 	availability := defaultObjectAvailability(name, resource)
 	availability.namespacedObject.namespace = options.Namespace
 	availability.isAvailable = isGatewayAvailable
