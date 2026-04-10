@@ -15,6 +15,55 @@ import (
 
 const domain = "infralib.entigo.io"
 
+func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
+	testK8sAwsAlbGatewayApi(t, "aws", "biz")
+}
+
+func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
+	testK8sAwsAlbGatewayApi(t, "aws", "pri")
+}
+
+func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string) {
+	t.Parallel()
+	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+
+	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
+
+	uniqueId := strings.ToLower(random.UniqueId())
+	gatewayClassName := fmt.Sprintf("%s-%s", namespaceName, uniqueId)
+	gatewayName := fmt.Sprintf("%s-%s", namespaceName, uniqueId)
+
+	gatewayClass, err := k8s.ReadObjectFromFile(t, "./templates/gatewayclass.yaml")
+	require.NoError(t, err)
+	gatewayClass.SetName(gatewayClassName)
+	createdGatewayClass, err := k8s.CreateK8SGatewayClass(t, kubectlOptions, gatewayClass)
+	require.NoError(t, err, "Creating GatewayClass error")
+	assert.NotNil(t, createdGatewayClass)
+
+	gateway, err := k8s.ReadObjectFromFile(t, "./templates/gateway.yaml")
+	require.NoError(t, err)
+	gateway.SetName(gatewayName)
+	err = unstructured.SetNestedField(gateway.Object, gatewayClassName, "spec", "gatewayClassName")
+	require.NoError(t, err)
+	createdGateway, err := k8s.CreateK8SGateway(t, kubectlOptions, gateway)
+	require.NoError(t, err, "Creating Gateway error")
+	assert.NotNil(t, createdGateway)
+
+	_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, gatewayName, 60, 5*time.Second)
+	if err != nil {
+		_ = k8s.DeleteK8SGateway(t, kubectlOptions, gatewayName)
+	}
+	require.NoError(t, err, "Gateway availability error")
+
+	err = k8s.DeleteK8SGateway(t, kubectlOptions, gatewayName)
+	require.NoError(t, err, "Deleting Gateway error")
+	err = k8s.WaitUntilK8SGatewayDeleted(t, kubectlOptions, gatewayName, 40, 2*time.Second)
+	require.NoError(t, err, "Gateway didn't get deleted")
+
+	err = k8s.DeleteK8SGatewayClass(t, kubectlOptions, gatewayClassName)
+	require.NoError(t, err, "Deleting GatewayClass error")
+}
+
 func TestK8sAwsAlbBiz(t *testing.T) {
 	testK8sAwsAlb(t, "aws", "biz")
 }
