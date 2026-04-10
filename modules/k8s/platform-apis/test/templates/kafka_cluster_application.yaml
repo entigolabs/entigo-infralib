@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-kafka-cluster
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-kafka-biz
+  project: default
+  source:
+    chart: platform-apis-test-kafka
+    repoURL: ghcr.io/entigolabs
+    targetRevision: '*.*.*-0'
+    helm:
+      releaseName: kafka-cluster
+      values: |
+        targetRevision: '*.*.*-0'
+        clusterName: test-kafka-cluster
+        renderCompositions: false
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
