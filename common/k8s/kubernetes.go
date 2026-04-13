@@ -239,6 +239,71 @@ func WaitUntilK8SGatewayAvailable(t testing.TestingT, options *k8s.KubectlOption
 	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
 }
 
+func CreateK8SHTTPRoute(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating HTTPRoute %s", object.GetName())
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "httproutes"}
+	return CreateObject(t, options, object, options.Namespace, resource)
+}
+
+func DeleteK8SHTTPRoute(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting HTTPRoute %s", name)
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "httproutes"}
+	return deleteObject(t, options, name, options.Namespace, resource)
+}
+
+func WaitUntilK8SHTTPRouteAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "httproutes"}
+	availability := defaultObjectAvailability(name, resource)
+	availability.namespacedObject.namespace = options.Namespace
+	availability.isAvailable = isHTTPRouteAvailable
+	availability.objectError = NewHTTPRouteNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func WaitUntilK8SHTTPRouteDeleted(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) error {
+	resource := schema.GroupVersionResource{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "httproutes"}
+	namespacedObject := defaultNamespacedObject(name, resource)
+	namespacedObject.namespace = options.Namespace
+	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
+func GetK8SGatewayAddress(gateway *unstructured.Unstructured) string {
+	addresses, found, err := unstructured.NestedSlice(gateway.Object, "status", "addresses")
+	if !found || err != nil || len(addresses) == 0 {
+		return ""
+	}
+	addressMap, ok := addresses[0].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	value, _ := addressMap["value"].(string)
+	return value
+}
+
+func CreateK8SDeployment(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating Deployment %s", object.GetName())
+	resource := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
+	return CreateObject(t, options, object, options.Namespace, resource)
+}
+
+func DeleteK8SDeployment(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting Deployment %s", name)
+	resource := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
+	return deleteObject(t, options, name, options.Namespace, resource)
+}
+
+func CreateK8SService(t testing.TestingT, options *k8s.KubectlOptions, object *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	logger.Logf(t, "Creating Service %s", object.GetName())
+	resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}
+	return CreateObject(t, options, object, options.Namespace, resource)
+}
+
+func DeleteK8SService(t testing.TestingT, options *k8s.KubectlOptions, name string) error {
+	logger.Logf(t, "Deleting Service %s", name)
+	resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}
+	return deleteObject(t, options, name, options.Namespace, resource)
+}
+
 func WaitUntilK8SIngressAvailable(t testing.TestingT, options *k8s.KubectlOptions, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	resource := schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "ingresses"}
 	availability := defaultObjectAvailability(name, resource)
@@ -437,6 +502,35 @@ func isIngressAvailable(ingress *unstructured.Unstructured) bool {
 	return ingressMap["hostname"] != ""
 }
 
+func isHTTPRouteAvailable(httpRoute *unstructured.Unstructured) bool {
+	parents, found, err := unstructured.NestedSlice(httpRoute.Object, "status", "parents")
+	if !found || err != nil || len(parents) == 0 {
+		return false
+	}
+	for _, parent := range parents {
+		parentMap, ok := parent.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		conditions, found, err := unstructured.NestedSlice(parentMap, "conditions")
+		if !found || err != nil {
+			continue
+		}
+		status := make(map[string]string)
+		for _, condition := range conditions {
+			conditionMap, ok := condition.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			status[conditionMap["type"].(string)] = conditionMap["status"].(string)
+		}
+		if status["Accepted"] == "True" && status["ResolvedRefs"] == "True" {
+			return true
+		}
+	}
+	return false
+}
+
 func getStatusMap(object *unstructured.Unstructured) map[string]string {
 	conditions, found, err := unstructured.NestedSlice(object.Object, "status", "conditions")
 	if !found || err != nil {
@@ -480,7 +574,7 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	return AWS
 }
 
-func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
+func WaitUntilHostnameAvailableWithAddress(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, targetAddress, namespaceName, targetURL, successCode string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 
 	randomString, err := generateRandomString(4)
@@ -496,23 +590,6 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	targetPort := "80"
 	if strings.HasPrefix(targetURL, "https://") {
 		targetPort = "443"
-	}
-
-	var targetIP string
-
-	for i := 0; i < retries; i++ {
-		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName, gatewayNamespace)
-		if err != nil {
-			return fmt.Errorf("failed to get target IP: %v", err)
-		}
-		if targetIP != "" {
-			break
-		}
-		logger.Log(t, "Waiting for target IP to be available")
-		time.Sleep(sleepBetweenRetries)
-	}
-	if targetIP == "" {
-		return fmt.Errorf("target IP not available")
 	}
 
 	logger.Log(t, fmt.Sprintf("Creating K8s job %s", jobName))
@@ -539,7 +616,7 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 		},
 		map[string]interface{}{
 			"name":  "TARGET_IP",
-			"value": targetIP,
+			"value": targetAddress,
 		},
 		map[string]interface{}{
 			"name":  "SUCCESS_CODE",
@@ -580,6 +657,28 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 	}
 
 	return nil
+}
+
+func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, gatewayName, gatewayNamespace, namespaceName, targetURL, successCode, cloudProvider string) error {
+	var targetIP string
+	var err error
+
+	for i := 0; i < retries; i++ {
+		targetIP, err = getTargetIP(t, options, cloudProvider, gatewayName, gatewayNamespace)
+		if err != nil {
+			return fmt.Errorf("failed to get target IP: %v", err)
+		}
+		if targetIP != "" {
+			break
+		}
+		logger.Log(t, "Waiting for target IP to be available")
+		time.Sleep(sleepBetweenRetries)
+	}
+	if targetIP == "" {
+		return fmt.Errorf("target IP not available")
+	}
+
+	return WaitUntilHostnameAvailableWithAddress(t, options, retries, sleepBetweenRetries, targetIP, namespaceName, targetURL, successCode)
 }
 
 func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider, gatewayName, gatewayNamespace string) (string, error) {
