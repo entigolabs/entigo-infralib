@@ -57,6 +57,8 @@ module "vpc" {
 
   secondary_cidr_blocks = var.secondary_cidr_blocks
 
+  enable_ipv6 = var.enable_ipv6
+
   azs                 = [for i in range(local.azs) : data.aws_availability_zones.available.names[i]]
   private_subnets     = local.private_subnets
   public_subnets      = local.public_subnets

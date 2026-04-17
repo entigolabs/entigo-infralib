@@ -9,6 +9,12 @@ variable "vpc_cidr" {
   default  = "10.156.0.0/16"
 }
 
+variable "enable_ipv6" {
+  description = "Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block."
+  type    = bool
+  default = false
+}
+
 variable "subnet_split_mode" {
   description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
   type     = string
