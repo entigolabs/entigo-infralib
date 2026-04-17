@@ -15,6 +15,18 @@ variable "enable_ipv6" {
   default = false
 }
 
+variable "public_subnet_ipv6_prefixes" {
+  description = "Assigns IPv6 public subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
+  type    = list(number)
+  default = []
+}
+
+variable "private_subnet_ipv6_prefixes" {
+  description = "Assigns IPv6 private subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list"
+  type    = list(number)
+  default = []
+}
+
 variable "subnet_split_mode" {
   description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
   type     = string
