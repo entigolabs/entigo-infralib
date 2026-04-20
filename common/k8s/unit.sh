@@ -73,8 +73,8 @@ echo "callback:
     key: 123456
 sources:
   - url: https://github.com/entigolabs/entigo-infralib
-      version: main
-      force_version: true
+    version: main
+    force_version: true
 steps:" > agents/config.yaml
 
 else
