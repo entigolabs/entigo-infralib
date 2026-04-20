@@ -26,3 +26,4 @@ dependencies:
   - name: external-secrets
     version: 2.3.0
     repository: https://charts.external-secrets.io
+
