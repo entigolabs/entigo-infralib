@@ -88,18 +88,16 @@ spec:
         - /bin/bash
         - -c
         - |
-          # Get CA from secret
           CA_BUNDLE=$(kubectl get secret aws-load-balancer-tls -n {{ .Release.Namespace }} -o jsonpath='{.data.ca\.crt}')
-          
-          # Patch validating webhook
-          kubectl patch validatingwebhookconfiguration aws-load-balancer-webhook --type='json' \
-            -p='[{"op": "replace", "path": "/webhooks/0/clientConfig/caBundle", "value":"'${CA_BUNDLE}'"}]'
-          
-          # Patch mutating webhook  
-          kubectl patch mutatingwebhookconfiguration aws-load-balancer-webhook --type='json' \
-            -p='[{"op": "replace", "path": "/webhooks/0/clientConfig/caBundle", "value":"'${CA_BUNDLE}'"}]'
-          
-          # Restart deployment
+
+          for TYPE in validatingwebhookconfiguration mutatingwebhookconfiguration; do
+            COUNT=$(kubectl get $TYPE aws-load-balancer-webhook -o jsonpath='{range .webhooks[*]}{.name}{"\n"}{end}' | wc -l | tr -d ' ')
+            if [ "$COUNT" -gt 0 ]; then
+              PATCH=$(seq 0 $((COUNT-1)) | awk -v ca="$CA_BUNDLE" 'BEGIN{printf "["} NR>1{printf ","} {printf "{\"op\":\"replace\",\"path\":\"/webhooks/%d/clientConfig/caBundle\",\"value\":\"%s\"}", $1, ca} END{printf "]"}')
+              kubectl patch $TYPE aws-load-balancer-webhook --type='json' -p="$PATCH"
+            fi
+          done
+
           kubectl rollout restart deployment -n {{ .Release.Namespace }} {{ .Release.Name }}-aws-load-balancer-controller
       restartPolicy: Never
   backoffLimit: 5
