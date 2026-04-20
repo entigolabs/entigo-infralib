@@ -1,6 +1,6 @@
 dependencies:
 - name: karpenter
   repository: oci://public.ecr.aws/karpenter
-  version: 1.9.0
-digest: sha256:db8368458943389ab5283e972ef04f081c7cb506ebf49566c00e6c77d5a51e37
-generated: "2026-03-31T13:10:42.494799116Z"
+  version: 1.11.1
+digest: sha256:7eca68d4dc33db7b2d1ba76da141032c1b9cf348a40fd39c61ee6895ce66a18f
+generated: "2026-04-20T09:00:18.637712641Z"
