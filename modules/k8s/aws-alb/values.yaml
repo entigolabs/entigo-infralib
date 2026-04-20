@@ -48,6 +48,7 @@ aws-load-balancer-controller:
       cpu: 4m
       memory: 40Mi
       ephemeral-storage: 10Mi
+  defaultTargetType: ip
   ingressClassConfig:
     default: true
   
@@ -55,7 +56,7 @@ aws-load-balancer-controller:
     kube-score/ignore: pod-networkpolicy,pod-probes
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.19.15"
+  tag: "v1.19.20"
 
 ingressClass:
   tags: {}
