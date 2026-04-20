@@ -48,6 +48,7 @@ aws-load-balancer-controller:
       cpu: 4m
       memory: 40Mi
       ephemeral-storage: 10Mi
+  defaultTargetType: ip
   ingressClassConfig:
     default: true
   
