@@ -1,0 +1,9 @@
+suites:
+  - cronjob
+  - postgresql
+  - repository
+  - s3bucket
+  - valkey
+  - webaccess
+  - webapp
+  - zone
