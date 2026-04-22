@@ -15,4 +15,3 @@ spec:
         decodingStrategy: None
         key: {{ .Release.Name }}
         metadataPolicy: None
-        nullBytePolicy: Ignore
