@@ -13,3 +13,4 @@ spec:
     kind: ExternalSecret
     jqPathExpressions:
     - .spec.data[].remoteRef.nullBytePolicy
+    - .spec.dataFrom[].extract.nullBytePolicy
