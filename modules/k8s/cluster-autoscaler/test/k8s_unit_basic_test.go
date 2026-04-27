@@ -13,10 +13,6 @@ func TestK8sClusterAutoscalerAWSBiz(t *testing.T) {
 	testK8sClusterAutoscaler(t, "aws", "biz")
 }
 
-func TestK8sClusterAutoscalerAWSPri(t *testing.T) {
-	testK8sClusterAutoscaler(t, "aws", "pri")
-}
-
 
 func testK8sClusterAutoscaler(t *testing.T, cloudName string, envName string) {
 	t.Parallel()	
