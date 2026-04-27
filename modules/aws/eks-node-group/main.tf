@@ -5,12 +5,12 @@ locals {
      "AL2023_x86_64_NEURON"       = "1.34.6-20260415"
      "AL2023_x86_64_NVIDIA"       = "1.34.6-20260415"
      "AL2023_x86_64_STANDARD"     = "1.34.6-20260415"
-     "BOTTLEROCKET_ARM_64"        = "1.57.0-beaadc52"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.57.0-beaadc52"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.57.0-beaadc52"
-     "BOTTLEROCKET_x86_64"        = "1.57.0-beaadc52"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.57.0-beaadc52"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.57.0-beaadc52"
+     "BOTTLEROCKET_ARM_64"        = "1.59.0-73b3be44"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.59.0-73b3be44"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.59.0-73b3be44"
+     "BOTTLEROCKET_x86_64"        = "1.59.0-73b3be44"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.59.0-73b3be44"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.59.0-73b3be44"
   }
 }
 
