@@ -73,8 +73,8 @@ echo "callback:
     key: 123456
 sources:
   - url: https://github.com/entigolabs/entigo-infralib
-      version: main
-      force_version: true
+    version: main
+    force_version: true
 steps:" > agents/config.yaml
 
 else
@@ -131,7 +131,7 @@ fi
             echo "Defaulting GOOGLE_PROJECT to entigo-infralib2"
             export GOOGLE_PROJECT="entigo-infralib2"
           fi
-
+          cat agents/$testname/config.yaml
           docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
         elif [[ $testname == aws_spoke ]]
@@ -147,6 +147,7 @@ fi
               echo "Defaulting AWS_REGION to eu-north-1"
               export AWS_REGION="eu-north-1"
             fi
+            cat agents/$testname/config.yaml
             docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
         else
