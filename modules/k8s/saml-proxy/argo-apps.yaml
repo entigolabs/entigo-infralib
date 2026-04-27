@@ -2,9 +2,15 @@ spec:
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
+    - RespectIgnoreDifferences=true
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: restricted
         pod-security.kubernetes.io/warn: restricted
         tenancy.entigo.com/zone: infralib
-
+  ignoreDifferences:
+  - group: "external-secrets.io"
+    kind: ExternalSecret
+    jqPathExpressions:
+    - .spec.data[].remoteRef.nullBytePolicy
+    - .spec.dataFrom[].extract.nullBytePolicy
