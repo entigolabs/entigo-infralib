@@ -8,7 +8,7 @@ on:
 jobs:
   install_stable_aws:
     name: Install stable AWS
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -50,7 +50,7 @@ jobs:
 
   install_stable_google:
     name: Install stable Google
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -92,7 +92,7 @@ jobs:
         SLACK_FOOTER: ""
   
   testk8s:   
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     needs: [install_stable_aws,install_stable_google]
     concurrency:
       group: pr-modules-test
