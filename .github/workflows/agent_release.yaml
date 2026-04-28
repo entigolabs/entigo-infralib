@@ -45,7 +45,6 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
-    - uses: google-github-actions/setup-gcloud@v3
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
       with:
@@ -90,7 +89,6 @@ jobs:
       cancel-in-progress: false
     name: Release
     steps:
-    - uses: google-github-actions/setup-gcloud@v3
     - name: Free disk space
       run: |
         # Remove large preinstalled tools
