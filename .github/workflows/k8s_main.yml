@@ -16,7 +16,7 @@ on:
 jobs:
   detect:
     name: Detect changed modules
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has_modules: ${{ steps.set-matrix.outputs.has_modules }}
@@ -56,7 +56,7 @@ jobs:
     name: Test ${{ matrix.module }}
     needs: detect
     if: needs.detect.outputs.has_modules == 'true'
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     # Remove concurrency group — turnstyle handles queuing without cancelling pending runs
     strategy:
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
@@ -96,7 +96,7 @@ jobs:
   release:
     name: Release modules/k8s
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
     - uses: actions/checkout@v4
       with:
