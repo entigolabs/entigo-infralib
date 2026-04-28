@@ -58,7 +58,7 @@ jobs:
     if: needs.detect.outputs.has_modules == 'true'
     runs-on: arc-runner-set
     container:
-      image: 413636892216.dkr.ecr.eu-north-1.amazonaws.com/ep-net-ecr-proxy-hub/entigolabs/entigo-infralib-test:v1.19.22
+      image: public.ecr.aws/entigolabs/entigo-infralib-test:v1.19.22
     # Remove concurrency group — turnstyle handles queuing without cancelling pending runs
     strategy:
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
