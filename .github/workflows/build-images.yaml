@@ -20,7 +20,7 @@ on:
 jobs:
   build:
     name: Build image ${{ inputs.name }}
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

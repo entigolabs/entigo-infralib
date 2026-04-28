@@ -10,7 +10,7 @@ on:
 jobs:     
   install_main_aws:
     name: Install main AWS
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     if: |
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
@@ -41,7 +41,7 @@ jobs:
 
   install_main_google:
     name: Install main Google
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     if: |
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
@@ -82,7 +82,7 @@ jobs:
         SLACK_FOOTER: ""
         
   release:   
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     needs: [install_main_aws,install_main_google]
     concurrency:
       group: pr-modules-test
