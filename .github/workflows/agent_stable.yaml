@@ -52,6 +52,7 @@ jobs:
     name: Install stable Google
     runs-on: arc-runner-set
     steps:
+    - uses: google-github-actions/setup-gcloud@v3
     - name: Get latest release
       id: get_latest_release
       uses: actions/github-script@v6
@@ -99,6 +100,7 @@ jobs:
       cancel-in-progress: false
     name: Release
     steps:
+    - uses: google-github-actions/setup-gcloud@v3
     - name: Free disk space
       run: |
         # Remove large preinstalled tools
