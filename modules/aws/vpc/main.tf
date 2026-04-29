@@ -44,6 +44,11 @@ locals {
   private_subnets     = var.private_subnets == null     ? var.subnet_split_mode == "default" ? local.default_private     : concat(local.spoke_control, local.spoke_service, local.spoke_compute) : var.private_subnets
   database_subnets    = var.database_subnets == null    ? var.subnet_split_mode == "default" ? local.default_database    : local.spoke_database : var.database_subnets
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
+
+  #IPv6 prefix indices — each subnet needs a unique /64 slot within the VPC's /56 block.
+  #Only populated when enable_ipv6 is true; empty lists disable IPv6 CIDR assignment.
+  public_subnet_ipv6_prefixes  = var.enable_ipv6 ? [for i in range(length(local.public_subnets)) : i] : []
+  private_subnet_ipv6_prefixes = var.enable_ipv6 ? [for i in range(length(local.private_subnets)) : length(local.public_subnets) + i] : []
 }
 
 
@@ -58,8 +63,9 @@ module "vpc" {
   secondary_cidr_blocks = var.secondary_cidr_blocks
 
   enable_ipv6 = var.enable_ipv6
-  public_subnet_ipv6_prefixes  = var.public_subnet_ipv6_prefixes
-  private_subnet_ipv6_prefixes = var.private_subnet_ipv6_prefixes
+  public_subnet_ipv6_prefixes  = local.public_subnet_ipv6_prefixes
+  private_subnet_ipv6_prefixes = local.private_subnet_ipv6_prefixes
+  private_subnet_enable_dns64 = var.private_subnet_enable_dns64
 
   azs                 = [for i in range(local.azs) : data.aws_availability_zones.available.names[i]]
   private_subnets     = local.private_subnets
