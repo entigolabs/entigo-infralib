@@ -80,12 +80,12 @@ get_step_name_tf_google() {
 }
 
 get_step_name_k8s() {
-  if [ "$BRANCH" == "main" ]
-  then
-    STEP_NAME="apps"
-  else
-    STEP_NAME=$APP_NAME
-  fi
+  #if [ "$BRANCH" == "main" ]
+  #then
+  #  STEP_NAME="apps"
+  #else
+  STEP_NAME=$APP_NAME
+  #fi
 }
 
 get_app_name() {
