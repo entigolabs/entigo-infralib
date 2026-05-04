@@ -7,6 +7,7 @@ global:
 loki:
   deploymentMode: SimpleScalable
   fullnameOverride: loki
+  nameOverride: loki
   serviceAccount:
     create: false
     name: loki
