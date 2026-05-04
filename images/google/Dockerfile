@@ -3,7 +3,6 @@ FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 
-ENV PATH="/google-cloud-sdk/bin:${PATH}"
 # Install additional tools
 RUN apk --no-cache add \
     ca-certificates \
