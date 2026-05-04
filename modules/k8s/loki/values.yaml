@@ -5,6 +5,7 @@ global:
   prefix: ""
 
 loki:
+  deploymentMode: SimpleScalable
   fullnameOverride: loki
   serviceAccount:
     create: false
