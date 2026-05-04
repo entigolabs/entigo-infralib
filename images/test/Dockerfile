@@ -10,6 +10,7 @@ USER root
 #Install AWS SDK
 RUN apk --no-cache add \
     py3-pip \
+    docker-cli \
     && rm -rf /var/cache/apk/* \
     && pip install --no-cache-dir --break-system-packages awscli \
     && rm -rf \
