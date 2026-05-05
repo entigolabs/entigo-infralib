@@ -14,7 +14,7 @@ mcp:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.19.20"
+  tag: "v1.19.30"
 
 argocd:
   crds:
