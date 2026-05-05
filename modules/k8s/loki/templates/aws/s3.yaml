@@ -136,8 +136,6 @@ spec:
             sseAlgorithm: AES256
           {{- end }}
         bucketKeyEnabled: true
-        blockedEncryptionTypes:
-          - SSE-C
     bucketRef:
       name: {{ .Values.global.bucketName }}
   providerConfigRef:
