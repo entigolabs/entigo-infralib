@@ -39,7 +39,7 @@ kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 5) }}'
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 4) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:

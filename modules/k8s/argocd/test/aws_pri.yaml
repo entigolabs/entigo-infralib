@@ -1,3 +1,5 @@
+mcp:
+  enabled: true
 argocd:
   dex:
     enabled: false

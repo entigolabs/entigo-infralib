@@ -11,9 +11,9 @@ RUN apk --no-cache add \
     git \
     sudo \
     && rm -rf /var/cache/apk/* && \
-    sudo -u cloudsdk gcloud config set core/disable_usage_reporting true && \
-    sudo -u cloudsdk gcloud config set component_manager/disable_update_check true && \
-    sudo -u cloudsdk gcloud config set metrics/environment github_docker_image && \
+    sudo -u cloudsdk /google-cloud-sdk/bin/gcloud config set core/disable_usage_reporting true && \
+    sudo -u cloudsdk /google-cloud-sdk/bin/gcloud config set component_manager/disable_update_check true && \
+    sudo -u cloudsdk /google-cloud-sdk/bin/gcloud config set metrics/environment github_docker_image && \
     gcloud config set core/disable_usage_reporting true && \
     gcloud config set component_manager/disable_update_check true && \
     gcloud config set metrics/environment github_docker_image && \

@@ -68,7 +68,7 @@ grafana:
         datasource: Prometheus
       apiserver:
         gnetId: 15761
-        revision: 20
+        revision: 21
         datasource: Prometheus
       prometheus:
         gnetId: 19105
