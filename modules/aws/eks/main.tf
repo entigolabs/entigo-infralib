@@ -12,12 +12,12 @@ locals {
      "AL2023_x86_64_NEURON"       = "1.34.7-20260423"
      "AL2023_x86_64_NVIDIA"       = "1.34.7-20260423"
      "AL2023_x86_64_STANDARD"     = "1.34.7-20260423"
-     "BOTTLEROCKET_ARM_64"        = "1.59.0-73b3be44"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.59.0-73b3be44"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.59.0-73b3be44"
-     "BOTTLEROCKET_x86_64"        = "1.59.0-73b3be44"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.59.0-73b3be44"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.59.0-73b3be44"
+     "BOTTLEROCKET_ARM_64"        = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64"        = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.60.0-c1f9ba0c"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
