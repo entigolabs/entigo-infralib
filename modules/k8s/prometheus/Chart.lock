@@ -1,12 +1,12 @@
 dependencies:
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts
-  version: 29.5.0
+  version: 29.6.0
 - name: prometheus-operator-crds
   repository: https://prometheus-community.github.io/helm-charts
   version: 28.0.1
 - name: prometheus-blackbox-exporter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 11.9.2
-digest: sha256:8ba6d4c36af73566cb666462231b5bb1b01dc3ccc5311fb12f910fb07b8e5614
-generated: "2026-05-04T08:24:49.474174806Z"
+  version: 11.10.0
+digest: sha256:12551951e73ee6bca663648f76f30dbcb414a9b2d47769f3fadf3765a3e9bbe8
+generated: "2026-05-06T06:08:25.996305272Z"
