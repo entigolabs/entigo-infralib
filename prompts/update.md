@@ -15,6 +15,26 @@ CRITICAL RULES:
 - EFFICIENCY: Combine multiple shell commands into a SINGLE Bash tool call wherever possible.
   For example, combine branch setup + version check + sed + helm dep update + commit + push
   into ONE Bash call using && and if/then/else. This is critical for staying within turn limits.
+- HUMAN COMMIT GUARD: Before pushing to any auto-* branch that already has an open PR,
+  check if any commits on that branch were made by a human. Detect this by looking for commits
+  whose message does NOT match the bot patterns. Bot commit messages are:
+    - Starts with: "chore(deps): update"
+    - Starts with: "Merge branch 'main' into auto-"
+  Any other commit message is considered a human intervention. Run this check as:
+    PR_NUMBER=$(gh pr list --head <BRANCH> --json number --jq '.[0].number' 2>/dev/null)
+    NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+      --jq '[.[] | select(
+        (.commit.message | test("^chore\\(deps\\): update")) or
+        (.commit.message | test("^Merge branch .main. into auto-"))
+        | not
+      )] | length')
+  If NON_BOT > 0:
+    - Do NOT git push
+    - Do NOT gh pr create or gh pr edit
+    - Print: "SKIPPED: <BRANCH> — human commits detected, not overwriting manual work"
+    - Move on to the next item
+  This check must run for every branch that already has an open PR, before any git push
+  or PR create/edit operation.
 
 STEP 1 - GET THE REPO:
 - If /workspace/entigo-infralib exists: cd /workspace/entigo-infralib && git checkout main && git pull origin main
@@ -68,6 +88,20 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
       LOCAL_TREE=$(git rev-parse HEAD^{tree})
       REMOTE_TREE=$(git rev-parse origin/auto-k8s-<DIR>^{tree})
       if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-k8s-<DIR> --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-k8s-<DIR> — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
         echo "PUSH_MERGE_ONLY"
       else
         echo "ALREADY_DONE"
@@ -87,6 +121,20 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
         LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
         REMOTE_TREE=$(git rev-parse origin/auto-k8s-<DIR>^{tree}) && \
         if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+          # Human commit guard
+          PR_NUMBER=$(gh pr list --head auto-k8s-<DIR> --json number --jq '.[0].number' 2>/dev/null) && \
+          if [ -n "$PR_NUMBER" ]; then
+            NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+              --jq '[.[] | select(
+                (.commit.message | test("^chore\\(deps\\): update")) or
+                (.commit.message | test("^Merge branch .main. into auto-"))
+                | not
+              )] | length') && \
+            if [ "$NON_BOT" -gt 0 ]; then
+              echo "SKIPPED: auto-k8s-<DIR> — human commits detected, not overwriting manual work"
+              exit 0
+            fi
+          fi
           git push origin auto-k8s-<DIR> && echo "PUSHED"
         else
           echo "SKIP_PUSH_IDENTICAL"
@@ -119,6 +167,20 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
       LOCAL_TREE=$(git rev-parse HEAD^{tree})
       REMOTE_TREE=$(git rev-parse origin/auto-k8s-<DIR>^{tree})
       if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-k8s-<DIR> --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-k8s-<DIR> — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
         echo "PUSH_MERGE_ONLY"
       else
         echo "ALREADY_DONE"
@@ -138,6 +200,20 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
         LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
         REMOTE_TREE=$(git rev-parse origin/auto-k8s-<DIR>^{tree}) && \
         if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+          # Human commit guard
+          PR_NUMBER=$(gh pr list --head auto-k8s-<DIR> --json number --jq '.[0].number' 2>/dev/null) && \
+          if [ -n "$PR_NUMBER" ]; then
+            NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+              --jq '[.[] | select(
+                (.commit.message | test("^chore\\(deps\\): update")) or
+                (.commit.message | test("^Merge branch .main. into auto-"))
+                | not
+              )] | length') && \
+            if [ "$NON_BOT" -gt 0 ]; then
+              echo "SKIPPED: auto-k8s-<DIR> — human commits detected, not overwriting manual work"
+              exit 0
+            fi
+          fi
           git push origin auto-k8s-<DIR> && echo "PUSHED"
         else
           echo "SKIP_PUSH_IDENTICAL"
@@ -151,6 +227,7 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
 
   After the Bash call, check the output:
   - "ALREADY_DONE" or "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to next chart, no PR needed.
+  - "SKIPPED: ... human commits detected" → skip to next chart, no PR needed, log the skip in final summary.
   - "PUSH_MERGE_ONLY" → run git push in one call, then check/update PR.
   - "PUSHED" → check/update PR.
 
@@ -222,6 +299,20 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
       LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
       REMOTE_TREE=$(git rev-parse origin/auto-aws-<TYPE>^{tree}) && \
       if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-aws-<TYPE> --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-aws-<TYPE> — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
         git push --force origin auto-aws-<TYPE> && echo "PUSHED"
       else
         echo "SKIP_PUSH_IDENTICAL"
@@ -234,6 +325,7 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
 
   After the Bash call, check the output:
   - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to next type, no PR needed.
+  - "SKIPPED: ... human commits detected" → skip to next type, no PR needed, log the skip in final summary.
   - "PUSHED" → check/update PR (same pattern as K8S: one Bash call for gh pr list + release notes, one for gh pr create/edit).
 
   PR title: 'chore(deps): update AWS Terraform <type>'
@@ -275,6 +367,20 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
       LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
       REMOTE_TREE=$(git rev-parse origin/auto-gcptf^{tree}) && \
       if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-gcptf --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-gcptf — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
         git push --force origin auto-gcptf && echo "PUSHED"
       else
         echo "SKIP_PUSH_IDENTICAL"
@@ -287,6 +393,7 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
 
   After the Bash call, check the output:
   - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to AFTER ALL PRs ARE DONE.
+  - "SKIPPED: ... human commits detected" → skip to AFTER ALL PRs ARE DONE, log the skip in final summary.
   - "PUSHED" → check/update PR.
 
   PR title: 'chore(deps): update Google Terraform providers'
@@ -305,5 +412,6 @@ AFTER ALL PRs ARE DONE:
   Print a summary of all actions taken:
     - Which PRs were created or updated (with PR numbers)
     - Which branches were skipped (already up to date)
+    - Which branches were skipped due to human commits (list branch name and PR number)
     - Which report lines were skipped (empty newer version)
   Delete /workspace/update-report.txt
