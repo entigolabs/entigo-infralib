@@ -3,4 +3,4 @@ dependencies:
   repository: https://aws.github.io/eks-charts
   version: 3.3.0
 digest: sha256:66066a1f27fb1842dc4be426403202c0a62c45837e9df6926efa0572255ab83d
-generated: "2026-05-06T06:06:16.031713902Z"
+generated: "2026-05-07T06:46:01.863503679Z"
