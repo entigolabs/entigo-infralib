@@ -36,8 +36,8 @@ then
     exit 0
   fi
   # Cancel any in-progress operation before syncing to avoid "another operation is already in progress"
-  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app terminate-op --app-namespace $app_namespace $app_name 2>/dev/null || true
-  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app sync --prune --app-namespace $app_namespace $app_name
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app terminate-op $app_namespace/$app_name 2>/dev/null || true
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app sync --prune $app_namespace/$app_name
   if [ $? -ne 0 ]
   then
     echo "Failed $app_name sync"
