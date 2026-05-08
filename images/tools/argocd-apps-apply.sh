@@ -35,7 +35,8 @@ then
     echo "Skip $app_name"
     exit 0
   fi
-
+  # Cancel any in-progress operation before syncing to avoid "another operation is already in progress"
+  argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app terminate-op --app-namespace $app_namespace $app_name 2>/dev/null || true
   argocd --server ${ARGOCD_HOSTNAME} --http-retry-max 5 --grpc-web app sync --prune --app-namespace $app_namespace $app_name
   if [ $? -ne 0 ]
   then
@@ -65,8 +66,10 @@ else #Fall back to Application auto sync when we can not get argo token.
   then
     echo "Failed $app_name wait"
     kubectl patch -n $app_namespace applications.argoproj.io $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1
-    kubectl patch -n $app_namespace applications.argoproj.io $app_name --type merge --patch '{"status": {"operationState": {"phase": "Terminating"}}}'
     kubectl describe applications.argoproj.io -n $app_namespace $app_name
+    kubectl patch -n $app_namespace applications.argoproj.io $app_name --type merge --patch '{"operation": null}'
+    #Maybe this will also be needed, but skipping for now.
+    #kubectl patch -n $app_namespace applications.argoproj.io $app_name --patch '{"status": {"operationState": null}}'
     exit 25
   fi
 fi
