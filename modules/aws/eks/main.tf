@@ -7,17 +7,17 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.34.3-20260209"
-     "AL2023_ARM_64_STANDARD"     = "1.34.3-20260209"
-     "AL2023_x86_64_NEURON"       = "1.34.3-20260209"
-     "AL2023_x86_64_NVIDIA"       = "1.34.3-20260209"
-     "AL2023_x86_64_STANDARD"     = "1.34.3-20260209"
-     "BOTTLEROCKET_ARM_64"        = "1.55.0-d93bb1b1"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.55.0-d93bb1b1"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.55.0-d93bb1b1"
-     "BOTTLEROCKET_x86_64"        = "1.55.0-d93bb1b1"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.55.0-d93bb1b1"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.55.0-d93bb1b1"
+     "AL2023_ARM_64_NVIDIA"       = "1.34.7-20260505"
+     "AL2023_ARM_64_STANDARD"     = "1.34.7-20260505"
+     "AL2023_x86_64_NEURON"       = "1.34.7-20260505"
+     "AL2023_x86_64_NVIDIA"       = "1.34.7-20260505"
+     "AL2023_x86_64_STANDARD"     = "1.34.7-20260505"
+     "BOTTLEROCKET_ARM_64"        = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64"        = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.60.0-c1f9ba0c"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.60.0-c1f9ba0c"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
@@ -266,7 +266,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.18.0"
+  version = "21.20.0"
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
