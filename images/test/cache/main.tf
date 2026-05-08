@@ -3,11 +3,11 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.43.0"
+      version = "6.44.0"
     }
     google = {
       source = "hashicorp/google"
-      version = "7.30.0"
+      version = "7.31.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
