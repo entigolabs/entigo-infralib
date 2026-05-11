@@ -18,6 +18,7 @@ parameters:
   provisioningMode: efs-ap
   fileSystemId: {{ $value }}
   directoryPerms: "700"
+  reuseAccessPoint: "true"
 provisioner: efs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
@@ -35,6 +36,7 @@ parameters:
   provisioningMode: efs-ap
   fileSystemId: {{ $value }}
   directoryPerms: "700"
+  reuseAccessPoint: "true"
 provisioner: efs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
