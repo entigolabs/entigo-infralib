@@ -2,9 +2,6 @@ metadata:
   annotations:
     infralib.entigo.io/sync-wave: "2"
 spec:
-  sources:
-  - helm:
-      skipCrds: true
   ignoreDifferences:
   - group: ""
     kind: Secret
