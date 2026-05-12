@@ -1,5 +1,5 @@
 #Due to a bug we must activate the namesapced and non namespaced observers at differnet time.
-
+{{- if .Values.global.createNamespacedObservers }}
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
 metadata:
@@ -9,7 +9,6 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   activate:
-{{- if .Values.global.createNamespacedObservers }}
   - 'policies.iam.aws.m.upbound.io'
   - 'rolepolicyattachments.iam.aws.m.upbound.io'
   - 'roles.iam.aws.m.upbound.io'
