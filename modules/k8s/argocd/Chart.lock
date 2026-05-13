@@ -6,4 +6,4 @@ dependencies:
   repository: https://argoproj.github.io/argo-helm
   version: 2.0.4
 digest: sha256:c6b7cf1daa8fe217c3022185e74d7cf8efecbbd5c023f3fae41f2badf98268e2
-generated: "2026-05-13T13:12:59.158162729Z"
+generated: "2026-05-13T13:25:25.735634634Z"
