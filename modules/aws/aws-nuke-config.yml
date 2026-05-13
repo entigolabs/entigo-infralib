@@ -159,3 +159,5 @@ accounts:
       - "AWSServiceRoleForSupport -> AWSSupportServiceRolePolicy"
       - "AWSServiceRoleForTrustedAdvisor -> AWSTrustedAdvisorServiceRolePolicy"
       - "OrganizationAccountAccessRole -> AdministratorAccess"
+      CloudTrailTrail:
+      - "entigo-org-trail"
