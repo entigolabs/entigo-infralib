@@ -1,7 +1,45 @@
+#Due to a bug we must activate the namesapced and non namespaced observers at differnet time.
+{{- if .Values.global.createNamespacedObservers }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}-ns
+  annotations:
+    argocd.argoproj.io/sync-wave: "19"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  activate:
+  - 'policies.iam.aws.m.upbound.io'
+  - 'rolepolicyattachments.iam.aws.m.upbound.io'
+  - 'roles.iam.aws.m.upbound.io'
+{{- if .Values.global.aws.vpc.id }}
+  - 'vpcs.ec2.aws.m.upbound.io'
+  - 'subnets.ec2.aws.m.upbound.io'
+  - 'securitygroups.ec2.aws.m.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.vpc.database_subnet_group_name }}
+  - 'subnetgroups.rds.aws.m.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
+  - 'subnetgroups.elasticache.aws.m.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.kms.data_key_arn }}
+  - 'keys.kms.aws.m.upbound.io'
+  - 'aliases.kms.aws.m.upbound.io'
+{{- end }}
+{{- if .Values.global.aws.eks.cluster_name }}
+  - 'clusters.eks.aws.m.upbound.io'
+{{- end }}
+{{- end }}
+
+---
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
 metadata:
   name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "18"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   activate:
   - 'policies.iam.aws.upbound.io'
@@ -29,26 +67,4 @@ spec:
   - 'launchtemplates.ec2.aws.upbound.io'
 {{- end }}
 {{- end }}
-{{- if .Values.global.createNamespacedObservers }}
-  - 'policies.iam.aws.m.upbound.io'
-  - 'rolepolicyattachments.iam.aws.m.upbound.io'
-  - 'roles.iam.aws.m.upbound.io'
-{{- if .Values.global.aws.vpc.id }}
-  - 'vpcs.ec2.aws.m.upbound.io'
-  - 'subnets.ec2.aws.m.upbound.io'
-  - 'securitygroups.ec2.aws.m.upbound.io'
-{{- end }}
-{{- if .Values.global.aws.vpc.database_subnet_group_name }}
-  - 'subnetgroups.rds.aws.m.upbound.io'
-{{- end }}
-{{- if .Values.global.aws.vpc.elasticache_subnet_group_name }}
-  - 'subnetgroups.elasticache.aws.m.upbound.io'
-{{- end }}
-{{- if .Values.global.aws.kms.data_key_arn }}
-  - 'keys.kms.aws.m.upbound.io'
-  - 'aliases.kms.aws.m.upbound.io'
-{{- end }}
-{{- if .Values.global.aws.eks.cluster_name }}
-  - 'clusters.eks.aws.m.upbound.io'
-{{- end }}
-{{- end }}
+
