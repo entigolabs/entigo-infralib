@@ -5,8 +5,10 @@ platform-apis:
       kind: '*'
     environmentConfig:
       granularEgress: true
+      roleMapping:
+        - roleRef: maintainer
+          groups: ["web-read-only-343159627493470238", "maintainer"]
       appProject:
-        maintainerGroups: ["web-read-only-343159627493470238"]
         namespaceResourceBlacklist: []
         namespaceResourceWhitelist:
         - group: '*'
@@ -17,11 +19,20 @@ platform-apis:
   kafka:
     install: true
     environmentConfig:
-      awsProvider: crossplane-aws
-      configKMSKey: config
       kafkaNamespace: crossplane-kafka-biz
   database:
     environmentConfig:
       postgresBackupBeforeDeletion: false
       valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
+  functions:
+    function-go-templating:
+      install: true
+    function-auto-ready:
+      install: true
+    function-sequencer:
+      install: true
+    function-patch-and-transform:
+      install: true
+    function-extra-resources:
+      install: true
