@@ -7,11 +7,11 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.34.7-20260505"
-     "AL2023_ARM_64_STANDARD"     = "1.34.7-20260505"
-     "AL2023_x86_64_NEURON"       = "1.34.7-20260505"
-     "AL2023_x86_64_NVIDIA"       = "1.34.7-20260505"
-     "AL2023_x86_64_STANDARD"     = "1.34.7-20260505"
+     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
+     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
+     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
+     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
+     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
      "BOTTLEROCKET_ARM_64"        = "1.60.0-c1f9ba0c"
      "BOTTLEROCKET_ARM_64_FIPS"   = "1.60.0-c1f9ba0c"
      "BOTTLEROCKET_ARM_64_NVIDIA" = "1.60.0-c1f9ba0c"
@@ -369,6 +369,9 @@ module "eks" {
       addon_version               = var.ebs_csi_addon_version
       service_account_role_arn = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
+        node : {
+          hostNetwork : true
+        },
         controller : {
           extraVolumeTags = var.node_launch_template_tags
           volumeModificationFeature: {
