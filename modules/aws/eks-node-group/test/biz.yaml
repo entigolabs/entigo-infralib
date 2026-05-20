@@ -4,3 +4,7 @@ max_size: 1
 capacity_type: "SPOT"
 volume_size: 30
 use_latest_ami_release_version: true
+tags: |
+  {
+    team = "entigo-team"
+  }
