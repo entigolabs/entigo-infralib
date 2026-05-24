@@ -25,4 +25,30 @@ spec:
         - protocol: TCP
           port: 80
 
+{{- if .Values.global.google.gateway.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-gateway-health-check
+  namespace: {{ .Release.Name }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Values.loki.nameOverride | default .Values.loki.fullnameOverride }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 35.191.0.0/16
+        - ipBlock:
+            cidr: 130.211.0.0/22
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}
+
 {{- end }}
