@@ -36,8 +36,6 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/component: gateway
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/name: {{ .Values.loki.nameOverride | default .Values.loki.fullnameOverride }}
   policyTypes:
     - Ingress
   ingress:
