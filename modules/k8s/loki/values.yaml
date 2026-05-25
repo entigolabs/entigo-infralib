@@ -198,6 +198,8 @@ loki:
     verboseLogging: false
     podDisruptionBudget:
       enabled: true
+    metrics:
+      enabled: false
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
