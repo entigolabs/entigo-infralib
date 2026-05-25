@@ -12,8 +12,6 @@ loki:
     create: false
     name: loki
 
-  server:
-    log_level: warn
   global:
     extraArgs:
       - "-log.level=warn"
@@ -50,6 +48,8 @@ loki:
         active_index_directory: /var/loki/tsdb-shipper-active
         cache_location: /var/loki/tsdb-shipper-cache
         cache_ttl: 24h
+    server:
+      log_level: warn
 
   memcached:
     enabled: false
