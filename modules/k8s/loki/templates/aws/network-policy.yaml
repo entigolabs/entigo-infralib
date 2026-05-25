@@ -13,7 +13,7 @@ spec:
     - Ingress
   ingress:
     - from:
-        {{- range (splitList "," (printf "%s,%s,%s" (.Values.global.aws.publicSubnetCidrs | default "") (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.controlSubnetCidrs | default ""))) }}
+        {{- range (splitList "," (printf "%s,%s,%s" (.Values.global.aws.publicSubnetCidrs | default "") (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default ""))) }}
         {{- $cidr := trim . }}
         {{- if $cidr }}
         - ipBlock:
