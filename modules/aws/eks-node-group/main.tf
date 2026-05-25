@@ -69,14 +69,14 @@ module "eks-managed-node-group" {
   
   labels = var.labels
   taints = var.taints
-  launch_template_tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
+  launch_template_tags = merge({
+    Terraform  = "true"
+    Prefix     = var.prefix
     created-by = "entigo-infralib"
-  }
-  tags = {
-    Terraform = "true"
-    Prefix    = var.prefix
+  }, var.tags)
+  tags = merge({
+    Terraform  = "true"
+    Prefix     = var.prefix
     created-by = "entigo-infralib"
-  }
+  }, var.tags)
 }

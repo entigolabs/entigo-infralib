@@ -138,3 +138,8 @@ variable "taints" {
   type        = any
   default     = {}
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
