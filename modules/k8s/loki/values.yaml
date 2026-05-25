@@ -198,6 +198,7 @@ loki:
     verboseLogging: false
     podDisruptionBudget:
       enabled: true
+      minAvailable: 1
     metrics:
       enabled: false
     affinity:
