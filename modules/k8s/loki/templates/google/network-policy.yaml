@@ -44,6 +44,10 @@ spec:
             cidr: 35.191.0.0/16
         - ipBlock:
             cidr: 130.211.0.0/22
+        {{- range .Values.global.google.vpc.publicSubnetCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
       ports:
         - protocol: TCP
           port: http
