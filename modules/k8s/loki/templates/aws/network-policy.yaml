@@ -26,7 +26,7 @@ spec:
             cidr: {{ trim . }}
         {{- end }}
         {{- end }}
-        {{- range .Values.global.aws.extraHealthCheckCidrs }}
+        {{- range .Values.global.aws.extraAlbCidrs }}
         - ipBlock:
             cidr: {{ . }}
         {{- end }}
