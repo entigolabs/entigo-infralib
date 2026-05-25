@@ -369,9 +369,6 @@ module "eks" {
       addon_version               = var.ebs_csi_addon_version
       service_account_role_arn = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
-        node : {
-          hostNetwork : true
-        },
         controller : {
           extraVolumeTags = var.node_launch_template_tags
           volumeModificationFeature: {

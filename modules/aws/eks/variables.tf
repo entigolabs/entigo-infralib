@@ -325,7 +325,7 @@ variable "kube_proxy_addon_version" {
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.21.1-eksbuild.8"
+  default = "v1.21.2-eksbuild.2"
 }
 
 variable "ebs_csi_addon_version" {
