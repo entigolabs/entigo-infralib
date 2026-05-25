@@ -2,6 +2,8 @@ global:
   google:
     gateway:
       name: google-gateway-external
+      extraHealthCheckCidrs:
+        - 192.168.0.0/16
 loki:
   fullnameOverride: "{{ .module.name }}"
   nameOverride: "{{ .module.name }}"

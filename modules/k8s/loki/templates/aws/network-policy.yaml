@@ -11,14 +11,24 @@ spec:
       app.kubernetes.io/component: gateway
   policyTypes:
     - Ingress
+  {{- $scheme := index .Values.loki.gateway.ingress.annotations "alb.ingress.kubernetes.io/scheme" }}
+  {{- $cidrs := "" }}
+  {{- if eq $scheme "internet-facing" }}
+    {{- $cidrs = .Values.global.aws.publicSubnetCidrs | default "" }}
+  {{- else if eq $scheme "internal" }}
+    {{- $cidrs = printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
+  {{- end }}
   ingress:
     - from:
-        {{- range (splitList "," (printf "%s,%s,%s" (.Values.global.aws.publicSubnetCidrs | default "") (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default ""))) }}
-        {{- $cidr := trim . }}
-        {{- if $cidr }}
+        {{- range (splitList "," $cidrs) }}
+        {{- if trim . }}
         - ipBlock:
-            cidr: {{ $cidr }}
+            cidr: {{ trim . }}
         {{- end }}
+        {{- end }}
+        {{- range .Values.global.aws.extraHealthCheckCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
         {{- end }}
       ports:
         - protocol: TCP
