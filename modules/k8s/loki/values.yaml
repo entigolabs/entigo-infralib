@@ -12,6 +12,8 @@ loki:
     create: false
     name: loki
 
+  server:
+    log_level: warn
   global:
     extraArgs:
       - "-log.level=warn"
