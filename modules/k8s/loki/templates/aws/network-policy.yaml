@@ -13,8 +13,13 @@ spec:
     - Ingress
   ingress:
     - from:
+        {{- range (splitList "," (printf "%s,%s,%s" (.Values.global.aws.publicSubnetCidrs | default "") (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.controlSubnetCidrs | default ""))) }}
+        {{- $cidr := trim . }}
+        {{- if $cidr }}
         - ipBlock:
-            cidr: 0.0.0.0/0
+            cidr: {{ $cidr }}
+        {{- end }}
+        {{- end }}
       ports:
         - protocol: TCP
           port: http
