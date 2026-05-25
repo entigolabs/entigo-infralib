@@ -196,6 +196,8 @@ loki:
         type: RuntimeDefault
     enabled: true
     verboseLogging: false
+    podDisruptionBudget:
+      enabled: true
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
