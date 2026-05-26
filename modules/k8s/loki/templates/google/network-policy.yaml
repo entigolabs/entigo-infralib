@@ -40,18 +40,15 @@ spec:
     - Ingress
   ingress:
     - from:
-        {{- if eq .Values.global.google.gateway.name "google-gateway-external" }}
         # https://docs.cloud.google.com/load-balancing/docs/health-check-concepts#ip-ranges
         - ipBlock:
             cidr: 35.191.0.0/16
         - ipBlock:
             cidr: 130.211.0.0/22
-        {{- else if eq .Values.global.google.gateway.name "google-gateway-internal" }}
         {{- range (splitList "," (.Values.global.google.publicSubnetCidrs | default "")) }}
         {{- if trim . }}
         - ipBlock:
             cidr: {{ trim . }}
-        {{- end }}
         {{- end }}
         {{- end }}
         {{- range .Values.global.google.gateway.extraHealthCheckCidrs }}
