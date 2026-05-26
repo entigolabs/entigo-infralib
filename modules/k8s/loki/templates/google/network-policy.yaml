@@ -81,6 +81,24 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: grafana
+      ports:
+        - protocol: TCP
+          port: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-allow-alloy
+  namespace: {{ .Release.Name }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
         - namespaceSelector: {}
           podSelector:
             matchLabels:
@@ -90,4 +108,3 @@ spec:
           port: http
 
 {{- end }}
-
