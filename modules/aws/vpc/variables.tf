@@ -104,6 +104,18 @@ variable "intra_subnet_names" {
   default  = []
 }
 
+variable "create_database_subnet_route_table" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
+variable "create_elasticache_subnet_route_table" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 variable "create_multiple_intra_route_tables" {
   type     = bool
   nullable = false
