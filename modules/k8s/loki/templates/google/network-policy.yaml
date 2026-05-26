@@ -84,7 +84,7 @@ spec:
         - namespaceSelector: {}
           podSelector:
             matchLabels:
-              app.kubernetes.io/instance: alloy
+              app.kubernetes.io/name: logs
       ports:
         - protocol: TCP
           port: http
