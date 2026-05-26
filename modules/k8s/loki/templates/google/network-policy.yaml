@@ -81,6 +81,10 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: grafana
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: alloy
       ports:
         - protocol: TCP
           port: http
