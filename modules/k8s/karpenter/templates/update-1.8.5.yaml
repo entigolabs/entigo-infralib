@@ -60,6 +60,21 @@ spec:
   template:
     spec:
       serviceAccountName: {{ .Release.Name }}-crd-patch
+      tolerations:
+        - effect: NoSchedule
+          key: tools
+          operator: Equal
+          value: 'true'
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: tools
+                    operator: In
+                    values:
+                      - 'true'
+              weight: 90
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
