@@ -96,7 +96,7 @@ crossplane:
         effect: "NoSchedule"
 
   # -- Priority class name for Crossplane and RBAC Manager (if enabled) pods.
-  priorityClassName: ""
+  priorityClassName: "crossplane"
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
