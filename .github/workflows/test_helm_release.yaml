@@ -167,14 +167,17 @@ jobs:
                 ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
 
               # Resolve SBOM digests and sign
-              GHCR_SBOM_DIGEST=$(oras discover --format json \
+              GHCR_SBOM_DIGEST=$(oras attach \
                 --artifact-type application/vnd.syft.sbom \
+                --format go-template --template "{{.digest}}" \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
-                | jq -r '.manifests[0].digest')
-              ECR_SBOM_DIGEST=$(oras discover --format json \
+                ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json)
+              ECR_SBOM_DIGEST=$(oras attach \
                 --artifact-type application/vnd.syft.sbom \
+                --format go-template --template "{{.digest}}" \
                 public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
-                | jq -r '.manifests[0].digest')
+                ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json)
+
               cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_SBOM_DIGEST}
               cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${ECR_SBOM_DIGEST}
 
