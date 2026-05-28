@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_VERSION: "1.21.2"
+  TEST_VERSION: "1.21.1"
 
 jobs:
   publish-helm-charts:
