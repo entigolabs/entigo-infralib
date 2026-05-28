@@ -19,32 +19,77 @@ jobs:
       - name: Install syft
         run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
+      - name: Create ECR Public repositories
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          for chart_dir in modules/k8s/*/; do
+            chart_name=$(basename "$chart_dir")
+            [ ! -f "${chart_dir}Chart.yaml" ] && continue
+            if ! aws ecr-public describe-repositories \
+              --repository-names entigo-infralib-release/k8s/${chart_name} &>/dev/null; then
+              aws ecr-public create-repository \
+                --repository-name entigo-infralib-release/k8s/${chart_name}
+            fi
+            break # TODO: remove to publish all charts
+          done
+
+          for module_type in aws aws-v2 google; do
+            for module_dir in modules/${module_type}/*/; do
+              module_name=$(basename "$module_dir")
+              [ ! -f "${module_dir}main.tf" ] && continue
+              if ! aws ecr-public describe-repositories \
+                --repository-names entigo-infralib-release/${module_type}/${module_name} &>/dev/null; then
+                aws ecr-public create-repository \
+                  --repository-name entigo-infralib-release/${module_type}/${module_name}
+              fi
+              break # TODO: remove to publish all modules
+            done
+            break # TODO: remove to publish all module types
+          done
+
       - name: Publish Helm charts as OCI
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-          # echo ${{ secrets.QUAY_PASSWORD }} | helm registry login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+          aws ecr-public get-login-password | helm registry login public.ecr.aws -u AWS --password-stdin
+          aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
+
           for chart_dir in modules/k8s/*/; do
             chart_name=$(basename "$chart_dir")
             [ ! -f "${chart_dir}Chart.yaml" ] && continue
             rm -rf "${chart_dir}test" "${chart_dir}test.sh"
             helm package "$chart_dir" --version ${TEST_VERSION} --destination /tmp/helm-charts
             helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
-            # helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://quay.io/entigolabs/entigo-infralib-release/k8s
+            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://public.ecr.aws/entigolabs/entigo-infralib-release/k8s
 
             syft "${chart_dir}" -o spdx-json > ${chart_name}-sbom.spdx.json
             oras attach \
               --artifact-type application/vnd.syft.sbom \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
               ${chart_name}-sbom.spdx.json:application/spdx+json
-
+            oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
+              ${chart_name}-sbom.spdx.json:application/spdx+json
             break # TODO: remove to publish all charts
           done
 
       - name: Publish OpenTofu modules as OCI
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+
           for module_type in aws aws-v2 google; do
             cd modules/${module_type}
             for module_dir in */; do
@@ -56,15 +101,19 @@ jobs:
                 --artifact-type=application/vnd.opentofu.modulepkg \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
                 ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
-              # oras push \
-              #   --artifact-type=application/vnd.opentofu.modulepkg \
-              #   quay.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
-              #   ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
+              oras push \
+                --artifact-type=application/vnd.opentofu.modulepkg \
+                public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
+                ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
 
               syft "${module_dir}" -o spdx-json > ${module_type}-${module_name}-sbom.spdx.json
               oras attach \
                 --artifact-type application/vnd.syft.sbom \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
+                ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
+              oras attach \
+                --artifact-type application/vnd.syft.sbom \
+                public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
                 ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
 
               break # TODO: remove to publish all modules
