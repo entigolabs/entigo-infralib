@@ -4,6 +4,9 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+    publicSubnetCidrs: "{{ .toutput.vpc.public_subnets_cidr_blocks }}"
+    privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
+    serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 loki:
   gateway:
