@@ -37,24 +37,22 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
 
-          mkdir -p /tmp/tofu-modules
-
           for module_type in aws aws-v2 google; do
             cd modules/${module_type}
             for module_dir in */; do
               module_name=$(basename "$module_dir")
               [ ! -f "${module_dir}main.tf" ] && continue
 
-              zip -r /tmp/tofu-modules/${module_type}-${module_name}-${TEST_VERSION}.zip ${module_name}/
+              zip -r ${module_type}-${module_name}-${TEST_VERSION}.zip ${module_name}/
 
               oras push \
                 --artifact-type=application/vnd.opentofu.modulepkg \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
-                /tmp/tofu-modules/${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
+                ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
               # oras push \
               #   --artifact-type=application/vnd.opentofu.modulepkg \
               #   quay.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
-              #   /tmp/tofu-modules/${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
+              #   ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
 
               break # TODO: remove to publish all modules
             done
