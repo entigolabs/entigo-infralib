@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Usage:
-#   Helm:    python3 common/sbom.py helm <chart_dir> <chart_name> <version>
+#   Helm:     python3 common/sbom.py helm <chart_dir> <chart_name> <version>
 #   OpenTofu: python3 common/sbom.py tofu <module_dir> <module_name> <version> <module_type>
 
 import json
@@ -29,12 +29,13 @@ def make_document(name, version, namespace_suffix):
     }
 
 
-def add_package(doc, spdx_id, name, version, download_location, package_type, purl):
+def add_root_package(doc, spdx_id, name, version, download_location, package_type, purl):
+    # Root package representing the artifact itself — DOCUMENT DESCRIBES root
     doc["packages"].append({
         "name": name,
         "SPDXID": spdx_id,
         "versionInfo": version,
-        "supplier": "NOASSERTION",
+        "supplier": "Organization: Entigolabs",
         "downloadLocation": download_location,
         "filesAnalyzed": False,
         "licenseConcluded": "NOASSERTION",
@@ -56,6 +57,37 @@ def add_package(doc, spdx_id, name, version, download_location, package_type, pu
     })
 
 
+def add_dependency(doc, root_spdx_id, spdx_id, name, version, download_location, package_type, purl, comment=None):
+    # Dependency package — root DEPENDS_ON dep
+    pkg = {
+        "name": name,
+        "SPDXID": spdx_id,
+        "versionInfo": version,
+        "supplier": "NOASSERTION",
+        "downloadLocation": download_location,
+        "filesAnalyzed": False,
+        "licenseConcluded": "NOASSERTION",
+        "licenseDeclared": "NOASSERTION",
+        "copyrightText": "NOASSERTION",
+        "primaryPackagePurpose": package_type,
+        "externalRefs": [
+            {
+                "referenceCategory": "PACKAGE-MANAGER",
+                "referenceType": "purl",
+                "referenceLocator": purl
+            }
+        ]
+    }
+    if comment:
+        pkg["comment"] = comment
+    doc["packages"].append(pkg)
+    doc["relationships"].append({
+        "spdxElementId": root_spdx_id,
+        "relatedSpdxElement": spdx_id,
+        "relationshipType": "DEPENDS_ON"
+    })
+
+
 def safe_spdx_id(name):
     # SPDX IDs only allow letters, numbers and dashes
     return re.sub(r"[^a-zA-Z0-9\-]", "-", name)
@@ -64,12 +96,20 @@ def safe_spdx_id(name):
 def generate_helm_sbom(chart_dir, chart_name, version):
     doc = make_document(chart_name, version, f"k8s/{chart_name}")
 
+    # Root package representing this helm chart
+    root_id = "SPDXRef-chart-root"
+    add_root_package(
+        doc, root_id, chart_name, version,
+        download_location=f"oci://ghcr.io/entigolabs/entigo-infralib-release/k8s/{chart_name}",
+        package_type="APPLICATION",
+        purl=f"pkg:oci/{chart_name}?repository_url=ghcr.io/entigolabs/entigo-infralib-release/k8s/{chart_name}&tag={version}"
+    )
+
     # Parse Chart.yaml for subchart dependencies
     chart_yaml_path = f"{chart_dir}/Chart.yaml"
     with open(chart_yaml_path) as f:
         content = f.read()
 
-    # Extract dependencies block entries
     dep_blocks = re.findall(
         r"- .*?(?=\n- |\Z)",
         re.search(r"dependencies:(.*?)(?=\n\w|\Z)", content, re.DOTALL).group(1) if "dependencies:" in content else "",
@@ -80,7 +120,6 @@ def generate_helm_sbom(chart_dir, chart_name, version):
         name_match    = re.search(r"name:\s*(\S+)", block)
         version_match = re.search(r"version:\s*(\S+)", block)
         repo_match    = re.search(r"repository:\s*(\S+)", block)
-        alias_match   = re.search(r"alias:\s*(\S+)", block)
 
         if not name_match or not version_match:
             continue
@@ -88,14 +127,13 @@ def generate_helm_sbom(chart_dir, chart_name, version):
         dep_name    = name_match.group(1)
         dep_version = version_match.group(1)
         dep_repo    = repo_match.group(1) if repo_match else "NOASSERTION"
-        dep_alias   = alias_match.group(1) if alias_match else dep_name
-        spdx_id     = f"SPDXRef-helm-{safe_spdx_id(dep_alias)}"
+        spdx_id     = f"SPDXRef-helm-{safe_spdx_id(dep_name)}"
 
-        add_package(
-            doc, spdx_id, dep_name, dep_version,
+        add_dependency(
+            doc, root_id, spdx_id, dep_name, dep_version,
             download_location=dep_repo,
             package_type="APPLICATION",
-            purl=f"pkg:helm/{dep_name}@{dep_version}"
+            purl=f"pkg:generic/{dep_name}@{dep_version}?download_url={dep_repo}"
         )
 
     # Run helm template to extract container images
@@ -104,20 +142,15 @@ def generate_helm_sbom(chart_dir, chart_name, version):
             ["helm", "template", chart_dir],
             capture_output=True, text=True, check=True
         )
-        images = set(
-            re.findall(r"image:\s*['\"]?([^\s'\"]+)['\"]?", result.stdout)
-        )
+        images = set(re.findall(r"image:\s*['\"]?([^\s'\"]+)['\"]?", result.stdout))
         for image in sorted(images):
-            # Parse image into name and tag
             tag     = "latest"
             img_ref = image
             if ":" in image.split("/")[-1]:
                 img_ref, tag = image.rsplit(":", 1)
             spdx_id = f"SPDXRef-image-{safe_spdx_id(img_ref.replace('/', '-'))}"
-            # Build correct download URL based on registry
-            # docker.io/grafana/alloy  -> hub.docker.com/r/grafana/alloy
-            # docker.io/library/nginx  -> hub.docker.com/_/nginx (official)
-            # other-registry.io/x/y   -> https://other-registry.io/x/y
+
+            # Build correct Docker Hub URL
             parts = img_ref.split("/")
             if parts[0] in ("docker.io", "index.docker.io"):
                 if len(parts) > 2 and parts[1] == "library":
@@ -128,11 +161,12 @@ def generate_helm_sbom(chart_dir, chart_name, version):
                 img_url = f"https://hub.docker.com/_/{img_ref}"
             else:
                 img_url = f"https://{img_ref}"
-            add_package(
-                doc, spdx_id, img_ref, tag,
+
+            add_dependency(
+                doc, root_id, spdx_id, img_ref, tag,
                 download_location=img_url,
                 package_type="CONTAINER",
-                purl=f"pkg:oci/{img_ref}@{tag}"
+                purl=f"pkg:oci/{img_ref.split('/')[-1]}?repository_url={img_ref}&tag={tag}"
             )
     except subprocess.CalledProcessError as e:
         print(f"Warning: helm template failed: {e.stderr}", file=sys.stderr)
@@ -142,6 +176,15 @@ def generate_helm_sbom(chart_dir, chart_name, version):
 
 def generate_tofu_sbom(module_dir, module_name, version, module_type):
     doc = make_document(module_name, version, f"{module_type}/{module_name}")
+
+    # Root package representing this tofu module
+    root_id = "SPDXRef-module-root"
+    add_root_package(
+        doc, root_id, module_name, version,
+        download_location=f"oci://ghcr.io/entigolabs/entigo-infralib-release/{module_type}/{module_name}",
+        package_type="LIBRARY",
+        purl=f"pkg:oci/{module_name}?repository_url=ghcr.io/entigolabs/entigo-infralib-release/{module_type}/{module_name}&tag={version}"
+    )
 
     versions_tf = f"{module_dir}/versions.tf"
     try:
@@ -159,21 +202,25 @@ def generate_tofu_sbom(module_dir, module_name, version, module_type):
 
     for alias, source, prov_version in providers:
         spdx_id = f"SPDXRef-provider-{safe_spdx_id(alias)}"
-        add_package(
-            doc, spdx_id, source, prov_version,
+        add_dependency(
+            doc, root_id, spdx_id, source, prov_version,
             download_location=f"https://registry.terraform.io/providers/{source}/{prov_version}",
             package_type="LIBRARY",
-            purl=f"pkg:terraform/{source}@{prov_version}"
+            # pkg:terraform is not a registered purl type; use pkg:generic with qualifiers
+            purl=f"pkg:generic/{source.split('/')[-1]}@{prov_version}?namespace={source.split('/')[0]}&download_url=https://registry.terraform.io/providers/{source}/{prov_version}"
         )
 
-    # Parse required_version for OpenTofu itself
+    # Parse required_version constraint — store as comment, omit from purl version
+    # (version constraints like ">= 1.5" are not valid purl version strings)
     tofu_version_match = re.search(r'required_version\s*=\s*"([^"]+)"', content)
     if tofu_version_match:
-        add_package(
-            doc, "SPDXRef-opentofu", "opentofu", tofu_version_match.group(1),
+        constraint = tofu_version_match.group(1)
+        add_dependency(
+            doc, root_id, "SPDXRef-opentofu", "opentofu", "latest",
             download_location="https://opentofu.org",
             package_type="APPLICATION",
-            purl=f"pkg:generic/opentofu@{tofu_version_match.group(1)}"
+            purl="pkg:generic/opentofu",
+            comment=f"Required version constraint: {constraint}"
         )
 
     return doc
