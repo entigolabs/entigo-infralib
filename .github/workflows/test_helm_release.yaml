@@ -97,15 +97,20 @@ jobs:
               public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
               ${chart_name}-sbom.spdx.json:application/spdx+json
 
-            # Resolve SBOM digests and sign
-            GHCR_SBOM_DIGEST=$(oras discover --format json \
+            # Attach SBOM and capture digest from output
+            GHCR_SBOM_DIGEST=$(oras attach \
               --artifact-type application/vnd.syft.sbom \
+              --format json \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
-              | jq -r '.manifests[0].digest')
-            ECR_SBOM_DIGEST=$(oras discover --format json \
+              ${chart_name}-sbom.spdx.json:application/spdx+json \
+              | jq -r '.digest')
+            ECR_SBOM_DIGEST=$(oras attach \
               --artifact-type application/vnd.syft.sbom \
+              --format json \
               public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
-              | jq -r '.manifests[0].digest')
+              ${chart_name}-sbom.spdx.json:application/spdx+json \
+              | jq -r '.digest')
+
             cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_SBOM_DIGEST}
             cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}@${ECR_SBOM_DIGEST}
 
