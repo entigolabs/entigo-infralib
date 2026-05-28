@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_VERSION: "1.21.1"
+  TEST_VERSION: "1.21.2"
 
 jobs:
   publish-helm-charts:
@@ -69,7 +69,9 @@ jobs:
             helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
             helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://public.ecr.aws/entigolabs/entigo-infralib-release/k8s
 
-            syft "${chart_dir}" -o spdx-json > ${chart_name}-sbom.spdx.json
+            #syft "${chart_dir}" -o spdx-json > ${chart_name}-sbom.spdx.json
+            python3 common/sbom.py helm "${chart_dir}" "${chart_name}" "${TEST_VERSION}" > ${chart_name}-sbom.spdx.json
+
             oras attach \
               --artifact-type application/vnd.syft.sbom \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
@@ -106,7 +108,8 @@ jobs:
                 public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
                 ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
 
-              syft "${module_dir}" -o spdx-json > ${module_type}-${module_name}-sbom.spdx.json
+              #syft "${module_dir}" -o spdx-json > ${module_type}-${module_name}-sbom.spdx.json
+              python3 ../../common/sbom.py tofu "${module_dir}" "${module_name}" "${TEST_VERSION}" "${module_type}" > ${module_type}-${module_name}-sbom.spdx.json
               oras attach \
                 --artifact-type application/vnd.syft.sbom \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
