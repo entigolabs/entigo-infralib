@@ -49,10 +49,12 @@ jobs:
               cd -
 
               oras push \
+                --disable-path-validation
                 --artifact-type=application/vnd.opentofu.modulepkg \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
                 /tmp/tofu-modules/${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
               # oras push \
+              #   --disable-path-validation
               #   --artifact-type=application/vnd.opentofu.modulepkg \
               #   quay.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
               #   /tmp/tofu-modules/${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
