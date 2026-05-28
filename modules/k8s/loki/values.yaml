@@ -5,7 +5,9 @@ global:
   prefix: ""
 
 loki:
+  deploymentMode: SimpleScalable
   fullnameOverride: loki
+  nameOverride: loki
   serviceAccount:
     create: false
     name: loki
@@ -46,6 +48,8 @@ loki:
         active_index_directory: /var/loki/tsdb-shipper-active
         cache_location: /var/loki/tsdb-shipper-cache
         cache_ttl: 24h
+    server:
+      log_level: warn
 
   memcached:
     enabled: false
@@ -189,11 +193,18 @@ loki:
       size: 30Gi
 
   gateway:
+    annotations:
+      argocd.argoproj.io/sync-options: Replace=true,Force=true
     podSecurityContext:
       seccompProfile:
         type: RuntimeDefault
     enabled: true
     verboseLogging: false
+    podDisruptionBudget:
+      enabled: false
+      minAvailable: 1
+    metrics:
+      enabled: false
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:

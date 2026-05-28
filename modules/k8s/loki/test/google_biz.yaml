@@ -1,5 +1,6 @@
 loki:
   fullnameOverride: "{{ .module.name }}"
+  nameOverride: "{{ .module.name }}"
   write:
     persistence:
       size: 3Gi
