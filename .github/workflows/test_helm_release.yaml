@@ -16,9 +16,13 @@ jobs:
         run: |
           ORAS_VERSION=1.3.2
           curl -sL https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz | tar -zx -C /usr/local/bin oras
+      - name: Install syft
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Publish Helm charts as OCI
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | helm registry login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
           for chart_dir in modules/k8s/*/; do
             chart_name=$(basename "$chart_dir")
@@ -27,6 +31,13 @@ jobs:
             helm package "$chart_dir" --version ${TEST_VERSION} --destination /tmp/helm-charts
             helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
             # helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://quay.io/entigolabs/entigo-infralib-release/k8s
+
+            syft "${chart_dir}" -o spdx-json > ${chart_name}-sbom.spdx.json
+            oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${TEST_VERSION} \
+              ${chart_name}-sbom.spdx.json:application/spdx+json
+
             break # TODO: remove to publish all charts
           done
 
@@ -49,6 +60,13 @@ jobs:
               #   --artifact-type=application/vnd.opentofu.modulepkg \
               #   quay.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
               #   ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
+
+              syft "${module_dir}" -o spdx-json > ${module_type}-${module_name}-sbom.spdx.json
+              oras attach \
+                --artifact-type application/vnd.syft.sbom \
+                ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
+                ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
+
               break # TODO: remove to publish all modules
             done
             cd -
