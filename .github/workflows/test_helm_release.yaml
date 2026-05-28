@@ -27,8 +27,8 @@ jobs:
 
             helm package "$chart_dir" --version ${TEST_VERSION} --destination /tmp/helm-charts
 
-            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://registry-1.docker.io/entigolabs/entigo-infralib-release-k8s
-            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release-k8s
+            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://registry-1.docker.io/entigolabs/entigo-infralib-release-k8s-${chart_name}
+            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release-k8s-${chart_name}
 
             break # TODO: remove to publish all charts
           done
