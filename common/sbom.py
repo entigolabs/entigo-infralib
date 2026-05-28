@@ -114,9 +114,23 @@ def generate_helm_sbom(chart_dir, chart_name, version):
             if ":" in image.split("/")[-1]:
                 img_ref, tag = image.rsplit(":", 1)
             spdx_id = f"SPDXRef-image-{safe_spdx_id(img_ref.replace('/', '-'))}"
+            # Build correct download URL based on registry
+            # docker.io/grafana/alloy  -> hub.docker.com/r/grafana/alloy
+            # docker.io/library/nginx  -> hub.docker.com/_/nginx (official)
+            # other-registry.io/x/y   -> https://other-registry.io/x/y
+            parts = img_ref.split("/")
+            if parts[0] in ("docker.io", "index.docker.io"):
+                if len(parts) > 2 and parts[1] == "library":
+                    img_url = f"https://hub.docker.com/_/{parts[2]}"
+                else:
+                    img_url = f"https://hub.docker.com/r/{'/'.join(parts[1:])}"
+            elif "/" not in img_ref:
+                img_url = f"https://hub.docker.com/_/{img_ref}"
+            else:
+                img_url = f"https://{img_ref}"
             add_package(
                 doc, spdx_id, img_ref, tag,
-                download_location=f"https://{img_ref}" if "/" in img_ref else f"https://hub.docker.com/_/{img_ref}",
+                download_location=img_url,
                 package_type="CONTAINER",
                 purl=f"pkg:oci/{img_ref}@{tag}"
             )
@@ -147,7 +161,7 @@ def generate_tofu_sbom(module_dir, module_name, version, module_type):
         spdx_id = f"SPDXRef-provider-{safe_spdx_id(alias)}"
         add_package(
             doc, spdx_id, source, prov_version,
-            download_location=f"https://registry.opentofu.org/providers/{source}",
+            download_location=f"https://registry.terraform.io/providers/{source}/{prov_version}",
             package_type="LIBRARY",
             purl=f"pkg:terraform/{source}@{prov_version}"
         )
