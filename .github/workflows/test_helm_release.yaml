@@ -20,31 +20,27 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | helm registry login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
-
           for chart_dir in modules/k8s/*/; do
             chart_name=$(basename "$chart_dir")
             [ ! -f "${chart_dir}Chart.yaml" ] && continue
-
+            rm -rf "${chart_dir}test" "${chart_dir}test.sh"
             helm package "$chart_dir" --version ${TEST_VERSION} --destination /tmp/helm-charts
-
             helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
             # helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://quay.io/entigolabs/entigo-infralib-release/k8s
-
             break # TODO: remove to publish all charts
           done
+
       - name: Publish OpenTofu modules as OCI
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
-
           for module_type in aws aws-v2 google; do
             cd modules/${module_type}
             for module_dir in */; do
               module_name=$(basename "$module_dir")
               [ ! -f "${module_dir}main.tf" ] && continue
-
+              rm -rf "${module_dir}test" "${module_dir}test.sh"
               zip -r ${module_type}-${module_name}-${TEST_VERSION}.zip ${module_name}/
-
               oras push \
                 --artifact-type=application/vnd.opentofu.modulepkg \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
@@ -53,13 +49,11 @@ jobs:
               #   --artifact-type=application/vnd.opentofu.modulepkg \
               #   quay.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${TEST_VERSION} \
               #   ${module_type}-${module_name}-${TEST_VERSION}.zip:archive/zip
-
               break # TODO: remove to publish all modules
             done
             cd -
             break # TODO: remove to publish all module types
           done
-
       - name: Post Cleanup
         if: always()
         run: |
