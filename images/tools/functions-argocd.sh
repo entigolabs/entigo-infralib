@@ -104,7 +104,7 @@ metadata:
 
 # Run argocd-plan for all yaml files in parallel
 argocd_plan() {
-    local helm_bootstrap=$(argocd_helm_bootstrap)
+    local helm_bootstrap=$(argocd_helm_bootstrap | tail -1)
 
     if [ "$ARGOCD_HOSTNAME" == "" ]; then
         export USE_ARGOCD_CLI="false"
