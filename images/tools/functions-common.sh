@@ -230,10 +230,10 @@ terraform_init() {
         echo "Unable to find backend.conf file"
         exit 100
     fi
-    # tofu requires -migrate-state when taking over a Terraform-initialized backend
-    local migrate_flag=""
-    [ "$TF_TOOL" == "tofu" ] && migrate_flag="-migrate-state"
-    $TF_TOOL init -input=false $migrate_flag -backend-config=backend.conf
+    # tofu requires -reconfigure when taking over a Terraform-initialized backend
+    local init_flag=""
+    [ "$TF_TOOL" == "tofu" ] && init_flag="-reconfigure"
+    $TF_TOOL init -input=false $init_flag -backend-config=backend.conf
     if [ $? -ne 0 ]; then
         echo "Terraform init failed."
         exit 14
