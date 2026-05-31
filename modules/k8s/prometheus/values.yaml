@@ -50,9 +50,6 @@ prometheus-blackbox-exporter:
 prometheus:
   fullnameOverride: prometheus
   server:
-    retention: "15d"
-    persistentVolume:
-      size: 30Gi
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
