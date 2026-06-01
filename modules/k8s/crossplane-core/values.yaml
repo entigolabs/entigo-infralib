@@ -96,19 +96,7 @@ crossplane:
         effect: "NoSchedule"
 
   # -- Priority class name for Crossplane and RBAC Manager (if enabled) pods.
-  priorityClassName: ""
-
-  resourcesCrossplane:
-    limits:
-      # -- CPU resource limits for Crossplane.
-      cpu: 1000m
-      # -- Memory resource limits for Crossplane.
-      memory: 768Mi
-    requests:
-      # -- CPU resource requests for Crossplane.
-      cpu: 30m
-      # -- Memory resource requests for Crossplane.
-      memory: 300Mi
+  priorityClassName: "crossplane"
 
   securityContextCrossplane:
     # -- Run as user for Crossplane.
