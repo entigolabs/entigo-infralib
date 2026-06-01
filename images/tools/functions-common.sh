@@ -231,9 +231,7 @@ terraform_init() {
         exit 100
     fi
     # tofu requires -reconfigure when taking over a Terraform-initialized backend
-    local init_flag=""
-    [ "$TF_TOOL" == "tofu" ] && init_flag="-reconfigure"
-    $TF_TOOL init -input=false $init_flag -backend-config=backend.conf
+    $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
     if [ $? -ne 0 ]; then
         echo "Terraform init failed."
         exit 14
