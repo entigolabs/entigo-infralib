@@ -7,7 +7,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-family-aws:v2.4.0
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.5.4
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
@@ -39,12 +39,12 @@ kind: Provider
 metadata:
   name: upbound-provider-aws-{{ $provider }}
   annotations:
-    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 5) }}'
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 4) }}'
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
-  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.4.0
+  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.5.4
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

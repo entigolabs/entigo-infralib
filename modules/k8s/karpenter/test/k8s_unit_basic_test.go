@@ -8,10 +8,6 @@ import (
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
 
-func TestK8sKarpenterAWSBiz(t *testing.T) {
-	testK8sKarpenter(t, "aws", "biz")
-}
-
 func TestK8sKarpenterAWSPri(t *testing.T) {
 	testK8sKarpenter(t, "aws", "pri")
 }

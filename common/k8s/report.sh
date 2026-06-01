@@ -43,7 +43,7 @@ do
           fi
         done
 
-        latest=$(echo "$all_tags" | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+        latest=$(echo "$all_tags" | tr ' ' '\n' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
 
       else
         helm repo add $name $url > /dev/null
@@ -52,7 +52,7 @@ do
       if [ "$latest" == "" -o "$latest" == "null" ]
       then
         echo "$name Chart not found in repo $url ($chart)"
-      elif [ "$(echo $latest | cut -d'.' -f1-3)" != "$(echo $version | cut -d'.' -f1-3)" ]
+      elif [ "$(echo $latest | sed 's/^v//' | cut -d'.' -f1-3)" != "$(echo $version | sed 's/^v//' | cut -d'.' -f1-3)" ]
       then
         echo "$name newer version $latest, current $version ($chart)"
       fi

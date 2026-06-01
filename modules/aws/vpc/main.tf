@@ -50,7 +50,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.6.0"
+  version = "6.6.1"
 
   name = var.prefix
   cidr = var.vpc_cidr
@@ -74,7 +74,9 @@ module "vpc" {
   elasticache_subnet_group_name = var.elasticache_subnet_group_name
 
   create_database_subnet_group    = length(local.database_subnets) > 0 ? true : false
+  create_database_subnet_route_table = length(local.database_subnets) > 0 ? var.create_database_subnet_route_table : false
   create_elasticache_subnet_group = length(local.elasticache_subnets) > 0 ? true : false
+  create_elasticache_subnet_route_table = length(local.elasticache_subnets) > 0 ? var.create_elasticache_subnet_route_table : false
   create_multiple_intra_route_tables = var.create_multiple_intra_route_tables
   create_multiple_public_route_tables = var.create_multiple_public_route_tables
   

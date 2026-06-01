@@ -1,0 +1,34 @@
+name: Test Helm Chart OCI Publish
+
+on:
+  workflow_dispatch:
+
+env:
+  TEST_VERSION: "1.21.2"
+
+jobs:
+  publish-helm-charts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish Helm charts as OCI
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USERNAME --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          for chart_dir in modules/k8s/*/; do
+            chart_name=$(basename "$chart_dir")
+            [ ! -f "${chart_dir}Chart.yaml" ] && continue
+
+            helm package "$chart_dir" --version ${TEST_VERSION} --destination /tmp/helm-charts
+
+            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://registry-1.docker.io/entigolabs/entigo-infralib-release-k8s
+            helm push /tmp/helm-charts/${chart_name}-${TEST_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release-k8s
+
+            break # TODO: remove to publish all charts
+          done
