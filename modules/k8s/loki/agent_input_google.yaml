@@ -3,6 +3,7 @@ global:
   google:
     hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
+    publicSubnetCidrs: "{{.toutput.vpc.public_subnet_cidrs}}"
     bucket:
       location: "{{ .toutput.gke.region }}"
       kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"

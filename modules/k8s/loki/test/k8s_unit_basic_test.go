@@ -34,7 +34,7 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "loki-read", 20, 6*time.Second)
+	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-read", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-read deployment error:", err)
 	}
@@ -44,11 +44,11 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 	if err != nil {
 		t.Fatal("loki-gateway deployment error:", err)
 	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "loki-write-0", 20, 6*time.Second)
+	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-write-0", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-write-0 pod error:", err)
 	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "loki-backend-0", 20, 6*time.Second)
+	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-backend-0", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("loki-backend-0 pod error:", err)
 	}

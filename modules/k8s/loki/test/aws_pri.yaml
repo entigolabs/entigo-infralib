@@ -1,3 +1,7 @@
+global:
+  aws:
+    extraAlbCidrs:
+      - 192.168.0.0/16
 loki:
   gateway:
     ingress:
@@ -5,6 +9,7 @@ loki:
         alb.ingress.kubernetes.io/group.name: external
         alb.ingress.kubernetes.io/scheme: internet-facing
   fullnameOverride: "{{ .module.name }}"
+  nameOverride: "{{ .module.name }}"
   write:
     persistence:
       size: 3Gi
