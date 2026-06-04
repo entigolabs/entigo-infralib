@@ -196,3 +196,432 @@ logs:
     tolerations:
       - effect: NoSchedule
         operator: Exists
+
+# ---------------------------------------------------------------------------
+# metrics: per-node DaemonSet. Replaces prometheus-node-exporter (via the
+# built-in unix exporter) and scrapes the local node's kubelet + cAdvisor.
+# Each pod scrapes only its own node, then remote_writes to Mimir.
+# ---------------------------------------------------------------------------
+metrics:
+  mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+  mimirTenantID: ""
+  scrapeInterval: "60s"
+  # extraConfig is appended verbatim to the generated Alloy config.
+  extraConfig: ""
+
+  alloy:
+    configMap:
+      create: true
+      content: |
+        logging {
+          level  = "warn"
+          format = "json"
+        }
+
+        prometheus.remote_write "default" {
+          endpoint {
+            url = {{ .Values.mimirEndpoint | quote }}
+            {{- if .Values.mimirTenantID }}
+            headers = {
+              "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
+            }
+            {{- end }}
+          }
+        }
+
+        // node-exporter replacement: reads the host root/proc/sys mounted below.
+        prometheus.exporter.unix "node" {
+          rootfs_path = "/host/root"
+          procfs_path = "/host/proc"
+          sysfs_path  = "/host/sys"
+
+          filesystem {
+            mount_points_exclude = "^/(dev|proc|sys|run/credentials/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+            fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+          }
+          netclass {
+            ignored_devices = "^(veth.*|cali.*|[a-f0-9]{15})$"
+          }
+        }
+
+        discovery.relabel "node_exporter" {
+          targets = prometheus.exporter.unix.node.targets
+          rule {
+            target_label = "job"
+            replacement  = "node-exporter"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "node_exporter" {
+          targets         = discovery.relabel.node_exporter.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // The kubelet (and its embedded cAdvisor) on this pod's own node.
+        discovery.kubernetes "local_node" {
+          role = "node"
+          selectors {
+            role  = "node"
+            field = "metadata.name=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.relabel "kubelet" {
+          targets = discovery.kubernetes.local_node.targets
+          rule {
+            source_labels = ["__meta_kubernetes_node_name"]
+            target_label  = "node"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "kubelet" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "kubelet"
+          scheme            = "https"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+
+        prometheus.scrape "cadvisor" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "cadvisor"
+          scheme            = "https"
+          metrics_path      = "/metrics/cadvisor"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
+
+    # Host mounts required by the unix (node) exporter.
+    mounts:
+      extra:
+        - name: rootfs
+          mountPath: /host/root
+          readOnly: true
+          mountPropagation: HostToContainer
+        - name: procfs
+          mountPath: /host/proc
+          readOnly: true
+        - name: sysfs
+          mountPath: /host/sys
+          readOnly: true
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "60Mi"
+        ephemeral-storage: "100Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+        ephemeral-storage: "1Gi"
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    enableHttpServerPort: false
+    enableReporting: false
+
+  service:
+    enabled: false
+
+  serviceAccount:
+    create: true
+
+  configReloader:
+    enabled: false
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress: []
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      # Mimir gateway (remote_write target).
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node (host network).
+      - ports:
+          - port: 10250
+            protocol: TCP
+
+  controller:
+    type: "daemonset"
+    replicas: 1
+    priorityClassName: "alloy"
+    # Host mounts for the unix (node) exporter.
+    volumes:
+      extra:
+        - name: rootfs
+          hostPath:
+            path: /
+        - name: procfs
+          hostPath:
+            path: /proc
+        - name: sysfs
+          hostPath:
+            path: /sys
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
+# ---------------------------------------------------------------------------
+# metricscluster: single-replica Deployment for cluster-wide scrape targets
+# (kube-state-metrics, annotation-based pod discovery). Runs as a singleton so
+# each target is scraped exactly once, then remote_writes to Mimir.
+# ---------------------------------------------------------------------------
+metricscluster:
+  mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+  mimirTenantID: ""
+  scrapeInterval: "60s"
+  extraConfig: ""
+
+  alloy:
+    configMap:
+      create: true
+      content: |
+        logging {
+          level  = "warn"
+          format = "json"
+        }
+
+        prometheus.remote_write "default" {
+          endpoint {
+            url = {{ .Values.mimirEndpoint | quote }}
+            {{- if .Values.mimirTenantID }}
+            headers = {
+              "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
+            }
+            {{- end }}
+          }
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        // kube-state-metrics (kept as a standalone deployment).
+        discovery.relabel "kube_state_metrics" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            regex         = "kube-state-metrics"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_port_number"]
+            regex         = "8080"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            target_label = "job"
+            replacement  = "kube-state-metrics"
+          }
+        }
+
+        prometheus.scrape "kube_state_metrics" {
+          targets         = discovery.relabel.kube_state_metrics.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // Annotation-based discovery: scrape pods with prometheus.io/scrape=true.
+        discovery.relabel "annotated_pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Running"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
+            regex         = "(https?)"
+            target_label  = "__scheme__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+            regex         = "(.+)"
+            target_label  = "__metrics_path__"
+          }
+          rule {
+            source_labels = ["__address__", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+            regex         = "([^:]+)(?::[0-9]+)?;([0-9]+)"
+            replacement   = "$1:$2"
+            target_label  = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+        }
+
+        prometheus.scrape "annotated_pods" {
+          targets         = discovery.relabel.annotated_pods.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
+
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+        ephemeral-storage: "100Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+        ephemeral-storage: "10Gi"
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    enableHttpServerPort: false
+    enableReporting: false
+
+  service:
+    enabled: false
+
+  serviceAccount:
+    create: true
+
+  configReloader:
+    enabled: false
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress: []
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      # Mimir gateway (remote_write target).
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Scrape any pod in the cluster (kube-state-metrics + annotated pods).
+      - to:
+          - namespaceSelector: {}
+
+  controller:
+    type: "deployment"
+    replicas: 1
+    priorityClassName: "alloy"
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"

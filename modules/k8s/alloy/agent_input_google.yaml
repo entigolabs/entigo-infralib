@@ -32,3 +32,76 @@ logs:
         to:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+
+metrics:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node.
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API (discovery.kubernetes node role).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+
+metricscluster:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubernetes API (discovery.kubernetes pod role).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+      # Scrape any pod in the cluster (kube-state-metrics + annotated pods).
+      - to:
+          - namespaceSelector: {}

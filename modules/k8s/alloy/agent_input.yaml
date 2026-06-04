@@ -2,3 +2,11 @@ logs:
   controller:
     priorityClassName: "{{ .module.name }}"
   lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
+metrics:
+  controller:
+    priorityClassName: "{{ .module.name }}"
+  mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+metricscluster:
+  controller:
+    priorityClassName: "{{ .module.name }}"
+  mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"

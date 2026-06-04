@@ -10,3 +10,11 @@ dependencies:
     alias: logs
     version: 1.8.1
     repository: https://grafana.github.io/helm-charts
+  - name: alloy
+    alias: metrics
+    version: 1.8.1
+    repository: https://grafana.github.io/helm-charts
+  - name: alloy
+    alias: metricscluster
+    version: 1.8.1
+    repository: https://grafana.github.io/helm-charts

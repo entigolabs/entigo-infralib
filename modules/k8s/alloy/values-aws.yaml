@@ -31,3 +31,72 @@ logs:
         to:
           - ipBlock:
               cidr: 172.20.0.1/32
+
+metrics:
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node.
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API (discovery.kubernetes node role).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
+
+metricscluster:
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubernetes API (discovery.kubernetes pod role).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
+      # Scrape any pod in the cluster (kube-state-metrics + annotated pods).
+      - to:
+          - namespaceSelector: {}

@@ -36,4 +36,20 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 		t.Fatal(fmt.Sprintf("Daemonset %s error:", namespaceName), err)
 	}
 	assert.NotEmpty(t, daemonSetName, "Daemonset was not returned")
+
+	metricsDaemonSetName := fmt.Sprintf("%s-metrics", namespaceName)
+
+	metricsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, metricsDaemonSetName)
+	if err != nil {
+		t.Fatal(fmt.Sprintf("Daemonset %s error:", metricsDaemonSetName), err)
+	}
+	assert.NotEmpty(t, metricsDaemonSet, "Metrics daemonset was not returned")
+
+	metricsClusterName := fmt.Sprintf("%s-metricscluster", namespaceName)
+
+	metricsCluster, err := terrak8s.GetDeploymentE(t, kubectlOptions, metricsClusterName)
+	if err != nil {
+		t.Fatal(fmt.Sprintf("Deployment %s error:", metricsClusterName), err)
+	}
+	assert.NotEmpty(t, metricsCluster, "Metricscluster deployment was not returned")
 }
