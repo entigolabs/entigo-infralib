@@ -32,7 +32,7 @@ logs:
           - ipBlock:
               cidr: 172.20.0.1/32
 
-metrics:
+node-metrics:
   networkPolicy:
     egress:
       - ports:
@@ -67,7 +67,7 @@ metrics:
           - ipBlock:
               cidr: 172.20.0.1/32
 
-metricscluster:
+cluster-metrics:
   networkPolicy:
     egress:
       - ports:

@@ -198,15 +198,15 @@ logs:
         operator: Exists
 
 # ---------------------------------------------------------------------------
-# metrics: per-node DaemonSet. Replaces prometheus-node-exporter (via the
+# node-metrics: per-node DaemonSet. Replaces prometheus-node-exporter (via the
 # built-in unix exporter) and scrapes the local node's kubelet + cAdvisor.
 # Each pod scrapes only its own node, then remote_writes to Mimir.
 # ---------------------------------------------------------------------------
-metrics:
+node-metrics:
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
   scrapeInterval: "60s"
-  # extraConfig is appended verbatim to the generated Alloy config.
+
   extraConfig: ""
 
   alloy:
@@ -315,7 +315,6 @@ metrics:
         {{ .Values.extraConfig | nindent 8 }}
         {{- end }}
 
-    # Host mounts required by the unix (node) exporter.
     mounts:
       extra:
         - name: rootfs
@@ -411,11 +410,11 @@ metrics:
         operator: Exists
 
 # ---------------------------------------------------------------------------
-# metricscluster: single-replica Deployment for cluster-wide scrape targets
+# cluster-metrics: single-replica Deployment for cluster-wide scrape targets
 # (kube-state-metrics, annotation-based pod discovery). Runs as a singleton so
 # each target is scraped exactly once, then remote_writes to Mimir.
 # ---------------------------------------------------------------------------
-metricscluster:
+cluster-metrics:
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
   scrapeInterval: "60s"

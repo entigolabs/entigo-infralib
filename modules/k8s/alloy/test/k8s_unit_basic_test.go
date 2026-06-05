@@ -37,19 +37,19 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 	}
 	assert.NotEmpty(t, daemonSetName, "Daemonset was not returned")
 
-	metricsDaemonSetName := fmt.Sprintf("%s-metrics", namespaceName)
+	nodeMetricsDaemonSetName := fmt.Sprintf("%s-node-metrics", namespaceName)
 
-	metricsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, metricsDaemonSetName)
+	nodeMetricsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, nodeMetricsDaemonSetName)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", metricsDaemonSetName), err)
+		t.Fatal(fmt.Sprintf("Daemonset %s error:", nodeMetricsDaemonSetName), err)
 	}
-	assert.NotEmpty(t, metricsDaemonSet, "Metrics daemonset was not returned")
+	assert.NotEmpty(t, nodeMetricsDaemonSet, "Node-metrics daemonset was not returned")
 
-	metricsClusterName := fmt.Sprintf("%s-metricscluster", namespaceName)
+	clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
 
-	metricsCluster, err := terrak8s.GetDeploymentE(t, kubectlOptions, metricsClusterName)
+	clusterMetrics, err := terrak8s.GetDeploymentE(t, kubectlOptions, clusterMetricsName)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Deployment %s error:", metricsClusterName), err)
+		t.Fatal(fmt.Sprintf("Deployment %s error:", clusterMetricsName), err)
 	}
-	assert.NotEmpty(t, metricsCluster, "Metricscluster deployment was not returned")
+	assert.NotEmpty(t, clusterMetrics, "Cluster-metrics deployment was not returned")
 }

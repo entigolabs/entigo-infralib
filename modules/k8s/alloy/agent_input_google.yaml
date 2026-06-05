@@ -33,7 +33,7 @@ logs:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
 
-metrics:
+node-metrics:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   networkPolicy:
@@ -70,7 +70,7 @@ metrics:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
 
-metricscluster:
+cluster-metrics:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   networkPolicy:
