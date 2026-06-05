@@ -14,7 +14,9 @@ dependencies:
     alias: node-metrics
     version: 1.8.2
     repository: https://grafana.github.io/helm-charts
+    condition: node-metrics.enabled
   - name: alloy
     alias: cluster-metrics
     version: 1.8.2
     repository: https://grafana.github.io/helm-charts
+    condition: cluster-metrics.enabled

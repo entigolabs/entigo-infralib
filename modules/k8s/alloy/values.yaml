@@ -203,8 +203,13 @@ logs:
 # Each pod scrapes only its own node, then remote_writes to Mimir.
 # ---------------------------------------------------------------------------
 node-metrics:
+  # Toggle this whole DaemonSet on/off (see condition in Chart.yaml).
+  enabled: true
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
+  # Labels added to every series via prometheus.remote_write external_labels
+  # (metrics equivalent of the logs stage.static_labels), e.g. {cluster: prod}.
+  externalLabels: {}
   scrapeInterval: "60s"
 
   extraConfig: ""
@@ -219,6 +224,13 @@ node-metrics:
         }
 
         prometheus.remote_write "default" {
+          {{- if .Values.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
           endpoint {
             url = {{ .Values.mimirEndpoint | quote }}
             {{- if .Values.mimirTenantID }}
@@ -415,8 +427,13 @@ node-metrics:
 # each target is scraped exactly once, then remote_writes to Mimir.
 # ---------------------------------------------------------------------------
 cluster-metrics:
+  # Toggle this whole Deployment on/off (see condition in Chart.yaml).
+  enabled: true
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
+  # Labels added to every series via prometheus.remote_write external_labels
+  # (metrics equivalent of the logs stage.static_labels), e.g. {cluster: prod}.
+  externalLabels: {}
   scrapeInterval: "60s"
   extraConfig: ""
 
@@ -430,6 +447,13 @@ cluster-metrics:
         }
 
         prometheus.remote_write "default" {
+          {{- if .Values.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
           endpoint {
             url = {{ .Values.mimirEndpoint | quote }}
             {{- if .Values.mimirTenantID }}
