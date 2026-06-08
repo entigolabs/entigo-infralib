@@ -284,22 +284,23 @@ jobs:
             "${TEST_VERSION}" \
             > "${STAGE}/agent-sbom.spdx.json"
 
-          # Package from the staging dir (subshell keeps cwd unaffected for later commands)
-          ( cd "${STAGE}" && zip -r agent-${TEST_VERSION}.zip modules providers manifest.json agent-sbom.spdx.json )
+          # Package and push from inside the staging dir so oras gets relative paths
+          cd "${STAGE}"
+          zip -r agent-${TEST_VERSION}.zip modules providers manifest.json agent-sbom.spdx.json
 
           # Inspect what got packaged (remove once happy)
-          unzip -l "${STAGE}/agent-${TEST_VERSION}.zip"
-          cat "${STAGE}/manifest.json"
+          unzip -l agent-${TEST_VERSION}.zip
+          cat manifest.json
 
           # Push to both registries
           oras push \
             --artifact-type=application/vnd.entigo.agentpkg \
             ghcr.io/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
-            "${STAGE}/agent-${TEST_VERSION}.zip:archive/zip"
+            agent-${TEST_VERSION}.zip:archive/zip
           oras push \
             --artifact-type=application/vnd.entigo.agentpkg \
             public.ecr.aws/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
-            "${STAGE}/agent-${TEST_VERSION}.zip:archive/zip"
+            agent-${TEST_VERSION}.zip:archive/zip
 
           # Resolve package digests and sign
           GHCR_DIGEST=$(oras discover --format json \
