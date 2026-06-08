@@ -38,7 +38,6 @@ jobs:
               aws ecr-public create-repository \
                 --repository-name entigo-infralib-release/k8s/${chart_name}
             fi
-            break # TODO: remove to publish all charts
           done
 
           for module_type in aws aws-v2 google; do
@@ -50,9 +49,7 @@ jobs:
                 aws ecr-public create-repository \
                   --repository-name entigo-infralib-release/${module_type}/${module_name}
               fi
-              break # TODO: remove to publish all modules
             done
-            break # TODO: remove to publish all module types
           done
 
       - name: Publish Helm charts as OCI
@@ -134,7 +131,6 @@ jobs:
                 }
               }' >> /tmp/agent-manifest/entries.jsonl
 
-            break # TODO: remove to publish all charts
           done
 
       - name: Publish OpenTofu modules as OCI
@@ -221,10 +217,8 @@ jobs:
                   }
                 }' >> /tmp/agent-manifest/entries.jsonl
 
-              break # TODO: remove to publish all modules
             done
             cd -
-            break # TODO: remove to publish all module types
           done
 
       - name: Publish agent package as OCI
