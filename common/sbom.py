@@ -240,10 +240,73 @@ def generate_tofu_sbom(module_dir, module_name, version, module_type):
     return doc
 
 
+def generate_agent_sbom(entries_path, version):
+    # entries_path: JSONL file, one module record per line, written by the
+    # helm/tofu publish steps. Each module becomes a CONTAINS dependency,
+    # referenced by an oci purl per registry with the package digest as checksum.
+    doc = make_document("agent", version, "agent")
+
+    root_id  = "SPDXRef-agent-root"
+    repo_url = "ghcr.io/entigolabs/entigo-infralib-release/agent"
+    add_root_package(
+        doc, root_id, "agent", version,
+        download_location=f"oci://{repo_url}",
+        package_type="LIBRARY",
+        # Digest not available for the agent package itself at generation time
+        purl=f"pkg:oci/agent?repository_url={repo_url}&tag={version}"
+    )
+
+    with open(entries_path) as f:
+        entries = [json.loads(line) for line in f if line.strip()]
+
+    for e in entries:
+        spdx_id = f"SPDXRef-module-{safe_spdx_id(e['type'])}-{safe_spdx_id(e['name'])}"
+
+        # One oci purl per registry — same artifact, different manifest digest
+        ext_refs = []
+        checksums = []
+        for reg in ("ghcr", "ecr"):
+            r = e["registries"][reg]
+            ext_refs.append({
+                "referenceCategory": "PACKAGE-MANAGER",
+                "referenceType": "purl",
+                # Digest is the version component; tag kept as a qualifier
+                "referenceLocator": f"pkg:oci/{e['name'].lower()}@{r['package']}"
+                                    f"?repository_url={r['repository']}&tag={e['tag']}"
+            })
+            # Record both the package and its SBOM digest as checksums
+            checksums.append({
+                "algorithm": "SHA256",
+                "checksumValue": r["package"].split(":", 1)[1]  # strip "sha256:"
+            })
+
+        doc["packages"].append({
+            "name": f"{e['type']}/{e['name']}",
+            "SPDXID": spdx_id,
+            "versionInfo": e["tag"],
+            "supplier": "Organization: Entigolabs",
+            "downloadLocation": f"oci://{e['registries']['ghcr']['repository']}",
+            "filesAnalyzed": False,
+            "licenseConcluded": "NOASSERTION",
+            "licenseDeclared": "NOASSERTION",
+            "copyrightText": "NOASSERTION",
+            "primaryPackagePurpose": "LIBRARY",
+            "checksums": checksums,
+            "externalRefs": ext_refs
+        })
+        doc["relationships"].append({
+            "spdxElementId": root_id,
+            "relatedSpdxElement": spdx_id,
+            "relationshipType": "CONTAINS"
+        })
+
+    return doc
+
 def main():
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 4:
         print(f"Usage: {sys.argv[0]} helm <chart_dir> <chart_name> <version>", file=sys.stderr)
         print(f"       {sys.argv[0]} tofu <module_dir> <module_name> <version> <module_type>", file=sys.stderr)
+        print(f"       {sys.argv[0]} agent <entries_jsonl> <version>", file=sys.stderr)
         sys.exit(1)
 
     mode = sys.argv[1]
@@ -254,6 +317,9 @@ def main():
     elif mode == "tofu":
         module_dir, module_name, version, module_type = sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
         doc = generate_tofu_sbom(module_dir, module_name, version, module_type)
+    elif mode == "agent":
+        entries_path, version = sys.argv[2], sys.argv[3]
+        doc = generate_agent_sbom(entries_path, version)
     else:
         print(f"Unknown mode: {mode}", file=sys.stderr)
         sys.exit(1)
