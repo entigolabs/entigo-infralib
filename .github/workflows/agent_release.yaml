@@ -172,7 +172,14 @@ jobs:
       with:
         base_sha: refs/tags/${{ steps.get_latest_release.outputs.stable_version }}
         sha: ${{ github.ref }}
-        
+    - name: Install cosign
+      uses: sigstore/cosign-installer@v3
+
+    - name: Install oras
+      run: |
+        ORAS_VERSION=1.3.2
+        curl -sL https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz | tar -zx -C /usr/local/bin oras
+
     - name: Create Release
       id: create_release
       run: |
@@ -264,6 +271,304 @@ jobs:
         cd entigo-infralib-release
         git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+
+
+    - name: Create ECR Public repositories
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        for chart_dir in modules/k8s/*/; do
+          chart_name=$(basename "$chart_dir")
+          [ ! -f "${chart_dir}Chart.yaml" ] && continue
+          if ! aws ecr-public describe-repositories \
+            --repository-names entigo-infralib-release/k8s/${chart_name} &>/dev/null; then
+            aws ecr-public create-repository \
+              --repository-name entigo-infralib-release/k8s/${chart_name}
+          fi
+        done
+
+        for module_type in aws aws-v2 google; do
+          for module_dir in modules/${module_type}/*/; do
+            module_name=$(basename "$module_dir")
+            [ ! -f "${module_dir}main.tf" ] && continue
+            if ! aws ecr-public describe-repositories \
+              --repository-names entigo-infralib-release/${module_type}/${module_name} &>/dev/null; then
+              aws ecr-public create-repository \
+                --repository-name entigo-infralib-release/${module_type}/${module_name}
+            fi
+          done
+        done
+
+    - name: Publish Helm charts as OCI
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        aws ecr-public get-login-password | helm registry login public.ecr.aws -u AWS --password-stdin
+        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
+
+        for chart_dir in modules/k8s/*/; do
+          chart_name=$(basename "$chart_dir")
+          [ ! -f "${chart_dir}Chart.yaml" ] && continue
+          rm -rf "${chart_dir}test" "${chart_dir}test.sh"
+          helm package "$chart_dir" --version ${RELEASE_VERSION} --destination /tmp/helm-charts
+
+          # Push to both registries
+          helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
+          helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz oci://public.ecr.aws/entigolabs/entigo-infralib-release/k8s
+
+          # Resolve digests and sign
+          GHCR_DIGEST=$(oras discover --format json \
+            ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            | jq -r '.digest')
+          ECR_DIGEST=$(oras discover --format json \
+            public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            | jq -r '.digest')
+          cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_DIGEST}
+          cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}@${ECR_DIGEST}
+
+          # Create and attach SBOM
+          python3 common/sbom.py helm "${chart_dir}" "${chart_name}" "${RELEASE_VERSION}" > ${chart_name}-sbom.spdx.json
+          oras attach \
+            --artifact-type application/vnd.syft.sbom \
+            ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            ${chart_name}-sbom.spdx.json:application/spdx+json
+          oras attach \
+            --artifact-type application/vnd.syft.sbom \
+            public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            ${chart_name}-sbom.spdx.json:application/spdx+json
+
+          # Attach SBOM and capture digest from output
+          GHCR_SBOM_DIGEST=$(oras attach \
+            --artifact-type application/vnd.syft.sbom \
+            --format json \
+            ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            ${chart_name}-sbom.spdx.json:application/spdx+json \
+            | jq -r '.digest')
+          ECR_SBOM_DIGEST=$(oras attach \
+            --artifact-type application/vnd.syft.sbom \
+            --format json \
+            public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
+            ${chart_name}-sbom.spdx.json:application/spdx+json \
+            | jq -r '.digest')
+
+          cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_SBOM_DIGEST}
+          cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}@${ECR_SBOM_DIGEST}
+
+          # Record digests for the agent umbrella manifest (one JSON object per line)
+          mkdir -p /tmp/agent-manifest
+          jq -nc \
+            --arg name "${chart_name}" \
+            --arg type "k8s" \
+            --arg tag "${RELEASE_VERSION}" \
+            --arg ghcr_repo "ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}" \
+            --arg ghcr_pkg "${GHCR_DIGEST}" \
+            --arg ghcr_sbom "${GHCR_SBOM_DIGEST}" \
+            --arg ecr_repo "public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}" \
+            --arg ecr_pkg "${ECR_DIGEST}" \
+            --arg ecr_sbom "${ECR_SBOM_DIGEST}" \
+            '{
+              name: $name, type: $type, tag: $tag,
+              registries: {
+                ghcr: { repository: $ghcr_repo, package: $ghcr_pkg, sbom: $ghcr_sbom },
+                ecr:  { repository: $ecr_repo,  package: $ecr_pkg,  sbom: $ecr_sbom }
+              }
+            }' >> /tmp/agent-manifest/entries.jsonl
+
+        done
+
+    - name: Publish OpenTofu modules as OCI
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
+        # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+
+        for module_type in aws aws-v2 google; do
+          cd modules/${module_type}
+          for module_dir in */; do
+            module_name=$(basename "$module_dir")
+            [ ! -f "${module_dir}main.tf" ] && continue
+            rm -rf "${module_dir}test" "${module_dir}test.sh"
+            zip -r ${module_type}-${module_name}-${RELEASE_VERSION}.zip ${module_name}/
+
+            # Push to both registries
+            oras push \
+              --artifact-type=application/vnd.opentofu.modulepkg \
+              ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip
+            oras push \
+              --artifact-type=application/vnd.opentofu.modulepkg \
+              public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip
+
+            # Resolve digests and sign
+            GHCR_DIGEST=$(oras discover --format json \
+              ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              | jq -r '.digest')
+            ECR_DIGEST=$(oras discover --format json \
+              public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              | jq -r '.digest')
+            cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_DIGEST}
+            cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${ECR_DIGEST}
+
+            # Create and attach SBOM
+            python3 ../../common/sbom.py tofu "${module_dir}" "${module_name}" "${RELEASE_VERSION}" "${module_type}" > ${module_type}-${module_name}-sbom.spdx.json
+            oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
+            oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json
+
+            # Resolve SBOM digests and sign
+            GHCR_SBOM_DIGEST=$(oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              --format go-template --template "{{.digest}}" \
+              ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json)
+            ECR_SBOM_DIGEST=$(oras attach \
+              --artifact-type application/vnd.syft.sbom \
+              --format go-template --template "{{.digest}}" \
+              public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
+              ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json)
+
+            cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_SBOM_DIGEST}
+            cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${ECR_SBOM_DIGEST}
+
+            # Record digests for the agent umbrella manifest (paths are relative to repo root)
+            mkdir -p /tmp/agent-manifest
+            jq -nc \
+              --arg name "${module_name}" \
+              --arg type "${module_type}" \
+              --arg tag "${RELEASE_VERSION}" \
+              --arg ghcr_repo "ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}" \
+              --arg ghcr_pkg "${GHCR_DIGEST}" \
+              --arg ghcr_sbom "${GHCR_SBOM_DIGEST}" \
+              --arg ecr_repo "public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}" \
+              --arg ecr_pkg "${ECR_DIGEST}" \
+              --arg ecr_sbom "${ECR_SBOM_DIGEST}" \
+              '{
+                name: $name, type: $type, tag: $tag,
+                registries: {
+                  ghcr: { repository: $ghcr_repo, package: $ghcr_pkg, sbom: $ghcr_sbom },
+                  ecr:  { repository: $ecr_repo,  package: $ecr_pkg,  sbom: $ecr_sbom }
+                }
+              }' >> /tmp/agent-manifest/entries.jsonl
+
+          done
+          cd -
+        done
+
+    - name: Publish agent package as OCI
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
+
+        # Create ECR Public repo if missing
+        if ! aws ecr-public describe-repositories \
+          --repository-names entigo-infralib-release/agent &>/dev/null; then
+          aws ecr-public create-repository \
+            --repository-name entigo-infralib-release/agent
+        fi
+
+        STAGE=$(mktemp -d)
+
+        # Recreate modules tree as empty dirs, excluding test, charts, templates
+        find modules -type d \( -name test -o -name charts -o -name templates \) -prune -o \
+          -type d -print | while read -r d; do
+          mkdir -p "${STAGE}/$d"  # keep folder even if it ends up empty
+        done
+
+        # Copy only the wanted agent files, skipping test dirs
+        find modules \
+          -type d -name test -prune -o \
+          -type f \( -name 'agent.yaml' \
+                  -o -name 'agent_input.yaml' \
+                  -o -name 'agent_input_aws.yaml' \
+                  -o -name 'agent_input_google.yaml' \
+                  -o -name 'versions.tf' \
+                  -o -name 'outputs.tf' \) \
+          -print | while read -r f; do
+            cp "$f" "${STAGE}/$f"  # parent dir already exists from step above
+          done
+
+        # providers/ minus test dir, test.sh and README.md
+        rsync -a \
+          --exclude 'test/' \
+          --exclude 'test.sh' \
+          --exclude 'README.md' \
+          providers "${STAGE}/"
+
+        # Build human/agent-friendly manifest.json from collected digests
+        jq -s \
+          --arg version "${RELEASE_VERSION}" \
+          '{version: $version, modules: .}' \
+          /tmp/agent-manifest/entries.jsonl \
+          > "${STAGE}/manifest.json"
+
+        # Build SPDX SBOM referencing each module package as an oci purl
+        python3 common/sbom.py agent \
+          /tmp/agent-manifest/entries.jsonl \
+          "${RELEASE_VERSION}" \
+          > "${STAGE}/agent-sbom.spdx.json"
+
+        # Package and push from inside the staging dir so oras gets relative paths
+        cd "${STAGE}"
+        zip -r agent-${RELEASE_VERSION}.zip modules providers manifest.json agent-sbom.spdx.json
+
+        # Inspect what got packaged (remove once happy)
+        unzip -l agent-${RELEASE_VERSION}.zip
+        cat manifest.json
+
+        # Push to both registries
+        oras push \
+          --artifact-type=application/vnd.entigo.agentpkg \
+          ghcr.io/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} \
+          agent-${RELEASE_VERSION}.zip:archive/zip
+        oras push \
+          --artifact-type=application/vnd.entigo.agentpkg \
+          public.ecr.aws/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} \
+          agent-${RELEASE_VERSION}.zip:archive/zip
+
+        # Resolve package digests and sign
+        GHCR_DIGEST=$(oras discover --format json \
+          ghcr.io/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} | jq -r '.digest')
+        ECR_DIGEST=$(oras discover --format json \
+          public.ecr.aws/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} | jq -r '.digest')
+        cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/agent@${GHCR_DIGEST}
+        cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/agent@${ECR_DIGEST}
+
+        # Attach the umbrella SBOM as a referrer and sign it
+        GHCR_SBOM_DIGEST=$(oras attach \
+          --artifact-type application/vnd.syft.sbom \
+          --format go-template --template "{{.digest}}" \
+          ghcr.io/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} \
+          agent-sbom.spdx.json:application/spdx+json)
+        ECR_SBOM_DIGEST=$(oras attach \
+          --artifact-type application/vnd.syft.sbom \
+          --format go-template --template "{{.digest}}" \
+          public.ecr.aws/entigolabs/entigo-infralib-release/agent:${RELEASE_VERSION} \
+          agent-sbom.spdx.json:application/spdx+json)
+        cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/agent@${GHCR_SBOM_DIGEST}
+        cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/agent@${ECR_SBOM_DIGEST}
 
 
     - name: Slack Success Release Message
