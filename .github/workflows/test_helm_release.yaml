@@ -186,7 +186,72 @@ jobs:
             cd -
             break # TODO: remove to publish all module types
           done
+      - name: Publish agent package as OCI
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+          aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
 
+          # Create ECR Public repo if missing
+          if ! aws ecr-public describe-repositories \
+            --repository-names entigo-infralib-release/agent &>/dev/null; then
+            aws ecr-public create-repository \
+              --repository-name entigo-infralib-release/agent
+          fi
+
+          STAGE=$(mktemp -d)
+
+          # Recreate full modules tree as empty dirs, excluding any test folder
+          find modules -type d -name test -prune -o -type d -print | while read -r d; do
+            mkdir -p "${STAGE}/$d"  # keep folder even if it ends up empty
+          done
+
+          # Copy only the wanted agent files, skipping test dirs
+          find modules \
+            -type d -name test -prune -o \
+            -type f \( -name 'agent.yaml' \
+                    -o -name 'agent_input.yaml' \
+                    -o -name 'agent_input_aws.yaml' \
+                    -o -name 'agent_input_google.yaml' \
+                    -o -name 'versions.tf' \
+                    -o -name 'outputs.tf' \) \
+            -print | while read -r f; do
+              cp "$f" "${STAGE}/$f"  # parent dir already exists from step above
+            done
+
+          # providers/ minus test dir, test.sh and README.md
+          rsync -a \
+            --exclude 'test/' \
+            --exclude 'test.sh' \
+            --exclude 'README.md' \
+            providers "${STAGE}/"
+
+          cd "${STAGE}"
+          zip -r agent-${TEST_VERSION}.zip modules providers
+
+          # Inspect what got packaged (remove once happy)
+          unzip -l agent-${TEST_VERSION}.zip
+
+          # Push to both registries
+          oras push \
+            --artifact-type=application/vnd.entigo.agentpkg \
+            ghcr.io/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
+            agent-${TEST_VERSION}.zip:archive/zip
+          oras push \
+            --artifact-type=application/vnd.entigo.agentpkg \
+            public.ecr.aws/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
+            agent-${TEST_VERSION}.zip:archive/zip
+
+          # Resolve digests and sign
+          GHCR_DIGEST=$(oras discover --format json \
+            ghcr.io/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} | jq -r '.digest')
+          ECR_DIGEST=$(oras discover --format json \
+            public.ecr.aws/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} | jq -r '.digest')
+          cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/agent@${GHCR_DIGEST}
+          cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/agent@${ECR_DIGEST}
       - name: Post Cleanup
         if: always()
         run: |
