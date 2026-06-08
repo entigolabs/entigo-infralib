@@ -230,6 +230,9 @@ terraform_init() {
         echo "Unable to find backend.conf file"
         exit 100
     fi
+    #
+    find .terraform/providers -name 'terraform-provider-*' -exec chmod +x {} +
+
     # tofu requires -reconfigure when taking over a Terraform-initialized backend
     $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
     if [ $? -ne 0 ]; then
