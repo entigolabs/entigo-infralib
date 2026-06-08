@@ -116,7 +116,7 @@ jobs:
 
             # Record digests for the agent umbrella manifest (one JSON object per line)
             mkdir -p /tmp/agent-manifest
-            jq -n \
+            jq -nc \
               --arg name "${chart_name}" \
               --arg type "k8s" \
               --arg tag "${TEST_VERSION}" \
@@ -203,7 +203,7 @@ jobs:
 
               # Record digests for the agent umbrella manifest (paths are relative to repo root)
               mkdir -p /tmp/agent-manifest
-              jq -n \
+              jq -nc \
                 --arg name "${module_name}" \
                 --arg type "${module_type}" \
                 --arg tag "${TEST_VERSION}" \
