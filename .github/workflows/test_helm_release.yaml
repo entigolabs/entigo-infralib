@@ -315,12 +315,12 @@ jobs:
             --artifact-type application/vnd.syft.sbom \
             --format go-template --template "{{.digest}}" \
             ghcr.io/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
-            "${STAGE}/agent-sbom.spdx.json:application/spdx+json")
+            agent-sbom.spdx.json:application/spdx+json)
           ECR_SBOM_DIGEST=$(oras attach \
             --artifact-type application/vnd.syft.sbom \
             --format go-template --template "{{.digest}}" \
             public.ecr.aws/entigolabs/entigo-infralib-release/agent:${TEST_VERSION} \
-            "${STAGE}/agent-sbom.spdx.json:application/spdx+json")
+            agent-sbom.spdx.json:application/spdx+json)
           cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/agent@${GHCR_SBOM_DIGEST}
           cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/agent@${ECR_SBOM_DIGEST}
 
