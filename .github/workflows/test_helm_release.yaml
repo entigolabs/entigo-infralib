@@ -204,8 +204,9 @@ jobs:
 
           STAGE=$(mktemp -d)
 
-          # Recreate full modules tree as empty dirs, excluding any test folder
-          find modules -type d -name test -prune -o -type d -print | while read -r d; do
+          # Recreate modules tree as empty dirs, excluding test, charts, templates
+          find modules -type d \( -name test -o -name charts -o -name templates \) -prune -o \
+            -type d -print | while read -r d; do
             mkdir -p "${STAGE}/$d"  # keep folder even if it ends up empty
           done
 
