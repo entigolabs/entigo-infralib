@@ -78,6 +78,7 @@ jobs:
             chart_dir="$1"
             chart_name=$(basename "$chart_dir")
             if [ ! -f "${chart_dir}Chart.yaml" ]; then return 0; fi
+            echo "Publishing k8s/${chart_name}"
 
             # Generate SBOM first, while the test folder still exists.
             # sbom.py picks up test/static_values.yaml itself if present.
@@ -129,6 +130,7 @@ jobs:
                   ecr:  { repository: $ecr_repo,  package: $ecr_pkg,  sbom: $ecr_sbom }
                 }
               }' > /tmp/agent-manifest/entry-k8s-${chart_name}.json
+            echo "Published  k8s/${chart_name} (${GHCR_DIGEST})"
           }
           export -f publish_chart
           export RELEASE_VERSION
