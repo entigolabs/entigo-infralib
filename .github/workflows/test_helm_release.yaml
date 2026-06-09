@@ -146,7 +146,7 @@ jobs:
               zip -r ${module_type}-${module_name}-${RELEASE_VERSION}.zip ${module_name}/
 
               # Push to ghcr only; ecr gets a byte-identical copy below
-              oras push --no-timestamp \
+              oras push \
                 --artifact-type=application/vnd.opentofu.modulepkg \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
                 ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip
@@ -262,7 +262,7 @@ jobs:
           cat manifest.json
 
           # Push to ghcr only; ecr gets a byte-identical copy below
-          oras push --no-timestamp \
+          oras push \
             --artifact-type=application/vnd.entigo.agentpkg \
             ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
             index-${RELEASE_VERSION}.zip:archive/zip
