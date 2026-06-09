@@ -63,6 +63,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         run: |
+          set -o pipefail
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           aws ecr-public get-login-password | helm registry login public.ecr.aws -u AWS --password-stdin
@@ -73,9 +74,10 @@ jobs:
           # Per-chart worker; runs in parallel via xargs. Each worker writes its own
           # manifest fragment to avoid concurrent-append corruption on a shared file.
           publish_chart() {
+            set -euo pipefail
             chart_dir="$1"
             chart_name=$(basename "$chart_dir")
-            [ ! -f "${chart_dir}Chart.yaml" ] && return 0
+            if [ ! -f "${chart_dir}Chart.yaml" ]; then return 0; fi
 
             # Generate SBOM first, while the test folder still exists.
             # sbom.py picks up test/static_values.yaml itself if present.
@@ -89,7 +91,7 @@ jobs:
             GHCR_DIGEST=$(helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
               oci://ghcr.io/entigolabs/entigo-infralib-release/k8s 2>&1 \
               | awk '/Digest:/ {print $2}')
-            [ -z "${GHCR_DIGEST}" ] && { echo "ERROR: failed to capture digest for ${chart_name}"; return 1; }
+            if [ -z "${GHCR_DIGEST}" ]; then echo "ERROR: failed to capture digest for ${chart_name}"; return 1; fi
 
             # Attach the SBOM on ghcr, capture its digest
             GHCR_SBOM_DIGEST=$(oras attach \
@@ -98,7 +100,7 @@ jobs:
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
               /tmp/${chart_name}-sbom.spdx.json:application/spdx+json)
-            [ -z "${GHCR_SBOM_DIGEST}" ] && { echo "ERROR: failed to attach SBOM for ${chart_name}"; return 1; }
+            if [ -z "${GHCR_SBOM_DIGEST}" ]; then echo "ERROR: failed to attach SBOM for ${chart_name}"; return 1; fi
 
             # Mirror subject + SBOM to ecr (byte-identical digests)
             oras cp -r --no-tty \
@@ -144,6 +146,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         run: |
+          set -o pipefail
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
           # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
@@ -153,10 +156,12 @@ jobs:
           # Per-module worker; arg is the full path "modules/<type>/<name>/".
           # No cd (parallel workers can't share a cwd) — use repo-root-relative paths.
           publish_module() {
+            set -euo pipefail
             module_path="$1"                              # e.g. modules/aws/vpc/
             module_type=$(basename "$(dirname "$module_path")")
             module_name=$(basename "$module_path")
-            [ ! -f "${module_path}main.tf" ] && return 0
+            if [ ! -f "${module_path}main.tf" ]; then return 0; fi
+            echo "Publishing ${module_type}/${module_name}"
 
             rm -rf "${module_path}test" "${module_path}test.sh"
             zip_file="/tmp/${module_type}-${module_name}-${RELEASE_VERSION}.zip"
@@ -170,7 +175,7 @@ jobs:
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
               "${zip_file}:archive/zip")
-            [ -z "${GHCR_DIGEST}" ] && { echo "ERROR: failed to capture digest for ${module_type}/${module_name}"; return 1; }
+            if [ -z "${GHCR_DIGEST}" ]; then echo "ERROR: failed to capture digest for ${module_type}/${module_name}"; return 1; fi
 
             # Create and attach SBOM on ghcr, capture its digest
             sbom_file="/tmp/${module_type}-${module_name}-sbom.spdx.json"
@@ -181,7 +186,7 @@ jobs:
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
               "${sbom_file}:application/spdx+json")
-            [ -z "${GHCR_SBOM_DIGEST}" ] && { echo "ERROR: failed to attach SBOM for ${module_type}/${module_name}"; return 1; }
+            if [ -z "${GHCR_SBOM_DIGEST}" ]; then echo "ERROR: failed to attach SBOM for ${module_type}/${module_name}"; return 1; fi
 
             # Mirror subject + SBOM to ecr (byte-identical digests)
             oras cp -r --no-tty \
@@ -209,6 +214,7 @@ jobs:
                   ecr:  { repository: $ecr_repo,  package: $ecr_pkg,  sbom: $ecr_sbom }
                 }
               }' > /tmp/agent-manifest/entry-${module_type}-${module_name}.json
+            echo "Published  ${module_type}/${module_name} (${GHCR_DIGEST})"
           }
           export -f publish_module
           export RELEASE_VERSION
@@ -228,6 +234,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         run: |
+          set -o pipefail
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
           aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
 
@@ -258,6 +265,40 @@ jobs:
             --exclude 'test.sh' \
             --exclude 'README.md' \
             providers "${STAGE}/"
+
+          # ---- Verify completeness and ECR presence before building the index ----
+          # Stage 1: expected count (filesystem) must equal recorded entries.
+          expected=$(
+            for d in modules/k8s/*/; do [ -f "${d}Chart.yaml" ] && echo x; done
+            for d in modules/aws/*/ modules/aws-v2/*/ modules/google/*/; do [ -f "${d}main.tf" ] && echo x; done
+          )
+          expected_count=$(echo "${expected}" | grep -c x || true)
+          recorded_count=$(wc -l < /tmp/agent-manifest/entries.jsonl | tr -d ' ')
+          echo "Expected ${expected_count} artifacts, recorded ${recorded_count}"
+          if [ "${expected_count}" -ne "${recorded_count}" ]; then
+            echo "ERROR: artifact count mismatch — some package(s) failed to publish"
+            exit 1
+          fi
+
+          # Stage 2: every recorded tag must resolve in ECR to the recorded digest.
+          # One `oras resolve` per entry confirms both tag existence and digest match.
+          fail=0
+          while read -r entry; do
+            ecr_repo=$(echo "${entry}" | jq -r '.registries.ecr.repository')
+            ecr_pkg=$(echo "${entry}" | jq -r '.registries.ecr.package')
+            tag=$(echo "${entry}" | jq -r '.tag')
+            tag_digest=$(oras resolve --no-tty "${ecr_repo}:${tag}" 2>/dev/null || true)
+            if [ "${tag_digest}" != "${ecr_pkg}" ]; then
+              echo "ERROR: ${ecr_repo}:${tag} resolves to '${tag_digest:-<missing>}', expected '${ecr_pkg}'"
+              fail=1
+            fi
+          done < /tmp/agent-manifest/entries.jsonl
+          if [ "${fail}" -ne 0 ]; then
+            echo "ERROR: ECR verification failed for one or more artifacts"
+            exit 1
+          fi
+          echo "Verified ${recorded_count} artifacts present in ECR"
+          # ------------------------------------------------------------------------
 
           # Build human/agent-friendly manifest.json from collected digests
           jq -s \
