@@ -149,6 +149,7 @@ jobs:
                   new_version = `v${major}.${minor}.${patch}`
                 }
                 core.setOutput('new_version',  new_version);
+                core.setOutput('oci_version', new_version.replace(/^v/, ''));  // bare semver for OCI
                 core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
               } else {
                 core.info('Latest release is same as main branch, no need to make a new release');
@@ -303,7 +304,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
-        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
         echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -390,7 +391,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
-        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
         echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -479,7 +480,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
-        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
         echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
