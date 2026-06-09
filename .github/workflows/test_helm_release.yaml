@@ -101,9 +101,12 @@ jobs:
             ECR_DIGEST="${GHCR_DIGEST}"
             ECR_SBOM_DIGEST="${GHCR_SBOM_DIGEST}"
 
-            # Sign the ecr copies separately (signatures don't reliably travel as referrers)
-            cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}@${ECR_DIGEST}
-            cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}@${ECR_SBOM_DIGEST}
+            # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing.
+            # The signature attests to the digest, which is identical on both registries.
+            REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}"
+            REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}"
+            oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+            oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
             # Record digests for the package index manifest (one JSON object per line)
             mkdir -p /tmp/agent-manifest
@@ -175,9 +178,11 @@ jobs:
               ECR_DIGEST="${GHCR_DIGEST}"
               ECR_SBOM_DIGEST="${GHCR_SBOM_DIGEST}"
 
-              # Sign the ecr copies separately
-              cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${ECR_DIGEST}
-              cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${ECR_SBOM_DIGEST}
+              # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing
+              REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
+              REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
+              oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+              oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
               # Record digests for the package index manifest (paths are relative to repo root)
               mkdir -p /tmp/agent-manifest
@@ -285,9 +290,11 @@ jobs:
             ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
             public.ecr.aws/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION}
 
-          # Sign the ecr copies separately
-          cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/index@${GHCR_DIGEST}
-          cosign sign --yes public.ecr.aws/entigolabs/entigo-infralib-release/index@${GHCR_SBOM_DIGEST}
+          # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing
+          REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/index"
+          REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/index"
+          oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+          oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
       - name: Post Cleanup
         if: always()
