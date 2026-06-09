@@ -357,6 +357,38 @@ jobs:
           oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
           oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
+          # ---- Consumer instructions ----------------------------------------------
+          IDENTITY_RE='^https://github\.com/entigolabs/entigo-infralib/\.github/workflows/.*@refs/.*$'
+          printf '%s\n' \
+            "" \
+            "============================================================" \
+            "Package index published: ${RELEASE_VERSION}" \
+            "============================================================" \
+            "" \
+            "Pull and extract the index (either registry; digests are identical):" \
+            "" \
+            "  oras pull ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} -o index-out" \
+            "  # or:" \
+            "  oras pull public.ecr.aws/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} -o index-out" \
+            "" \
+            "  unzip index-out/index-${RELEASE_VERSION}.zip -d index-${RELEASE_VERSION}" \
+            "  cat index-${RELEASE_VERSION}/manifest.json   # catalog of all packages + digests" \
+            "" \
+            "Verify the index signature with cosign (pinned to this repo's workflow identity):" \
+            "" \
+            "  cosign verify \\" \
+            "    --certificate-oidc-issuer https://token.actions.githubusercontent.com \\" \
+            "    --certificate-identity-regexp '${IDENTITY_RE}' \\" \
+            "    ghcr.io/entigolabs/entigo-infralib-release/index@${GHCR_DIGEST}" \
+            "" \
+            "The index digest above commits to manifest.json, which lists every package" \
+            "digest. Pull individual packages BY DIGEST (not tag) to inherit that trust:" \
+            "" \
+            "  oras pull <repository>@<package-digest-from-manifest.json>" \
+            "============================================================" \
+            ""
+          # -------------------------------------------------------------------------
+
       - name: Post Cleanup
         if: always()
         run: |
