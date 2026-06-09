@@ -71,6 +71,12 @@ jobs:
           for chart_dir in modules/k8s/*/; do
             chart_name=$(basename "$chart_dir")
             [ ! -f "${chart_dir}Chart.yaml" ] && continue
+
+            # Generate SBOM first, while the test folder still exists.
+            # sbom.py picks up test/static_values.yaml itself if present.
+            python3 common/sbom.py helm "${chart_dir}" "${chart_name}" "${RELEASE_VERSION}" > ${chart_name}-sbom.spdx.json
+
+            # Now drop the test folder and package the chart
             rm -rf "${chart_dir}test" "${chart_dir}test.sh"
             helm package "$chart_dir" --version ${RELEASE_VERSION} --destination /tmp/helm-charts
 
@@ -83,8 +89,7 @@ jobs:
               | jq -r '.digest')
             cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_DIGEST}
 
-            # Create and attach SBOM on ghcr, capture its digest
-            python3 common/sbom.py helm "${chart_dir}" "${chart_name}" "${RELEASE_VERSION}" > ${chart_name}-sbom.spdx.json
+            # Attach the SBOM on ghcr, capture its digest
             GHCR_SBOM_DIGEST=$(oras attach \
               --artifact-type application/vnd.syft.sbom \
               --format go-template --template "{{.digest}}" \

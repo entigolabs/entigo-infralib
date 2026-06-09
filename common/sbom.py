@@ -7,6 +7,7 @@ import json
 import re
 import subprocess
 import sys
+import os
 import uuid
 from datetime import datetime, timezone
 
@@ -150,8 +151,14 @@ def generate_helm_sbom(chart_dir, chart_name, version):
 
     # Run helm template to extract container images
     try:
+        cmd = ["helm", "template", chart_dir]
+        # Some static tests require test/static_values.yaml to render;
+        # include it when present (the test folder still exists at SBOM time)
+        static_values = f"{chart_dir}/test/static_values.yaml"
+        if os.path.isfile(static_values):
+            cmd += ["-f", static_values]
         result = subprocess.run(
-            ["helm", "template", chart_dir],
+            cmd,
             capture_output=True, text=True, check=True
         )
         images = set(re.findall(r"image:\s*['\"]?([^\s'\"]+)['\"]?", result.stdout))
