@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  RELEASE_VERSION: "1.21.2"
+  RELEASE_VERSION: "1.21.4"
 
 jobs:
   publish-helm-charts:
@@ -83,11 +83,13 @@ jobs:
             # Push to ghcr only; ecr gets a byte-identical copy below
             helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
 
-            # Resolve digest and sign on ghcr
+            # Resolve digest on ghcr
             GHCR_DIGEST=$(oras discover --format json \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
               | jq -r '.digest')
-            cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_DIGEST}
+            # Per-package signing disabled — only the index is signed (digests in the
+            # index catalog protect each package; pull by digest to verify).
+            # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_DIGEST}
 
             # Attach the SBOM on ghcr, capture its digest
             GHCR_SBOM_DIGEST=$(oras attach \
@@ -95,7 +97,7 @@ jobs:
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
               ${chart_name}-sbom.spdx.json:application/spdx+json)
-            cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_SBOM_DIGEST}
+            # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_SBOM_DIGEST}
 
             # Mirror subject + SBOM to ecr (byte-identical digests)
             oras cp -r \
@@ -106,12 +108,11 @@ jobs:
             ECR_DIGEST="${GHCR_DIGEST}"
             ECR_SBOM_DIGEST="${GHCR_SBOM_DIGEST}"
 
-            # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing.
-            # The signature attests to the digest, which is identical on both registries.
-            REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}"
-            REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}"
-            oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
-            oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
+            # Signature copy disabled — see index-only signing note above.
+            # REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}"
+            # REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}"
+            # oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+            # oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
             # Record digests for the package index manifest (one JSON object per line)
             mkdir -p /tmp/agent-manifest
@@ -159,11 +160,12 @@ jobs:
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
                 ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip
 
-              # Resolve digest and sign on ghcr
+              # Resolve digest on ghcr
               GHCR_DIGEST=$(oras discover --format json \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
                 | jq -r '.digest')
-              cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_DIGEST}
+              # Per-package signing disabled — only the index is signed.
+              # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_DIGEST}
 
               # Create and attach SBOM on ghcr, capture its digest
               python3 ../../common/sbom.py tofu "${module_dir}" "${module_name}" "${RELEASE_VERSION}" "${module_type}" > ${module_type}-${module_name}-sbom.spdx.json
@@ -172,7 +174,7 @@ jobs:
                 --format go-template --template "{{.digest}}" \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
                 ${module_type}-${module_name}-sbom.spdx.json:application/spdx+json)
-              cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_SBOM_DIGEST}
+              # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_SBOM_DIGEST}
 
               # Mirror subject + SBOM to ecr (byte-identical digests)
               oras cp -r \
@@ -183,11 +185,11 @@ jobs:
               ECR_DIGEST="${GHCR_DIGEST}"
               ECR_SBOM_DIGEST="${GHCR_SBOM_DIGEST}"
 
-              # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing
-              REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
-              REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
-              oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
-              oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
+              # Signature copy disabled — see index-only signing note.
+              # REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
+              # REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}"
+              # oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+              # oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
               # Record digests for the package index manifest (paths are relative to repo root)
               mkdir -p /tmp/agent-manifest
