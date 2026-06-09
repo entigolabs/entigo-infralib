@@ -288,9 +288,13 @@ jobs:
             ecr_repo=$(echo "${entry}" | jq -r '.registries.ecr.repository')
             ecr_pkg=$(echo "${entry}" | jq -r '.registries.ecr.package')
             tag=$(echo "${entry}" | jq -r '.tag')
-            tag_digest=$(oras resolve --no-tty "${ecr_repo}:${tag}" 2>/dev/null || true)
+            # Capture stderr too — if resolve errors, show why instead of masking as <missing>
+            resolve_out=$(oras resolve "${ecr_repo}:${tag}" 2>&1) || true
+            # oras resolve prints the bare digest on success
+            tag_digest=$(echo "${resolve_out}" | grep -oE 'sha256:[0-9a-f]{64}' | head -n1)
             if [ "${tag_digest}" != "${ecr_pkg}" ]; then
-              echo "ERROR: ${ecr_repo}:${tag} resolves to '${tag_digest:-<missing>}', expected '${ecr_pkg}'"
+              echo "ERROR: ${ecr_repo}:${tag} -> '${tag_digest:-<missing>}', expected '${ecr_pkg}'"
+              echo "       oras output: ${resolve_out}"
               fail=1
             fi
           done < /tmp/agent-manifest/entries.jsonl
