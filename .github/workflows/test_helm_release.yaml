@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  RELEASE_VERSION: "1.21.4"
+  RELEASE_VERSION: "1.21.2"
 
 jobs:
   publish-helm-charts:
@@ -80,13 +80,13 @@ jobs:
             rm -rf "${chart_dir}test" "${chart_dir}test.sh"
             helm package "$chart_dir" --version ${RELEASE_VERSION} --destination /tmp/helm-charts
 
-            # Push to ghcr only; ecr gets a byte-identical copy below
-            helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
+            # Push to ghcr only; ecr gets a byte-identical copy below.
+            # Capture the digest from helm push output (printed as "Digest: sha256:...").
+            GHCR_DIGEST=$(helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
+              oci://ghcr.io/entigolabs/entigo-infralib-release/k8s 2>&1 \
+              | awk '/Digest:/ {print $2}')
+            [ -z "${GHCR_DIGEST}" ] && { echo "ERROR: failed to capture digest for ${chart_name}"; exit 1; }
 
-            # Resolve digest on ghcr
-            GHCR_DIGEST=$(oras discover --format json \
-              ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
-              | jq -r '.digest')
             # Per-package signing disabled — only the index is signed (digests in the
             # index catalog protect each package; pull by digest to verify).
             # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}@${GHCR_DIGEST}
@@ -154,16 +154,15 @@ jobs:
               rm -rf "${module_dir}test" "${module_dir}test.sh"
               zip -r ${module_type}-${module_name}-${RELEASE_VERSION}.zip ${module_name}/
 
-              # Push to ghcr only; ecr gets a byte-identical copy below
-              oras push \
+              # Push to ghcr only; ecr gets a byte-identical copy below.
+              # Capture the digest directly from the push output.
+              GHCR_DIGEST=$(oras push \
                 --artifact-type=application/vnd.opentofu.modulepkg \
+                --format go-template --template "{{.digest}}" \
                 ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
-                ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip
+                ${module_type}-${module_name}-${RELEASE_VERSION}.zip:archive/zip)
+              [ -z "${GHCR_DIGEST}" ] && { echo "ERROR: failed to capture digest for ${module_type}/${module_name}"; exit 1; }
 
-              # Resolve digest on ghcr
-              GHCR_DIGEST=$(oras discover --format json \
-                ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
-                | jq -r '.digest')
               # Per-package signing disabled — only the index is signed.
               # cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}@${GHCR_DIGEST}
 
@@ -273,15 +272,16 @@ jobs:
           unzip -l index-${RELEASE_VERSION}.zip
           cat manifest.json
 
-          # Push to ghcr only; ecr gets a byte-identical copy below
-          oras push \
+          # Push to ghcr only; ecr gets a byte-identical copy below.
+          # Capture the digest directly from the push output.
+          GHCR_DIGEST=$(oras push \
             --artifact-type=application/vnd.entigo.agentpkg \
+            --format go-template --template "{{.digest}}" \
             ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
-            index-${RELEASE_VERSION}.zip:archive/zip
+            index-${RELEASE_VERSION}.zip:archive/zip)
+          [ -z "${GHCR_DIGEST}" ] && { echo "ERROR: failed to capture index digest"; exit 1; }
 
-          # Resolve digest and sign on ghcr
-          GHCR_DIGEST=$(oras discover --format json \
-            ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} | jq -r '.digest')
+          # Sign the index on ghcr
           cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/index@${GHCR_DIGEST}
 
           # Attach the umbrella SBOM as a referrer on ghcr
