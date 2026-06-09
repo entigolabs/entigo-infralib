@@ -94,6 +94,7 @@ jobs:
             # Attach the SBOM on ghcr, capture its digest
             GHCR_SBOM_DIGEST=$(oras attach \
               --artifact-type application/vnd.syft.sbom \
+              --disable-path-validation \
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
               /tmp/${chart_name}-sbom.spdx.json:application/spdx+json)
@@ -165,6 +166,7 @@ jobs:
             # Push to ghcr only; capture digest from push output
             GHCR_DIGEST=$(oras push \
               --artifact-type=application/vnd.opentofu.modulepkg \
+              --disable-path-validation \
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
               "${zip_file}:archive/zip")
@@ -175,6 +177,7 @@ jobs:
             python3 common/sbom.py tofu "${module_path}" "${module_name}" "${RELEASE_VERSION}" "${module_type}" > "${sbom_file}"
             GHCR_SBOM_DIGEST=$(oras attach \
               --artifact-type application/vnd.syft.sbom \
+              --disable-path-validation \
               --format go-template --template "{{.digest}}" \
               ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
               "${sbom_file}:application/spdx+json")
