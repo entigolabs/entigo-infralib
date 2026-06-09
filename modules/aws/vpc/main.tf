@@ -110,6 +110,10 @@ module "vpc" {
     "karpenter.sh/discovery" = var.prefix
   }
 
+  intra_subnet_tags       = var.intra_subnet_tags
+  database_subnet_tags    = var.database_subnet_tags
+  elasticache_subnet_tags = var.elasticache_subnet_tags
+
   tags = {
     Terraform = "true"
     Prefix    = var.prefix
