@@ -488,31 +488,15 @@ jobs:
 
         STAGE=$(mktemp -d)
 
-        # Recreate modules tree as empty dirs, excluding test, charts, templates
-        find modules -type d \( -name test -o -name charts -o -name templates \) -prune -o \
-          -type d -print | while read -r d; do
-          mkdir -p "${STAGE}/$d"  # keep folder even if it ends up empty
-        done
-
-        # Copy only the wanted agent files, skipping test dirs
-        find modules \
-          -type d -name test -prune -o \
-          -type f \( -name 'agent.yaml' \
-                  -o -name 'agent_input.yaml' \
-                  -o -name 'agent_input_aws.yaml' \
-                  -o -name 'agent_input_google.yaml' \
-                  -o -name 'versions.tf' \
-                  -o -name 'outputs.tf' \) \
-          -print | while read -r f; do
-            cp "$f" "${STAGE}/$f"  # parent dir already exists from step above
-          done
-
-        # providers/ minus test dir, test.sh and README.md
+        # Stage the full modules + providers tree, excluding only charts/, test/, test.sh.
+        # (Helm subchart archives in charts/ are large and not needed in the index;
+        #  test folders/scripts are not part of the released content.)
         rsync -a \
+          --exclude 'charts/' \
           --exclude 'test/' \
           --exclude 'test.sh' \
           --exclude 'README.md' \
-          providers "${STAGE}/"
+          modules providers "${STAGE}/"
 
         # ---- Verify completeness and ECR presence before building the index ----
         # Stage 1: expected count (filesystem) must equal recorded entries.
