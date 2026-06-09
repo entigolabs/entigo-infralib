@@ -213,7 +213,7 @@ jobs:
                   ghcr: { repository: $ghcr_repo, package: $ghcr_pkg, sbom: $ghcr_sbom },
                   ecr:  { repository: $ecr_repo,  package: $ecr_pkg,  sbom: $ecr_sbom }
                 }
-              }' > /tmp/agent-manifest/entry-${module_type}-${module_name}.json
+              }' > /tmp/agent-manifest/entry__${module_type}__${module_name}.json
             echo "Published  ${module_type}/${module_name} (${GHCR_DIGEST})"
           }
           export -f publish_module
@@ -223,10 +223,9 @@ jobs:
           printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ \
             | xargs -P 6 -I{} bash -c 'publish_module "$@"' _ {}
 
-          # Merge per-module fragments into the shared JSONL the index step consumes
-          cat /tmp/agent-manifest/entry-aws-*.json \
-              /tmp/agent-manifest/entry-aws-v2-*.json \
-              /tmp/agent-manifest/entry-google-*.json 2>/dev/null >> /tmp/agent-manifest/entries.jsonl
+          # Merge per-module fragments into the shared JSONL the index step consumes.
+          # Single glob — type names like aws / aws-v2 can't prefix-collide thanks to __.
+          cat /tmp/agent-manifest/entry__*.json 2>/dev/null >> /tmp/agent-manifest/entries.jsonl
 
       - name: Publish package index as OCI
         env:
