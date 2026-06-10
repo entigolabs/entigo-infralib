@@ -394,8 +394,6 @@ jobs:
         RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
-        echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        aws ecr-public get-login-password --region us-east-1 | oras login public.ecr.aws -u AWS --password-stdin
 
         mkdir -p /tmp/agent-manifest
 
@@ -482,8 +480,6 @@ jobs:
         RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
-        echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
 
         STAGE=$(mktemp -d)
 
