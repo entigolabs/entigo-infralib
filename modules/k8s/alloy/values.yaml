@@ -218,6 +218,9 @@ logs:
 node-metrics:
   # Toggle this whole DaemonSet on/off (see condition in Chart.yaml).
   enabled: true
+  # Metrics-only instance: don't install the PodLogs CRD (chart default is true).
+  crds:
+    create: false
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
   # Labels added to every series via prometheus.remote_write external_labels
@@ -467,6 +470,9 @@ node-metrics:
 cluster-metrics:
   # Toggle this whole Deployment on/off (see condition in Chart.yaml).
   enabled: true
+  # Metrics-only instance: don't install the PodLogs CRD (chart default is true).
+  crds:
+    create: false
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
   # Labels added to every series via prometheus.remote_write external_labels
