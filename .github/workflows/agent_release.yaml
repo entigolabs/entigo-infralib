@@ -309,8 +309,8 @@ jobs:
         set -o pipefail
         echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
         echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        aws ecr-public get-login-password | helm registry login public.ecr.aws -u AWS --password-stdin
-        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | helm registry login public.ecr.aws -u AWS --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | oras login public.ecr.aws -u AWS --password-stdin
 
         mkdir -p /tmp/agent-manifest
 
@@ -395,8 +395,7 @@ jobs:
       run: |
         set -o pipefail
         echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io -u ${{ github.actor }} --password-stdin
-        aws ecr-public get-login-password | oras login public.ecr.aws -u AWS --password-stdin
-        # echo ${{ secrets.QUAY_PASSWORD }} | oras login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | oras login public.ecr.aws -u AWS --password-stdin
 
         mkdir -p /tmp/agent-manifest
 
