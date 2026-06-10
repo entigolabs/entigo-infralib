@@ -1,3 +1,16 @@
+global:
+  # Install the Prometheus Operator CRDs (ServiceMonitor/PodMonitor/Probe).
+  # Required if you enable cluster-metrics.serviceMonitors / .podMonitors and the
+  # CRDs aren't already present in the cluster. Off by default.
+  installPrometheusOperatorCRDs: false
+
+# CRDs are large; apply them server-side. Only rendered when the dependency is
+# enabled via global.installPrometheusOperatorCRDs.
+prometheus-operator-crds:
+  crds:
+    annotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=true
+
 logs:
   crds:
     create: false
@@ -211,6 +224,8 @@ node-metrics:
   # (metrics equivalent of the logs stage.static_labels), e.g. {cluster: prod}.
   externalLabels: {}
   scrapeInterval: "60s"
+  # Scrape Alloy's own internal metrics (remote_write health, scrape health).
+  selfMonitor: true
 
   extraConfig: ""
 
@@ -323,6 +338,29 @@ node-metrics:
             insecure_skip_verify = true
           }
         }
+        {{- if .Values.selfMonitor }}
+        // Alloy's own internal metrics (remote_write health, scrape health, resource use).
+        prometheus.exporter.self "alloy" { }
+
+        discovery.relabel "alloy_self" {
+          targets = prometheus.exporter.self.alloy.targets
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "alloy_self" {
+          targets         = discovery.relabel.alloy_self.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          job_name        = "alloy-node-metrics"
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+        {{- end }}
         {{- if .Values.extraConfig }}
         {{ .Values.extraConfig | nindent 8 }}
         {{- end }}
@@ -435,6 +473,12 @@ cluster-metrics:
   # (metrics equivalent of the logs stage.static_labels), e.g. {cluster: prod}.
   externalLabels: {}
   scrapeInterval: "60s"
+  # Scrape Alloy's own internal metrics (remote_write health, scrape health).
+  selfMonitor: true
+  # Scrape Prometheus Operator ServiceMonitor / PodMonitor CRDs. Requires the CRDs
+  # to exist (see global.installPrometheusOperatorCRDs); off by default.
+  serviceMonitors: false
+  podMonitors: false
   extraConfig: ""
 
   alloy:
@@ -640,6 +684,29 @@ cluster-metrics:
             server_name = "kubernetes"
           }
         }
+        {{- if .Values.serviceMonitors }}
+        // Scrape all ServiceMonitor CRDs cluster-wide (requires the operator CRDs).
+        prometheus.operator.servicemonitors "servicemonitors" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+        {{- end }}
+        {{- if .Values.podMonitors }}
+        // Scrape all PodMonitor CRDs cluster-wide (requires the operator CRDs).
+        prometheus.operator.podmonitors "podmonitors" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+        {{- end }}
+        {{- if .Values.selfMonitor }}
+        // Alloy's own internal metrics (remote_write health, scrape health, resource use).
+        prometheus.exporter.self "alloy" { }
+
+        prometheus.scrape "alloy_self" {
+          targets         = prometheus.exporter.self.alloy.targets
+          forward_to      = [prometheus.remote_write.default.receiver]
+          job_name        = "alloy-cluster-metrics"
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+        {{- end }}
         {{- if .Values.extraConfig }}
         {{ .Values.extraConfig | nindent 8 }}
         {{- end }}
