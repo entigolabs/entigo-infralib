@@ -553,6 +553,93 @@ cluster-metrics:
           forward_to      = [prometheus.remote_write.default.receiver]
           scrape_interval = {{ .Values.scrapeInterval | quote }}
         }
+
+        // Endpoints discovery, reused by service-endpoints and apiserver scraping.
+        discovery.kubernetes "endpoints" {
+          role = "endpoints"
+        }
+
+        // kubernetes-service-endpoints: scrape Services annotated prometheus.io/scrape=true.
+        discovery.relabel "service_endpoints" {
+          targets = discovery.kubernetes.endpoints.targets
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          // kube-state-metrics has its own dedicated job above; don't scrape it twice.
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            regex         = "kube-state-metrics"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
+            regex         = "(https?)"
+            target_label  = "__scheme__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
+            regex         = "(.+)"
+            target_label  = "__metrics_path__"
+          }
+          rule {
+            source_labels = ["__address__", "__meta_kubernetes_service_annotation_prometheus_io_port"]
+            regex         = "([^:]+)(?::[0-9]+)?;([0-9]+)"
+            replacement   = "$1:$2"
+            target_label  = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label  = "service"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+          // job = the Service name (e.g. "kube-state-metrics" -> "kube-state-metrics").
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label  = "job"
+          }
+        }
+
+        prometheus.scrape "service_endpoints" {
+          targets         = discovery.relabel.service_endpoints.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // kubernetes-apiservers: scrape the API server's own /metrics over HTTPS.
+        discovery.relabel "apiserver" {
+          targets = discovery.kubernetes.endpoints.targets
+          rule {
+            source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"]
+            regex         = "default;kubernetes;https"
+            action        = "keep"
+          }
+        }
+
+        prometheus.scrape "apiserver" {
+          targets           = discovery.relabel.apiserver.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "kubernetes-apiservers"
+          scheme            = "https"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.scrapeInterval | quote }}
+          tls_config {
+            ca_file     = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            server_name = "kubernetes"
+          }
+        }
         {{- if .Values.extraConfig }}
         {{ .Values.extraConfig | nindent 8 }}
         {{- end }}
