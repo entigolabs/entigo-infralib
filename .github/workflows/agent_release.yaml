@@ -88,6 +88,9 @@ jobs:
       group: pr-modules-test
       cancel-in-progress: false
     name: Release
+    permissions:
+      packages: write
+      id-token: write  # required for keyless OIDC signing
     steps:
     - name: Free disk space
       run: |
