@@ -7,6 +7,7 @@ global:
     region: ""
     kmsKeyId: ""
     bucketLifecycleRules: []
+    extraAlbCidrs: []
 
 loki:
   loki:
@@ -68,8 +69,8 @@ loki:
       tls: []
   networkPolicy:
     externalStorage:
-     ports:
-     - 443
+      ports:
+        - 443
     discovery:
       port: 53
       podSelector:

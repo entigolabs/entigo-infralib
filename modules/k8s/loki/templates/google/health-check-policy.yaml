@@ -20,6 +20,6 @@ spec:
   targetRef:
     group: ""
     kind: Service
-    name: loki-gateway
+    name: {{ .Values.loki.fullnameOverride }}-gateway
 
 {{- end }}

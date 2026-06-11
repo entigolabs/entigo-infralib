@@ -116,6 +116,24 @@ variable "create_elasticache_subnet_route_table" {
   default  = false
 }
 
+variable "intra_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
+}
+
+variable "database_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
+}
+
+variable "elasticache_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
+}
+
 variable "create_multiple_intra_route_tables" {
   type     = bool
   nullable = false
