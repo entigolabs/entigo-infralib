@@ -1,5 +1,5 @@
 apiVersion: v2
-name: crossplane
+name: crossplane-core
 description: Crossplane operator chart
 type: application
 version: 2.3.1
