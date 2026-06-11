@@ -9,9 +9,9 @@ logs:
 node-metrics:
   # Exercise external_labels templating.
   externalLabels:
-    cluster: aws-biz
+    cluster: aws-biz-alloy
 
 cluster-metrics:
   # Exercise external_labels templating.
   externalLabels:
-    cluster: aws-biz
+    cluster: aws-biz-alloy

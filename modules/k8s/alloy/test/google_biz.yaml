@@ -9,9 +9,9 @@ logs:
 node-metrics:
   # Exercise external_labels templating.
   externalLabels:
-    cluster: google-biz
+    cluster: google-biz-alloy
 
 cluster-metrics:
   # Exercise external_labels templating.
   externalLabels:
-    cluster: google-biz
+    cluster: google-biz-alloy

@@ -17,7 +17,7 @@ kube-state-metrics:
             port: 53
           - protocol: TCP
             port: 53
-      # Kubernetes API (kube-state-metrics watches the API to build metrics).
+      # Kubernetes API
       - to:
           - ipBlock:
               cidr: 172.20.0.1/32
