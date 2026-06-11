@@ -10,6 +10,7 @@ dependencies:
     alias: logs
     version: 1.8.2
     repository: https://grafana.github.io/helm-charts
+    condition: logs.enabled
   - name: alloy
     alias: node-metrics
     version: 1.8.2
@@ -20,9 +21,6 @@ dependencies:
     version: 1.8.2
     repository: https://grafana.github.io/helm-charts
     condition: cluster-metrics.enabled
-  # Optional: install the Prometheus Operator CRDs (ServiceMonitor/PodMonitor/Probe)
-  # so cluster-metrics can scrape them. Off by default; enable in exactly one module
-  # per cluster to avoid two owners of the same cluster-scoped CRDs.
   - name: prometheus-operator-crds
     version: 28.0.1
     repository: https://prometheus-community.github.io/helm-charts

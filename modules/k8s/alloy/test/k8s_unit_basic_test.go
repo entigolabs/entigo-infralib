@@ -31,11 +31,11 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 
 	logsDaemonSetName := fmt.Sprintf("%s-logs", namespaceName)
 
-	daemonSetName, err := terrak8s.GetDaemonSetE(t, kubectlOptions, logsDaemonSetName)
+	logsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, logsDaemonSetName)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", namespaceName), err)
+		t.Fatal(fmt.Sprintf("Daemonset %s error:", logsDaemonSetName), err)
 	}
-	assert.NotEmpty(t, daemonSetName, "Daemonset was not returned")
+	assert.NotEmpty(t, logsDaemonSet, "Logs daemonset was not returned")
 
 	nodeMetricsDaemonSetName := fmt.Sprintf("%s-node-metrics", namespaceName)
 

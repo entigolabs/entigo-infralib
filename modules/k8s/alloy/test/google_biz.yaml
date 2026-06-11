@@ -5,3 +5,13 @@ logs:
       max_wait_time = "5s"
       max_lines     = 5000
     }
+
+node-metrics:
+  # Exercise external_labels templating.
+  externalLabels:
+    cluster: google-biz
+
+cluster-metrics:
+  # Exercise external_labels templating.
+  externalLabels:
+    cluster: google-biz

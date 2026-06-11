@@ -9,6 +9,7 @@ prometheus-operator-crds:
       argocd.argoproj.io/sync-options: ServerSideApply=true
 
 logs:
+  enabled: true
   crds:
     create: false
   lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
