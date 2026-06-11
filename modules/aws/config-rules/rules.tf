@@ -46,6 +46,7 @@ locals {
         resourceName == /AmazonEKS_(?i)/ or
         resourceName == /VPC-CNI-(?i)/ or
         resourceName == /awsconfigconforms(?i)/ or
+        configuration.keyManager == "AWS" or
         tags["${tag}"] !empty
       }
     EOT

@@ -1,2 +1,15 @@
 global:
   cloudProvider: "google"
+
+crossplane:
+  resourcesCrossplane:
+    limits:
+      # -- CPU resource limits for Crossplane.
+      cpu: 2000m
+      # -- Memory resource limits for Crossplane.
+      memory: 1536Mi
+    requests:
+      # -- CPU resource requests for Crossplane.
+      cpu: 20m
+      # -- Memory resource requests for Crossplane.
+      memory: 200Mi

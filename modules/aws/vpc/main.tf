@@ -74,7 +74,9 @@ module "vpc" {
   elasticache_subnet_group_name = var.elasticache_subnet_group_name
 
   create_database_subnet_group    = length(local.database_subnets) > 0 ? true : false
+  create_database_subnet_route_table = length(local.database_subnets) > 0 ? var.create_database_subnet_route_table : false
   create_elasticache_subnet_group = length(local.elasticache_subnets) > 0 ? true : false
+  create_elasticache_subnet_route_table = length(local.elasticache_subnets) > 0 ? var.create_elasticache_subnet_route_table : false
   create_multiple_intra_route_tables = var.create_multiple_intra_route_tables
   create_multiple_public_route_tables = var.create_multiple_public_route_tables
   
@@ -107,6 +109,10 @@ module "vpc" {
     "kubernetes.io/role/internal-elb" = "1"
     "karpenter.sh/discovery" = var.prefix
   }
+
+  intra_subnet_tags       = var.intra_subnet_tags
+  database_subnet_tags    = var.database_subnet_tags
+  elasticache_subnet_tags = var.elasticache_subnet_tags
 
   tags = {
     Terraform = "true"
