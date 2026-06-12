@@ -62,6 +62,7 @@ else
     key: 123456
 sources:
  - url: /conf
+enable_opentofu: true
 steps:" > agents/config.yaml
   if [ "$AWS_ACCESS_KEY_ID" != "" ]
   then

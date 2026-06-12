@@ -1,0 +1,37 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-gateway-alb
+  namespace: {{ .Release.Name }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  {{- $scheme := index .Values.loki.gateway.ingress.annotations "alb.ingress.kubernetes.io/scheme" }}
+  {{- $cidrs := "" }}
+  {{- if eq $scheme "internet-facing" }}
+    {{- $cidrs = .Values.global.aws.publicSubnetCidrs | default "" }}
+  {{- else if eq $scheme "internal" }}
+    {{- $cidrs = printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
+  {{- end }}
+  ingress:
+    - from:
+        {{- range (splitList "," $cidrs) }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . }}
+        {{- end }}
+        {{- end }}
+        {{- range .Values.global.aws.extraAlbCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: http
+
+{{- end }}

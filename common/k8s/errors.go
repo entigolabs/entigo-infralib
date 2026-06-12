@@ -54,6 +54,14 @@ func (err GatewayNotAvailable) Error() string {
 	return fmt.Sprintf("Gateway %s IP address has not been set", err.gateway.GetName())
 }
 
+type HTTPRouteNotAvailable struct {
+	httpRoute *unstructured.Unstructured
+}
+
+func (err HTTPRouteNotAvailable) Error() string {
+	return fmt.Sprintf("HTTPRoute %s is not available (Accepted or ResolvedRefs not True)", err.httpRoute.GetName())
+}
+
 type NewObjectError func(object *unstructured.Unstructured) error
 
 func DefaultObjectError(object *unstructured.Unstructured) error {
@@ -74,4 +82,8 @@ func NewIngressNotAvailable(ingress *unstructured.Unstructured) error {
 
 func NewGatewayNotAvailable(gateway *unstructured.Unstructured) error {
 	return GatewayNotAvailable{gateway}
+}
+
+func NewHTTPRouteNotAvailable(httpRoute *unstructured.Unstructured) error {
+	return HTTPRouteNotAvailable{httpRoute}
 }
