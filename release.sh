@@ -10,6 +10,7 @@ echo "sources:
     - url: https://github.com/entigolabs/entigo-infralib
       version: main
       force_version: true
+enable_opentofu: true
 steps:" > agents/config.yaml
 
 if [ "$AWS_REGION" != "" ]
