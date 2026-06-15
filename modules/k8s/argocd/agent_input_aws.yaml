@@ -13,15 +13,13 @@ argocd:
   configs:
     repositories:
       infralib-oci-ecr:
-        url: oci://public.ecr.aws/entigolabs/entigo-infralib-release
+        url: oci://public.ecr.aws/entigolabs/entigo-infralib-release/k8s
         name: infralib-oci-ecr
-        type: helm
-        enableOCI: "true"
+        type: oci
       infralib-oci-ghcr:
-        url: oci://ghcr.io/entigolabs/entigo-infralib-release
+        url: oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
         name: infralib-oci-ghcr
-        type: helm
-        enableOCI: "true"
+        type: oci
 
 job:
   image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
