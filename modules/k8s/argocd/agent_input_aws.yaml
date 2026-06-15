@@ -17,7 +17,7 @@ argocd:
         name: infralib-oci-ecr
         type: oci
       infralib-oci-ghcr:
-        url: oci://ghcr.io/entigolabs/entigo-infralib-release/k8s
+        url: oci://ghcr.io/entigolabs/entigo-infralib-release/index
         name: infralib-oci-ghcr
         type: oci
 
