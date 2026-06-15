@@ -18,6 +18,10 @@ spec:
     encryption:
       defaultKmsKeyName: {{ .Values.global.google.bucket.kmsKeyId }}
     {{- end }}
+    {{- with .Values.global.google.bucket.lifecycleRule }}
+    lifecycleRule:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 
