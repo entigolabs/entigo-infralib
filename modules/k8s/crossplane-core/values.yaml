@@ -228,7 +228,7 @@ crossplane:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.19.30"
+  tag: "v1.22.1"
   deleteUnusedCrds: false
   deleteInactiveProviderRevisions: false
   deleteInactiveFunctionRevisions: false
