@@ -193,15 +193,13 @@ loki:
       size: 30Gi
 
   gateway:
-    annotations:
-      argocd.argoproj.io/sync-options: Replace=true,Force=true
     podSecurityContext:
       seccompProfile:
         type: RuntimeDefault
     enabled: true
     verboseLogging: false
     podDisruptionBudget:
-      enabled: false
+      enabled: true
       minAvailable: 1
     metrics:
       enabled: false

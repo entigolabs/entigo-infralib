@@ -20,7 +20,7 @@ gke_main_node_locations: "europe-north1-a"
 
 gke_tools_min_size: 3
 gke_tools_max_size: 6
-gke_tools_spot_nodes: true
+gke_tools_spot_nodes: false
 gke_tools_location_policy: "ANY"
 gke_tools_node_locations: "europe-north1-a"
 
