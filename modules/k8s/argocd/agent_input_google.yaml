@@ -14,7 +14,7 @@ argocd:
     repositories:
       infralib-oci-ecr:
         url: oci://{{ .toptout.gar-proxy.ecr_registry | "public.ecr.aws" }}/entigolabs/entigo-infralib-release
-        name: infralib-oci-ghcr
+        name: infralib-oci-ecr
         type: helm
         enableOCI: "true"
       infralib-oci-ghcr:

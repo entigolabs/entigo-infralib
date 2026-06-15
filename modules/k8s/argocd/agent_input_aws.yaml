@@ -13,12 +13,12 @@ argocd:
   configs:
     repositories:
       infralib-oci-ecr:
-        url: oci://{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/entigolabs/entigo-infralib-release
-        name: infralib-oci-ghcr
+        url: oci://public.ecr.aws/entigolabs/entigo-infralib-release
+        name: infralib-oci-ecr
         type: helm
         enableOCI: "true"
       infralib-oci-ghcr:
-        url: oci://{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs/entigo-infralib-release
+        url: oci://ghcr.io/entigolabs/entigo-infralib-release
         name: infralib-oci-ghcr
         type: helm
         enableOCI: "true"
