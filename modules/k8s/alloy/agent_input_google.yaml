@@ -1,4 +1,4 @@
-logs:
+node-agent:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   configReloader:
@@ -15,6 +15,7 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -26,27 +27,7 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      - ports:
-          - port: 443
-            protocol: TCP
-        to:
-          - ipBlock:
-              cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
-
-node-metrics:
-  image:
-    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  networkPolicy:
-    egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
+      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP
@@ -73,6 +54,9 @@ node-metrics:
 cluster-metrics:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
   networkPolicy:
     egress:
       - ports:

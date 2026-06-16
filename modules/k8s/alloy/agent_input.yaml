@@ -1,11 +1,10 @@
-logs:
+node-agent:
   controller:
     priorityClassName: "{{ .module.name }}"
-  lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
-node-metrics:
-  controller:
-    priorityClassName: "{{ .module.name }}"
-  mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+  logs:
+    lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
+  metrics:
+    mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
 cluster-metrics:
   controller:
     priorityClassName: "{{ .module.name }}"

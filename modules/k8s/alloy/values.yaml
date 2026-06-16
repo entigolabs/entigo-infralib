@@ -8,19 +8,35 @@ prometheus-operator-crds:
     annotations:
       argocd.argoproj.io/sync-options: ServerSideApply=true
 
-logs:
+# ---------------------------------------------------------------------------
+# node-agent: per-node DaemonSet. Ships pod logs to Loki and node-level metrics
+# (node-exporter via the unix exporter, kubelet, cAdvisor) to Mimir.
+# Toggle each signal independently with logs.enabled / metrics.enabled.
+# ---------------------------------------------------------------------------
+node-agent:
   enabled: true
   crds:
     create: false
-  lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
-  lokiTenantID: ""
-  extraProcessStages: ""
-  # extraProcessStages: |
-  #   stage.multiline {
-  #     firstline     = "^[^\\s].*\\d{2}:\\d{2}:\\d{2},\\d{3}"
-  #     max_wait_time = "5s"
-  #     max_lines     = 5000
-  #   }
+
+  # Pod logs -> Loki
+  logs:
+    enabled: true
+    lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
+    lokiTenantID: ""
+    extraProcessStages: ""
+
+  # Node-level metrics (node-exporter, kubelet, cAdvisor) -> Mimir
+  metrics:
+    enabled: true
+    mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+    mimirTenantID: ""
+    # Labels added to every metric series, e.g. {cluster: prod}
+    externalLabels: {}
+    scrapeInterval: "60s"
+    selfMonitor: true
+
+  # Appended verbatim to the generated Alloy config (metric jobs here need metrics.enabled).
+  extraConfig: ""
 
   alloy:
     configMap:
@@ -30,6 +46,131 @@ logs:
           level  = "warn"
           format = "json"
         }
+        {{- if .Values.metrics.enabled }}
+
+        prometheus.remote_write "default" {
+          {{- if .Values.metrics.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.metrics.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
+          endpoint {
+            url = {{ .Values.metrics.mimirEndpoint | quote }}
+            {{- if .Values.metrics.mimirTenantID }}
+            headers = {
+              "X-Scope-OrgID" = {{ .Values.metrics.mimirTenantID | quote }},
+            }
+            {{- end }}
+          }
+        }
+
+        prometheus.exporter.unix "node" {
+          rootfs_path = "/host/root"
+          procfs_path = "/host/proc"
+          sysfs_path  = "/host/sys"
+
+          filesystem {
+            mount_points_exclude = "^/(dev|proc|sys|run/credentials/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+            fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+          }
+          netclass {
+            ignored_devices = "^(veth.*|cali.*|[a-f0-9]{15})$"
+          }
+        }
+
+        discovery.relabel "node_exporter" {
+          targets = prometheus.exporter.unix.node.targets
+          rule {
+            target_label = "job"
+            replacement  = "node-exporter"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "node_exporter" {
+          targets         = discovery.relabel.node_exporter.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
+        }
+
+        discovery.kubernetes "local_node" {
+          role = "node"
+          selectors {
+            role  = "node"
+            field = "metadata.name=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.relabel "kubelet" {
+          targets = discovery.kubernetes.local_node.targets
+          rule {
+            source_labels = ["__meta_kubernetes_node_name"]
+            target_label  = "node"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "kubelet" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "kubelet"
+          scheme            = "https"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.metrics.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+
+        prometheus.scrape "cadvisor" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "cadvisor"
+          scheme            = "https"
+          metrics_path      = "/metrics/cadvisor"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.metrics.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+        {{- if .Values.metrics.selfMonitor }}
+
+        prometheus.exporter.self "alloy" { }
+
+        discovery.relabel "alloy_self" {
+          targets = prometheus.exporter.self.alloy.targets
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "alloy_self" {
+          targets         = discovery.relabel.alloy_self.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          job_name        = "alloy-node-agent"
+          scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
+        }
+        {{- end }}
+        {{- end }}
+        {{- if .Values.logs.enabled }}
 
         discovery.kubernetes "kubernetes_pods" {
           role = "pod"
@@ -127,30 +268,46 @@ logs:
         loki.process "kubernetes_pods" {
           forward_to = [loki.write.default.receiver]
           stage.cri { }
-          {{- if .Values.extraProcessStages }}
-          {{- .Values.extraProcessStages | nindent 2 }}
+          {{- if .Values.logs.extraProcessStages }}
+          {{- .Values.logs.extraProcessStages | nindent 2 }}
           {{- end }}
         }
 
         loki.write "default" {
           endpoint {
-            url = {{ .Values.lokiEndpoint | quote }}
-            {{- if .Values.lokiTenantID }}
-            tenant_id = {{ .Values.lokiTenantID | quote }}
+            url = {{ .Values.logs.lokiEndpoint | quote }}
+            {{- if .Values.logs.lokiTenantID }}
+            tenant_id = {{ .Values.logs.lokiTenantID | quote }}
             {{- end }}
           }
         }
+        {{- end }}
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
 
     mounts:
       varlog: true
+      # Host mounts for the unix (node) exporter (used when metrics.enabled is true).
+      extra:
+        - name: rootfs
+          mountPath: /host/root
+          readOnly: true
+          mountPropagation: HostToContainer
+        - name: procfs
+          mountPath: /host/proc
+          readOnly: true
+        - name: sysfs
+          mountPath: /host/sys
+          readOnly: true
     resources:
       requests:
-        cpu: "10m"
-        memory: "45Mi"
+        cpu: "20m"
+        memory: "100Mi"
         ephemeral-storage: "100Mi"
       limits:
-        cpu: "500m"
-        memory: "500Mi"
+        cpu: "1"
+        memory: "700Mi"
         ephemeral-storage: "50Gi"
     livenessProbe:
       httpGet:
@@ -188,6 +345,7 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -199,224 +357,7 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-
-  controller:
-    type: "daemonset"
-    replicas: 1
-    priorityClassName: "alloy"
-    tolerations:
-      - effect: NoSchedule
-        operator: Exists
-
-# ---------------------------------------------------------------------------
-# node-metrics: per-node DaemonSet and scrapes the local node's kubelet + cAdvisor
-# ---------------------------------------------------------------------------
-node-metrics:
-  enabled: true
-  crds:
-    create: false
-  mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
-  mimirTenantID: ""
-
-  # Labels added to every series, e.g. {cluster: prod}
-  externalLabels: {}
-  scrapeInterval: "60s"
-  selfMonitor: true
-
-  extraConfig: ""
-
-  alloy:
-    configMap:
-      create: true
-      content: |
-        logging {
-          level  = "warn"
-          format = "json"
-        }
-
-        prometheus.remote_write "default" {
-          {{- if .Values.externalLabels }}
-          external_labels = {
-            {{- range $k, $v := .Values.externalLabels }}
-            {{ $k }} = {{ $v | quote }},
-            {{- end }}
-          }
-          {{- end }}
-          endpoint {
-            url = {{ .Values.mimirEndpoint | quote }}
-            {{- if .Values.mimirTenantID }}
-            headers = {
-              "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
-            }
-            {{- end }}
-          }
-        }
-
-        prometheus.exporter.unix "node" {
-          rootfs_path = "/host/root"
-          procfs_path = "/host/proc"
-          sysfs_path  = "/host/sys"
-
-          filesystem {
-            mount_points_exclude = "^/(dev|proc|sys|run/credentials/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
-            fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
-          }
-          netclass {
-            ignored_devices = "^(veth.*|cali.*|[a-f0-9]{15})$"
-          }
-        }
-
-        discovery.relabel "node_exporter" {
-          targets = prometheus.exporter.unix.node.targets
-          rule {
-            target_label = "job"
-            replacement  = "node-exporter"
-          }
-          rule {
-            target_label = "instance"
-            replacement  = sys.env("HOSTNAME")
-          }
-          rule {
-            target_label = "node"
-            replacement  = sys.env("HOSTNAME")
-          }
-        }
-
-        prometheus.scrape "node_exporter" {
-          targets         = discovery.relabel.node_exporter.output
-          forward_to      = [prometheus.remote_write.default.receiver]
-          scrape_interval = {{ .Values.scrapeInterval | quote }}
-        }
-
-        discovery.kubernetes "local_node" {
-          role = "node"
-          selectors {
-            role  = "node"
-            field = "metadata.name=" + sys.env("HOSTNAME")
-          }
-        }
-
-        discovery.relabel "kubelet" {
-          targets = discovery.kubernetes.local_node.targets
-          rule {
-            source_labels = ["__meta_kubernetes_node_name"]
-            target_label  = "node"
-          }
-          rule {
-            target_label = "instance"
-            replacement  = sys.env("HOSTNAME")
-          }
-        }
-
-        prometheus.scrape "kubelet" {
-          targets           = discovery.relabel.kubelet.output
-          forward_to        = [prometheus.remote_write.default.receiver]
-          job_name          = "kubelet"
-          scheme            = "https"
-          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-          scrape_interval   = {{ .Values.scrapeInterval | quote }}
-          tls_config {
-            insecure_skip_verify = true
-          }
-        }
-
-        prometheus.scrape "cadvisor" {
-          targets           = discovery.relabel.kubelet.output
-          forward_to        = [prometheus.remote_write.default.receiver]
-          job_name          = "cadvisor"
-          scheme            = "https"
-          metrics_path      = "/metrics/cadvisor"
-          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-          scrape_interval   = {{ .Values.scrapeInterval | quote }}
-          tls_config {
-            insecure_skip_verify = true
-          }
-        }
-
-        {{- if .Values.selfMonitor }}
-        prometheus.exporter.self "alloy" { }
-
-        discovery.relabel "alloy_self" {
-          targets = prometheus.exporter.self.alloy.targets
-          rule {
-            target_label = "instance"
-            replacement  = sys.env("HOSTNAME")
-          }
-          rule {
-            target_label = "node"
-            replacement  = sys.env("HOSTNAME")
-          }
-        }
-
-        prometheus.scrape "alloy_self" {
-          targets         = discovery.relabel.alloy_self.output
-          forward_to      = [prometheus.remote_write.default.receiver]
-          job_name        = "alloy-node-metrics"
-          scrape_interval = {{ .Values.scrapeInterval | quote }}
-        }
-        {{- end }}
-        {{- if .Values.extraConfig }}
-        {{ .Values.extraConfig | nindent 8 }}
-        {{- end }}
-
-    mounts:
-      extra:
-        - name: rootfs
-          mountPath: /host/root
-          readOnly: true
-          mountPropagation: HostToContainer
-        - name: procfs
-          mountPath: /host/proc
-          readOnly: true
-        - name: sysfs
-          mountPath: /host/sys
-          readOnly: true
-    resources:
-      requests:
-        cpu: "10m"
-        memory: "60Mi"
-        ephemeral-storage: "100Mi"
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-        ephemeral-storage: "1Gi"
-    livenessProbe:
-      httpGet:
-        path: /-/healthy
-        port: 12345
-      initialDelaySeconds: 30
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
-    enableHttpServerPort: false
-    enableReporting: false
-
-  service:
-    enabled: false
-
-  serviceAccount:
-    create: true
-
-  configReloader:
-    enabled: false
-
-  networkPolicy:
-    enabled: true
-    policyTypes:
-      - Ingress
-      - Egress
-    ingress: []
-    egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
-      # Mimir gateway
+      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP
@@ -470,7 +411,7 @@ cluster-metrics:
   # Scrape Prometheus Operator ServiceMonitor / PodMonitor CRDs. Requires the CRDs to exist (set global.installPrometheusOperatorCRDs to true)
   serviceMonitors: false
   podMonitors: false
-  
+
   extraConfig: ""
 
   alloy:

@@ -2,7 +2,7 @@ global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
 
-logs:
+node-agent:
   networkPolicy:
     egress:
       - ports:
@@ -14,6 +14,7 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -25,25 +26,7 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      - ports:
-          - port: 443
-            protocol: TCP
-        to:
-          - ipBlock:
-              cidr: 172.20.0.1/32
-
-node-metrics:
-  networkPolicy:
-    egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
+      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP

@@ -29,21 +29,13 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
-	logsDaemonSetName := fmt.Sprintf("%s-logs", namespaceName)
+	nodeAgentDaemonSetName := fmt.Sprintf("%s-node-agent", namespaceName)
 
-	logsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, logsDaemonSetName)
+	nodeAgentDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, nodeAgentDaemonSetName)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", logsDaemonSetName), err)
+		t.Fatal(fmt.Sprintf("Daemonset %s error:", nodeAgentDaemonSetName), err)
 	}
-	assert.NotEmpty(t, logsDaemonSet, "Logs daemonset was not returned")
-
-	nodeMetricsDaemonSetName := fmt.Sprintf("%s-node-metrics", namespaceName)
-
-	nodeMetricsDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, nodeMetricsDaemonSetName)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", nodeMetricsDaemonSetName), err)
-	}
-	assert.NotEmpty(t, nodeMetricsDaemonSet, "Node-metrics daemonset was not returned")
+	assert.NotEmpty(t, nodeAgentDaemonSet, "Node-agent daemonset was not returned")
 
 	clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
 
