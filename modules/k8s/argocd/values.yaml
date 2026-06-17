@@ -10,7 +10,7 @@ argocd-apps:
 mcp:
   enabled: false
   image: entigolabs/mcp-for-argocd
-  tag: "0.7.0"
+  tag: "0.8.0"
   resources:
     requests:
       cpu: 10m
