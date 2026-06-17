@@ -10,7 +10,16 @@ argocd-apps:
 mcp:
   enabled: false
   image: entigolabs/mcp-for-argocd
-  tag: "0.7.0"
+  tag: "0.8.0"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+      ephemeral-storage: 8Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 256Mi
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
