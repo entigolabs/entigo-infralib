@@ -33,7 +33,7 @@ spec:
         - name: mcp-for-argocd
           image: {{ .Values.mcp.image }}:{{ .Values.mcp.tag }}
           resources:
-            {{ .Values.mcp.resources | nindent 12 }}
+            {{- toYaml .Values.mcp.resources | nindent 12 }}
           ports:
             - containerPort: 3000
           securityContext:
