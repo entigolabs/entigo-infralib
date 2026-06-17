@@ -13,7 +13,6 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
-      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -25,7 +24,6 @@ node-agent:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP
@@ -52,33 +50,13 @@ node-agent:
 cluster-metrics:
   networkPolicy:
     egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
+      # DNS + all in-cluster scrape targets (KSM, annotated pods, service endpoints, Mimir gateway) — any pod, any port.
+      - to:
           - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
-      # Kubernetes API (discovery.kubernetes pod role).
+      # Kubernetes API server (not a pod, so namespaceSelector won't match it -> ipBlock).
       - ports:
           - port: 443
             protocol: TCP
         to:
           - ipBlock:
               cidr: 172.20.0.1/32
-      # Scrape any pod in the cluster (kube-state-metrics + annotated pods).
-      - to:
-          - namespaceSelector: {}

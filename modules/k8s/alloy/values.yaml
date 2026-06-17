@@ -9,8 +9,7 @@ prometheus-operator-crds:
       argocd.argoproj.io/sync-options: ServerSideApply=true
 
 # ---------------------------------------------------------------------------
-# node-agent: per-node DaemonSet. Ships pod logs to Loki and node-level metrics to Mimir.
-# Toggle each signal independently with logs.enabled / metrics.enabled.
+# node-agent: per-node DaemonSet. Toggle each signal independently with logs.enabled / metrics.enabled.
 # ---------------------------------------------------------------------------
 node-agent:
   enabled: true
@@ -341,7 +340,6 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
-      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -353,7 +351,6 @@ node-agent:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP
@@ -674,27 +671,7 @@ cluster-metrics:
       - Egress
     ingress: []
     egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
-      # Mimir gateway
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
+      # All in-cluster scrape targets
       - to:
           - namespaceSelector: {}
 

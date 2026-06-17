@@ -15,7 +15,6 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
-      # Loki gateway (logs)
       - ports:
           - port: 80
             protocol: TCP
@@ -27,7 +26,6 @@ node-agent:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
-      # Mimir gateway (metrics)
       - ports:
           - port: 80
             protocol: TCP
@@ -59,33 +57,13 @@ cluster-metrics:
       registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
   networkPolicy:
     egress:
-      - ports:
-          - port: 53
-            protocol: UDP
-          - port: 53
-            protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: kube-system
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
+      # All in-cluster scrape targets
+      - to:
           - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
-      # Kubernetes API
+      # Kubernetes API server
       - ports:
           - port: 443
             protocol: TCP
         to:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
-      # Scrape annotated pods
-      - to:
-          - namespaceSelector: {}
