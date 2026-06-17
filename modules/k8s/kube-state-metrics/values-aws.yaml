@@ -1,6 +1,5 @@
 global:
   cloudProvider: aws
-  providerConfigRefName: crossplane-aws
 
 kube-state-metrics:
   networkPolicy:

@@ -1,6 +1,5 @@
 global:
   cloudProvider: ""
-  providerConfigRefName: ""
   prefix: ""
 
 kube-state-metrics:
