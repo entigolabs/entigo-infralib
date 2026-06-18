@@ -1,2 +1,4 @@
 config_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .agent.accountId }}-{{ .agent.region }}-config-logs"
 cloudtrail_logs_bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .agent.accountId }}-{{ .agent.region }}-cloudtrail-logs"
+#Setting this by default would mean we can not have two infralib instances in one account.
+#ebs_default_kms_key: "{{ .toptout.kms.data_alias_arn }}"

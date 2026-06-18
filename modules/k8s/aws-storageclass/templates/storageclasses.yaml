@@ -13,11 +13,9 @@ parameters:
   #tagSpecification_1: "Environment={{ .Values.environment }}"
   {{- if .Values.global.kmsKeyId }}
   kmsKeyId: {{ .Values.global.kmsKeyId }}
-  encrypted: "true"
-  {{- else }}
-  encrypted: "false"
   {{- end }}
-  
+  encrypted: "true"
+
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
@@ -38,10 +36,8 @@ parameters:
   type: gp2
   {{- if .Values.global.kmsKeyId }}
   kmsKeyId: {{ .Values.global.kmsKeyId }}
-  encrypted: "true"
-  {{- else }}
-  encrypted: "false"
   {{- end }}
+  encrypted: "true"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true
@@ -62,10 +58,8 @@ parameters:
   type: gp3
   {{- if .Values.global.kmsKeyId }}
   kmsKeyId: {{ .Values.global.kmsKeyId }}
-  encrypted: "true"
-  {{- else }}
-  encrypted: "false"
   {{- end }}
+  encrypted: "true"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
@@ -86,10 +80,8 @@ parameters:
   type: gp3
   {{- if .Values.global.kmsKeyId }}
   kmsKeyId: {{ .Values.global.kmsKeyId }}
-  encrypted: "true"
-  {{- else }}
-  encrypted: "false"
   {{- end }}
+  encrypted: "true"
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 allowVolumeExpansion: true

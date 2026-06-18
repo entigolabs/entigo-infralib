@@ -60,7 +60,7 @@ module "eks-managed-node-group" {
         volume_size           = var.volume_size
         volume_iops           = var.volume_iops
         volume_type           = var.volume_type
-        encrypted             = var.encryption_kms_key_arn != "" ? true : false
+        encrypted             = true
         kms_key_id            = var.encryption_kms_key_arn != "" ? var.encryption_kms_key_arn : null
         delete_on_termination = true
       }
