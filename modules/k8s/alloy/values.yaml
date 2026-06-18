@@ -148,6 +148,10 @@ node-agent:
         discovery.relabel "alloy_self" {
           targets = prometheus.exporter.self.alloy.targets
           rule {
+            target_label = "alloy_role"
+            replacement  = "node-agent"
+          }
+          rule {
             target_label = "instance"
             replacement  = sys.env("HOSTNAME")
           }
@@ -160,7 +164,6 @@ node-agent:
         prometheus.scrape "alloy_self" {
           targets         = discovery.relabel.alloy_self.output
           forward_to      = [prometheus.remote_write.default.receiver]
-          job_name        = "alloy-node-agent"
           scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
         }
         {{- end }}
@@ -624,10 +627,17 @@ cluster-metrics:
         {{- if .Values.selfMonitor }}
         prometheus.exporter.self "alloy" { }
 
+        discovery.relabel "alloy_self" {
+          targets = prometheus.exporter.self.alloy.targets
+          rule {
+            target_label = "alloy_role"
+            replacement  = "cluster-metrics"
+          }
+        }
+
         prometheus.scrape "alloy_self" {
-          targets         = prometheus.exporter.self.alloy.targets
+          targets         = discovery.relabel.alloy_self.output
           forward_to      = [prometheus.remote_write.default.receiver]
-          job_name        = "alloy-cluster-metrics"
           scrape_interval = {{ .Values.scrapeInterval | quote }}
         }
         {{- end }}
