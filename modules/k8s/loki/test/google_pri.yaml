@@ -4,6 +4,12 @@ global:
       name: google-gateway-external
       extraHealthCheckCidrs:
         - 192.168.0.0/16
+    bucket:
+      lifecycleRule:
+        - action:
+            type: Delete
+          condition:
+            age: 100
 loki:
   fullnameOverride: "{{ .module.name }}"
   nameOverride: "{{ .module.name }}"
