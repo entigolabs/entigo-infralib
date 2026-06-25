@@ -1,6 +1,6 @@
 dependencies:
 - name: wireguard
   repository: https://bryopsida.github.io/wireguard-chart
-  version: 0.31.2
-digest: sha256:d882ecc2b29789b469b63b206be10c1ddd553f0d9af05db7b21725d3e45fa4ce
-generated: "2026-03-19T14:42:53.224137814Z"
+  version: 0.32.0
+digest: sha256:440249abca8d97c42045f94e58ae26604d7c68bdbd6bfd9dbf39e18b0d5fa5a9
+generated: "2026-06-17T09:05:22.125669384+03:00"
