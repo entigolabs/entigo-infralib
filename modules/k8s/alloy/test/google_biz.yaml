@@ -1,7 +1,15 @@
-logs:
-  extraProcessStages: |
-    stage.multiline {
-      firstline     = "^[^\\s].*\\d{2}:\\d{2}:\\d{2},\\d{3}"
-      max_wait_time = "5s"
-      max_lines     = 5000
-    }
+node-agent:
+  logs:
+    extraProcessStages: |
+      stage.multiline {
+        firstline     = "^[^\\s].*\\d{2}:\\d{2}:\\d{2},\\d{3}"
+        max_wait_time = "5s"
+        max_lines     = 5000
+      }
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.gke.cluster_name }}-alloy"
+
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.gke.cluster_name }}-alloy"
