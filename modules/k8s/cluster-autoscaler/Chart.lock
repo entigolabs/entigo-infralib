@@ -1,6 +1,6 @@
 dependencies:
 - name: cluster-autoscaler
   repository: https://kubernetes.github.io/autoscaler
-  version: 9.57.0
-digest: sha256:33f350031b5db219be4f0842b554c70f9fa1c42954e8c6fe888b626c1b1aa182
-generated: "2026-04-27T07:43:06.838660116Z"
+  version: 9.58.0
+digest: sha256:12c43b343eb6294c1996e6548ba9a8d38e7ded411b7a6776fd4e8d330750343b
+generated: "2026-06-25T06:45:01.039386734Z"
