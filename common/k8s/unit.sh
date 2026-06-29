@@ -75,6 +75,7 @@ sources:
   - url: https://github.com/entigolabs/entigo-infralib
     version: main
     force_version: true
+enable_opentofu: true
 steps:" > agents/config.yaml
 
 else
@@ -83,6 +84,7 @@ else
     key: 123456
 sources:
   - url: /conf
+enable_opentofu: true
 steps:" > agents/config.yaml
 fi
   if [ "$AWS_ACCESS_KEY_ID" != "" ]

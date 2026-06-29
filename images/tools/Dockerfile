@@ -33,9 +33,6 @@ RUN wget -O "opentofu.zip" "https://github.com/opentofu/opentofu/releases/downlo
     && rm opentofu.zip \
     && strip /entigo-bin/tofu
 
-#COPY --from=entigolabs/entigo-infralib-agent:latest /usr/bin/ei-agent /entigo-bin/ei-agent
-#RUN strip /entigo-bin/ei-agent
-
 COPY *.sh /entigo-scripts/
 
 RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo
