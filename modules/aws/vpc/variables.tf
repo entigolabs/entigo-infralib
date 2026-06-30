@@ -16,13 +16,6 @@ variable "enable_ipv6" {
 }
 
 
-variable "private_subnet_enable_dns64" {
-  description = "Enable DNS64 on private subnets. When enabled, the resolver synthesises 64:ff9b::/96 IPv6 addresses for IPv4-only hostnames; requires a NAT64 route to be useful"
-  type     = bool
-  nullable = false
-  default  = true
-}
-
 variable "subnet_split_mode" {
   description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
   type     = string
