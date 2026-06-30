@@ -38,7 +38,7 @@ RUN apk --no-cache add \
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-COPY --from=entigolabs/entigo-infralib-agent:v1.12.0-alpha1 /usr/bin/ei-agent /usr/bin/ei-agent
+COPY --from=entigolabs/entigo-infralib-agent:v1.12.0-alpha2 /usr/bin/ei-agent /usr/bin/ei-agent
 
 USER 1000
 WORKDIR /app
