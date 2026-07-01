@@ -96,6 +96,10 @@ module "vpc" {
   database_subnet_ipv6_prefixes    = local.database_subnet_ipv6_prefixes
   elasticache_subnet_ipv6_prefixes = local.elasticache_subnet_ipv6_prefixes
   intra_subnet_ipv6_prefixes       = local.intra_subnet_ipv6_prefixes
+  private_subnet_enable_dns64     = var.enable_ipv6 && var.subnet_enable_dns64
+  database_subnet_enable_dns64    = var.enable_ipv6 && var.subnet_enable_dns64
+  elasticache_subnet_enable_dns64 = var.enable_ipv6 && var.subnet_enable_dns64
+  intra_subnet_enable_dns64       = var.enable_ipv6 && var.subnet_enable_dns64
 
   enable_nat_gateway     = var.enable_nat_gateway
   single_nat_gateway     = var.one_nat_gateway_per_az ? false : true

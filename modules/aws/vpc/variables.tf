@@ -15,6 +15,13 @@ variable "enable_ipv6" {
   default = false
 }
 
+variable "subnet_enable_dns64" {
+  description = "Enable DNS64 on all non-public subnets when IPv6 is enabled. Synthesises 64:ff9b::/96 IPv6 addresses for IPv4-only hostnames."
+  type     = bool
+  nullable = false
+  default  = false
+}
+
 
 variable "subnet_split_mode" {
   description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
