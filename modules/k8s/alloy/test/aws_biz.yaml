@@ -7,9 +7,11 @@ node-agent:
         max_lines     = 5000
       }
   metrics:
+    enabled: true
     externalLabels:
       cluster: "{{ .toutput.eks.cluster_name }}-alloy"
 
 cluster-metrics:
+  enabled: true
   externalLabels:
     cluster: "{{ .toutput.eks.cluster_name }}-alloy"

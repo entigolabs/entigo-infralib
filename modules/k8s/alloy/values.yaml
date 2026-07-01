@@ -23,7 +23,7 @@ node-agent:
     extraProcessStages: ""
 
   metrics:
-    enabled: true
+    enabled: false
     mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
     mimirTenantID: ""
     
@@ -393,7 +393,7 @@ node-agent:
 # cluster-metrics: single-replica Deployment for cluster-wide scrape targets (kube-state-metrics, annotation-based pod discovery etc)
 # ---------------------------------------------------------------------------
 cluster-metrics:
-  enabled: true
+  enabled: false
   crds:
     create: false
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"

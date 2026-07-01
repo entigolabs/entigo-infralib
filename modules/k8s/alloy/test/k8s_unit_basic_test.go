@@ -37,11 +37,15 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 	}
 	assert.NotEmpty(t, nodeAgentDaemonSet, "Node-agent daemonset was not returned")
 
-	clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
+	// Metrics are opt-in (they need a Mimir), off by default. The biz envs enable
+	// them (see test/*_biz.yaml); pri runs logs-only, so cluster-metrics is absent there.
+	if envName == "biz" {
+		clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
 
-	clusterMetrics, err := terrak8s.GetDeploymentE(t, kubectlOptions, clusterMetricsName)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("Deployment %s error:", clusterMetricsName), err)
+		clusterMetrics, err := terrak8s.GetDeploymentE(t, kubectlOptions, clusterMetricsName)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("Deployment %s error:", clusterMetricsName), err)
+		}
+		assert.NotEmpty(t, clusterMetrics, "Cluster-metrics deployment was not returned")
 	}
-	assert.NotEmpty(t, clusterMetrics, "Cluster-metrics deployment was not returned")
 }
