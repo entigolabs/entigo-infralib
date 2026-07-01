@@ -2,7 +2,7 @@ ARG TOOLS_TAG=latest
 FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM alpine:3.22
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH" AGENT_VERSION=v1.12.0-alpha2
 
 #Install AWS SDK
 RUN apk --no-cache add \
@@ -38,7 +38,8 @@ RUN apk --no-cache add \
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
 
-COPY --from=entigolabs/entigo-infralib-agent:v1.12.0-alpha2 /usr/bin/ei-agent /usr/bin/ei-agent
+# Copy agent for running provision cmd aka wrapper
+COPY --from=entigolabs/entigo-infralib-agent:${ARGOCD_CLI} /usr/bin/ei-agent /usr/bin/ei-agent
 
 USER 1000
 WORKDIR /app
