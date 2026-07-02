@@ -1,5 +1,5 @@
 ARG TOOLS_TAG=latest
-ARG AGENT_VERSION=v1.12.0-alpha2
+ARG AGENT_VERSION=v1.12.0-alpha3
 FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 FROM alpine:3.22
