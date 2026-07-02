@@ -9,8 +9,7 @@ COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 
 RUN apk --no-cache add \
     unzip \
-    binutils \
-    && mkdir /entigo-bin
+    binutils
 RUN wget -O /entigo-bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-${TARGETARCH}" \
     && chmod +x /entigo-bin/argocd \
     && strip /entigo-bin/argocd
