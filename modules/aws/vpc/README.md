@@ -118,3 +118,22 @@ db-a 10.24.14.0/24
 db-b 10.24.15.0/24
 
 __No elasticsearch networks are created.__
+
+### IPv6 support scenarios ###
+
+**Scenario 1 — Inbound IPv6 from external clients (most common)**
+External IPv6 clients connect to a dual-stack ALB/NLB. The load balancer accepts the IPv6 connection and forwards it to backend pods/services over IPv4. The EKS cluster and internal services do not need to be IPv6-aware — IPv6 terminates at the load balancer edge. `enable_ipv6 = true` is sufficient. DNS64 is not needed and should remain disabled.
+
+**Scenario 2 — IPv4-mode EKS pods connecting to IPv4-only internal services**
+IPv4-mode EKS pods only have IPv4 addresses. When DNS64 is disabled (the default), internal services that are not dual-stack like MSK return only A records, pods connect over IPv4, and everything works without any special configuration.
+
+**Scenario 3 — IPv4-mode EKS pods connecting to dual-stack internal services, or DNS64 is enabled**
+When a service has AAAA records (dual-stack) or DNS64 is enabled (synthesizing `64:ff9b::` AAAA records for IPv4-only hostnames), IPv4-mode EKS pods will see both A and AAAA records for internal services. Since the pod has no IPv6 address it cannot complete an IPv6 connection. What happens next depends on the client:
+
+- **Clients with proper fallback** — attempt IPv6, receive an immediate "network unreachable", retry over IPv4 transparently. No visible impact.
+- **Clients with poor fallback** — ends on the IPv6 error instead of falling back, causing connection failures.
+
+If you hit this with a specific client, either disable DNS64 (`subnet_enable_dns64 = false`, the default) or configure the client to prefer IPv4.
+
+**DNS64 + NAT64 (`subnet_enable_dns64`, default: `false`)**
+DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances with IPv6 addresses, or a dual-stack EKS cluster) that need to reach IPv4-only destinations. AWS NAT Gateway supports NAT64 natively — when `subnet_enable_dns64 = true` and a NAT Gateway is present, this module automatically creates a `64:ff9b::/96` route via the NAT Gateway to handle the translation. IPv4-mode EKS pods have no IPv6 source address and cannot use this path.
