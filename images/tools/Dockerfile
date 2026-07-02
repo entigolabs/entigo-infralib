@@ -1,6 +1,11 @@
 FROM alpine:3.22
 ARG TARGETARCH
+ARG AGENT_VERSION=v1.12.0-alpha3
 ENV KUBECTL_VERSION=v1.35.5 TERRAFORM_VERSION=1.7.5 HELM_VERSION=v3.21.0 ARGOCD_CLI=v3.4.3 OPENTOFU_VERSION=1.12.1
+
+FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
+
+COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 
 RUN apk --no-cache add \
     unzip \
