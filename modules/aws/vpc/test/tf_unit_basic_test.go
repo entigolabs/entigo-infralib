@@ -77,6 +77,24 @@ func testTerraformVpcBiz(t *testing.T) {
 	
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, 0, len(intraSubnetCidrs), "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.NotEmpty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block was not returned")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(publicSubnetsIpv6CidrBlocks), "Wrong number of public_subnets_ipv6_cidr_blocks returned")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(privateSubnetsIpv6CidrBlocks), "Wrong number of private_subnets_ipv6_cidr_blocks returned")
+
+	databaseSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__database_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(databaseSubnetsIpv6CidrBlocks), "Wrong number of database_subnets_ipv6_cidr_blocks returned")
+
+	elasticacheSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(elasticacheSubnetsIpv6CidrBlocks), "Wrong number of elasticache_subnets_ipv6_cidr_blocks returned")
+
+	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
+	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
 }
 
 func testTerraformVpcPri(t *testing.T) {
@@ -139,6 +157,15 @@ func testTerraformVpcPri(t *testing.T) {
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, "10.24.4.0/23", intraSubnetCidrs[0], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.24.6.0/23", intraSubnetCidrs[1], "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.Empty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block should be empty when ipv6 is disabled")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 0, len(publicSubnetsIpv6CidrBlocks), "public_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 0, len(privateSubnetsIpv6CidrBlocks), "private_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
 }
 
 func testTerraformVpcSpoke(t *testing.T) {
@@ -222,4 +249,16 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Equal(t, "10.30.0.0/28", intraSubnetCidrs[0], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.30.0.16/28", intraSubnetCidrs[1], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.30.0.32/28", intraSubnetCidrs[2], "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.NotEmpty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block was not returned")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 3, len(publicSubnetsIpv6CidrBlocks), "Wrong number of public_subnets_ipv6_cidr_blocks returned")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 9, len(privateSubnetsIpv6CidrBlocks), "Wrong number of private_subnets_ipv6_cidr_blocks returned")
+
+	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
+	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
 }
