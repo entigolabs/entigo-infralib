@@ -1,5 +1,6 @@
 vpc_cidr: "10.146.0.0/16"
 one_nat_gateway_per_az: false
+enable_ipv6: true
 private_subnets: |
   ["10.146.32.0/21", "10.146.40.0/21"]
 private_subnet_names: |
