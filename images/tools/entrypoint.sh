@@ -1,7 +1,9 @@
 #!/bin/bash
 #set -x
-
-if [ -n "$GOOGLE_REGION" ]; then
+if [ "$COMMAND" == "test" ]
+then
+    exec entrypoint-core.sh "$@"
+elif [ -n "$GOOGLE_REGION" ]; then
     exec entrypoint-core.sh "$@"
 elif [ -n "$AWS_REGION" ]; then
     exec /usr/bin/ei-agent provision "$@"
