@@ -1,4 +1,4 @@
-ARG AGENT_VERSION=v1.12.0-alpha3
+ARG AGENT_VERSION=v1.12.0-alpha4
 FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 
 FROM alpine:3.22
