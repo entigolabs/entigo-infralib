@@ -1,15 +1,37 @@
-logs:
+global:
+  # Install Prometheus Operator CRDs (ServiceMonitor/PodMonitor)
+  # Required if you enable cluster-metrics.serviceMonitors/podMonitors
+  installPrometheusOperatorCRDs: false
+
+prometheus-operator-crds:
+  crds:
+    annotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=true
+
+# ---------------------------------------------------------------------------
+# node-agent: per-node DaemonSet. Toggle each signal independently with logs.enabled / metrics.enabled.
+# ---------------------------------------------------------------------------
+node-agent:
+  enabled: true
   crds:
     create: false
-  lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
-  lokiTenantID: ""
-  extraProcessStages: ""
-  # extraProcessStages: |
-  #   stage.multiline {
-  #     firstline     = "^[^\\s].*\\d{2}:\\d{2}:\\d{2},\\d{3}"
-  #     max_wait_time = "5s"
-  #     max_lines     = 5000
-  #   }
+
+  logs:
+    enabled: true
+    lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
+    lokiTenantID: ""
+    extraProcessStages: ""
+
+  metrics:
+    enabled: false
+    mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+    mimirTenantID: ""
+    
+    externalLabels: {}
+    scrapeInterval: "60s"
+    selfMonitor: true
+
+  extraConfig: ""
 
   alloy:
     configMap:
@@ -19,6 +41,134 @@ logs:
           level  = "warn"
           format = "json"
         }
+        {{- if .Values.metrics.enabled }}
+
+        prometheus.remote_write "default" {
+          {{- if .Values.metrics.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.metrics.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
+          endpoint {
+            url = {{ .Values.metrics.mimirEndpoint | quote }}
+            {{- if .Values.metrics.mimirTenantID }}
+            headers = {
+              "X-Scope-OrgID" = {{ .Values.metrics.mimirTenantID | quote }},
+            }
+            {{- end }}
+          }
+        }
+
+        prometheus.exporter.unix "node" {
+          rootfs_path = "/host/root"
+          procfs_path = "/host/proc"
+          sysfs_path  = "/host/sys"
+
+          filesystem {
+            mount_points_exclude = "^/(dev|proc|sys|run/credentials/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+            fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+          }
+          netclass {
+            ignored_devices = "^(veth.*|cali.*|[a-f0-9]{15})$"
+          }
+        }
+
+        discovery.relabel "node_exporter" {
+          targets = prometheus.exporter.unix.node.targets
+          rule {
+            target_label = "job"
+            replacement  = "node-exporter"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "node_exporter" {
+          targets         = discovery.relabel.node_exporter.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
+        }
+
+        discovery.kubernetes "local_node" {
+          role = "node"
+          selectors {
+            role  = "node"
+            field = "metadata.name=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.relabel "kubelet" {
+          targets = discovery.kubernetes.local_node.targets
+          rule {
+            source_labels = ["__meta_kubernetes_node_name"]
+            target_label  = "node"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "kubelet" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "kubelet"
+          scheme            = "https"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.metrics.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+
+        prometheus.scrape "cadvisor" {
+          targets           = discovery.relabel.kubelet.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "cadvisor"
+          scheme            = "https"
+          metrics_path      = "/metrics/cadvisor"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.metrics.scrapeInterval | quote }}
+          tls_config {
+            insecure_skip_verify = true
+          }
+        }
+        {{- if .Values.metrics.selfMonitor }}
+
+        prometheus.exporter.self "alloy" { }
+
+        discovery.relabel "alloy_self" {
+          targets = prometheus.exporter.self.alloy.targets
+          rule {
+            target_label = "alloy_role"
+            replacement  = "node-agent"
+          }
+          rule {
+            target_label = "instance"
+            replacement  = sys.env("HOSTNAME")
+          }
+          rule {
+            target_label = "node"
+            replacement  = sys.env("HOSTNAME")
+          }
+        }
+
+        prometheus.scrape "alloy_self" {
+          targets         = discovery.relabel.alloy_self.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
+        }
+        {{- end }}
+        {{- end }}
+        {{- if .Values.logs.enabled }}
 
         discovery.kubernetes "kubernetes_pods" {
           role = "pod"
@@ -116,30 +266,46 @@ logs:
         loki.process "kubernetes_pods" {
           forward_to = [loki.write.default.receiver]
           stage.cri { }
-          {{- if .Values.extraProcessStages }}
-          {{- .Values.extraProcessStages | nindent 2 }}
+          {{- if .Values.logs.extraProcessStages }}
+          {{- .Values.logs.extraProcessStages | nindent 2 }}
           {{- end }}
         }
 
         loki.write "default" {
           endpoint {
-            url = {{ .Values.lokiEndpoint | quote }}
-            {{- if .Values.lokiTenantID }}
-            tenant_id = {{ .Values.lokiTenantID | quote }}
+            url = {{ .Values.logs.lokiEndpoint | quote }}
+            {{- if .Values.logs.lokiTenantID }}
+            tenant_id = {{ .Values.logs.lokiTenantID | quote }}
             {{- end }}
           }
         }
+        {{- end }}
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
 
     mounts:
       varlog: true
+      # Host mounts for the unix (node) exporter
+      extra:
+        - name: rootfs
+          mountPath: /host/root
+          readOnly: true
+          mountPropagation: HostToContainer
+        - name: procfs
+          mountPath: /host/proc
+          readOnly: true
+        - name: sysfs
+          mountPath: /host/sys
+          readOnly: true
     resources:
       requests:
-        cpu: "10m"
-        memory: "45Mi"
+        cpu: "20m"
+        memory: "100Mi"
         ephemeral-storage: "100Mi"
       limits:
-        cpu: "500m"
-        memory: "500Mi"
+        cpu: "1"
+        memory: "700Mi"
         ephemeral-storage: "50Gi"
     livenessProbe:
       httpGet:
@@ -188,11 +354,364 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node
+      - ports:
+          - port: 10250
+            protocol: TCP
 
   controller:
     type: "daemonset"
     replicas: 1
     priorityClassName: "alloy"
+    volumes:
+      extra:
+        - name: rootfs
+          hostPath:
+            path: /
+        - name: procfs
+          hostPath:
+            path: /proc
+        - name: sysfs
+          hostPath:
+            path: /sys
     tolerations:
       - effect: NoSchedule
         operator: Exists
+
+# ---------------------------------------------------------------------------
+# cluster-metrics: single-replica Deployment for cluster-wide scrape targets (kube-state-metrics, annotation-based pod discovery etc)
+# ---------------------------------------------------------------------------
+cluster-metrics:
+  enabled: false
+  crds:
+    create: false
+  mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+  mimirTenantID: ""
+
+  # Labels added to every series, e.g. {cluster: prod}
+  externalLabels: {}
+  scrapeInterval: "60s"
+  selfMonitor: true
+
+  # Scrape Prometheus Operator ServiceMonitor / PodMonitor CRDs. Requires the CRDs to exist (set global.installPrometheusOperatorCRDs to true)
+  serviceMonitors: false
+  podMonitors: false
+
+  extraConfig: ""
+
+  alloy:
+    configMap:
+      create: true
+      content: |
+        logging {
+          level  = "warn"
+          format = "json"
+        }
+
+        prometheus.remote_write "default" {
+          {{- if .Values.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
+          endpoint {
+            url = {{ .Values.mimirEndpoint | quote }}
+            {{- if .Values.mimirTenantID }}
+            headers = {
+              "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
+            }
+            {{- end }}
+          }
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        // kube-state-metrics is kept as a standalone module/deployment
+        discovery.relabel "kube_state_metrics" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            regex         = "kube-state-metrics"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_port_number"]
+            regex         = "8080"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            target_label = "job"
+            replacement  = "kube-state-metrics"
+          }
+        }
+
+        prometheus.scrape "kube_state_metrics" {
+          targets         = discovery.relabel.kube_state_metrics.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // Annotation-based discovery: scrape pods with prometheus.io/scrape=true.
+        discovery.relabel "annotated_pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Running"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
+            regex         = "(https?)"
+            target_label  = "__scheme__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+            regex         = "(.+)"
+            target_label  = "__metrics_path__"
+          }
+          rule {
+            source_labels = ["__address__", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+            regex         = "([^:]+)(?::[0-9]+)?;([0-9]+)"
+            replacement   = "$1:$2"
+            target_label  = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+        }
+
+        prometheus.scrape "annotated_pods" {
+          targets         = discovery.relabel.annotated_pods.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // Endpoints discovery, reused by service-endpoints and apiserver scraping.
+        discovery.kubernetes "endpoints" {
+          role = "endpoints"
+        }
+
+        // kubernetes-service-endpoints: scrape Services annotated prometheus.io/scrape=true.
+        discovery.relabel "service_endpoints" {
+          targets = discovery.kubernetes.endpoints.targets
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            regex         = "kube-state-metrics"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
+            regex         = "(https?)"
+            target_label  = "__scheme__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
+            regex         = "(.+)"
+            target_label  = "__metrics_path__"
+          }
+          rule {
+            source_labels = ["__address__", "__meta_kubernetes_service_annotation_prometheus_io_port"]
+            regex         = "([^:]+)(?::[0-9]+)?;([0-9]+)"
+            replacement   = "$1:$2"
+            target_label  = "__address__"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label  = "service"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label  = "job"
+          }
+        }
+
+        prometheus.scrape "service_endpoints" {
+          targets         = discovery.relabel.service_endpoints.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+
+        // kubernetes-apiservers: scrape the API server's own /metrics
+        discovery.relabel "apiserver" {
+          targets = discovery.kubernetes.endpoints.targets
+          rule {
+            source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"]
+            regex         = "default;kubernetes;https"
+            action        = "keep"
+          }
+        }
+
+        prometheus.scrape "apiserver" {
+          targets           = discovery.relabel.apiserver.output
+          forward_to        = [prometheus.remote_write.default.receiver]
+          job_name          = "kubernetes-apiservers"
+          scheme            = "https"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          scrape_interval   = {{ .Values.scrapeInterval | quote }}
+          tls_config {
+            ca_file     = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            server_name = "kubernetes"
+          }
+        }
+
+        {{- if .Values.serviceMonitors }}
+        // Scrape all ServiceMonitor CRDs cluster-wide (requires the operator CRDs)
+        prometheus.operator.servicemonitors "servicemonitors" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+        {{- end }}
+        {{- if .Values.podMonitors }}
+        // Scrape all PodMonitor CRDs cluster-wide (requires the operator CRDs)
+        prometheus.operator.podmonitors "podmonitors" {
+          forward_to = [prometheus.remote_write.default.receiver]
+        }
+        {{- end }}
+        {{- if .Values.selfMonitor }}
+        prometheus.exporter.self "alloy" { }
+
+        discovery.relabel "alloy_self" {
+          targets = prometheus.exporter.self.alloy.targets
+          rule {
+            target_label = "alloy_role"
+            replacement  = "cluster-metrics"
+          }
+        }
+
+        prometheus.scrape "alloy_self" {
+          targets         = discovery.relabel.alloy_self.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          scrape_interval = {{ .Values.scrapeInterval | quote }}
+        }
+        {{- end }}
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
+
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+        ephemeral-storage: "100Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+        ephemeral-storage: "10Gi"
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    enableHttpServerPort: false
+    enableReporting: false
+
+  service:
+    enabled: false
+
+  serviceAccount:
+    create: true
+
+  configReloader:
+    enabled: false
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress: []
+    egress:
+      # All in-cluster scrape targets
+      - to:
+          - namespaceSelector: {}
+
+  controller:
+    type: "deployment"
+    replicas: 1
+    priorityClassName: "alloy"
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: mon
+                  operator: In
+                  values:
+                    - "true"
+          - weight: 10
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
