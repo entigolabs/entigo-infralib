@@ -2,10 +2,10 @@ apiVersion: v2
 name: crossplane-core
 description: Crossplane operator chart
 type: application
-version: 2.2.2
+version: 2.3.3
 appVersion: "2.0"
 
 dependencies:
   - name: crossplane
-    version: 2.2.2
+    version: 2.3.3
     repository: https://charts.crossplane.io/stable
