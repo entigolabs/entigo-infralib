@@ -1,11 +1,15 @@
+ARG AGENT_VERSION=latest
+FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
+
 FROM alpine:3.22
 ARG TARGETARCH
 ENV KUBECTL_VERSION=v1.35.5 TERRAFORM_VERSION=1.7.5 HELM_VERSION=v3.21.0 ARGOCD_CLI=v3.4.3 OPENTOFU_VERSION=1.12.1
 
+COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
+
 RUN apk --no-cache add \
     unzip \
-    binutils \
-    && mkdir /entigo-bin
+    binutils
 RUN wget -O /entigo-bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI}/argocd-linux-${TARGETARCH}" \
     && chmod +x /entigo-bin/argocd \
     && strip /entigo-bin/argocd
