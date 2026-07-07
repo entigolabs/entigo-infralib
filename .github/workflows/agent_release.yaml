@@ -414,7 +414,7 @@ jobs:
           rm -rf "${module_path}test" "${module_path}test.sh"
           zip_file="/tmp/${module_type}-${module_name}-${RELEASE_VERSION}.zip"
           # zip from inside modules/<type> so archive paths stay "<name>/..."
-          ( cd "modules/${module_type}" && zip -r "${zip_file}" "${module_name}/" >/dev/null )
+          ( cd "${module_path}" && zip -r "${zip_file}" . >/dev/null )
 
           # Push to ghcr only; capture digest from push output
           GHCR_DIGEST=$(oras push \
