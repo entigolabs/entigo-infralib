@@ -11,6 +11,7 @@ USER root
 RUN apk --no-cache add \
     py3-pip \
     docker-cli \
+    docker-credential-ecr-login \
     && rm -rf /var/cache/apk/* \
     && pip install --no-cache-dir --break-system-packages awscli \
     && rm -rf \
