@@ -7,5 +7,6 @@ global:
     region: ""
     clusterOIDC: ""
     createECRNamespace: ""
+    ECRProxyPolicy: ""
     createECRAccounts: []   
     
