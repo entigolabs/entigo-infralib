@@ -229,6 +229,12 @@ oci_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" {
   docker_credentials_helper = "ecr-login"
 }
 EOF
+    elif [ ! -z "$GOOGLE_REGION" ]; then
+      cat >> "$HOME/.tofurc" <<EOF
+oci_credentials "${GOOGLE_REGION}-docker.pkg.dev" {
+  docker_credentials_helper = "gcloud"
+}
+EOF
     fi
 }
 
