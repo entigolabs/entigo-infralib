@@ -363,7 +363,8 @@ argocd_apply_destroy() {
     # Patch external-dns to sync mode before destroy
     echo "Detecting external-dns modules."
     for app_file in ./*.yaml; do
-        if yq -r '.spec.sources[0].path' $app_file | grep -q "modules/k8s/external-dns"; then
+        # Module name comes from .path for git sources and from .chart for OCI sources
+        if yq -r '.spec.sources[0].path // .spec.sources[0].chart // ""' $app_file | grep -Eq "(^|/)external-dns$"; then
             app=$(yq -r '.metadata.name' $app_file)
             echo "Found $app, patching policy to sync."
             POLICY_INDEX=$(kubectl get deployment $app -n $app -o jsonpath='{.spec.template.spec.containers[0].args}' | jq -r 'to_entries[] | select(.value | test("--policy")) | .key')
