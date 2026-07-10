@@ -128,6 +128,28 @@ helm_oci_login() {
             return
         fi
     done
+    # Only create helm registry config if AWS_REGION is set
+    if [ -n "$AWS_REGION" ]; then
+      # Get current account number
+      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      mkdir -p "$HOME/.config/helm/registry"
+      cat > "$HOME/.config/helm/registry/config.json" <<EOF
+{
+  "credHelpers": {
+    "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com": "ecr-login"
+  }
+}
+EOF
+    elif [ ! -z "$GOOGLE_REGION" ]; then
+      mkdir -p "$HOME/.config/helm/registry"
+      cat > "$HOME/.config/helm/registry/config.json" <<EOF
+{
+  "credHelpers": {
+    "${GOOGLE_REGION}-docker.pkg.dev": "gcloud"
+  }
+}
+EOF
+    fi
 }
 
 # Bootstrap ArgoCD using Helm when not yet installed, supports GIT and OCI sources
