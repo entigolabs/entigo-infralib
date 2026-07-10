@@ -154,6 +154,8 @@ argocd_helm_bootstrap() {
 
         echo "Found $app_file ($source_type source), installing using helm." >&2
         local app=$(yq -r '.metadata.name' $app_file)
+        # Ensure temporary files are removed on any failure exit
+        trap "rm -rf values-$app.yaml git-$app oci-$app" EXIT
         yq -r '.spec.sources[0].helm.values' $app_file > values-$app.yaml
         local namespace=$(yq -r '.spec.destination.namespace' $app_file)
         local version=$(yq -r '.spec.sources[0].targetRevision' $app_file)
@@ -169,8 +171,15 @@ argocd_helm_bootstrap() {
             # Pull and unpack the OCI chart so the value files inside the package can be referenced
             local chart=$(yq -r '.spec.sources[0].chart' $app_file)
             local oci_repo="${repo#oci://}"
+            local chart_ref="oci://${oci_repo}/${chart}"
+            local version_arg="--version $version"
+            # Digest pinned revisions go into the chart reference, --version only accepts semver
+            if [[ "$version" == sha256:* ]]; then
+                chart_ref="${chart_ref}@${version}"
+                version_arg=""
+            fi
             helm_oci_login "$oci_repo" >&2
-            helm pull oci://${oci_repo}/${chart} --version $version --untar --untardir oci-$app >&2 || { echo "Helm pull failed for oci://${oci_repo}/${chart}"; exit 25; }
+            helm pull $chart_ref $version_arg --untar --untardir oci-$app >&2 || { echo "Helm pull failed for $chart_ref"; exit 25; }
             chart_dir="oci-$app/$chart"
         fi
 
