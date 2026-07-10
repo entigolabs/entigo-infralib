@@ -72,6 +72,29 @@ stringData:
         fi
     done
 
+    # Seed a temporary ECR credential secret on AWS until External Secrets takes over
+    # ECR tokens are valid for 12 hours, ESO keeps the secret refreshed afterwards
+    if [ -n "$AWS_REGION" ]; then
+        local account_id=$(aws sts get-caller-identity --query Account --output text)
+        local ecr_secret="repo-${account_id}-${AWS_REGION}"
+        if ! kubectl -n $namespace get secret $ecr_secret >/dev/null 2>&1; then
+            echo "Applying temporary ECR credential secret $ecr_secret in namespace $namespace."
+            local ecr_token=$(aws ecr get-login-password --region $AWS_REGION) || { echo "Failed to get ECR token"; exit 24; }
+            echo "apiVersion: v1
+kind: Secret
+metadata:
+  name: ${ecr_secret}
+  namespace: ${namespace}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: helm
+  enableOCI: \"true\"
+  url: ${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com
+  username: AWS
+  password: \"${ecr_token}\"" | kubectl apply -f - || { echo "Failed to create ECR credential secret $ecr_secret"; exit 24; }
+        fi
+    fi
     # Register credential-less OCI registries found in application files
     # ArgoCD requires a repository entry with enableOCI even for public OCI registries
     local done_urls=""
