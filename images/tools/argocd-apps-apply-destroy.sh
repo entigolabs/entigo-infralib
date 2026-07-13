@@ -4,13 +4,11 @@ then
   echo "Unable to get ArgoCD namespace."
   exit 29
 fi
-
 if [ "$1" == "" ]
 then
   echo "First parameters has to be ArgoCD Application file."
   exit 28
 fi
-
 app_file=$1
 app_name=$(yq -r '.metadata.name // ""' "$app_file")
 if [ -z "$app_name" ]
@@ -18,7 +16,6 @@ then
   echo "Unable to find .metadata.name in $app_file."
   exit 27
 fi
-
 app_namespace=$(yq -r '.metadata.namespace // ""' "$app_file")
 if [ -n "$app_namespace" ]
 then
@@ -26,30 +23,32 @@ then
 else
   app_namespace=$ARGOCD_NAMESPACE
 fi
-
 if [ ! -f "${app_file}.sync-destroy" ] #In plan stage we mark the apps that are not synced so we would only sync the ones we need to sync.
 then
   echo "Skip $app_name"
   exit 0
 fi
-
 echo "Deleting $app_name"
-if yq -r '.spec.sources[0].path' $app_file | grep -q "modules/k8s/external-dns"
+# Module name comes from .path for git sources and from .chart for OCI sources
+module=$(yq -r '.spec.sources[0].path // .spec.sources[0].chart // ""' "$app_file")
+if echo "$module" | grep -Eq "(^|/)external-dns$"
 then
   echo "Waiting 70 seconds for external DNS to complete last round of sync before being deleted."
   sleep 70
 fi
-
-if yq -r '.spec.sources[0].path' $app_file | grep -vEq "modules/k8s/argocd"
+if echo "$module" | grep -Evq "(^|/)argocd$"
 then
   kubectl patch applications.argoproj.io $app_name -n $app_namespace -p '{"metadata": {"finalizers": ["resources-finalizer.argocd.argoproj.io"]}}' --type merge
   kubectl delete --grace-period=600 applications.argoproj.io $app_name -n $app_namespace
   kubectl delete --grace-period=600 ns $app_name
-else  
+else
   echo "For ArgoCD we only remove Ingress"
   kubectl delete --grace-period=600 applications.argoproj.io $app_name -n $app_namespace
   kubectl delete ingress -n $app_namespace --all
+  kubectl delete httproutes -n $app_namespace --all
+
 fi
-
-
 echo "###############"
+
+
+

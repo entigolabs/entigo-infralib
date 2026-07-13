@@ -201,13 +201,41 @@ handle_failed_jobs() {
 # Authenticate git repos if available
 git_login() {
     for var in "${!GIT_AUTH_SOURCE_@}"; do
-      printf 'Configure git credentials for %s=%s\n' "$var" "${!var}"
-            #SOURCE="$(echo ${!var} | grep -oP '(?<=://)[^/]+')"
+        printf 'Configure credentials for %s=%s\n' "$var" "${!var}"
+        PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
+        USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
+        if [[ "${!var}" =~ ^(https?|ssh):// || "${!var}" =~ ^git@ ]]; then
+            # GIT source, rewrite the host to include credentials
             SOURCE="$(echo ${!var} | sed -n 's|.*://\([^/]*\).*|\1|p')"
-            PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
-            USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
             git config --global url."https://${!USERNAME}:${!PASSWORD}@${SOURCE}".insteadOf https://${SOURCE}
+        else
+            # OCI source, OpenTofu reads oci_credentials blocks from the CLI config
+            # The label supports a registry domain with an optional repository path prefix
+            SOURCE="${!var#oci://}"
+            echo "oci_credentials \"${SOURCE}\" {
+  username = \"${!USERNAME}\"
+  password = \"${!PASSWORD}\"
+}" >> $HOME/.tofurc
+        fi
     done
+
+    # Only create ~/.tofurc if AWS_REGION is set
+    if [ -n "$AWS_REGION" ]; then
+      # Get current account number
+      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+      cat >> "$HOME/.tofurc" <<EOF
+oci_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" {
+  docker_credentials_helper = "ecr-login"
+}
+EOF
+    elif [ ! -z "$GOOGLE_REGION" ]; then
+      cat >> "$HOME/.tofurc" <<EOF
+oci_credentials "${GOOGLE_REGION}-docker.pkg.dev" {
+  docker_credentials_helper = "gcloud"
+}
+EOF
+    fi
 }
 
 # Setup CA certificates
