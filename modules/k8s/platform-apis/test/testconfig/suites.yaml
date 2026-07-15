@@ -6,5 +6,6 @@ suites:
   - repository
   - s3bucket
   - valkey
+  - mariadb
   - webaccess
   - webapp
