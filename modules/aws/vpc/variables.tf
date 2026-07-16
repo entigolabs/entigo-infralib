@@ -209,3 +209,8 @@ variable "endpoints_sg_extra_rules" {
   nullable = false
   default  = []
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}

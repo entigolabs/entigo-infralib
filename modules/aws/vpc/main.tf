@@ -110,11 +110,11 @@ module "vpc" {
     "karpenter.sh/discovery" = var.prefix
   }
 
-  tags = {
+  tags = merge({
     Terraform = "true"
     Prefix    = var.prefix
     created-by = "entigo-infralib"
-  }
+  }, var.tags)
 }
 
 resource "aws_security_group" "pipeline_security_group" {

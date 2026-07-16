@@ -18,3 +18,7 @@ create_endpoint_sts: true
 create_endpoint_efs: true
 endpoints_sg_extra_rules: |
   ["10.0.0.0/8"]
+tags: |
+  {
+    team = "entigo-team"
+  }
