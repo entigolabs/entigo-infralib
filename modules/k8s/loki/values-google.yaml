@@ -11,8 +11,10 @@ global:
       enabled: true
       name: google-gateway-internal
       namespace: google-gateway
+      extraHealthCheckCidrs: []
     bucket:
       location: ""
+      lifecycleRule: []
 
 loki:
   loki:

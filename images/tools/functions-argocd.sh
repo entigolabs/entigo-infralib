@@ -104,7 +104,7 @@ metadata:
 
 # Run argocd-plan for all yaml files in parallel
 argocd_plan() {
-    local helm_bootstrap=$(argocd_helm_bootstrap)
+    local helm_bootstrap=$(argocd_helm_bootstrap | tail -1)
 
     if [ "$ARGOCD_HOSTNAME" == "" ]; then
         export USE_ARGOCD_CLI="false"
@@ -124,12 +124,10 @@ argocd_plan() {
     local ADD=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Missing:0" | wc -l)
     local CHANGE=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "Changed:0" | wc -l)
     local DESTROY=$(cat ./*.log | grep "^Status " | grep -ve"Status:Synced" | grep -ve "RequiresPruning:0" | wc -l)
-
     # Prevent agent from confirming first bootstrap when ArgoCD's own application will always show changes
     if [ "$helm_bootstrap" == "true" -a $CHANGE -gt 0 ]; then
         CHANGE=$((CHANGE - 1))
     fi
-
     echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
     rm -f *.log
 

@@ -9,6 +9,20 @@ variable "vpc_cidr" {
   default  = "10.156.0.0/16"
 }
 
+variable "enable_ipv6" {
+  description = "Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block"
+  type    = bool
+  default = false
+}
+
+variable "subnet_enable_dns64" {
+  description = "Enable DNS64 on all non-public subnets when IPv6 is enabled. Synthesises 64:ff9b::/96 IPv6 addresses for IPv4-only hostnames."
+  type     = bool
+  nullable = false
+  default  = false
+}
+
+
 variable "subnet_split_mode" {
   description = "Define the way we split the VPC cidr into subnets if they are not specified. Possible: default, spoke"
   type     = string
@@ -114,6 +128,24 @@ variable "create_elasticache_subnet_route_table" {
   type     = bool
   nullable = false
   default  = false
+}
+
+variable "intra_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
+}
+
+variable "database_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
+}
+
+variable "elasticache_subnet_tags" {
+  type     = map(string)
+  nullable = false
+  default  = {}
 }
 
 variable "create_multiple_intra_route_tables" {

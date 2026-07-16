@@ -32,6 +32,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION:  ${{ secrets.AWS_REGION }}
       run: |
+        aws configservice stop-configuration-recorder --region $AWS_REGION --configuration-recorder-name biz-net-config-rules || true
         modules/aws/nuke.sh || modules/aws/nuke.sh
     - name: Slack Failed To Nuke Message
       if: ${{ failure() }}
