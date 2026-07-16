@@ -123,3 +123,8 @@ variable "iam_instance_profile" {
   type = string
   default = ""
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
