@@ -145,7 +145,7 @@ get_k8s_credentials() {
             --compartment-id "$ORACLE_COMPARTMENT_ID" \
             --name "$KUBERNETES_CLUSTER_NAME" \
             --lifecycle-state ACTIVE \
-            --region "$ORACLE_REGION" \
+            --region "$OCI_REGION" \
             --query 'data[0].id' --raw-output 2>/dev/null)
         if [ -z "$cluster_id" ] || [ "$cluster_id" = "null" ]; then
             echo "Unable to find an active OKE cluster named '$KUBERNETES_CLUSTER_NAME' in compartment $ORACLE_COMPARTMENT_ID"
@@ -159,7 +159,7 @@ get_k8s_credentials() {
     oci ce cluster create-kubeconfig $(oci_cli_auth) \
         --cluster-id "$cluster_id" \
         --file "$HOME/.kube/config" \
-        --region "$ORACLE_REGION" \
+        --region "$OCI_REGION" \
         --token-version 2.0.0 \
         --kube-endpoint "${ORACLE_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
 }

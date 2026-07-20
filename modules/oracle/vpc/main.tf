@@ -14,18 +14,15 @@ locals {
 
   # Route rules per subnet tier. Conditionals short-circuit, so the [0] index is
   # only evaluated when the matching gateway is created.
-  public_routes = concat(
-    var.enable_internet_gateway ? [{
-      destination       = "0.0.0.0/0"
-      destination_type  = "CIDR_BLOCK"
-      network_entity_id = oci_core_internet_gateway.this[0].id
-    }] : [],
-    var.enable_service_gateway ? [{
-      destination       = local.services_cidr
-      destination_type  = "SERVICE_CIDR_BLOCK"
-      network_entity_id = oci_core_service_gateway.this[0].id
-    }] : [],
-  )
+  #
+  # The public table intentionally omits the service gateway: OCI rejects an
+  # internet gateway and an "All Services" service gateway target in the same
+  # route table. Public subnets reach OCI services via the internet gateway.
+  public_routes = var.enable_internet_gateway ? [{
+    destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_internet_gateway.this[0].id
+  }] : []
 
   private_routes = concat(
     var.enable_nat_gateway ? [{

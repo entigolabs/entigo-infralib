@@ -76,7 +76,7 @@ stringData:
     # ECR tokens are valid for 12 hours, ESO keeps the secret refreshed afterwards.
     # Excluded for Oracle: the OCI s3-compatible backend also sets AWS_REGION, but
     # these AWS ECR/STS calls do not apply there.
-    if [ -n "$AWS_REGION" ] && [ -z "$ORACLE_REGION" ]; then
+    if [ -n "$AWS_REGION" ] && [ -z "$OCI_REGION" ]; then
         local account_id=$(aws sts get-caller-identity --query Account --output text)
         local ecr_secret="repo-${account_id}-${AWS_REGION}"
         if ! kubectl -n $namespace get secret $ecr_secret >/dev/null 2>&1; then
@@ -153,10 +153,10 @@ helm_oci_login() {
             return
         fi
     done
-    # ORACLE_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
+    # OCI_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
     # also sets AWS_REGION. Oracle OCIR logins happen via the GIT_AUTH_SOURCE_* oci://
     # match above (helm registry login), so no credential helper config is needed.
-    if [ -n "$ORACLE_REGION" ]; then
+    if [ -n "$OCI_REGION" ]; then
       :
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
