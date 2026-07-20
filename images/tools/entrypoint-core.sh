@@ -12,12 +12,16 @@ fi
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source "$SCRIPT_DIR/functions-common.sh"
 
-if [ ! -z "$GOOGLE_REGION" ]; then
+# ORACLE_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
+# also sets AWS_REGION, which would otherwise match the AWS branch below.
+if [ ! -z "$ORACLE_REGION" ]; then
+    source "$SCRIPT_DIR/functions-oracle.sh"
+elif [ ! -z "$GOOGLE_REGION" ]; then
     source "$SCRIPT_DIR/functions-google.sh"
 elif [ ! -z "$AWS_REGION" ]; then
     source "$SCRIPT_DIR/functions-aws.sh"
 else
-    echo "AWS_REGION or GOOGLE_REGION must be set"
+    echo "AWS_REGION, GOOGLE_REGION or ORACLE_REGION must be set"
     exit 1
 fi
 

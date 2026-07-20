@@ -219,8 +219,13 @@ git_login() {
         fi
     done
 
-    # Only create ~/.tofurc if AWS_REGION is set
-    if [ -n "$AWS_REGION" ]; then
+    # ORACLE_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
+    # also sets AWS_REGION, which would otherwise match the AWS branch and try to
+    # hit AWS STS / write an ECR helper. Oracle OCIR credentials arrive via the
+    # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
+    if [ -n "$ORACLE_REGION" ]; then
+      :
+    elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
