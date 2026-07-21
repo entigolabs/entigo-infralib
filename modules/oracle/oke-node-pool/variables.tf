@@ -26,13 +26,15 @@ variable "node_shape" {
 }
 
 variable "ocpus" {
+  # 1 OCPU = 2 vCPU-equivalent threads, so this plus 8GB memory below matches an AWS
+  # t3.large (2 vCPU / 8GB) - not 2 OCPUs, which would be ~4 vCPU-equivalent.
   type    = number
-  default = 2
+  default = 1
 }
 
 variable "memory_in_gbs" {
   type    = number
-  default = 16
+  default = 8
 }
 
 variable "node_count" {
