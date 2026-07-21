@@ -11,9 +11,15 @@ variable "vcn_id" {
   type = string
 }
 
-variable "endpoint_subnet_id" {
-  description = "Subnet for the Kubernetes API endpoint. A private subnet is recommended; use is_public_ip_enabled to also assign a public IP on the same endpoint."
+variable "private_subnet_id" {
+  description = "Subnet for the Kubernetes API endpoint when is_public_ip_enabled is false."
   type        = string
+}
+
+variable "public_subnet_id" {
+  description = "Subnet for the Kubernetes API endpoint when is_public_ip_enabled is true. OCI requires the endpoint subnet to be public (prohibit_public_ip_on_vnic = false) whenever a public IP is assigned to it."
+  type        = string
+  default     = ""
 }
 
 variable "is_public_ip_enabled" {

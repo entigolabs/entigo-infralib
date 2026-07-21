@@ -3,6 +3,10 @@ locals {
   # caller doesn't pin a specific version.
   versions           = data.oci_containerengine_cluster_option.this.kubernetes_versions
   kubernetes_version = var.kubernetes_version != "" ? var.kubernetes_version : local.versions[length(local.versions) - 1]
+
+  # OCI rejects a private subnet for the endpoint when is_public_ip_enabled is true
+  # ("must be a public subnet if public ip enabled"), so the subnet choice must follow it.
+  endpoint_subnet_id = var.is_public_ip_enabled ? var.public_subnet_id : var.private_subnet_id
 }
 
 resource "oci_containerengine_cluster" "this" {
@@ -13,7 +17,7 @@ resource "oci_containerengine_cluster" "this" {
 
   endpoint_config {
     is_public_ip_enabled = var.is_public_ip_enabled
-    subnet_id            = var.endpoint_subnet_id
+    subnet_id            = local.endpoint_subnet_id
   }
 
   cluster_pod_network_options {
