@@ -1,0 +1,4 @@
+cluster_id: "{{ .toutput.oke.cluster_id }}"
+kubernetes_version: "{{ .toutput.oke.kubernetes_version }}"
+subnet_ids: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]

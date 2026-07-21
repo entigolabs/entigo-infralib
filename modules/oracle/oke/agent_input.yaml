@@ -1,0 +1,4 @@
+vcn_id: "{{ .toutput.vpc.vpc_id }}"
+endpoint_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
+service_lb_subnet_ids: |
+  ["{{ .toutput.vpc.public_subnets[0] }}"]
