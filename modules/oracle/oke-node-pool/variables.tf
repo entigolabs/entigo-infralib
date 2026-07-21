@@ -48,7 +48,7 @@ variable "boot_volume_size_in_gbs" {
 }
 
 variable "node_pool_os_type" {
-  description = "Operating system family used to pick the node image, e.g. Oracle Linux."
+  description = "Operating system family used to pick the node image. Valid values: OL7, OL8, UBUNTU."
   type        = string
-  default     = "ORACLE_LINUX"
+  default     = "OL8"
 }
