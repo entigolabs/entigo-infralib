@@ -79,6 +79,10 @@ get_step_name_tf_google() {
   fi
 }
 
+get_step_name_tf_oracle() {
+  STEP_NAME="${BRANCH}-${MODULE_NAME}"
+}
+
 get_step_name_k8s() {
   #if [ "$BRANCH" == "main" ]
   #then
@@ -248,6 +252,25 @@ run_agents() {
           docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AGENT_AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
           PIDS="$PIDS $!=$agent"
         fi
+    elif [[ $agent == oracle_* ]]
+    then
+        if [ "$OCI_REGION" == "" ]
+        then
+          echo "Defaulting OCI_REGION to eu-frankfurt-1"
+          export OCI_REGION="eu-frankfurt-1"
+        fi
+        if [ "$ORACLE_COMPARTMENT_ID" == "" ]
+        then
+          echo "ERROR: ORACLE_COMPARTMENT_ID should be set to the compartment used for testing."
+          exit 5
+        fi
+        if [ "$OCI_CONFIG_FILE" == "" ]
+        then
+          echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
+          export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
+        fi
+        docker run --rm -v "$OCI_CONFIG_FILE":"$OCI_CONFIG_FILE":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e ORACLE_COMPARTMENT_ID="$ORACLE_COMPARTMENT_ID" -e ORACLE_REGION="$OCI_REGION" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+        PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
     fi
@@ -348,6 +371,13 @@ test_tf() {
     ./modules/google/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
   fi
+  if [ "$OCI_REGION" != "" ]
+  then
+    ./modules/oracle/vpc/test.sh testonly &
+    PIDS="$PIDS $!=vpc"
+    ./modules/oracle/dns/test.sh testonly &
+    PIDS="$PIDS $!=dns"
+  fi
 
   FAIL=""
   for p in $PIDS; do
@@ -441,6 +471,10 @@ default_aws_conf() {
 default_google_conf() {
   generate_config "google" "net" "google/services" "google/vpc" "google/dns" "google/gar-proxy" "google/kms"
   generate_config "google" "infra" "google/gke" "google/gke-node-pool" "google/crossplane"
+}
+
+default_oracle_conf() {
+  generate_config "oracle" "net" "oracle/vpc" "oracle/dns"
 }
 
 full_k8s_conf() {
