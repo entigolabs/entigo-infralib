@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-rabbitmq
+  labels:
+    tenancy.entigo.com/zone: a
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: baseline
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-rabbitmq
+  namespace: argocd-biz
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-rabbitmq
+  project: a
+  source:
+    chart: platform-apis-test-rabbitmq
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.38-rc.196.260.1'
+    helm:
+      releaseName: rabbitmq
+      values: |
+        targetRevision: 'v0.2.38-rc.196.260.1'
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
