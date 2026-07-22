@@ -18,29 +18,85 @@ locals {
 # discovery inbound - nothing on 6443/10250/12250, and nothing between worker nodes. That
 # silently breaks node registration ("1 node(s) register timeout"): the control plane and
 # worker nodes can never actually reach each other. Egress is already open (the default
-# security list allows all egress), so this NSG only needs to add the missing ingress -
+# security list allows all egress), so these NSGs only need to add the missing ingress -
 # see https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengnetworkconfig.htm.
-# Shared by both the cluster endpoint and every node pool since OCI evaluates all
-# security lists/NSGs on a VNIC as a union, not an intersection.
-resource "oci_core_network_security_group" "this" {
+#
+# Split in two rather than one shared "allow all" group: the control plane only ever needs
+# 6443/12250 from workers, so it gets exactly that. Workers genuinely need ALL protocols
+# from each other (Flannel VXLAN, kube-proxy, etc.) per Oracle's own doc, and TCP/ALL from
+# the endpoint (flannel CNI row) - narrowing that further would mean reverse-engineering
+# Flannel's exact port usage, so it's scoped only as far as source (VCN CIDR), not protocol.
+resource "oci_core_network_security_group" "endpoint" {
   compartment_id = var.compartment_id
   vcn_id         = var.vcn_id
-  display_name   = "${var.prefix}-oke"
+  display_name   = "${var.prefix}-oke-endpoint"
 }
 
-resource "oci_core_network_security_group_security_rule" "intra_vcn" {
-  network_security_group_id = oci_core_network_security_group.this.id
+resource "oci_core_network_security_group_security_rule" "endpoint_kube_api" {
+  network_security_group_id = oci_core_network_security_group.endpoint.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = data.oci_core_vcn.this.cidr_blocks[0]
+  source_type               = "CIDR_BLOCK"
+  description               = "Worker node -> Kubernetes API"
+
+  tcp_options {
+    destination_port_range {
+      min = 6443
+      max = 6443
+    }
+  }
+}
+
+resource "oci_core_network_security_group_security_rule" "endpoint_oke_control" {
+  network_security_group_id = oci_core_network_security_group.endpoint.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = data.oci_core_vcn.this.cidr_blocks[0]
+  source_type               = "CIDR_BLOCK"
+  description               = "Worker node -> OKE control plane secondary channel"
+
+  tcp_options {
+    destination_port_range {
+      min = 12250
+      max = 12250
+    }
+  }
+}
+
+resource "oci_core_network_security_group_security_rule" "endpoint_path_mtu_discovery" {
+  network_security_group_id = oci_core_network_security_group.endpoint.id
+  direction                 = "INGRESS"
+  protocol                  = "1" # ICMP
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Path MTU discovery"
+
+  icmp_options {
+    type = 3
+    code = 4
+  }
+}
+
+resource "oci_core_network_security_group" "node" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke-node"
+}
+
+resource "oci_core_network_security_group_security_rule" "node_intra_vcn" {
+  network_security_group_id = oci_core_network_security_group.node.id
   direction                 = "INGRESS"
   protocol                  = "all"
   source                    = data.oci_core_vcn.this.cidr_blocks[0]
   source_type               = "CIDR_BLOCK"
-  description               = "Control plane <-> worker node <-> worker node (6443, 10250, 12250, flannel overlay)"
+  description               = "Control plane -> worker node (10250, flannel) and worker node <-> worker node"
 }
 
-resource "oci_core_network_security_group_security_rule" "path_mtu_discovery" {
-  network_security_group_id = oci_core_network_security_group.this.id
+resource "oci_core_network_security_group_security_rule" "node_path_mtu_discovery" {
+  network_security_group_id = oci_core_network_security_group.node.id
   direction                 = "INGRESS"
-  protocol                  = "1"
+  protocol                  = "1" # ICMP
   source                    = "0.0.0.0/0"
   source_type               = "CIDR_BLOCK"
   description               = "Path MTU discovery"
@@ -60,7 +116,7 @@ resource "oci_containerengine_cluster" "this" {
   endpoint_config {
     is_public_ip_enabled = var.is_public_ip_enabled
     subnet_id            = local.endpoint_subnet_id
-    nsg_ids              = [oci_core_network_security_group.this.id]
+    nsg_ids              = [oci_core_network_security_group.endpoint.id]
   }
 
   cluster_pod_network_options {
@@ -94,7 +150,7 @@ module "main" {
   boot_volume_size_in_gbs = var.oke_main_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_main_node_pool_os_type
   labels                  = { main = "true" }
-  nsg_ids                 = [oci_core_network_security_group.this.id]
+  nsg_ids                 = [oci_core_network_security_group.node.id]
 }
 
 module "mon" {
@@ -116,7 +172,7 @@ module "mon" {
   # No NO_SCHEDULE taint - oci_containerengine_node_pool has no taint attribute in the
   # provider schema (see NOTES.md "Known, permanent-for-now limitation"). Label-only.
   labels  = { mon = "true" }
-  nsg_ids = [oci_core_network_security_group.this.id]
+  nsg_ids = [oci_core_network_security_group.node.id]
 }
 
 module "tools" {
@@ -136,5 +192,5 @@ module "tools" {
   boot_volume_size_in_gbs = var.oke_tools_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_tools_node_pool_os_type
   labels                  = { tools = "true" }
-  nsg_ids                 = [oci_core_network_security_group.this.id]
+  nsg_ids                 = [oci_core_network_security_group.node.id]
 }
