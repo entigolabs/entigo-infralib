@@ -3,3 +3,5 @@ private_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
 public_subnet_id: "{{ .toutput.vpc.public_subnets[0] }}"
 service_lb_subnet_ids: |
   ["{{ .toutput.vpc.public_subnets[0] }}"]
+node_subnet_ids: |
+  ["{{ .toutput.vpc.private_subnets[0] }}"]

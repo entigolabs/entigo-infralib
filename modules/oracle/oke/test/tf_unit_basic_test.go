@@ -30,4 +30,13 @@ func testTerraformOkeBiz(t *testing.T) {
 
 	kubernetesEndpoint := tf.GetStringValue(t, outputs, "oke__kubernetes_endpoint")
 	assert.NotEmpty(t, kubernetesEndpoint, "kubernetes_endpoint was not returned")
+
+	mainNodePoolId := tf.GetStringValue(t, outputs, "oke__main_node_pool_id")
+	assert.NotEmpty(t, mainNodePoolId, "main_node_pool_id was not returned")
+
+	monNodePoolId := tf.GetStringValue(t, outputs, "oke__mon_node_pool_id")
+	assert.NotEmpty(t, monNodePoolId, "mon_node_pool_id was not returned")
+
+	toolsNodePoolId := tf.GetStringValue(t, outputs, "oke__tools_node_pool_id")
+	assert.NotEmpty(t, toolsNodePoolId, "tools_node_pool_id was not returned")
 }

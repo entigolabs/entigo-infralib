@@ -1,5 +1,6 @@
 locals {
   availability_domains = data.oci_identity_availability_domains.this.availability_domains[*].name
+  node_labels          = merge(var.labels, { created-by = "entigo-infralib" })
 
   # node_pool_os_type still returns aarch64 and GPU variants alongside the plain x86_64
   # image for the same OS/k8s version - picking the wrong one fails at apply with
@@ -16,7 +17,7 @@ locals {
 resource "oci_containerengine_node_pool" "this" {
   cluster_id         = var.cluster_id
   compartment_id     = var.compartment_id
-  name               = "${var.prefix}-pool"
+  name               = "${var.prefix}-${var.pool_name}"
   kubernetes_version = var.kubernetes_version
   node_shape         = var.node_shape
 
@@ -40,6 +41,14 @@ resource "oci_containerengine_node_pool" "this" {
         availability_domain = placement_configs.value
         subnet_id           = element(var.subnet_ids, placement_configs.key)
       }
+    }
+  }
+
+  dynamic "initial_node_labels" {
+    for_each = local.node_labels
+    content {
+      key   = initial_node_labels.key
+      value = initial_node_labels.value
     }
   }
 }
