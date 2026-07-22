@@ -131,7 +131,6 @@ oci_cli_auth() {
 }
 
 # Get Kubernetes credentials for an OKE cluster.
-# NOTE: unvalidated against a live OKE cluster (ArgoCD on Oracle is not exercised yet).
 # KUBERNETES_CLUSTER_NAME may be the cluster OCID directly, or a display name resolved
 # via ORACLE_COMPARTMENT_ID. Requires the oci CLI in the image.
 get_k8s_credentials() {
@@ -156,11 +155,20 @@ get_k8s_credentials() {
     # Default to the private endpoint: OKE clusters are private-only in most
     # setups, and the in-container (Container Instances, same VCN) execution model
     # can reach it. Override with ORACLE_KUBE_ENDPOINT=PUBLIC_ENDPOINT when needed.
+    #
+    # --with-auth-context is required: $(oci_cli_auth) only affects this one
+    # create-kubeconfig call, but every later kubectl/helm request re-invokes the exec
+    # command persisted *inside* the kubeconfig, which otherwise carries no --auth at all
+    # and silently falls back to the oci CLI's real default (api_key, needing a
+    # ~/.oci/config that doesn't exist in-container) - confirmed by generating a
+    # kubeconfig both ways and diffing the exec block, and by reproducing the exact same
+    # "executable oci failed with exit code 1" failure locally without this flag.
     oci ce cluster create-kubeconfig $(oci_cli_auth) \
         --cluster-id "$cluster_id" \
         --file "$HOME/.kube/config" \
         --region "$OCI_REGION" \
         --token-version 2.0.0 \
+        --with-auth-context \
         --kube-endpoint "${ORACLE_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
 }
 
