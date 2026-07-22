@@ -1,0 +1,16 @@
+argocd:
+  global:
+    domain: |
+      {{ .module.name }}.{{ .toutput.dns.int_domain }}
+    image:
+      repository: 'quay.io/argoproj/argocd'
+  dex:
+    image:
+      repository: 'ghcr.io/dexidp/dex'
+  redis:
+    image:
+      repository: 'public.ecr.aws/docker/library/redis'
+job:
+  image: 'docker.io/entigolabs/entigo-infralib-kubectl'
+mcp:
+  image: 'docker.io/entigolabs/mcp-for-argocd'

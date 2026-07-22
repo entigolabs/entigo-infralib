@@ -1,0 +1,10 @@
+global:
+  cloudProvider: oracle
+
+argocd:
+  configs:
+    params:
+      server.insecure: true
+  server:
+    ingress:
+      enabled: false
