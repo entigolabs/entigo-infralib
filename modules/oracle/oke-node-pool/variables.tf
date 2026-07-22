@@ -59,6 +59,12 @@ variable "labels" {
   default     = {}
 }
 
+variable "nsg_ids" {
+  description = "Network security groups applied to every node's VNIC."
+  type        = list(string)
+  default     = []
+}
+
 variable "node_pool_os_type" {
   description = "Operating system family used to pick the node image. Valid values: OL7, OL8, UBUNTU."
   type        = string

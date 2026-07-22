@@ -33,7 +33,8 @@ resource "oci_containerengine_node_pool" "this" {
   }
 
   node_config_details {
-    size = var.node_count
+    size    = var.node_count
+    nsg_ids = var.nsg_ids
 
     dynamic "placement_configs" {
       for_each = local.availability_domains

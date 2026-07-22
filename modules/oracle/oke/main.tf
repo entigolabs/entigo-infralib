@@ -13,6 +13,44 @@ locals {
   tools_subnet_ids = length(var.oke_tools_subnet_ids) > 0 ? var.oke_tools_subnet_ids : var.node_subnet_ids
 }
 
+# oracle/vpc doesn't create any security lists/NSGs of its own, so subnets fall back to
+# the VCN's auto-created default security list, which only allows SSH-22 and ICMP path
+# discovery inbound - nothing on 6443/10250/12250, and nothing between worker nodes. That
+# silently breaks node registration ("1 node(s) register timeout"): the control plane and
+# worker nodes can never actually reach each other. Egress is already open (the default
+# security list allows all egress), so this NSG only needs to add the missing ingress -
+# see https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengnetworkconfig.htm.
+# Shared by both the cluster endpoint and every node pool since OCI evaluates all
+# security lists/NSGs on a VNIC as a union, not an intersection.
+resource "oci_core_network_security_group" "this" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke"
+}
+
+resource "oci_core_network_security_group_security_rule" "intra_vcn" {
+  network_security_group_id = oci_core_network_security_group.this.id
+  direction                 = "INGRESS"
+  protocol                  = "all"
+  source                    = data.oci_core_vcn.this.cidr_blocks[0]
+  source_type               = "CIDR_BLOCK"
+  description               = "Control plane <-> worker node <-> worker node (6443, 10250, 12250, flannel overlay)"
+}
+
+resource "oci_core_network_security_group_security_rule" "path_mtu_discovery" {
+  network_security_group_id = oci_core_network_security_group.this.id
+  direction                 = "INGRESS"
+  protocol                  = "1"
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Path MTU discovery"
+
+  icmp_options {
+    type = 3
+    code = 4
+  }
+}
+
 resource "oci_containerengine_cluster" "this" {
   compartment_id     = var.compartment_id
   name               = var.prefix
@@ -22,6 +60,7 @@ resource "oci_containerengine_cluster" "this" {
   endpoint_config {
     is_public_ip_enabled = var.is_public_ip_enabled
     subnet_id            = local.endpoint_subnet_id
+    nsg_ids              = [oci_core_network_security_group.this.id]
   }
 
   cluster_pod_network_options {
@@ -55,6 +94,7 @@ module "main" {
   boot_volume_size_in_gbs = var.oke_main_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_main_node_pool_os_type
   labels                  = { main = "true" }
+  nsg_ids                 = [oci_core_network_security_group.this.id]
 }
 
 module "mon" {
@@ -75,7 +115,8 @@ module "mon" {
   node_pool_os_type       = var.oke_mon_node_pool_os_type
   # No NO_SCHEDULE taint - oci_containerengine_node_pool has no taint attribute in the
   # provider schema (see NOTES.md "Known, permanent-for-now limitation"). Label-only.
-  labels = { mon = "true" }
+  labels  = { mon = "true" }
+  nsg_ids = [oci_core_network_security_group.this.id]
 }
 
 module "tools" {
@@ -95,4 +136,5 @@ module "tools" {
   boot_volume_size_in_gbs = var.oke_tools_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_tools_node_pool_os_type
   labels                  = { tools = "true" }
+  nsg_ids                 = [oci_core_network_security_group.this.id]
 }
