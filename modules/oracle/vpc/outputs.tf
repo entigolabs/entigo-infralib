@@ -14,6 +14,15 @@ output "public_subnets" {
   value = oci_core_subnet.public[*].id
 }
 
+# Single-value alias of public_subnets[0] - the agent's k8s Helm value templating
+# (agent_input_oracle.yaml) has no way to index into a list output the way Terraform
+# module inputs are auto-wired, so anything needing exactly one subnet OCID as a plain
+# string (e.g. modules/k8s/oci-native-ingress-controller's IngressClassParameters) needs
+# a dedicated singular output instead.
+output "public_subnet_id" {
+  value = element(oci_core_subnet.public[*].id, 0)
+}
+
 output "private_subnets" {
   value = oci_core_subnet.private[*].id
 }

@@ -47,6 +47,12 @@ func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string
 		contextName = fmt.Sprintf("arn:aws:eks:eu-north-1:877483565445:cluster/%s-infra-eks", envName)
 	case "google":
 		contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
+	case "oracle":
+		// Best-effort guess following the aws/google naming convention above - unlike
+		// EKS/GKE, `oci ce cluster create-kubeconfig` doesn't deterministically name the
+		// context after the cluster's display name by default, so this needs confirming
+		// once a real shared Oracle test cluster/kubeconfig exists in CI.
+		contextName = fmt.Sprintf("%s-infra-oke", envName)
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -499,7 +505,9 @@ func isIngressAvailable(ingress *unstructured.Unstructured) bool {
 		return false
 	}
 	ingressMap := ingresses[0].(map[string]interface{})
-	return ingressMap["hostname"] != ""
+	// AWS ALB populates .hostname; OCI's Native Ingress Controller (and most other
+	// cloud LBs) populate .ip instead - a real Ingress status can carry either.
+	return ingressMap["hostname"] != "" || ingressMap["ip"] != ""
 }
 
 func isHTTPRouteAvailable(httpRoute *unstructured.Unstructured) bool {

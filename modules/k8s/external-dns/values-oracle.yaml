@@ -1,0 +1,20 @@
+global:
+  cloudProvider: oracle
+
+external-dns:
+  sources:
+    - service
+    - ingress
+
+  provider:
+    name: oci
+  # Instance principal - this cluster is a Basic OKE cluster (no Workload Identity
+  # available) - no oci.yaml config secret needed, unlike the key-based/workload-identity
+  # auth paths. The matching dynamic group + "manage dns" policy are created in
+  # modules/oracle/oke (shared with oci-native-ingress-controller's identity).
+  # --oci-compartment-ocid is templated in agent_input_oracle.yaml - extraArgs is set there
+  # in full (including this --oci-auth-instance-principal flag and the base
+  # --metrics-address flag) since Helm values lists fully replace rather than merge across
+  # value files, so splitting extraArgs across two files would silently drop one.
+  serviceAccount:
+    create: true

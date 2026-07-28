@@ -107,6 +107,58 @@ resource "oci_core_network_security_group_security_rule" "node_path_mtu_discover
   }
 }
 
+# Dynamic groups are tenancy-scoped in OCI (unlike policies): the resource's compartment_id
+# argument must be the tenancy OCID, not the target compartment. This project's compartments
+# are flat - a single level below the tenancy root (confirmed live via `oci iam compartment
+# get`, whose compartment_id is exactly the tenancy OCID from ~/.oci/config) - so the parent
+# of var.compartment_id is reliably the tenancy here. A deeper compartment hierarchy would
+# need to walk further up instead of taking the immediate parent.
+data "oci_identity_compartment" "this" {
+  id = var.compartment_id
+}
+
+# Instance Principal identity for in-cluster controllers (oci-native-ingress-controller,
+# external-dns). This cluster is a Basic OKE cluster (no OKE Workload Identity available),
+# so instance principal - any instance in the compartment - is the only no-static-credential
+# auth option. Shared by both controllers rather than split per-controller since they run on
+# the same node pools within the same compartment boundary.
+resource "oci_identity_dynamic_group" "controllers" {
+  compartment_id = data.oci_identity_compartment.this.compartment_id
+  name           = "${var.prefix}-oke-controllers"
+  description    = "Instances in ${var.prefix}'s OKE node pools - used by in-cluster controllers (ingress, external-dns) via instance principal auth"
+  matching_rule  = "ALL {instance.compartment.id = '${var.compartment_id}'}"
+}
+
+resource "oci_identity_policy" "controllers" {
+  compartment_id = var.compartment_id
+  name           = "${var.prefix}-oke-controllers"
+  description    = "Grants oci-native-ingress-controller and external-dns the permissions they need, via instance principal"
+
+  statements = [
+    # oci-native-ingress-controller - see
+    # https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage load-balancers in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use virtual-network-family in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cabundles in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cabundle-associations in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage leaf-certificates in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage leaf-certificate-versions in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read leaf-certificate-bundles in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage certificate-associations in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read certificate-authorities in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage certificate-authority-associations in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read certificate-authority-bundles in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read public-ips in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage floating-ips in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage waf-family in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read cluster-family in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use tag-namespaces in tenancy",
+    # external-dns - the aggregate "dns" resource-type covers dns-zones + dns-records
+    # together, matching what upstream external-dns's own OCI tutorial documents.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage dns in compartment id ${var.compartment_id}",
+  ]
+}
+
 resource "oci_containerengine_cluster" "this" {
   compartment_id     = var.compartment_id
   name               = var.prefix

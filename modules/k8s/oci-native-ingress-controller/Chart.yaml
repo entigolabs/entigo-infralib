@@ -1,0 +1,15 @@
+apiVersion: v2
+name: oci-native-ingress-controller
+description: OCI Native Ingress Controller, wired for OKE with an IngressClass/IngressClassParameters pair
+type: application
+version: 0.1.0
+appVersion: "1.4.3"
+
+# file:// rather than a real chart repository + Chart.lock (unlike every other module in
+# this repo) - see README.md for why: upstream has no chart repository to depend on, this
+# is a manually vendored copy of github.com/oracle/oci-native-ingress-controller's own
+# in-repo chart.
+dependencies:
+  - name: oci-native-ingress-controller
+    version: 1.4.3
+    repository: "file://./charts/oci-native-ingress-controller"

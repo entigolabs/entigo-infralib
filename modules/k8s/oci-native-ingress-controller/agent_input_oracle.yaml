@@ -1,0 +1,8 @@
+oci-native-ingress-controller:
+  compartment_id: "{{ .agent.accountId }}"
+  subnet_id: "{{ .toutput.vpc.public_subnet_id }}"
+  cluster_id: "{{ .toutput.oke.cluster_id }}"
+
+ingressClassParameters:
+  compartmentId: "{{ .agent.accountId }}"
+  subnetId: "{{ .toutput.vpc.public_subnet_id }}"

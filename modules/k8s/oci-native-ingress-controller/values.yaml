@@ -1,0 +1,54 @@
+# deploymentNamespace must match oci-native-ingress-controller.deploymentNamespace below -
+# both are hardcoded to the same literal rather than cross-referenced, since named
+# templates from the vendored subchart aren't safely callable from this parent chart's
+# own templates/webhook-certs.yaml (see that file's header comment for why).
+deploymentNamespace: native-ingress-controller-system
+
+oci-native-ingress-controller:
+  # fullnameOverride pins the subchart's resource names (Deployment, Service, ServiceAccount,
+  # and critically the webhook TLS secret name) to a literal, independent of whatever Helm
+  # release name ArgoCD assigns this Application - our own webhook-certs.yaml template needs
+  # to know the exact secret name up front, so it can't be discovered afterward.
+  fullnameOverride: oci-native-ingress-controller
+  deploymentNamespace: native-ingress-controller-system
+  compartment_id: ""
+  subnet_id: ""
+  cluster_id: ""
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 1Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 24Mi
+
+# IngressClassParameters (namespaced CRD) + the IngressClass that references it.
+# compartmentId/subnetId are wired per-environment via agent_input_oracle.yaml.
+ingressClassParameters:
+  compartmentId: ""
+  subnetId: ""
+  loadBalancerName: "oci-ic-lb"
+  isPrivate: false
+  minBandwidthMbps: 10
+  maxBandwidthMbps: 100
+
+ingressClass:
+  name: oci-ic
+  isDefaultClass: true

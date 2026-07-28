@@ -7,4 +7,9 @@ argocd:
       server.insecure: true
   server:
     ingress:
-      enabled: false
+      enabled: true
+      # Matches modules/k8s/oci-native-ingress-controller's default IngressClass name.
+      # hostname is left unset - it defaults to global.domain (set below in
+      # agent_input_oracle.yaml). No TLS yet - no cert-manager/ACME wiring exists for
+      # Oracle, so this is plain HTTP through the LB, consistent with server.insecure above.
+      ingressClassName: oci-ic

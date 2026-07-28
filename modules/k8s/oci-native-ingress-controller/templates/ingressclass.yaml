@@ -1,0 +1,29 @@
+apiVersion: "ingress.oraclecloud.com/v1beta1"
+kind: IngressClassParameters
+metadata:
+  name: {{ .Values.ingressClass.name }}-parameters
+  namespace: {{ .Values.deploymentNamespace }}
+spec:
+  compartmentId: {{ .Values.ingressClassParameters.compartmentId | quote }}
+  subnetId: {{ .Values.ingressClassParameters.subnetId | quote }}
+  loadBalancerName: {{ .Values.ingressClassParameters.loadBalancerName | quote }}
+  isPrivate: {{ .Values.ingressClassParameters.isPrivate }}
+  minBandwidthMbps: {{ .Values.ingressClassParameters.minBandwidthMbps }}
+  maxBandwidthMbps: {{ .Values.ingressClassParameters.maxBandwidthMbps }}
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: {{ .Values.ingressClass.name }}
+  {{- if .Values.ingressClass.isDefaultClass }}
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+  {{- end }}
+spec:
+  controller: oci.oraclecloud.com/native-ingress-controller
+  parameters:
+    scope: Namespace
+    namespace: {{ .Values.deploymentNamespace }}
+    apiGroup: ingress.oraclecloud.com
+    kind: ingressclassparameters
+    name: {{ .Values.ingressClass.name }}-parameters
