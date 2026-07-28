@@ -37,6 +37,12 @@ argocd_repositories() {
 
         if [[ "$SOURCE" =~ ^(https?|ssh):// || "$SOURCE" =~ ^git@ ]]; then
             # GIT repository secret
+            # Azure DevOps rejects the .git suffix (TF401019), other hosts expect it
+            local repo_url="${SOURCE%.git}"
+            case "$SOURCE" in
+                *dev.azure.com*|*visualstudio.com*) : ;;
+                *) repo_url="${repo_url}.git" ;;
+            esac
             echo "Applying git repository secret $secret_name in namespace $namespace."
             echo "apiVersion: v1
 kind: Secret
@@ -48,7 +54,7 @@ metadata:
 stringData:
   type: git
   name: ${NAME}
-  url: ${SOURCE}.git
+  url: ${repo_url}
   username: \"${!USERNAME}\"
   password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create repository secret $secret_name"; exit 24; }
         else
