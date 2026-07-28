@@ -1,0 +1,6 @@
+version: v1
+metadata:
+  cluster_arn: "{{ .sout.cluster_id }}"
+  cluster_endpoint: "{{ .sout.kubernetes_endpoint }}"
+  cluster_version: "{{ .sout.kubernetes_version }}"
+module_types: [kubernetes-cluster, kubernetes-nodes]
