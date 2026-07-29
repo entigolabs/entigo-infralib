@@ -18,4 +18,10 @@ spec:
       - http01:
           ingress:
             ingressClassName: {{ .Values.issuer.ingressClassName }}
+            {{- with .Values.issuer.solverIngressAnnotations }}
+            ingressTemplate:
+              metadata:
+                annotations:
+                  {{- toYaml . | nindent 18 }}
+            {{- end }}
 {{- end }}

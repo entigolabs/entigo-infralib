@@ -5,6 +5,9 @@ issuer:
   ingressClassName: ""
   email: tarmo.trumm@entigo.com
   server: https://acme-v02.api.letsencrypt.org/directory
+  # Extra annotations for the ACME solver Ingresses cert-manager creates -
+  # set per cloud when the ingress controller needs routing hints.
+  solverIngressAnnotations: {}
 
 cert-manager:
   crds:
