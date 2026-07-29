@@ -130,7 +130,13 @@ resource "oci_identity_dynamic_group" "controllers" {
 }
 
 resource "oci_identity_policy" "controllers" {
-  compartment_id = var.compartment_id
+  # Must live at the tenancy too, alongside the dynamic group: OCI only allows a policy's
+  # statements to reference the compartment it's attached to or compartments *below* it in
+  # the hierarchy, never above - and this policy needs "in tenancy" statements (public-ips,
+  # floating-ips, tag-namespaces) alongside its "in compartment id <var.compartment_id>"
+  # ones. Attaching it at var.compartment_id instead failed live: "Compartment
+  # {tenancy_ocid} does not exist or is not part of the policy compartment subtree".
+  compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"
   description    = "Grants oci-native-ingress-controller and external-dns the permissions they need, via instance principal"
 
