@@ -33,3 +33,7 @@ output "mon_node_pool_id" {
 output "tools_node_pool_id" {
   value = try(module.tools[0].node_pool_id, "")
 }
+
+output "lb_nsg_id" {
+  value = oci_core_network_security_group.lb.id
+}

@@ -15,9 +15,17 @@ apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
   name: {{ .Values.ingressClass.name }}
-  {{- if .Values.ingressClass.isDefaultClass }}
+  {{- if or .Values.ingressClass.isDefaultClass .Values.ingressClass.nsgIds }}
   annotations:
+    {{- if .Values.ingressClass.isDefaultClass }}
     ingressclass.kubernetes.io/is-default-class: "true"
+    {{- end }}
+    {{- if .Values.ingressClass.nsgIds }}
+    # NIC attaches the LB to these NSGs - the only way it manages LB network access
+    # (it never touches security lists). Without this the LB sits behind the subnet's
+    # default security list, which blocks 80/443.
+    oci-native-ingress.oraclecloud.com/network-security-group-ids: {{ .Values.ingressClass.nsgIds | quote }}
+    {{- end }}
   {{- end }}
 spec:
   controller: oci.oraclecloud.com/native-ingress-controller

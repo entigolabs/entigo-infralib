@@ -52,3 +52,6 @@ ingressClassParameters:
 ingressClass:
   name: oci-ic
   isDefaultClass: true
+  # Comma-separated NSG OCIDs the controller attaches to the LB (ingress 80/443).
+  # Wired from modules/oracle/oke's lb_nsg_id output via agent_input_oracle.yaml.
+  nsgIds: ""

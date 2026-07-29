@@ -107,6 +107,51 @@ resource "oci_core_network_security_group_security_rule" "node_path_mtu_discover
   }
 }
 
+# NSG for the OCI LBs created by oci-native-ingress-controller. The public subnet's
+# default security list only allows SSH-22 + ICMP inbound (confirmed live: HTTP to the
+# ingress LB timed out until this existed), and NIC does not manage security lists or NSGs
+# itself - it only *attaches* the LB to NSGs listed in the IngressClass's
+# oci-native-ingress.oraclecloud.com/network-security-group-ids annotation, which
+# modules/k8s/oci-native-ingress-controller wires to this NSG's id via lb_nsg_id output.
+# Backend LB->node traffic is already covered by the node NSG's allow-all-from-VCN rule.
+resource "oci_core_network_security_group" "lb" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke-lb"
+}
+
+resource "oci_core_network_security_group_security_rule" "lb_http" {
+  network_security_group_id = oci_core_network_security_group.lb.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Public HTTP to ingress load balancers"
+
+  tcp_options {
+    destination_port_range {
+      min = 80
+      max = 80
+    }
+  }
+}
+
+resource "oci_core_network_security_group_security_rule" "lb_https" {
+  network_security_group_id = oci_core_network_security_group.lb.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Public HTTPS to ingress load balancers"
+
+  tcp_options {
+    destination_port_range {
+      min = 443
+      max = 443
+    }
+  }
+}
+
 # Dynamic groups are tenancy-scoped in OCI (unlike policies): the resource's compartment_id
 # argument must be the tenancy OCID, not the target compartment. This project's compartments
 # are flat - a single level below the tenancy root (confirmed live via `oci iam compartment

@@ -6,3 +6,6 @@ oci-native-ingress-controller:
 ingressClassParameters:
   compartmentId: "{{ .agent.accountId }}"
   subnetId: "{{ .toutput.vpc.public_subnet_id }}"
+
+ingressClass:
+  nsgIds: "{{ .toutput.oke.lb_nsg_id }}"
