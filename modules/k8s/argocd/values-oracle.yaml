@@ -6,10 +6,22 @@ argocd:
     params:
       server.insecure: true
   server:
+    service:
+      # NIC on Flannel clusters builds LB backends as nodeIP:nodePort and skips services
+      # with no nodePort (nodeBackend.go) - a ClusterIP service leaves the LB with zero
+      # backends (502). Confirmed live before this was set.
+      type: NodePort
     ingress:
       enabled: true
       # Matches modules/k8s/oci-native-ingress-controller's default IngressClass name.
-      # hostname is left unset - it defaults to global.domain (set below in
-      # agent_input_oracle.yaml). No TLS yet - no cert-manager/ACME wiring exists for
-      # Oracle, so this is plain HTTP through the LB, consistent with server.insecure above.
+      # hostname is left unset - it defaults to global.domain (set in
+      # agent_input_oracle.yaml).
       ingressClassName: oci-ic
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        # TLS terminates on the OCI LB; the argocd-server backend stays plain HTTP
+        # (consistent with server.insecure above).
+        oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+      # Retrieves the cert into the argocd-server-tls secret via cert-manager; NIC
+      # uploads it to OCI Certificates and terminates HTTPS on the LB listener.
+      tls: true

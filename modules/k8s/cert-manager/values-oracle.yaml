@@ -1,0 +1,5 @@
+issuer:
+  # modules/k8s/oci-native-ingress-controller's IngressClass. cert-manager's HTTP-01
+  # solver service is NodePort by default, which is also what NIC requires on Flannel
+  # clusters to populate LB backends.
+  ingressClassName: oci-ic

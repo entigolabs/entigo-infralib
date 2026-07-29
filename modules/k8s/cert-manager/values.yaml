@@ -1,0 +1,12 @@
+issuer:
+  # Let's Encrypt ClusterIssuer via HTTP-01. The solver Ingress must be served by a real
+  # ingress controller - set ingressClassName per cloud in values-<cloud>.yaml. Left empty,
+  # no ClusterIssuer is created (chart still installs cert-manager itself).
+  ingressClassName: ""
+  email: tarmo.trumm@entigo.com
+  server: https://acme-v02.api.letsencrypt.org/directory
+
+cert-manager:
+  crds:
+    enabled: true
+    keep: true
