@@ -19,7 +19,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: nginx
-        image: nginxinc/nginx-unprivileged:alpine
+        image: docker.io/nginxinc/nginx-unprivileged:alpine
         ports:
         - containerPort: 8080
         securityContext:
