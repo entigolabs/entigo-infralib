@@ -22,6 +22,12 @@ argocd:
         # TLS terminates on the OCI LB; the argocd-server backend stays plain HTTP
         # (consistent with server.insecure above).
         oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+        # NIC derives listener ports from the backend service port (80 here), so
+        # without these the TLS listener lands on port 80 instead of 443 - confirmed
+        # live: one HTTP listener on 80 with the certificate attached to it, nothing
+        # listening on 443. Same NIC behavior that broke the ACME solver routing.
+        oci-native-ingress.oraclecloud.com/http-listener-port: "80"
+        oci-native-ingress.oraclecloud.com/https-listener-port: "443"
       # Retrieves the cert into the argocd-server-tls secret via cert-manager; NIC
       # uploads it to OCI Certificates and terminates HTTPS on the LB listener.
       tls: true
