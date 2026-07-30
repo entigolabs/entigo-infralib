@@ -1,0 +1,15 @@
+service:
+  # NIC on Flannel skips ClusterIP services when populating LB backends.
+  type: NodePort
+
+ingress:
+  enabled: true
+  className: oci-ic
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+    # NIC derives listener ports from backend service ports - pin to 80/443
+    # (same as the argocd ingress, see modules/k8s/argocd/values-oracle.yaml).
+    oci-native-ingress.oraclecloud.com/http-listener-port: "80"
+    oci-native-ingress.oraclecloud.com/https-listener-port: "443"

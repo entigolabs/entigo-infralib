@@ -1,3 +1,13 @@
 image:
   registry: docker.io/nginxinc/nginx-unprivileged
   tag: "1.31"
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tls: false
+  annotations: {}

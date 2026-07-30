@@ -1,0 +1,2 @@
+ingress:
+  host: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
