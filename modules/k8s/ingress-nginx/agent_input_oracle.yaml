@@ -1,0 +1,7 @@
+ingress-nginx:
+  controller:
+    service:
+      annotations:
+        # Public subnet for the LB - the oke cluster's service_lb_subnet_ids is empty,
+        # so the CCM needs the subnet supplied per service.
+        service.beta.kubernetes.io/oci-load-balancer-subnet1: "{{ .toutput.vpc.public_subnet_id }}"

@@ -1,0 +1,15 @@
+ingress-nginx:
+  controller:
+    service:
+      type: LoadBalancer
+      annotations:
+        # Classic (layer 4/7) flexible OCI LB, smallest shape. The LB only passes
+        # TCP 80/443 through - TLS terminates in nginx itself (full SNI, per-app
+        # certs), sidestepping OCI's one-certificate-per-listener limit entirely.
+        oci.oraclecloud.com/load-balancer-type: "lb"
+        service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+        service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+        service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+        # CCM's default security-list management ("All") auto-opens 80/443 on the
+        # subnet's security list and the node-port range on the node subnets - unlike
+        # NIC, no manual NSG wiring is needed.

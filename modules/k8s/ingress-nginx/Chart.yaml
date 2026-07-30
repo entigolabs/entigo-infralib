@@ -1,0 +1,11 @@
+apiVersion: v2
+name: ingress-nginx
+description: ingress-nginx behind a cloud TCP load balancer (TLS terminates in nginx, full SNI)
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: ingress-nginx
+    version: 4.15.1
+    repository: https://kubernetes.github.io/ingress-nginx

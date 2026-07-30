@@ -1,11 +1,5 @@
 issuer:
-  # modules/k8s/oci-native-ingress-controller's IngressClass. cert-manager's HTTP-01
-  # solver service is NodePort by default, which is also what NIC requires on Flannel
-  # clusters to populate LB backends.
-  ingressClassName: oci-ic
-  # NIC creates one LB listener per backend service port - without this the challenge
-  # route lands on the solver service's port (8089), where Let's Encrypt (port 80)
-  # never looks. Confirmed live via the LB's routing policies. This annotation merges
-  # the solver's route onto the port-80 listener.
-  solverIngressAnnotations:
-    oci-native-ingress.oraclecloud.com/http-listener-port: "80"
+  # modules/k8s/ingress-nginx - the HTTP-01 solver ingress is served by nginx like
+  # any other ingress; no listener-port or NodePort special-casing needed (both were
+  # OCI Native Ingress Controller quirks).
+  ingressClassName: nginx
