@@ -378,3 +378,9 @@ variable "efs_csi_controller_config" {
   default = {}
 }
 
+
+variable "tags" {
+  type        = map(string)
+  description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
+  default     = {}
+}
