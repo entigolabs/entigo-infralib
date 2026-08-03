@@ -1,7 +1,7 @@
 ARG TOOLS_TAG=latest
 FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
 FROM alpine:3.22
-ENTRYPOINT ["/usr/bin/entrypoint.sh"]  
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 ENV PATH="/opt/venv/bin:$PATH"
 
 #Install AWS SDK
@@ -14,6 +14,7 @@ RUN apk --no-cache add \
     git \
     sudo \
     bash \
+    docker-credential-ecr-login \
     && rm -rf /var/cache/apk/* \
     && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir awscli \

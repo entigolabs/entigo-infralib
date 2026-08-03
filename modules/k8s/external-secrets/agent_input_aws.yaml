@@ -4,6 +4,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     createECRNamespace: "{{ .tmodule.argocd }}"
+    ECRProxyPolicy: "{{ .toptout.ecr-proxy.policy }}"
     createECRAccounts: 
     - accountNumber: "{{ .toutput.eks.account }}"
       accountRegion: "{{ .toutput.eks.region }}"
