@@ -353,3 +353,34 @@ variable "enable_efs_csi" {
   default = false
 }
 
+variable "coredns_config" {
+  type    = any
+  default = {}
+}
+
+variable "kube_proxy_config" {
+  type    = any
+  default = {}
+}
+
+variable "vpc_cni_env_config" {
+  type    = any
+  default = {}
+}
+
+variable "ebs_csi_controller_config" {
+  type    = any
+  default = {}
+}
+
+variable "efs_csi_controller_config" {
+  type    = any
+  default = {}
+}
+
+
+variable "tags" {
+  type        = map(string)
+  description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
+  default     = {}
+}
