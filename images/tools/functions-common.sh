@@ -51,10 +51,19 @@ terraform_plan() {
         echo "Failed to create TF plan!"
         exit 6
     fi
-    $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > ${TF_VAR_prefix}-plan.json
+    $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > plan.json
     if [ $? -ne 0 ]; then
         echo "Failed to create json plan from TF plan!"
         exit 6
+    fi
+}
+
+# Upload the JSON plan to the bucket
+upload_plan_json() {
+    local plan_json="steps/$TF_VAR_prefix/plan.json"
+    if [ -f "$plan_json" ]; then
+        echo "Copy json plan to bucket"
+        copy_to_bucket "$plan_json" "$INFRALIB_BUCKET" "$TF_VAR_prefix/plan.json"
     fi
 }
 

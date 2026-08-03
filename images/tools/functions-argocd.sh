@@ -307,6 +307,9 @@ argocd_plan() {
         CHANGE=$((CHANGE - 1))
     fi
     echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
+    cat > "plan.json" <<EOF
+{"type":"argocd","add":${ADD},"change":${CHANGE},"destroy":${DESTROY}}
+EOF
     rm -f *.log
 
     if [ ! -z "$FAIL" ]; then

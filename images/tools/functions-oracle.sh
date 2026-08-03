@@ -119,6 +119,7 @@ upload_plan_artifact() {
       tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
       echo "Copy plan to Oracle Object Storage"
       aws s3 --endpoint-url "$AWS_ENDPOINT_URL_S3" cp tf.tar.gz "s3://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz" --no-progress
+      upload_plan_json
     fi
 }
 
