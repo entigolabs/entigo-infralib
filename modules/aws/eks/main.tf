@@ -298,8 +298,8 @@ module "eks" {
         },
         resources : {
           requests : {
-            cpu : "200m",
-            memory : "128Mi"
+            cpu : "100m",
+            memory : "70Mi"
           }
         },
         tolerations : [
