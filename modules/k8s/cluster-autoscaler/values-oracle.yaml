@@ -1,0 +1,15 @@
+global:
+  cloudProvider: oracle
+
+cluster-autoscaler:
+  cloudProvider: oci
+  # Instance principal - this is a Basic OKE cluster (no Workload Identity, and the OKE
+  # autoscaler add-on is Enhanced-only). The dynamic group + node-pool management policy
+  # live in modules/oracle/oke, shared with the ingress controller and external-dns.
+  # OKE_USE_INSTANCE_PRINCIPAL also exists but is deprecated upstream.
+  extraEnv:
+    OCI_USE_INSTANCE_PRINCIPAL: "true"
+    OCI_SDK_APPEND_USER_AGENT: oci-oke-cluster-autoscaler
+  rbac:
+    serviceAccount:
+      create: true

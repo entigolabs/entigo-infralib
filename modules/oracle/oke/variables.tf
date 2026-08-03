@@ -170,3 +170,44 @@ variable "oke_tools_subnet_ids" {
   type        = list(string)
   default     = []
 }
+
+# cluster-autoscaler sizing, mirroring aws/eks's eks_<pool>_min/max_size naming. Default 0
+# = pool not autoscaled; modules/k8s/cluster-autoscaler's agent_input_oracle.yaml only
+# wires pools whose max size is set. These are pass-through metadata for the autoscaler
+# (exported as outputs) - the pool resource itself ignores post-creation size changes so
+# terraform never fights the autoscaler (see oke-node-pool's lifecycle comment).
+variable "oke_main_min_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_main_max_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_mon_min_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_mon_max_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_tools_min_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_tools_max_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}

@@ -37,3 +37,27 @@ output "tools_node_pool_id" {
 output "lb_nsg_id" {
   value = oci_core_network_security_group.lb.id
 }
+
+output "main_min_size" {
+  value = var.oke_main_min_size
+}
+
+output "main_max_size" {
+  value = var.oke_main_max_size
+}
+
+output "mon_min_size" {
+  value = var.oke_mon_min_size
+}
+
+output "mon_max_size" {
+  value = var.oke_mon_max_size
+}
+
+output "tools_min_size" {
+  value = var.oke_tools_min_size
+}
+
+output "tools_max_size" {
+  value = var.oke_tools_max_size
+}

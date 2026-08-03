@@ -207,6 +207,13 @@ resource "oci_identity_policy" "controllers" {
     # external-dns - the aggregate "dns" resource-type covers dns-zones + dns-records
     # together, matching what upstream external-dns's own OCI tutorial documents.
     "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage dns in compartment id ${var.compartment_id}",
+    # cluster-autoscaler - per Oracle's OKE autoscaler doc. The doc's remaining two
+    # statements (read virtual-network-family, use vnics) are already covered by the
+    # broader "use virtual-network-family" granted above for the ingress controller.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cluster-node-pools in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage instance-family in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use subnets in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to inspect compartments in compartment id ${var.compartment_id}",
   ]
 }
 

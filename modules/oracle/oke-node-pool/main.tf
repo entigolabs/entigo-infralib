@@ -21,6 +21,16 @@ resource "oci_containerengine_node_pool" "this" {
   kubernetes_version = var.kubernetes_version
   node_shape         = var.node_shape
 
+  # cluster-autoscaler resizes pools through the OCI API, so after any scale event every
+  # terraform plan would show a size diff and every apply would snap the pool back to
+  # node_count - and this repo's agent auto-applies, so scaling would be undone on each
+  # run. Deliberate deviation from aws/eks-node-group (which doesn't ignore desired_size):
+  # node_count therefore only applies at pool creation; resize non-autoscaled pools via
+  # the OCI console/CLI (or by recreating the pool).
+  lifecycle {
+    ignore_changes = [node_config_details[0].size]
+  }
+
   node_shape_config {
     ocpus         = var.ocpus
     memory_in_gbs = var.memory_in_gbs
