@@ -1,6 +1,17 @@
-logs:
+node-agent:
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   configReloader:
     image:
       registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"
+cluster-metrics:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+  externalLabels:
+    cluster: "{{ .toutput.eks.cluster_name }}"

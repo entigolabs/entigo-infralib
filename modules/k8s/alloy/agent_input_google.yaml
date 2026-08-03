@@ -1,9 +1,12 @@
-logs:
+node-agent:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   configReloader:
     image:
       registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.gke.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -26,6 +29,43 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+
+cluster-metrics:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
+  externalLabels:
+    cluster: "{{ .toutput.gke.cluster_name }}"
+  networkPolicy:
+    egress:
+      # All in-cluster scrape targets
+      - to:
+          - namespaceSelector: {}
+      # Kubernetes API server
       - ports:
           - port: 443
             protocol: TCP

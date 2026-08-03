@@ -1,0 +1,3 @@
+kube-state-metrics:
+  image:
+    registry: '{{ .toptout.ecr-proxy.k8s_registry | "registry.k8s.io" }}'

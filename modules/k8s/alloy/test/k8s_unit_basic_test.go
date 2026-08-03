@@ -29,11 +29,23 @@ func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
-	logsDaemonSetName := fmt.Sprintf("%s-logs", namespaceName)
+	nodeAgentDaemonSetName := fmt.Sprintf("%s-node-agent", namespaceName)
 
-	daemonSetName, err := terrak8s.GetDaemonSetE(t, kubectlOptions, logsDaemonSetName)
+	nodeAgentDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, nodeAgentDaemonSetName)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", namespaceName), err)
+		t.Fatal(fmt.Sprintf("Daemonset %s error:", nodeAgentDaemonSetName), err)
 	}
-	assert.NotEmpty(t, daemonSetName, "Daemonset was not returned")
+	assert.NotEmpty(t, nodeAgentDaemonSet, "Node-agent daemonset was not returned")
+
+	// Metrics are opt-in (they need a Mimir), off by default. The biz envs enable
+	// them (see test/*_biz.yaml); pri runs logs-only, so cluster-metrics is absent there.
+	if envName == "biz" {
+		clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
+
+		clusterMetrics, err := terrak8s.GetDeploymentE(t, kubectlOptions, clusterMetricsName)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("Deployment %s error:", clusterMetricsName), err)
+		}
+		assert.NotEmpty(t, clusterMetrics, "Cluster-metrics deployment was not returned")
+	}
 }

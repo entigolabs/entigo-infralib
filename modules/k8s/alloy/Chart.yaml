@@ -7,6 +7,16 @@ appVersion: "1.0"
 
 dependencies:
   - name: alloy
-    alias: logs
+    alias: node-agent
     version: 1.10.0
     repository: https://grafana.github.io/helm-charts
+    condition: node-agent.enabled
+  - name: alloy
+    alias: cluster-metrics
+    version: 1.10.0
+    repository: https://grafana.github.io/helm-charts
+    condition: cluster-metrics.enabled
+  - name: prometheus-operator-crds
+    version: 29.0.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: global.installPrometheusOperatorCRDs
