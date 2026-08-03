@@ -290,7 +290,18 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.coredns_addon_version
-      configuration_values = jsonencode({
+      configuration_values = jsonencode(merge({
+        autoScaling : {
+          enabled : true,
+          minReplicas : 2,
+          maxReplicas : 10
+        },
+        resources : {
+          requests : {
+            cpu : "100m",
+            memory : "70Mi"
+          }
+        },
         tolerations : [
           {
             key : "tools",
@@ -319,13 +330,15 @@ module "eks" {
             ]
           }
         }
-      })
+      }, var.coredns_config))
     }
-    kube-proxy = {
+    kube-proxy = merge({
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.kube_proxy_addon_version
-    }
+    }, length(var.kube_proxy_config) > 0 ? {
+      configuration_values = jsonencode(var.kube_proxy_config)
+    } : {})
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -335,11 +348,11 @@ module "eks" {
       service_account_role_arn    = module.vpc_cni_irsa_role.arn
 
       configuration_values = jsonencode({
-        env = {
+        env = merge({
           ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
           WARM_IP_TARGET           = "1"
           MINIMUM_IP_TARGET        = "1"
-        }
+        }, var.vpc_cni_env_config)
         enableNetworkPolicy = var.enable_vpc_cni_network_policy
       })
     }
@@ -348,9 +361,9 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.efs_csi_addon_version
-      service_account_role_arn = module.efs_csi_irsa_role[0].arn
+      service_account_role_arn    = module.efs_csi_irsa_role[0].arn
       configuration_values = jsonencode({
-        controller : {
+        controller : merge({
           tolerations : [
             {
               key : "tools",
@@ -359,7 +372,7 @@ module "eks" {
               effect : "NoSchedule"
             }
           ]
-        }
+        }, var.efs_csi_controller_config)
       })
     }
   } : {}, {
@@ -367,12 +380,12 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.ebs_csi_addon_version
-      service_account_role_arn = module.ebs_csi_irsa_role.arn
+      service_account_role_arn    = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
-        controller : {
+        controller : merge({
           extraVolumeTags = var.node_launch_template_tags
-          volumeModificationFeature: {
-                enabled: true
+          volumeModificationFeature : {
+            enabled : true
           },
           tolerations : [
             {
@@ -416,7 +429,7 @@ module "eks" {
               ]
             }
           }
-        }
+        }, var.ebs_csi_controller_config)
       })
     }
   })
