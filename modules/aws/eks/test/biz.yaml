@@ -1,6 +1,27 @@
 eks_cluster_public: true
 enable_vpc_cni_network_policy: true
 enable_cluster_creator_admin_permissions: false
+coredns_config: |
+  {
+    autoScaling = {
+      enabled     = true
+      maxReplicas = 8
+      minReplicas = 3
+    }
+    resources = {
+      requests = { cpu = "100m", memory = "128Mi" }
+    }
+  }
+ebs_csi_controller_config: |
+  {
+    resources = {
+      requests = { cpu = "100m", memory = "128Mi" }
+    }
+  }
+vpc_cni_env_config: |
+  {
+    WARM_IP_TARGET = "2"
+  }
 eks_mon_capacity_type: "SPOT"
 eks_mon_volume_size: 30
 eks_mon_subnets: |
@@ -91,4 +112,8 @@ eks_managed_node_groups_extra: |
           }
         }
       }
+  }
+tags: |
+  {
+    team = "entigo-team"
   }

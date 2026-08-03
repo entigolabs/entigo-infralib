@@ -14,6 +14,7 @@ RUN apk --no-cache add \
     git \
     sudo \
     bash \
+    docker-credential-ecr-login \
     && rm -rf /var/cache/apk/* \
     && python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir awscli \
