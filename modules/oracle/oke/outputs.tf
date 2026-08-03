@@ -39,25 +39,49 @@ output "lb_nsg_id" {
 }
 
 output "main_min_size" {
-  value = var.oke_main_min_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_main_min_size)
 }
 
 output "main_max_size" {
-  value = var.oke_main_max_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_main_max_size)
 }
 
 output "mon_min_size" {
-  value = var.oke_mon_min_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_mon_min_size)
 }
 
 output "mon_max_size" {
-  value = var.oke_mon_max_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_mon_max_size)
 }
 
 output "tools_min_size" {
-  value = var.oke_tools_min_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_tools_min_size)
 }
 
 output "tools_max_size" {
-  value = var.oke_tools_max_size
+  # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
+  # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then
+  # falls back to the instance-pool implementation and crash-loops). Strings pass
+  # through Go templating verbatim.
+  value = tostring(var.oke_tools_max_size)
 }
