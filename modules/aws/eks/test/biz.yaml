@@ -92,3 +92,7 @@ eks_managed_node_groups_extra: |
         }
       }
   }
+tags: |
+  {
+    team = "entigo-team"
+  }

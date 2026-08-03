@@ -533,6 +533,10 @@ module "eks" {
     var.additional_access_entries
   )
 
+  # Cluster resource only - module-wide tags would flow into node group launch
+  # templates and force a rolling replacement of all nodes.
+  cluster_tags = var.tags
+
   tags = {
     Terraform = "true"
     Prefix    = var.prefix

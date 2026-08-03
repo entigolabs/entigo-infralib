@@ -353,3 +353,9 @@ variable "enable_efs_csi" {
   default = false
 }
 
+
+variable "tags" {
+  type        = map(string)
+  description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
+  default     = {}
+}
