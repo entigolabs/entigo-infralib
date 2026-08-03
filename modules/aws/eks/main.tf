@@ -291,6 +291,17 @@ module "eks" {
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.coredns_addon_version
       configuration_values = jsonencode(merge({
+        autoScaling : {
+          enabled : true,
+          minReplicas : 2,
+          maxReplicas : 10
+        },
+        resources : {
+          requests : {
+            cpu : "200m",
+            memory : "128Mi"
+          }
+        },
         tolerations : [
           {
             key : "tools",
