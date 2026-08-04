@@ -2,6 +2,17 @@ global:
   cloudProvider: "oracle"
 
 crossplane:
+  image:
+    # Fully qualified on purpose. The upstream chart defaults to the bare name
+    # `crossplane/crossplane`, and OKE's container runtime refuses unqualified names:
+    # "short name mode is enforcing, but image name crossplane/crossplane:v2.2.2 returns
+    # ambiguous list", which surfaces as ImageInspectError and an init container that never
+    # starts. aws and google don't hit this because their agent_input rewrites the
+    # repository through their ecr-proxy/gar-proxy. There is no Oracle registry-proxy module
+    # yet, so the public registry is hardcoded here (same precedent as external-dns,
+    # argocd, cluster-autoscaler and istio-istiod on Oracle).
+    repository: docker.io/crossplane/crossplane
+
   resourcesCrossplane:
     limits:
       # -- CPU resource limits for Crossplane.
