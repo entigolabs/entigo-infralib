@@ -26,6 +26,13 @@ spec:
   # the annotations Istio would otherwise copy from metadata.annotations rather than
   # merging with them, so every OCI load balancer setting has to live here, not above.
   infrastructure:
+    # Strategic-merge patches for the generated Deployment - currently just the
+    # seccompProfile the `restricted` Pod Security Standard requires. See
+    # templates/gateway-options.yaml.
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: {{ .Release.Name }}-options
     annotations:
       {{- toYaml .Values.service.annotations | nindent 6 }}
       {{- with .Values.global.oracle.loadBalancerSubnetId }}
