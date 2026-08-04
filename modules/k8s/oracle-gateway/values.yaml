@@ -21,6 +21,21 @@ gatewayClassName: istio
 # ingress-nginx setup did, and keeps one app's certificate failure from affecting others.
 hosts: []
 
+# HTTPRoutes this module creates on an app's behalf, in the app's own namespace. Needed
+# only for apps whose chart cannot contain Gateway API kinds - in practice just argocd,
+# which is helm-installed during the apps-step bootstrap before the Gateway API CRDs exist
+# (see templates/httproute-apps.yaml for the full explanation). Every other app should ship
+# its own HTTPRoute template.
+#
+# Each entry needs a `name` matching a `hosts` entry (so it attaches to listener
+# `https-<name>`), plus the backend Service's namespace, name and port:
+#   routes:
+#     - name: argocd
+#       namespace: argocd
+#       service: argocd-server
+#       port: 80
+routes: []
+
 certificate:
   # cert-manager ClusterIssuer that signs the listener certificates. Set to "" to skip the
   # annotation entirely and manage the TLS secrets yourself.

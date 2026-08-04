@@ -1,16 +1,6 @@
 global:
   cloudProvider: oracle
 
-  oracle:
-    # The shared Gateway API gateway from modules/k8s/oracle-gateway. sectionName pins this
-    # app to its own HTTPS listener - without it the route would also attach to the
-    # gateway's port-80 listener (whose hostname is unset, so it matches everything) and
-    # argocd would be served over plaintext HTTP too.
-    gateway:
-      name: oracle-gateway
-      namespace: oracle-gateway
-      sectionName: https-argocd
-
 argocd:
   configs:
     params:
@@ -18,7 +8,13 @@ argocd:
       server.insecure: true
   server:
     ingress:
-      # Exposed with an HTTPRoute (templates/oracle/http-route.yaml) instead of the chart's
-      # own Ingress - ingress-nginx is gone. The certificate is issued by cert-manager
-      # against the gateway's listener, so nothing cert-related belongs here anymore.
+      # No Ingress (ingress-nginx is gone) and, deliberately, no HTTPRoute in this chart
+      # either: argocd is installed with `helm upgrade --install` during the apps step's
+      # bootstrap, which happens before any ArgoCD Application exists and therefore before
+      # the Gateway API CRDs are installed - a Gateway API kind here fails the bootstrap
+      # outright with "no matches for kind HTTPRoute".
+      #
+      # argocd's HTTPRoute is created for it by modules/k8s/oracle-gateway (its `routes`
+      # value) once the CRDs are in place, into this namespace so the backend reference
+      # stays same-namespace. The certificate comes from the gateway's own listener.
       enabled: false

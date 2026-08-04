@@ -1,0 +1,48 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- range .Values.routes }}
+---
+# Route for an app that cannot carry its own HTTPRoute. This exists for exactly one
+# reason: ArgoCD is installed by `helm upgrade --install` during the apps step's bootstrap,
+# BEFORE any ArgoCD Application exists - so before gateway-api-crds (sync-wave 0) can have
+# run. A Gateway API kind inside the argocd chart therefore fails the bootstrap outright
+# with "no matches for kind HTTPRoute", which is how the first live run of this migration
+# broke. GKE never hits this because it ships the Gateway API CRDs pre-installed, which is
+# why modules/k8s/argocd/templates/google/http-route.yaml is fine there and an Oracle
+# equivalent is not.
+#
+# The route is created in the app's OWN namespace so that its backendRef stays
+# same-namespace and needs no ReferenceGrant; only the parentRef crosses namespaces, which
+# the gateway's listeners already permit via allowedRoutes.namespaces.from: All.
+#
+# Apps deployed as ordinary Applications (hello-world and anything added later) should keep
+# their own HTTPRoute template instead - by their sync-wave the CRDs are long since present.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $.Release.Name }}
+      namespace: {{ $.Release.Namespace }}
+      # Pins the route to this app's own HTTPS listener. Without it the route would also
+      # attach to the shared port-80 listener, whose hostname is unset and so matches
+      # everything, and the app would be served over plaintext as well.
+      sectionName: https-{{ .name }}
+  hostnames:
+    - {{ printf "%s.%s" .name $.Values.global.oracle.domain | quote }}
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .service }}
+          port: {{ .port }}
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}
+{{- end }}

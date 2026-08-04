@@ -6,3 +6,9 @@ global:
 hosts:
   - argocd
   - hello-world
+
+routes:
+  - name: argocd
+    namespace: argocd
+    service: argocd-server
+    port: 80
