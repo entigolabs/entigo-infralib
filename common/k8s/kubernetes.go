@@ -96,6 +96,19 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 			hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "google-gateway-external"
 		}
+	case "oracle":
+		// Single shared gateway from modules/k8s/oracle-gateway, in a namespace named after
+		// the module - there is no internal/external split on Oracle, so `mode` is ignored.
+		// The domain is whatever the oracle/dns module was given as parent_domain plus its
+		// subdomain, which is per-deployment rather than a fixed CI convention like the
+		// aws/google ones above - hence the env var, defaulted to the dev deployment.
+		gatewayName = "oracle-gateway"
+		gatewayNamespace = "oracle-gateway"
+		domain := os.Getenv("ENTIGO_INFRALIB_ORACLE_DOMAIN")
+		if domain == "" {
+			domain = fmt.Sprintf("%s.tarmo.entigo.dev", envName)
+		}
+		hostName = fmt.Sprintf("%s.%s", namespaceName, domain)
 	}
 	return gatewayName, gatewayNamespace, hostName, retries
 }
@@ -707,6 +720,17 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 			return "", err
 		}
 		return strings.Trim(gatewayIP, "'"), nil
+
+	case "oracle":
+		// Same Gateway API shape as google, but without filtering on address type: Istio
+		// copies whatever the OCI load balancer produced from the generated Service's
+		// status, and an OCI classic load balancer can surface as either an IPAddress or a
+		// Hostname. Taking the first address covers both.
+		gatewayAddress, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[0].value}'")
+		if err != nil {
+			return "", err
+		}
+		return strings.Trim(gatewayAddress, "'"), nil
 	}
 	return "", errors.New("error getting target IP")
 }

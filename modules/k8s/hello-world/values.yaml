@@ -5,9 +5,23 @@ image:
 service:
   type: ClusterIP
 
+# Expose via a plain Ingress (aws-style, or any cluster with an ingress controller).
 ingress:
   enabled: false
   className: ""
   host: ""
   tls: false
   annotations: {}
+
+# Expose via a Kubernetes Gateway API HTTPRoute attached to an existing shared Gateway.
+# Mutually exclusive with `ingress` in practice - enable one or the other. `host` is shared
+# between both and comes from agent_input_<cloud>.yaml.
+httpRoute:
+  enabled: false
+  gateway:
+    name: ""
+    namespace: ""
+    # Which Gateway listener to attach to. Leave empty to let the Gateway match by
+    # hostname, but note that also attaches the route to any hostname-less listener
+    # (e.g. a shared port-80 one), which would serve the app over plaintext too.
+    sectionName: ""

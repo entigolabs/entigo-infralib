@@ -1,0 +1,8 @@
+global:
+  oracle:
+    domain: "dev.example.entigo.dev"
+    loadBalancerSubnetId: "ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaadummy"
+
+hosts:
+  - argocd
+  - hello-world

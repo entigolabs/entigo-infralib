@@ -1,19 +1,24 @@
 global:
   cloudProvider: oracle
 
+  oracle:
+    # The shared Gateway API gateway from modules/k8s/oracle-gateway. sectionName pins this
+    # app to its own HTTPS listener - without it the route would also attach to the
+    # gateway's port-80 listener (whose hostname is unset, so it matches everything) and
+    # argocd would be served over plaintext HTTP too.
+    gateway:
+      name: oracle-gateway
+      namespace: oracle-gateway
+      sectionName: https-argocd
+
 argocd:
   configs:
     params:
+      # TLS terminates in the Istio gateway, which then talks plain HTTP to argocd-server.
       server.insecure: true
   server:
     ingress:
-      enabled: true
-      # modules/k8s/ingress-nginx - TLS terminates in nginx (SNI), so every app has
-      # its own cert-manager certificate. hostname defaults to global.domain (set in
-      # agent_input_oracle.yaml).
-      ingressClassName: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-        # argocd-server itself speaks plain HTTP (server.insecure above).
-        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-      tls: true
+      # Exposed with an HTTPRoute (templates/oracle/http-route.yaml) instead of the chart's
+      # own Ingress - ingress-nginx is gone. The certificate is issued by cert-manager
+      # against the gateway's listener, so nothing cert-related belongs here anymore.
+      enabled: false

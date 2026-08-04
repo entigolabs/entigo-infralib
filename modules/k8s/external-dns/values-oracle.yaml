@@ -10,7 +10,17 @@ global:
 external-dns:
   sources:
     - service
+    # gateway-httproute: apps are exposed through modules/k8s/oracle-gateway's Gateway API
+    # gateway now, so their hostnames come from HTTPRoutes. external-dns resolves the
+    # target from the parent Gateway's status.addresses, which Istio only populates because
+    # the generated Service is type LoadBalancer - if that ever changes to ClusterIP or
+    # NodePort, this publishes a cluster IP or nothing and the Gateway needs an explicit
+    # external-dns target annotation instead.
+    #
+    # `ingress` stays for anything still exposed the old way; the chart derives the extra
+    # Gateway API RBAC automatically from this list.
     - ingress
+    - gateway-httproute
 
   provider:
     name: oci

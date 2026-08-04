@@ -1,0 +1,6 @@
+global:
+  # No Oracle registry-proxy module exists yet, so the public registry is hardcoded
+  # rather than referencing a .toptout.<proxy> module that doesn't exist for this cloud
+  # (same precedent as external-dns, argocd and cluster-autoscaler on Oracle). The aws
+  # and google variants of this file route through their ecr-proxy/gar-proxy instead.
+  hub: docker.io/istio

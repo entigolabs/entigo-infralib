@@ -1,6 +1,15 @@
+# Exposed through modules/k8s/oracle-gateway's Gateway API gateway rather than an Ingress -
+# ingress-nginx is gone. The TLS certificate is issued by cert-manager against the
+# gateway's own listener, so there is nothing cert-related to configure here.
 ingress:
+  enabled: false
+
+httpRoute:
   enabled: true
-  className: nginx
-  tls: true
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
+  # sectionName pins this app to its own HTTPS listener. Without it the route would also
+  # attach to the gateway's port-80 listener, whose hostname is unset and therefore matches
+  # every host, and the app would be served over plaintext HTTP as well.
+  gateway:
+    name: oracle-gateway
+    namespace: oracle-gateway
+    sectionName: https-hello-world

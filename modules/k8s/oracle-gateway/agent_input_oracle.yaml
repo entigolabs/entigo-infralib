@@ -1,0 +1,4 @@
+global:
+  oracle:
+    domain: "{{ .toutput.dns.int_domain }}"
+    loadBalancerSubnetId: "{{ .toutput.vpc.public_subnet_id }}"

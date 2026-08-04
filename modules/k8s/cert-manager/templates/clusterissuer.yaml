@@ -1,4 +1,4 @@
-{{- if .Values.issuer.ingressClassName }}
+{{- if or .Values.issuer.gateway.name .Values.issuer.ingressClassName }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -16,6 +16,21 @@ spec:
       name: letsencrypt-account-key
     solvers:
       - http01:
+          {{- if .Values.issuer.gateway.name }}
+          # Gateway API solver: cert-manager creates a temporary HTTPRoute pointing at
+          # this Gateway rather than an Ingress, so no ingress controller is needed. The
+          # Gateway must already exist and have a port-80 listener accepting routes from
+          # this namespace - cert-manager never edits Gateways, and if nothing matches it
+          # creates the route and then silently waits forever.
+          gatewayHTTPRoute:
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: {{ .Values.issuer.gateway.name }}
+                {{- with .Values.issuer.gateway.namespace }}
+                namespace: {{ . }}
+                {{- end }}
+          {{- else }}
           ingress:
             ingressClassName: {{ .Values.issuer.ingressClassName }}
             {{- with .Values.issuer.solverIngressAnnotations }}
@@ -24,4 +39,5 @@ spec:
                 annotations:
                   {{- toYaml . | nindent 18 }}
             {{- end }}
+          {{- end }}
 {{- end }}

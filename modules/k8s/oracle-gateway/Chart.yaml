@@ -1,0 +1,7 @@
+apiVersion: v2
+name: oracle-gateway
+description: Shared Gateway API gateway for OKE, served by Istio behind an OCI load balancer
+type: application
+version: 0.1.0
+appVersion: "1.0"
+dependencies: []

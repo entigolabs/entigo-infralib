@@ -1,0 +1,80 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.certificate.clusterIssuer }}
+  annotations:
+    # cert-manager's gateway-shim watches this annotation and creates one Certificate per
+    # HTTPS listener, taking the dnsNames from the listener's `hostname` and the secret
+    # name from its certificateRefs. The secrets land in this namespace, which is also
+    # where Istio runs the generated gateway pod - so the proxy can read them without a
+    # ReferenceGrant. (That agreement-by-construction is the main reason this uses the
+    # Gateway API instead of Istio's own Gateway CRD, whose credentialName secrets must
+    # live in the workload namespace and can never be referenced cross-namespace.)
+    cert-manager.io/cluster-issuer: {{ .Values.certificate.clusterIssuer }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ .Values.gatewayClassName }}
+  # Istio auto-provisions a Deployment and a Service named <gateway>-<gatewayclass> for
+  # this Gateway, defaulting the Service to type LoadBalancer - which is what we want:
+  # external-dns reads the published address from this Gateway's status.addresses, and
+  # Istio only populates that from a LoadBalancer Service.
+  #
+  # infrastructure.annotations is copied onto those generated resources. Note it REPLACES
+  # the annotations Istio would otherwise copy from metadata.annotations rather than
+  # merging with them, so every OCI load balancer setting has to live here, not above.
+  infrastructure:
+    annotations:
+      {{- toYaml .Values.service.annotations | nindent 6 }}
+      {{- with .Values.global.oracle.loadBalancerSubnetId }}
+      service.beta.kubernetes.io/oci-load-balancer-subnet1: {{ . | quote }}
+      {{- end }}
+      {{- if .Values.hosts }}
+      # Publish every gateway hostname from the generated Service, via external-dns's
+      # `service` source. This breaks a circular dependency: cert-manager requests the
+      # listener certificates as soon as this Gateway appears, but ACME HTTP-01 can only
+      # validate once the hostname resolves - and if DNS came only from the apps'
+      # HTTPRoutes, those are deployed in later sync waves, so the challenges would fail
+      # and the Gateway would sit Degraded (ArgoCD marks a listener with unresolved
+      # certificateRefs as Degraded) until the apps caught up.
+      #
+      # ingress-nginx never had this problem: each app's Ingress carried its host, its DNS
+      # record and its certificate together in a single wave.
+      external-dns.alpha.kubernetes.io/hostname: {{ include "oracle-gateway.hostnames" . | quote }}
+      {{- end }}
+  listeners:
+    # Shared HTTP listener. Load-bearing for two things beyond redirects: ACME HTTP-01
+    # challenges (cert-manager attaches its temporary solver HTTPRoutes here, and they
+    # come from the issuer's namespace, hence `from: All`), and OCI load balancer health -
+    # unlike nginx, an Istio gateway pod only listens on a port once a listener binds it.
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+    {{- range .Values.hosts }}
+    - name: https-{{ . }}
+      protocol: HTTPS
+      port: 443
+      # cert-manager skips any HTTPS listener with an empty hostname, or with
+      # tls.mode other than Terminate, without emitting an event - so both are required
+      # for a certificate to ever appear.
+      hostname: {{ printf "%s.%s" . $.Values.global.oracle.domain | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: {{ . }}-tls
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+    {{- end }}
+{{- end }}
