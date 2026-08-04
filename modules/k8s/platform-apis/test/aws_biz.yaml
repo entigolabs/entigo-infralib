@@ -23,6 +23,7 @@ platform-apis:
   database:
     environmentConfig:
       postgresBackupBeforeDeletion: false
+      mariaDBBackupBeforeDeletion: false
       valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
   functions:

@@ -1,10 +1,5 @@
 suites:
-  - cronjob
-  - kafka
   - postgresql
-  - repository
-  - s3bucket
+  - rabbitmq
   - valkey
-  - webaccess
-  - webapp
-  - zone
+  - mariadb
