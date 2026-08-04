@@ -38,6 +38,15 @@ output "lb_nsg_id" {
   value = oci_core_network_security_group.lb.id
 }
 
+output "kubernetes_service_ip" {
+  # The in-cluster kube-apiserver ClusterIP, which Kubernetes always assigns as the first
+  # address of the services CIDR. NetworkPolicies that need to allow egress to the API
+  # server reference this (see modules/k8s/prometheus's kube-state-metrics policy, where
+  # aws hardcodes its own 172.20.0.1 equivalent). Verified live: 10.96.0.1 for the default
+  # services_cidr.
+  value = cidrhost(var.services_cidr, 1)
+}
+
 output "controllers_dynamic_group_name" {
   # Referenced by the per-app Crossplane Policy CRs in k8s modules' templates/oracle/
   # ("Allow dynamic-group <this> to ..." statements).

@@ -1,0 +1,30 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.oracle.gateway.name }}
+      namespace: {{ .Values.global.oracle.gateway.namespace }}
+      # Pins this app to its own HTTPS listener. Without it the route would also attach to
+      # the gateway's shared port-80 listener, whose hostname is unset and therefore matches
+      # everything, and prometheus would be served over plaintext as well.
+      sectionName: {{ .Values.global.oracle.gateway.sectionName }}
+  hostnames:
+    - {{ .Values.global.oracle.hostname }}
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .Release.Name }}-server
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}

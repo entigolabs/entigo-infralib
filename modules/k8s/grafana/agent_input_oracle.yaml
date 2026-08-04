@@ -1,0 +1,44 @@
+global:
+  oracle:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
+  datasources:
+    # `.toptmodule` (optional) rather than `.tmodule` (required, as aws/google use): a
+    # missing module makes `.tmodule` fail the whole apps step, and Oracle is being rolled
+    # out incrementally - loki needs Crossplane object storage that isn't wired yet. The
+    # datasource name is passed rather than a full URL because an empty optional value would
+    # otherwise render the nonsense "http://-gateway."; templates/oracle/config-map.yaml
+    # builds the URL and skips the datasource entirely when this is empty, so Loki appears
+    # automatically the moment loki is added to the config.
+    loki:
+      module: "{{ .toptmodule.loki }}"
+    prometheus:
+      hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
+    users:
+      home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
+  ingress:
+    # ingress.enabled stays false (values-oracle.yaml) - this is set only because agent.yaml
+    # builds the developer-portal ui_url from `.input.grafana.ingress.hosts.0`.
+    hosts:
+      - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
+  serviceAccount:
+    name: "{{ .module.name }}"
+  # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded, fully
+  # qualified (OKE's runtime refuses unqualified image names).
+  image:
+    registry: docker.io
+  sidecar:
+    image:
+      registry: quay.io
+  initChownData:
+    image:
+      registry: docker.io
+  downloadDashboardsImage:
+    registry: docker.io
+  imageRenderer:
+    image:
+      registry: docker.io

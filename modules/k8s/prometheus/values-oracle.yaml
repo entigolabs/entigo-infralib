@@ -1,0 +1,44 @@
+global:
+  cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+  oracle:
+    # Filled by agent_input_oracle.yaml.
+    hostname: ""
+    # The shared Gateway API gateway from modules/k8s/oracle-gateway. Its `hosts` value must
+    # include this module's name so the matching https-<name> listener (and its Let's
+    # Encrypt certificate) exists.
+    gateway:
+      name: oracle-gateway
+      namespace: oracle-gateway
+      sectionName: https-prometheus
+    # The in-cluster kube-apiserver ClusterIP, for the kube-state-metrics egress policy
+    # below. aws hardcodes its own equivalent (172.20.0.1) in values.yaml.
+    kubernetesServiceIp: ""
+
+prometheus:
+  server:
+    ingress:
+      # Exposed with an HTTPRoute through modules/k8s/oracle-gateway instead of an Ingress -
+      # there is no ingress controller on Oracle since the move off ingress-nginx.
+      enabled: false
+    persistentVolume:
+      # OKE's default StorageClass. Named explicitly rather than relying on the default so
+      # the intent survives a cluster whose default class differs.
+      storageClass: oci-bv
+      # OCI Block Volume has a 50GB floor - a smaller request is rounded up and billed at
+      # 50GB anyway, so ask for what we actually get instead of the upstream chart's 8Gi.
+      size: 50Gi
+
+  kube-state-metrics:
+    networkPolicy:
+      egress:
+        # Replaces the aws-shaped 172.20.0.1/32 entry from values.yaml (Helm list values are
+        # replaced wholesale, not merged). Note NetworkPolicy is not actually enforced on
+        # this cluster - OKE with FLANNEL_OVERLAY ships no policy controller - so this is
+        # correctness for the day one is added rather than something load-bearing today.
+        - to:
+            - ipBlock:
+                cidr: "" # set in agent_input_oracle.yaml from the oke module's output
+          ports:
+            - port: 443
+              protocol: TCP

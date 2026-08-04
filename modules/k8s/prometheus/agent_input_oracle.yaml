@@ -1,0 +1,54 @@
+global:
+  oracle:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
+    kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+
+# No Oracle registry-proxy module exists yet, so the upstream registries are hardcoded
+# rather than routed through a .toptout.<proxy> that doesn't exist for this cloud (same
+# precedent as external-dns, argocd, cluster-autoscaler, istio-istiod and crossplane-core).
+# These must stay fully qualified: OKE's runtime refuses unqualified image names
+# ("short name mode is enforcing ... returns ambiguous list").
+prometheus:
+  server:
+    image:
+      repository: quay.io/prometheus/prometheus
+  prometheus-node-exporter:
+    image:
+      registry: quay.io
+  kube-state-metrics:
+    image:
+      registry: registry.k8s.io
+    networkPolicy:
+      egress:
+        - to:
+            - ipBlock:
+                cidr: "{{ .toutput.oke.kubernetes_service_ip }}/32"
+          ports:
+            - port: 443
+              protocol: TCP
+        - to:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: kube-system
+              podSelector:
+                matchLabels:
+                  k8s-app: kube-dns
+          ports:
+            - protocol: UDP
+              port: 53
+            - protocol: TCP
+              port: 53
+  alertmanager:
+    image:
+      repository: quay.io/prometheus/alertmanager
+    configmapReload:
+      image:
+        repository: quay.io/prometheus-operator/prometheus-config-reloader
+  configmapReload:
+    prometheus:
+      image:
+        repository: quay.io/prometheus-operator/prometheus-config-reloader
+
+prometheus-blackbox-exporter:
+  image:
+    registry: quay.io

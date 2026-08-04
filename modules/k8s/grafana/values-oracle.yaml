@@ -1,0 +1,39 @@
+global:
+  cloudProvider: "oracle"
+  providerConfigRefName: "crossplane-oracle"
+  datasources:
+    loki:
+      # Name of the loki module, or empty when loki isn't deployed - the Loki datasource is
+      # then skipped entirely. Set from `.toptmodule.loki` in agent_input_oracle.yaml.
+      module: ""
+  oracle:
+    # Filled by agent_input_oracle.yaml.
+    hostname: ""
+    # The shared Gateway API gateway from modules/k8s/oracle-gateway. Its `hosts` value must
+    # include this module's name so the matching https-<name> listener (and its Let's
+    # Encrypt certificate) exists.
+    gateway:
+      name: oracle-gateway
+      namespace: oracle-gateway
+      sectionName: https-grafana
+
+grafana:
+  ingress:
+    # Exposed with an HTTPRoute through oracle-gateway instead of an Ingress - there is no
+    # ingress controller on Oracle since the move off ingress-nginx. `hosts` is still set
+    # (in agent_input_oracle.yaml) because agent.yaml derives the portal ui_url from it.
+    enabled: false
+  persistence:
+    # OKE's default StorageClass, named explicitly so the intent survives a cluster whose
+    # default class differs. OCI Block Volume has a 50GB floor - a smaller request is
+    # rounded up and billed at 50GB regardless - so ask for what we actually get rather
+    # than the 2Gi the base values request.
+    storageClassName: "oci-bv"
+    size: 50Gi
+  serviceAccount:
+    # Created by templates/oracle/service-account.yaml. Unlike aws (IRSA role annotation)
+    # and google (Workload Identity + a GCP service account), it carries no cloud identity:
+    # grafana needs no OCI API access here, because there is no OCI equivalent of the
+    # CloudWatch/Cloud Monitoring datasource wired in (see templates/oracle/config-map.yaml).
+    create: false
+    name: grafana
