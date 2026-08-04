@@ -1,3 +1,11 @@
+global:
+  providerConfigRefName: crossplane-oracle
+  oracle:
+    # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
+    compartmentId: ""
+    dynamicGroupName: ""
+    tenancyOcid: ""
+
 # deploymentNamespace must match oci-native-ingress-controller.deploymentNamespace below -
 # both are hardcoded to the same literal rather than cross-referenced, since named
 # templates from the vendored subchart aren't safely callable from this parent chart's

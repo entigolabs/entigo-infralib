@@ -1,0 +1,63 @@
+# Per-app OCI IAM, applied by the crossplane-oracle provider - see
+# https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
+# These statements lived in modules/oracle/oke's shared controllers policy until the
+# Crossplane IAM migration. Split in two because OCI only allows a policy to grant within
+# the subtree it is attached to: the tenancy-scoped statements (public-ips, floating-ips,
+# tag-namespaces) cannot live in the compartment-attached policy.
+#
+# NOTE: this module is currently unused (ingress-nginx replaced it - OCI LBs allow only
+# one TLS certificate per listener, no SNI). Deploying it again requires widening the
+# Crossplane bootstrap grant in modules/oracle/oke from
+# "manage policies in compartment id ..." to "manage policies in tenancy", or the
+# tenancy-attached Policy below will fail to apply.
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ .Release.Name }}
+    description: Grants oci-native-ingress-controller its compartment-scoped permissions (LBs, certificates, WAF), via instance principal
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage load-balancers in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage cabundles in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage cabundle-associations in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage leaf-certificates in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage leaf-certificate-versions in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read leaf-certificate-bundles in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage certificate-associations in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read certificate-authorities in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage certificate-authority-associations in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read certificate-authority-bundles in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage waf-family in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read cluster-family in compartment id {{ .Values.global.oracle.compartmentId }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-tenancy
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.tenancyOcid }}
+    name: {{ .Release.Name }}-tenancy
+    description: Grants oci-native-ingress-controller its tenancy-scoped permissions (public-ips, floating-ips, tag-namespaces), via instance principal
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read public-ips in tenancy
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage floating-ips in tenancy
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use tag-namespaces in tenancy
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}

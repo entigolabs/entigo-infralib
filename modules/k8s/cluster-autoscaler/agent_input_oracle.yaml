@@ -1,3 +1,8 @@
+global:
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    dynamicGroupName: "{{ .toutput.oke.controllers_dynamic_group_name }}"
+
 cluster-autoscaler:
   image:
     # No Oracle registry-proxy module exists yet - hardcode the upstream registry (its

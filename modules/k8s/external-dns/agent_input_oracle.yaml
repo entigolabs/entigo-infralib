@@ -1,3 +1,8 @@
+global:
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    dynamicGroupName: "{{ .toutput.oke.controllers_dynamic_group_name }}"
+
 external-dns:
   extraArgs:
     - --metrics-address=:7979

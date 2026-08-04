@@ -38,6 +38,24 @@ output "lb_nsg_id" {
   value = oci_core_network_security_group.lb.id
 }
 
+output "controllers_dynamic_group_name" {
+  # Referenced by the per-app Crossplane Policy CRs in k8s modules' templates/oracle/
+  # ("Allow dynamic-group <this> to ..." statements).
+  value = oci_identity_dynamic_group.controllers.name
+}
+
+output "tenancy_id" {
+  # Used by crossplane-oracle's Instance Principal credentials secret.
+  value = data.oci_identity_compartment.this.compartment_id
+}
+
+output "region" {
+  # The OCI provider has no "current region" data source; OCIDs of regional resources
+  # embed the region identifier as the 4th dot-separated field
+  # (ocid1.cluster.oc1.<region>.<hash>), so derive it from the cluster's own OCID.
+  value = split(".", oci_containerengine_cluster.this.id)[3]
+}
+
 output "main_min_size" {
   # tostring: the agent renders numeric terraform outputs as %f floats ("1.000000"),
   # which breaks cluster-autoscaler's --nodes=<min>:<max>:<ocid> parsing (it then

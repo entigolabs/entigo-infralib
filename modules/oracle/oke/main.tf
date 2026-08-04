@@ -162,58 +162,36 @@ data "oci_identity_compartment" "this" {
   id = var.compartment_id
 }
 
-# Instance Principal identity for in-cluster controllers (oci-native-ingress-controller,
-# external-dns). This cluster is a Basic OKE cluster (no OKE Workload Identity available),
-# so instance principal - any instance in the compartment - is the only no-static-credential
-# auth option. Shared by both controllers rather than split per-controller since they run on
-# the same node pools within the same compartment boundary.
+# Instance Principal identity for in-cluster controllers (Crossplane OCI provider,
+# external-dns, cluster-autoscaler). This cluster is a Basic OKE cluster (no OKE Workload
+# Identity available), so instance principal - any instance in the compartment - is the
+# only no-static-credential auth option. Shared rather than split per-controller since
+# they run on the same node pools within the same compartment boundary (per-pod isolation
+# is impossible with instance principal anyway - every pod shares the node's identity).
 resource "oci_identity_dynamic_group" "controllers" {
   compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"
-  description    = "Instances in ${var.prefix}'s OKE node pools - used by in-cluster controllers (ingress, external-dns) via instance principal auth"
+  description    = "Instances in ${var.prefix}'s OKE node pools - used by in-cluster controllers (crossplane, external-dns, cluster-autoscaler) via instance principal auth"
   matching_rule  = "ALL {instance.compartment.id = '${var.compartment_id}'}"
 }
 
 resource "oci_identity_policy" "controllers" {
-  # Must live at the tenancy too, alongside the dynamic group: OCI only allows a policy's
-  # statements to reference the compartment it's attached to or compartments *below* it in
-  # the hierarchy, never above - and this policy needs "in tenancy" statements (public-ips,
-  # floating-ips, tag-namespaces) alongside its "in compartment id <var.compartment_id>"
-  # ones. Attaching it at var.compartment_id instead failed live: "Compartment
-  # {tenancy_ocid} does not exist or is not part of the policy compartment subtree".
-  compartment_id = data.oci_identity_compartment.this.compartment_id
+  # Bootstrap grant only: per-app permissions (external-dns "manage dns",
+  # cluster-autoscaler's node-pool statements, the ingress controller's cert/LB set)
+  # live in each k8s module's templates/oracle/ as Crossplane Policy CRs, applied by
+  # the crossplane-oracle provider - which is what this statement authorizes. Attached
+  # at the compartment (not the tenancy like before the Crossplane migration): OCI only
+  # lets a policy grant within the subtree it is attached to, so compartment-level
+  # "manage policies" cannot be escalated beyond this compartment. The flip side: a
+  # Crossplane Policy CR needing "in tenancy" statements (oci-native-ingress-controller
+  # would - public-ips, floating-ips, tag-namespaces) requires widening this grant to
+  # tenancy and attaching that CR's policy at the tenancy.
+  compartment_id = var.compartment_id
   name           = "${var.prefix}-oke-controllers"
-  description    = "Grants oci-native-ingress-controller and external-dns the permissions they need, via instance principal"
+  description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
 
   statements = [
-    # oci-native-ingress-controller - see
-    # https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage load-balancers in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use virtual-network-family in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cabundles in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cabundle-associations in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage leaf-certificates in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage leaf-certificate-versions in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read leaf-certificate-bundles in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage certificate-associations in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read certificate-authorities in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage certificate-authority-associations in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read certificate-authority-bundles in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read public-ips in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage floating-ips in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage waf-family in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read cluster-family in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use tag-namespaces in tenancy",
-    # external-dns - the aggregate "dns" resource-type covers dns-zones + dns-records
-    # together, matching what upstream external-dns's own OCI tutorial documents.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage dns in compartment id ${var.compartment_id}",
-    # cluster-autoscaler - per Oracle's OKE autoscaler doc. The doc's remaining two
-    # statements (read virtual-network-family, use vnics) are already covered by the
-    # broader "use virtual-network-family" granted above for the ingress controller.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage cluster-node-pools in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage instance-family in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use subnets in compartment id ${var.compartment_id}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to inspect compartments in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage policies in compartment id ${var.compartment_id}",
   ]
 }
 

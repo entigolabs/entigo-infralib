@@ -1,3 +1,9 @@
+global:
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    dynamicGroupName: "{{ .toutput.oke.controllers_dynamic_group_name }}"
+    tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
+
 oci-native-ingress-controller:
   compartment_id: "{{ .agent.accountId }}"
   subnet_id: "{{ .toutput.vpc.public_subnet_id }}"

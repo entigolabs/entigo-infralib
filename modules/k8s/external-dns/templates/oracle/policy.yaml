@@ -1,0 +1,26 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# Per-app OCI IAM, applied by the crossplane-oracle provider. The grantee is the shared
+# instance-principal dynamic group from modules/oracle/oke (Basic OKE has no Workload
+# Identity, so every pod on a node shares the node's identity - this gives structural
+# parity with the aws/google per-app IAM templates, not per-pod isolation).
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ .Release.Name }}
+    description: Grants external-dns permission to manage DNS zones and records, via instance principal
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      # The aggregate "dns" resource-type covers dns-zones + dns-records together,
+      # matching what upstream external-dns's own OCI tutorial documents.
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage dns in compartment id {{ .Values.global.oracle.compartmentId }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

@@ -1,0 +1,18 @@
+installProviderConfig: true
+
+global:
+  extraProviders: []
+  # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, ...);
+  # objectstorage: buckets + S3-compat credentials for loki/mimir and friends.
+  requiredProviders: ["identity", "objectstorage"]
+
+  cloudProvider: ""
+  oracle:
+    # Tenancy OCID and region for the provider's Instance Principal credentials secret.
+    # Not secret material - OCIDs and region identifiers are not credentials; the actual
+    # authentication comes from the node's instance identity.
+    tenancyOcid: ""
+    region: ""
+  deploymentRuntimeConfig:
+    args:
+      - --enable-management-policies

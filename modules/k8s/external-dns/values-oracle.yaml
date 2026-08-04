@@ -1,5 +1,11 @@
 global:
   cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+
+  oracle:
+    # Filled by agent_input_oracle.yaml; consumed by templates/oracle/policy.yaml.
+    compartmentId: ""
+    dynamicGroupName: ""
 
 external-dns:
   sources:
@@ -10,8 +16,8 @@ external-dns:
     name: oci
   # Instance principal - this cluster is a Basic OKE cluster (no Workload Identity
   # available) - no oci.yaml config secret needed, unlike the key-based/workload-identity
-  # auth paths. The matching dynamic group + "manage dns" policy are created in
-  # modules/oracle/oke (shared with oci-native-ingress-controller's identity).
+  # auth paths. The dynamic group comes from modules/oracle/oke; the "manage dns" policy
+  # is created by this module's own templates/oracle/policy.yaml via crossplane-oracle.
   # --oci-compartment-ocid is templated in agent_input_oracle.yaml - extraArgs is set there
   # in full (including this --oci-auth-instance-principal flag and the base
   # --metrics-address flag) since Helm values lists fully replace rather than merge across

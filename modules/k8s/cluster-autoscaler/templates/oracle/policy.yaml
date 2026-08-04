@@ -1,0 +1,32 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# Per-app OCI IAM, applied by the crossplane-oracle provider. The grantee is the shared
+# instance-principal dynamic group from modules/oracle/oke (Basic OKE has no Workload
+# Identity, so every pod on a node shares the node's identity - this gives structural
+# parity with the aws/google per-app IAM templates, not per-pod isolation).
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ .Release.Name }}
+    description: Grants cluster-autoscaler permission to resize OKE node pools, via instance principal
+    freeformTags:
+      created-by: "entigo-infralib"
+    # The verbatim statement list from Oracle's OKE cluster-autoscaler doc - all six,
+    # unlike the pre-Crossplane shared policy where read virtual-network-family and
+    # use vnics were covered by the ingress controller's broader grant.
+    statements:
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage cluster-node-pools in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage instance-family in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use subnets in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use vnics in compartment id {{ .Values.global.oracle.compartmentId }}
+      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to inspect compartments in compartment id {{ .Values.global.oracle.compartmentId }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}
