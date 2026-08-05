@@ -21,6 +21,14 @@ metadata:
     {{- include "oci-native-ingress-controller.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # DEVIATION FROM UPSTREAM: readiness here depends on holding the leader-election lease, and
+  # the default RollingUpdate with one replica computes maxUnavailable 25% -> 0, so Kubernetes
+  # will not terminate the old pod until the new one is Ready while the new one cannot become
+  # Ready until the old one releases the lease. Every upgrade then wedges until someone deletes
+  # a pod by hand. Recreate stops the old pod first; the load balancer keeps serving throughout,
+  # only reconciliation pauses.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "oci-native-ingress-controller.selectorLabels" . | nindent 6 }}

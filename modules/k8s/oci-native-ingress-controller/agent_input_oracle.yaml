@@ -8,6 +8,11 @@ oci-native-ingress-controller:
   compartment_id: "{{ .agent.accountId }}"
   subnet_id: "{{ .toutput.vpc.public_subnet_id }}"
   cluster_id: "{{ .toutput.oke.cluster_id }}"
+  # Feeds OCI_RESOURCE_PRINCIPAL_REGION. Mandatory under OKE Workload Identity and ignored
+  # under instance principal, which derives the region from instance metadata instead - leaving
+  # it empty produced requests to "containerengine..oci.oraclecloud.com" (note the empty label)
+  # and a DNS failure that looked nothing like an auth problem.
+  region: "{{ .toutput.oke.region }}"
 
 ingressClassParameters:
   compartmentId: "{{ .agent.accountId }}"

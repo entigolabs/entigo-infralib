@@ -51,7 +51,7 @@ entry + `Chart.lock` pointing at a Helm chart repository - NIC has no chart repo
 only an in-repo chart at `github.com/oracle/oci-native-ingress-controller/helm/oci-native-ingress-controller`.
 `charts/oci-native-ingress-controller/` is a manual copy of that chart at tag `v1.4.3`.
 To upgrade: diff the upstream `helm/oci-native-ingress-controller` directory at the new
-tag against this one and re-apply the two deviations below.
+tag against this one and re-apply the three deviations below.
 
 ### Deviations from the upstream chart ###
 
@@ -72,7 +72,11 @@ tag against this one and re-apply the two deviations below.
      `values.yaml` specifically so the generated Secret name is deterministic and known
      ahead of time to `webhook-certs.yaml` - Helm subchart named templates aren't reliably
      callable from a parent chart's own templates across chart boundaries.
-2. **`ingressClassParameters.subnetId`/`.compartmentId` and
+2. **`templates/deployment.yaml` sets `strategy: Recreate`.** Readiness depends on holding the
+   leader-election lease, so with the chart's default RollingUpdate on a single replica the old
+   pod will not terminate until the new one is Ready, and the new one cannot become Ready until
+   the old one releases the lease. Every upgrade deadlocks until a pod is deleted by hand.
+3. **`ingressClassParameters.subnetId`/`.compartmentId` and
    `oci-native-ingress-controller.subnet_id`** are wired from
    `.toutput.vpc.public_subnet_id`, a new **singular** output added to `modules/oracle/vpc`
    alongside the existing `public_subnets` list output - the agent's k8s Helm value
