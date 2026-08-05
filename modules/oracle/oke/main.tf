@@ -179,26 +179,36 @@ resource "oci_identity_policy" "controllers" {
   # Bootstrap grant only: per-app permissions (external-dns "manage dns",
   # cluster-autoscaler's node-pool statements, the ingress controller's cert/LB set)
   # live in each k8s module's templates/oracle/ as Crossplane Policy CRs, applied by
-  # the crossplane-oracle provider - which is what this statement authorizes. Attached
-  # at the compartment (not the tenancy like before the Crossplane migration): OCI only
-  # lets a policy grant within the subtree it is attached to, so compartment-level
-  # "manage policies" cannot be escalated beyond this compartment. The flip side: a
-  # Crossplane Policy CR needing "in tenancy" statements (oci-native-ingress-controller
-  # would - public-ips, floating-ips, tag-namespaces) requires widening this grant to
-  # tenancy and attaching that CR's policy at the tenancy.
-  compartment_id = var.compartment_id
+  # the crossplane-oracle provider - which is what this statement authorizes.
+  #
+  # Attached at the tenancy, and granting "in tenancy", because OCI only lets a policy
+  # grant within the subtree it is attached to and oci-native-ingress-controller needs
+  # genuinely tenancy-scoped statements (read public-ips, manage floating-ips, use
+  # tag-namespaces - see modules/k8s/oci-native-ingress-controller/templates/policy.yaml).
+  # A compartment-attached grant would be the tighter boundary, but it cannot create that
+  # policy at all. This is the one grant worth reading carefully: it lets anything running
+  # on these nodes write IAM policy anywhere in the tenancy.
+  compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"
   description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage policies in compartment id ${var.compartment_id}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage policies in tenancy",
   ]
 }
 
 resource "oci_containerengine_cluster" "this" {
-  compartment_id     = var.compartment_id
-  name               = var.prefix
-  vcn_id             = var.vcn_id
+  compartment_id = var.compartment_id
+  name           = var.prefix
+  vcn_id         = var.vcn_id
+  # OCI defaults an unset type to BASIC_CLUSTER, which is what we ran on until now. Basic
+  # clusters have no OKE Workload Identity and no cluster add-ons, so every in-cluster
+  # controller is stuck on instance principal (node-wide identity, no per-pod isolation)
+  # and nothing Oracle ships as an add-on can be used. Enhanced is not free, but the
+  # capability gap is not worth working around. Not a variable: a cluster's type can be
+  # upgraded Basic -> Enhanced in place but never downgraded, so offering the choice would
+  # only let a consumer pick the one that can't be undone.
+  type               = "ENHANCED_CLUSTER"
   kubernetes_version = local.kubernetes_version
 
   endpoint_config {

@@ -1,31 +1,17 @@
+# Note what does NOT use this issuer: the platform tools (argocd, grafana, prometheus) are
+# served by a single zone-wide wildcard certificate created in the infra step by
+# modules/oracle/dns, because an OCI load balancer listener carries only one key pair and
+# NIC puts every Ingress on the same listener. This ClusterIssuer stays for anything that
+# genuinely needs its own certificate - which on Oracle means an app exposed through Istio
+# rather than through NIC, since only Istio can do SNI across several certificates.
 issuer:
-  # modules/k8s/oracle-gateway - the ACME HTTP-01 challenge is solved with a temporary
-  # HTTPRoute on that Gateway's port-80 listener. No ingress controller is involved, which
-  # is the point: ingress-nginx is retired upstream and Istio's own plain-Ingress support
-  # is its most legacy surface, so the solver Ingress this used to rely on has no good
-  # home anymore.
-  #
-  # Safe alongside the gateway's HTTP->HTTPS redirect route: cert-manager matches the
-  # challenge path with `type: Exact`, which Gateway API ranks above the redirect's
-  # `PathPrefix: /`, so renewals aren't shadowed.
-  gateway:
-    name: oracle-gateway
-    namespace: oracle-gateway
-
-cert-manager:
-  config:
-    gatewayAPI:
-      # NOTE: the key is `enabled`, despite the cert-manager chart's own values.yaml
-      # example showing `enable: true` - that comment is wrong. Verified against the
-      # ControllerConfiguration Go type (GatewayAPIConfig.Enabled, json:"enabled") in
-      # cert-manager v1.21.0. Getting it wrong means the gateway-shim never runs and no
-      # certificate is ever issued, silently.
-      #
-      # The ExperimentalGatewayAPISupport feature gate is BETA and on by default since
-      # 1.15, so it does not need setting - but this switch still does, they are separate.
-      #
-      # Ordering matters: cert-manager only checks for the Gateway API CRDs at startup, so
-      # they must already exist when this pod starts. modules/k8s/gateway-api-crds runs at
-      # sync-wave 0 for exactly this reason. If the CRDs ever land afterwards, restart the
-      # deployment (kubectl rollout restart deployment cert-manager -n cert-manager).
-      enabled: true
+  # modules/k8s/oci-native-ingress-controller's IngressClass. cert-manager's HTTP-01
+  # solver service is NodePort by default, which is also what NIC requires on Flannel
+  # clusters to populate LB backends.
+  ingressClassName: oci-ic
+  # NIC creates one LB listener per backend service port - without this the challenge
+  # route lands on the solver service's port (8089), where Let's Encrypt (port 80)
+  # never looks. Confirmed live via the LB's routing policies. This annotation merges
+  # the solver's route onto the port-80 listener.
+  solverIngressAnnotations:
+    oci-native-ingress.oraclecloud.com/http-listener-port: "80"

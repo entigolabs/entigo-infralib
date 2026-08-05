@@ -1,27 +1,13 @@
 issuer:
-  # Let's Encrypt ClusterIssuer via ACME HTTP-01. Two solver flavours are supported, and
-  # exactly one should be configured - `gateway` wins if both are set. Leave both empty
-  # and no ClusterIssuer is created (the chart still installs cert-manager itself).
-  #
-  # 1. Ingress solver: cert-manager creates a solver Ingress, which needs a real ingress
-  #    controller to serve it. Set ingressClassName per cloud.
+  # Let's Encrypt ClusterIssuer via HTTP-01. The solver Ingress must be served by a real
+  # ingress controller - set ingressClassName per cloud in values-<cloud>.yaml. Left empty,
+  # no ClusterIssuer is created (chart still installs cert-manager itself).
   ingressClassName: ""
+  email: tarmo.trumm@entigo.com
+  server: https://acme-v02.api.letsencrypt.org/directory
   # Extra annotations for the ACME solver Ingresses cert-manager creates -
   # set per cloud when the ingress controller needs routing hints.
   solverIngressAnnotations: {}
-  # 2. Gateway API solver: cert-manager creates a temporary HTTPRoute attached to an
-  #    existing Gateway instead, so no ingress controller is involved at all. The Gateway
-  #    must already exist (cert-manager never edits Gateways) and must have a listener on
-  #    port 80 that accepts routes from the issuer's namespace (allowedRoutes.from: All,
-  #    since a ClusterIssuer's challenges are created in cert-manager's own namespace).
-  #
-  #    Requires Gateway API support to be switched on in the controller - see
-  #    `cert-manager.config.gatewayAPI.enabled` in values-oracle.yaml.
-  gateway:
-    name: ""
-    namespace: ""
-  email: tarmo.trumm@entigo.com
-  server: https://acme-v02.api.letsencrypt.org/directory
 
 cert-manager:
   crds:

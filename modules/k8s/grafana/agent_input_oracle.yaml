@@ -1,6 +1,4 @@
 global:
-  oracle:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
   datasources:
     # `.toptmodule` (optional) rather than `.tmodule` (required, as aws/google use): a
     # missing module makes `.tmodule` fail the whole apps step, and Oracle is being rolled
@@ -21,10 +19,12 @@ grafana:
     users:
       home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
   ingress:
-    # ingress.enabled stays false (values-oracle.yaml) - this is set only because agent.yaml
-    # builds the developer-portal ui_url from `.input.grafana.ingress.hosts.0`.
     hosts:
       - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
+    annotations:
+      # The zone-wide wildcard certificate in OCI Certificates, shared by every app on this
+      # cluster - see modules/k8s/argocd/values-oracle.yaml.
+      oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.certificate_ocid }}"
   serviceAccount:
     name: "{{ .module.name }}"
   # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded, fully

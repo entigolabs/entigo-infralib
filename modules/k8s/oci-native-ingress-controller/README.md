@@ -5,6 +5,45 @@ Deploys Oracle's [OCI Native Ingress Controller](https://github.com/oracle/oci-n
 Load Balancer, so other modules (e.g. `argocd`) can get a real hostname via a standard
 `Ingress` resource.
 
+### TLS ###
+
+NIC terminates TLS on the OCI load balancer, and **a load balancer listener can carry only
+one key pair** ("customer can specify only one key pair per listener" - Oracle's own
+wording). Since NIC places every `Ingress` that sets
+`oci-native-ingress.oraclecloud.com/https-listener-port: "443"` on that one listener, apps
+on this cluster cannot each bring their own certificate the way they do behind nginx or an
+ALB. There is no SNI here.
+
+So the platform tools share a single zone-wide **wildcard** certificate, created in the
+infra step by `modules/oracle/dns` and referenced by OCID:
+
+```yaml
+annotations:
+  oci-native-ingress.oraclecloud.com/certificate-ocid: ocid1.certificate.oc1...
+  oci-native-ingress.oraclecloud.com/https-listener-port: "443"
+  oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+```
+
+The OCID form is used rather than a Kubernetes TLS secret in `spec.tls` deliberately. A
+secret must live in the `Ingress`'s own namespace, so a shared certificate would have to be
+copied into every app namespace, and NIC would then import each copy into OCI Certificates
+as a *separate* certificate - several different OCIDs competing for the single listener.
+An OCID is namespace-free, so every app names the same certificate and they agree.
+
+Note that `certificate-ocid` also makes NIC treat every host on that `Ingress` as
+TLS-enabled and **ignore** `http-listener-port`, so these apps answer on 443 only. An app
+that genuinely needs its own certificate has to be served by Istio instead.
+
+### Gateway API CRDs ###
+
+`templates/gateway-api-crds.yaml` is the upstream Gateway API v1.5.1 standard-channel
+bundle, byte-identical to the copy in `modules/k8s/aws-alb`. OKE ships no Gateway API CRDs
+at all, and NIC itself does not implement Gateway API - the bundle is here because it is
+the cluster-wide prerequisite that has to land before anything that *does* implement it
+(Istio), and this module is the natural owner of the ingress-layer CRDs, exactly as
+`aws-alb` owns them on AWS. The CRDs carry `helm.sh/resource-policy: keep`, so removing
+this module does not delete Gateways other things may still depend on.
+
 ### Why this module vendors its own chart copy ###
 
 Unlike every other `modules/k8s/*` module, this one does **not** use a `dependencies:`

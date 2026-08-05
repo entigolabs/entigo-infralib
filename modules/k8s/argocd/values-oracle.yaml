@@ -4,17 +4,32 @@ global:
 argocd:
   configs:
     params:
-      # TLS terminates in the Istio gateway, which then talks plain HTTP to argocd-server.
+      # TLS terminates in the OCI load balancer, which then speaks plain HTTP to
+      # argocd-server (see backend-tls-enabled below).
       server.insecure: true
   server:
     ingress:
-      # No Ingress (ingress-nginx is gone) and, deliberately, no HTTPRoute in this chart
-      # either: argocd is installed with `helm upgrade --install` during the apps step's
-      # bootstrap, which happens before any ArgoCD Application exists and therefore before
-      # the Gateway API CRDs are installed - a Gateway API kind here fails the bootstrap
-      # outright with "no matches for kind HTTPRoute".
-      #
-      # argocd's HTTPRoute is created for it by modules/k8s/oracle-gateway (its `routes`
-      # value) once the CRDs are in place, into this namespace so the backend reference
-      # stays same-namespace. The certificate comes from the gateway's own listener.
-      enabled: false
+      enabled: true
+      # modules/k8s/oci-native-ingress-controller's IngressClass. NIC programs an OCI load
+      # balancer directly - there is no in-cluster proxy - so every routing and TLS decision
+      # is expressed as an annotation on this Ingress, the same shape as the alb annotations
+      # in values-aws.yaml.
+      ingressClassName: oci-ic
+      annotations:
+        # Without this NIC creates one listener per backend service port, so argocd would
+        # answer on the service's own port rather than 443. The matching http-listener-port
+        # annotation is deliberately absent: NIC ignores it whenever a certificate-ocid is
+        # set, and there is nothing to serve on port 80 anyway.
+        oci-native-ingress.oraclecloud.com/https-listener-port: "443"
+        # NIC defaults to end-to-end TLS, re-encrypting to the backend. argocd-server runs
+        # in insecure (plain HTTP) mode above, so the second hop has to be plaintext.
+        oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+        # certificate-ocid is added by agent_input_oracle.yaml - it points at the shared
+        # wildcard certificate from modules/oracle/dns. Every Oracle app must use the same
+        # certificate: NIC puts them all on one listener, and an OCI load balancer listener
+        # can only carry one key pair ("customer can specify only one key pair per
+        # listener"), so per-app certificates would collide.
+      # No `tls:` block - the certificate is referenced by OCID, not through a Kubernetes
+      # secret, and NIC treats every host on an Ingress carrying that annotation as
+      # TLS-enabled. Setting both would make NIC import a second, conflicting certificate.
+      tls: false

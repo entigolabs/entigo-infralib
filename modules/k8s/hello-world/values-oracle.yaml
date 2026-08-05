@@ -1,15 +1,9 @@
-# Exposed through modules/k8s/oracle-gateway's Gateway API gateway rather than an Ingress -
-# ingress-nginx is gone. The TLS certificate is issued by cert-manager against the
-# gateway's own listener, so there is nothing cert-related to configure here.
+# Exposed through modules/k8s/oci-native-ingress-controller, which programs an OCI load
+# balancer straight from this Ingress. TLS comes from the shared wildcard certificate in
+# OCI Certificates rather than a per-app cert-manager secret - see the annotations in
+# agent_input_oracle.yaml and the argocd module for the full rationale.
 ingress:
-  enabled: false
-
-httpRoute:
   enabled: true
-  # sectionName pins this app to its own HTTPS listener. Without it the route would also
-  # attach to the gateway's port-80 listener, whose hostname is unset and therefore matches
-  # every host, and the app would be served over plaintext HTTP as well.
-  gateway:
-    name: oracle-gateway
-    namespace: oracle-gateway
-    sectionName: https-hello-world
+  className: oci-ic
+  # No Kubernetes TLS secret: the certificate is referenced by OCID in the annotations.
+  tls: false

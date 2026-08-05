@@ -1,1 +1,4 @@
 parent_domain: "biz.internal.test"
+# biz.biz.internal.test does not resolve, so a real Let's Encrypt DNS-01 challenge against
+# it could only ever time out.
+create_certificate: false

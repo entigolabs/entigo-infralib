@@ -2,15 +2,6 @@ global:
   cloudProvider: oracle
   providerConfigRefName: crossplane-oracle
   oracle:
-    # Filled by agent_input_oracle.yaml.
-    hostname: ""
-    # The shared Gateway API gateway from modules/k8s/oracle-gateway. Its `hosts` value must
-    # include this module's name so the matching https-<name> listener (and its Let's
-    # Encrypt certificate) exists.
-    gateway:
-      name: oracle-gateway
-      namespace: oracle-gateway
-      sectionName: https-prometheus
     # The in-cluster kube-apiserver ClusterIP, for the kube-state-metrics egress policy
     # below. aws hardcodes its own equivalent (172.20.0.1) in values.yaml.
     kubernetesServiceIp: ""
@@ -18,9 +9,18 @@ global:
 prometheus:
   server:
     ingress:
-      # Exposed with an HTTPRoute through modules/k8s/oracle-gateway instead of an Ingress -
-      # there is no ingress controller on Oracle since the move off ingress-nginx.
-      enabled: false
+      enabled: true
+      # modules/k8s/oci-native-ingress-controller's IngressClass; the annotations are the
+      # OCI equivalent of the alb ones in values-aws.yaml. See
+      # modules/k8s/argocd/values-oracle.yaml for what each of them does - the
+      # certificate-ocid one is added by agent_input_oracle.yaml.
+      ingressClassName: oci-ic
+      annotations:
+        oci-native-ingress.oraclecloud.com/https-listener-port: "443"
+        oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+      # Empty rather than the aws-style list: the certificate is referenced by OCID, so no
+      # Kubernetes TLS secret is involved. `hosts` is set in agent_input_oracle.yaml.
+      tls: []
     persistentVolume:
       # OKE's default StorageClass. Named explicitly rather than relying on the default so
       # the intent survives a cluster whose default class differs.

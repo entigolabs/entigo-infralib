@@ -6,23 +6,21 @@ global:
       # Name of the loki module, or empty when loki isn't deployed - the Loki datasource is
       # then skipped entirely. Set from `.toptmodule.loki` in agent_input_oracle.yaml.
       module: ""
-  oracle:
-    # Filled by agent_input_oracle.yaml.
-    hostname: ""
-    # The shared Gateway API gateway from modules/k8s/oracle-gateway. Its `hosts` value must
-    # include this module's name so the matching https-<name> listener (and its Let's
-    # Encrypt certificate) exists.
-    gateway:
-      name: oracle-gateway
-      namespace: oracle-gateway
-      sectionName: https-grafana
 
 grafana:
   ingress:
-    # Exposed with an HTTPRoute through oracle-gateway instead of an Ingress - there is no
-    # ingress controller on Oracle since the move off ingress-nginx. `hosts` is still set
-    # (in agent_input_oracle.yaml) because agent.yaml derives the portal ui_url from it.
-    enabled: false
+    enabled: true
+    # modules/k8s/oci-native-ingress-controller's IngressClass; the annotations are the OCI
+    # equivalent of the alb ones in values-aws.yaml. See modules/k8s/argocd/values-oracle.yaml
+    # for what each does - certificate-ocid is added by agent_input_oracle.yaml.
+    ingressClassName: oci-ic
+    annotations:
+      oci-native-ingress.oraclecloud.com/https-listener-port: "443"
+      oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+    path: /
+    # Empty rather than the aws-style list: the certificate is referenced by OCID, so no
+    # Kubernetes TLS secret is involved. `hosts` is set in agent_input_oracle.yaml.
+    tls: []
   persistence:
     # OKE's default StorageClass, named explicitly so the intent survives a cluster whose
     # default class differs. OCI Block Volume has a 50GB floor - a smaller request is

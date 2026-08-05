@@ -4,12 +4,8 @@
 # Crossplane IAM migration. Split in two because OCI only allows a policy to grant within
 # the subtree it is attached to: the tenancy-scoped statements (public-ips, floating-ips,
 # tag-namespaces) cannot live in the compartment-attached policy.
-#
-# NOTE: this module is currently unused (ingress-nginx replaced it - OCI LBs allow only
-# one TLS certificate per listener, no SNI). Deploying it again requires widening the
-# Crossplane bootstrap grant in modules/oracle/oke from
-# "manage policies in compartment id ..." to "manage policies in tenancy", or the
-# tenancy-attached Policy below will fail to apply.
+# That second policy is also why modules/oracle/oke's Crossplane bootstrap grant has to be
+# "manage policies in tenancy", attached at the tenancy: anything narrower cannot create it.
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:

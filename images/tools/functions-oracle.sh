@@ -173,11 +173,10 @@ get_k8s_credentials() {
         --kube-endpoint "${ORACLE_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
 }
 
-# Get ArgoCD hostname - reads the HTTPRoute, the same as the Google provider does, because
-# argocd is exposed through the Gateway API on Oracle now (modules/k8s/oracle-gateway) and
-# has no Ingress at all since ingress-nginx was retired. Looking for an Ingress here (as the
-# AWS provider does, and as this function used to) returns nothing, which silently drops
-# argocd_apply into its kubectl fallback - and that fallback then wedges instead of syncing.
+# Get ArgoCD hostname - reads the Ingress, like the AWS provider, since argocd is served by
+# modules/k8s/oci-native-ingress-controller. Returning nothing here is not a loud failure:
+# argocd_apply silently drops into its kubectl fallback, which then wedges instead of
+# syncing, so this must stay in step with how argocd is actually exposed.
 get_argocd_hostname() {
-    kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}'
+    kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}'
 }

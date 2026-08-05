@@ -14,6 +14,14 @@ output "int_domain" {
   value = oci_dns_zone.pub.name
 }
 
+# OCID of the zone-wide wildcard certificate in OCI Certificates (certificate.tf), or an
+# empty string when create_certificate is off. Consumed by the Oracle apps as the
+# oci-native-ingress.oraclecloud.com/certificate-ocid annotation - every app on the cluster
+# uses this same value, because they all share one load balancer listener.
+output "certificate_ocid" {
+  value = var.create_certificate ? oci_certificates_management_certificate.wildcard[0].id : ""
+}
+
 # The NS delegation record must be added manually in the parent zone (which typically
 # lives in a different cloud/provider, e.g. Route53) - these are the values to add.
 output "name_servers" {
