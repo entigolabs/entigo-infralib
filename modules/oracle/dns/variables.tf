@@ -18,27 +18,25 @@ variable "subdomain_name" {
   default     = ""
 }
 
-variable "create_certificate" {
-  description = "Issue a Let's Encrypt wildcard certificate for the zone and import it into OCI Certificates. Required by modules/k8s/oci-native-ingress-controller, which cannot do SNI and so serves every host from one certificate. Turn off only if nothing on the cluster is exposed through NIC - the ACME DNS-01 challenge needs the zone's NS delegation to be live in the parent domain, which is a manual step, so a brand new zone will fail here until that is done."
-  type        = bool
-  default     = true
-}
-
-variable "acme_email" {
-  description = "Contact address registered with Let's Encrypt, used for expiry warnings."
+# The wildcard certificate every app under this zone is served from. Supplied rather than
+# created here, and that is not for want of trying: modules/k8s/oci-native-ingress-controller
+# terminates TLS on an OCI load balancer listener, which holds exactly one key pair, so all
+# apps must share one certificate referenced by OCID - and the OCID has to exist before the
+# apps step renders its Helm values, which rules out issuing it from inside the cluster.
+#
+# Terraform cannot own it either. oci_certificates_management_certificate validates IMPORTED
+# material in CustomizeDiff with certificateConfigDiffStringProvided(), which reads the value
+# via diff.GetChange() and rejects anything empty - and an unknown value reads as empty. So a
+# certificate produced in the same apply (by acme_certificate, say) always fails plan with
+# "cert_chain_pem is required when config_type is IMPORTED". No version guards this with
+# NewValueKnown; checked 8.15 through 8.25. Renewal hits the identical check, so it is not
+# only a bootstrap problem.
+#
+# Until that is automated elsewhere, issue the wildcard (DNS-01 against this zone, since
+# Let's Encrypt issues wildcards no other way), import it into OCI Certificates, and pass the
+# OCID here.
+variable "certificate_ocid" {
+  description = "OCID of a certificate in OCI Certificates covering *.<this zone> and the zone apex, served by every app behind the native ingress controller. Passed straight through to the certificate_ocid output."
   type        = string
-  default     = "tarmo.trumm@entigo.com"
-}
-
-variable "certificate_min_days_remaining" {
-  description = "Renew the certificate once it has fewer than this many days left. Renewal only happens while terraform is running, so the deployment has to be applied at least this often."
-  type        = number
-  default     = 30
-}
-
-variable "acme_dns_challenge_config" {
-  description = "Extra lego configuration for the DNS-01 challenge, merged over OCI_COMPARTMENT_OCID. Normally left empty so credentials come from the environment - see https://go-acme.github.io/lego/dns/oraclecloud/ for the accepted keys."
-  type        = map(string)
-  default     = {}
-  sensitive   = true
+  default     = ""
 }
