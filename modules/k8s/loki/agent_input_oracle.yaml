@@ -1,0 +1,76 @@
+global:
+  prefix: "{{ .config.prefix }}"
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
+    objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
+    region: "{{ .toutput.oke.region }}"
+    kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+  # Bucket names are globally unique per namespace in OCI, not per account+region as on aws,
+  # so prefix + module name is enough to keep two deployments apart.
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}"
+
+loki:
+  global:
+    # The Customer Secret Key minted by templates/oracle/credentials.yaml, delivered through
+    # Crossplane's connection secret. The access key id is the key's OCID and the secret is its
+    # `key` field - confirmed against the agent's own Object Storage code, which returns
+    # exactly (*response.Id, *response.Key) for the terraform state backend.
+    #
+    # The secret's *field* names come from the Crossplane provider, not from us.
+    extraEnv:
+      - name: OCI_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: "{{ .module.name }}-object-storage"
+            key: attribute.id
+      - name: OCI_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: "{{ .module.name }}-object-storage"
+            key: attribute.key
+  loki:
+    storage:
+      s3:
+        endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+        region: "{{ .toutput.oke.region }}"
+      bucketNames:
+        chunks: "{{ .config.prefix }}-{{ .module.name }}"
+        ruler: "{{ .config.prefix }}-{{ .module.name }}"
+        admin: "{{ .config.prefix }}-{{ .module.name }}"
+    structuredConfig:
+      storage_config:
+        aws:
+          endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+          region: "{{ .toutput.oke.region }}"
+          bucketnames: "{{ .config.prefix }}-{{ .module.name }}"
+          s3forcepathstyle: true
+  # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded and must
+  # stay fully qualified - OKE's runtime refuses unqualified image names ("short name mode is
+  # enforcing ... returns ambiguous list").
+  image:
+    registry: docker.io
+  sidecar:
+    image:
+      registry: docker.io
+  memcached:
+    image:
+      repository: docker.io/library/memcached
+  networkPolicy:
+    externalStorage:
+      # Object Storage has no fixed address range reachable from here, and the traffic leaves
+      # through the NAT gateway.
+      cidrs:
+        - "0.0.0.0/0"
+    ingress:
+      namespaceSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: Exists
+      podSelector:
+        matchExpressions:
+          - key: netpol-loki
+            operator: In
+            values:
+              - 'loki'
+              - '{{ .module.name }}'

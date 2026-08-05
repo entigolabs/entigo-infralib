@@ -233,6 +233,17 @@ resource "oci_identity_policy" "controllers" {
 
   statements = [
     "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage policies in tenancy",
+    # Users and groups are needed because loki reaches Object Storage through the
+    # S3-compatibility endpoint, and that endpoint authenticates only with a Customer Secret
+    # Key, which belongs to an IAM user - there is no instance-principal or Workload Identity
+    # path (see modules/k8s/loki/templates/oracle/credentials.yaml). Crossplane therefore has
+    # to be able to create the user, put it in a group the policy can name, and mint the key.
+    #
+    # Read this as the escalation it is: anything running on these nodes can create tenancy
+    # users. It becomes unnecessary the moment Loki gains a native OCI backend -
+    # https://github.com/grafana/loki/issues/23687 - at which point drop these two lines.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage users in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage groups in tenancy",
   ]
 }
 

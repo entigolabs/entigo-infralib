@@ -1,0 +1,42 @@
+global:
+  cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+  oracle:
+    # The in-cluster kube-apiserver ClusterIP, filled by agent_input_oracle.yaml. aws
+    # hardcodes its own equivalent (172.20.0.1) in values-aws.yaml; on OKE it derives from the
+    # cluster's services CIDR, so it has to come from the oke module's output.
+    kubernetesServiceIp: ""
+
+logs:
+  networkPolicy:
+    # Note this is not actually enforced - OKE ships no policy controller with either CNI - so
+    # it documents intent and is ready for the day one is added. The egress list is replaced
+    # wholesale rather than merged (Helm does not merge lists), which is why the DNS and loki
+    # rules are repeated here instead of inherited.
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "" # set in agent_input_oracle.yaml from the oke module's output

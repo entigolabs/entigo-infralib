@@ -112,3 +112,8 @@ output "tools_max_size" {
   # through Go templating verbatim.
   value = tostring(var.oke_tools_max_size)
 }
+
+# Consumed by modules/k8s/loki to build its S3-compatible endpoint hostname.
+output "object_storage_namespace" {
+  value = data.oci_objectstorage_namespace.this.namespace
+}

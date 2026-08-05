@@ -1,0 +1,101 @@
+global:
+  cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+  # Filled by agent_input_oracle.yaml.
+  prefix: ""
+  oracle:
+    compartmentId: ""
+    # Users and groups are tenancy-scoped in OCI, unlike the bucket and the policy.
+    tenancyOcid: ""
+    # The Object Storage namespace - tenancy-wide, and also part of the S3-compatible
+    # hostname, which is why path-style addressing is mandatory below.
+    objectStorageNamespace: ""
+    region: ""
+    # The in-cluster kube-apiserver ClusterIP, for the egress network policy.
+    kubernetesServiceIp: ""
+
+loki:
+  loki:
+    storage:
+      type: s3
+      s3:
+        # OCI's S3-compatibility endpoint. The namespace is in the hostname, so the bucket
+        # cannot also be a subdomain - s3ForcePathStyle is not a preference here, it is
+        # required, and the same reason images/tools/functions-oracle.sh sets
+        # `aws configure set default.s3.addressing_style path`.
+        endpoint: ""
+        region: ""
+        s3ForcePathStyle: true
+        insecure: false
+        # Credentials arrive as environment variables, expanded into the rendered config by
+        # the chart's unconditional -config.expand-env=true. They are deliberately NOT values:
+        # a Customer Secret Key placed here would end up in an ArgoCD Application manifest.
+        # The names are bound to the Crossplane connection secret in agent_input_oracle.yaml.
+        accessKeyId: "${OCI_ACCESS_KEY_ID}"
+        secretAccessKey: "${OCI_SECRET_ACCESS_KEY}"
+        http_config: {}
+    storage_config:
+      aws:
+        s3forcepathstyle: true
+        bucketnames: ""
+        endpoint: ""
+        region: ""
+        insecure: false
+    # Only the tsdb/v13 schema, unlike aws which carries a 2022 boltdb-shipper entry it has to
+    # keep for data continuity. Oracle has no history to preserve, so there is no reason to
+    # start on a legacy schema.
+    schemaConfig:
+      configs:
+        - from: "2026-01-01"
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+  read:
+    persistence:
+      # OKE's default StorageClass. OCI Block Volume has a 50GB floor, so a smaller request is
+      # rounded up and billed at 50GB regardless.
+      storageClass: oci-bv
+      size: 50Gi
+  write:
+    persistence:
+      storageClass: oci-bv
+      size: 50Gi
+  backend:
+    persistence:
+      storageClass: oci-bv
+      size: 50Gi
+
+  serviceAccount:
+    # Created by templates/oracle/service-account.yaml. It carries no cloud identity, unlike
+    # aws (IRSA) and google (Workload Identity): loki authenticates to Object Storage with a
+    # Customer Secret Key, because the S3-compatibility endpoint accepts nothing else.
+    create: false
+    name: loki
+
+  gateway:
+    ingress:
+      # No Ingress. Grafana reaches loki in-cluster at http://<module>-gateway.<namespace>
+      # (see modules/k8s/grafana/templates/oracle/config-map.yaml), so exposing it publicly
+      # would add a hostname on the shared load balancer for no one to use.
+      enabled: false
+
+  networkPolicy:
+    # Not enforced on this cluster - OKE ships no policy controller with either CNI - but kept
+    # correct for the day one is added, and the ports still document the intent. Object Storage
+    # is reached over 443 through the NAT gateway.
+    enabled: true
+    externalStorage:
+      ports:
+        - 443
+    discovery:
+      port: 53
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system

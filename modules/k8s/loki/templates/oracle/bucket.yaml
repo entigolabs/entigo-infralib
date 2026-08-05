@@ -1,0 +1,32 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# Object Storage bucket for loki's chunks, index and rules, created through the
+# crossplane-oracle provider - the Oracle counterpart of templates/aws/s3.yaml.
+#
+# Far fewer resources than the aws version needs: OCI buckets are private by default with no
+# ACL, ownership or public-access-block objects to configure, and encryption at rest is always
+# on (Oracle-managed unless kmsKeyId names a key). So there is nothing here but the bucket.
+apiVersion: objectstorage.oci.upbound.io/v1alpha1
+kind: Bucket
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan, matching aws: losing a log bucket to a helm uninstall would be an unpleasant
+  # surprise, and an empty orphaned bucket is cheap.
+  deletionPolicy: Orphan
+  forProvider:
+    name: {{ .Values.global.bucketName }}
+    # The Object Storage namespace, which is tenancy-wide and not the compartment - it also
+    # appears in the S3-compatibility hostname. Set from the oke module's output.
+    namespace: {{ .Values.global.oracle.objectStorageNamespace }}
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    accessType: NoPublicAccess
+    versioning: Disabled
+    freeformTags:
+      created-by: "entigo-infralib"
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}
