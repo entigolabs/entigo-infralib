@@ -97,7 +97,19 @@ spec:
                   memory: 250Mi
                 limits:
                   cpu: 2000m
-                  memory: 1024Mi
+                  # 2Gi, not the 1Gi the other runtime config uses, because the identity
+                  # provider spikes hard while starting: measured 1332Mi peak, settling to
+                  # 671Mi once running (objectstorage, which shares this config, peaks at
+                  # 129Mi). At 1Gi it was SIGKILLed about 15s in, roughly where it logs
+                  # "falling back to eager controller setup" - and cri-o reported that as
+                  # exit 137 with reason "Error" rather than OOMKilled, so no OOM event was
+                  # ever recorded and nothing in the provider's own log looked wrong.
+                  #
+                  # The spike is a symptom: the provider logs "SafeStart disabled; CRD watch
+                  # access denied" and then eagerly starts a controller for every identity
+                  # kind instead of only the activated ones. Letting it watch CRDs would cut
+                  # this down, and is the better fix if the memory ever becomes a problem.
+                  memory: 2048Mi
               securityContext:
                 runAsNonRoot: true
                 seccompProfile:
