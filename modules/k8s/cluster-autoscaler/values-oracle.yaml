@@ -5,19 +5,28 @@ global:
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/oracle/policy.yaml.
     compartmentId: ""
-    dynamicGroupName: ""
+    # OKE Workload Identity policy conditions are scoped to one cluster, so the policy needs
+    # the cluster OCID alongside the namespace and service account.
+    clusterId: ""
+    # The service account the policy grants to. Pinned rather than left to the chart, which
+    # derives it as <release>-oci-cluster-autoscaler: that name would be embedded in an IAM
+    # condition, so an upstream fullname change would silently revoke access instead of
+    # failing loudly.
+    serviceAccountName: "cluster-autoscaler"
 
 cluster-autoscaler:
   cloudProvider: oci
-  # Instance principal - the node's identity. Workload Identity would scope this per pod and
-  # is available on this ENHANCED cluster, but nothing has been migrated to it yet.
-  # The dynamic group comes from modules/oracle/oke;
-  # the node-pool management policy is created by this module's own
-  # templates/oracle/policy.yaml via crossplane-oracle.
-  # OKE_USE_INSTANCE_PRINCIPAL also exists but is deprecated upstream.
+  # OKE Workload Identity: the autoscaler acts as its own service account rather than
+  # inheriting the node's identity, which every pod on that node shares. Its OCI provider
+  # checks OCI_USE_WORKLOAD_IDENTITY before OCI_USE_INSTANCE_PRINCIPAL and then calls the
+  # SDK's OkeWorkloadIdentityConfigurationProvider, which needs an ENHANCED cluster.
+  # The node-pool policy is created by this module's own templates/oracle/policy.yaml via
+  # crossplane-oracle.
   extraEnv:
-    OCI_USE_INSTANCE_PRINCIPAL: "true"
+    OCI_USE_WORKLOAD_IDENTITY: "true"
     OCI_SDK_APPEND_USER_AGENT: oci-oke-cluster-autoscaler
   rbac:
     serviceAccount:
       create: true
+      # Must match global.oracle.serviceAccountName above - it is named in the IAM condition.
+      name: cluster-autoscaler

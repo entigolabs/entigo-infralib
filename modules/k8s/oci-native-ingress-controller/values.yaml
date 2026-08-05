@@ -3,8 +3,10 @@ global:
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
     compartmentId: ""
-    dynamicGroupName: ""
     tenancyOcid: ""
+    # OKE Workload Identity policy conditions are scoped to a single cluster, so the policy
+    # needs the cluster's OCID as well as the namespace and service account below.
+    clusterId: ""
 
 # deploymentNamespace must match oci-native-ingress-controller.deploymentNamespace below -
 # both are hardcoded to the same literal rather than cross-referenced, since named
@@ -18,6 +20,13 @@ oci-native-ingress-controller:
   # release name ArgoCD assigns this Application - our own webhook-certs.yaml template needs
   # to know the exact secret name up front, so it can't be discovered afterward.
   fullnameOverride: oci-native-ingress-controller
+  # OKE Workload Identity rather than the chart's default "instance": the controller then acts
+  # as its own service account instead of inheriting the node's identity, which every pod on
+  # that node shares. Accepted values are instance/user/workloadIdentity
+  # (pkg/types.MapToPrincipalType); workloadIdentity resolves to the SDK's
+  # OkeWorkloadIdentityConfigurationProvider, which requires an ENHANCED cluster - it fails
+  # with "please ensure the cluster type is enhanced" otherwise.
+  authType: workloadIdentity
   deploymentNamespace: native-ingress-controller-system
   compartment_id: ""
   subnet_id: ""

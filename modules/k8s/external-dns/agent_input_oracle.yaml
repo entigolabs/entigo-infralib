@@ -1,13 +1,14 @@
 global:
   oracle:
     compartmentId: "{{ .agent.accountId }}"
-    dynamicGroupName: "{{ .toutput.oke.controllers_dynamic_group_name }}"
+    clusterId: "{{ .toutput.oke.cluster_id }}"
 
 external-dns:
   extraArgs:
     - --metrics-address=:7979
-    - --oci-auth-instance-principal
-    - "--oci-compartment-ocid={{ .agent.accountId }}"
+    # Workload Identity is only selectable from the config file, so no auth flag here. The
+    # compartment comes from the same file; --oci-compartment-ocid is ignored on this path.
+    - --oci-config-file=/etc/kubernetes/oci.yaml
   image:
     # No Oracle registry-proxy module exists yet (same gap noted in modules/k8s/argocd's
     # agent_input_oracle.yaml) - hardcode the public default registry rather than

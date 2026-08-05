@@ -1,0 +1,28 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# external-dns's OCI config file, mounted at the path its --oci-config-file flag points to.
+#
+# This exists only because useWorkloadIdentity has no command-line equivalent: the OCI
+# provider reads it exclusively from this YAML (provider/oci/oci.go's OCIAuthConfig), whereas
+# instance principal has the --oci-auth-instance-principal flag and needs no file at all. So
+# moving to Workload Identity means introducing a config file, which is a small step backwards
+# in moving parts - but the file holds no credential, just a mode switch and the compartment.
+#
+# A Secret rather than a ConfigMap purely to match how the key-based auth path documents this
+# same file upstream, keeping the shape familiar if anyone ever adds a private key here.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-oci-config
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+type: Opaque
+stringData:
+  oci.yaml: |
+    auth:
+      # No region, tenancy, user, key or fingerprint: the pod authenticates as its own service
+      # account through the OKE Workload Identity provider, which derives all of that from the
+      # projected service account token. Requires an ENHANCED cluster.
+      useWorkloadIdentity: true
+    compartment: {{ .Values.global.oracle.compartmentId }}
+{{- end }}

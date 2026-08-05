@@ -5,7 +5,9 @@ global:
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/oracle/policy.yaml.
     compartmentId: ""
-    dynamicGroupName: ""
+    # OKE Workload Identity policy conditions are scoped to one cluster, so the policy needs
+    # the cluster OCID alongside the namespace and service account.
+    clusterId: ""
 
 external-dns:
   sources:
@@ -14,14 +16,24 @@ external-dns:
 
   provider:
     name: oci
-  # Instance principal - the node's identity, shared by every pod on it - so no oci.yaml
-  # config secret is needed, unlike the key-based auth path. OKE Workload Identity would scope
-  # this per pod and is available on this ENHANCED cluster, but nothing has been migrated to it
-  # yet. The dynamic group comes from modules/oracle/oke; the "manage dns" policy
-  # is created by this module's own templates/oracle/policy.yaml via crossplane-oracle.
-  # --oci-compartment-ocid is templated in agent_input_oracle.yaml - extraArgs is set there
-  # in full (including this --oci-auth-instance-principal flag and the base
-  # --metrics-address flag) since Helm values lists fully replace rather than merge across
-  # value files, so splitting extraArgs across two files would silently drop one.
+  # OKE Workload Identity: external-dns acts as its own service account rather than inheriting
+  # the node's identity, which every pod on that node shares. Unlike instance principal there
+  # is no flag for it - the switch lives in the mounted oci.yaml from
+  # templates/oracle/oci-config.yaml, which is why the volume below exists. The "manage dns"
+  # policy is created by this module's own templates/oracle/policy.yaml via crossplane-oracle.
+  #
+  # extraArgs is set in full in agent_input_oracle.yaml (including --metrics-address and
+  # --oci-config-file) because Helm replaces lists wholesale rather than merging them across
+  # value files, so splitting it would silently drop one.
+  extraVolumes:
+    - name: oci-config
+      secret:
+        secretName: external-dns-oci-config
+  extraVolumeMounts:
+    - name: oci-config
+      mountPath: /etc/kubernetes
+      readOnly: true
   serviceAccount:
     create: true
+    # Named in the IAM condition, so pinned rather than chart-derived.
+    name: external-dns

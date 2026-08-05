@@ -1,11 +1,16 @@
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = 'oci-native-ingress-controller'" .Values.global.oracle.clusterId .Values.deploymentNamespace }}
 # Per-app OCI IAM, applied by the crossplane-oracle provider - see
 # https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
-# These statements lived in modules/oracle/oke's shared controllers policy until the
-# Crossplane IAM migration. Split in two because OCI only allows a policy to grant within
+# Split in two because OCI only allows a policy to grant within
 # the subtree it is attached to: the tenancy-scoped statements (public-ips, floating-ips,
 # tag-namespaces) cannot live in the compartment-attached policy.
 # That second policy is also why modules/oracle/oke's Crossplane bootstrap grant has to be
 # "manage policies in tenancy", attached at the tenancy: anything narrower cannot create it.
+#
+# Granted to the controller's own service account through OKE Workload Identity, not to the
+# node's identity: under instance principal every pod on a node inherits the same grant, so
+# "manage load-balancers" and the certificate verbs would be held by everything scheduled
+# there. The condition pins each statement to one cluster, namespace and service account.
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:
@@ -17,23 +22,23 @@ spec:
   forProvider:
     compartmentId: {{ .Values.global.oracle.compartmentId }}
     name: {{ .Release.Name }}
-    description: Grants oci-native-ingress-controller its compartment-scoped permissions (LBs, certificates, WAF), via instance principal
+    description: Grants oci-native-ingress-controller its compartment-scoped permissions (LBs, certificates, WAF), via OKE Workload Identity
     freeformTags:
       created-by: "entigo-infralib"
     statements:
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage load-balancers in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage cabundles in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage cabundle-associations in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage leaf-certificates in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage leaf-certificate-versions in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read leaf-certificate-bundles in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage certificate-associations in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read certificate-authorities in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage certificate-authority-associations in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read certificate-authority-bundles in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage waf-family in compartment id {{ .Values.global.oracle.compartmentId }}
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read cluster-family in compartment id {{ .Values.global.oracle.compartmentId }}
+      - "Allow any-user to manage load-balancers in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to use virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage cabundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage cabundle-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage leaf-certificates in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage leaf-certificate-versions in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read leaf-certificate-bundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage certificate-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read certificate-authorities in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage certificate-authority-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read certificate-authority-bundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage waf-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read cluster-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 ---
@@ -48,12 +53,12 @@ spec:
   forProvider:
     compartmentId: {{ .Values.global.oracle.tenancyOcid }}
     name: {{ .Release.Name }}-tenancy
-    description: Grants oci-native-ingress-controller its tenancy-scoped permissions (public-ips, floating-ips, tag-namespaces), via instance principal
+    description: Grants oci-native-ingress-controller its tenancy-scoped permissions (public-ips, floating-ips, tag-namespaces), via OKE Workload Identity
     freeformTags:
       created-by: "entigo-infralib"
     statements:
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to read public-ips in tenancy
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to manage floating-ips in tenancy
-      - Allow dynamic-group {{ .Values.global.oracle.dynamicGroupName }} to use tag-namespaces in tenancy
+      - "Allow any-user to read public-ips in tenancy where all { {{ $wl }} }"
+      - "Allow any-user to manage floating-ips in tenancy where all { {{ $wl }} }"
+      - "Allow any-user to use tag-namespaces in tenancy where all { {{ $wl }} }"
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}

@@ -201,20 +201,20 @@ data "oci_identity_compartment" "this" {
   id = var.compartment_id
 }
 
-# Instance Principal identity for in-cluster controllers (Crossplane OCI provider,
-# external-dns, cluster-autoscaler) - any instance in the compartment. Shared rather than split
-# per-controller because instance principal is a node-wide identity: they run on the same node
-# pools in the same compartment, and per-pod isolation is impossible this way regardless, since
-# every pod on a node inherits that node's identity.
+# Instance Principal identity for the Crossplane OCI provider - any instance in the
+# compartment. This is the bootstrap identity only: terraform provisions the platform up to
+# argocd and crossplane, and from there crossplane creates each application's own IAM.
 #
-# OKE Workload Identity would give genuine per-pod scoping and IS available on this ENHANCED
-# cluster. Nothing has been migrated to it yet - that is outstanding work rather than a
-# platform limitation. Note it would not help loki, which needs a Customer Secret Key because
-# the S3-compatibility endpoint accepts nothing else.
+# Everything else has moved to OKE Workload Identity and is scoped to its own service account
+# (see the policies in modules/k8s/{external-dns,cluster-autoscaler,oci-native-ingress-controller}).
+# Crossplane stays on instance principal deliberately, which means the grants below - including
+# user and group management, which loki needs because the S3-compatibility endpoint accepts
+# nothing but a Customer Secret Key - remain node-wide: any pod scheduled on these nodes can
+# use them. That is the residual cost of keeping the bootstrap layer in terraform.
 resource "oci_identity_dynamic_group" "controllers" {
   compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"
-  description    = "Instances in ${var.prefix}'s OKE node pools - used by in-cluster controllers (crossplane, external-dns, cluster-autoscaler) via instance principal auth"
+  description    = "Instances in ${var.prefix}'s OKE node pools - used by the Crossplane OCI provider via instance principal auth; other controllers use OKE Workload Identity"
   matching_rule  = "ALL {instance.compartment.id = '${var.compartment_id}'}"
 }
 
