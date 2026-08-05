@@ -10,6 +10,14 @@ locals {
   # Third range
   database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 2)] : var.database_subnets
 
+  # Fourth range - pods, for OKE's VCN-native pod networking (see modules/oracle/oke).
+  # Every pod gets a real VCN IP off this subnet, the way EKS pods get VPC IPs. Takes the
+  # previously unused fourth quarter of the second range rather than resizing any existing
+  # tier, so adding this cannot renumber a deployed VCN. A /19 out of the default /16 holds
+  # ~8190 addresses; OKE reserves 31 per worker node (one secondary VNIC's worth), so that
+  # is room for roughly 260 nodes.
+  pod_subnets = var.pod_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 3)] : var.pod_subnets
+
   services_cidr = data.oci_core_services.all.services[0].cidr_block
 
   # Route rules per subnet tier. Conditionals short-circuit, so the [0] index is
@@ -94,7 +102,8 @@ resource "oci_core_route_table" "public" {
 }
 
 resource "oci_core_route_table" "private" {
-  count          = length(local.private_subnets) > 0 ? 1 : 0
+  # Shared with the pod subnet, which needs the same NAT + service gateway egress.
+  count          = length(local.private_subnets) + length(local.pod_subnets) > 0 ? 1 : 0
   compartment_id = var.compartment_id
   vcn_id         = oci_core_vcn.this.id
   display_name   = "${var.prefix}-private"
@@ -141,6 +150,19 @@ resource "oci_core_subnet" "private" {
   vcn_id                     = oci_core_vcn.this.id
   cidr_block                 = local.private_subnets[count.index]
   display_name               = try(var.private_subnet_names[count.index], "${var.prefix}-private-${count.index}")
+  route_table_id             = oci_core_route_table.private[0].id
+  prohibit_public_ip_on_vnic = true
+}
+
+# Pods under OKE's VCN-native CNI. Shares the private tier's route table so pods reach OCI
+# services through the service gateway and the internet through NAT. No availability_domain
+# is set, which is what makes it regional - OKE requires that of a pod subnet.
+resource "oci_core_subnet" "pod" {
+  count                      = length(local.pod_subnets)
+  compartment_id             = var.compartment_id
+  vcn_id                     = oci_core_vcn.this.id
+  cidr_block                 = local.pod_subnets[count.index]
+  display_name               = try(var.pod_subnet_names[count.index], "${var.prefix}-pod-${count.index}")
   route_table_id             = oci_core_route_table.private[0].id
   prohibit_public_ip_on_vnic = true
 }

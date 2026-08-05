@@ -27,6 +27,14 @@ output "private_subnets" {
   value = oci_core_subnet.private[*].id
 }
 
+output "pod_subnets" {
+  value = oci_core_subnet.pod[*].id
+}
+
+output "pod_subnet_cidrs" {
+  value = oci_core_subnet.pod[*].cidr_block
+}
+
 output "intra_subnets" {
   value = oci_core_subnet.intra[*].id
 }

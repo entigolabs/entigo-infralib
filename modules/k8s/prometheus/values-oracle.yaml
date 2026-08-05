@@ -34,7 +34,7 @@ prometheus:
       egress:
         # Replaces the aws-shaped 172.20.0.1/32 entry from values.yaml (Helm list values are
         # replaced wholesale, not merged). Note NetworkPolicy is not actually enforced on
-        # this cluster - OKE with FLANNEL_OVERLAY ships no policy controller - so this is
+        # this cluster - OKE ships no policy controller with either CNI - so this is
         # correctness for the day one is added rather than something load-bearing today.
         - to:
             - ipBlock:

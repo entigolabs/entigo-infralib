@@ -5,9 +5,8 @@
 # genuinely needs its own certificate - which on Oracle means an app exposed through Istio
 # rather than through NIC, since only Istio can do SNI across several certificates.
 issuer:
-  # modules/k8s/oci-native-ingress-controller's IngressClass. cert-manager's HTTP-01
-  # solver service is NodePort by default, which is also what NIC requires on Flannel
-  # clusters to populate LB backends.
+  # modules/k8s/oci-native-ingress-controller's IngressClass, which serves the solver
+  # Ingress cert-manager creates for the challenge.
   ingressClassName: oci-ic
   # NIC creates one LB listener per backend service port - without this the challenge
   # route lands on the solver service's port (8089), where Let's Encrypt (port 80)

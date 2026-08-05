@@ -34,6 +34,9 @@ func testTerraformVpcBiz(t *testing.T) {
 	intraSubnets := tf.GetStringListValue(t, outputs, "vpc__intra_subnets")
 	assert.Equal(t, 1, len(intraSubnets), "Wrong number of intra_subnets returned")
 
+	podSubnets := tf.GetStringListValue(t, outputs, "vpc__pod_subnets")
+	assert.Equal(t, 1, len(podSubnets), "Wrong number of pod_subnets returned")
+
 	publicSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__public_subnet_cidrs")
 	assert.Equal(t, "10.201.0.0/20", publicSubnetCidrs[0], "Wrong value for public_subnet_cidrs returned")
 
@@ -43,6 +46,11 @@ func testTerraformVpcBiz(t *testing.T) {
 
 	databaseSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__database_subnet_cidrs")
 	assert.Equal(t, "10.201.48.0/22", databaseSubnetCidrs[0], "Wrong value for database_subnet_cidrs returned")
+
+	// biz.yaml leaves pod_subnets unset, so this is the module's default: the fourth
+	// quarter of the VCN's second half, which was previously unallocated.
+	podSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__pod_subnet_cidrs")
+	assert.Equal(t, "10.201.224.0/19", podSubnetCidrs[0], "Wrong value for pod_subnet_cidrs returned")
 
 	internetGatewayId := tf.GetStringValue(t, outputs, "vpc__internet_gateway_id")
 	assert.NotEmpty(t, internetGatewayId, "Output internet_gateway_id not returned")

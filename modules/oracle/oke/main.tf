@@ -21,11 +21,12 @@ locals {
 # security list allows all egress), so these NSGs only need to add the missing ingress -
 # see https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengnetworkconfig.htm.
 #
-# Split in two rather than one shared "allow all" group: the control plane only ever needs
+# Split by role rather than one shared "allow all" group: the control plane only ever needs
 # 6443/12250 from workers, so it gets exactly that. Workers genuinely need ALL protocols
-# from each other (Flannel VXLAN, kube-proxy, etc.) per Oracle's own doc, and TCP/ALL from
-# the endpoint (flannel CNI row) - narrowing that further would mean reverse-engineering
-# Flannel's exact port usage, so it's scoped only as far as source (VCN CIDR), not protocol.
+# from each other and from the endpoint per Oracle's own doc, so that one is scoped by
+# source (VCN CIDR) rather than by protocol - narrowing it would mean pinning down every
+# port kube-proxy and the CNI happen to use. Pods get their own group further down, since
+# under VCN-native networking they live on a separate subnet with their own VNICs.
 resource "oci_core_network_security_group" "endpoint" {
   compartment_id = var.compartment_id
   vcn_id         = var.vcn_id
@@ -90,11 +91,48 @@ resource "oci_core_network_security_group_security_rule" "node_intra_vcn" {
   protocol                  = "all"
   source                    = data.oci_core_vcn.this.cidr_blocks[0]
   source_type               = "CIDR_BLOCK"
-  description               = "Control plane -> worker node (10250, flannel) and worker node <-> worker node"
+  description               = "Control plane -> worker node (kubelet 10250) and worker node <-> worker node"
 }
 
 resource "oci_core_network_security_group_security_rule" "node_path_mtu_discovery" {
   network_security_group_id = oci_core_network_security_group.node.id
+  direction                 = "INGRESS"
+  protocol                  = "1" # ICMP
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Path MTU discovery"
+
+  icmp_options {
+    type = 3
+    code = 4
+  }
+}
+
+# NSG for pod VNICs under VCN-native networking. Pods sit on their own subnet with real VCN
+# IPs, so nothing in the node NSG above covers them - and there is a lot that has to reach
+# them: other pods on the same and other nodes, the node's own kubelet, the control plane
+# calling admission webhooks (oci-native-ingress-controller runs one), and the ingress load
+# balancer addressing pods directly as backends. Scoped by source (the VCN) rather than by
+# protocol for the same reason the node NSG is: narrowing it would mean pinning down every
+# port the CNI, kube-proxy and each admission webhook happen to use. Egress is already open
+# through the VCN's default security list.
+resource "oci_core_network_security_group" "pods" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke-pods"
+}
+
+resource "oci_core_network_security_group_security_rule" "pods_intra_vcn" {
+  network_security_group_id = oci_core_network_security_group.pods.id
+  direction                 = "INGRESS"
+  protocol                  = "all"
+  source                    = data.oci_core_vcn.this.cidr_blocks[0]
+  source_type               = "CIDR_BLOCK"
+  description               = "Pod <-> pod, kubelet -> pod, control plane -> webhooks, load balancer -> pod backends"
+}
+
+resource "oci_core_network_security_group_security_rule" "pods_path_mtu_discovery" {
+  network_security_group_id = oci_core_network_security_group.pods.id
   direction                 = "INGRESS"
   protocol                  = "1" # ICMP
   source                    = "0.0.0.0/0"
@@ -113,7 +151,8 @@ resource "oci_core_network_security_group_security_rule" "node_path_mtu_discover
 # itself - it only *attaches* the LB to NSGs listed in the IngressClass's
 # oci-native-ingress.oraclecloud.com/network-security-group-ids annotation, which
 # modules/k8s/oci-native-ingress-controller wires to this NSG's id via lb_nsg_id output.
-# Backend LB->node traffic is already covered by the node NSG's allow-all-from-VCN rule.
+# Backend traffic needs no rule here: under VCN-native networking the LB addresses pods
+# directly, which the pods NSG above already allows from anywhere in the VCN.
 resource "oci_core_network_security_group" "lb" {
   compartment_id = var.compartment_id
   vcn_id         = var.vcn_id
@@ -218,7 +257,15 @@ resource "oci_containerengine_cluster" "this" {
   }
 
   cluster_pod_network_options {
-    cni_type = "FLANNEL_OVERLAY"
+    # Every pod gets a real VCN IP off var.pod_subnet_ids, the same model as the AWS VPC CNI
+    # on EKS and VPC-native on GKE. Not just for parity: with the Flannel overlay an OCI
+    # load balancer has no route to pod IPs, so oci-native-ingress-controller falls back to
+    # nodeIP:nodePort backends and refuses any ClusterIP service outright ("Node port not
+    # found for service", pkg/controllers/nodeBackend). VCN-native lets it address pods
+    # directly and keeps our Services ClusterIP like everywhere else. The controller picks
+    # its backend strategy from this value by querying the cluster, so the two cannot
+    # disagree. Fixed at cluster creation - changing it means replacing the cluster.
+    cni_type = "OCI_VCN_IP_NATIVE"
   }
 
   options {
@@ -249,6 +296,9 @@ module "main" {
   node_pool_os_type       = var.oke_main_node_pool_os_type
   labels                  = { main = "true" }
   nsg_ids                 = [oci_core_network_security_group.node.id]
+  pod_subnet_ids          = var.pod_subnet_ids
+  pod_nsg_ids             = [oci_core_network_security_group.pods.id]
+  max_pods_per_node       = var.max_pods_per_node
 }
 
 module "mon" {
@@ -269,8 +319,11 @@ module "mon" {
   node_pool_os_type       = var.oke_mon_node_pool_os_type
   # No NO_SCHEDULE taint - oci_containerengine_node_pool has no taint attribute in the
   # provider schema (see NOTES.md "Known, permanent-for-now limitation"). Label-only.
-  labels  = { mon = "true" }
-  nsg_ids = [oci_core_network_security_group.node.id]
+  labels            = { mon = "true" }
+  nsg_ids           = [oci_core_network_security_group.node.id]
+  pod_subnet_ids    = var.pod_subnet_ids
+  pod_nsg_ids       = [oci_core_network_security_group.pods.id]
+  max_pods_per_node = var.max_pods_per_node
 }
 
 module "tools" {
@@ -291,4 +344,7 @@ module "tools" {
   node_pool_os_type       = var.oke_tools_node_pool_os_type
   labels                  = { tools = "true" }
   nsg_ids                 = [oci_core_network_security_group.node.id]
+  pod_subnet_ids          = var.pod_subnet_ids
+  pod_nsg_ids             = [oci_core_network_security_group.pods.id]
+  max_pods_per_node       = var.max_pods_per_node
 }

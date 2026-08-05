@@ -46,6 +46,17 @@ resource "oci_containerengine_node_pool" "this" {
     size    = var.node_count
     nsg_ids = var.nsg_ids
 
+    # Under VCN-native networking each pod holds a real VCN IP off the pod subnet, taken
+    # from secondary VNICs on the node. The other three arguments only apply in that mode,
+    # so they are nulled out for Flannel rather than left as empty lists (which the API
+    # reads as an explicit, invalid value).
+    node_pool_pod_network_option_details {
+      cni_type          = var.cni_type
+      pod_subnet_ids    = var.cni_type == "OCI_VCN_IP_NATIVE" ? var.pod_subnet_ids : null
+      pod_nsg_ids       = var.cni_type == "OCI_VCN_IP_NATIVE" ? var.pod_nsg_ids : null
+      max_pods_per_node = var.cni_type == "OCI_VCN_IP_NATIVE" ? var.max_pods_per_node : null
+    }
+
     dynamic "placement_configs" {
       for_each = local.availability_domains
       content {

@@ -45,6 +45,14 @@ variable "intra_subnets" {
   default  = null
 }
 
+# Pods, for OKE's VCN-native pod networking. Must stay private and regional - OKE rejects
+# a public or availability-domain-scoped pod subnet.
+variable "pod_subnets" {
+  type     = list(string)
+  nullable = true
+  default  = null
+}
+
 variable "private_subnet_names" {
   type    = list(string)
   default = []
@@ -62,6 +70,12 @@ variable "database_subnet_names" {
 }
 
 variable "intra_subnet_names" {
+  type     = list(string)
+  nullable = true
+  default  = []
+}
+
+variable "pod_subnet_names" {
   type     = list(string)
   nullable = true
   default  = []

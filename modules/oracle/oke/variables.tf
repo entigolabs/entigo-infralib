@@ -56,6 +56,17 @@ variable "node_subnet_ids" {
   default     = []
 }
 
+variable "pod_subnet_ids" {
+  description = "Subnets pods draw their VCN IPs from. The cluster uses OCI_VCN_IP_NATIVE pod networking, so this is required; OKE rejects a pod subnet that is public or scoped to a single availability domain. Wired from modules/oracle/vpc's pod_subnets output."
+  type        = list(string)
+}
+
+variable "max_pods_per_node" {
+  description = "Pod capacity per node. Capped by the node shape: MIN((VNICs - 1) * 31, 110), since one VNIC serves the node and each of the rest carries 31 pod IPs. Flexible shapes get one VNIC per OCPU with a floor of two, so the 1-OCPU pool defaults allow exactly 31 - raise the pool's ocpus before raising this."
+  type        = number
+  default     = 31
+}
+
 # Mirrors aws/eks and google/gke, which always bundle three node groups/pools
 # (main/mon/tools) by default - eks-node-group/gke-node-pool (our oke-node-pool) is only
 # for *additional* custom pools beyond these three. Set a pool's node_count to 0 to skip

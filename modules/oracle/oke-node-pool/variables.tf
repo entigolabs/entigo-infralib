@@ -65,6 +65,30 @@ variable "nsg_ids" {
   default     = []
 }
 
+variable "cni_type" {
+  description = "Pod networking plugin. Must match the cluster's own cni_type. OCI_VCN_IP_NATIVE gives every pod a real VCN IP off pod_subnet_ids, like the AWS VPC CNI; FLANNEL_OVERLAY keeps pods on an overlay only routable inside the cluster."
+  type        = string
+  default     = "OCI_VCN_IP_NATIVE"
+}
+
+variable "pod_subnet_ids" {
+  description = "Subnets pods draw their VCN IPs from, when cni_type is OCI_VCN_IP_NATIVE. Must be private and regional."
+  type        = list(string)
+  default     = []
+}
+
+variable "pod_nsg_ids" {
+  description = "Network security groups applied to every pod VNIC, when cni_type is OCI_VCN_IP_NATIVE."
+  type        = list(string)
+  default     = []
+}
+
+variable "max_pods_per_node" {
+  description = "Pod capacity per node under OCI_VCN_IP_NATIVE. Capped by the node shape: MIN((VNICs - 1) * 31, 110), since one VNIC serves the node itself and each of the rest carries 31 pod IPs. A flexible shape gets one VNIC per OCPU with a floor of two, so the 1-OCPU default here allows exactly 31 - raise ocpus before raising this."
+  type        = number
+  default     = 31
+}
+
 variable "node_pool_os_type" {
   description = "Operating system family used to pick the node image. Valid values: OL7, OL8, UBUNTU."
   type        = string
