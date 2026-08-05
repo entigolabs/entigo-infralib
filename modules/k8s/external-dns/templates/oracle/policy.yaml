@@ -1,8 +1,9 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
 # Per-app OCI IAM, applied by the crossplane-oracle provider. The grantee is the shared
-# instance-principal dynamic group from modules/oracle/oke (Basic OKE has no Workload
-# Identity, so every pod on a node shares the node's identity - this gives structural
-# parity with the aws/google per-app IAM templates, not per-pod isolation).
+# instance-principal dynamic group from modules/oracle/oke, so every pod on a node shares the
+# node's identity - this gives structural parity with the aws/google per-app IAM templates,
+# not per-pod isolation. OKE Workload Identity would give real per-pod scoping and is available
+# on this ENHANCED cluster; migrating to it is outstanding work, not a limitation.
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:

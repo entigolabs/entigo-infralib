@@ -6,6 +6,7 @@ global:
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
     region: "{{ .toutput.oke.region }}"
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+    serviceUserEmail: "{{ .module.name }}@{{ .toutput.dns.int_domain }}"
   # Bucket names are globally unique per namespace in OCI, not per account+region as on aws,
   # so prefix + module name is enough to keep two deployments apart.
   bucketName: "{{ .config.prefix }}-{{ .module.name }}"

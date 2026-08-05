@@ -14,7 +14,8 @@ create their own OCI IAM policies with `identity.oci.upbound.io/v1alpha1 Policy`
 Auth notes:
 
 - Instance Principal: any pod on any node in the compartment shares the node identity
-  (Basic OKE has no Workload Identity), so per-app policies give structural parity with
+  (Workload Identity is available on ENHANCED clusters but nothing has been migrated to it
+  yet), so per-app policies give structural parity with
   aws/google, not per-pod isolation.
 - The provider needs a Terraform-created bootstrap grant to manage the per-app policies:
   `manage policies in compartment` on the shared dynamic group - created by

@@ -14,9 +14,10 @@ external-dns:
 
   provider:
     name: oci
-  # Instance principal - this cluster is a Basic OKE cluster (no Workload Identity
-  # available) - no oci.yaml config secret needed, unlike the key-based/workload-identity
-  # auth paths. The dynamic group comes from modules/oracle/oke; the "manage dns" policy
+  # Instance principal - the node's identity, shared by every pod on it - so no oci.yaml
+  # config secret is needed, unlike the key-based auth path. OKE Workload Identity would scope
+  # this per pod and is available on this ENHANCED cluster, but nothing has been migrated to it
+  # yet. The dynamic group comes from modules/oracle/oke; the "manage dns" policy
   # is created by this module's own templates/oracle/policy.yaml via crossplane-oracle.
   # --oci-compartment-ocid is templated in agent_input_oracle.yaml - extraArgs is set there
   # in full (including this --oci-auth-instance-principal flag and the base

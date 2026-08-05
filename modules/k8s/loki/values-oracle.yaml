@@ -13,6 +13,10 @@ global:
     region: ""
     # The in-cluster kube-apiserver ClusterIP, for the egress network policy.
     kubernetesServiceIp: ""
+    # Primary email for the IAM user, which an Identity Domains (IDCS) tenancy requires on
+    # CreateUser. Set from the deployment's own domain in agent_input_oracle.yaml - no mail is
+    # ever sent to it.
+    serviceUserEmail: ""
 
 loki:
   loki:

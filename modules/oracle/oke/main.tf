@@ -202,11 +202,15 @@ data "oci_identity_compartment" "this" {
 }
 
 # Instance Principal identity for in-cluster controllers (Crossplane OCI provider,
-# external-dns, cluster-autoscaler). This cluster is a Basic OKE cluster (no OKE Workload
-# Identity available), so instance principal - any instance in the compartment - is the
-# only no-static-credential auth option. Shared rather than split per-controller since
-# they run on the same node pools within the same compartment boundary (per-pod isolation
-# is impossible with instance principal anyway - every pod shares the node's identity).
+# external-dns, cluster-autoscaler) - any instance in the compartment. Shared rather than split
+# per-controller because instance principal is a node-wide identity: they run on the same node
+# pools in the same compartment, and per-pod isolation is impossible this way regardless, since
+# every pod on a node inherits that node's identity.
+#
+# OKE Workload Identity would give genuine per-pod scoping and IS available on this ENHANCED
+# cluster. Nothing has been migrated to it yet - that is outstanding work rather than a
+# platform limitation. Note it would not help loki, which needs a Customer Secret Key because
+# the S3-compatibility endpoint accepts nothing else.
 resource "oci_identity_dynamic_group" "controllers" {
   compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"

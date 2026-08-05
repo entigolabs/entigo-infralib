@@ -1,5 +1,5 @@
 {{- if .Values.installProviderConfig }}
-# Instance Principal: this is a Basic OKE cluster, so the OKEWorkloadIdentity auth
+# Instance Principal rather than the OKEWorkloadIdentity auth
 # variant (Enhanced-only) is unavailable. The provider acts as the node instances via
 # the shared dynamic group created in modules/oracle/oke, whose policy grants it
 # "manage policies" in the compartment - per-app permissions are then created by

@@ -9,8 +9,9 @@ global:
 
 cluster-autoscaler:
   cloudProvider: oci
-  # Instance principal - this is a Basic OKE cluster (no Workload Identity, and the OKE
-  # autoscaler add-on is Enhanced-only). The dynamic group comes from modules/oracle/oke;
+  # Instance principal - the node's identity. Workload Identity would scope this per pod and
+  # is available on this ENHANCED cluster, but nothing has been migrated to it yet.
+  # The dynamic group comes from modules/oracle/oke;
   # the node-pool management policy is created by this module's own
   # templates/oracle/policy.yaml via crossplane-oracle.
   # OKE_USE_INSTANCE_PRINCIPAL also exists but is deprecated upstream.
