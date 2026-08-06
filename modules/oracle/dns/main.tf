@@ -56,8 +56,13 @@ resource "oci_certificates_management_certificate_authority" "this" {
       common_name = "${local.domain} root CA"
     }
 
+    # Sub-second precision is not decoration - OCI rejects an RFC3339 timestamp without it
+    # with a flat "400-InvalidParameter, Unable to process JSON input", naming no field.
+    # Proven against the live API: "2036-08-06T09:02:54Z" fails, "2036-08-06T09:02:54.000Z"
+    # succeeds, and the duration makes no difference. time_offset emits the former, hence
+    # the reformat. Safe because time_offset always emits UTC, so hardcoding Z is correct.
     validity {
-      time_of_validity_not_after = time_offset.ca_validity[0].rfc3339
+      time_of_validity_not_after = formatdate("YYYY-MM-DD'T'hh:mm:ss'.000Z'", time_offset.ca_validity[0].rfc3339)
     }
   }
 
