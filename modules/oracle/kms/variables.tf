@@ -101,3 +101,9 @@ variable "ca_key_length" {
   type        = number
   default     = 512
 }
+
+variable "ca_policy_wait" {
+  description = "How long to wait after granting certificate authorities the use of this compartment's keys, before anything creates one. A CA that starts before the grant propagates fails permanently rather than retrying."
+  type        = string
+  default     = "60s"
+}

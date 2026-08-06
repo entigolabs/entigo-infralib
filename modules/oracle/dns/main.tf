@@ -56,13 +56,19 @@ resource "oci_certificates_management_certificate_authority" "this" {
       common_name = "${local.domain} root CA"
     }
 
-    # Sub-second precision is not decoration - OCI rejects an RFC3339 timestamp without it
-    # with a flat "400-InvalidParameter, Unable to process JSON input", naming no field.
-    # Proven against the live API: "2036-08-06T09:02:54Z" fails, "2036-08-06T09:02:54.000Z"
-    # succeeds, and the duration makes no difference. time_offset emits the former, hence
-    # the reformat. Safe because time_offset always emits UTC, so hardcoding Z is correct.
+    # Sub-second precision is not decoration, and ".000" will not do.
+    #
+    # OCI rejects an RFC3339 timestamp with no fraction - "400-InvalidParameter, Unable to
+    # process JSON input", naming no field - so "2036-08-06T09:02:54Z" fails where
+    # "...54.000Z" is accepted by the API. But the provider does not send what you write: it
+    # parses the string into an SDKTime and re-serialises with time.RFC3339Nano, which
+    # *trims trailing zeros*, turning ".000Z" straight back into "Z". Captured off the wire
+    # with OCI_GO_SDK_DEBUG: config ".000Z" -> body "2036-08-06T08:44:05Z" -> rejected.
+    #
+    # A non-zero fraction survives the round trip, hence .5. Safe to hardcode Z because
+    # time_offset always emits UTC.
     validity {
-      time_of_validity_not_after = formatdate("YYYY-MM-DD'T'hh:mm:ss'.000Z'", time_offset.ca_validity[0].rfc3339)
+      time_of_validity_not_after = formatdate("YYYY-MM-DD'T'hh:mm:ss'.500Z'", time_offset.ca_validity[0].rfc3339)
     }
   }
 

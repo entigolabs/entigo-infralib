@@ -134,3 +134,49 @@ resource "oci_kms_key" "ca" {
     length    = var.ca_key_length
   }
 }
+
+# Creating a certificate authority is not enough to make one work: the CA then reaches for
+# its signing key as *itself*, and without this it is refused. The CA is created, goes to
+# FAILED a few seconds later, and reports only "Authorization failed or requested resource
+# not found: Key Id ocid1.key..." in the Console - `lifecycle-details` on the API is empty,
+# and terraform just says the service reported an unexpected state. Every CA created here
+# failed this way until the grant existed.
+#
+# Dynamic group rather than a service principal because that is how OCI models it: CAs are
+# resources, matched by type, and a policy grants to the group.
+resource "oci_identity_dynamic_group" "certificate_authorities" {
+  count          = var.create_ca_key ? 1 : 0
+  compartment_id = data.oci_identity_compartment.this[0].compartment_id
+  name           = "${var.prefix}-certificate-authorities"
+  description    = "Certificate authorities in ${var.prefix}'s compartment, so they can use the vault key they sign with"
+  matching_rule  = "ALL {resource.type='certificateauthority', resource.compartment.id='${var.compartment_id}'}"
+}
+
+resource "oci_identity_policy" "certificate_authorities" {
+  count          = var.create_ca_key ? 1 : 0
+  compartment_id = var.compartment_id
+  name           = "${var.prefix}-certificate-authorities"
+  description    = "Lets certificate authorities in this compartment use the keys in it"
+
+  # Attached at the compartment, not the tenancy: unlike the ingress controller's grants
+  # this needs nothing outside the compartment, so it stays inside it. Could be narrowed
+  # further with "where target.key.id = '<the ca key>'" if one key per CA is ever worth
+  # spelling out.
+  statements = [
+    "Allow dynamic-group ${oci_identity_dynamic_group.certificate_authorities[0].name} to use keys in compartment id ${var.compartment_id}",
+  ]
+}
+
+# IAM is eventually consistent, and a CA that starts before the grant lands does not retry -
+# it goes to FAILED and stays there, needing a teardown that OCI will not do for 7 days. The
+# ca_key_id output depends on this, so modules/oracle/dns cannot begin creating the CA until
+# the grant has had time to take effect.
+resource "time_sleep" "ca_policy" {
+  count           = var.create_ca_key ? 1 : 0
+  depends_on      = [oci_identity_policy.certificate_authorities]
+  create_duration = var.ca_policy_wait
+
+  triggers = {
+    policy_id = oci_identity_policy.certificate_authorities[0].id
+  }
+}
