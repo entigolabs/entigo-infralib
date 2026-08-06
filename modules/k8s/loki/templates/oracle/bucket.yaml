@@ -10,7 +10,14 @@ kind: Bucket
 metadata:
   name: {{ .Values.global.bucketName }}
   annotations:
-    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    # No crossplane.io/external-name here, deliberately. Setting it to the bucket name looks
+    # right and creates an endless sync loop: after creating the bucket the provider rewrites
+    # the annotation to the composite OCI id, "n/<object storage namespace>/b/<bucket>", ArgoCD
+    # sees a field it authored being changed and sets it back, the provider rewrites it again.
+    # The app never reaches Synced and a manual sync cannot win the race.
+    #
+    # Nothing is lost by leaving it out: forProvider.name and forProvider.namespace already
+    # identify the bucket, and Crossplane fills the annotation in itself on create.
     argocd.argoproj.io/sync-wave: '-2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
