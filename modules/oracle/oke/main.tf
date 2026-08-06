@@ -248,6 +248,16 @@ resource "oci_identity_policy" "controllers" {
     # https://github.com/grafana/loki/issues/23687 - at which point drop these two lines.
     "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage users in tenancy",
     "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage groups in tenancy",
+    # And the bucket those chunks go into. loki's own Policy CR grants its IAM *user* "manage
+    # objects" and "inspect buckets" - enough to write into a bucket, not to create one - so
+    # without this the Bucket CR sits in ApplyFailure reporting "409-BucketAlreadyExists,
+    # Either the bucket 'tarmo-loki' ... already exists or you are not authorized to create
+    # it". It is the second half of that sentence: the bucket does not exist anywhere in the
+    # tenancy, and bucket names are unique per namespace, so an admin would see it if it did.
+    #
+    # Scoped to the compartment rather than the tenancy, unlike the three above, because
+    # nothing needs to create buckets outside it. Goes away with the same upstream fix.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage buckets in compartment id ${var.compartment_id}",
   ]
 }
 
