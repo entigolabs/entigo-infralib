@@ -7,6 +7,14 @@ global:
     region: "{{ .toutput.oke.region }}"
 
 external-dns:
+  # The region also goes on the pod, purely so that changing it rolls the deployment.
+  # Nothing else would: the region reaches the container through a mounted Secret, a Secret
+  # change does not restart anything, and external-dns reads its config file once at
+  # startup. Without this the pod keeps running happily on the old value - which is exactly
+  # what happened when the region was first added, and it took a manual rollout restart to
+  # notice the fix had not taken effect.
+  podAnnotations:
+    infralib.entigo.io/oci-region: "{{ .toutput.oke.region }}"
   extraArgs:
     - --metrics-address=:7979
     # Workload Identity is only selectable from the config file, so no auth flag here. The

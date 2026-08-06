@@ -2,6 +2,32 @@ metadata:
   annotations:
     infralib.entigo.io/sync-wave: "2"
 spec:
+  # templates/webhook-certs.yaml builds the webhook's TLS material with Helm's genCA and
+  # genSignedCert, which produce fresh output on every render - so ArgoCD compares a newly
+  # generated certificate against the stored one on each refresh and this app can never
+  # report Synced. Ignoring the two fields that carry the material is what makes the
+  # difference disappear, since it is not drift: nothing changed in the cluster.
+  #
+  # Safe here specifically because the certificate is self-signed, internal, and exists only
+  # to satisfy a startup check - NIC's main.go starts a webhook HTTPS server unconditionally
+  # and exits if it cannot load a cert, while the webhook's own feature (pod-readiness-gate
+  # injection) is opt-in per namespace and unused. If a real sync does run, the Secret and
+  # the caBundle re-render together and stay consistent with each other.
+  #
+  # Not generated in terraform instead: the private key would then travel through the agent
+  # into this Application's spec.source.helm.values, in plaintext, where today it never
+  # leaves the cluster.
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: oci-native-ingress-controller-tls
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: oci-native-ingress-controller-webhook
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
