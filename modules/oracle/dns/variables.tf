@@ -30,6 +30,12 @@ variable "ca_key_id" {
   default     = ""
 }
 
+variable "name_salt" {
+  description = "Bump this to rotate the random suffix on the CA and certificate names. Needed when a create fails after OCI accepted it: the orphan keeps the name for 7 days, and no retry can reuse it."
+  type        = string
+  default     = "1"
+}
+
 variable "ca_validity_years" {
   description = "Lifetime of the root CA. Replacing it means redistributing it to every client that trusts it, so this is deliberately long."
   type        = number

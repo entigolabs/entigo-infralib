@@ -16,9 +16,20 @@ resource "oci_dns_zone" "pub" {
 
 # Certificate authority and certificate names must be unique in the tenancy *including
 # objects that are only scheduled for deletion*, and neither can be deleted immediately
-# (OCI enforces a minimum waiting period). A teardown followed by a rebuild the same day
-# would collide with its own leftovers without this.
+# (OCI enforces a minimum waiting period - 7 days for a CA). A teardown followed by a
+# rebuild the same day would collide with its own leftovers without this.
+#
+# name_salt exists for the nastier version of the same problem: if creating the CA fails
+# *after* OCI accepted the request - which is exactly what an IAM grant that has not
+# propagated yet produces - terraform discards the resource but OCI keeps it, FAILED, still
+# holding the name for a week. Every retry then dies on "a certificate authority with the
+# name ... already exists", and scheduling the orphan for deletion does not release the
+# name either. Bumping name_salt rotates the suffix and gets past it.
 resource "random_string" "suffix" {
+  keepers = {
+    salt = var.name_salt
+  }
+
   length  = 8
   lower   = true
   upper   = false
