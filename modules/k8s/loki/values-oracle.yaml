@@ -39,12 +39,29 @@ loki:
         secretAccessKey: "${OCI_SECRET_ACCESS_KEY}"
         http_config: {}
     storage_config:
-      aws:
-        s3forcepathstyle: true
-        bucketnames: ""
-        endpoint: ""
-        region: ""
-        insecure: false
+      # loki's own aws client CANNOT write to OCI, and no setting changes that. Since
+      # grafana/loki#20088 it hardcodes ChecksumAlgorithm: SHA256 on every PutObject
+      # (pkg/storage/chunk/client/aws/s3_storage_client.go), the SDK sends that as a trailer
+      # using aws-chunked content encoding, and OCI answers
+      #   501 NotImplemented: AWS chunked encoding not supported.
+      # It is a hardcoded API parameter, so AWS_REQUEST_CHECKSUM_CALCULATION=when_required
+      # does not help - an explicit request field beats the environment. Every flush fails,
+      # ingesters fill, and the bucket stays empty while the pods look healthy.
+      #
+      # So Oracle uses the thanos-io/objstore client, which loki also ships and which speaks
+      # to S3 through minio-go without trailers. Selected per-schema by object_store: s3 in
+      # schemaConfig below; the connection details come from agent_input_oracle.yaml.
+      use_thanos_objstore: true
+      object_store:
+        s3:
+          endpoint: ""
+          region: ""
+          bucket_name: ""
+          # Path-style, for the same reason as above: the Object Storage namespace is already
+          # the hostname, so the bucket cannot also be a subdomain. This client spells it as
+          # a lookup type rather than a boolean.
+          bucket_lookup_type: path
+          insecure: false
     # Only the tsdb/v13 schema, unlike aws which carries a 2022 boltdb-shipper entry it has to
     # keep for data continuity. Oracle has no history to preserve, so there is no reason to
     # start on a legacy schema.

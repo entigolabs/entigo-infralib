@@ -41,10 +41,19 @@ loki:
         admin: "{{ .config.prefix }}-{{ .module.name }}"
     structuredConfig:
       storage_config:
-        aws:
-          endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
-          region: "{{ .toutput.oke.region }}"
-          bucketnames: "{{ .config.prefix }}-{{ .module.name }}"
+        # The thanos-io/objstore client instead of loki's own aws one - see values-oracle.yaml
+        # for why the aws client cannot write to OCI at all.
+        #
+        # Endpoint is a bare host here, not a URL: this client takes "hostname:port" and
+        # derives the scheme from `insecure`. Passing https:// makes every request fail on a
+        # malformed endpoint.
+        object_store:
+          s3:
+            endpoint: "{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+            region: "{{ .toutput.oke.region }}"
+            bucket_name: "{{ .config.prefix }}-{{ .module.name }}"
+            access_key_id: "${OCI_ACCESS_KEY_ID}"
+            secret_access_key: "${OCI_SECRET_ACCESS_KEY}"
           s3forcepathstyle: true
   # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded and must
   # stay fully qualified - OKE's runtime refuses unqualified image names ("short name mode is
