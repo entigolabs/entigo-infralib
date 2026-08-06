@@ -4,6 +4,11 @@ global:
     clusterId: "{{ .toutput.oke.cluster_id }}"
 
 cluster-autoscaler:
+  # OCI_RESOURCE_PRINCIPAL_REGION has no default and the SDK cannot infer it under Workload
+  # Identity - see the extraEnv comment in values-oracle.yaml. Same wiring as the ingress
+  # controller's region input.
+  extraEnv:
+    OCI_RESOURCE_PRINCIPAL_REGION: "{{ .toutput.oke.region }}"
   image:
     # No Oracle registry-proxy module exists yet - hardcode the upstream registry (its
     # image includes the OCI provider; Oracle's OCIR builds are only needed for legacy

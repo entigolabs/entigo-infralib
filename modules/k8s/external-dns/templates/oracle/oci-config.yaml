@@ -20,9 +20,17 @@ type: Opaque
 stringData:
   oci.yaml: |
     auth:
-      # No region, tenancy, user, key or fingerprint: the pod authenticates as its own service
-      # account through the OKE Workload Identity provider, which derives all of that from the
-      # projected service account token. Requires an ENHANCED cluster.
+      # No tenancy, user, key or fingerprint: the pod authenticates as its own service account
+      # through the OKE Workload Identity provider, using the projected service account token.
+      # Requires an ENHANCED cluster.
+      #
+      # The region, however, is NOT derived from the token and has to be given here. On this
+      # path external-dns copies it straight into OCI_RESOURCE_PRINCIPAL_REGION for the SDK
+      # (provider/oci/oci.go), so leaving it out sets that variable to the empty string rather
+      # than leaving it unset - which slips past the SDK's presence check and builds requests
+      # against "dns..oci.oraclecloud.com". The pod then logs nothing but soft DNS errors while
+      # looking perfectly healthy, and records silently stop being published.
+      region: {{ .Values.global.oracle.region }}
       useWorkloadIdentity: true
     compartment: {{ .Values.global.oracle.compartmentId }}
 {{- end }}

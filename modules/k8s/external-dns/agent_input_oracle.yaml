@@ -2,6 +2,9 @@ global:
   oracle:
     compartmentId: "{{ .agent.accountId }}"
     clusterId: "{{ .toutput.oke.cluster_id }}"
+    # Written into the mounted oci.yaml. Mandatory under Workload Identity and not derivable
+    # from the service account token, unlike everything else in that file.
+    region: "{{ .toutput.oke.region }}"
 
 external-dns:
   extraArgs:

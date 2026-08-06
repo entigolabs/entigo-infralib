@@ -8,6 +8,9 @@ global:
     # OKE Workload Identity policy conditions are scoped to one cluster, so the policy needs
     # the cluster OCID alongside the namespace and service account.
     clusterId: ""
+    # Mandatory under Workload Identity - see templates/oracle/oci-config.yaml for what an
+    # empty one does. Filled by agent_input_oracle.yaml.
+    region: ""
 
 external-dns:
   sources:

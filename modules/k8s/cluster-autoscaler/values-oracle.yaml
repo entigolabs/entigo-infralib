@@ -22,8 +22,19 @@ cluster-autoscaler:
   # SDK's OkeWorkloadIdentityConfigurationProvider, which needs an ENHANCED cluster.
   # The node-pool policy is created by this module's own templates/oracle/policy.yaml via
   # crossplane-oracle.
+  #
+  # The two OCI_RESOURCE_PRINCIPAL_* variables are not optional and not obvious: despite the
+  # name, OkeWorkloadIdentityConfigurationProvider is built on the resource-principal
+  # plumbing and reads both directly from the environment. Without the version it exits
+  # immediately with "can not create resource principal, environment variable:
+  # OCI_RESOURCE_PRINCIPAL_VERSION, not present" - having already logged "using workload
+  # identity provider", which makes it look like the workload identity setup is at fault.
+  # Region has no default either; the SDK cannot infer it here the way instance principal
+  # does from instance metadata. Set to "2.2" because that is what the SDK accepts for OKE
+  # (1.1 is the only other value).
   extraEnv:
     OCI_USE_WORKLOAD_IDENTITY: "true"
+    OCI_RESOURCE_PRINCIPAL_VERSION: "2.2"
     OCI_SDK_APPEND_USER_AGENT: oci-oke-cluster-autoscaler
   rbac:
     serviceAccount:
