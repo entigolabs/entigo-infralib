@@ -1,0 +1,4 @@
+# Optional on purpose (.toptout, not .toutput): a deployment with no oracle/kms module
+# still has to plan. It then gets an empty ca_key_id, and either sets certificate_ocid to
+# bring its own certificate or create_cert = false to have none.
+ca_key_id: "{{ .toptout.kms.ca_key_id }}"

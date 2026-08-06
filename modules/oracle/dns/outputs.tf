@@ -15,12 +15,20 @@ output "int_domain" {
 }
 
 # Consumed by the Oracle apps as the oci-native-ingress.oraclecloud.com/certificate-ocid
-# annotation - every app on the cluster uses this same value, because they all share one load
-# balancer listener and a listener holds one key pair. A pass-through of var.certificate_ocid
-# (see there for why this module cannot create it), so that the zone and the certificate
-# covering it stay described in one place.
+# annotation - every app on the cluster uses this same value, because they all share one
+# load balancer listener and a listener holds one key pair. Either the wildcard this module
+# issued from its own CA, or whatever was passed in as certificate_ocid.
 output "certificate_ocid" {
-  value = var.certificate_ocid
+  value = var.certificate_ocid != "" ? var.certificate_ocid : (local.create_cert ? oci_certificates_management_certificate.wildcard[0].id : "")
+}
+
+# The CA that signed it. Clients trust the wildcard only after importing this CA's
+# certificate, which terraform cannot output: the PEM comes from the Certificates *data
+# plane* API, and the OCI provider only wraps certificates_management. Fetch it with
+#   oci certificates certificate-authority-bundle get \
+#     --certificate-authority-id <this> --query 'data."certificate-pem"' --raw-output
+output "certificate_authority_id" {
+  value = local.create_cert ? oci_certificates_management_certificate_authority.this[0].id : ""
 }
 
 # The NS delegation record must be added manually in the parent zone (which typically

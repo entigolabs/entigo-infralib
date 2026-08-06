@@ -1,1 +1,5 @@
 parent_domain: "biz.internal.test"
+# The CA and its wildcard certificate need an HSM key from modules/oracle/kms, which a
+# harness applying one module at a time cannot supply - and an HSM key version is billed
+# and cannot be deleted on the spot. The zone is what this test covers.
+create_cert: false

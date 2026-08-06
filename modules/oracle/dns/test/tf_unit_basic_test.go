@@ -27,4 +27,8 @@ func testTerraformDnsBiz(t *testing.T) {
 
 	nameServers := tf.GetStringListValue(t, outputs, "dns__name_servers")
 	assert.NotEmpty(t, nameServers, "name_servers was not returned")
+
+	// biz.yaml sets create_cert = false, so both certificate outputs are empty here.
+	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__certificate_ocid"), "certificate_ocid should be empty when create_cert is false")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__certificate_authority_id"), "certificate_authority_id should be empty when create_cert is false")
 }

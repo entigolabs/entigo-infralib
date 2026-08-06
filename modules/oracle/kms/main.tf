@@ -1,0 +1,116 @@
+locals {
+  vault_name = var.vault_name != "" ? var.vault_name : "${var.prefix}-${random_string.suffix.result}"
+
+  vault_id            = var.create_vault ? oci_kms_vault.this[0].id : data.oci_kms_vaults.this[0].vaults[0].id
+  management_endpoint = var.create_vault ? oci_kms_vault.this[0].management_endpoint : data.oci_kms_vaults.this[0].vaults[0].management_endpoint
+
+  data_key_name      = "${var.prefix}-data-${random_string.suffix.result}"
+  config_key_name    = "${var.prefix}-config-${random_string.suffix.result}"
+  telemetry_key_name = "${var.prefix}-telemetry-${random_string.suffix.result}"
+  ca_key_name        = "${var.prefix}-ca-${random_string.suffix.result}"
+}
+
+# Every name here carries a random suffix, for the same reason modules/oracle/dns's
+# certificate does: deleting a vault or a key only *schedules* the deletion (7 days
+# minimum, 30 maximum), and the object keeps its name for the whole waiting period. A
+# teardown followed by a rebuild the same day - which is the normal development cycle
+# here - would otherwise collide with its own pending-deletion leftovers.
+resource "random_string" "suffix" {
+  length  = 8
+  lower   = true
+  upper   = false
+  numeric = true
+  special = false
+}
+
+resource "oci_kms_vault" "this" {
+  count          = var.create_vault ? 1 : 0
+  compartment_id = var.compartment_id
+  display_name   = local.vault_name
+  vault_type     = var.vault_type
+}
+
+# The three keys mirror modules/aws/kms and modules/google/kms one for one, so that a
+# deployment reads the same on all three clouds:
+#   data      - block volumes, boot volumes, object storage buckets, databases
+#   config    - secrets and cluster configuration (OKE etcd)
+#   telemetry - log and metric storage
+# Consumers take the OCID; unlike AWS there is no key policy to attach here, because OCI
+# authorises key use through IAM policies on the compartment rather than through a
+# document on the key itself.
+resource "oci_kms_key" "data" {
+  compartment_id      = var.compartment_id
+  display_name        = local.data_key_name
+  management_endpoint = local.management_endpoint
+  protection_mode     = var.key_protection_mode
+
+  key_shape {
+    algorithm = var.key_algorithm
+    length    = var.key_length
+  }
+
+  dynamic "auto_key_rotation_details" {
+    for_each = var.key_rotation_interval_in_days == null ? [] : [1]
+    content {
+      rotation_interval_in_days = var.key_rotation_interval_in_days
+    }
+  }
+}
+
+resource "oci_kms_key" "config" {
+  compartment_id      = var.compartment_id
+  display_name        = local.config_key_name
+  management_endpoint = local.management_endpoint
+  protection_mode     = var.key_protection_mode
+
+  key_shape {
+    algorithm = var.key_algorithm
+    length    = var.key_length
+  }
+
+  dynamic "auto_key_rotation_details" {
+    for_each = var.key_rotation_interval_in_days == null ? [] : [1]
+    content {
+      rotation_interval_in_days = var.key_rotation_interval_in_days
+    }
+  }
+}
+
+resource "oci_kms_key" "telemetry" {
+  compartment_id      = var.compartment_id
+  display_name        = local.telemetry_key_name
+  management_endpoint = local.management_endpoint
+  protection_mode     = var.key_protection_mode
+
+  key_shape {
+    algorithm = var.key_algorithm
+    length    = var.key_length
+  }
+
+  dynamic "auto_key_rotation_details" {
+    for_each = var.key_rotation_interval_in_days == null ? [] : [1]
+    content {
+      rotation_interval_in_days = var.key_rotation_interval_in_days
+    }
+  }
+}
+
+# The signing key for modules/oracle/dns's certificate authority. It lives here rather
+# than in that module because this is the module that owns the vault, and because a CA key
+# is worth seeing next to the others when reviewing what a deployment pays for: this is the
+# only HSM-protected key created by default.
+#
+# No auto_key_rotation_details: rotating a CA's signing key mid-life would invalidate the
+# CA. Certificate rotation is handled by the renewal rule on the certificate itself.
+resource "oci_kms_key" "ca" {
+  count               = var.create_ca_key ? 1 : 0
+  compartment_id      = var.compartment_id
+  display_name        = local.ca_key_name
+  management_endpoint = local.management_endpoint
+  protection_mode     = var.ca_key_protection_mode
+
+  key_shape {
+    algorithm = var.ca_key_algorithm
+    length    = var.ca_key_length
+  }
+}
