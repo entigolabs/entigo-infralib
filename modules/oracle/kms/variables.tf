@@ -102,8 +102,13 @@ variable "ca_key_length" {
   default     = 512
 }
 
+# Five minutes is not superstition. 60s was tried first and the CA still failed; the same
+# CA, created by hand from the same key a few minutes later with nothing else changed, came
+# up ACTIVE. So the grant is right and only its propagation is slow. Erring long costs one
+# wait on the first deployment; erring short costs a CA stuck in FAILED that OCI will not
+# delete for 7 days.
 variable "ca_policy_wait" {
   description = "How long to wait after granting certificate authorities the use of this compartment's keys, before anything creates one. A CA that starts before the grant propagates fails permanently rather than retrying."
   type        = string
-  default     = "60s"
+  default     = "300s"
 }
