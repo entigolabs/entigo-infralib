@@ -32,6 +32,18 @@ variable "vault_type" {
 # Software-protected key versions are free; HSM-protected ones are billed per version.
 # The three storage keys default to SOFTWARE, matching modules/google/kms's
 # key_protection_level. The CA key below cannot follow that default - see ca_key_protection_mode.
+# A new vault's management endpoint is a hostname of its own
+# (<prefix>-management.kms.<region>.oraclecloud.com) and the DNS record for it does not
+# exist the moment CreateVault returns. Terraform goes straight on to the keys and every
+# one of them fails with "no such host" - seen on the first real run, all four at once,
+# right after the vault reported complete after 2m9s. There is nothing to poll and the
+# provider does not retry it, so the only fix is to wait.
+variable "vault_endpoint_wait" {
+  description = "How long to wait after creating a vault before using its management endpoint, so its DNS record can appear. Only applies when this module creates the vault."
+  type        = string
+  default     = "180s"
+}
+
 variable "key_protection_mode" {
   description = "SOFTWARE or HSM, for the data, config and telemetry keys."
   type        = string

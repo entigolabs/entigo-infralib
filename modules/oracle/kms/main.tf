@@ -30,6 +30,22 @@ resource "oci_kms_vault" "this" {
   vault_type     = var.vault_type
 }
 
+# CreateVault returns before the vault's management endpoint is resolvable, and every key
+# below is created against that endpoint rather than the regional one - so without this
+# they all fail together with "no such host". See vault_endpoint_wait.
+#
+# Keyed on the vault's id so it waits again if the vault is ever replaced, and skipped
+# entirely when an existing vault is being reused: that one's DNS resolved long ago.
+resource "time_sleep" "vault_endpoint" {
+  count           = var.create_vault ? 1 : 0
+  depends_on      = [oci_kms_vault.this]
+  create_duration = var.vault_endpoint_wait
+
+  triggers = {
+    vault_id = oci_kms_vault.this[0].id
+  }
+}
+
 # The three keys mirror modules/aws/kms and modules/google/kms one for one, so that a
 # deployment reads the same on all three clouds:
 #   data      - block volumes, boot volumes, object storage buckets, databases
@@ -39,6 +55,7 @@ resource "oci_kms_vault" "this" {
 # authorises key use through IAM policies on the compartment rather than through a
 # document on the key itself.
 resource "oci_kms_key" "data" {
+  depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.data_key_name
   management_endpoint = local.management_endpoint
@@ -58,6 +75,7 @@ resource "oci_kms_key" "data" {
 }
 
 resource "oci_kms_key" "config" {
+  depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.config_key_name
   management_endpoint = local.management_endpoint
@@ -77,6 +95,7 @@ resource "oci_kms_key" "config" {
 }
 
 resource "oci_kms_key" "telemetry" {
+  depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.telemetry_key_name
   management_endpoint = local.management_endpoint
@@ -104,6 +123,7 @@ resource "oci_kms_key" "telemetry" {
 # CA. Certificate rotation is handled by the renewal rule on the certificate itself.
 resource "oci_kms_key" "ca" {
   count               = var.create_ca_key ? 1 : 0
+  depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.ca_key_name
   management_endpoint = local.management_endpoint
