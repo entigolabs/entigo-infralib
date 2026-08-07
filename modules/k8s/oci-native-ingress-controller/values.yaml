@@ -1,5 +1,8 @@
 global:
   providerConfigRefName: crossplane-oracle
+  # Filled by agent_input_oracle.yaml. Prefixes the IAM policy names so oci-nuke's
+  # tenancy sweep can recognise them - see templates/policy.yaml.
+  prefix: ""
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
     compartmentId: ""

@@ -1,4 +1,17 @@
 {{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = 'oci-native-ingress-controller'" .Values.global.oracle.clusterId .Values.deploymentNamespace }}
+{{- /*
+Prefix-first names, for the same reason modules/k8s/loki's IAM objects were renamed in
+f1297c41. The tenancy-attached policy is the one that matters: oci-nuke can only filter
+tenancy-scoped resources by prefix - the tenancy is shared, so an unfiltered sweep there
+would delete other people's objects - and a policy called plain "oci-ingress-tenancy"
+therefore survives every teardown. One did, from a cluster that no longer existed, and
+Crossplane could not create over it: "409-PolicyAlreadyExists". The whole sync wave stalled
+behind it and grafana, prometheus, loki, alloy and hello-world were never created.
+
+The compartment-scoped policy is swept unfiltered and does not need this, but is renamed too
+so the pair reads consistently in the console.
+*/ -}}
+{{- $iamName := printf "%s-%s" .Values.global.prefix .Release.Name }}
 # Per-app OCI IAM, applied by the crossplane-oracle provider - see
 # https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
 # Split in two because OCI only allows a policy to grant within
@@ -14,14 +27,14 @@
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ $iamName }}
   annotations:
     argocd.argoproj.io/sync-wave: '-2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     compartmentId: {{ .Values.global.oracle.compartmentId }}
-    name: {{ .Release.Name }}
+    name: {{ $iamName }}
     description: Grants oci-native-ingress-controller its compartment-scoped permissions (LBs, certificates, WAF), via OKE Workload Identity
     freeformTags:
       created-by: "entigo-infralib"
@@ -45,14 +58,14 @@ spec:
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:
-  name: {{ .Release.Name }}-tenancy
+  name: {{ $iamName }}-tenancy
   annotations:
     argocd.argoproj.io/sync-wave: '-2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     compartmentId: {{ .Values.global.oracle.tenancyOcid }}
-    name: {{ .Release.Name }}-tenancy
+    name: {{ $iamName }}-tenancy
     description: Grants oci-native-ingress-controller its tenancy-scoped permissions (public-ips, floating-ips, tag-namespaces), via OKE Workload Identity
     freeformTags:
       created-by: "entigo-infralib"

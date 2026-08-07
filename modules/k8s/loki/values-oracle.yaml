@@ -1,3 +1,9 @@
+# Used only by templates/oracle/connection-secret-job.yaml - see there for why that job
+# exists. Same image and tag as every other kubectl job in the repo.
+job:
+  image: docker.io/entigolabs/entigo-infralib-kubectl
+  tag: "v1.22.1"
+
 global:
   cloudProvider: oracle
   providerConfigRefName: crossplane-oracle

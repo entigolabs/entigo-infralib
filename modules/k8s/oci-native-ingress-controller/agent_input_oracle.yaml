@@ -1,4 +1,5 @@
 global:
+  prefix: "{{ .config.prefix }}"
   oracle:
     compartmentId: "{{ .agent.accountId }}"
     tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
