@@ -55,7 +55,7 @@ locals {
             volume_size           = var.eks_main_volume_size
             volume_iops           = var.eks_main_volume_iops
             volume_type           = var.eks_main_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
@@ -102,7 +102,7 @@ locals {
             volume_size           = var.eks_mon_volume_size
             volume_iops           = var.eks_mon_volume_iops
             volume_type           = var.eks_mon_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
@@ -149,7 +149,7 @@ locals {
             volume_size           = var.eks_tools_volume_size
             volume_iops           = var.eks_tools_volume_iops
             volume_type           = var.eks_tools_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
