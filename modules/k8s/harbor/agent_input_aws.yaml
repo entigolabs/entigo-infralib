@@ -45,7 +45,7 @@ harbor:
   redis:
     internal:
       image:
-        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/redis-photon'
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/valkey-photon'
   exporter:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'

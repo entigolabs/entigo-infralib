@@ -617,13 +617,17 @@ jobs:
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Clone the target repository and copy files
+      env:
+        # Expanded safely into the environment, not into the script text
+        NEW_VERSION: ${{ steps.get_latest_release.outputs.new_version }}
+        RELEASE_NOTES: ${{ steps.get_release_notes.outputs.notes }}
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release
-        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m"Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push && git tag -a ${{ steps.get_latest_release.outputs.new_version }} -m "Release ${{ steps.get_latest_release.outputs.new_version }}" -m "${{ steps.get_release_notes.outputs.notes }}" && git push origin ${{ steps.get_latest_release.outputs.new_version }} || echo "Nothing to release"
+        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m "Release $NEW_VERSION" -m "$RELEASE_NOTES" && git push && git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION" -m "$RELEASE_NOTES" && git push origin "$NEW_VERSION" || echo "Nothing to release"
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Slack Success Release Message
