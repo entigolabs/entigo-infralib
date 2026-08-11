@@ -9,9 +9,14 @@ policies written against the compartment, so grants live with the consumer, not 
 
 ### The CA key ###
 
-A fourth key, `ca`, is created by default. It is the signing key for the internal
-certificate authority in `modules/oracle/dns`, which issues the wildcard certificate every
-app behind the native ingress controller is served from.
+A fourth key, `ca`, is created by default. It is the signing key for the certificate
+authority in `modules/oracle/pca`, which issues the wildcard certificate every app behind
+the native ingress controller is served from.
+
+It lives here rather than in that module because this module owns the vault, and a second
+vault would bring a 7-day deletion floor of its own. The IAM grant that lets an authority
+*use* this key is the other way round - it belongs to `oracle/pca`, because the module that
+creates the CA is the one that has to wait for the grant to propagate.
 
 It is the only **HSM-protected** key in the module, and that is not a choice: OCI
 Certificates refuses software-protected keys for a certificate authority ("Certificates

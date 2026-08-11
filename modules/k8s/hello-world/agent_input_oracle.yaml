@@ -4,6 +4,6 @@ ingress:
     # See modules/k8s/argocd/values-oracle.yaml for what each of these does. The
     # certificate is the zone-wide wildcard from modules/oracle/dns, shared by every app
     # because NIC terminates them all on one load balancer listener.
-    oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.certificate_ocid }}"
+    oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.int_cert_ocid }}"
     oci-native-ingress.oraclecloud.com/https-listener-port: "443"
     oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"

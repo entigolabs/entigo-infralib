@@ -5,7 +5,7 @@ argocd:
         # The shared wildcard certificate in OCI Certificates (modules/oracle/dns). One
         # certificate for every host under the zone, because NIC terminates all of them on
         # a single load balancer listener and a listener carries exactly one key pair.
-        oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.certificate_ocid }}"
+        oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.int_cert_ocid }}"
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.dns.int_domain }}

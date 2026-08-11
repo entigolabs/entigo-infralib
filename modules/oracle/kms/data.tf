@@ -1,12 +1,3 @@
-# Dynamic groups are tenancy-scoped in OCI, so the group below needs the tenancy OCID and
-# not the compartment. Same reasoning as modules/oracle/oke's copy of this lookup: these
-# compartments are flat, one level below the root, so the parent of var.compartment_id is
-# reliably the tenancy.
-data "oci_identity_compartment" "this" {
-  count = var.create_ca_key ? 1 : 0
-  id    = var.compartment_id
-}
-
 # Looked up by name rather than taken as an OCID input, so that create_vault = false reads
 # the same way as create_key_ring = false does in modules/google/kms. oci_kms_vaults (the
 # plural, list-and-filter data source) is used because the singular oci_kms_vault requires

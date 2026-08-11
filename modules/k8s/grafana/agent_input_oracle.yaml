@@ -24,7 +24,7 @@ grafana:
     annotations:
       # The zone-wide wildcard certificate in OCI Certificates, shared by every app on this
       # cluster - see modules/k8s/argocd/values-oracle.yaml.
-      oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.certificate_ocid }}"
+      oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.int_cert_ocid }}"
   serviceAccount:
     name: "{{ .module.name }}"
   # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded, fully

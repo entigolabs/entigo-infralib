@@ -1,5 +1,20 @@
-parent_domain: "biz.internal.test"
-# The CA and its wildcard certificate need an HSM key from modules/oracle/kms, which a
-# harness applying one module at a time cannot supply - and an HSM key version is billed
-# and cannot be deleted on the spot. The zone is what this test covers.
-create_cert: false
+# Two public domains rather than one, so the pub_*/int_* selection and the map outputs are
+# actually exercised: with a single domain every default falls out of a shortcut and the
+# multi-zone logic is never reached.
+#
+# Both are public and neither creates a certificate. A private zone needs a VCN, and a
+# certificate needs a certificate authority from modules/oracle/pca whose HSM key is billed
+# and cannot be deleted on the spot - neither is available to a harness that applies one
+# module at a time. The zones and the default selection are what this test covers.
+domains: |
+  {
+    "public" = {
+      domain_name        = "biz.biz.internal.test"
+      create_certificate = false
+      default_public     = true
+    },
+    "secondary" = {
+      domain_name        = "biz2.biz.internal.test"
+      create_certificate = false
+    }
+  }

@@ -1,30 +1,143 @@
 locals {
-  subdomain_name = var.subdomain_name != "" ? var.subdomain_name : var.prefix
-  domain         = "${local.subdomain_name}.${var.parent_domain}"
+  public_count  = length([for k, v in var.domains : k if !v.private])
+  private_count = length([for k, v in var.domains : k if v.private])
 
-  # An explicitly supplied certificate_ocid wins: that is how a deployment brings a
-  # publicly trusted certificate instead of using the CA below.
-  create_cert = var.create_cert && var.certificate_ocid == ""
+  # Everything derived per domain, so no resource has to repeat a fallback. Same intent as
+  # domains_with_defaults in modules/aws-v2/route53.
+  domains = {
+    for key, d in var.domains : key => merge(d, {
+      # A domain that names no authority uses the module-level one, which is where
+      # modules/oracle/pca is wired in.
+      certificate_authority_id = d.certificate_authority_id != "" ? d.certificate_authority_id : var.certificate_authority_id
+
+      # An explicitly supplied certificate_ocid wins: that is how a deployment brings a
+      # publicly trusted certificate instead of one issued by the CA.
+      create_cert = d.create_certificate && d.certificate_ocid == ""
+
+      effective_vcn_id = d.vcn_id != "" ? d.vcn_id : var.vcn_id
+
+      # Which domain the pub_*/int_* outputs describe. Explicit wins; otherwise a single
+      # domain is both, and a single domain of a kind is the default for that kind.
+      is_default_public = d.default_public != null ? d.default_public : (
+        length(var.domains) == 1 ? true : (!d.private && local.public_count == 1)
+      )
+      is_default_private = d.default_private != null ? d.default_private : (
+        length(var.domains) == 1 ? true : (d.private && local.private_count == 1)
+      )
+    })
+  }
+
+  default_public_keys  = [for k, v in local.domains : k if v.is_default_public]
+  default_private_keys = [for k, v in local.domains : k if v.is_default_private]
+
+  chosen_public  = length(local.default_public_keys) > 0 ? local.default_public_keys[0] : ""
+  chosen_private = length(local.default_private_keys) > 0 ? local.default_private_keys[0] : ""
+
+  # Each kind falls back to the other, a deliberate deviation from modules/aws-v2/route53 which
+  # requires exactly one default of *each* and fails a deployment that has only public domains.
+  # This is the behaviour modules/aws/route53 had through `int_domain = create_private ? ... :
+  # local.pub_domain`, and every Oracle app reads .toutput.<dns>.int_domain - so the fallback is
+  # what lets a single-public-zone deployment work at all.
+  default_public_key  = local.chosen_public != "" ? local.chosen_public : local.chosen_private
+  default_private_key = local.chosen_private != "" ? local.chosen_private : local.chosen_public
+
+  # A private zone needs the view its VCN's resolver keeps; an explicit view_id skips the
+  # lookup. Only computed for private domains - the data sources below are keyed the same way.
+  view_ids = {
+    for k, v in local.domains : k => v.view_id != "" ? v.view_id : data.oci_dns_resolver.this[k].default_view_id
+    if v.private
+  }
+
+  zone_ids = {
+    for k, v in local.domains : k => v.create_zone ? oci_dns_zone.this[k].id : data.oci_dns_zones.existing[k].zones[0].id
+  }
+
+  domain_names = { for k, v in local.domains : k => v.domain_name }
+
+  certificate_ocids = {
+    for k, v in local.domains : k => v.certificate_ocid != "" ? v.certificate_ocid : (
+      v.create_cert ? oci_certificates_management_certificate.this[k].id : ""
+    )
+  }
+
+  # Only zones this module created report nameservers; an existing zone was delegated long ago.
+  nameservers = {
+    for k, v in local.domains : k => oci_dns_zone.this[k].nameservers[*].hostname
+    if v.create_zone
+  }
 }
 
-resource "oci_dns_zone" "pub" {
+resource "oci_dns_zone" "this" {
+  for_each = { for k, v in local.domains : k => v if v.create_zone }
+
   compartment_id = var.compartment_id
-  name           = local.domain
+  name           = each.value.domain_name
   zone_type      = "PRIMARY"
-  scope          = "GLOBAL"
+
+  # GLOBAL is the public DNS namespace; a PRIVATE zone is resolvable only through the view it
+  # belongs to, which is what confines it to a VCN.
+  scope   = each.value.private ? "PRIVATE" : "GLOBAL"
+  view_id = each.value.private ? local.view_ids[each.key] : null
+
+  lifecycle {
+    precondition {
+      condition     = !each.value.private || each.value.effective_vcn_id != "" || each.value.view_id != ""
+      error_message = "Domain '${each.key}' is private but has no VCN: set vcn_id on the domain, set the module-level vcn_id (wired from oracle/vpc), or name a view_id directly."
+    }
+  }
 }
 
-# Certificate authority and certificate names must be unique in the tenancy *including
-# objects that are only scheduled for deletion*, and neither can be deleted immediately
-# (OCI enforces a minimum waiting period - 7 days for a CA). A teardown followed by a
-# rebuild the same day would collide with its own leftovers without this.
+# Zones with create_zone = false are assumed to exist already. Looked up by name rather than
+# taken as an OCID so that create_zone reads the same as it does on AWS; oci_dns_zones (the
+# plural, list-and-filter data source) is used because the singular requires the OCID that we
+# are trying to find.
+data "oci_dns_zones" "existing" {
+  for_each = { for k, v in local.domains : k => v if !v.create_zone }
+
+  compartment_id = var.compartment_id
+  name           = each.value.domain_name
+  scope          = each.value.private ? "PRIVATE" : "GLOBAL"
+  view_id        = each.value.private ? local.view_ids[each.key] : null
+  state          = "ACTIVE"
+}
+
+# The NS delegation, when the parent zone is in OCI DNS too. When it is not - the usual case
+# here, where the parent is in Route53 - this creates nothing and the records are added by
+# hand from the nameservers output.
 #
-# name_salt exists for the nastier version of the same problem: if creating the CA fails
-# *after* OCI accepted the request - which is exactly what an IAM grant that has not
-# propagated yet produces - terraform discards the resource but OCI keeps it, FAILED, still
-# holding the name for a week. Every retry then dies on "a certificate authority with the
-# name ... already exists", and scheduling the orphan for deletion does not release the
-# name either. Bumping name_salt rotates the suffix and gets past it.
+# UNTESTED: every deployment so far has had its parent zone outside OCI.
+resource "oci_dns_rrset" "ns_delegation" {
+  for_each = {
+    for k, v in local.domains : k => v
+    if v.parent_zone_id != "" && v.create_zone && !v.private
+  }
+
+  zone_name_or_id = each.value.parent_zone_id
+  domain          = each.value.domain_name
+  rtype           = "NS"
+
+  dynamic "items" {
+    for_each = oci_dns_zone.this[each.key].nameservers[*].hostname
+    content {
+      domain = each.value.domain_name
+      rtype  = "NS"
+      rdata  = items.value
+      ttl    = 300
+    }
+  }
+}
+
+# Certificate names must be unique in the tenancy *including certificates that are only
+# scheduled for deletion*, and a certificate cannot be deleted immediately - OCI enforces a
+# 24-hour minimum. A teardown followed by a rebuild the same day would collide with its own
+# leftovers without this.
+#
+# name_salt exists for the nastier version of the same problem: if a create fails *after* OCI
+# accepted the request, terraform discards the resource but OCI keeps it, FAILED, still
+# holding the name. Every retry then dies on "a certificate with the name ... already
+# exists", and scheduling the orphan for deletion does not release the name either. Bumping
+# name_salt rotates the suffix and gets past it. The CA has its own copy of this in
+# modules/oracle/pca, where the same problem lasts a week rather than a day.
 resource "random_string" "suffix" {
   keepers = {
     salt = var.name_salt
@@ -37,114 +150,58 @@ resource "random_string" "suffix" {
   special = false
 }
 
-# OCI has no equivalent of ACM's free publicly trusted issuance, so where modules/aws/route53
-# asks ACM for "*.${domain}" this asks an internal CA of our own for the same thing. The
-# certificates are therefore trusted only by clients that have imported the CA - see the
-# README for how to fetch its PEM.
-#
-# The lifetime is set explicitly because OCI's default validity is measured in months, which
-# is fine for a leaf certificate and wrong for a root: replacing the CA means redistributing
-# it to every client.
-resource "time_offset" "ca_validity" {
-  count        = local.create_cert ? 1 : 0
-  offset_years = var.ca_validity_years
-}
-
-resource "oci_certificates_management_certificate_authority" "this" {
-  count          = local.create_cert ? 1 : 0
-  compartment_id = var.compartment_id
-  name           = "${var.prefix}-root-ca-${random_string.suffix.result}"
-  description    = "Root CA issuing the wildcard certificate for ${local.domain}"
-
-  # Must be an HSM-protected asymmetric key: OCI Certificates rejects software-protected
-  # keys outright. modules/oracle/kms creates one and this is wired to it by agent_input.yaml.
-  kms_key_id = var.ca_key_id
-
-  certificate_authority_config {
-    config_type = "ROOT_CA_GENERATED_INTERNALLY"
-
-    subject {
-      common_name = "${local.domain} root CA"
-    }
-
-    # Sub-second precision is not decoration, and ".000" will not do.
-    #
-    # OCI rejects an RFC3339 timestamp with no fraction - "400-InvalidParameter, Unable to
-    # process JSON input", naming no field - so "2036-08-06T09:02:54Z" fails where
-    # "...54.000Z" is accepted by the API. But the provider does not send what you write: it
-    # parses the string into an SDKTime and re-serialises with time.RFC3339Nano, which
-    # *trims trailing zeros*, turning ".000Z" straight back into "Z". Captured off the wire
-    # with OCI_GO_SDK_DEBUG: config ".000Z" -> body "2036-08-06T08:44:05Z" -> rejected.
-    #
-    # A non-zero fraction survives the round trip, hence .5. Safe to hardcode Z because
-    # time_offset always emits UTC.
-    validity {
-      time_of_validity_not_after = formatdate("YYYY-MM-DD'T'hh:mm:ss'.500Z'", time_offset.ca_validity[0].rfc3339)
-    }
-  }
-
-  # Stated rather than left to OCI's defaults, which are undocumented and would put the
-  # ceiling on what this CA may issue uncomfortably close to the validity of the
-  # certificate below.
-  certificate_authority_rules {
-    rule_type                                   = "CERTIFICATE_AUTHORITY_ISSUANCE_EXPIRY_RULE"
-    leaf_certificate_max_validity_duration      = var.leaf_certificate_max_validity
-    certificate_authority_max_validity_duration = var.subordinate_ca_max_validity
-  }
-
-  lifecycle {
-    precondition {
-      condition     = var.ca_key_id != ""
-      error_message = "ca_key_id is empty: add an oracle/kms module to the same step (it supplies ca_key_id through .toptout), or set create_cert = false / certificate_ocid to bring your own certificate."
-    }
-  }
-}
-
-# One wildcard certificate for the whole zone, because modules/k8s/oci-native-ingress-controller
+# One wildcard certificate per domain, because modules/k8s/oci-native-ingress-controller
 # terminates TLS on an OCI load balancer listener and a listener holds exactly one key pair -
-# there is no SNI, so every app on the cluster is served from this one certificate.
+# there is no SNI, so every app served from a given domain shares its certificate.
 #
 # The wildcard is repeated in the SANs rather than left in the common name alone: modern
 # clients ignore CN entirely and match against subjectAltName only.
-resource "oci_certificates_management_certificate" "wildcard" {
-  count          = local.create_cert ? 1 : 0
+resource "oci_certificates_management_certificate" "this" {
+  for_each = { for k, v in local.domains : k => v if v.create_cert }
+
   compartment_id = var.compartment_id
-  name           = "${var.prefix}-wildcard-${random_string.suffix.result}"
-  description    = "Wildcard certificate for ${local.domain}, served by every app behind the native ingress controller"
+  name           = "${var.prefix}-${each.key}-${random_string.suffix.result}"
+  description    = "Wildcard certificate for ${each.value.domain_name}"
 
   certificate_config {
     config_type                     = "ISSUED_BY_INTERNAL_CA"
-    issuer_certificate_authority_id = oci_certificates_management_certificate_authority.this[0].id
+    issuer_certificate_authority_id = each.value.certificate_authority_id
     certificate_profile_type        = "TLS_SERVER"
 
     subject {
-      common_name = "*.${local.domain}"
+      common_name = "*.${each.value.domain_name}"
     }
 
     subject_alternative_names {
       type  = "DNS"
-      value = "*.${local.domain}"
+      value = "*.${each.value.domain_name}"
     }
 
     subject_alternative_names {
       type  = "DNS"
-      value = local.domain
+      value = each.value.domain_name
     }
   }
 
-  # OCI renews the certificate itself, which is the whole reason this module can own it -
-  # an imported certificate would have to be re-issued and re-imported by hand every time.
-  # Validity is left at OCI's default (three months), so renewing every 60 days with 15
-  # days of headroom leaves a wide margin.
+  # OCI renews the certificate itself, which is the whole reason this module can own it - an
+  # imported certificate would have to be re-issued and re-imported by hand every time.
+  # Validity is left at OCI's default (three months), so renewing every 60 days with 15 days
+  # of headroom leaves a wide margin.
   #
   # KNOWN GAP: a renewal produces a new *version* of the same certificate, and an OCI load
-  # balancer listener has been observed to keep serving the previous version until the
-  # ingress controller re-pushes it. Until that is confirmed fixed for CA-issued
-  # certificates, treat renewal as needing a `kubectl rollout restart` of
-  # oci-native-ingress-controller.
+  # balancer listener has been observed to keep serving the previous version until the ingress
+  # controller re-pushes it. Until that is confirmed fixed for CA-issued certificates, treat
+  # renewal as needing a `kubectl rollout restart` of oci-native-ingress-controller.
   certificate_rules {
     rule_type              = "CERTIFICATE_RENEWAL_RULE"
     renewal_interval       = var.certificate_renewal_interval
     advance_renewal_period = var.certificate_advance_renewal_period
+  }
+
+  lifecycle {
+    precondition {
+      condition     = each.value.certificate_authority_id != ""
+      error_message = "Domain '${each.key}' has create_certificate = true but no issuing authority: add an oracle/pca module to the same step (it supplies certificate_authority_id through .toptout), name a CA on the domain, or set certificate_ocid to bring your own certificate."
+    }
   }
 }

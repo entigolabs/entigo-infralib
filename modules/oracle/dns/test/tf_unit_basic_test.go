@@ -16,19 +16,35 @@ func testTerraformDnsBiz(t *testing.T) {
 	t.Parallel()
 	outputs := oracle.GetTFOutputs(t, "biz")
 
-	zoneId := tf.GetStringValue(t, outputs, "dns__zone_id")
-	assert.NotEmpty(t, zoneId, "zone_id was not returned")
+	zoneId := tf.GetStringValue(t, outputs, "dns__pub_zone_id")
+	assert.NotEmpty(t, zoneId, "pub_zone_id was not returned")
 
-	domain := tf.GetStringValue(t, outputs, "dns__domain")
-	assert.Equal(t, "biz.biz.internal.test", domain, "Wrong value for domain returned")
+	domain := tf.GetStringValue(t, outputs, "dns__pub_domain")
+	assert.Equal(t, "biz.biz.internal.test", domain, "Wrong value for pub_domain returned")
 
-	intDomain := tf.GetStringValue(t, outputs, "dns__int_domain")
-	assert.Equal(t, domain, intDomain, "int_domain must equal domain (no private-zone split yet)")
+	// biz.yaml has no private domain, so int_* falls back to the public default. This is a
+	// deliberate deviation from aws-v2/route53, which would reject the configuration - every
+	// Oracle app reads .toutput.<dns>.int_domain, so the fallback has to hold.
+	assert.Equal(t, domain, tf.GetStringValue(t, outputs, "dns__int_domain"), "int_domain should fall back to pub_domain when no domain is private")
+	assert.Equal(t, zoneId, tf.GetStringValue(t, outputs, "dns__int_zone_id"), "int_zone_id should fall back to pub_zone_id when no domain is private")
 
-	nameServers := tf.GetStringListValue(t, outputs, "dns__name_servers")
-	assert.NotEmpty(t, nameServers, "name_servers was not returned")
+	// The map outputs carry every domain, not just the defaults.
+	zoneIds, ok := tf.GetValue(t, outputs, "dns__zone_ids").(map[string]interface{})
+	assert.True(t, ok, "zone_ids was not a map")
+	assert.Len(t, zoneIds, 2, "zone_ids should carry both domains")
+	assert.NotEmpty(t, zoneIds["secondary"], "the secondary zone was not created")
 
-	// biz.yaml sets create_cert = false, so both certificate outputs are empty here.
-	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__certificate_ocid"), "certificate_ocid should be empty when create_cert is false")
-	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__certificate_authority_id"), "certificate_authority_id should be empty when create_cert is false")
+	domainNames, ok := tf.GetValue(t, outputs, "dns__domain_names").(map[string]interface{})
+	assert.True(t, ok, "domain_names was not a map")
+	assert.Equal(t, "biz2.biz.internal.test", domainNames["secondary"], "Wrong value for the secondary domain name")
+
+	nameservers, ok := tf.GetValue(t, outputs, "dns__nameservers").(map[string]interface{})
+	assert.True(t, ok, "nameservers was not a map")
+	assert.Len(t, nameservers, 2, "nameservers should carry both created zones")
+
+	// No certificates: biz.yaml sets create_certificate = false on both domains, and no CA is
+	// wired in for a single-module test.
+	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__pub_cert_ocid"), "pub_cert_ocid should be empty when no certificate is created")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__int_cert_ocid"), "int_cert_ocid should be empty when no certificate is created")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "dns__certificate_authority_id"), "certificate_authority_id should be empty when none is wired in")
 }

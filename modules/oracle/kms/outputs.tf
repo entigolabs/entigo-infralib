@@ -31,14 +31,13 @@ output "telemetry_key_id" {
   value = oci_kms_key.telemetry.id
 }
 
-# Consumed by modules/oracle/dns as ca_key_id, via .toptout so that a deployment without
+# Consumed by modules/oracle/pca as ca_key_id, via .toptout so that a deployment without
 # this module still plans. Empty rather than null for the same reason - the agent renders
 # the value into a string input.
 #
-# The depends_on is what stops a certificate authority being created before it is allowed to
-# use this key: consumers of this output inherit the wait, and a CA that starts too early
-# fails permanently rather than retrying.
+# The grant that lets a certificate authority actually use this key, and the wait for it to
+# propagate, live in modules/oracle/pca: they are about the CA rather than the key, and the
+# module that creates the CA is the one that has to hold off until the grant lands.
 output "ca_key_id" {
-  value      = var.create_ca_key ? oci_kms_key.ca[0].id : ""
-  depends_on = [time_sleep.ca_policy]
+  value = var.create_ca_key ? oci_kms_key.ca[0].id : ""
 }

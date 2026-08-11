@@ -1,6 +1,6 @@
 key_rotation_interval_in_days: 90
 # The CA signing key has to be HSM-protected, and HSM key versions are billed per version
 # and cannot be deleted immediately (7 days minimum), so a run of this test would leave a
-# paid, undeletable key behind every time. The CA path is covered by modules/oracle/dns
+# paid, undeletable key behind every time. The CA path is covered by modules/oracle/pca
 # against a real deployment instead.
 create_ca_key: false
