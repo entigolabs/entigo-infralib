@@ -20,6 +20,13 @@ external-dns:
     # Workload Identity is only selectable from the config file, so no auth flag here. The
     # compartment comes from the same file; --oci-compartment-ocid is ignored on this path.
     - --oci-config-file=/etc/kubernetes/oci.yaml
+    # Empty means BOTH global and private zones. The flag defaults to GLOBAL, and a
+    # deployment with a private zone in modules/oracle/dns would then have its records
+    # silently not published - external-dns lists only the scopes it was told about, logs
+    # nothing about the zone it never saw, and stays Healthy. "PRIVATE" would be the
+    # opposite mistake, dropping the public zone. Trailing "=" is deliberate and is how
+    # upstream documents "both".
+    - --oci-zone-scope=
   image:
     # No Oracle registry-proxy module exists yet (same gap noted in modules/k8s/argocd's
     # agent_input_oracle.yaml) - hardcode the public default registry rather than

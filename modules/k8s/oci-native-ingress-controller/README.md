@@ -1,9 +1,46 @@
 ## OCI Native Ingress Controller ##
 
 Deploys Oracle's [OCI Native Ingress Controller](https://github.com/oracle/oci-native-ingress-controller)
-(NIC) and a default `IngressClass`/`IngressClassParameters` pair backed by a public OCI
+(NIC) and one or more `IngressClass`/`IngressClassParameters` pairs, each backed by its own OCI
 Load Balancer, so other modules (e.g. `argocd`) can get a real hostname via a standard
 `Ingress` resource.
+
+### Load balancers are chosen by IngressClass ###
+
+OCI has no equivalent of the AWS load balancer controller's `alb.ingress.kubernetes.io/group.name`
+annotation - nothing on an `Ingress` picks or creates a load balancer. The load balancer comes
+from the `IngressClassParameters` that the `Ingress`'s class points at, so **more load balancers
+means more IngressClasses**. `ingressClasses` in `values.yaml` is a map of them:
+
+| entry | class name | load balancer | NSG |
+|---|---|---|---|
+| `public` | `oci-ic` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
+| `private` | `oci-ic-int` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
+
+`private` ships **disabled**, because enabling it provisions a second load balancer that is
+billed whether or not an `Ingress` uses it. Both are wired with their subnet and NSG regardless,
+so turning it on is one line in a deployment's config:
+
+```yaml
+ingressClasses:
+  private:
+    enabled: true
+```
+
+An app then selects it, in the deployment's own `config/apps/<module>.yaml`:
+
+```yaml
+ingress:
+  ingressClassName: oci-ic-int
+```
+
+Add further entries for further load balancers; nothing about the map is limited to two.
+
+**An internal load balancer is not the same as a private hostname.** The load balancer becomes
+unreachable from outside the VCN, but a name on a public DNS zone still resolves for everyone
+and still gets a certificate. For an app that should be invisible from outside, pair it with a
+`private = true` domain in `modules/oracle/dns` - and note that external-dns needs
+`--oci-zone-scope=PRIVATE` (or empty, for both) before it will publish into a private zone.
 
 ### TLS ###
 
@@ -31,8 +68,14 @@ as a *separate* certificate - several different OCIDs competing for the single l
 An OCID is namespace-free, so every app names the same certificate and they agree.
 
 Note that `certificate-ocid` also makes NIC treat every host on that `Ingress` as
-TLS-enabled and **ignore** `http-listener-port`, so these apps answer on 443 only. An app
-that genuinely needs its own certificate has to be served by Istio instead.
+TLS-enabled and **ignore** `http-listener-port`, so these apps answer on 443 only.
+
+The limit is one key pair per **listener**, not per load balancer, so an app that genuinely
+needs its own certificate has two options short of Istio: give it a different
+`https-listener-port` on the same load balancer, or put it on a different `IngressClass` and get
+a load balancer of its own. A different port needs that port opened first - `lb_ingress_ports`
+in `modules/oracle/oke`, since NIC never touches NSGs and a listener nothing can reach comes up
+looking perfectly healthy.
 
 ### Gateway API CRDs ###
 
@@ -76,13 +119,12 @@ tag against this one and re-apply the three deviations below.
    leader-election lease, so with the chart's default RollingUpdate on a single replica the old
    pod will not terminate until the new one is Ready, and the new one cannot become Ready until
    the old one releases the lease. Every upgrade deadlocks until a pod is deleted by hand.
-3. **`ingressClassParameters.subnetId`/`.compartmentId` and
-   `oci-native-ingress-controller.subnet_id`** are wired from
-   `.toutput.vpc.public_subnet_id`, a new **singular** output added to `modules/oracle/vpc`
-   alongside the existing `public_subnets` list output - the agent's k8s Helm value
-   templating (`agent_input_oracle.yaml`) has no way to index into a list output the way
-   Terraform module variables get auto-wired, so anything needing exactly one OCID as a
-   plain string needs its own singular output.
+3. **`ingressClasses.<entry>.subnetId` and `oci-native-ingress-controller.subnet_id`** are
+   wired from `.toutput.vpc.public_subnet_id` and `.toutput.vpc.private_subnet_id`, both
+   **singular** outputs added to `modules/oracle/vpc` alongside its `public_subnets` /
+   `private_subnets` lists - the agent's k8s Helm value templating (`agent_input_oracle.yaml`)
+   has no way to index into a list output the way Terraform module variables get auto-wired,
+   so anything needing exactly one OCID as a plain string needs its own singular output.
 
 ### Example code ###
 

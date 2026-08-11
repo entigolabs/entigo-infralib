@@ -22,7 +22,10 @@ spec:
       created-by: "entigo-infralib"
     statements:
       # The aggregate "dns" resource-type covers dns-zones + dns-records together,
-      # matching what upstream external-dns's own OCI tutorial documents.
+      # matching what upstream external-dns's own OCI tutorial documents. It also covers
+      # dns-views and dns-resolver - Oracle defines an aggregate as equivalent to one
+      # statement per individual resource-type in the family - so private zones need nothing
+      # extra here, even though reaching one means resolving a VCN's resolver and its view.
       - "Allow any-user to manage dns in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}

@@ -15,9 +15,14 @@ oci-native-ingress-controller:
   # and a DNS failure that looked nothing like an auth problem.
   region: "{{ .toutput.oke.region }}"
 
-ingressClassParameters:
-  compartmentId: "{{ .agent.accountId }}"
-  subnetId: "{{ .toutput.vpc.public_subnet_id }}"
-
-ingressClass:
-  nsgIds: "{{ .toutput.oke.lb_nsg_id }}"
+# Both classes are wired even though `private` ships disabled: a deployment then enables it
+# with one line (ingressClasses.private.enabled: true) instead of also having to look up a
+# subnet and an NSG OCID. Maps deep-merge across value files, so these fill in beside the
+# defaults in values.yaml rather than replacing them.
+ingressClasses:
+  public:
+    subnetId: "{{ .toutput.vpc.public_subnet_id }}"
+    nsgIds: "{{ .toutput.oke.lb_nsg_id }}"
+  private:
+    subnetId: "{{ .toutput.vpc.private_subnet_id }}"
+    nsgIds: "{{ .toutput.oke.lb_int_nsg_id }}"

@@ -34,8 +34,16 @@ output "tools_node_pool_id" {
   value = try(module.tools[0].node_pool_id, "")
 }
 
+# Attached to the public ingress load balancer by the IngressClass annotation in
+# modules/k8s/oci-native-ingress-controller. Accepts lb_ingress_ports from anywhere.
 output "lb_nsg_id" {
   value = oci_core_network_security_group.lb.id
+}
+
+# The same, for load balancers of an IngressClass with isPrivate = true: accepts the same ports
+# but only from inside the VCN.
+output "lb_int_nsg_id" {
+  value = oci_core_network_security_group.lb_int.id
 }
 
 output "kubernetes_service_ip" {

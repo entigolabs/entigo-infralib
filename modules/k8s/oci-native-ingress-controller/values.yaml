@@ -59,19 +59,45 @@ oci-native-ingress-controller:
       memory: 64Mi
       ephemeral-storage: 24Mi
 
-# IngressClassParameters (namespaced CRD) + the IngressClass that references it.
-# compartmentId/subnetId are wired per-environment via agent_input_oracle.yaml.
-ingressClassParameters:
-  compartmentId: ""
-  subnetId: ""
-  loadBalancerName: "oci-ic-lb"
-  isPrivate: false
-  minBandwidthMbps: 10
-  maxBandwidthMbps: 100
+# One IngressClass + IngressClassParameters pair per entry, and NIC gives each pair its own
+# OCI load balancer. This is how Oracle expresses what an ALB group does on AWS: there is no
+# per-Ingress annotation that picks or creates a load balancer, so an app chooses one by
+# setting spec.ingressClassName - or gets the class marked isDefaultClass.
+#
+# subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
+# falls back to global.oracle.compartmentId, which is already wired there.
+#
+# A deployment may add further entries (a second internal class for a different subnet, say).
+# Each one is a billed load balancer, which is why `private` below is off by default.
+ingressClasses:
+  public:
+    enabled: true
+    name: oci-ic
+    isDefaultClass: true
+    isPrivate: false
+    loadBalancerName: "oci-ic-lb"
+    subnetId: ""
+    # Comma-separated NSG OCIDs the controller attaches to the LB. Wired from
+    # modules/oracle/oke's lb_nsg_id, which accepts its ports from anywhere.
+    nsgIds: ""
+    minBandwidthMbps: 10
+    maxBandwidthMbps: 100
 
-ingressClass:
-  name: oci-ic
-  isDefaultClass: true
-  # Comma-separated NSG OCIDs the controller attaches to the LB (ingress 80/443).
-  # Wired from modules/oracle/oke's lb_nsg_id output via agent_input_oracle.yaml.
-  nsgIds: ""
+  # An internal load balancer, in a private subnet and reachable only from inside the VCN.
+  # Off by default because enabling it provisions a second load balancer, which is billed
+  # whether or not an Ingress uses it.
+  #
+  # Note what this does and does not give you: the load balancer is unreachable from outside
+  # the VCN, but a hostname on a *public* DNS zone still resolves for everyone. Pair it with a
+  # private zone in modules/oracle/dns for an app that should be invisible from outside.
+  private:
+    enabled: false
+    name: oci-ic-int
+    isDefaultClass: false
+    isPrivate: true
+    loadBalancerName: "oci-ic-lb-int"
+    subnetId: ""
+    # From modules/oracle/oke's lb_int_nsg_id, which accepts its ports from the VCN CIDR only.
+    nsgIds: ""
+    minBandwidthMbps: 10
+    maxBandwidthMbps: 100

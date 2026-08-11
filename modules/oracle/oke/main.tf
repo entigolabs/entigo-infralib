@@ -159,34 +159,54 @@ resource "oci_core_network_security_group" "lb" {
   display_name   = "${var.prefix}-oke-lb"
 }
 
-resource "oci_core_network_security_group_security_rule" "lb_http" {
+# One rule per port rather than a resource per port, because the port list is now something a
+# deployment changes: an app moved to its own listener (a second certificate needs a second
+# listener - see modules/k8s/oci-native-ingress-controller) receives nothing until its port is
+# open here, and NIC never touches NSGs itself.
+resource "oci_core_network_security_group_security_rule" "lb" {
+  for_each = { for port in var.lb_ingress_ports : tostring(port) => port }
+
   network_security_group_id = oci_core_network_security_group.lb.id
   direction                 = "INGRESS"
   protocol                  = "6" # TCP
   source                    = "0.0.0.0/0"
   source_type               = "CIDR_BLOCK"
-  description               = "Public HTTP to ingress load balancers"
+  description               = "Public ingress to load balancers on ${each.key}"
 
   tcp_options {
     destination_port_range {
-      min = 80
-      max = 80
+      min = each.value
+      max = each.value
     }
   }
 }
 
-resource "oci_core_network_security_group_security_rule" "lb_https" {
-  network_security_group_id = oci_core_network_security_group.lb.id
+# A second NSG for *internal* load balancers - same ports, reachable only from inside the VCN.
+# modules/k8s/oci-native-ingress-controller attaches this to the load balancer of an
+# IngressClass with isPrivate = true, the way it attaches the one above to the public class.
+#
+# Two NSGs rather than one with both sources because the whole point of a private load balancer
+# is that its NSG does not say 0.0.0.0/0. Sharing an NSG would silently make it public.
+resource "oci_core_network_security_group" "lb_int" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke-lb-int"
+}
+
+resource "oci_core_network_security_group_security_rule" "lb_int" {
+  for_each = { for port in var.lb_ingress_ports : tostring(port) => port }
+
+  network_security_group_id = oci_core_network_security_group.lb_int.id
   direction                 = "INGRESS"
   protocol                  = "6" # TCP
-  source                    = "0.0.0.0/0"
+  source                    = data.oci_core_vcn.this.cidr_blocks[0]
   source_type               = "CIDR_BLOCK"
-  description               = "Public HTTPS to ingress load balancers"
+  description               = "In-VCN ingress to internal load balancers on ${each.key}"
 
   tcp_options {
     destination_port_range {
-      min = 443
-      max = 443
+      min = each.value
+      max = each.value
     }
   }
 }

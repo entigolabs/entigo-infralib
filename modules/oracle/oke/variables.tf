@@ -11,6 +11,16 @@ variable "vcn_id" {
   type = string
 }
 
+# Applies to both ingress load balancer NSGs: the public one accepts these ports from
+# 0.0.0.0/0, the internal one from the VCN CIDR only. NIC does not manage NSGs - it only
+# attaches a load balancer to the ones named in its IngressClass - so a listener on a port
+# missing from this list comes up healthy and receives nothing.
+variable "lb_ingress_ports" {
+  description = "TCP ports the ingress load balancer NSGs accept. 80 and 443 are what the default IngressClass listens on; add a port here before pointing an app's https-listener-port at it."
+  type        = list(number)
+  default     = [80, 443]
+}
+
 variable "private_subnet_id" {
   description = "Subnet for the Kubernetes API endpoint when is_public_ip_enabled is false."
   type        = string

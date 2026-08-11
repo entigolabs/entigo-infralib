@@ -1,37 +1,42 @@
+{{- range $key, $class := .Values.ingressClasses }}
+{{- if $class.enabled }}
+---
 apiVersion: "ingress.oraclecloud.com/v1beta1"
 kind: IngressClassParameters
 metadata:
-  name: {{ .Values.ingressClass.name }}-parameters
-  namespace: {{ .Values.deploymentNamespace }}
+  name: {{ $class.name }}-parameters
+  namespace: {{ $.Values.deploymentNamespace }}
 spec:
-  compartmentId: {{ .Values.ingressClassParameters.compartmentId | quote }}
-  subnetId: {{ .Values.ingressClassParameters.subnetId | quote }}
-  loadBalancerName: {{ .Values.ingressClassParameters.loadBalancerName | quote }}
-  isPrivate: {{ .Values.ingressClassParameters.isPrivate }}
-  minBandwidthMbps: {{ .Values.ingressClassParameters.minBandwidthMbps }}
-  maxBandwidthMbps: {{ .Values.ingressClassParameters.maxBandwidthMbps }}
+  compartmentId: {{ $class.compartmentId | default $.Values.global.oracle.compartmentId | quote }}
+  subnetId: {{ $class.subnetId | quote }}
+  loadBalancerName: {{ $class.loadBalancerName | quote }}
+  isPrivate: {{ $class.isPrivate }}
+  minBandwidthMbps: {{ $class.minBandwidthMbps }}
+  maxBandwidthMbps: {{ $class.maxBandwidthMbps }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: {{ .Values.ingressClass.name }}
-  {{- if or .Values.ingressClass.isDefaultClass .Values.ingressClass.nsgIds }}
+  name: {{ $class.name }}
+  {{- if or $class.isDefaultClass $class.nsgIds }}
   annotations:
-    {{- if .Values.ingressClass.isDefaultClass }}
+    {{- if $class.isDefaultClass }}
     ingressclass.kubernetes.io/is-default-class: "true"
     {{- end }}
-    {{- if .Values.ingressClass.nsgIds }}
+    {{- if $class.nsgIds }}
     # NIC attaches the LB to these NSGs - the only way it manages LB network access
     # (it never touches security lists). Without this the LB sits behind the subnet's
     # default security list, which blocks 80/443.
-    oci-native-ingress.oraclecloud.com/network-security-group-ids: {{ .Values.ingressClass.nsgIds | quote }}
+    oci-native-ingress.oraclecloud.com/network-security-group-ids: {{ $class.nsgIds | quote }}
     {{- end }}
   {{- end }}
 spec:
   controller: oci.oraclecloud.com/native-ingress-controller
   parameters:
     scope: Namespace
-    namespace: {{ .Values.deploymentNamespace }}
+    namespace: {{ $.Values.deploymentNamespace }}
     apiGroup: ingress.oraclecloud.com
     kind: ingressclassparameters
-    name: {{ .Values.ingressClass.name }}-parameters
+    name: {{ $class.name }}-parameters
+{{- end }}
+{{- end }}

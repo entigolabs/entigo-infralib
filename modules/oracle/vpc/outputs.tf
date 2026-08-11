@@ -27,6 +27,13 @@ output "private_subnets" {
   value = oci_core_subnet.private[*].id
 }
 
+# Singular alias of private_subnets[0], for the same reason public_subnet_id exists: a Helm
+# value needing exactly one subnet OCID as a plain string cannot index a list output. Used by
+# the internal IngressClass in modules/k8s/oci-native-ingress-controller.
+output "private_subnet_id" {
+  value = element(oci_core_subnet.private[*].id, 0)
+}
+
 output "pod_subnets" {
   value = oci_core_subnet.pod[*].id
 }
