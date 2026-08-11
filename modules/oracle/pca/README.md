@@ -73,8 +73,13 @@ Rule on the compartment rather than per resource, so no module here sets them.
 A CA cannot be deleted immediately - OCI schedules deletion 7 days out at the earliest and the
 name is held for the whole period. Worse, a CA cannot be scheduled at all while any certificate
 it issued still exists, and a certificate's own floor is 24 hours, so a full teardown takes
-**two passes a day apart**. Every name here therefore carries a random suffix; see `name_salt`
-for the failure this rescues.
+**two passes a day apart**.
+
+`name_salt` appends a random suffix to the CA name so a rebuild cannot collide with its own
+leftovers. It is **off by default** - a deployment built once deserves a readable name - and
+worth turning on for an environment that is torn down repeatedly. The suffix lives in
+terraform state, so a nuke that takes the state bucket with it produces a fresh one on the
+next run, with nothing to bump by hand.
 
 ### Example code ###
 

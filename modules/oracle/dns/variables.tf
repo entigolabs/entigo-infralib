@@ -68,10 +68,18 @@ variable "certificate_authority_id" {
   default     = ""
 }
 
+# Certificate names are unique across the tenancy *including certificates only scheduled for
+# deletion*, and a certificate cannot be deleted on the spot - OCI enforces a 24-hour minimum.
+# A teardown and same-day rebuild therefore collides with its own leftovers.
+#
+# Off by default so a deployment built once has readable names. Turn it on for an environment
+# that is torn down repeatedly: the suffix lives in terraform state, so a nuke that takes the
+# state bucket produces a fresh one automatically. modules/oracle/pca has its own copy, where
+# the same problem lasts a week rather than a day.
 variable "name_salt" {
-  description = "Bump this to rotate the random suffix on certificate names. Needed when a create fails after OCI accepted it: the orphan keeps the name, and no retry can reuse it."
-  type        = string
-  default     = "1"
+  description = "Append a random suffix to certificate names, so a rebuild cannot collide with a torn-down certificate still holding its name for 24h. Leave false for stable, readable names."
+  type        = bool
+  default     = false
 }
 
 # Left at OCI's default certificate validity (three months) rather than pinned here: an

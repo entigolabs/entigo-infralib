@@ -1,5 +1,7 @@
 locals {
-  ca_name     = var.ca_name != "" ? var.ca_name : "${var.prefix}-root-ca-${random_string.suffix.result}"
+  name_suffix = var.name_salt ? "-${random_string.suffix[0].result}" : ""
+
+  ca_name     = var.ca_name != "" ? var.ca_name : "${var.prefix}-root-ca${local.name_suffix}"
   common_name = var.common_name != "" ? var.common_name : "${var.prefix} root CA"
 
   # A CA signed by another CA is a subordinate; one that signs itself is a root. OCI spells
@@ -13,9 +15,7 @@ locals {
 }
 
 resource "random_string" "suffix" {
-  keepers = {
-    salt = var.name_salt
-  }
+  count = var.name_salt ? 1 : 0
 
   length  = 8
   lower   = true

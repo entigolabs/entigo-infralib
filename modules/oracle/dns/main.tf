@@ -65,6 +65,8 @@ locals {
     for k, v in local.domains : k => oci_dns_zone.this[k].nameservers[*].hostname
     if v.create_zone
   }
+
+  name_suffix = var.name_salt ? "-${random_string.suffix[0].result}" : ""
 }
 
 resource "oci_dns_zone" "this" {
@@ -127,21 +129,10 @@ resource "oci_dns_rrset" "ns_delegation" {
   }
 }
 
-# Certificate names must be unique in the tenancy *including certificates that are only
-# scheduled for deletion*, and a certificate cannot be deleted immediately - OCI enforces a
-# 24-hour minimum. A teardown followed by a rebuild the same day would collide with its own
-# leftovers without this.
-#
-# name_salt exists for the nastier version of the same problem: if a create fails *after* OCI
-# accepted the request, terraform discards the resource but OCI keeps it, FAILED, still
-# holding the name. Every retry then dies on "a certificate with the name ... already
-# exists", and scheduling the orphan for deletion does not release the name either. Bumping
-# name_salt rotates the suffix and gets past it. The CA has its own copy of this in
-# modules/oracle/pca, where the same problem lasts a week rather than a day.
+# Only created when name_salt asks for it - see that variable for why a rebuild needs it and
+# why it is off by default.
 resource "random_string" "suffix" {
-  keepers = {
-    salt = var.name_salt
-  }
+  count = var.name_salt ? 1 : 0
 
   length  = 8
   lower   = true
@@ -160,7 +151,7 @@ resource "oci_certificates_management_certificate" "this" {
   for_each = { for k, v in local.domains : k => v if v.create_cert }
 
   compartment_id = var.compartment_id
-  name           = "${var.prefix}-${each.key}-${random_string.suffix.result}"
+  name           = "${var.prefix}-${each.key}${local.name_suffix}"
   description    = "Wildcard certificate for ${each.value.domain_name}"
 
   certificate_config {

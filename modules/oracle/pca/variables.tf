@@ -36,20 +36,20 @@ variable "description" {
 }
 
 # CA names are unique across the tenancy *including authorities that are only scheduled for
-# deletion*, and a CA cannot be deleted on the spot - OCI enforces a 7-day minimum. A
-# teardown followed by a rebuild the same day would collide with its own leftovers without
-# the suffix.
+# deletion*, and a CA cannot be deleted on the spot - OCI enforces a 7-day minimum. So a
+# teardown followed by a rebuild inside a week collides with its own leftovers, and so does a
+# create that failed *after* OCI accepted it: terraform discards the resource but OCI keeps
+# it, FAILED, holding the name for the full week. Scheduling the orphan for deletion does not
+# release the name either.
 #
-# name_salt is for the nastier version of the same problem: when creating a CA fails *after*
-# OCI accepted the request - which is exactly what an IAM grant that has not propagated
-# produces - terraform discards the resource but OCI keeps it, FAILED, holding the name for a
-# week. Every retry then dies on "a certificate authority with the name ... already exists",
-# and scheduling the orphan for deletion does not release the name either. Bumping this
-# rotates the suffix and gets past it.
+# Off by default because a deployment that is built once deserves a name a human can read.
+# Turn it on for an environment that is torn down and rebuilt repeatedly - the suffix lives in
+# terraform state, so a nuke that takes the state bucket with it produces a fresh one on the
+# next run, with nothing to bump by hand.
 variable "name_salt" {
-  description = "Bump to rotate the random suffix in the generated CA name. Needed when a create fails after OCI accepted it: the orphan holds the name for 7 days and no retry can reuse it."
-  type        = string
-  default     = "1"
+  description = "Append a random suffix to the CA name, so a rebuild cannot collide with a torn-down CA still holding its name for 7 days. Leave false for a stable, readable name."
+  type        = bool
+  default     = false
 }
 
 # Subject
