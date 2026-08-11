@@ -20,9 +20,14 @@ platform-apis:
     install: true
     environmentConfig:
       kafkaNamespace: crossplane-kafka-biz
+  mariadb:
+    install: true
+  rabbitmq:
+    install: true
   database:
     environmentConfig:
       postgresBackupBeforeDeletion: false
+      mariaDBBackupBeforeDeletion: false
       valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
   functions:
