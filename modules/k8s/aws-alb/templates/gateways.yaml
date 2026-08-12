@@ -34,8 +34,11 @@ spec:
     {{- end }}
   {{- end }}
   {{- if $.Values.ingressClass.tags }}
+  # LoadBalancerConfiguration takes tags as a map, ingressClass.tags is a key/value list
   tags:
-    {{- toYaml $.Values.ingressClass.tags | nindent 4 }}
+    {{- range $.Values.ingressClass.tags }}
+    {{ .key | quote }}: {{ .value | quote }}
+    {{- end }}
   {{- end }}
   # Default target group settings for every backend attached to this Gateway
   defaultTargetGroupConfiguration:
