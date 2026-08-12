@@ -10,10 +10,13 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   controllerName: gateway.k8s.aws/alb
-# One Gateway (= one shared ALB) per traffic type, reusing the ingressClass values
-{{- range $name, $scheme := dict "internal" "internal" "service" "internal" "external" "internet-facing" }}
-{{- $cfg := index $.Values.ingressClass $name }}
-{{- if $cfg.enabled }}
+# One Gateway (= one shared ALB) per entry in .Values.ingressClass.
+# Any map entry with enabled: true becomes a gateway, so users can add custom
+# gateways in values. Each entry must define its own scheme (internal | internet-facing).
+# Non-gateway keys like "tags" are skipped by the map + enabled checks.
+{{- range $name, $cfg := .Values.ingressClass }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- $scheme := required (printf "ingressClass.%s.scheme is required (internal | internet-facing)" $name) $cfg.scheme }}
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
 apiVersion: gateway.k8s.aws/v1beta1
@@ -90,7 +93,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   parentRefs:
-    - name: {{ $name }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $name }}
       namespace: {{ $.Release.Namespace }}
       sectionName: http
   rules:

@@ -63,10 +63,18 @@ ingressClass:
   tags: {}
   internal:
     enabled: true
+    scheme: internal
     subnets: ""
   service:
     enabled: true
+    scheme: internal
     subnets: ""
   external:
     enabled: true
+    scheme: internet-facing
     subnets: ""
+  # custom user-defined gateway, just add an entry
+  # partner:
+  #   enabled: true
+  #   scheme: internet-facing
+  #   subnets: "subnet-aaa,subnet-bbb"
