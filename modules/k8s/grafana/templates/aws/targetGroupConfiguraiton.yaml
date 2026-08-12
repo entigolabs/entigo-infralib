@@ -1,0 +1,13 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Name }}
+spec:
+  targetReference:
+    name: grafana
+  defaultConfiguration:
+    healthCheckConfig:
+      healthCheckPath: /api/health
+{{- end }}

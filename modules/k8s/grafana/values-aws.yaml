@@ -9,7 +9,6 @@ global:
 
 grafana:
   ingress:
-    enabled: false
     ingressClassName: alb
     annotations:
       alb.ingress.kubernetes.io/ssl-redirect: "443"
@@ -22,8 +21,5 @@ grafana:
     path: /
     hosts: []
     tls: []
-  route:
-    main:
-      enabled: true
   persistence:
     storageClassName: "gp3"

@@ -1,5 +1,7 @@
 global:
   routingResources: "both" #both, httproute
+  createIngress: false
+  createRoute: true
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
