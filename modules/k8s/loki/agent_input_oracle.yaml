@@ -7,6 +7,10 @@ global:
     region: "{{ .toutput.oke.region }}"
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
     serviceUserEmail: "{{ .module.name }}@{{ .toutput.dns.int_domain }}"
+    # The telemetry key, matching loki and mimir on aws (telemetry_alias_arn) and google
+    # (telemetry_key_id). Optional (.toptout) so a deployment without a kms module still
+    # renders - the bucket then falls back to Oracle-managed encryption.
+    kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
   # Bucket names are globally unique per namespace in OCI, not per account+region as on aws,
   # so prefix + module name is enough to keep two deployments apart.
   bucketName: "{{ .config.prefix }}-{{ .module.name }}"

@@ -94,3 +94,11 @@ variable "node_pool_os_type" {
   type        = string
   default     = "OL8"
 }
+
+# Set at pool creation. OCI will not re-encrypt an existing boot volume, so changing this on a
+# live pool replaces its nodes rather than converting them.
+variable "kms_key_id" {
+  description = "OCID of a key to encrypt the nodes' boot volumes with. Empty leaves them on Oracle-managed encryption, which is always on either way."
+  type        = string
+  default     = ""
+}

@@ -1,0 +1,31 @@
+global:
+  cloudProvider: "oracle"
+  oracle:
+    # Filled by agent_input_oracle.yaml.
+    # Hostname the pubkey sidecar is served on, through the shared ingress load balancer.
+    pubkeyHostname: ""
+    # OCID of the wildcard certificate that ingress listener terminates with.
+    certificateOcid: ""
+
+wireguard:
+  service:
+    annotations:
+      # WireGuard is UDP, and an OCI *classic* Load Balancer - the one
+      # oci-native-ingress-controller drives - carries TCP and HTTP only. A UDP Service has to
+      # become a Network Load Balancer, which the OCI cloud-controller-manager selects on this
+      # annotation. Without it the Service stays Pending forever with no useful event.
+      oci.oraclecloud.com/load-balancer-type: "nlb"
+      # The NLB never sees the VCN's security lists, and the CCM will happily edit them if left
+      # to its own devices. None keeps it out, and the NSG below is what actually opens 51820 -
+      # wired from modules/oracle/oke's nlb_nsg_id.
+      oci-network-load-balancer.oraclecloud.com/security-list-management-mode: "None"
+      oci.oraclecloud.com/oci-network-security-groups: ""
+      # Without this the source address of every packet is the load balancer's, so the
+      # WireGuard handshake cannot be attributed to a peer.
+      oci-network-load-balancer.oraclecloud.com/is-preserve-source: "true"
+
+    # No extraPorts, unlike aws. There the public key is served on the NLB's 443 with
+    # aws-load-balancer-ssl-cert, but an OCI network load balancer is pure layer 4 with no TLS
+    # termination at all, so there is no certificate to attach. The pubkey goes through the
+    # ordinary ingress instead - templates/oracle/ - which is also what google does with an
+    # HTTPRoute rather than an extra port.

@@ -125,3 +125,9 @@ output "tools_max_size" {
 output "object_storage_namespace" {
   value = data.oci_objectstorage_namespace.this.namespace
 }
+
+# Attached to a UDP Service's network load balancer through the
+# oci.oraclecloud.com/oci-network-security-groups annotation - see modules/k8s/wireguard.
+output "nlb_nsg_id" {
+  value = oci_core_network_security_group.nlb.id
+}

@@ -70,6 +70,39 @@ variable "key_rotation_interval_in_days" {
   default     = null
 }
 
+# An OCI service encrypting something with one of these keys does so as *itself*, and is
+# refused unless a policy says otherwise - the same shape of failure the certificate authority
+# hits in modules/oracle/pca. Object Storage is the one that has to be named per region.
+#
+# Granted at the compartment rather than per key: a statement can be narrowed with
+# "where target.key.id = '<ocid>'", but each service would then need its own statement and the
+# module would have to know which key each consumer picked.
+variable "key_service_principals" {
+  description = "OCI service principals allowed to use these keys. oke covers etcd encryption, blockstorage covers boot and block volumes. Object Storage is added separately because its principal name carries the region."
+  type        = list(string)
+  default     = ["oke", "blockstorage"]
+}
+
+variable "grant_object_storage" {
+  description = "Also allow objectstorage-<region> to use these keys, which a bucket with a customer-managed key needs. Requires region."
+  type        = bool
+  default     = true
+}
+
+variable "region" {
+  description = "Region whose Object Storage principal is granted key use, e.g. eu-frankfurt-1. Wired from the agent by agent_input.yaml."
+  type        = string
+  default     = ""
+}
+
+# Same reasoning as ca_policy_wait in modules/oracle/pca: IAM is eventually consistent, and a
+# resource created before its grant lands fails rather than retrying.
+variable "key_policy_wait" {
+  description = "How long to wait after granting the service principals key use, before anything encrypts with these keys."
+  type        = string
+  default     = "60s"
+}
+
 variable "create_ca_key" {
   description = "Create the asymmetric key that modules/oracle/pca's certificate authority signs with. Set false if nothing in the deployment issues certificates from an OCI CA."
   type        = bool

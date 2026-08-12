@@ -1,0 +1,48 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# Serves the server's public key over HTTP, so a client can fetch it without anyone copying
+# secrets around by hand. Same purpose as templates/google/{service,http-route}.yaml.
+#
+# A Service plus an Ingress rather than an extra port on the WireGuard load balancer, which is
+# how aws does it: that load balancer is an OCI *network* load balancer, pure layer 4 with no
+# TLS termination, so there is no way to attach the wildcard certificate to it. The ordinary
+# ingress load balancer already terminates TLS for every other app, so the key rides along
+# there instead.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-pubkey
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Release.Name }}-wireguard
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-pubkey
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # The zone-wide wildcard, same as every other app - a listener holds one key pair, so they
+    # all share it. See modules/k8s/oci-native-ingress-controller's README.
+    oci-native-ingress.oraclecloud.com/certificate-ocid: {{ .Values.global.oracle.certificateOcid | quote }}
+    oci-native-ingress.oraclecloud.com/https-listener-port: "443"
+    oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+spec:
+  rules:
+    - host: {{ .Values.global.oracle.pubkeyHostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-pubkey
+                port:
+                  number: 80
+{{- end }}

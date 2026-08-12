@@ -19,16 +19,23 @@ output "vault_crypto_endpoint" {
 # Named to match modules/aws/kms and modules/google/kms, so a module consuming "the data
 # key" reads identically on every cloud. There is no _arn twin here: an OCID is the only
 # identifier OCI has.
+#
+# The depends_on carries the service-grant wait to every consumer: a bucket, volume or cluster
+# that names one of these keys before the grant propagates is rejected outright rather than
+# retried, the same trap modules/oracle/pca has with its certificate authority.
 output "data_key_id" {
-  value = oci_kms_key.data.id
+  value      = oci_kms_key.data.id
+  depends_on = [time_sleep.key_policy]
 }
 
 output "config_key_id" {
-  value = oci_kms_key.config.id
+  value      = oci_kms_key.config.id
+  depends_on = [time_sleep.key_policy]
 }
 
 output "telemetry_key_id" {
-  value = oci_kms_key.telemetry.id
+  value      = oci_kms_key.telemetry.id
+  depends_on = [time_sleep.key_policy]
 }
 
 # Consumed by modules/oracle/pca as ca_key_id, via .toptout so that a deployment without

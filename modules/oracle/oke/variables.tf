@@ -232,3 +232,34 @@ variable "oke_tools_max_size" {
   nullable = false
   default  = 0
 }
+
+# Encrypts etcd, and therefore every Kubernetes Secret, with a customer-managed key.
+#
+# NOT wired from modules/oracle/kms automatically, unlike node_kms_key_id below. OCI will not
+# re-key an existing cluster, so this is creation-time only: setting it on a live cluster makes
+# terraform plan a REPLACEMENT. The agent applies plans unattended, so auto-wiring it would
+# turn "add a kms module" into "silently rebuild the cluster". Set it explicitly in a
+# deployment's config, on a cluster that does not exist yet.
+variable "etcd_kms_key_id" {
+  description = "OCID of a key to encrypt etcd with. Empty leaves etcd on Oracle-managed encryption. Creation-time only - setting this on an existing cluster replaces it."
+  type        = string
+  default     = ""
+}
+
+# Passed to all three node pools. Wired from modules/oracle/kms by agent_input.yaml, matching
+# node_encryption_kms_key_arn in modules/aws/eks. Changing it replaces the pools' nodes, which
+# roll rather than take the cluster down.
+variable "node_kms_key_id" {
+  description = "OCID of a key to encrypt the worker nodes' boot volumes with. Empty leaves them on Oracle-managed encryption."
+  type        = string
+  default     = ""
+}
+
+# UDP ports the network load balancer NSG accepts. Defaults to WireGuard's, which is the only
+# UDP service in the repo; the NSG is unattached until a Service names it, so an unused port
+# here costs nothing.
+variable "nlb_ingress_udp_ports" {
+  description = "UDP ports the network load balancer NSG accepts from anywhere. 51820 is WireGuard."
+  type        = list(number)
+  default     = [51820]
+}

@@ -4,7 +4,7 @@
 #
 # Far fewer resources than the aws version needs: OCI buckets are private by default with no
 # ACL, ownership or public-access-block objects to configure, and encryption at rest is always
-# on (Oracle-managed unless kmsKeyId names a key). So there is nothing here but the bucket.
+# on. So there is nothing here but the bucket - the only choice is whose key encrypts it.
 apiVersion: objectstorage.oci.upbound.io/v1alpha1
 kind: Bucket
 metadata:
@@ -32,6 +32,18 @@ spec:
     compartmentId: {{ .Values.global.oracle.compartmentId }}
     accessType: NoPublicAccess
     versioning: Disabled
+    {{- if .Values.global.oracle.kmsKeyId }}
+    # Customer-managed encryption, from modules/oracle/kms's telemetry key - the same key
+    # modules/k8s/loki and mimir use on aws and google, so "log storage is encrypted with the
+    # telemetry key" reads the same on every cloud. Without it the bucket is still encrypted,
+    # but with a key Oracle owns and rotates.
+    #
+    # Requires objectstorage-<region> to be allowed to use the key. modules/oracle/kms grants
+    # that and holds its key outputs behind a propagation wait, so by the time this OCID is
+    # rendered the grant exists - a bucket naming a key the service cannot use is rejected
+    # outright rather than retried.
+    kmsKeyId: {{ .Values.global.oracle.kmsKeyId }}
+    {{- end }}
     freeformTags:
       created-by: "entigo-infralib"
   providerConfigRef:

@@ -1,0 +1,4 @@
+# Object Storage's service principal is region-scoped - objectstorage-eu-frankfurt-1, not
+# objectstorage - so the grant that lets a bucket use one of these keys cannot be written
+# without knowing the region. Every other principal in key_service_principals is global.
+region: "{{ .agent.region }}"

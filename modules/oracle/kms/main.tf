@@ -1,4 +1,12 @@
 locals {
+  # Object Storage's principal is region-scoped (objectstorage-eu-frankfurt-1), unlike oke and
+  # blockstorage. Dropped rather than half-formed when the region is unknown, so a deployment
+  # that never wired one does not create a policy naming "objectstorage-".
+  key_services = concat(
+    var.key_service_principals,
+    var.grant_object_storage && var.region != "" ? ["objectstorage-${var.region}"] : []
+  )
+
   vault_name = var.vault_name != "" ? var.vault_name : "${var.prefix}-${random_string.suffix.result}"
 
   vault_id            = var.create_vault ? oci_kms_vault.this[0].id : data.oci_kms_vaults.this[0].vaults[0].id
@@ -133,5 +141,36 @@ resource "oci_kms_key" "ca" {
   key_shape {
     algorithm = var.ca_key_algorithm
     length    = var.ca_key_length
+  }
+}
+
+# Lets the OCI services that encrypt on our behalf actually use these keys. Without it the
+# failure is not a permission error where you would expect one: OKE refuses to create a
+# cluster whose etcd key it cannot read, and a bucket or volume naming a key it cannot use is
+# rejected at create time.
+#
+# One statement per service rather than one policy each, so the whole grant is visible in a
+# single object and oci-nuke sweeps it with the rest of the compartment's policies.
+resource "oci_identity_policy" "key_services" {
+  count          = length(local.key_services) > 0 ? 1 : 0
+  compartment_id = var.compartment_id
+  name           = "${var.prefix}-key-services"
+  description    = "Lets OCI services encrypt with the keys in this compartment"
+
+  statements = [
+    for service in local.key_services :
+    "Allow service ${service} to use keys in compartment id ${var.compartment_id}"
+  ]
+}
+
+# Consumers inherit this through the key outputs, so nothing encrypts with a key before the
+# grant has had time to propagate.
+resource "time_sleep" "key_policy" {
+  count           = length(local.key_services) > 0 ? 1 : 0
+  depends_on      = [oci_identity_policy.key_services]
+  create_duration = var.key_policy_wait
+
+  triggers = {
+    policy_id = oci_identity_policy.key_services[0].id
   }
 }

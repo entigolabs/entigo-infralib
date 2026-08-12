@@ -7,3 +7,10 @@ node_subnet_ids: |
   ["{{ .toutput.vpc.private_subnets[0] }}"]
 pod_subnet_ids: |
   ["{{ .toutput.vpc.pod_subnets[0] }}"]
+# Boot volume encryption for the worker nodes, mirroring node_encryption_kms_key_arn in
+# modules/aws/eks. Optional (.toptout) so a deployment without a kms module still plans.
+#
+# etcd_kms_key_id is deliberately NOT wired here - see its comment in variables.tf. It can only
+# be set when the cluster is created, so wiring it automatically would turn "add a kms module"
+# into "silently replace the cluster", and the agent applies plans unattended.
+node_kms_key_id: "{{ .toptout.kms.data_key_id }}"

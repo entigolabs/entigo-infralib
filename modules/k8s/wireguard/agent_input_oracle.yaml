@@ -1,0 +1,59 @@
+global:
+  oracle:
+    # The public zone, not int_domain: this is the one thing that has to be reachable from
+    # outside before the VPN is up, so it cannot live behind the VPN.
+    pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
+    certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"
+
+wireguard:
+  service:
+    annotations:
+      # Opens UDP 51820 on the network load balancer. The OCI cloud-controller-manager does not
+      # create security rules when security-list-management-mode is None, so without this the
+      # load balancer comes up healthy and drops every handshake.
+      oci.oraclecloud.com/oci-network-security-groups: "{{ .toutput.oke.nlb_nsg_id }}"
+      # external-dns publishes this from the Service, so the client's endpoint is a name rather
+      # than an IP that changes whenever the load balancer is recreated.
+      external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+      hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+
+  # Public registries, hardcoded: there is no Oracle registry-proxy module yet, so unlike aws
+  # (.toptout.ecr-proxy) and google (.toptout.gar-proxy) there is nothing to route through. Same
+  # gap as modules/k8s/external-dns and argocd note.
+  image:
+    repository: ghcr.io/bryopsida/wireguard
+  keygenJob:
+    wireguardMgrImage:
+      repository: ghcr.io/bryopsida/k8s-wireguard-mgr
+    image:
+      repository: ghcr.io/curium-rocks/wg-kubectl
+  metrics:
+    repository: docker.io/mindflavor/prometheus-wireguard-exporter
+  healthSideCar:
+    image:
+      repository: ghcr.io/bryopsida/http-healthcheck-sidecar
+
+  # Serves the generated public key on 8080, which templates/oracle/pubkey.yaml exposes.
+  extraSideCars:
+    - name: pubkey
+      image: docker.io/nginxinc/nginx-unprivileged:1.29-alpine
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumeMounts:
+        - name: pubkey
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: publickey
+      resources:
+        requests:
+          cpu: 1m
+          memory: 1Mi
+          ephemeral-storage: 4Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+          ephemeral-storage: 128Mi
+  volumes:
+    - name: pubkey
+      secret:
+        secretName: "{{ .module.name }}-wg-generated-public"

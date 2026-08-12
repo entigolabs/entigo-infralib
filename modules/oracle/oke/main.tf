@@ -295,6 +295,15 @@ resource "oci_containerengine_cluster" "this" {
   type               = "ENHANCED_CLUSTER"
   kubernetes_version = local.kubernetes_version
 
+  # Encrypts etcd - and so every Kubernetes Secret - with a customer-managed key rather than
+  # Oracle's. Null when unset, because the API rejects an empty string.
+  #
+  # Creation-time only: OCI will not re-key an existing cluster, so setting this on a live one
+  # asks terraform to REPLACE the cluster. That is why it is not wired automatically from
+  # modules/oracle/kms the way node_kms_key_id is - the agent applies plans without a human
+  # reading them, and a silent cluster replacement is not an acceptable surprise.
+  kms_key_id = var.etcd_kms_key_id != "" ? var.etcd_kms_key_id : null
+
   endpoint_config {
     is_public_ip_enabled = var.is_public_ip_enabled
     subnet_id            = local.endpoint_subnet_id
@@ -344,6 +353,7 @@ module "main" {
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]
   max_pods_per_node       = var.max_pods_per_node
+  kms_key_id              = var.node_kms_key_id
 }
 
 module "mon" {
@@ -369,6 +379,7 @@ module "mon" {
   pod_subnet_ids    = var.pod_subnet_ids
   pod_nsg_ids       = [oci_core_network_security_group.pods.id]
   max_pods_per_node = var.max_pods_per_node
+  kms_key_id        = var.node_kms_key_id
 }
 
 module "tools" {
@@ -392,4 +403,37 @@ module "tools" {
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]
   max_pods_per_node       = var.max_pods_per_node
+  kms_key_id              = var.node_kms_key_id
+}
+
+# NSG for OCI *Network* Load Balancers, which is what a UDP Service gets: the classic Load
+# Balancer behind oci-native-ingress-controller is TCP/HTTP only, so a Service asking for UDP
+# has to be an NLB (oci.oraclecloud.com/load-balancer-type: "nlb"). wireguard is the reason
+# this exists.
+#
+# Separate from the lb/lb_int NSGs because the protocol differs and because an NSG costs
+# nothing until something attaches itself to it - a deployment without wireguard simply never
+# references this one.
+resource "oci_core_network_security_group" "nlb" {
+  compartment_id = var.compartment_id
+  vcn_id         = var.vcn_id
+  display_name   = "${var.prefix}-oke-nlb"
+}
+
+resource "oci_core_network_security_group_security_rule" "nlb_udp" {
+  for_each = { for port in var.nlb_ingress_udp_ports : tostring(port) => port }
+
+  network_security_group_id = oci_core_network_security_group.nlb.id
+  direction                 = "INGRESS"
+  protocol                  = "17" # UDP
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "Public UDP to network load balancers on ${each.key}"
+
+  udp_options {
+    destination_port_range {
+      min = each.value
+      max = each.value
+    }
+  }
 }

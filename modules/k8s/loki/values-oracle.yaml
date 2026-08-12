@@ -23,6 +23,10 @@ global:
     # CreateUser. Set from the deployment's own domain in agent_input_oracle.yaml - no mail is
     # ever sent to it.
     serviceUserEmail: ""
+    # OCID of the key the chunk bucket is encrypted with. Empty leaves it on Oracle-managed
+    # encryption, which is always on either way. Wired to kms's telemetry key by
+    # agent_input_oracle.yaml, matching what loki uses on aws and google.
+    kmsKeyId: ""
 
 loki:
   loki:

@@ -46,6 +46,11 @@ resource "oci_containerengine_node_pool" "this" {
     size    = var.node_count
     nsg_ids = var.nsg_ids
 
+    # Encrypts the nodes' boot volumes with a customer-managed key instead of Oracle's. Null
+    # rather than "" when unset: the API reads an empty string as an explicit, invalid value.
+    # Requires blockstorage to be allowed to use the key - modules/oracle/kms grants that.
+    kms_key_id = var.kms_key_id != "" ? var.kms_key_id : null
+
     # Under VCN-native networking each pod holds a real VCN IP off the pod subnet, taken
     # from secondary VNICs on the node. The other three arguments only apply in that mode,
     # so they are nulled out for Flannel rather than left as empty lists (which the API
