@@ -16,12 +16,12 @@ grafana:
     users:
       home_page: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}/dashboards"
   ingress:
-    enabled: {{ .tinput.aws-alb.global.createIngress }}
+    enabled: "{{ .tinput.aws-alb.global.createIngress }}"
     hosts:
       - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   route:
     main:
-      enabled: {{ .tinput.aws-alb.global.createRoute }}
+      enabled: "{{ .tinput.aws-alb.global.createRoute }}"
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
