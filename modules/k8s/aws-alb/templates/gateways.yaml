@@ -85,6 +85,10 @@ spec:
         namespaces:
           from: All
 ---
+{{- /* sslRedirect defaults to true; hasKey is needed because "default" would override an explicit false */}}
+{{- $sslRedirect := true }}
+{{- if hasKey $cfg "sslRedirect" }}{{- $sslRedirect = $cfg.sslRedirect }}{{- end }}
+{{- if $sslRedirect }}
 # Replaces alb.ingress.kubernetes.io/ssl-redirect: catch-all HTTP -> HTTPS.
 # Host-specific user routes on the http listener take precedence over this
 # hostname-less route, so plain HTTP is still possible per host if needed.
@@ -111,6 +115,7 @@ spec:
           requestRedirect:
             scheme: https
             statusCode: 301
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

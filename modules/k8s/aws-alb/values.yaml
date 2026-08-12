@@ -64,17 +64,21 @@ ingressClass:
   internal:
     enabled: true
     scheme: internal
+    sslRedirect: true
     subnets: ""
   service:
     enabled: true
     scheme: internal
+    sslRedirect: true
     subnets: ""
   external:
     enabled: true
     scheme: internet-facing
+    sslRedirect: true
     subnets: ""
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
   #   scheme: internet-facing
+  #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
