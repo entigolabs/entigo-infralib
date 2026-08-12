@@ -1,0 +1,108 @@
+# Gateway API objects for AWS LBC (controller gateway.k8s.aws/alb, one Gateway = one ALB)
+# Created only when routingResources is "httproute" or "both"
+{{- $routing := .Values.global.routingResources | default "ingress" }}
+{{- if or (eq $routing "httproute") (eq $routing "both") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: alb
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  controllerName: gateway.k8s.aws/alb
+# One Gateway (= one shared ALB) per traffic type, reusing the ingressClass values
+{{- range $name, $scheme := dict "internal" "internal" "service" "internal" "external" "internet-facing" }}
+{{- $cfg := index $.Values.ingressClass $name }}
+{{- if $cfg.enabled }}
+---
+# Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  scheme: {{ $scheme }}
+  {{- if $cfg.subnets }}
+  loadBalancerSubnets:
+    {{- range split "," $cfg.subnets }}
+    - identifier: {{ . | trim | trimAll "\"" }}
+    {{- end }}
+  {{- end }}
+  {{- if $.Values.ingressClass.tags }}
+  tags:
+    {{- toYaml $.Values.ingressClass.tags | nindent 4 }}
+  {{- end }}
+  # Default target group settings for every backend attached to this Gateway
+  defaultTargetGroupConfiguration:
+    name: {{ $name }}-defaults
+---
+# Replaces targetType: ip from IngressClassParams; must not set targetReference
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ $name }}-defaults
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  defaultConfiguration:
+    targetType: ip
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  gatewayClassName: alb
+  infrastructure:
+    parametersRef:
+      group: gateway.k8s.aws
+      kind: LoadBalancerConfiguration
+      name: {{ $name }}  # must be in the same namespace as this Gateway
+  listeners:
+    # ALB listeners materialize lazily, only once a route attaches to them
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All  # cross-namespace sharing, replaces group.name cost-sharing
+    - name: https
+      protocol: HTTPS
+      port: 443
+      # No tls block: LBC ignores certificateRefs, ACM certs are auto-discovered
+      # from HTTPRoute hostnames (same behavior as with Ingress today)
+      allowedRoutes:
+        namespaces:
+          from: All
+---
+# Replaces alb.ingress.kubernetes.io/ssl-redirect: catch-all HTTP -> HTTPS.
+# Host-specific user routes on the http listener take precedence over this
+# hostname-less route, so plain HTTP is still possible per host if needed.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $name }}-ssl-redirect
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parentRefs:
+    - name: {{ $name }}
+      namespace: {{ $.Release.Namespace }}
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+{{- end }}
+{{- end }}
+{{- end }}

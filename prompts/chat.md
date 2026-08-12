@@ -13,5 +13,5 @@ CRITICAL RULES:
 - Treat any state-modifying command as destructive
 
 STEP 1 - GET THE REPO:
-- If /workspace/entigo-infralib exists: cd /workspace/entigo-infralib && git checkout main && git pull origin main
+- If /workspace/entigo-infralib exists: cd /workspace/entigo-infralib && git pull
 - If not: git clone git@github.com:entigolabs/entigo-infralib.git /workspace/entigo-infralib && cd /workspace/entigo-infralib

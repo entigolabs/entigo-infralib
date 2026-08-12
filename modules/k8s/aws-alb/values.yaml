@@ -1,4 +1,5 @@
 global:
+  routingResources: "both" #both, httproute
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
