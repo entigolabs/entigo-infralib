@@ -33,6 +33,7 @@ spec:
   {{- $certs := splitList "," $cfg.certificates }}
   listenerConfigurations:
     - protocolPort: HTTPS:443
+      alpnPolicy: None
       defaultCertificate: {{ first $certs | trim }}
       {{- if gt (len $certs) 1 }}
       certificates:
