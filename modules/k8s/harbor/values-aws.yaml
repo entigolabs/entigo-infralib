@@ -8,20 +8,6 @@ global:
     kmsKeyId: ""
 
 harbor:
-  expose:
-    type: ingress
-    tls:
-      certSource: none
-    ingress:
-      annotations:
-        alb.ingress.kubernetes.io/ssl-redirect: "443"
-        alb.ingress.kubernetes.io/backend-protocol: HTTP
-        alb.ingress.kubernetes.io/group.name: external
-        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-        alb.ingress.kubernetes.io/scheme: internet-facing
-        alb.ingress.kubernetes.io/target-type: ip
-        kubernetes.io/ingress.class: alb
-      controller: alb
   updateStrategy:
     type: Recreate
   #persistence:

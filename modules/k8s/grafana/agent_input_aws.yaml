@@ -25,7 +25,7 @@ grafana:
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: internal
+          name: "{{ .tinput.aws-alb.global.internalGatway }}"
           namespace: "{{ .tmodule.aws-alb }}"
           sectionName: https
       hostnames:

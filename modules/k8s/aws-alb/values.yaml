@@ -1,7 +1,11 @@
 global:
-  routingResources: "both" #both, httproute
+  routingResources: "both" #ingress, both, httproute
   createIngress: false
   createRoute: true
+  createType: route
+  internalGatway: internal
+  externalGatway: external
+  serviceGatway: service
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
