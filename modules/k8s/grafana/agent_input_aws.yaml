@@ -16,7 +16,8 @@ grafana:
     users:
       home_page: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}/dashboards"
   ingress:
-    enabled: "{{ .tinput.aws-alb.global.createIngress }}"
+    enabled: |
+      {{ .tinput.aws-alb.global.createIngress }}
     hosts:
       - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   route:
