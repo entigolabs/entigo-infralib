@@ -21,14 +21,14 @@ RUN apk --no-cache add \
     && rm -rf \
        /root/.cache/pip \
        /opt/venv/bin/pip* \
-       /opt/venv/lib/python3.12/site-packages/awscli/examples \
-       /opt/venv/lib/python3.12/site-packages/pip \
-       /opt/venv/lib/python3.12/site-packages/setuptools \
-       /opt/venv/lib/python3.12/site-packages/wheel \
-       /opt/venv/lib/python3.12/site-packages/*/tests \
-       /opt/venv/lib/python3.12/site-packages/*/test \
-       /opt/venv/lib/python3.12/site-packages/pip-* \
-    && find /opt/venv/lib/python3.12/site-packages/botocore/data -name examples-1.json -delete \
+       /opt/venv/lib/python3.*/site-packages/awscli/examples \
+       /opt/venv/lib/python3.*/site-packages/pip \
+       /opt/venv/lib/python3.*/site-packages/setuptools \
+       /opt/venv/lib/python3.*/site-packages/wheel \
+       /opt/venv/lib/python3.*/site-packages/*/tests \
+       /opt/venv/lib/python3.*/site-packages/*/test \
+       /opt/venv/lib/python3.*/site-packages/pip-* \
+    && find /opt/venv/lib/python3.*/site-packages/botocore/data -name examples-1.json -delete \
     && find /opt/venv -type f -name "*.pyc" -delete \
     && find /opt/venv -type f -name "*.pyo" -delete \
     && apk del py3-pip \

@@ -16,10 +16,10 @@ RUN apk --no-cache add \
     && pip install --no-cache-dir --break-system-packages awscli \
     && rm -rf \
        /root/.cache/pip \
-       /usr/lib/python3.12/site-packages/awscli/examples \
-       /usr/lib/python3.12/site-packages/*/tests \
-    && find /usr/lib/python3.12 -type f -name examples-1.json -delete \
-    && find /usr/lib/python3.12 -type f -name "*.pyc" -delete \
+       /usr/lib/python3.*/site-packages/awscli/examples \
+       /usr/lib/python3.*/site-packages/*/tests \
+    && find /usr/lib/python3.* -type f -name examples-1.json -delete \
+    && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
     && apk del py3-pip
 #Install golang
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
