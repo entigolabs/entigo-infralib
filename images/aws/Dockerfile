@@ -28,7 +28,6 @@ RUN apk --no-cache add \
        /opt/venv/lib/python3.*/site-packages/*/tests \
        /opt/venv/lib/python3.*/site-packages/*/test \
        /opt/venv/lib/python3.*/site-packages/pip-* \
-    && find /opt/venv/lib/python3.*/site-packages/botocore/data -name examples-1.json -delete \
     && find /opt/venv -type f -name "*.pyc" -delete \
     && find /opt/venv -type f -name "*.pyo" -delete \
     && apk del py3-pip \
