@@ -3,7 +3,7 @@ apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:
   name: {{ .Release.Name }}-core
-  namespace: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   targetReference:
     name: {{ .Release.Name }}-core
