@@ -17,3 +17,4 @@ ingressClass:
     subnets: '{{ .toutput.vpc.service_subnets }}'
   external:
     subnets: '{{ .toutput.vpc.public_subnets }}'
+    certificates: '{{ .toutput.route53.pub_cert_arn }}'

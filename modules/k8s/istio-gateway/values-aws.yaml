@@ -10,3 +10,5 @@ global:
     scheme: internet-facing
     groupName: external
     groupOrder: 800
+    createRoute: true
+    createIngress: false

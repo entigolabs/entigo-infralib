@@ -7,7 +7,7 @@ argocd:
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: "{{ .tinput.aws-alb.global.internalGatway }}"
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
           namespace: "{{ .tmodule.aws-alb }}"
           sectionName: https
       hostnames:
@@ -18,7 +18,7 @@ argocd:
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: "{{ .tinput.aws-alb.global.internalGatway }}"
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
           namespace: "{{ .tmodule.aws-alb }}"
           sectionName: https
       hostnames:

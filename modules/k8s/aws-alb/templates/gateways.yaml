@@ -27,6 +27,20 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   scheme: {{ $scheme }}
+  {{- if $cfg.certificates }}
+  # Static certs on the HTTPS listener, for hosts that ACM discovery cannot
+  # find via route hostnames (e.g. istio-managed domains behind the fallback route)
+  {{- $certs := splitList "," $cfg.certificates }}
+  listenerConfigurations:
+    - protocolPort: HTTPS:443
+      defaultCertificate: {{ first $certs | trim }}
+      {{- if gt (len $certs) 1 }}
+      certificates:
+        {{- range rest $certs }}
+        - {{ . | trim }}
+        {{- end }}
+      {{- end }}
+  {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:
     {{- range split "," $cfg.subnets }}
