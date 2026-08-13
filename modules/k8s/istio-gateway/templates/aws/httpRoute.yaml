@@ -1,0 +1,55 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createRoute }}
+# Replaces the ALB Ingress in front of the istio ingressgateway.
+# No hostnames = lowest Gateway API route precedence, so this acts as the
+# fallback for any host not claimed by other HTTPRoutes on the shared ALB,
+# replacing group.order: 800.
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: istio
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.aws.gateway.name }}
+      namespace: {{ .Values.global.aws.gateway.namespace }}
+      sectionName: https
+  {{- with .Values.global.aws.hostnames }}
+  # Optional wildcard hostnames for the istio-managed domains. Setting these
+  # enables ACM certificate discovery for them; wildcards still rank below
+  # exact hostnames of other routes, so fallback behavior is preserved.
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .Values.gateway.name }}
+          # http2 port of the istio ingressgateway Service; Gateway API
+          # backendRefs require a port number, port names are not supported
+          port: 80
+---
+# Replaces alb.ingress.kubernetes.io/success-codes: 200,301,302,404
+# (404 because the istio gateway answers 404 for unknown hosts)
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Values.gateway.name }}
+  defaultConfiguration:
+    healthCheckConfig:
+      matcher:
+        httpCode: "200,301,302,404"
+
+{{- end }}
