@@ -36,6 +36,7 @@ spec:
           # http2 port of the istio ingressgateway Service; Gateway API
           # backendRefs require a port number, port names are not supported
           port: 80
+          weight: 1
 ---
 # Replaces alb.ingress.kubernetes.io/success-codes: 200,301,302,404
 # (404 because the istio gateway answers 404 for unknown hosts)
