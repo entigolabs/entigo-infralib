@@ -24,13 +24,4 @@ variable "domains" {
     default_private            = optional(bool, null)
   }))
   default = {}
-
-  validation {
-    # PCA-issued certificates are always exportable
-    condition = alltrue([
-      for k, v in var.domains :
-      v.certificate_authority_arn == "" || v.certificate_export != "DISABLED"
-    ])
-    error_message = "certificate_export can not be DISABLED when certificate_authority_arn is set, PCA certificates are always exportable."
-  }
 }
