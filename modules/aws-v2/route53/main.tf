@@ -185,7 +185,7 @@ resource "aws_acm_certificate" "this" {
   key_algorithm             = each.value.certificate_key_algorithm
 
   options {
-    export = each.value.certificate_export
+    export = each.value.certificate_authority_arn != "" ? "ENABLED" : each.value.certificate_export
   }
   
   lifecycle {
