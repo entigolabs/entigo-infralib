@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "aws" }}
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.argocd.server.grpcroute.enabled }}
 apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:
@@ -16,7 +16,7 @@ spec:
     - routeIdentifier:
         kind: GRPCRoute
         name: {{ .Release.Name }}-server-grpc
-        namespace: {{ .Release.Name }}
+        namespace: {{ .Release.Namespace }}
       targetGroupProps:
         protocol: HTTPS
         protocolVersion: GRPC
