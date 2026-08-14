@@ -1,8 +1,8 @@
 global:
-  routingResources: "both" #ingress, both, httproute
-  createIngress: false
-  createRoute: true
-  createType: route
+  routingResources: "ingress" #ingress|both|httproute
+  createIngress: true
+  createRoute: false
+  createType: ingress #ingress|route
   internalGateway: internal
   externalGateway: external
   serviceGateway: service
