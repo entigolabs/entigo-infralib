@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.58.0"
+      version = "6.60.0"
     }
     google = {
       source = "hashicorp/google"
@@ -23,7 +23,7 @@ terraform {
     }
     time = {
       source = "hashicorp/time"
-      version = "0.14.0"
+      version = "0.14.1"
     }
     cloudinit = {
       source = "hashicorp/cloudinit"
@@ -31,7 +31,7 @@ terraform {
     }
     null = {
       source  = "hashicorp/null"
-      version = "3.3.0"
+      version = "3.3.1"
     }
     random = {
       source  = "hashicorp/random"
