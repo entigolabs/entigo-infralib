@@ -14,7 +14,7 @@ prometheus:
       # OCI equivalent of the alb ones in values-aws.yaml. See
       # modules/k8s/argocd/values-oracle.yaml for what each of them does - the
       # certificate-ocid one is added by agent_input_oracle.yaml.
-      ingressClassName: oci-ic
+      ingressClassName: oci-ic-int
       annotations:
         oci-native-ingress.oraclecloud.com/https-listener-port: "443"
         oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"

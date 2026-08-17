@@ -14,7 +14,7 @@ argocd:
       # balancer directly - there is no in-cluster proxy - so every routing and TLS decision
       # is expressed as an annotation on this Ingress, the same shape as the alb annotations
       # in values-aws.yaml.
-      ingressClassName: oci-ic
+      ingressClassName: oci-ic-int
       annotations:
         # Without this NIC creates one listener per backend service port, so argocd would
         # answer on the service's own port rather than 443. The matching http-listener-port

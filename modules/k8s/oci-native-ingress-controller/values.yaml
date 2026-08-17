@@ -68,7 +68,7 @@ oci-native-ingress-controller:
 # falls back to global.oracle.compartmentId, which is already wired there.
 #
 # A deployment may add further entries (a second internal class for a different subnet, say).
-# Each one is a billed load balancer, which is why `private` below is off by default.
+# Each one is a billed load balancer.
 ingressClasses:
   public:
     enabled: true
@@ -84,14 +84,21 @@ ingressClasses:
     maxBandwidthMbps: 100
 
   # An internal load balancer, in a private subnet and reachable only from inside the VCN.
-  # Off by default because enabling it provisions a second load balancer, which is billed
-  # whether or not an Ingress uses it.
   #
-  # Note what this does and does not give you: the load balancer is unreachable from outside
-  # the VCN, but a hostname on a *public* DNS zone still resolves for everyone. Pair it with a
-  # private zone in modules/oracle/dns for an app that should be invisible from outside.
+  # ON by default, because the platform tools live here: argocd, grafana and prometheus all set
+  # ingressClassName: oci-ic-int, matching aws where those three sit on the private int_domain
+  # rather than the public one. Turning it off therefore means those Ingresses reference a
+  # class that does not exist and never get a load balancer.
+  #
+  # It is a second, billed load balancer, and it makes the platform tools reachable only
+  # through the VPN (modules/k8s/wireguard). Both are deliberate: an argocd that answers the
+  # public internet is the thing worth avoiding.
+  #
+  # Note what a private load balancer does NOT give you on its own - a hostname on a *public*
+  # DNS zone still resolves for everyone. Pair it with a private = true domain in
+  # modules/oracle/dns, which is what int_domain points at.
   private:
-    enabled: false
+    enabled: true
     name: oci-ic-int
     isDefaultClass: false
     isPrivate: true
