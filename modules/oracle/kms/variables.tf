@@ -72,21 +72,34 @@ variable "key_rotation_interval_in_days" {
 
 # An OCI service encrypting something with one of these keys does so as *itself*, and is
 # refused unless a policy says otherwise - the same shape of failure the certificate authority
-# hits in modules/oracle/pca. Object Storage is the one that has to be named per region.
+# hits in modules/oracle/pca, and just as unhelpful: nothing mentions a key.
 #
-# Granted at the compartment rather than per key: a statement can be narrowed with
-# "where target.key.id = '<ocid>'", but each service would then need its own statement and the
-# module would have to know which key each consumer picked.
-variable "key_service_principals" {
-  description = "OCI service principals allowed to use these keys. oke covers etcd encryption, blockstorage covers boot and block volumes. Object Storage is added separately because its principal name carries the region."
-  type        = list(string)
-  default     = ["oke", "blockstorage"]
+# One toggle per consumer rather than a list of service names, because the verb and
+# resource-type differ. See the statements in main.tf for which is which.
+variable "grant_oke" {
+  description = "Let OKE use these keys: \"use keys\" for etcd encryption, plus the key-delegates pair that worker node boot volumes need."
+  type        = bool
+  default     = true
+}
+
+variable "grant_block_storage" {
+  description = "Let Block Volume use these keys, which boot and block volumes need."
+  type        = bool
+  default     = true
 }
 
 variable "grant_object_storage" {
-  description = "Also allow objectstorage-<region> to use these keys, which a bucket with a customer-managed key needs. Requires region."
+  description = "Let Object Storage use these keys, which a bucket with a customer-managed key needs. Requires region, because that principal is region-scoped."
   type        = bool
   default     = true
+}
+
+# Escape hatch for a consumer this module does not know about - a database service, say. Given
+# verbatim, so the caller owns the verb, resource-type and any conditions.
+variable "extra_key_statements" {
+  description = "Additional policy statements appended to the key-services policy, verbatim."
+  type        = list(string)
+  default     = []
 }
 
 variable "region" {
