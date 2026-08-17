@@ -10,7 +10,7 @@ argocd-apps:
 mcp:
   enabled: false
   image: entigolabs/mcp-for-argocd
-  tag: "0.8.0"
+  tag: "0.9.0"
   resources:
     requests:
       cpu: 10m
@@ -23,7 +23,7 @@ mcp:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.1"
+  tag: "v1.22.18"
 
 argocd:
   crds:

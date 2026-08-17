@@ -11,5 +11,6 @@ domains: |
       create_certificate = true
       create_validation  = false
       create_zone        = false
+      certificate_export = "ENABLED"
     }
   }
