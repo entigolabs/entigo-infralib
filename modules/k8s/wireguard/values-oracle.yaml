@@ -20,20 +20,25 @@ wireguard:
       # wired from modules/oracle/oke's nlb_nsg_id.
       oci-network-load-balancer.oraclecloud.com/security-list-management-mode: "None"
       oci.oraclecloud.com/oci-network-security-groups: ""
-      # Without this the source address of every packet is the load balancer's, so the
-      # WireGuard handshake cannot be attributed to a peer.
+      # NO is-preserve-source, deliberately, and it is worth saying why since it looks like the
+      # obvious thing to set.
       #
-      # Requires externalTrafficPolicy: Local below - OCI refuses the pair outright:
-      #   "is-preserve-source annotation cannot be set when externalTrafficPolicy is set to
-      #   Cluster"
-      # and the Service then sits at <pending> forever while the cloud-controller-manager
-      # retries every few minutes. Nothing surfaces on the Service itself except events.
-      oci-network-load-balancer.oraclecloud.com/is-preserve-source: "true"
-
-    # Mandatory alongside is-preserve-source, not a tuning choice. Local also means the load
-    # balancer only forwards to nodes actually running a wireguard pod, which is what makes the
-    # preserved source address meaningful - a second hop through kube-proxy would rewrite it.
-    externalTrafficPolicy: Local
+      # Turning it on starts a chain that defeats itself: OCI then rejects the Service unless
+      # externalTrafficPolicy is Local ("is-preserve-source annotation cannot be set when
+      # externalTrafficPolicy is set to Cluster", after which the Service sits at <pending>
+      # forever and only events say why). With Local, packets reach a node's nodePort still
+      # carrying the *client's* public source address - which the node NSG in
+      # modules/oracle/oke does not allow, since it accepts the VCN CIDR only. The load
+      # balancer reports healthy backends and every packet is dropped at the node.
+      #
+      # Opening the NSG instead would mean allowing UDP from 0.0.0.0/0 across the whole
+      # 30000-32767 nodePort range, because Local allocates that port dynamically and terraform
+      # cannot know it. Not worth it: WireGuard identifies peers by public key, not by source
+      # address, so clients arriving behind the load balancer's address are no different from
+      # clients behind any NAT - which is what PersistentKeepalive already handles.
+      #
+      # So the default Cluster policy stands, the NLB source-NATs to its own in-VCN address,
+      # and the existing node NSG rule accepts it.
 
     # No extraPorts, unlike aws. There the public key is served on the NLB's 443 with
     # aws-load-balancer-ssl-cert, but an OCI network load balancer is pure layer 4 with no TLS
