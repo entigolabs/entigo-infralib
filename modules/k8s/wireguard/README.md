@@ -79,7 +79,7 @@ client therefore needs both the routes and the resolver:
 [Interface]
 PrivateKey = <your wg-private.key>
 Address    = 172.31.201.2/32
-DNS        = 10.96.0.10          # CoreDNS, which forwards to the VCN resolver
+DNS        = <kube-dns ClusterIP>  # CoreDNS, which forwards to the VCN resolver
 
 [Peer]
 PublicKey  = <fetched from the pubkey host>
@@ -91,3 +91,17 @@ AllowedIPs = 172.31.201.0/24, 10.156.0.0/16, 10.96.0.0/16
 services CIDR, which is what makes CoreDNS reachable - and CoreDNS is what resolves a private
 zone, since it forwards to the VCN resolver. Substitute your own CIDRs: `services_cidr` in
 `modules/oracle/oke` and the VCN's own block.
+
+**Read the DNS address, do not derive it.** OKE does not place kube-dns at `.10` of the
+services CIDR the way many clusters do - on a `10.96.0.0/16` cluster it was `10.96.5.5`. Get it
+from the cluster:
+
+```shell
+kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}'
+```
+
+**The Endpoint hostname resolves to two addresses.** An OCI network load balancer has both a
+public and a private IP, the Service reports both, and external-dns publishes both under the
+one name. WireGuard resolves the hostname once at startup and picks one - so roughly half the
+time it picks the in-VCN address and the tunnel silently never establishes. Until that is
+fixed, put the public IP in `Endpoint` rather than the hostname.

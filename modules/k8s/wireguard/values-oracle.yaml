@@ -40,6 +40,33 @@ wireguard:
       # So the default Cluster policy stands, the NLB source-NATs to its own in-VCN address,
       # and the existing node NSG rule accepts it.
 
+  # ONE replica, and the VPN does not work with more. A WireGuard handshake spans two packets
+  # and the session it establishes lives in ONE pod's memory; with the Cluster policy above,
+  # kube-proxy re-picks a backend per packet, so a handshake begun against pod A gets answered
+  # by pod B, which holds no matching state. It fails in total silence - healthy backends,
+  # healthy pods, nothing in any log, and a client that reports "active" while no traffic
+  # passes. Proven by scaling to 1, which fixed it instantly.
+  #
+  # aws keeps two replicas because its load balancer runs in ip target mode and delivers
+  # straight to a pod IP, where 5-tuple hashing already pins a flow. On OCI the traffic goes
+  # through kube-proxy, which does not. Service.sessionAffinity: ClientIP would be the better
+  # answer - it would keep the redundancy - but this chart's Service template does not render
+  # that field, so setting it would be silently ignored.
+  replicaCount: 1
+
+  # A PodDisruptionBudget of minAvailable 2 against one replica is unsatisfiable, and would
+  # block draining the node it runs on - which is every OKE node upgrade and every
+  # cluster-autoscaler scale-down. 1 replica with minAvailable 1 is no better: eviction can
+  # never proceed. So the budget goes, and a brief VPN outage during a drain is the accepted
+  # cost of it being a single pod.
+  disruptionBudget:
+    enabled: false
+
+  # The chart defaults this on, which would fight replicaCount and could scale back up to
+  # multiple pods - reintroducing the exact failure above.
+  autoscaling:
+    enabled: false
+
     # No extraPorts, unlike aws. There the public key is served on the NLB's 443 with
     # aws-load-balancer-ssl-cert, but an OCI network load balancer is pure layer 4 with no TLS
     # termination at all, so there is no certificate to attach. The pubkey goes through the
