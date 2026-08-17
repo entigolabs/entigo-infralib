@@ -278,15 +278,19 @@ resource "oci_identity_policy" "controllers" {
     # Scoped to the compartment rather than the tenancy, unlike the three above, because
     # nothing needs to create buckets outside it. Goes away with the same upstream fix.
     "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage buckets in compartment id ${var.compartment_id}",
-    # A bucket that names a customer-managed key needs the *caller* to be allowed to use that
-    # key, not only Object Storage itself - modules/oracle/kms grants the service, this grants
-    # whoever asks. Without it CreateBucket is refused, and the refusal is indistinguishable
-    # from the bucket already existing: the same "409-BucketAlreadyExists ... or you are not
-    # authorized to create it" above, on a bucket that a GET reports as 404.
+    # A bucket that names a customer-managed key needs the *caller* authorised too, not only
+    # Object Storage - modules/oracle/kms grants the service, this grants whoever asks. Without
+    # it CreateBucket is refused, and the refusal is indistinguishable from the bucket already
+    # existing: the same "409-BucketAlreadyExists ... or you are not authorized to create it"
+    # above, on a bucket that a GET reports as 404.
     #
-    # The same two-principal split caught out worker node boot volumes, where granting only
-    # "service oke" left node provisioning failing with no mention of a key at all.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use keys in compartment id ${var.compartment_id}",
+    # key-delegate, NOT keys. Oracle's common policies split these deliberately: a service uses
+    # "keys" to perform the cryptography, while a caller uses "key-delegate" to *associate* a
+    # resource with a key without being able to use the key itself. Granting "use keys" here
+    # instead changes nothing - tried, and the bucket failed identically.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use key-delegates in compartment id ${var.compartment_id}",
+    # And read, so the provider can resolve the key it was handed.
+    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read keys in compartment id ${var.compartment_id}",
   ]
 }
 
