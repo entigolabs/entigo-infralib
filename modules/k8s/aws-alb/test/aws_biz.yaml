@@ -2,3 +2,25 @@ ingressClass:
   tags:
   - key: testtag
     value: tagvalue
+  internal:
+    enabled: false
+  service:
+    enabled: true
+    sslRedirect: false
+
+global:
+  routingResources: "both" #ingress, both, httproute
+  createIngress: false
+  createRoute: true
+  createType: route
+  internalGateway: external
+
+gateways:
+  tags:
+  - key: testtag
+    value: tagvalue
+  internal:
+    enabled: false
+  service:
+    enabled: true
+    sslRedirect: false
