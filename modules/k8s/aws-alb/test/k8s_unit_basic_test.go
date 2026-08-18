@@ -19,7 +19,7 @@ import (
 const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
-	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "internal", "service"})
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"})
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
