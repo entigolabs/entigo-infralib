@@ -1,7 +1,7 @@
 <h1 align="center">Infralib Modules</h1>
 
 <p align="center">
-  <strong>Production-tested Terraform modules and Helm charts for building a complete Kubernetes platform on AWS or Google Cloud.</strong>
+  <strong>Production-tested Terraform / OpenTofu modules and Helm charts for building a complete Kubernetes platform on AWS or Google Cloud.</strong>
 </p>
 
 <p align="center">
@@ -27,13 +27,21 @@ New here? Follow the [quickstart guide](https://infralib-quickstart.dev.entigo.d
 
 ## What this is
 
-This repository holds the building blocks — the opinionated Terraform modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more.
+This repository holds the building blocks — the opinionated Terraform / OpenTofu modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more. The modules work with either Terraform or OpenTofu.
 
 You can consume them in three ways:
 
 - **With the [Infralib Agent](https://github.com/entigolabs/entigo-infralib-agent)** — describe the platform in one YAML file and let the agent provision and continuously update it. Most people want this.
-- **Directly from Terraform** — reference a released module by tag (see [example](#example-usage)).
+- **Directly from Terraform or OpenTofu** — reference a released module by tag (see [example](#example-usage)).
 - **Directly from ArgoCD** — point an Application at a Helm chart path (see [example](#example-usage)).
+
+## Repository layout
+
+| Folder | Contents |
+|---|---|
+| [`modules/`](modules/) | Terraform / OpenTofu modules and Kubernetes Helm charts |
+| [`images/`](images/) | Runtime images for running infrastructure as code |
+| [`providers/`](providers/) | Terraform / OpenTofu provider configurations |
 
 ## Modules
 
@@ -52,7 +60,7 @@ See [`modules/k8s/README.md`](modules/k8s/README.md) for chart-specific notes.
 Reference a released module by tag. Releases are published to
 [entigo-infralib-release](https://github.com/entigolabs/entigo-infralib-release).
 
-**Terraform**
+**Terraform / OpenTofu**
 
 ```hcl
 module "main" {
@@ -97,14 +105,6 @@ spec:
       - RespectIgnoreDifferences=true
 ```
 
-## Repository layout
-
-| Folder | Contents |
-|---|---|
-| [`modules/`](modules/) | Terraform modules and Kubernetes Helm charts |
-| [`images/`](images/) | Runtime images for running infrastructure as code |
-| [`providers/`](providers/) | Terraform provider configurations |
-
 ## Release process
 
 Releases are cut from `main` roughly once per day:
@@ -117,7 +117,33 @@ Releases are cut from `main` roughly once per day:
 Once a release is created, it is published to
 [entigo-infralib-release](https://github.com/entigolabs/entigo-infralib-release),
 where it can be used by the [Infralib Agent](https://github.com/entigolabs/entigo-infralib-agent)
-or referenced directly from Terraform and ArgoCD.
+or referenced directly from Terraform / OpenTofu and ArgoCD.
+
+Releases are also published as OCI packages to the **AWS Public ECR**
+and **GitHub Container Registry**, so modules can be consumed as an OCI source
+without going through git.
+
+Agent configuration examples:
+
+```yaml
+# OCI repository for AWS
+sources:
+  - url: oci://public.ecr.aws/entigolabs/entigo-infralib-release
+
+# OCI repository for Google Cloud
+sources:
+  - url: oci://ghcr.io/entigolabs/entigo-infralib-release
+
+# GIT repository for any
+sources:
+  - url: https://github.com/entigolabs/entigo-infralib-release
+
+# GIT branch on our development repo
+sources:
+  - url: https://github.com/entigolabs/entigo-infralib
+    force_version: true
+    version: custom-branch
+```
 
 ## License
 
