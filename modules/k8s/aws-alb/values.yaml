@@ -5,7 +5,6 @@ global:
   createType: ingress #ingress|route
   internalGateway: internal
   externalGateway: external
-  serviceGateway: service
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
@@ -74,7 +73,7 @@ ingressClass:
     subnets: ""
     certificates: ""
   service:
-    enabled: true
+    enabled: false
     scheme: internal
     sslRedirect: true
     subnets: ""
