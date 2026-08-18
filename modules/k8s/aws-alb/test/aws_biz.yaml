@@ -2,11 +2,6 @@ ingressClass:
   tags:
   - key: testtag
     value: tagvalue
-  internal:
-    enabled: false
-  service:
-    enabled: true
-    sslRedirect: false
 
 global:
   routingResources: "both" #ingress, both, httproute
