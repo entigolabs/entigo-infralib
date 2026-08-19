@@ -110,6 +110,13 @@ fi
         then
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
         fi
+
+        # Append module to the apps step unless an entry with this name already exists
+        # grep -qx: exact line match, otherwise grafana-biz would match runn-xxx-grafana-biz
+        if ! yq '.steps[] | select(.name == "apps") | .modules[].name' "agents/${testname}/config.yaml" | grep -qx "$APP_NAME"
+        then
+          yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
+        fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
         
