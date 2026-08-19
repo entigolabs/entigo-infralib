@@ -7,7 +7,6 @@ global:
 kiali-server:
   deployment:
     ingress:
-      enabled: true
       class_name: "alb"
       override_yaml:
         metadata:
