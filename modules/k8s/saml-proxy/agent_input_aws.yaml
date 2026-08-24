@@ -12,6 +12,6 @@ global:
     createIngress:  "{{ .tinput.aws-alb.global.createIngress }}"
     createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
     gateway:
-      name: "{{ .tinput.aws-alb.global.internalGateway }}"
+      name: "{{ .tinput.aws-alb.global.externalGateway }}"
       namespace: "{{ .tmodule.aws-alb }}"
-    hostname: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+    hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
