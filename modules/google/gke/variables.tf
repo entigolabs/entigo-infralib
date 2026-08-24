@@ -7,6 +7,16 @@ variable "kubernetes_version" {
   default = "1.35."
 }
 
+variable "maintenance_exclusions" {
+  type = list(object({
+    name            = string
+    start_time      = string
+    end_time        = string
+    exclusion_scope = string
+  }))
+  default = null
+}
+
 variable "preserve_kubernetes_version" {
   type        = bool
   default     = false
