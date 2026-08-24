@@ -1,4 +1,10 @@
 global:
+  routingResources: "ingress" #ingress|both|httproute
+  createIngress: true
+  createRoute: false
+  createType: ingress #ingress|route
+  internalGateway: internal
+  externalGateway: external
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
