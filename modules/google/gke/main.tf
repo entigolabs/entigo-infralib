@@ -128,6 +128,22 @@ locals {
   ]
 
   gke_managed_node_groups = concat(local.gke_managed_node_groups_all, var.gke_managed_node_groups_extra)
+
+  # Quantize to the 1st of the current month so the value only changes
+  # once a month instead of producing a diff on every plan
+  exclusion_start = formatdate("YYYY-MM-01'T'00:00:00'Z'", timestamp())
+
+  # ~9 months forward (timeadd only takes h/m/s, no month unit)
+  exclusion_end = timeadd(local.exclusion_start, "6570h")
+
+  maintenance_exclusions = var.maintenance_exclusions != null ? var.maintenance_exclusions : [{
+    name            = "block-auto-upgrades"
+    start_time      = local.exclusion_start
+    end_time        = local.exclusion_end
+    exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
+  }]
+
+
 }
 
 # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/private-cluster
@@ -221,7 +237,7 @@ module "gke" {
 
   # Replaces the old auto_upgrade=false behavior
   # main.tf, inside module "gke"
-  maintenance_exclusions = var.maintenance_exclusions
+  maintenance_exclusions = local.maintenance_exclusions
 }
 
 resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypter_decrypter" {
