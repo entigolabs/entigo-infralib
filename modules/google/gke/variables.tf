@@ -7,6 +7,22 @@ variable "kubernetes_version" {
   default = "1.35."
 }
 
+variable "maintenance_exclusions" {
+  type = list(object({
+    name            = string
+    start_time      = string
+    end_time        = string
+    exclusion_scope = string
+  }))
+  # end_time must stay before the running minor version's end-of-support date
+  default = [{
+    name            = "block-auto-upgrades"
+    start_time      = "2026-08-24T00:00:00Z"
+    end_time        = "2027-06-01T00:00:00Z"
+    exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
+  }]
+}
+
 variable "preserve_kubernetes_version" {
   type        = bool
   default     = false
