@@ -17,6 +17,12 @@ variable "maintenance_exclusions" {
   default = null
 }
 
+variable "maintenance_exclusion_window_days" {
+  # Test env can set this higher, prod stays small; weekly runs refresh it
+  type    = number
+  default = 60
+}
+
 variable "preserve_kubernetes_version" {
   type        = bool
   default     = false
