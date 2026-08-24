@@ -7,4 +7,4 @@ global:
   createIngress: false
   createRoute: true
   createType: route
-  internalGateway: internal
+  internalGateway: external
