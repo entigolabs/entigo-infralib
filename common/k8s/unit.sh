@@ -109,9 +109,9 @@ fi
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
-          if [[ $testname == aws_* ]]
+          if [[ $testname == aws_*  && $MODULE_NAME != "aws-alb" ]]
           then
-            # This is a dirty hack to make the .input work. This is not a good approach.
+            # This is a dirty hack to make the .input work. This is not a good approach but works for now.
             # Copy the aws-alb module from the apps step into the new step
             yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
             mkdir -p "agents/${testname}/config/$STEP_NAME"
