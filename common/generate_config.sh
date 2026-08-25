@@ -83,7 +83,7 @@ get_step_name_k8s() {
   # All k8s modules now run inside the shared apps step
   #STEP_NAME="apps"
   #Old logic
-  STEP_NAME=$APP_NAMEs
+  STEP_NAME=$APP_NAME
 }
 
 get_app_name() {
