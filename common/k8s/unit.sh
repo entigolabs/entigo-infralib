@@ -114,6 +114,9 @@ fi
             # This is a dirty hack to make the .input work. This is not a good approach.
             # Copy the aws-alb module from the apps step into the new step
             yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb")]' "agents/${testname}/config.yaml"
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "agents/${testname}/config/apps/aws-alb.yaml" "agents/${testname}/config/$STEP_NAME/aws-alb.yaml"
           fi
         fi
 
@@ -123,7 +126,7 @@ fi
         #then
         #  yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
         #fi
-        mkdir -p "agents/${testname}/config/$STEP_NAME"
+
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
         
       
