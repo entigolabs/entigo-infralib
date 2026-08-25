@@ -109,14 +109,20 @@ fi
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
+          if [[ $testname == aws_* ]]
+          then
+            # This is a dirty hack to make the .input work. This is not a good approach.
+            # Copy the aws-alb module from the apps step into the new step
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb")]' "agents/${testname}/config.yaml"
+          fi
         fi
 
         # Append module to the apps step unless an entry with this name already exists
         # grep -qx: exact line match, otherwise grafana-biz would match runn-xxx-grafana-biz
-        if ! yq '.steps[] | select(.name == "apps") | .modules[].name' "agents/${testname}/config.yaml" | grep -qx "$APP_NAME"
-        then
-          yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
-        fi
+        #if ! yq '.steps[] | select(.name == "apps") | .modules[].name' "agents/${testname}/config.yaml" | grep -qx "$APP_NAME"
+        #then
+        #  yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
+        #fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
         
