@@ -125,7 +125,7 @@ fi
         #then
         #  yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
         #fi
-
+        mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
         
       
