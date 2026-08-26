@@ -1,4 +1,10 @@
 global:
+  routingResources: "ingress" #ingress|both|httproute
+  createIngress: true
+  createRoute: false
+  createType: ingress #ingress|route
+  internalGateway: internal
+  externalGateway: external
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
@@ -69,3 +75,30 @@ ingressClass:
   external:
     enabled: true
     subnets: ""
+
+gateways:
+  tags: {}
+  internal:
+    enabled: true
+    scheme: internal
+    sslRedirect: true
+    subnets: ""
+    certificates: ""
+  service:
+    enabled: false
+    scheme: internal
+    sslRedirect: true
+    subnets: ""
+    certificates: ""
+  external:
+    enabled: true
+    scheme: internet-facing
+    sslRedirect: true
+    subnets: ""
+    certificates: ""
+  # custom user-defined gateway, just add an entry
+  # partner:
+  #   enabled: true
+  #   scheme: internet-facing
+  #   sslRedirect: true
+  #   subnets: "subnet-aaa,subnet-bbb"

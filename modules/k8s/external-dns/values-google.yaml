@@ -6,13 +6,6 @@ global:
     projectID: ""
 
 external-dns:
-  sources:
-    - service
-    - ingress
-    - istio-gateway
-    - istio-virtualservice
-    - gateway-httproute
-
   provider:
     name: google
   serviceAccount:
