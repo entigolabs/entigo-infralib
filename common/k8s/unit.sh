@@ -115,7 +115,7 @@ fi
             # Copy the aws-alb module from the apps step into the new step
             yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
             mkdir -p "agents/${testname}/config/$STEP_NAME"
-            cp "agents/${testname}/config/apps/aws-alb.yaml" "agents/${testname}/config/$STEP_NAME/aws-alb.yaml"
+            cp "$MODULE_PATH/../aws-alb/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/aws-alb.yaml"
           fi
         fi
 
