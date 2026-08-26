@@ -55,7 +55,6 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 
 	switch cloudName {
 	case "aws":
-		gatewayName = fmt.Sprintf("%s-gateway", gatewayName)
 
 		err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
 		if err != nil {
