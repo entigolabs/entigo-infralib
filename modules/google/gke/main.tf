@@ -134,7 +134,7 @@ locals {
   exclusion_start = formatdate("YYYY-MM-01'T'00:00:00'Z'", timestamp())
 
   # ~9 months forward (timeadd only takes h/m/s, no month unit)
-  exclusion_end = timeadd(local.exclusion_start, "1440h")
+  exclusion_end = timeadd(local.exclusion_start, "${var.maintenance_exclusion_window_days * 24}h")
 
   maintenance_exclusions = var.maintenance_exclusions != null ? var.maintenance_exclusions : [{
     name            = "block-auto-upgrades"
