@@ -49,7 +49,7 @@ Each line means: open <file_path>, find version <OLD>, replace with <NEW>.
 
 === AWS TERRAFORM UPDATES ===
 Lines like: hashicorp/aws newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/aws/ and replace with <NEW>.
+Use grep -r to find <OLD> in modules/aws/ and in modules/aws-v2 and replace with <NEW>.
 EKS AL2023_* lines: find the AMI version string in modules/aws/ and replace.
 
 === GOOGLE TERRAFORM UPDATES ===
@@ -254,7 +254,8 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
        * Summary of key changes (2-3 sentences max)
        * Link to full changelog
      - If release notes fetch fails, just note 'Release notes unavailable' and include the link.
-     - Do NOT spend more than TWO curl calls per chart on release notes.
+     - Do NOT spend more than FIVE curl calls per chart on release notes.
+     - Try to find the application version from the chart version and provide the application release notes too.
 
   Common repo mappings for release notes:
     aws-load-balancer-controller → kubernetes-sigs/aws-load-balancer-controller
@@ -403,7 +404,7 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
        hashicorp/google → https://github.com/hashicorp/terraform-provider-google/releases
        hashicorp/google-beta → https://github.com/hashicorp/terraform-provider-google-beta/releases
        terraform-google-modules/kubernetes-engine/google → https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/releases
-     - Fetch release notes with curl (one call per provider max)
+     - Fetch release notes with curl (five calls per provider max)
      - Extract: breaking changes (⚠️), key changes summary, link to full changelog
      - If it fails, note 'Release notes unavailable'.
 
