@@ -690,7 +690,7 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 		// Try Gateway API first (httproute/both phases)
 		gatewayHost, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[?(@.type==\"Hostname\")].value}'")
 		if err == nil && gatewayHost != "" {
-			return gatewayHost, nil
+			return strings.Trim(gatewayHost, "'"), nil
 		}
 		// Fall back to the ALB Ingress (ingress phase)
 		ingress, err := k8s.GetIngressE(t, options, gatewayName)
