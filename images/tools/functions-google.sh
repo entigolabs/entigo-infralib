@@ -79,8 +79,3 @@ upload_plan_artifact() {
 get_k8s_credentials() {
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
 }
-
-# Get ArgoCD hostname
-get_argocd_hostname() {
-    kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}'
-}
