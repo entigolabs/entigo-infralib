@@ -76,7 +76,7 @@ locals {
       disk_type          = var.gke_main_volume_type
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
-      auto_upgrade       = false
+      auto_upgrade       = true
       spot               = var.gke_main_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_main_max_surge
@@ -97,7 +97,7 @@ locals {
       disk_type          = var.gke_mon_volume_type
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
-      auto_upgrade       = false
+      auto_upgrade       = true
       spot               = var.gke_mon_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_mon_max_surge
@@ -118,7 +118,7 @@ locals {
       disk_type          = var.gke_tools_volume_type
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
-      auto_upgrade       = false
+      auto_upgrade       = true
       spot               = var.gke_tools_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_tools_max_surge
@@ -128,6 +128,22 @@ locals {
   ]
 
   gke_managed_node_groups = concat(local.gke_managed_node_groups_all, var.gke_managed_node_groups_extra)
+
+  # Quantize to the 1st of the current month so the value only changes
+  # once a month instead of producing a diff on every plan
+  exclusion_start = formatdate("YYYY-MM-01'T'00:00:00'Z'", timestamp())
+
+  # ~9 months forward (timeadd only takes h/m/s, no month unit)
+  exclusion_end = timeadd(local.exclusion_start, "${var.maintenance_exclusion_window_days * 24}h")
+
+  maintenance_exclusions = var.maintenance_exclusions != null ? var.maintenance_exclusions : [{
+    name            = "block-auto-upgrades"
+    start_time      = local.exclusion_start
+    end_time        = local.exclusion_end
+    exclusion_scope = "NO_MINOR_OR_NODE_UPGRADES"
+  }]
+
+
 }
 
 # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/private-cluster
@@ -138,7 +154,7 @@ module "gke" {
   project_id             = data.google_client_config.this.project
   name                   = var.prefix
   kubernetes_version     = local.latest_stable_version
-  release_channel        = "UNSPECIFIED" # in order to disable auto upgrade
+  release_channel        = "STABLE" # in order to disable auto upgrade
   region                 = data.google_client_config.this.region
   network                = var.network
   subnetwork             = var.subnetwork
@@ -218,6 +234,10 @@ module "gke" {
   }
 
   master_authorized_networks = var.master_authorized_networks
+
+  # Replaces the old auto_upgrade=false behavior
+  # main.tf, inside module "gke"
+  maintenance_exclusions = local.maintenance_exclusions
 }
 
 resource "google_kms_crypto_key_iam_member" "boot_disk_kms_key_encrypter_decrypter" {

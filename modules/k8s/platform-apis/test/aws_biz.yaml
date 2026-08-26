@@ -16,6 +16,23 @@ platform-apis:
       tags:
         etag: etest
         eutag: eutest
+  artifact:
+    environmentConfig:
+      lifecycleRules:
+        - tagPrefixes:
+            - release
+            - DEPLOYED
+          keepCount: 10
+        - tagPatterns:
+            - "*.*.*"
+          keepCount: 30
+        - tagPatterns:
+            - "feature-*"
+            - "*-cloud"
+          keepCount: 5
+        - untagged: true
+          expireAfterDays: 7
+        - expireAfterDays: 90
   kafka:
     install: true
     environmentConfig:
