@@ -1,3 +1,7 @@
+# IngressClass/IngressClassParams objects, kept while routingResources is "ingress" or "both"
+# Deprecated: will be removed once all users have migrated to Gateway API HTTPRoutes
+{{- $routing := .Values.global.routingResources | default "ingress" }}
+{{- if or (eq $routing "ingress") (eq $routing "both") }}
 {{- if .Values.ingressClass.internal.enabled }}
 apiVersion: elbv2.k8s.aws/v1beta1
 kind: IngressClassParams
@@ -212,4 +216,5 @@ spec:
     apiGroup: elbv2.k8s.aws
     kind: IngressClassParams
     name: external-nogroup
+{{- end }}
 {{- end }}
