@@ -2,37 +2,47 @@ package test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
-	"strings"
+
 	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/assert"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-const domain = "infralib.entigo.io"
+// GatewayClass and Gateways are provisioned by the module itself,
+// the test only verifies their health and attaches HTTPRoutes.
+const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
-	testK8sAwsAlbGatewayApi(t, "aws", "biz")
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"})
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
-	testK8sAwsAlbGatewayApi(t, "aws", "pri")
+	// service gateway is disabled in pri
+	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"})
 }
 
-func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string) {
+func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
 
-	uniqueId := strings.ToLower(random.UniqueId())
-	resourceName := fmt.Sprintf("%s-%s", namespaceName, uniqueId)
-	gatewayClassName := resourceName
-	hostname := fmt.Sprintf("%s.%s", uniqueId, domain)
+	// Health check of the module-provisioned GatewayClass: Accepted must be True
+	acceptedStatus, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
+		"get", "gatewayclass", gatewayClassName,
+		"-o", `jsonpath={.status.conditions[?(@.type=="Accepted")].status}`)
+	require.NoError(t, err, "Getting GatewayClass %s error", gatewayClassName)
+	require.Equal(t, "True", acceptedStatus, "GatewayClass %s is not Accepted", gatewayClassName)
+
+	// One shared backend workload for all gateway checks
+	resourceName := fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId()))
 
 	deployment, err := k8s.ReadObjectFromFile(t, "./templates/deployment.yaml")
 	require.NoError(t, err)
@@ -48,36 +58,42 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string) {
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, resourceName, 20, 6*time.Second)
 
-	gatewayClass, err := k8s.ReadObjectFromFile(t, "./templates/gatewayclass.yaml")
-	require.NoError(t, err)
-	gatewayClass.SetName(gatewayClassName)
-	createdGatewayClass, err := k8s.CreateK8SGatewayClass(t, kubectlOptions, gatewayClass)
-	require.NoError(t, err, "Creating GatewayClass error")
-	assert.NotNil(t, createdGatewayClass)
-
-	gateway, err := k8s.ReadObjectFromFile(t, "./templates/gateway.yaml")
-	require.NoError(t, err)
-	gateway.SetName(resourceName)
-	err = unstructured.SetNestedField(gateway.Object, gatewayClassName, "spec", "gatewayClassName")
-	require.NoError(t, err)
-	createdGateway, err := k8s.CreateK8SGateway(t, kubectlOptions, gateway)
-	require.NoError(t, err, "Creating Gateway error")
-	assert.NotNil(t, createdGateway)
-
-	createdGateway, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, resourceName, 60, 5*time.Second)
-	if err != nil {
-		_ = k8s.DeleteK8SGateway(t, kubectlOptions, resourceName)
+	// Every enabled gateway gets its own HTTPRoute with a unique hostname
+	for _, gatewayName := range gatewayNames {
+		testGatewayHTTPRoute(t, kubectlOptions, namespaceName, gatewayName, hostName, resourceName)
 	}
-	require.NoError(t, err, "Gateway availability error")
 
-	gatewayAddress := k8s.GetK8SGatewayAddress(createdGateway)
-	require.NotEmpty(t, gatewayAddress, "Gateway address is empty")
+	err = k8s.DeleteK8SService(t, kubectlOptions, resourceName)
+	require.NoError(t, err, "Deleting Service error")
+	err = k8s.DeleteK8SDeployment(t, kubectlOptions, resourceName)
+	require.NoError(t, err, "Deleting Deployment error")
+}
+
+func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayName string, hostName string, backendName string) {
+	// Health check of the module-provisioned Gateway, the helper waits for Programmed
+	existingGateway, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, gatewayName, 60, 5*time.Second)
+	require.NoError(t, err, "Gateway %s availability error", gatewayName)
+
+	// The Gateway must reference the expected GatewayClass
+	className, found, err := unstructured.NestedString(existingGateway.Object, "spec", "gatewayClassName")
+	require.NoError(t, err)
+	require.True(t, found, "Gateway %s spec.gatewayClassName not found", gatewayName)
+	require.Equal(t, gatewayClassName, className, "Gateway %s does not use GatewayClass %s", gatewayName, gatewayClassName)
+
+	gatewayAddress := k8s.GetK8SGatewayAddress(existingGateway)
+	require.NotEmpty(t, gatewayAddress, "Gateway %s address is empty", gatewayName)
+
+	// Randomized hostname, same mechanism as the ingress test
+	hostname := fmt.Sprintf("%s-%s", strings.ToLower(random.UniqueId()), hostName)
+	routeName := fmt.Sprintf("%s-%s", backendName, gatewayName)
 
 	httpRoute, err := k8s.ReadObjectFromFile(t, "./templates/httproute.yaml")
 	require.NoError(t, err)
-	httpRoute.SetName(resourceName)
-	err = k8s.SetNestedSliceString(httpRoute.Object, 0, "name", resourceName, "spec", "parentRefs")
+	httpRoute.SetName(routeName)
+	err = k8s.SetNestedSliceString(httpRoute.Object, 0, "name", gatewayName, "spec", "parentRefs")
 	require.NoError(t, err, "Setting HTTPRoute parentRef name error")
+	err = k8s.SetNestedSliceString(httpRoute.Object, 0, "namespace", namespaceName, "spec", "parentRefs")
+	require.NoError(t, err, "Setting HTTPRoute parentRef namespace error")
 	err = unstructured.SetNestedStringSlice(httpRoute.Object, []string{hostname}, "spec", "hostnames")
 	require.NoError(t, err, "Setting HTTPRoute hostnames error")
 	rules, found, err := unstructured.NestedSlice(httpRoute.Object, "spec", "rules")
@@ -85,46 +101,31 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string) {
 	require.True(t, found, "HTTPRoute spec.rules not found")
 	backendRefs, ok := rules[0].(map[string]interface{})["backendRefs"].([]interface{})
 	require.True(t, ok, "HTTPRoute spec.rules[0].backendRefs not found")
-	backendRefs[0].(map[string]interface{})["name"] = resourceName
+	backendRefs[0].(map[string]interface{})["name"] = backendName
 	rules[0].(map[string]interface{})["backendRefs"] = backendRefs
 	err = unstructured.SetNestedSlice(httpRoute.Object, rules, "spec", "rules")
 	require.NoError(t, err, "Setting HTTPRoute backendRef name error")
 	createdHTTPRoute, err := k8s.CreateK8SHTTPRoute(t, kubectlOptions, httpRoute)
-	require.NoError(t, err, "Creating HTTPRoute error")
+	require.NoError(t, err, "Creating HTTPRoute for gateway %s error", gatewayName)
 	assert.NotNil(t, createdHTTPRoute)
 
-	_, err = k8s.WaitUntilK8SHTTPRouteAvailable(t, kubectlOptions, resourceName, 60, 5*time.Second)
+	_, err = k8s.WaitUntilK8SHTTPRouteAvailable(t, kubectlOptions, routeName, 60, 5*time.Second)
 	if err != nil {
-		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, resourceName)
-		_ = k8s.DeleteK8SGateway(t, kubectlOptions, resourceName)
+		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
 	}
-	require.NoError(t, err, "HTTPRoute availability error")
+	require.NoError(t, err, "HTTPRoute availability error for gateway %s", gatewayName)
 
 	targetURL := fmt.Sprintf("http://%s/", hostname)
 	err = k8s.WaitUntilHostnameAvailableWithAddress(t, kubectlOptions, 60, 5*time.Second, gatewayAddress, namespaceName, targetURL, "200")
 	if err != nil {
-		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, resourceName)
-		_ = k8s.DeleteK8SGateway(t, kubectlOptions, resourceName)
+		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
 	}
-	require.NoError(t, err, "HTTPRoute HTTP test error")
+	require.NoError(t, err, "HTTPRoute HTTP test error for gateway %s", gatewayName)
 
-	err = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, resourceName)
-	require.NoError(t, err, "Deleting HTTPRoute error")
-	err = k8s.WaitUntilK8SHTTPRouteDeleted(t, kubectlOptions, resourceName, 40, 2*time.Second)
-	require.NoError(t, err, "HTTPRoute didn't get deleted")
-
-	err = k8s.DeleteK8SGateway(t, kubectlOptions, resourceName)
-	require.NoError(t, err, "Deleting Gateway error")
-	err = k8s.WaitUntilK8SGatewayDeleted(t, kubectlOptions, resourceName, 40, 2*time.Second)
-	require.NoError(t, err, "Gateway didn't get deleted")
-
-	err = k8s.DeleteK8SGatewayClass(t, kubectlOptions, gatewayClassName)
-	require.NoError(t, err, "Deleting GatewayClass error")
-
-	err = k8s.DeleteK8SService(t, kubectlOptions, resourceName)
-	require.NoError(t, err, "Deleting Service error")
-	err = k8s.DeleteK8SDeployment(t, kubectlOptions, resourceName)
-	require.NoError(t, err, "Deleting Deployment error")
+	err = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
+	require.NoError(t, err, "Deleting HTTPRoute error for gateway %s", gatewayName)
+	err = k8s.WaitUntilK8SHTTPRouteDeleted(t, kubectlOptions, routeName, 40, 2*time.Second)
+	require.NoError(t, err, "HTTPRoute didn't get deleted for gateway %s", gatewayName)
 }
 
 func TestK8sAwsAlbBiz(t *testing.T) {
@@ -136,11 +137,11 @@ func TestK8sAwsAlbPri(t *testing.T) {
 }
 
 func testK8sAwsAlb(t *testing.T, cloudName string, envName string) {
-  
+
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
-	
+
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, fmt.Sprintf("%s-aws-load-balancer-controller", namespaceName), 10, 6*time.Second)
 	terrak8s.WaitUntilServiceAvailable(t, kubectlOptions, "aws-load-balancer-webhook-service", 60, 1*time.Second)
 	time.Sleep(5 * time.Second)
