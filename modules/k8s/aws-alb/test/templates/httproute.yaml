@@ -4,7 +4,9 @@ metadata:
   name: test
 spec:
   parentRefs:
+  # name and namespace are overwritten by the test code
   - name: test
+    sectionName: http
   hostnames:
   - test.infralib.entigo.io
   rules:

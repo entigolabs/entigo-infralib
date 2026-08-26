@@ -33,7 +33,7 @@ variable "auto_repair" {
 
 variable "auto_upgrade" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "min_size" {

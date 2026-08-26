@@ -8,12 +8,6 @@ global:
     assumeRole: ""
 
 external-dns:
-  sources:
-    - service
-    - ingress
-    - istio-gateway
-    - istio-virtualservice
-    
   provider:
     name: aws
   env:
