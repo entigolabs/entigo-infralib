@@ -1,6 +1,6 @@
 locals {
   name_suffix = var.name_salt ? "-${random_string.suffix[0].result}" : ""
-  domain_name = "${var.prefix}-identity-domain${local.name_suffix}"
+  domain_name = "${var.prefix}${local.name_suffix}"
 }
 
 resource "random_string" "suffix" {
