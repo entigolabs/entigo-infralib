@@ -75,6 +75,11 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       ENTIGO_INFRALIB_DESTROY: true
+      # arc-runner-set runs docker via a separate dind sidecar container that only shares
+      # the _work volume with this container, not $HOME. Point gcloud's config dir at the
+      # workspace so credentials written here are visible to `docker run -v $CLOUDSDK_CONFIG:...`
+      # on the dind side too.
+      CLOUDSDK_CONFIG: ${{ github.workspace }}/.gcloud-config
     steps:
     - uses: actions/checkout@v4
       with:
