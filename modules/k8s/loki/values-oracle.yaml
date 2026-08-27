@@ -11,8 +11,6 @@ global:
   prefix: ""
   oracle:
     compartmentId: ""
-    # Users and groups are tenancy-scoped in OCI, unlike the bucket and the policy.
-    tenancyOcid: ""
     # The Object Storage namespace - tenancy-wide, and also part of the S3-compatible
     # hostname, which is why path-style addressing is mandatory below.
     objectStorageNamespace: ""
@@ -23,6 +21,9 @@ global:
     # CreateUser. Set from the deployment's own domain in agent_input_oracle.yaml - no mail is
     # ever sent to it.
     serviceUserEmail: ""
+    identityDomainEndpoint: ""
+    # Policy statements referencing a domain-scoped group must name the domain explicitly.
+    identityDomainDisplayName: ""
     # OCID of the key the chunk bucket is encrypted with. Empty leaves it on Oracle-managed
     # encryption, which is always on either way. Wired to kms's telemetry key by
     # agent_input_oracle.yaml, matching what loki uses on aws and google.

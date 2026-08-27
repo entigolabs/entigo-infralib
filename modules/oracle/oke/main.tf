@@ -211,12 +211,11 @@ resource "oci_core_network_security_group_security_rule" "lb_int" {
   }
 }
 
-# Dynamic groups are tenancy-scoped in OCI (unlike policies): the resource's compartment_id
-# argument must be the tenancy OCID, not the target compartment. This project's compartments
-# are flat - a single level below the tenancy root (confirmed live via `oci iam compartment
-# get`, whose compartment_id is exactly the tenancy OCID from ~/.oci/config) - so the parent
-# of var.compartment_id is reliably the tenancy here. A deeper compartment hierarchy would
-# need to walk further up instead of taking the immediate parent.
+# Needed only to resolve the tenancy OCID: the "manage policies in tenancy" statement below
+# requires the policy itself to be attached at the tenancy, and the tenancy_id output (used by
+# crossplane-oracle's Instance Principal credentials secret) has no other source. Compartments
+# here are flat - a single level below the tenancy root - so the parent of var.compartment_id
+# is reliably the tenancy. A deeper compartment hierarchy would need to walk further up.
 data "oci_identity_compartment" "this" {
   id = var.compartment_id
 }
@@ -231,12 +230,11 @@ data "oci_identity_compartment" "this" {
 # user and group management, which loki needs because the S3-compatibility endpoint accepts
 # nothing but a Customer Secret Key - remain node-wide: any pod scheduled on these nodes can
 # use them. That is the residual cost of keeping the bootstrap layer in terraform.
-resource "oci_identity_dynamic_group" "controllers" {
-  compartment_id = data.oci_identity_compartment.this.compartment_id
-  name           = "${var.prefix}-oke-controllers"
-  description    = "Instances in ${var.prefix}'s OKE node pools - used by the Crossplane OCI provider via instance principal auth; other controllers use OKE Workload Identity"
-  matching_rule  = "ALL {instance.compartment.id = '${var.compartment_id}'}"
-}
+#
+# Instances are matched by type and compartment via an any-user condition, the same match a
+# dynamic group's matching_rule would express - but as an ordinary compartment-scoped policy
+# statement, which needs no tenancy-level privilege to create (CreateDynamicGroup's
+# compartmentId is always the tenancy, regardless of what's passed).
 
 resource "oci_identity_policy" "controllers" {
   # Bootstrap grant only: per-app permissions (external-dns "manage dns",
@@ -244,30 +242,23 @@ resource "oci_identity_policy" "controllers" {
   # live in each k8s module's templates/oracle/ as Crossplane Policy CRs, applied by
   # the crossplane-oracle provider - which is what this statement authorizes.
   #
-  # Attached at the tenancy, and granting "in tenancy", because OCI only lets a policy
-  # grant within the subtree it is attached to and oci-native-ingress-controller needs
-  # genuinely tenancy-scoped statements (read public-ips, manage floating-ips, use
-  # tag-namespaces - see modules/k8s/oci-native-ingress-controller/templates/policy.yaml).
-  # A compartment-attached grant would be the tighter boundary, but it cannot create that
-  # policy at all. This is the one grant worth reading carefully: it lets anything running
-  # on these nodes write IAM policy anywhere in the tenancy.
+  # Attached at the tenancy for the "manage policies in tenancy" statement (see below),
+  # which requires tenancy attachment. Other statements could be compartment-attached now,
+  # but they stay here for visibility - all the bootstrap grants in one policy.
   compartment_id = data.oci_identity_compartment.this.compartment_id
   name           = "${var.prefix}-oke-controllers"
   description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage policies in tenancy",
-    # Users and groups are needed because loki reaches Object Storage through the
-    # S3-compatibility endpoint, and that endpoint authenticates only with a Customer Secret
-    # Key, which belongs to an IAM user - there is no instance-principal or Workload Identity
-    # path (see modules/k8s/loki/templates/oracle/credentials.yaml). Crossplane therefore has
-    # to be able to create the user, put it in a group the policy can name, and mint the key.
-    #
-    # Read this as the escalation it is: anything running on these nodes can create tenancy
-    # users. It becomes unnecessary the moment Loki gains a native OCI backend -
-    # https://github.com/grafana/loki/issues/23687 - at which point drop these two lines.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage users in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage groups in tenancy",
+    # NIC's own tenancy-wide grants (see modules/k8s/oci-native-ingress-controller) require this
+    # policy to stay attached at the tenancy; narrowing those hasn't been attempted.
+    "Allow any-user to manage policies in tenancy where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+
+    # Loki's IAM user lives in modules/oracle/identity-domain's Domain, a compartment resource,
+    # so this grant is compartment-scoped rather than tenancy-wide.
+    "Allow any-user to manage users in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+    "Allow any-user to manage groups in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+
     # And the bucket those chunks go into. loki's own Policy CR grants its IAM *user* "manage
     # objects" and "inspect buckets" - enough to write into a bucket, not to create one - so
     # without this the Bucket CR sits in ApplyFailure reporting "409-BucketAlreadyExists,
@@ -275,9 +266,10 @@ resource "oci_identity_policy" "controllers" {
     # it". It is the second half of that sentence: the bucket does not exist anywhere in the
     # tenancy, and bucket names are unique per namespace, so an admin would see it if it did.
     #
-    # Scoped to the compartment rather than the tenancy, unlike the three above, because
-    # nothing needs to create buckets outside it. Goes away with the same upstream fix.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to manage buckets in compartment id ${var.compartment_id}",
+    # Scoped to the compartment rather than the tenancy, because nothing needs to create
+    # buckets outside it.
+    "Allow any-user to manage buckets in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+
     # A bucket that names a customer-managed key needs the *caller* authorised too, not only
     # Object Storage - modules/oracle/kms grants the service, this grants whoever asks. Without
     # it CreateBucket is refused, and the refusal is indistinguishable from the bucket already
@@ -288,9 +280,10 @@ resource "oci_identity_policy" "controllers" {
     # "keys" to perform the cryptography, while a caller uses "key-delegate" to *associate* a
     # resource with a key without being able to use the key itself. Granting "use keys" here
     # instead changes nothing - tried, and the bucket failed identically.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to use key-delegates in compartment id ${var.compartment_id}",
+    "Allow any-user to use key-delegates in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+
     # And read, so the provider can resolve the key it was handed.
-    "Allow dynamic-group ${oci_identity_dynamic_group.controllers.name} to read keys in compartment id ${var.compartment_id}",
+    "Allow any-user to read keys in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
   ]
 }
 

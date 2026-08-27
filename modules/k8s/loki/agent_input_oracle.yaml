@@ -2,11 +2,13 @@ global:
   prefix: "{{ .config.prefix }}"
   oracle:
     compartmentId: "{{ .agent.accountId }}"
-    tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
     region: "{{ .toutput.oke.region }}"
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
     serviceUserEmail: "{{ .module.name }}@{{ .toutput.dns.int_domain }}"
+    # Optional (.toptout) so a deployment without an identity-domain module still renders.
+    identityDomainEndpoint: "{{ .toptout.identity-domain.idcs_endpoint }}"
+    identityDomainDisplayName: "{{ .toptout.identity-domain.display_name }}"
     # The telemetry key, matching loki and mimir on aws (telemetry_alias_arn) and google
     # (telemetry_key_id). Optional (.toptout) so a deployment without a kms module still
     # renders - the bucket then falls back to Oracle-managed encryption.

@@ -55,12 +55,6 @@ output "kubernetes_service_ip" {
   value = cidrhost(var.services_cidr, 1)
 }
 
-output "controllers_dynamic_group_name" {
-  # Referenced by the per-app Crossplane Policy CRs in k8s modules' templates/oracle/
-  # ("Allow dynamic-group <this> to ..." statements).
-  value = oci_identity_dynamic_group.controllers.name
-}
-
 output "tenancy_id" {
   # Used by crossplane-oracle's Instance Principal credentials secret.
   value = data.oci_identity_compartment.this.compartment_id
