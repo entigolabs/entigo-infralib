@@ -53,6 +53,8 @@ google_auth_login() {
       mkdir -p $CLOUDSDK_CONFIG/legacy_credentials/$gaccount
       cp $CLOUDSDK_CONFIG/application_default_credentials.json $CLOUDSDK_CONFIG/legacy_credentials/$gaccount/adc.json
     fi
+    echo "DEBUG CLOUDSDK_CONFIG=$CLOUDSDK_CONFIG gaccount=$gaccount"
+    find $CLOUDSDK_CONFIG -maxdepth 4 -exec ls -la {} \;
   fi
 
 }
