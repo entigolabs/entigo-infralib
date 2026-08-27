@@ -69,7 +69,7 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 		switch envName {
 		case "biz":
 			hostName = fmt.Sprintf("%s.%s-net-route53-int.infralib.entigo.io", namespaceName, envName)
-			gatewayName = "internal"
+			gatewayName = "service"
 		case "pri":
 			hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "external"

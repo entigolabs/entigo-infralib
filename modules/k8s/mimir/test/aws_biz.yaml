@@ -7,7 +7,7 @@ global:
           - days: 1095
             storageClass: "GLACIER"
     gateway:
-      name: internal
+      name: service
       namespace: "{{ .tmodule.aws-alb }}"
 
 mimir-distributed:
