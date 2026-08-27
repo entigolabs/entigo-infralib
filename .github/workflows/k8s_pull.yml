@@ -80,6 +80,8 @@ jobs:
       # workspace so credentials written here are visible to `docker run -v $CLOUDSDK_CONFIG:...`
       # on the dind side too.
       CLOUDSDK_CONFIG: ${{ github.workspace }}/.gcloud-config
+      # Same reasoning as CLOUDSDK_CONFIG above, for the kubeconfig directory.
+      KUBE_CONFIG_DIR: ${{ github.workspace }}/.kube-config
     steps:
     - uses: actions/checkout@v4
       with:
