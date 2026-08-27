@@ -33,7 +33,7 @@ func testK8sMimir(t *testing.T, cloudName string, envName string) {
 	
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
+	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-gateway", 20, 6*time.Second)
 	if err != nil {

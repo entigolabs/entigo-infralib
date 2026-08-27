@@ -30,7 +30,7 @@ func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
+	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 20, 6*time.Second)
