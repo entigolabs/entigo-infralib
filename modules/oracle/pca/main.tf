@@ -31,16 +31,11 @@ resource "random_string" "suffix" {
 # and terraform just says the service reported an unexpected state. Every CA created here
 # failed this way until the grant existed.
 #
-# Dynamic group rather than a service principal because that is how OCI models it: CAs are
-# resources, matched by type, and a policy grants to the group.
-resource "oci_identity_dynamic_group" "certificate_authorities" {
-  count          = local.create_policy ? 1 : 0
-  compartment_id = data.oci_identity_compartment.this[0].compartment_id
-  name           = "${var.prefix}-certificate-authorities"
-  description    = "Certificate authorities in ${var.prefix}'s compartment, so they can use the vault key they sign with"
-  matching_rule  = "ALL {resource.type='certificateauthority', resource.compartment.id='${var.compartment_id}'}"
-}
-
+# any-user + where, not a dynamic group: CreateDynamicGroup always targets the tenancy as its
+# compartmentId no matter what compartment_id is passed, so an identity holding only
+# compartment-scoped grants can never create one. This statement matches CAs by type the same
+# way a dynamic group's matching_rule would, but as an ordinary compartment-scoped policy
+# statement - creating one of those needs no tenancy-level privilege.
 resource "oci_identity_policy" "certificate_authorities" {
   count          = local.create_policy ? 1 : 0
   compartment_id = var.compartment_id
@@ -51,7 +46,7 @@ resource "oci_identity_policy" "certificate_authorities" {
   # needs nothing outside the compartment, so it stays inside it. Could be narrowed further
   # with "where target.key.id = '<the ca key>'" if one key per CA is ever worth spelling out.
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.certificate_authorities[0].name} to use keys in compartment id ${var.compartment_id}",
+    "Allow any-user to use keys in compartment id ${var.compartment_id} where all {request.principal.type='certificateauthority', request.principal.compartment.id='${var.compartment_id}'}",
   ]
 }
 
