@@ -29,7 +29,7 @@ CLAUDE.md
 - On upgrades, new webhook entries may be created without caBundle by ArgoCD SSA — fixcertjob corrects this
 
 # Gateway API
-- Gateway API CRDs v1.5.1 standard channel bundled in templates/gateway-api-crds.yaml with helm.sh/resource-policy: keep
+- Gateway API CRDs v1.5.1 standard channel bundled in templates/gatewayApiCrds.yaml with helm.sh/resource-policy: keep
 - NLBGatewayAPI and ALBGatewayAPI feature gates are on by default in the controller binary (no explicit values needed)
 - GatewayClass controllerName for ALB: gateway.k8s.aws/alb
 - Common k8s test library (common/k8s/kubernetes.go) has CreateK8SGatewayClass, DeleteK8SGatewayClass, CreateK8SGateway, DeleteK8SGateway, WaitUntilK8SGatewayAvailable, WaitUntilK8SGatewayDeleted helpers
@@ -41,19 +41,19 @@ When upgrading to a new chart version:
 1. Place the new `aws-load-balancer-controller-X.Y.Z.tgz` tarball in `charts/`
 2. Extract chart contents: `tar -xzf charts/aws-load-balancer-controller-X.Y.Z.tgz -C charts/ && rm charts/aws-load-balancer-controller-X.Y.Z.tgz`
 3. Diff ALB CRDs against managed templates:
-   - `diff charts/aws-load-balancer-controller/crds/crds.yaml <(sed '/helm.sh\/resource-policy/d;/argocd.argoproj.io\/sync-wave/d' templates/alb-crds.yaml)`
-   - `diff charts/aws-load-balancer-controller/crds/gateway-crds.yaml <(sed '/helm.sh\/resource-policy/d;/argocd.argoproj.io\/sync-wave/d' templates/alb-gateway-crds.yaml)`
+   - `diff charts/aws-load-balancer-controller/crds/crds.yaml <(sed '/helm.sh\/resource-policy/d;/argocd.argoproj.io\/sync-wave/d' templates/albCrds.yaml)`
+   - `diff charts/aws-load-balancer-controller/crds/gateway-crds.yaml <(sed '/helm.sh\/resource-policy/d;/argocd.argoproj.io\/sync-wave/d' templates/albGatewayCrds.yaml)`
 4. If CRDs changed: regenerate templates with annotations preserved:
-   - `sed 's/    controller-gen.kubebuilder.io\/version:.*$/&\n    helm.sh\/resource-policy: keep\n    argocd.argoproj.io\/sync-wave: "-1"/' charts/aws-load-balancer-controller/crds/crds.yaml > templates/alb-crds.yaml`
-   - `sed 's/    controller-gen.kubebuilder.io\/version:.*$/&\n    helm.sh\/resource-policy: keep\n    argocd.argoproj.io\/sync-wave: "-1"/' charts/aws-load-balancer-controller/crds/gateway-crds.yaml > templates/alb-gateway-crds.yaml`
-5. Diff `templates/gateway-api-crds.yaml` against upstream Gateway API CRDs release (separate versioning — check release notes)
+   - `sed 's/    controller-gen.kubebuilder.io\/version:.*$/&\n    helm.sh\/resource-policy: keep\n    argocd.argoproj.io\/sync-wave: "-1"/' charts/aws-load-balancer-controller/crds/crds.yaml > templates/albCrds.yaml`
+   - `sed 's/    controller-gen.kubebuilder.io\/version:.*$/&\n    helm.sh\/resource-policy: keep\n    argocd.argoproj.io\/sync-wave: "-1"/' charts/aws-load-balancer-controller/crds/gateway-crds.yaml > templates/albGatewayCrds.yaml`
+5. Diff `templates/gatewayApiCrds.yaml` against upstream Gateway API CRDs release (separate versioning — check release notes)
 6. Update `version` and `appVersion` in both `Chart.yaml` (wrapper) and `charts/aws-load-balancer-controller/Chart.yaml`
 7. Update version reference in this file (Module context above)
 
 CRD files managed in templates/ (NOT in subchart crds/ — Helm does not apply subchart CRDs, and ArgoCD uses helm template which skips crds/ entirely):
-- `templates/alb-crds.yaml` — albtargetcontrolconfigs, globalaccelerators, ingressclassparams, targetgroupbindings (from upstream crds/crds.yaml)
-- `templates/alb-gateway-crds.yaml` — listenerruleconfigurations, loadbalancerconfigurations, targetgroupconfigurations (from upstream crds/gateway-crds.yaml)
-- `templates/gateway-api-crds.yaml` — upstream Gateway API CRDs (gateway.networking.k8s.io), versioned independently
+- `templates/albCrds.yaml` — albtargetcontrolconfigs, globalaccelerators, ingressclassparams, targetgroupbindings (from upstream crds/crds.yaml)
+- `templates/albGatewayCrds.yaml` — listenerruleconfigurations, loadbalancerconfigurations, targetgroupconfigurations (from upstream crds/gateway-crds.yaml)
+- `templates/gatewayApiCrds.yaml` — upstream Gateway API CRDs (gateway.networking.k8s.io), versioned independently
 
 # Known deferred items
 - Gateway API CRDs not yet in a shared infralib module (deferred — needs platform dev discussion; Istio base chart does not include gateway.networking.k8s.io CRDs)

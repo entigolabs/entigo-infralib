@@ -80,12 +80,10 @@ get_step_name_tf_google() {
 }
 
 get_step_name_k8s() {
-  #if [ "$BRANCH" == "main" ]
-  #then
-  #  STEP_NAME="apps"
-  #else
+  # All k8s modules now run inside the shared apps step
+  #STEP_NAME="apps"
+  #Old logic
   STEP_NAME=$APP_NAME
-  #fi
 }
 
 get_app_name() {

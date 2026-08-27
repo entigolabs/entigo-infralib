@@ -1,9 +1,12 @@
 global:
   cloudProvider: "aws"
+  aws:
+    gateway:
+      name: ""
+      namespace: ""
 kiali-server:
   deployment:
     ingress:
-      enabled: true
       class_name: "alb"
       override_yaml:
         metadata:

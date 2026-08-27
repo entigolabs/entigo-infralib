@@ -1,0 +1,25 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}-core
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Release.Name }}-core
+  defaultConfiguration:
+    healthCheckConfig:
+      healthCheckPath: /api/v2.0/ping
+---
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}-portal
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Release.Name }}-portal
+  defaultConfiguration:
+    healthCheckConfig:
+      healthCheckPath: /
+{{- end }}
