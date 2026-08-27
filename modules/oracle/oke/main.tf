@@ -211,11 +211,10 @@ resource "oci_core_network_security_group_security_rule" "lb_int" {
   }
 }
 
-# Needed only to resolve the tenancy OCID: the "manage policies in tenancy" statement below
-# requires the policy itself to be attached at the tenancy, and the tenancy_id output (used by
-# crossplane-oracle's Instance Principal credentials secret) has no other source. Compartments
-# here are flat - a single level below the tenancy root - so the parent of var.compartment_id
-# is reliably the tenancy. A deeper compartment hierarchy would need to walk further up.
+# Needed only to resolve the tenancy OCID for the tenancy_id output (used by crossplane-oracle's
+# Instance Principal credentials secret), which has no other source. Compartments here are
+# flat - a single level below the tenancy root - so the parent of var.compartment_id is
+# reliably the tenancy. A deeper compartment hierarchy would need to walk further up.
 data "oci_identity_compartment" "this" {
   id = var.compartment_id
 }
@@ -241,19 +240,11 @@ resource "oci_identity_policy" "controllers" {
   # cluster-autoscaler's node-pool statements, the ingress controller's cert/LB set)
   # live in each k8s module's templates/oracle/ as Crossplane Policy CRs, applied by
   # the crossplane-oracle provider - which is what this statement authorizes.
-  #
-  # Attached at the tenancy for the "manage policies in tenancy" statement (see below),
-  # which requires tenancy attachment. Other statements could be compartment-attached now,
-  # but they stay here for visibility - all the bootstrap grants in one policy.
-  compartment_id = data.oci_identity_compartment.this.compartment_id
+  compartment_id = var.compartment_id
   name           = "${var.prefix}-oke-controllers"
   description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
 
   statements = [
-    # NIC's own tenancy-wide grants (see modules/k8s/oci-native-ingress-controller) require this
-    # policy to stay attached at the tenancy; narrowing those hasn't been attempted.
-    "Allow any-user to manage policies in tenancy where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
-
     # Loki's IAM user lives in modules/oracle/identity-domain's Domain, a compartment resource,
     # so this grant is compartment-scoped rather than tenancy-wide.
     "Allow any-user to manage users in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",

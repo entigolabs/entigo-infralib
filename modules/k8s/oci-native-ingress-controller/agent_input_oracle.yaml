@@ -2,7 +2,6 @@ global:
   prefix: "{{ .config.prefix }}"
   oracle:
     compartmentId: "{{ .agent.accountId }}"
-    tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
     clusterId: "{{ .toutput.oke.cluster_id }}"
 
 oci-native-ingress-controller:

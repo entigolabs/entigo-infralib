@@ -1,12 +1,12 @@
 global:
   providerConfigRefName: crossplane-oracle
-  # Filled by agent_input_oracle.yaml. Prefixes the IAM policy names so oci-nuke's
-  # tenancy sweep can recognise them - see templates/policy.yaml.
+  # Filled by agent_input_oracle.yaml; prefixes the IAM policy name, matching every other IAM
+  # object across this repo, so it stays distinct from other modules' policies in the same
+  # compartment - see templates/policy.yaml.
   prefix: ""
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
     compartmentId: ""
-    tenancyOcid: ""
     # OKE Workload Identity policy conditions are scoped to a single cluster, so the policy
     # needs the cluster's OCID as well as the namespace and service account below.
     clusterId: ""
