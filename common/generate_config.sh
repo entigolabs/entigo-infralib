@@ -45,6 +45,14 @@ google_auth_login() {
       fi
     done
     gcloud config set account $gaccount
+
+    # Newer Cloud SDK versions no longer write this file as a side effect of
+    # activate-service-account, but gsutil's legacy boto-based auth still requires it.
+    if [ -n "$gaccount" ] && [ ! -f $CLOUDSDK_CONFIG/legacy_credentials/$gaccount/adc.json ]
+    then
+      mkdir -p $CLOUDSDK_CONFIG/legacy_credentials/$gaccount
+      cp $CLOUDSDK_CONFIG/application_default_credentials.json $CLOUDSDK_CONFIG/legacy_credentials/$gaccount/adc.json
+    fi
   fi
 
 }
