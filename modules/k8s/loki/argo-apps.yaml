@@ -10,6 +10,7 @@ spec:
     name: loki
     jqPathExpressions:
       - .spec.forProvider.ocid
+      - .spec.forProvider.user[].ocid
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
