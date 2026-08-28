@@ -24,6 +24,14 @@ resource "oci_identity_domain" "this" {
   compartment_id = var.compartment_id
   display_name   = local.domain_name
   home_region    = var.region
-  license_type   = "FREE"
+  license_type   = "free"
   description    = "Compartment-scoped identity domain for per-app service users (Loki, future apps)"
+
+  # UpdateDomain needs a tenancy-scoped grant this test deliberately doesn't hold, and that
+  # call fails no matter which field triggered it - confirmed empirically, not just for
+  # license_type. So this resource is create-only for us: any drift Terraform notices on any
+  # field must never be applied.
+  lifecycle {
+    ignore_changes = all
+  }
 }
