@@ -192,6 +192,7 @@ argocd:
               "DeploymentRuntimeConfig",
               "ClusterProviderConfig",
               "EnvironmentConfig",
+              "ImageConfig",
               "ProviderConfig",
               "ProviderConfigUsage"
             }
@@ -228,7 +229,7 @@ argocd:
                 health_status.message = condition.message or condition.reason or "Sync failed"
                 return health_status
               end
-              if contains({"Ready", "Healthy", "Offered", "Established", "ValidPipeline", "RevisionHealthy"}, condition.type)
+              if contains({"Ready", "Healthy", "Offered", "Established", "ValidPipeline", "RevisionHealthy", "Succeeded", "Watching", "Scheduling"}, condition.type)
                   and condition.status == "True" then
                 ready = true
               end
