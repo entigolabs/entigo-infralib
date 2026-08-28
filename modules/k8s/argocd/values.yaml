@@ -68,6 +68,41 @@ argocd:
               end
             end
             return health_status
+        "pkg.crossplane.io/Provider":
+          health.lua: |
+            -- Healthy only when the package is both installed and its
+            -- revision/runtime is healthy (deployment Available)
+            health_status = {
+              status = "Progressing",
+              message = "Waiting for provider to become healthy"
+            }
+            if obj.status == nil or obj.status.conditions == nil then
+              return health_status
+            end
+            local installed = false
+            local healthy = false
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Installed" then
+                if condition.status == "True" then
+                  installed = true
+                else
+                  -- guard concat against nil message (argo-cd #23363)
+                  health_status.message = condition.message or condition.reason or "Not installed"
+                end
+              end
+              if condition.type == "Healthy" then
+                if condition.status == "True" then
+                  healthy = true
+                else
+                  health_status.message = condition.message or condition.reason or "Not healthy"
+                end
+              end
+            end
+            if installed and healthy then
+              health_status.status = "Healthy"
+              health_status.message = "Provider is installed and healthy"
+            end
+            return health_status
         "*.upbound.io/*":
           health.lua: |
             health_status = {
