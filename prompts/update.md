@@ -12,6 +12,10 @@ CRITICAL RULES:
   Only push to auto-* branches.
 - Use node (not python3) for JSON processing — python3 is not available in this container.
 - Do not create a pull request when the new version is semver wise older than the current version.
+- RELEASE NOTES GATE: Some upstream projects (e.g. crossplane) publish a chart/package artifact
+  before publishing matching release notes on GitHub. Do not update a K8S Helm chart or
+  Crossplane provider to a version that has no published GitHub release for that exact version
+  yet. See the RELEASE NOTES CHECK step under "FOR K8S HELM UPDATES" for how to verify this.
 - EFFICIENCY: Combine multiple shell commands into a SINGLE Bash tool call wherever possible.
   For example, combine branch setup + version check + sed + helm dep update + commit + push
   into ONE Bash call using && and if/then/else. This is critical for staying within turn limits.
@@ -64,6 +68,22 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   modules/k8s/aws-alb/Chart.yaml → directory name is aws-alb
   modules/k8s/crossplane-google/templates/provider.yaml → directory name is crossplane-google
   Skip the platform-apis folder update in the K8S HELM UPDATES.
+
+  RELEASE NOTES CHECK (run BEFORE the branch+update+commit+push sequence, for each chart/provider):
+    Some projects (e.g. crossplane) publish the chart/package artifact before publishing
+    matching release notes — updating during that window pulls an undocumented, unverified
+    release. Using the repo mapping table further below ("Common repo mappings for release
+    notes"), check whether a GitHub release exists for the exact target version <NEW>:
+      curl -s -o /dev/null -w '%{http_code}' https://api.github.com/repos/<ORG>/<REPO>/releases/tags/<NEW>
+      curl -s -o /dev/null -w '%{http_code}' https://api.github.com/repos/<ORG>/<REPO>/releases/tags/v<NEW>
+    (check both the bare version and the 'v'-prefixed tag — different projects use different
+    tagging conventions)
+    If BOTH requests return 404, do NOT update to <NEW>. Instead:
+      - Print: 'SKIPPED: <chart/provider> <NEW> — no release notes published yet for this version'
+      - Leave any existing branch/PR untouched (do not push, do not create/edit a PR)
+      - Re-run the update later once release notes for <NEW> are published
+    If the repo mapping for a chart/provider is unknown, skip this check and proceed as before
+    (best effort only — do not block the whole run over an unmapped repo).
 
   For EACH chart or provider, run the ENTIRE branch+update+commit+push sequence in a SINGLE Bash call:
 
