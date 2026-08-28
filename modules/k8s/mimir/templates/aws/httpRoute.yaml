@@ -1,0 +1,27 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createRoute }}
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.aws.gateway.name }}
+      namespace: {{ .Values.global.aws.gateway.namespace }}
+      sectionName: https
+  hostnames: [ {{ .Values.global.aws.hostname }} ]
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: mimir-gateway
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+{{- end }}

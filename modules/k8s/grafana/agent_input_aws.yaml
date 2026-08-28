@@ -16,8 +16,20 @@ grafana:
     users:
       home_page: "https://{{ .module.name }}.{{ .toutput.route53.int_domain }}/dashboards"
   ingress:
+    enabled: "{{ .tinput.aws-alb.global.createIngress }}"
     hosts:
       - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+  route:
+    main:
+      enabled: "{{ .tinput.aws-alb.global.createRoute }}"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
+          namespace: "{{ .tmodule.aws-alb }}"
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
   sidecar:

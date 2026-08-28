@@ -1,4 +1,5 @@
 global:
+  cloudProvider: aws
   aws:
     scheme: internet-facing
     groupName: external
