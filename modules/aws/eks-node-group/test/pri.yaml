@@ -26,5 +26,5 @@ taints: |
   }
 labels: |
   {
-    tools = "true"
+    foo = "true"
   }

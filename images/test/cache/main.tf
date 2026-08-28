@@ -3,11 +3,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.50.0"
+      version = "6.61.0"
     }
     google = {
       source = "hashicorp/google"
-      version = "7.36.0"
+      version = "7.46.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "7.46.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -23,7 +27,7 @@ terraform {
     }
     time = {
       source = "hashicorp/time"
-      version = "0.14.0"
+      version = "0.14.1"
     }
     cloudinit = {
       source = "hashicorp/cloudinit"
@@ -31,7 +35,7 @@ terraform {
     }
     null = {
       source  = "hashicorp/null"
-      version = "3.3.0"
+      version = "3.3.1"
     }
     random = {
       source  = "hashicorp/random"
