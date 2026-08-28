@@ -191,6 +191,7 @@ argocd:
               "CompositionRevision",
               "DeploymentRuntimeConfig",
               "ClusterProviderConfig",
+              "EnvironmentConfig",
               "ProviderConfig",
               "ProviderConfigUsage"
             }
