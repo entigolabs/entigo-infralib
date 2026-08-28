@@ -275,6 +275,10 @@ resource "oci_identity_policy" "controllers" {
 
     # And read, so the provider can resolve the key it was handed.
     "Allow any-user to read keys in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+
+    # Each k8s module's own scoped IAM Policy is itself a Crossplane Policy CR, created
+    # through this same instance principal - needs the grant too.
+    "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
   ]
 }
 
