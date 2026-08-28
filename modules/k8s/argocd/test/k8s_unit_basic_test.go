@@ -33,10 +33,6 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
 
-	if cloudName == "aws" {
-		gatewayName = fmt.Sprintf("%s-server", namespaceName)
-	}
-
 	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second)
 	require.NoError(t, err, "Argocd no Applications CRD")
 	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second)
