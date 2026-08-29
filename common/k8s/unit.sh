@@ -26,6 +26,18 @@ fi
 
 google_auth_login
 
+# Default matches kubectl/aws/gcloud's own default (~/.kube/config) so behavior is
+# unchanged unless KUBE_CONFIG_DIR is set. On arc-runner-set, ~/.kube lives outside
+# the volume shared between the runner and dind containers (only _work and the
+# CLOUDSDK_CONFIG-style workspace paths are), so the final test container can't see
+# any context written there — same failure mode CLOUDSDK_CONFIG had. Point it under
+# the workspace instead so the mount below actually resolves inside dind.
+if [ "$KUBE_CONFIG_DIR" == "" ]
+then
+  export KUBE_CONFIG_DIR="$(echo ~)/.kube"
+fi
+export KUBECONFIG="$KUBE_CONFIG_DIR/config"
+
 if [ "$1" != "testonly" ]
 then
   
@@ -148,7 +160,7 @@ fi
             export GOOGLE_PROJECT="entigo-infralib2"
           fi
           cat agents/$testname/config.yaml
-          docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
+          docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud $CLOUDSDK_CONFIG_DOCKER_MOUNT -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
         elif [[ $testname == aws_spoke ]]
         then
@@ -216,5 +228,6 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
 	-e COMMAND="test" \
 	-e APP_NAME="$APP_NAME" \
   -v $CLOUDSDK_CONFIG:/root/.config/gcloud \
-	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(echo ~)/.kube":"/root/.kube" -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
+  $CLOUDSDK_CONFIG_DOCKER_MOUNT \
+	$TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$KUBE_CONFIG_DIR":"/root/.kube" -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
  
