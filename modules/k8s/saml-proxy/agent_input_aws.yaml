@@ -1,2 +1,17 @@
 image: 
   registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/priitrent/saml-proxy'
+
+ingress:
+  hostName: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+
+secretStore:
+  name: "{{ .tmodule.external-secrets }}"
+
+global:
+  aws:
+    createIngress:  "{{ .tinput.aws-alb.global.createIngress }}"
+    createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
+    gateway:
+      name: "{{ .tinput.aws-alb.global.externalGateway }}"
+      namespace: "{{ .tmodule.aws-alb }}"
+    hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"

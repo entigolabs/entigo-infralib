@@ -1,0 +1,16 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createRoute }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Release.Name }}   # must match the backendRef Service, same namespace
+  defaultConfiguration:
+    targetType: ip
+    healthCheckConfig:
+      healthCheckPath: /
+      matcher:
+        httpCode: "200-499"
+{{- end }}

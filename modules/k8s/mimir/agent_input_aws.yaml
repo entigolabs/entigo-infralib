@@ -4,10 +4,17 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+    createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
+    gateway:
+      name: "{{ .tinput.aws-alb.global.internalGateway }}"
+      namespace: "{{ .tmodule.aws-alb }}"
+    hostname: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+
 mimir-distributed:
   gateway:
     ingress:
+      enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:
       - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
         paths:

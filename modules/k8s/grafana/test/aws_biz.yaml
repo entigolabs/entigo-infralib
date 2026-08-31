@@ -20,3 +20,7 @@ grafana:
     annotations:
       alb.ingress.kubernetes.io/group.name: external
       alb.ingress.kubernetes.io/scheme: internet-facing
+  route:
+    main:
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
