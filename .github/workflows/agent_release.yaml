@@ -248,6 +248,7 @@ jobs:
         
         RELEASE_URL=$(gh release create ${{ steps.get_latest_release.outputs.new_version }} \
         --title "Release ${{ steps.get_latest_release.outputs.new_version }}" \
+        --notes-start-tag ${{ steps.get_latest_release.outputs.stable_version }} \
         --generate-notes \
         --notes "## Changed modules, providers and images
         $CHANGED
