@@ -13,11 +13,26 @@ loki:
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
     ingress:
+      enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:
         - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
           paths:
             - path: "/"
               pathType: "Prefix"
+    route:
+      main:
+        enabled: "{{ .tinput.aws-alb.global.createRoute }}"
+        # Pin to avoid Capabilities auto-detect under ArgoCD repo-server discovery cache
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: HTTPRoute
+        parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
+          namespace: "{{ .tmodule.aws-alb }}"
+          sectionName: https
+        hostnames:
+          - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   loki:
     storage:
       s3:

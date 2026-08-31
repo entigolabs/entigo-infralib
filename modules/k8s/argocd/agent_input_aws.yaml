@@ -1,4 +1,30 @@
 argocd:
+  server:
+    ingress:
+      enabled: "{{ .tinput.aws-alb.global.createIngress }}"
+    httproute:
+      enabled: "{{ .tinput.aws-alb.global.createRoute }}"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
+          namespace: "{{ .tmodule.aws-alb }}"
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+      # default rules (single PathPrefix /) are correct, no override needed
+    grpcroute:
+      enabled: "{{ .tinput.aws-alb.global.createRoute }}"
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tinput.aws-alb.global.internalGateway }}"
+          namespace: "{{ .tmodule.aws-alb }}"
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
+      rules:
+        - {}   # no matches = match all gRPC; the chart injects the backendRef
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.route53.int_domain }}
