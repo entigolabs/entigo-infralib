@@ -1,7 +1,7 @@
 #https://registry.terraform.io/modules/terraform-aws-modules/efs/aws/latest
 module "efs" {
   source = "terraform-aws-modules/efs/aws"
-  version = "2.2.0"
+  version = "2.2.1"
 
   for_each = toset(var.efs_volumes)
 
