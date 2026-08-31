@@ -5,7 +5,6 @@ global:
 prometheus:
   server:
     ingress:
-      enabled: true
       ingressClassName: "alb"
       annotations:
         alb.ingress.kubernetes.io/ssl-redirect: "443"
