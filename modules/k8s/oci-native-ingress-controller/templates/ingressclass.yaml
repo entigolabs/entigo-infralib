@@ -6,6 +6,10 @@ kind: IngressClassParameters
 metadata:
   name: {{ $class.name }}-parameters
   namespace: {{ $.Values.deploymentNamespace }}
+  annotations:
+    # Pruned in an earlier wave than the controller Deployment (wave 0), so NIC is still
+    # running to release the LB and clear its finalizer instead of being deleted alongside it.
+    argocd.argoproj.io/sync-wave: '1'
 spec:
   compartmentId: {{ $class.compartmentId | default $.Values.global.oracle.compartmentId | quote }}
   subnetId: {{ $class.subnetId | quote }}
@@ -18,8 +22,12 @@ apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
   name: {{ $class.name }}
-  {{- if or $class.isDefaultClass $class.nsgIds }}
   annotations:
+    # Same reasoning as IngressClassParameters above: this finalizes via
+    # oci.oraclecloud.com/ingress-controller-protection, which only the controller Deployment
+    # clears - pruning this before the Deployment (wave 0) is gone avoids a deadlocked
+    # finalizer that never releases once nothing is left to process it.
+    argocd.argoproj.io/sync-wave: '1'
     {{- if $class.isDefaultClass }}
     ingressclass.kubernetes.io/is-default-class: "true"
     {{- end }}
@@ -29,7 +37,6 @@ metadata:
     # default security list, which blocks 80/443.
     oci-native-ingress.oraclecloud.com/network-security-group-ids: {{ $class.nsgIds | quote }}
     {{- end }}
-  {{- end }}
 spec:
   controller: oci.oraclecloud.com/native-ingress-controller
   parameters:
