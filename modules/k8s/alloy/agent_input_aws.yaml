@@ -23,10 +23,10 @@ logs:
         to:
           - namespaceSelector:
               matchLabels:
-                kubernetes.io/metadata.name: '{{ .tmodule.loki }}'
+                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
             podSelector:
               matchLabels:
-                app.kubernetes.io/name: '{{ .tmodule.loki }}'
+                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
                 app.kubernetes.io/component: gateway
       - ports:
           - port: 443

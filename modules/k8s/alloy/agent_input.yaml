@@ -1,4 +1,6 @@
 logs:
   controller:
     priorityClassName: "{{ .module.name }}"
+    podLabels:
+      netpol-loki: '{{ .toptmodule.loki | "loki" }}'
   lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
