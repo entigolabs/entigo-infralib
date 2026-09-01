@@ -11,9 +11,5 @@ metadata:
 spec:
   activate:
   - 'buckets.objectstorage.oci.upbound.io'
-  - 'users.identity.oci.upbound.io'
-  - 'groups.identity.oci.upbound.io'
-  - 'usergroupmemberships.identity.oci.upbound.io'
-  - 'customersecretkeys.identity.oci.upbound.io'
   - 'policies.identity.oci.upbound.io'
 {{- end }}

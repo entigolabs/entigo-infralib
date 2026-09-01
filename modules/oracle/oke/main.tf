@@ -224,11 +224,18 @@ data "oci_identity_compartment" "this" {
 # argocd and crossplane, and from there crossplane creates each application's own IAM.
 #
 # Everything else has moved to OKE Workload Identity and is scoped to its own service account
-# (see the policies in modules/k8s/{external-dns,cluster-autoscaler,oci-native-ingress-controller}).
-# Crossplane stays on instance principal deliberately, which means the grants below - including
-# user and group management, which loki needs because the S3-compatibility endpoint accepts
-# nothing but a Customer Secret Key - remain node-wide: any pod scheduled on these nodes can
-# use them. That is the residual cost of keeping the bootstrap layer in terraform.
+# (see the policies in modules/k8s/{external-dns,cluster-autoscaler,oci-native-ingress-controller,
+# external-secrets}). Crossplane stays on instance principal deliberately, which means the
+# grants below remain node-wide: any pod scheduled on these nodes can use them. That is the
+# residual cost of keeping the bootstrap layer in terraform.
+#
+# Loki's Object Storage credential (a Customer Secret Key, which the S3-compatibility endpoint
+# requires and which only a classic tenancy User can hold) is deliberately NOT created here:
+# minting a User is a tenancy-root-only operation with no compartment-scoped or workload-identity
+# equivalent, so it is out of scope for what this instance principal - or any identity in this
+# compartment - is ever granted. The client creates that User/CustomerSecretKey once, manually,
+# with their own tenancy access, and drops it into an OCI Vault secret; modules/k8s/external-secrets
+# reads it from there via Workload Identity. See modules/k8s/loki/templates/oracle/.
 #
 # Instances are matched by type and compartment via an any-user condition, the same match a
 # dynamic group's matching_rule would express - but as an ordinary compartment-scoped policy
@@ -245,12 +252,7 @@ resource "oci_identity_policy" "controllers" {
   description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
 
   statements = [
-    # Loki's IAM user lives in modules/oracle/identity-domain's Domain, a compartment resource,
-    # so this grant is compartment-scoped rather than tenancy-wide.
-    "Allow any-user to manage users in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
-    "Allow any-user to manage groups in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
-
-    # And the bucket those chunks go into. loki's own Policy CR grants its IAM *user* "manage
+    # The bucket those chunks go into. loki's own Policy CR grants its IAM *user* "manage
     # objects" and "inspect buckets" - enough to write into a bucket, not to create one - so
     # without this the Bucket CR sits in ApplyFailure reporting "409-BucketAlreadyExists,
     # Either the bucket 'tarmo-loki' ... already exists or you are not authorized to create

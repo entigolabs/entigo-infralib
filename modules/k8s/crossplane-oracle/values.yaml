@@ -2,10 +2,9 @@ installProviderConfig: true
 
 global:
   extraProviders: []
-  # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, ...);
-  # objectstorage: buckets + S3-compat credentials for loki/mimir and friends;
-  # identitydomains: domain-scoped Group/User/CustomerSecretKey for loki's Object Storage user.
-  requiredProviders: ["identity", "objectstorage", "identitydomains"]
+  # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, external-secrets, ...);
+  # objectstorage: buckets for loki/mimir and friends.
+  requiredProviders: ["identity", "objectstorage"]
 
   cloudProvider: ""
   oracle:

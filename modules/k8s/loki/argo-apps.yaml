@@ -5,12 +5,6 @@ spec:
     name: loki-read
     jqPathExpressions:
       - .spec.persistentVolumeClaimRetentionPolicy
-  - group: identitydomains.oci.upbound.io
-    kind: CustomerSecretKey
-    name: loki
-    jqPathExpressions:
-      - .spec.forProvider.ocid
-      - .spec.forProvider.user[].ocid
   syncPolicy:
     syncOptions:
     - ServerSideApply=true

@@ -1,9 +1,3 @@
-# Used only by templates/oracle/connection-secret-job.yaml - see there for why that job
-# exists. Same image and tag as every other kubectl job in the repo.
-job:
-  image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.1"
-
 global:
   cloudProvider: oracle
   providerConfigRefName: crossplane-oracle
@@ -17,13 +11,10 @@ global:
     region: ""
     # The in-cluster kube-apiserver ClusterIP, for the egress network policy.
     kubernetesServiceIp: ""
-    # Primary email for the IAM user, which an Identity Domains (IDCS) tenancy requires on
-    # CreateUser. Set from the deployment's own domain in agent_input_oracle.yaml - no mail is
-    # ever sent to it.
-    serviceUserEmail: ""
-    identityDomainEndpoint: ""
-    # Policy statements referencing a domain-scoped group must name the domain explicitly.
-    identityDomainDisplayName: ""
+    # Name of the classic tenancy Group the client puts loki's manually-created User into -
+    # see templates/oracle/credentials.yaml. Client-provided; no default, since infralib has
+    # no way to create or discover it itself.
+    serviceAccountGroupName: ""
     # OCID of the key the chunk bucket is encrypted with. Empty leaves it on Oracle-managed
     # encryption, which is always on either way. Wired to kms's telemetry key by
     # agent_input_oracle.yaml, matching what loki uses on aws and google.

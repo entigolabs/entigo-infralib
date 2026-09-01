@@ -5,10 +5,6 @@ global:
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
     region: "{{ .toutput.oke.region }}"
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
-    serviceUserEmail: "{{ .module.name }}@{{ .toutput.dns.int_domain }}"
-    # Optional (.toptout) so a deployment without an identity-domain module still renders.
-    identityDomainEndpoint: "{{ .toptout.identity-domain.idcs_endpoint }}"
-    identityDomainDisplayName: "{{ .toptout.identity-domain.display_name }}"
     # The telemetry key, matching loki and mimir on aws (telemetry_alias_arn) and google
     # (telemetry_key_id). Optional (.toptout) so a deployment without a kms module still
     # renders - the bucket then falls back to Oracle-managed encryption.
@@ -19,23 +15,15 @@ global:
 
 loki:
   global:
-    # The Customer Secret Key minted by templates/oracle/credentials.yaml, delivered through
-    # Crossplane's connection secret. The access key id is the key's OCID and the secret is its
-    # `key` field - confirmed against the agent's own Object Storage code, which returns
-    # exactly (*response.Id, *response.Key) for the terraform state backend.
-    #
-    # The secret's *field* names come from the Crossplane provider, not from us.
+    # The Customer Secret Key the client minted manually (see templates/oracle/credentials.yaml)
+    # and handed to the agent via `ei-agent add-custom --key=loki-attribute-id/-key --value=...`.
+    # Rendered here as a literal value, not a Secret reference - see credentials.yaml's NOTE on
+    # why that's an accepted tradeoff for now.
     extraEnv:
       - name: OCI_ACCESS_KEY_ID
-        valueFrom:
-          secretKeyRef:
-            name: "{{ .module.name }}-object-storage"
-            key: attribute.id
+        value: "{{ .output-custom.loki-attribute-id }}"
       - name: OCI_SECRET_ACCESS_KEY
-        valueFrom:
-          secretKeyRef:
-            name: "{{ .module.name }}-object-storage"
-            key: attribute.key
+        value: "{{ .output-custom.loki-attribute-key }}"
   loki:
     storage:
       s3:
