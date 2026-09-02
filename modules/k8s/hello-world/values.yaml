@@ -11,3 +11,11 @@ ingress:
   host: ""
   tls: false
   annotations: {}
+
+# Mutually exclusive with `ingress` - `host` above is shared between both.
+httpRoute:
+  enabled: false
+  gateway:
+    name: ""
+    namespace: ""
+    sectionName: ""

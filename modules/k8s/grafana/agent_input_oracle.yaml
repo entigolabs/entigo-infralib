@@ -11,6 +11,8 @@ global:
       module: "{{ .toptmodule.loki }}"
     prometheus:
       hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+  oracle:
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
 
 grafana:
   grafana.ini:
@@ -18,13 +20,6 @@ grafana:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
     users:
       home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
-  ingress:
-    hosts:
-      - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
-    annotations:
-      # The zone-wide wildcard certificate in OCI Certificates, shared by every app on this
-      # cluster - see modules/k8s/argocd/values-oracle.yaml.
-      oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.int_cert_ocid }}"
   serviceAccount:
     name: "{{ .module.name }}"
   # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded, fully

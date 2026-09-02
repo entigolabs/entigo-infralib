@@ -5,22 +5,18 @@ global:
     # The in-cluster kube-apiserver ClusterIP, for the kube-state-metrics egress policy
     # below. aws hardcodes its own equivalent (172.20.0.1) in values.yaml.
     kubernetesServiceIp: ""
+    # Internal/private instance of modules/k8s/oracle-gateway - reached only over WireGuard.
+    gateway:
+      name: oracle-gateway-int
+      namespace: oracle-gateway-int
+      sectionName: https
+    hostname: ""
 
 prometheus:
   server:
+    # Exposed via HTTPRoute instead (templates/oracle/http-route.yaml).
     ingress:
-      enabled: true
-      # modules/k8s/oci-native-ingress-controller's IngressClass; the annotations are the
-      # OCI equivalent of the alb ones in values-aws.yaml. See
-      # modules/k8s/argocd/values-oracle.yaml for what each of them does - the
-      # certificate-ocid one is added by agent_input_oracle.yaml.
-      ingressClassName: oci-ic-int
-      annotations:
-        oci-native-ingress.oraclecloud.com/https-listener-port: "443"
-        oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
-      # Empty rather than the aws-style list: the certificate is referenced by OCID, so no
-      # Kubernetes TLS secret is involved. `hosts` is set in agent_input_oracle.yaml.
-      tls: []
+      enabled: false
     persistentVolume:
       # OKE's default StorageClass. Named explicitly rather than relying on the default so
       # the intent survives a cluster whose default class differs.

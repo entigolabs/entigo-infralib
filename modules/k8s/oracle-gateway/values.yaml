@@ -1,0 +1,11 @@
+global:
+  cloudProvider: ""
+
+  oracle:
+    # Filled by agent_input_oracle.yaml (public instance); a second, internal instance
+    # overrides all three - see the README.
+    ingressClassName: oci-ic
+    certificateOcid: ""
+    domain: ""
+
+gatewayClassName: istio

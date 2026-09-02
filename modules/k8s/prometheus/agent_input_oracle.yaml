@@ -1,6 +1,7 @@
 global:
   oracle:
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
 
 # No Oracle registry-proxy module exists yet, so the upstream registries are hardcoded
 # rather than routed through a .toptout.<proxy> that doesn't exist for this cloud (same
@@ -9,13 +10,6 @@ global:
 # ("short name mode is enforcing ... returns ambiguous list").
 prometheus:
   server:
-    ingress:
-      hosts:
-        - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
-      annotations:
-        # The zone-wide wildcard certificate in OCI Certificates, shared by every app on
-        # this cluster - see modules/k8s/argocd/values-oracle.yaml.
-        oci-native-ingress.oraclecloud.com/certificate-ocid: "{{ .toutput.dns.int_cert_ocid }}"
     image:
       repository: quay.io/prometheus/prometheus
   prometheus-node-exporter:

@@ -15,6 +15,9 @@ global:
 external-dns:
   sources:
     - service
+    # Apps use HTTPRoute now, but DNS still comes from the `ingress` source: oracle-gateway's
+    # Service is deliberately ClusterIP (no gateway-httproute target to read), so the real
+    # public IP is oracle-gateway/templates/ingress.yaml's wildcard-host Ingress instead.
     - ingress
 
   provider:

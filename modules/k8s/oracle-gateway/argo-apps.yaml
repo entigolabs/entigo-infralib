@@ -1,0 +1,20 @@
+metadata:
+  annotations:
+    # After gateway-api-crds (0), istio-base/istio-istiod (1), oci-ingress (2).
+    infralib.entigo.io/sync-wave: "3"
+spec:
+  # See templates/secret.yaml - genSelfSignedCert churns every render, ignored for the
+  # same reason oci-native-ingress-controller's webhook cert ignores its own.
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/warn: restricted
+        tenancy.entigo.com/zone: infralib

@@ -1,9 +1,10 @@
-# Exposed through modules/k8s/oci-native-ingress-controller, which programs an OCI load
-# balancer straight from this Ingress. TLS comes from the shared wildcard certificate in
-# OCI Certificates rather than a per-app cert-manager secret - see the annotations in
-# agent_input_oracle.yaml and the argocd module for the full rationale.
+# Exposed via HTTPRoute instead of Ingress (templates/httproute.yaml).
 ingress:
+  enabled: false
+
+httpRoute:
   enabled: true
-  className: oci-ic
-  # No Kubernetes TLS secret: the certificate is referenced by OCID in the annotations.
-  tls: false
+  gateway:
+    name: oracle-gateway
+    namespace: oracle-gateway
+    sectionName: https

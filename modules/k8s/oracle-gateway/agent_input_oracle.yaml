@@ -1,0 +1,4 @@
+global:
+  oracle:
+    certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"
+    domain: "{{ .toutput.dns.pub_domain }}"
