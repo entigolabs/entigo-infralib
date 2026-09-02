@@ -1,3 +1,5 @@
-global:
-  createInternal: true
-  createExternal: true
+gateways:
+  external:
+    enabled: true
+  internal:
+    enabled: true

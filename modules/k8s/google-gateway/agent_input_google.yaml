@@ -1,5 +1,7 @@
 global:
   prefix: "{{ .config.prefix }}"
+  internalGateway: "{{ .module.name }}-internal"
+  externalGateway: "{{ .module.name }}-external"
   google:
     externalCertificateMap: "{{ .toutput.dns.pub_zone_id }}"
     internalCertificateMap: "{{ .toutput.dns.int_zone_id }}"

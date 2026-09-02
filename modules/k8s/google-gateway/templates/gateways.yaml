@@ -1,0 +1,138 @@
+{{- /*
+One Gateway (= one GKE load balancer) per entry in .Values.gateways, so users
+can add custom gateways in values instead of only getting the built-in
+internal/external pair. Every gateway also gets its optional GCPGatewayPolicy
+and its http -> https redirect route.
+
+The deprecated global.create* / global.google.*Gateway* values are still
+honoured as fallbacks for the built-in "external" and "internal" entries.
+*/}}
+{{- $release := .Release.Name }}
+{{- $g := .Values.global }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if kindIs "map" $cfg }}
+
+{{- /* enabled defaults to true; the deprecated flags can still switch the built-in gateways off */}}
+{{- $enabled := true }}
+{{- if hasKey $cfg "enabled" }}{{- $enabled = $cfg.enabled }}{{- end }}
+{{- if eq $name "external" }}{{- $enabled = and $enabled $g.createExternal }}{{- end }}
+{{- if eq $name "internal" }}{{- $enabled = and $enabled $g.createInternal }}{{- end }}
+
+{{- if $enabled }}
+
+{{- /* gateway class: per gateway, falling back to the deprecated globals for the built-in pair */}}
+{{- $class := $cfg.gatewayClassName }}
+{{- if not $class }}
+  {{- if eq $name "external" }}{{- $class = $g.google.externalGatewayClassName }}{{- end }}
+  {{- if eq $name "internal" }}{{- $class = $g.google.internalGatewayClassName }}{{- end }}
+{{- end }}
+{{- $class = required (printf "gateways.%s.gatewayClassName is required" $name) $class }}
+
+{{- /* Certificate Manager map, only supported by the global external gateway classes */}}
+{{- $certMap := $cfg.certificateMap }}
+{{- if and (not $certMap) (eq $name "external") }}{{- $certMap = $g.google.externalCertificateMap }}{{- end }}
+
+{{- /* cert-manager certificates, used by the regional internal gateway classes */}}
+{{- $certs := $cfg.certManagerCerts }}
+{{- if and (not $certs) (eq $name "internal") }}{{- $certs = $g.google.internalCertificateMap }}{{- end }}
+
+{{- $globalAccess := $cfg.allowGlobalAccess }}
+{{- if and (not $globalAccess) (eq $name "internal") }}{{- $globalAccess = $g.google.internalGatewayAllowGlobalAccess }}{{- end }}
+
+{{- /* sslRedirect defaults to true; hasKey is needed because "default" would override an explicit false */}}
+{{- $sslRedirect := true }}
+{{- if hasKey $cfg "sslRedirect" }}{{- $sslRedirect = $cfg.sslRedirect }}{{- end }}
+---
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $release }}-{{ $name }}
+  namespace: {{ $release }}
+  {{- if or $certMap $cfg.annotations }}
+  annotations:
+    {{- if $certMap }}
+    networking.gke.io/certmap: {{ $certMap }}
+    {{- end }}
+    {{- range $k, $v := $cfg.annotations }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if $cfg.labels }}
+  labels:
+    {{- range $k, $v := $cfg.labels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ $class }}
+  {{- if $cfg.addresses }}
+  addresses:
+    {{- toYaml $cfg.addresses | nindent 4 }}
+  {{- end }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+      {{- if $certs }}
+      tls:
+        mode: Terminate
+        options:
+          networking.gke.io/cert-manager-certs: {{ $certs }}
+      {{- end }}
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+
+{{- if $globalAccess }}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPGatewayPolicy
+metadata:
+  name: {{ $release }}-{{ $name }}
+spec:
+  default:
+    allowGlobalAccess: true
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ $release }}-{{ $name }}
+{{- end }}
+
+{{- if $sslRedirect }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $release }}-{{ $name }}-redirect
+  namespace: {{ $release }}
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ $release }}-{{ $name }}
+    sectionName: http
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+{{- end }}
+
+{{- end }}
+{{- end }}
+{{- end }}
