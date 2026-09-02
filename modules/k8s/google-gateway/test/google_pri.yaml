@@ -1,5 +1,2 @@
-# Deliberately kept on the deprecated global.create* flags so that the
-# backwards compatible path stays covered by the tests.
 global:
   createInternal: false
-  createExternal: true

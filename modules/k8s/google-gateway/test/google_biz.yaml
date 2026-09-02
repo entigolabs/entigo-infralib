@@ -1,5 +1,0 @@
-gateways:
-  external:
-    enabled: true
-  internal:
-    enabled: true
