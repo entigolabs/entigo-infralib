@@ -4,8 +4,10 @@ can add custom gateways in values instead of only getting the built-in
 internal/external pair. Every gateway also gets its optional GCPGatewayPolicy
 and its http -> https redirect route.
 
-The deprecated global.create* / global.google.*Gateway* values are still
-honoured as fallbacks for the built-in "external" and "internal" entries.
+The deprecated global.create* / global.google.* values are still honoured for
+the built-in "external" and "internal" entries: they default to empty and,
+when a configuration written before the gateways block sets one, it overrides
+the matching per-gateway value.
 */}}
 {{- $release := .Release.Name }}
 {{- $g := .Values.global }}
@@ -20,21 +22,22 @@ honoured as fallbacks for the built-in "external" and "internal" entries.
 
 {{- if $enabled }}
 
-{{- /* gateway class: per gateway, falling back to the deprecated globals for the built-in pair */}}
-{{- $class := $cfg.gatewayClassName }}
-{{- if not $class }}
-  {{- if eq $name "external" }}{{- $class = $g.google.externalGatewayClassName }}{{- end }}
-  {{- if eq $name "internal" }}{{- $class = $g.google.internalGatewayClassName }}{{- end }}
-{{- end }}
+{{- /* gateway class: the deprecated global wins when a configuration still sets it */}}
+{{- $class := "" }}
+{{- if eq $name "external" }}{{- $class = $g.google.externalGatewayClassName }}{{- end }}
+{{- if eq $name "internal" }}{{- $class = $g.google.internalGatewayClassName }}{{- end }}
+{{- if not $class }}{{- $class = $cfg.gatewayClassName }}{{- end }}
 {{- $class = required (printf "gateways.%s.gatewayClassName is required" $name) $class }}
 
 {{- /* Certificate Manager map, only supported by the global external gateway classes */}}
-{{- $certMap := $cfg.certificateMap }}
-{{- if and (not $certMap) (eq $name "external") }}{{- $certMap = $g.google.externalCertificateMap }}{{- end }}
+{{- $certMap := "" }}
+{{- if eq $name "external" }}{{- $certMap = $g.google.externalCertificateMap }}{{- end }}
+{{- if not $certMap }}{{- $certMap = $cfg.certificateMap }}{{- end }}
 
 {{- /* cert-manager certificates, used by the regional internal gateway classes */}}
-{{- $certs := $cfg.certManagerCerts }}
-{{- if and (not $certs) (eq $name "internal") }}{{- $certs = $g.google.internalCertificateMap }}{{- end }}
+{{- $certs := "" }}
+{{- if eq $name "internal" }}{{- $certs = $g.google.internalCertificateMap }}{{- end }}
+{{- if not $certs }}{{- $certs = $cfg.certManagerCerts }}{{- end }}
 
 {{- $globalAccess := $cfg.allowGlobalAccess }}
 {{- if and (not $globalAccess) (eq $name "internal") }}{{- $globalAccess = $g.google.internalGatewayAllowGlobalAccess }}{{- end }}

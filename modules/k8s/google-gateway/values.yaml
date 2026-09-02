@@ -13,16 +13,14 @@ global:
   createInternal: true
 
   google:
-    # Deprecated, use gateways.external.certificateMap
-    externalCertificateMap: ""
-    # Deprecated, use gateways.internal.certManagerCerts
-    internalCertificateMap: ""
-    # Deprecated, use gateways.external.gatewayClassName
-    externalGatewayClassName: gke-l7-global-external-managed
-    # Deprecated, use gateways.internal.gatewayClassName
-    internalGatewayClassName: gke-l7-rilb
-    # Deprecated, use gateways.internal.allowGlobalAccess
-    internalGatewayAllowGlobalAccess: false
+    # Deprecated. Empty means unused, anything set here overrides the matching
+    # value in the gateways block below, so that configurations written before
+    # the gateways block keep working. See README.md.
+    externalCertificateMap: ""            # overrides gateways.external.certificateMap
+    internalCertificateMap: ""            # overrides gateways.internal.certManagerCerts
+    externalGatewayClassName: ""          # overrides gateways.external.gatewayClassName
+    internalGatewayClassName: ""          # overrides gateways.internal.gatewayClassName
+    internalGatewayAllowGlobalAccess: false  # when true, forces gateways.internal.allowGlobalAccess on
 
 # One Gateway (= one GKE load balancer) per entry. Any map entry with
 # enabled: true becomes a gateway, so additional gateways can be defined by
@@ -34,7 +32,7 @@ global:
 gateways:
   external:
     enabled: true
-    gatewayClassName: ""       # defaults to global.google.externalGatewayClassName
+    gatewayClassName: gke-l7-global-external-managed
     certificateMap: ""         # Certificate Manager map, networking.gke.io/certmap
     certManagerCerts: ""       # cert-manager secrets on the https listener, comma separated
     sslRedirect: true
@@ -46,11 +44,11 @@ gateways:
     labels: {}
   internal:
     enabled: true
-    gatewayClassName: ""       # defaults to global.google.internalGatewayClassName
+    gatewayClassName: gke-l7-rilb
     certificateMap: ""
-    certManagerCerts: ""       # defaults to global.google.internalCertificateMap
+    certManagerCerts: ""
     sslRedirect: true
-    allowGlobalAccess: false   # defaults to global.google.internalGatewayAllowGlobalAccess
+    allowGlobalAccess: false
     addresses: []
     annotations: {}
     labels: {}

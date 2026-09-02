@@ -9,17 +9,17 @@ can be defined by simply adding an entry under `gateways`:
 gateways:
   external:
     enabled: true
-    gatewayClassName: ""       # defaults to global.google.externalGatewayClassName
+    gatewayClassName: gke-l7-global-external-managed
     certificateMap: ""
     certManagerCerts: ""
     sslRedirect: true
   internal:
     enabled: true
-    gatewayClassName: ""       # defaults to global.google.internalGatewayClassName
+    gatewayClassName: gke-l7-rilb
     certificateMap: ""
-    certManagerCerts: ""       # defaults to global.google.internalCertificateMap
+    certManagerCerts: ""
     sslRedirect: true
-    allowGlobalAccess: false   # defaults to global.google.internalGatewayAllowGlobalAccess
+    allowGlobalAccess: false
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
@@ -34,9 +34,8 @@ Each entry produces one `Gateway`, which is one GKE load balancer. The Gateway
 object is named `<release name>-<key>`, so the entries above create
 `google-gateway-external` and `google-gateway-internal`.
 
-A custom entry must set its own `gatewayClassName` — only the built-in
-`external` and `internal` entries fall back to the deprecated
-`global.google.*GatewayClassName` values.
+A custom entry must set its own `gatewayClassName`; the built-in entries come
+with the class they have always used.
 
 ### No per-gateway subnets
 
@@ -112,6 +111,10 @@ existing configurations keep working unchanged:
 | `global.google.internalGatewayClassName` | `gateways.internal.gatewayClassName` |
 | `global.google.internalGatewayAllowGlobalAccess` | `gateways.internal.allowGlobalAccess` |
 
-`createExternal` and `createInternal` are combined with `enabled` using AND, so
-a built-in gateway is created only when both are true. The remaining values are
-used only when the matching per-gateway value is empty.
+`createExternal` and `createInternal` default to `true` and are combined with
+`enabled` using AND, so a built-in gateway is created only when both are true.
+
+The rest default to empty, meaning unused. A configuration that still sets one
+of them overrides the matching value in the `gateways` block, which is what
+keeps older configurations working. To move to the `gateways` block, drop the
+deprecated value — while it is set, the `gateways` value is ignored.
