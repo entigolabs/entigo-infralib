@@ -10,8 +10,6 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 loki:
   gateway:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
     ingress:
       enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:
@@ -46,14 +44,6 @@ loki:
         aws:
           region: "{{ .toutput.eks.region }}"
           bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
-  sidecar:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
-  memcached:
-    image:
-      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/memcached'
   networkPolicy:
     externalStorage:
      cidrs:

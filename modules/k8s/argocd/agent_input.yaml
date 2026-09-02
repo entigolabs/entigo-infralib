@@ -1,0 +1,14 @@
+argocd:
+  global:
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/argoproj/argocd'
+  dex:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/dexidp/dex'
+  redis:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ecr_registry | .toptout.gar-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
+mcp:
+  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/mcp-for-argocd'

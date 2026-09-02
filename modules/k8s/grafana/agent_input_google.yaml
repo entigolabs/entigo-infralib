@@ -15,16 +15,3 @@ grafana:
       home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
   serviceAccount:
     name: "{{ .module.name }}"
-  image:
-    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  sidecar:
-    image:
-      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
-  initChownData:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  downloadDashboardsImage:
-    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  imageRenderer:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

@@ -1,0 +1,3 @@
+kiali-server:
+  deployment:
+    image_name: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/kiali/kiali'

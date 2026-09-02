@@ -1,0 +1,36 @@
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
+harbor:
+  portal:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-portal'
+  core:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-core'
+  jobservice:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-jobservice'
+  registry:
+    registry:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/registry-photon'
+    controller:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-registryctl'
+  trivy:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/trivy-adapter-photon'
+  database:
+    internal:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-db'
+  redis:
+    internal:
+      image:
+        repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/valkey-photon'
+  exporter:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'
+  nginx:
+    image:
+      repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/goharbor/nginx-photon'
