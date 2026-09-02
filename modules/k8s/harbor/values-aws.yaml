@@ -9,7 +9,6 @@ global:
 
 harbor:
   expose:
-    type: ingress
     tls:
       certSource: none
     ingress:
@@ -24,6 +23,7 @@ harbor:
       controller: alb
   updateStrategy:
     type: Recreate
+
   #persistence:
   #  imageChartStorage:
   #    type: s3

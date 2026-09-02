@@ -4,6 +4,12 @@ global:
 external-dns:
   registry: txt
   policy: upsert-only
+  sources:
+    - service
+    - ingress
+    - istio-gateway
+    - istio-virtualservice
+    - gateway-httproute
   extraArgs:
     - --metrics-address=:7979
   serviceAccount:

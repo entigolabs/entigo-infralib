@@ -31,10 +31,6 @@ func testK8sGrafana(t *testing.T, cloudName string, envName string) {
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
-	
-	if cloudName == "aws" {
-		gatewayName = "grafana"
-	}
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 20, 6*time.Second)
 	if err != nil {

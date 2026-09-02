@@ -8,6 +8,8 @@
 #   ./prompts.sh -v update        # Run with verbose/debug logging
 #   ./prompts.sh fix              # Fix failed CI on auto-* PRs
 #   ./prompts.sh login            # Re-authenticate only
+#   ./prompts.sh chat             # Interactive Claude Code session in the container
+#   ./prompts.sh chat --continue  # Resume the last session in /workspace
 #   ./prompts.sh <name>           # Run prompts/<name>.md
 #
 
@@ -94,6 +96,7 @@ run_claude() {
     -v "${HOME}/.ssh:${C_HOME}/.ssh:ro" \
     -v "${CONTAINER_GITCONFIG}:${C_HOME}/.gitconfig:ro" \
     -e "HOME=${C_HOME}" \
+    -e CLAUDE_CODE_DISABLE_MOUSE=1 \
     -e "GIT_SSH_COMMAND=ssh -i ${C_HOME}/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
     $gh_token_arg \
     -w /workspace \
@@ -104,6 +107,21 @@ run_claude() {
 if [ "${1:-}" = "login" ]; then
   echo "Starting interactive login..."
   run_claude
+  exit 0
+fi
+
+# --- Interactive mode: full Claude Code REPL in the container ---
+# Preloads prompts/chat.md as the first message if it exists.
+# Extra args are passed to claude, e.g.: ./prompts.sh chat --continue
+if [ "${1:-}" = "chat" ]; then
+  shift
+  CHAT_FILE="${SCRIPT_DIR}/prompts/chat.md"
+  if [ -f "$CHAT_FILE" ]; then
+    # Flags first, positional prompt last
+    run_claude "$@" "$(cat "$CHAT_FILE")"
+  else
+    run_claude "$@"
+  fi
   exit 0
 fi
 

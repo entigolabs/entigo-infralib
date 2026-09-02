@@ -1,3 +1,10 @@
 ingressClass:
   service:
     enabled: false
+
+global:
+  routingResources: "both" #ingress, both, httproute
+  createIngress: false
+  createRoute: true
+  createType: route
+  internalGateway: external

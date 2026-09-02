@@ -1,0 +1,27 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.argocd.server.grpcroute.enabled }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}-server
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Release.Name }}-server
+  defaultConfiguration:
+    # Applies to the HTTPRoute (web UI) target group
+    protocol: HTTPS
+    healthCheckConfig:
+      healthCheckPath: /healthz
+  routeConfigurations:
+    - routeIdentifier:
+        kind: GRPCRoute
+        name: {{ .Release.Name }}-server-grpc
+        namespace: {{ .Release.Namespace }}
+      targetGroupProps:
+        protocol: HTTPS
+        protocolVersion: GRPC
+        healthCheckConfig:
+          healthCheckPath: /
+          matcher:
+            grpcCode: "12"
+{{- end }}

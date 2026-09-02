@@ -259,6 +259,8 @@ metadata:
             -f values-$app.yaml \
             --set-string 'argocd.configs.cm.admin\.enabled=true' \
             --set argocd.server.ingress.enabled=false \
+            --set argocd.server.httproute.enabled=false \
+            --set argocd.server.grpcroute.enabled=false \
             --set argocd.server.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-server \
             --set argocd.dex.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-dex-server \
             --set argocd.redis.deploymentAnnotations."argocd\.argoproj\.io/tracking-id"=$app:apps/Deployment:$app/$app-redis \

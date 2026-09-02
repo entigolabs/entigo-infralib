@@ -279,3 +279,15 @@ terraform_init() {
         exit 14
     fi
 }
+
+# Get ArgoCD hostname, prefer Gateway API HTTPRoute and fall back to Ingress
+get_argocd_hostname() {
+    local host
+    # HTTPRoute first; Ingress is on the deprecation path
+    host=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} \
+        -o jsonpath='{.items[*].spec.hostnames[*]}' 2>/dev/null | awk '{print $1}')
+    # Fall back to Ingress (ALB controller path)
+    [ -z "${host}" ] && host=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server \
+        -o jsonpath='{.items[*].spec.rules[*].host}' 2>/dev/null | awk '{print $1}')
+    echo "${host}"
+}

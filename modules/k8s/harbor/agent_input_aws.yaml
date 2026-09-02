@@ -10,9 +10,20 @@ job:
 harbor:
   externalURL: "https://{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
   expose:
+    type: "{{ .tinput.aws-alb.global.createType }}"
     ingress:
       hosts:
         core: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+    route:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tinput.aws-alb.global.externalGateway }}"
+          namespace: "{{ .tmodule.aws-alb }}"
+          sectionName: https
+      hosts:
+        - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+
   #persistence:
   #  imageChartStorage:
   #    s3:
@@ -45,7 +56,7 @@ harbor:
   redis:
     internal:
       image:
-        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/redis-photon'
+        repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/valkey-photon'
   exporter:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/goharbor/harbor-exporter'

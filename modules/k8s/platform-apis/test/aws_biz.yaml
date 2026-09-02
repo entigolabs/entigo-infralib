@@ -16,13 +16,35 @@ platform-apis:
       tags:
         etag: etest
         eutag: eutest
+  artifact:
+    environmentConfig:
+      lifecycleRules:
+        - tagPrefixes:
+            - release
+            - DEPLOYED
+          keepCount: 10
+        - tagPatterns:
+            - "*.*.*"
+          keepCount: 30
+        - tagPatterns:
+            - "feature-*"
+            - "*-cloud"
+          keepCount: 5
+        - untagged: true
+          expireAfterDays: 7
+        - expireAfterDays: 90
   kafka:
     install: true
     environmentConfig:
       kafkaNamespace: crossplane-kafka-biz
+  mariadb:
+    install: true
+  rabbitmq:
+    install: true
   database:
     environmentConfig:
       postgresBackupBeforeDeletion: false
+      mariaDBBackupBeforeDeletion: false
       valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
   functions:

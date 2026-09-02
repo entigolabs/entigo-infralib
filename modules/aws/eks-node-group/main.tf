@@ -18,7 +18,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "21.23.0"
+  version = "21.25.0"
   use_name_prefix = true
   name                    = substr(var.prefix, 0, 35)
   iam_role_use_name_prefix = true
@@ -60,7 +60,7 @@ module "eks-managed-node-group" {
         volume_size           = var.volume_size
         volume_iops           = var.volume_iops
         volume_type           = var.volume_type
-        encrypted             = var.encryption_kms_key_arn != "" ? true : false
+        encrypted             = true
         kms_key_id            = var.encryption_kms_key_arn != "" ? var.encryption_kms_key_arn : null
         delete_on_termination = true
       }

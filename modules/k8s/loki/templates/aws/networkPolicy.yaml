@@ -1,0 +1,57 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+{{- $gw := .Values.loki.gateway }}
+# enabled flags arrive as templated strings, normalize before comparing
+{{- $routeEnabled := eq (toString $gw.route.main.enabled) "true" }}
+{{- $ingressEnabled := eq (toString $gw.ingress.enabled) "true" }}
+{{- if or $routeEnabled $ingressEnabled }}
+{{- $cidrs := "" }}
+{{- if $routeEnabled }}
+# Gateway API (ALB controller): map gateway name to its subnet set
+{{- $gwName := "" }}
+{{- with $gw.route.main.parentRefs }}
+{{- $gwName = (first .).name }}
+{{- end }}
+{{- if eq $gwName "service" }}
+{{- $cidrs = .Values.global.aws.serviceSubnetCidrs | default "" }}
+{{- else if eq $gwName "internal" }}
+{{- $cidrs = .Values.global.aws.privateSubnetCidrs | default "" }}
+{{- else }}
+{{- $cidrs = .Values.global.aws.publicSubnetCidrs | default "" }}
+{{- end }}
+{{- else }}
+# Ingress: scheme from the ALB annotation, no gateway name to narrow by
+{{- $scheme := index $gw.ingress.annotations "alb.ingress.kubernetes.io/scheme" }}
+{{- if eq $scheme "internet-facing" }}
+{{- $cidrs = .Values.global.aws.publicSubnetCidrs | default "" }}
+{{- else }}
+{{- $cidrs = printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
+{{- end }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-gateway-alb
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        {{- range (splitList "," $cidrs) }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . }}
+        {{- end }}
+        {{- end }}
+        {{- range .Values.global.aws.extraAlbCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}
+{{- end }}

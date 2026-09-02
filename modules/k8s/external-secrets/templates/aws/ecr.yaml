@@ -94,6 +94,23 @@ spec:
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 ---
+{{- if .Values.global.aws.ECRProxyPolicy }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .Release.Name }}-ecr-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    policyArn: {{ .Values.global.aws.ECRProxyPolicy }}
+    roleRef:
+      name: {{ .Release.Name }}-ecr-token
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+{{- end }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -135,7 +152,7 @@ spec:
     template:
       metadata:
         labels:
-          argocd.argoproj.io/secret-type: repository
+          argocd.argoproj.io/secret-type: repo-creds
       data:
         name: "repo-{{ .accountNumber }}-{{ .accountRegion }}"
         type: helm

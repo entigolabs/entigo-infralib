@@ -71,15 +71,18 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 	retries := 100
 	switch cloudName {
 	case "aws":
-		gatewayName = namespaceName
+		gatewayNamespace = fmt.Sprintf("aws-alb-%s", envName)
 		switch envName {
 		case "biz":
 			hostName = fmt.Sprintf("%s.%s-net-route53-int.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "service"
 		case "pri":
 			hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "external"
 		}
 		if mode == "external" {
 			hostName = fmt.Sprintf("%s.%s-net-route53.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "external"
 		}
 	case "google":
 		retries = 400
@@ -692,6 +695,12 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider, gatewayName, gatewayNamespace string) (string, error) {
 	switch cloudProvider {
 	case "aws":
+		// Try Gateway API first (httproute/both phases)
+		gatewayHost, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[?(@.type==\"Hostname\")].value}'")
+		if err == nil && gatewayHost != "" {
+			return strings.Trim(gatewayHost, "'"), nil
+		}
+		// Fall back to the ALB Ingress (ingress phase)
 		ingress, err := k8s.GetIngressE(t, options, gatewayName)
 		if err != nil {
 			return "", err
@@ -700,7 +709,6 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 			return "", fmt.Errorf("Ingress.Status.LoadBalancer.Ingress[0].Hostname not available")
 		}
 		return ingress.Status.LoadBalancer.Ingress[0].Hostname, nil
-
 	case "google":
 		gatewayIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[?(@.type==\"IPAddress\")].value}'")
 		if err != nil {

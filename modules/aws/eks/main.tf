@@ -55,7 +55,7 @@ locals {
             volume_size           = var.eks_main_volume_size
             volume_iops           = var.eks_main_volume_iops
             volume_type           = var.eks_main_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
@@ -102,7 +102,7 @@ locals {
             volume_size           = var.eks_mon_volume_size
             volume_iops           = var.eks_mon_volume_iops
             volume_type           = var.eks_mon_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
@@ -149,7 +149,7 @@ locals {
             volume_size           = var.eks_tools_volume_size
             volume_iops           = var.eks_tools_volume_iops
             volume_type           = var.eks_tools_volume_type
-            encrypted             = var.node_encryption_kms_key_arn != "" ? true : false
+            encrypted             = true
             kms_key_id            = var.node_encryption_kms_key_arn != "" ? var.node_encryption_kms_key_arn : null
             delete_on_termination = true
           }
@@ -198,7 +198,7 @@ resource "aws_ec2_tag" "publicsubnets" {
 
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.6.1"
+  version               = "6.8.0"
   name                  = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_arns  = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -221,7 +221,7 @@ module "ebs_csi_irsa_role" {
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.6.1"
+  version               = "6.8.0"
   name                  = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -242,7 +242,7 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.6.1"
+  version               = "6.8.0"
   name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -266,7 +266,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.23.0"
+  version = "21.25.0"
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
@@ -290,7 +290,18 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.coredns_addon_version
-      configuration_values = jsonencode({
+      configuration_values = jsonencode(merge({
+        autoScaling : {
+          enabled : true,
+          minReplicas : 2,
+          maxReplicas : 10
+        },
+        resources : {
+          requests : {
+            cpu : "100m",
+            memory : "70Mi"
+          }
+        },
         tolerations : [
           {
             key : "tools",
@@ -319,13 +330,15 @@ module "eks" {
             ]
           }
         }
-      })
+      }, var.coredns_config))
     }
-    kube-proxy = {
+    kube-proxy = merge({
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.kube_proxy_addon_version
-    }
+    }, length(var.kube_proxy_config) > 0 ? {
+      configuration_values = jsonencode(var.kube_proxy_config)
+    } : {})
     vpc-cni = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
@@ -335,11 +348,11 @@ module "eks" {
       service_account_role_arn    = module.vpc_cni_irsa_role.arn
 
       configuration_values = jsonencode({
-        env = {
+        env = merge({
           ENABLE_PREFIX_DELEGATION = var.enable_vpc_cni_prefix_delegation
           WARM_IP_TARGET           = "1"
           MINIMUM_IP_TARGET        = "1"
-        }
+        }, var.vpc_cni_env_config)
         enableNetworkPolicy = var.enable_vpc_cni_network_policy
       })
     }
@@ -348,9 +361,9 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.efs_csi_addon_version
-      service_account_role_arn = module.efs_csi_irsa_role[0].arn
+      service_account_role_arn    = module.efs_csi_irsa_role[0].arn
       configuration_values = jsonencode({
-        controller : {
+        controller : merge({
           tolerations : [
             {
               key : "tools",
@@ -359,7 +372,7 @@ module "eks" {
               effect : "NoSchedule"
             }
           ]
-        }
+        }, var.efs_csi_controller_config)
       })
     }
   } : {}, {
@@ -367,12 +380,12 @@ module "eks" {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.ebs_csi_addon_version
-      service_account_role_arn = module.ebs_csi_irsa_role.arn
+      service_account_role_arn    = module.ebs_csi_irsa_role.arn
       configuration_values = jsonencode({
-        controller : {
+        controller : merge({
           extraVolumeTags = var.node_launch_template_tags
-          volumeModificationFeature: {
-                enabled: true
+          volumeModificationFeature : {
+            enabled : true
           },
           tolerations : [
             {
@@ -416,7 +429,7 @@ module "eks" {
               ]
             }
           }
-        }
+        }, var.ebs_csi_controller_config)
       })
     }
   })
@@ -532,6 +545,10 @@ module "eks" {
     } : {},
     var.additional_access_entries
   )
+
+  # Cluster resource only - module-wide tags would flow into node group launch
+  # templates and force a rolling replacement of all nodes.
+  cluster_tags = var.tags
 
   tags = {
     Terraform = "true"
