@@ -172,9 +172,3 @@ get_k8s_credentials() {
         --with-auth-context \
         --kube-endpoint "${ORACLE_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
 }
-
-# Get ArgoCD hostname - reads the HTTPRoute, like the Google provider, since argocd is
-# served by modules/k8s/oracle-gateway's Gateway now, not an Ingress.
-get_argocd_hostname() {
-    kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}'
-}
