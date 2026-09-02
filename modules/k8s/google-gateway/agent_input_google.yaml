@@ -2,6 +2,8 @@ global:
   prefix: "{{ .config.prefix }}"
   internalGateway: "{{ .module.name }}-internal"
   externalGateway: "{{ .module.name }}-external"
+  google:
+    region: "{{ .toutput.gke.region }}"
 gateways:
   external:
     certificateMap: "{{ .toutput.dns.pub_zone_id }}"

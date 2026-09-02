@@ -1,46 +1,41 @@
 {{- /*
 One Gateway (= one GKE load balancer) per entry in .Values.gateways, so users
 can add custom gateways in values instead of only getting the built-in
-internal/external pair. Every gateway also gets its optional GCPGatewayPolicy
-and its http -> https redirect route.
-
-The deprecated global.create* / global.google.* values are still honoured for
-the built-in "external" and "internal" entries: they default to empty and,
-when a configuration written before the gateways block sets one, it overrides
-the matching per-gateway value.
+internal/external pair. Any map entry with enabled: true becomes a gateway.
+Every gateway also gets its optional GCPGatewayPolicy and its http -> https
+redirect route.
 */}}
 {{- $release := .Release.Name }}
-{{- $g := .Values.global }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if kindIs "map" $cfg }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
 
-{{- /* enabled defaults to true; the deprecated flags can still switch the built-in gateways off */}}
-{{- $enabled := true }}
-{{- if hasKey $cfg "enabled" }}{{- $enabled = $cfg.enabled }}{{- end }}
-{{- if eq $name "external" }}{{- $enabled = and $enabled $g.createExternal }}{{- end }}
-{{- if eq $name "internal" }}{{- $enabled = and $enabled $g.createInternal }}{{- end }}
-
-{{- if $enabled }}
-
-{{- /* gateway class: the deprecated global wins when a configuration still sets it */}}
-{{- $class := "" }}
-{{- if eq $name "external" }}{{- $class = $g.google.externalGatewayClassName }}{{- end }}
-{{- if eq $name "internal" }}{{- $class = $g.google.internalGatewayClassName }}{{- end }}
-{{- if not $class }}{{- $class = $cfg.gatewayClassName }}{{- end }}
-{{- $class = required (printf "gateways.%s.gatewayClassName is required" $name) $class }}
+{{- $class := required (printf "gateways.%s.gatewayClassName is required" $name) $cfg.gatewayClassName }}
 
 {{- /* Certificate Manager map, only supported by the global external gateway classes */}}
-{{- $certMap := "" }}
-{{- if eq $name "external" }}{{- $certMap = $g.google.externalCertificateMap }}{{- end }}
-{{- if not $certMap }}{{- $certMap = $cfg.certificateMap }}{{- end }}
+{{- $certMap := $cfg.certificateMap }}
 
 {{- /* cert-manager certificates, used by the regional internal gateway classes */}}
-{{- $certs := "" }}
-{{- if eq $name "internal" }}{{- $certs = $g.google.internalCertificateMap }}{{- end }}
-{{- if not $certs }}{{- $certs = $cfg.certManagerCerts }}{{- end }}
+{{- $certs := $cfg.certManagerCerts }}
 
-{{- $globalAccess := $cfg.allowGlobalAccess }}
-{{- if and (not $globalAccess) (eq $name "internal") }}{{- $globalAccess = $g.google.internalGatewayAllowGlobalAccess }}{{- end }}
+{{- /*
+SSL policy: either an existing one referenced by name, or one crossplane
+creates for this gateway, named <release>-<key> unless a name is given.
+*/}}
+{{- $ssl := $cfg.sslPolicy | default dict }}
+{{- $sslPolicyName := $ssl.name | default "" }}
+{{- if and $ssl.create (not $sslPolicyName) }}
+{{- $sslPolicyName = printf "%s-%s" $release $name }}
+{{- end }}
+
+{{- /*
+GKE allows only one GCPGatewayPolicy per Gateway - a second one targeting the
+same Gateway is rejected with a conflict, the oldest wins. So every setting the
+policy carries has to go into this one object: collect them into a dict here
+and add new ones with another line below, do not render a second policy.
+*/}}
+{{- $policy := dict }}
+{{- if $cfg.allowGlobalAccess }}{{- $_ := set $policy "allowGlobalAccess" true }}{{- end }}
+{{- if $sslPolicyName }}{{- $_ := set $policy "sslPolicy" $sslPolicyName }}{{- end }}
 
 {{- /* sslRedirect defaults to true; hasKey is needed because "default" would override an explicit false */}}
 {{- $sslRedirect := true }}
@@ -96,15 +91,16 @@ spec:
           - group: gateway.networking.k8s.io
             kind: HTTPRoute
 
-{{- if $globalAccess }}
+{{- if $policy }}
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPGatewayPolicy
 metadata:
   name: {{ $release }}-{{ $name }}
+  namespace: {{ $release }}
 spec:
   default:
-    allowGlobalAccess: true
+    {{- toYaml $policy | nindent 4 }}
   targetRef:
     group: gateway.networking.k8s.io
     kind: Gateway
@@ -136,6 +132,5 @@ spec:
           value: /
 {{- end }}
 
-{{- end }}
 {{- end }}
 {{- end }}

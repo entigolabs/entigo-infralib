@@ -6,21 +6,14 @@ global:
   internalGateway: google-gateway-internal
   externalGateway: google-gateway-external
 
-  # Deprecated, use gateways.external.enabled / gateways.internal.enabled.
-  # Still honoured: the built-in gateways are only created when both the
-  # gateways.<name>.enabled and the matching flag below are true.
-  createExternal: true
-  createInternal: true
+  # ProviderConfig used by the crossplane managed resources, only needed when a
+  # gateway sets sslPolicy.create. Must match the crossplane-google release
+  # name, and that module needs "compute" in its extraProviders.
+  providerConfigRefName: crossplane-google
 
   google:
-    # Deprecated. Empty means unused, anything set here overrides the matching
-    # value in the gateways block below, so that configurations written before
-    # the gateways block keep working. See README.md.
-    externalCertificateMap: ""            # overrides gateways.external.certificateMap
-    internalCertificateMap: ""            # overrides gateways.internal.certManagerCerts
-    externalGatewayClassName: ""          # overrides gateways.external.gatewayClassName
-    internalGatewayClassName: ""          # overrides gateways.internal.gatewayClassName
-    internalGatewayAllowGlobalAccess: false  # when true, forces gateways.internal.allowGlobalAccess on
+    # Cluster region, only needed for a regional sslPolicy. Set by the agent.
+    region: ""
 
 # One Gateway (= one GKE load balancer) per entry. Any map entry with
 # enabled: true becomes a gateway, so additional gateways can be defined by
@@ -37,6 +30,18 @@ gateways:
     certManagerCerts: ""       # cert-manager secrets on the https listener, comma separated
     sslRedirect: true
     allowGlobalAccess: false   # only meaningful for regional internal gateway classes
+    # TLS versions and ciphers the load balancer accepts from clients. Either
+    # point name at a compute SSL policy that already exists, or set create to
+    # let crossplane create one named <release name>-<key>. The policy scope
+    # must match the gateway class: global for the global external classes,
+    # regional for classes such as gke-l7-rilb. See README.md.
+    sslPolicy:
+      name: ""                 # existing policy name, e.g. gke-gateway-tls12
+      create: false
+      regional: false          # true creates a RegionSSLPolicy in global.google.region
+      profile: MODERN          # COMPATIBLE | MODERN | RESTRICTED | CUSTOM
+      minTlsVersion: TLS_1_2   # TLS_1_0 | TLS_1_1 | TLS_1_2
+      customFeatures: []       # cipher suites, only with profile CUSTOM
     addresses: []
     # - type: NamedAddress
     #   value: my-reserved-address
@@ -49,6 +54,13 @@ gateways:
     certManagerCerts: ""
     sslRedirect: true
     allowGlobalAccess: false
+    sslPolicy:
+      name: ""
+      create: false
+      regional: true           # gke-l7-rilb is a regional gateway class
+      profile: MODERN
+      minTlsVersion: TLS_1_2
+      customFeatures: []
     addresses: []
     annotations: {}
     labels: {}
@@ -58,3 +70,5 @@ gateways:
   #   gatewayClassName: gke-l7-global-external-managed
   #   certificateMap: "projects/my-project/locations/global/certificateMaps/partner"
   #   sslRedirect: true
+  #   sslPolicy:
+  #     create: true

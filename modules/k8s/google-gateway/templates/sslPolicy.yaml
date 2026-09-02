@@ -1,0 +1,44 @@
+{{- /*
+Compute SSL policies for the gateways that ask for one with sslPolicy.create,
+named <release>-<key> unless sslPolicy.name overrides it.
+
+The global external gateway classes take a global SSLPolicy, the regional
+classes such as gke-l7-rilb take a RegionSSLPolicy in the cluster's region -
+set sslPolicy.regional accordingly. A wrong-scope policy is rejected by GKE and
+leaves the Gateway unprogrammed.
+*/}}
+{{- $release := .Release.Name }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- $ssl := $cfg.sslPolicy | default dict }}
+{{- if $ssl.create }}
+{{- $policyName := $ssl.name | default (printf "%s-%s" $release $name) }}
+---
+apiVersion: compute.gcp.upbound.io/v1beta1
+{{- if $ssl.regional }}
+kind: RegionSSLPolicy
+{{- else }}
+kind: SSLPolicy
+{{- end }}
+metadata:
+  name: {{ $policyName }}
+  annotations:
+    crossplane.io/external-name: {{ $policyName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    profile: {{ $ssl.profile | default "MODERN" }}
+    minTlsVersion: {{ $ssl.minTlsVersion | default "TLS_1_2" }}
+    {{- if $ssl.regional }}
+    region: {{ required (printf "gateways.%s.sslPolicy needs global.google.region for a regional policy" $name) $.Values.global.google.region }}
+    {{- end }}
+    {{- with $ssl.customFeatures }}
+    customFeatures:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  providerConfigRef:
+    name: {{ $.Values.global.providerConfigRefName }}
+{{- end }}
+{{- end }}
+{{- end }}

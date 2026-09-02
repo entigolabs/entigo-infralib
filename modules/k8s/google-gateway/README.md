@@ -3,21 +3,22 @@
 ## Default gateways and custom gateways
 
 The module creates the following gateways by default, and additional gateways
-can be defined by simply adding an entry under `gateways`:
+can be defined by simply adding an entry under `gateways`. An entry is only
+created when it sets `enabled: true`:
 
 ```yaml
 gateways:
   external:
     enabled: true
     gatewayClassName: gke-l7-global-external-managed
-    certificateMap: ""
-    certManagerCerts: ""
+    certificateMap: ''
+    certManagerCerts: ''
     sslRedirect: true
   internal:
     enabled: true
     gatewayClassName: gke-l7-rilb
-    certificateMap: ""
-    certManagerCerts: ""
+    certificateMap: ''
+    certManagerCerts: ''
     sslRedirect: true
     allowGlobalAccess: false
   # custom user-defined gateway, just add an entry
@@ -64,8 +65,8 @@ same way it does for `aws-alb`:
 global:
   google:
     gateway:
-      name: "{{ .tinput.google-gateway.global.internalGateway }}"
-      namespace: "{{ .tmodule.google-gateway }}"
+      name: '{{ .tinput.google-gateway.global.internalGateway }}'
+      namespace: '{{ .tmodule.google-gateway }}'
 ```
 
 Note that on google the value is the full Gateway object name, since gateways
@@ -96,25 +97,86 @@ to https with a 301, named `<release name>-<key>-redirect`. Set
 any region reach the load balancer. It only applies to regional internal
 gateway classes such as `gke-l7-rilb`.
 
-## Deprecated values
+## SSL policies
 
-The previous fixed internal/external configuration is still honoured, so
-existing configurations keep working unchanged:
+`sslPolicy` sets the TLS versions and cipher suites the load balancer accepts
+from clients, the google equivalent of the `aws-alb` `sslPolicy` setting. It is
+per gateway, so each gateway can have its own. Leaving it unset keeps the GKE
+default, which still permits TLS 1.0 and 1.1.
 
-| Deprecated value | Replacement |
-| --- | --- |
-| `global.createExternal` | `gateways.external.enabled` |
-| `global.createInternal` | `gateways.internal.enabled` |
-| `global.google.externalCertificateMap` | `gateways.external.certificateMap` |
-| `global.google.internalCertificateMap` | `gateways.internal.certManagerCerts` |
-| `global.google.externalGatewayClassName` | `gateways.external.gatewayClassName` |
-| `global.google.internalGatewayClassName` | `gateways.internal.gatewayClassName` |
-| `global.google.internalGatewayAllowGlobalAccess` | `gateways.internal.allowGlobalAccess` |
+There are two ways to use it.
 
-`createExternal` and `createInternal` default to `true` and are combined with
-`enabled` using AND, so a built-in gateway is created only when both are true.
+### Reference an existing policy
 
-The rest default to empty, meaning unused. A configuration that still sets one
-of them overrides the matching value in the `gateways` block, which is what
-keeps older configurations working. To move to the `gateways` block, drop the
-deprecated value — while it is set, the `gateways` value is ignored.
+```yaml
+gateways:
+  external:
+    sslPolicy:
+      name: 'public-tls12'
+```
+
+The policy must already exist and is referenced by name, so it can be managed
+wherever the rest of the project's compute resources are - terraform
+(`google_compute_ssl_policy` / `google_compute_region_ssl_policy`) or gcloud:
+
+```sh
+gcloud compute ssl-policies create public-tls12 --profile MODERN --min-tls-version 1.2
+```
+
+### Let crossplane create it
+
+```yaml
+gateways:
+  external:
+    sslPolicy:
+      create: true
+      profile: MODERN # COMPATIBLE | MODERN | RESTRICTED | CUSTOM
+      minTlsVersion: TLS_1_2 # TLS_1_0 | TLS_1_1 | TLS_1_2
+      customFeatures: [] # cipher suites, only with profile CUSTOM
+  internal:
+    sslPolicy:
+      create: true
+      regional: true # gke-l7-rilb is a regional gateway class
+      profile: RESTRICTED
+```
+
+This renders a `compute.gcp.upbound.io/v1beta1` `SSLPolicy` named
+`<release name>-<key>`, unless `name` is also set, in which case that name is
+used for both the created policy and the reference. The module also renders a
+`ManagedResourceActivationPolicy` for `sslpolicies.compute.gcp.upbound.io`, but
+only when at least one gateway sets `create: true`.
+
+Two prerequisites for `create`:
+
+- The `compute` provider must be installed, since it is not one of the
+  crossplane-google defaults:
+  ```yaml
+  # crossplane-google values
+  global:
+    extraProviders: ['compute']
+  ```
+- `global.providerConfigRefName` must match the crossplane-google release name.
+  It defaults to `crossplane-google`.
+
+### Policy scope must match the gateway class
+
+An SSL policy is either global or regional, and the scope has to match the
+gateway class, otherwise GKE rejects it and the Gateway stays unprogrammed:
+
+| Gateway class | Scope | Setting |
+| --- | --- | --- |
+| `gke-l7-global-external-managed` and the other global classes | global | `regional: false` (default), renders `SSLPolicy` |
+| `gke-l7-rilb` and the other regional classes | regional | `regional: true`, renders `RegionSSLPolicy` |
+
+A regional policy needs the cluster region in `global.google.region`, which the
+agent sets from the `gke` module. Rendering fails with a clear message if it is
+missing.
+
+### One policy object per gateway
+
+`allowGlobalAccess` and `sslPolicy` are both carried by the same
+`GCPGatewayPolicy`, named `<release name>-<key>`, because GKE accepts only one
+`GCPGatewayPolicy` per Gateway - a second one targeting the same Gateway is
+rejected as a conflict and the oldest wins. Further gateway policy settings must
+be added to that same object in `templates/gateways.yaml`, not as a new
+document.

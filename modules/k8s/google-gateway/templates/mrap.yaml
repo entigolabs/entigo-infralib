@@ -1,0 +1,10 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{.Release.Name}}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  activate:
+    - "sslpolicies.compute.gcp.upbound.io"
+    - "regionsslpolicies.compute.gcp.upbound.io"
