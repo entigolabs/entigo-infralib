@@ -1,3 +1,7 @@
+global:
+  aws:
+    gateway:
+      name: external
 kiali-server:
   auth:
     strategy: openid
@@ -7,10 +11,3 @@ kiali-server:
       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
       scopes: ["openid", "profile", "email", "roles"]
       username_claim: "email"
-  deployment:
-    ingress:
-      override_yaml:
-        metadata:
-          annotations:
-            alb.ingress.kubernetes.io/group.name: external
-            alb.ingress.kubernetes.io/scheme: internet-facing

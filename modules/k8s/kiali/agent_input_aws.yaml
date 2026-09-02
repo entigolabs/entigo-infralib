@@ -14,5 +14,5 @@ global:
   aws:
     createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
     gateway:
-      name: "{{ .tinput.aws-alb.global.externalGateway }}"
+      name: "{{ .tinput.aws-alb.global.internalGateway }}"
       namespace: "{{ .tmodule.aws-alb }}"
