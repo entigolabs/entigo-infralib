@@ -29,9 +29,7 @@ creates for this gateway, named <release>-<key> unless a name is given.
 
 {{- /*
 GKE allows only one GCPGatewayPolicy per Gateway - a second one targeting the
-same Gateway is rejected with a conflict, the oldest wins. So every setting the
-policy carries has to go into this one object: collect them into a dict here
-and add new ones with another line below, do not render a second policy.
+same Gateway is rejected with a conflict, the oldest wins.
 */}}
 {{- $policy := dict }}
 {{- if $cfg.allowGlobalAccess }}{{- $_ := set $policy "allowGlobalAccess" true }}{{- end }}
