@@ -2,10 +2,15 @@ global:
   cloudProvider: "oracle"
   oracle:
     # Filled by agent_input_oracle.yaml.
-    # Hostname the pubkey sidecar is served on, through the shared ingress load balancer.
+    # Hostname the pubkey sidecar is served on, through the public oracle-gateway.
     pubkeyHostname: ""
-    # OCID of the wildcard certificate that ingress listener terminates with.
-    certificateOcid: ""
+    # Public instance of modules/k8s/oracle-gateway - this is the one thing that must be
+    # reachable before the VPN is up, so unlike argocd/grafana it cannot sit behind the
+    # internal (VPN-only) gateway.
+    gateway:
+      name: oracle-gateway
+      namespace: oracle-gateway
+      sectionName: https
 
 wireguard:
   service:
@@ -70,5 +75,5 @@ wireguard:
     # No extraPorts, unlike aws. There the public key is served on the NLB's 443 with
     # aws-load-balancer-ssl-cert, but an OCI network load balancer is pure layer 4 with no TLS
     # termination at all, so there is no certificate to attach. The pubkey goes through the
-    # ordinary ingress instead - templates/oracle/ - which is also what google does with an
-    # HTTPRoute rather than an extra port.
+    # oracle-gateway HTTPRoute instead - templates/oracle/ - which is also what google does
+    # with an HTTPRoute rather than an extra port.

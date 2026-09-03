@@ -3,7 +3,6 @@ global:
     # The public zone, not int_domain: this is the one thing that has to be reachable from
     # outside before the VPN is up, so it cannot live behind the VPN.
     pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
-    certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"
 
 wireguard:
   service:

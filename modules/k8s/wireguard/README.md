@@ -52,11 +52,10 @@ dropping every handshake.
 `is-preserve-source: "true"` matters more here than it looks: without it every packet arrives
 with the load balancer's address and no handshake can be attributed to a peer.
 
-**The public key is served through the ingress, not the load balancer.** On aws the key rides on
+**The public key is served through the gateway, not the load balancer.** On aws the key rides on
 the NLB's port 443 with `aws-load-balancer-ssl-cert`. An OCI network load balancer is pure layer
 4 with no TLS termination, so there is no certificate to attach - `templates/oracle/pubkey.yaml`
-puts a Service and an Ingress on the ordinary ingress load balancer instead, which is closer to
-what google does with an HTTPRoute.
+puts a Service and an HTTPRoute on the public `oracle-gateway` instead, same as google.
 
 The pubkey host is on the **public** zone deliberately: it is the one thing that must be
 reachable before the VPN is up.
