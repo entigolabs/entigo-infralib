@@ -139,9 +139,6 @@ grafana:
     storageClassName: "gp3"              # "standard" on google
 ```
 
-`ignoreMissingValueFiles: true` means a module that only supports one cloud can
-simply omit the other file.
-
 `global.cloudProvider` is set here and nowhere else. It is what every cloud
 specific template gates on, so it must never be templated by the agent.
 
