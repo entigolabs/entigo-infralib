@@ -21,7 +21,7 @@ gateways:
     certManagerCerts: ''
     sslRedirect: true
     allowGlobalAccess: false
-  # custom user-defined gateway, just add an entry
+  # custom user-defined gateway
   # partner:
   #   enabled: true
   #   gatewayClassName: gke-l7-global-external-managed
@@ -108,11 +108,11 @@ The policies themselves are created by the `dns` module, which makes three of
 them, each existing both as a global and as a regional policy under the same
 name:
 
-| Output | Profile | Minimum TLS |
-| --- | --- | --- |
-| `ssl_policy_restricted` | `RESTRICTED` | 1.2 |
-| `ssl_policy_modern` | `MODERN` | 1.2 |
-| `ssl_policy_compatible` | `COMPATIBLE` | 1.0 |
+| Output                  | Profile      | Minimum TLS |
+| ----------------------- | ------------ | ----------- |
+| `ssl_policy_restricted` | `RESTRICTED` | 1.2         |
+| `ssl_policy_modern`     | `MODERN`     | 1.2         |
+| `ssl_policy_compatible` | `COMPATIBLE` | 1.0         |
 
 `modern` is the default: the agent wires it into both built-in gateways, so
 every gateway requires TLS 1.2 out of the box. `compatible` matches the google

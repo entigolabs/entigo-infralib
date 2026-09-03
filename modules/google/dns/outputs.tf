@@ -29,6 +29,6 @@ output "ssl_policy_modern" {
 }
 
 output "ssl_policy_compatible" {
-  description = "COMPATIBLE profile, minimum TLS 1.0, the google default"
+  description = "COMPATIBLE profile, minimum TLS 1.0"
   value       = google_compute_ssl_policy.this["compatible"].name
 }

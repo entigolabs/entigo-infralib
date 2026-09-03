@@ -21,9 +21,6 @@ gateways:
     certManagerCerts: ""       # cert-manager secrets on the https listener, comma separated
     sslRedirect: true
     allowGlobalAccess: false   # only meaningful for regional internal gateway classes
-    # Name of a compute SSL policy, controlling the TLS versions and ciphers
-    # accepted from clients. The dns module creates three of them and the agent
-    # wires the "modern" one in here by default. See README.md.
     sslPolicy: ""
     addresses: []
     # - type: NamedAddress
@@ -41,7 +38,7 @@ gateways:
     addresses: []
     annotations: {}
     labels: {}
-  # custom user-defined gateway, just add an entry
+  # custom user-defined gateway
   # partner:
   #   enabled: true
   #   gatewayClassName: gke-l7-global-external-managed
