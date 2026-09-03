@@ -29,7 +29,9 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: {{ .Release.Name }}-backend-tls
+          - group: ""
+            kind: Secret
+            name: {{ .Release.Name }}-backend-tls
       allowedRoutes:
         kinds:
           - group: gateway.networking.k8s.io
