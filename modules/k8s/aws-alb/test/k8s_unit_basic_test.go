@@ -87,7 +87,7 @@ func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions,
 	hostname := fmt.Sprintf("%s-%s", strings.ToLower(random.UniqueId()), hostName)
 	routeName := fmt.Sprintf("%s-%s", backendName, gatewayName)
 
-	httpRoute, err := k8s.ReadObjectFromFile(t, "./templates/httproute.yaml")
+	httpRoute, err := k8s.ReadObjectFromFile(t, "./templates/httpRoute.yaml")
 	require.NoError(t, err)
 	httpRoute.SetName(routeName)
 	err = k8s.SetNestedSliceString(httpRoute.Object, 0, "name", gatewayName, "spec", "parentRefs")
