@@ -243,7 +243,7 @@ than one cloud puts the cloud specific ones in a folder named after the cloud:
 templates/
   configMap.yaml          # rendered everywhere
   aws/
-    Role.yaml
+    role.yaml
     serviceAccount.yaml
     targetGroupConfiguration.yaml
   google/
@@ -321,6 +321,30 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
 ```
+
+## Template file names
+
+**camelCase, starting lowercase.** One resource per file, named after what the
+file contains:
+
+```
+role.yaml
+rolePolicyAttachment.yaml
+serviceAccount.yaml
+configMap.yaml
+priorityClass.yaml
+targetGroupConfiguration.yaml
+```
+
+Not `Role.yaml`, not `serviceaccount.yaml`, not `RolePolicyAttachment.yaml`.
+The Kubernetes kind is written `ServiceAccount`, but the file that holds it is
+not — camelCase always starts small, so the first letter is lowercase even when
+the kind's is not.
+
+Helm does not care what a template is called, so this is purely for the people
+reading the folder. It is worth keeping to, because a folder that mixes
+`configmap.yaml`, `configMap.yaml` and `ConfigMap.yaml` gives no clue which one
+to write next.
 
 ## Updating the upstream chart
 
@@ -426,8 +450,9 @@ environment. This is where cloud specific templates actually get verified.
    `global.cloudProvider` and the per cloud differences.
 3. `agent_input.yaml` for the wiring, chained across clouds; per cloud input
    files only for what exists on one cloud alone.
-4. `templates/` for the resources we own, cloud specific ones under
-   `templates/<cloud>/` and gated on `global.cloudProvider`.
+4. `templates/` for the resources we own, one resource per camelCase named
+   file, cloud specific ones under `templates/<cloud>/` and gated on
+   `global.cloudProvider`.
 5. `argo-apps.yaml` if the module needs sync options, ignored differences or
    namespace labels.
 6. `test.sh` copied from an existing module — it is the same three lines
