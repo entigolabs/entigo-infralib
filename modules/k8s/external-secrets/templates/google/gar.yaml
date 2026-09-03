@@ -1,0 +1,88 @@
+{{- if and 
+    (eq .Values.global.cloudProvider "google")
+    (not (empty .Values.global.google.createGARAccounts))
+    (.Values.global.google.createGARNamespace)
+}}
+  {{- range .Values.global.google.createGARRepositories }}
+  {{- $parts := splitList "/" . }}
+  {{- if eq (len $parts) 3 }}
+
+# Repository-scoped read access, so ArgoCD cannot read unrelated repositories
+apiVersion: artifact.gcp.upbound.io/v1beta2
+kind: RegistryRepositoryIAMMember
+metadata:
+  name: {{ $.Release.Name }}-gar-{{ index $parts 2 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    member: serviceAccount:{{ $.Values.global.google.projectID }}.svc.id.goog[{{ $.Values.global.google.createGARNamespace }}/gar-token]
+    project: {{ index $parts 1 }}
+    location: {{ trimSuffix "-docker.pkg.dev" (index $parts 0) }}
+    repository: {{ index $parts 2 }}
+    role: roles/artifactregistry.reader
+  providerConfigRef:
+    name: {{ $.Values.global.providerConfigRefName }}
+---
+  {{- end }}
+  {{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gar-token
+  namespace: {{ .Values.global.google.createGARNamespace }}
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: GCRAccessToken
+metadata:
+  name: gar-token
+  namespace: {{ .Values.global.google.createGARNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  projectID: {{ .Values.global.google.projectID }}
+  auth:
+    workloadIdentity:
+      clusterLocation: {{ .Values.global.google.region }}
+      clusterName: {{ .Values.global.google.cluster.name }}
+      clusterProjectID: {{ .Values.global.google.projectID }}
+      serviceAccountRef:
+        name: gar-token
+---
+
+  {{- range .Values.global.google.createGARAccounts }}
+
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "repo-{{ .projectID }}-{{ .projectRegion }}"
+  namespace: {{ $.Values.global.google.createGARNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 30m
+  target:
+    name: "repo-{{ .projectID }}-{{ .projectRegion }}"
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repo-creds
+      data:
+        name: "repo-{{ .projectID }}-{{ .projectRegion }}"
+        type: helm
+        enableOCI: "true"
+        url: {{ .projectRegion }}-docker.pkg.dev/{{ .projectID }}
+        password: "{{`{{ .password }}`}}"
+        username: "{{`{{ .username }}`}}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: GCRAccessToken
+          name: gar-token
+
+{{- end }}
+{{- end }}
