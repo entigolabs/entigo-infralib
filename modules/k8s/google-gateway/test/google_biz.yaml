@@ -1,3 +1,5 @@
-global:
-  createInternal: true
-  createExternal: true
+gateways:
+  external:
+    sslPolicy: "{{ .toptout.dns.ssl_policy_restricted }}"
+  internal:
+    sslPolicy: "{{ .toptout.dns.ssl_policy_compatible }}"
