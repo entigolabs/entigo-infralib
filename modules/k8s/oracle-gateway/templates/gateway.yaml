@@ -10,6 +10,14 @@ metadata:
     networking.istio.io/service-type: ClusterIP
 spec:
   gatewayClassName: {{ .Values.gatewayClassName }}
+  infrastructure:
+    # Strategic-merge patch for the generated Deployment - the `restricted` Pod Security
+    # Standard this namespace enforces needs seccompProfile, which Istio's auto-provisioned
+    # gateway pod doesn't set on its own. See templates/gateway-options.yaml.
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: {{ .Release.Name }}-options
   listeners:
     # One shared listener, one wildcard cert - matches NIC's own one-cert-per-listener
     # shape. This TLS session is separate from the client-facing one NIC terminates
