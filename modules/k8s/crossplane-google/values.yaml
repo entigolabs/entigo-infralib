@@ -11,6 +11,6 @@ global:
 
   extraProviders: []
   observerProviders: []
-  requiredProviders: ["cloudplatform", "storage", "secretmanager", "compute"]
+  requiredProviders: ["cloudplatform", "storage", "secretmanager"]
   createObservers: false
   createNamespacedObservers: false

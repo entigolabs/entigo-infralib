@@ -1,12 +1,5 @@
 gateways:
   external:
-    sslPolicy:
-      create: true
-      profile: MODERN
-      minTlsVersion: TLS_1_2
+    sslPolicy: "{{ .toptout.dns.ssl_policy_restricted }}"
   internal:
-    sslPolicy:
-      create: true
-      regional: true
-      profile: RESTRICTED
-      minTlsVersion: TLS_1_2
+    sslPolicy: "{{ .toptout.dns.ssl_policy_compatible }}"

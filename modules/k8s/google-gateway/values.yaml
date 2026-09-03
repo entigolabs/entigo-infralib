@@ -6,15 +6,6 @@ global:
   internalGateway: google-gateway-internal
   externalGateway: google-gateway-external
 
-  # ProviderConfig used by the crossplane managed resources, only needed when a
-  # gateway sets sslPolicy.create. Must match the crossplane-google release
-  # name, and that module needs "compute" in its extraProviders.
-  providerConfigRefName: crossplane-google
-
-  google:
-    # Cluster region, only needed for a regional sslPolicy. Set by the agent.
-    region: ""
-
 # One Gateway (= one GKE load balancer) per entry. Any map entry with
 # enabled: true becomes a gateway, so additional gateways can be defined by
 # simply adding an entry. The Gateway object is named <release name>-<key>.
@@ -30,18 +21,10 @@ gateways:
     certManagerCerts: ""       # cert-manager secrets on the https listener, comma separated
     sslRedirect: true
     allowGlobalAccess: false   # only meaningful for regional internal gateway classes
-    # TLS versions and ciphers the load balancer accepts from clients. Either
-    # point name at a compute SSL policy that already exists, or set create to
-    # let crossplane create one named <release name>-<key>. The policy scope
-    # must match the gateway class: global for the global external classes,
-    # regional for classes such as gke-l7-rilb. See README.md.
-    sslPolicy:
-      name: ""                 # existing policy name, e.g. gke-gateway-tls12
-      create: false
-      regional: false          # true creates a RegionSSLPolicy in global.google.region
-      profile: MODERN          # COMPATIBLE | MODERN | RESTRICTED | CUSTOM
-      minTlsVersion: TLS_1_2   # TLS_1_0 | TLS_1_1 | TLS_1_2
-      customFeatures: []       # cipher suites, only with profile CUSTOM
+    # Name of a compute SSL policy, controlling the TLS versions and ciphers
+    # accepted from clients. The dns module creates three of them and the agent
+    # wires the "modern" one in here by default. See README.md.
+    sslPolicy: ""
     addresses: []
     # - type: NamedAddress
     #   value: my-reserved-address
@@ -54,13 +37,7 @@ gateways:
     certManagerCerts: ""
     sslRedirect: true
     allowGlobalAccess: false
-    sslPolicy:
-      name: ""
-      create: false
-      regional: true           # gke-l7-rilb is a regional gateway class
-      profile: MODERN
-      minTlsVersion: TLS_1_2
-      customFeatures: []
+    sslPolicy: ""
     addresses: []
     annotations: {}
     labels: {}
@@ -70,5 +47,4 @@ gateways:
   #   gatewayClassName: gke-l7-global-external-managed
   #   certificateMap: "projects/my-project/locations/global/certificateMaps/partner"
   #   sslRedirect: true
-  #   sslPolicy:
-  #     create: true
+  #   sslPolicy: "my-prefix-restricted"

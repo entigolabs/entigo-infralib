@@ -18,14 +18,11 @@ redirect route.
 {{- $certs := $cfg.certManagerCerts }}
 
 {{- /*
-SSL policy: either an existing one referenced by name, or one crossplane
-creates for this gateway, named <release>-<key> unless a name is given.
+Compute SSL policy name. The policies themselves are created by the dns module,
+which makes each name exist both globally and regionally, so the same value
+works for a global and a regional gateway class.
 */}}
-{{- $ssl := $cfg.sslPolicy | default dict }}
-{{- $sslPolicyName := $ssl.name | default "" }}
-{{- if and $ssl.create (not $sslPolicyName) }}
-{{- $sslPolicyName = printf "%s-%s" $release $name }}
-{{- end }}
+{{- $sslPolicyName := $cfg.sslPolicy }}
 
 {{- /*
 GKE allows only one GCPGatewayPolicy per Gateway - a second one targeting the

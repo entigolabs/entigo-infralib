@@ -104,73 +104,37 @@ from clients, the google equivalent of the `aws-alb` `sslPolicy` setting. It is
 per gateway, so each gateway can have its own. Leaving it unset keeps the GKE
 default, which still permits TLS 1.0 and 1.1.
 
-There are two ways to use it.
+The policies themselves are created by the `dns` module, which makes three of
+them, each existing both as a global and as a regional policy under the same
+name:
 
-### Reference an existing policy
-
-```yaml
-gateways:
-  external:
-    sslPolicy:
-      name: 'public-tls12'
-```
-
-The policy must already exist and is referenced by name, so it can be managed
-wherever the rest of the project's compute resources are - terraform
-(`google_compute_ssl_policy` / `google_compute_region_ssl_policy`) or gcloud:
-
-```sh
-gcloud compute ssl-policies create public-tls12 --profile MODERN --min-tls-version 1.2
-```
-
-### Let crossplane create it
-
-```yaml
-gateways:
-  external:
-    sslPolicy:
-      create: true
-      profile: MODERN # COMPATIBLE | MODERN | RESTRICTED | CUSTOM
-      minTlsVersion: TLS_1_2 # TLS_1_0 | TLS_1_1 | TLS_1_2
-      customFeatures: [] # cipher suites, only with profile CUSTOM
-  internal:
-    sslPolicy:
-      create: true
-      regional: true # gke-l7-rilb is a regional gateway class
-      profile: RESTRICTED
-```
-
-This renders a `compute.gcp.upbound.io/v1beta1` `SSLPolicy` named
-`<release name>-<key>`, unless `name` is also set, in which case that name is
-used for both the created policy and the reference. The module also renders a
-`ManagedResourceActivationPolicy` for `sslpolicies.compute.gcp.upbound.io`, but
-only when at least one gateway sets `create: true`.
-
-Two prerequisites for `create`:
-
-- The `compute` provider must be installed, since it is not one of the
-  crossplane-google defaults:
-  ```yaml
-  # crossplane-google values
-  global:
-    extraProviders: ['compute']
-  ```
-- `global.providerConfigRefName` must match the crossplane-google release name.
-  It defaults to `crossplane-google`.
-
-### Policy scope must match the gateway class
-
-An SSL policy is either global or regional, and the scope has to match the
-gateway class, otherwise GKE rejects it and the Gateway stays unprogrammed:
-
-| Gateway class | Scope | Setting |
+| Output | Profile | Minimum TLS |
 | --- | --- | --- |
-| `gke-l7-global-external-managed` and the other global classes | global | `regional: false` (default), renders `SSLPolicy` |
-| `gke-l7-rilb` and the other regional classes | regional | `regional: true`, renders `RegionSSLPolicy` |
+| `ssl_policy_restricted` | `RESTRICTED` | 1.2 |
+| `ssl_policy_modern` | `MODERN` | 1.2 |
+| `ssl_policy_compatible` | `COMPATIBLE` | 1.0 |
 
-A regional policy needs the cluster region in `global.google.region`, which the
-agent sets from the `gke` module. Rendering fails with a clear message if it is
-missing.
+`modern` is the default: the agent wires it into both built-in gateways, so
+every gateway requires TLS 1.2 out of the box. `compatible` matches the google
+default that still permits TLS 1.0, for a gateway that has to serve old clients.
+`restricted` allows only AEAD ciphers, for stricter compliance requirements.
+
+Because each name exists in both scopes, the same value works for a global
+gateway class such as `gke-l7-global-external-managed` and for a regional one
+such as `gke-l7-rilb` - the load balancer picks up the policy matching its own
+scope. To use a non-default policy, point the gateway at another output:
+
+```yaml
+gateways:
+  external:
+    sslPolicy: '{{ .toptout.dns.ssl_policy_restricted }}'
+  internal:
+    sslPolicy: '{{ .toptout.dns.ssl_policy_compatible }}'
+```
+
+A policy managed elsewhere can be referenced by its plain name instead. Leaving
+`sslPolicy` empty attaches no policy at all, which falls back to the GKE default
+that permits TLS 1.0 and 1.1.
 
 ### One policy object per gateway
 
