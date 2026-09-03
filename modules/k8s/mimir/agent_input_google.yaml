@@ -6,13 +6,3 @@ global:
     bucket:
       location: "{{ .toutput.gke.region }}"
       kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
-mimir-distributed:
-  gateway:
-    nginx:
-      image:
-        registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  image:
-    repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/grafana/mimir'
-  nginx:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

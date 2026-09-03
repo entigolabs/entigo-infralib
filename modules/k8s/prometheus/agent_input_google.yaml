@@ -3,16 +3,8 @@ global:
     hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
 
 prometheus:
-  server:
-    image:
-      repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/prometheus'
-  prometheus-node-exporter:
-    image:
-      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
 
   kube-state-metrics:
-    image:
-      registry: '{{ .toptout.gar-proxy.k8s_registry | "registry.k8s.io" }}'
     networkPolicy:
       egress:
         - to:
@@ -33,16 +25,3 @@ prometheus:
             - protocol: TCP
               port: 53
 
-  alertmanager:
-    image:
-      repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/alertmanager'
-    configmapReload:
-      image:
-        repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
-  configmapReload:
-    prometheus:
-      image:
-        repository: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
-prometheus-blackbox-exporter:
-  image:
-    registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
