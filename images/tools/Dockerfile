@@ -41,3 +41,4 @@ COPY *.sh /entigo-scripts/
 
 RUN addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo
 USER 1000
+
