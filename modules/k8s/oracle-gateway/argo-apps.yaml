@@ -1,6 +1,7 @@
 metadata:
   annotations:
-    # After gateway-api-crds (0), istio-base/istio-istiod (1), oci-ingress (2).
+    # After istio-base/istio-istiod (1) and oci-ingress (2, which also ships the Gateway
+    # API CRDs - no separate gateway-api-crds module needed here).
     infralib.entigo.io/sync-wave: "3"
 spec:
   # See templates/secret.yaml - genSelfSignedCert churns every render, ignored for the

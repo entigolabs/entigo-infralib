@@ -5,9 +5,9 @@ The shared ingress edge for OKE: one Kubernetes Gateway API `Gateway`, served by
 instead of a Kubernetes `LoadBalancer` Service. Plays the same role for Oracle that
 `modules/k8s/google-gateway` plays for GKE.
 
-Requires, in this order: `gateway-api-crds` (wave 0), `istio-base` + `istio-istiod` (wave
-1), `oci-ingress` (wave 2, its `IngressClass` has to exist first), then this module (wave
-3).
+Requires, in this order: `istio-base` + `istio-istiod` (wave 1), `oci-ingress` (wave 2,
+its `IngressClass` has to exist first and it already ships the Gateway API CRDs - no
+separate `gateway-api-crds` module needed), then this module (wave 3).
 
 ## Why NIC fronts this instead of a LoadBalancer Service
 
