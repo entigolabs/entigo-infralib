@@ -4,3 +4,14 @@ global:
     region: "{{ .toutput.gke.region }}"
     cluster:
       name: "{{ .toutput.gke.cluster_name }}"
+    createGARNamespace: "{{ .tmodule.argocd }}"
+    createGARAccounts:
+    - projectID: "{{ .toutput.crossplane.project_id }}"
+      projectRegion: "{{ .toutput.gke.region }}"
+    createGARRepositories:
+    - '{{ .toptout.gar-proxy.hub_registry | "" }}'
+    - '{{ .toptout.gar-proxy.ghcr_registry | "" }}'
+    - '{{ .toptout.gar-proxy.gcr_registry | "" }}'
+    - '{{ .toptout.gar-proxy.ecr_registry | "" }}'
+    - '{{ .toptout.gar-proxy.quay_registry | "" }}'
+    - '{{ .toptout.gar-proxy.k8s_registry | "" }}'

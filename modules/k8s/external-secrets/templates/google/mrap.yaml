@@ -8,5 +8,6 @@ metadata:
 spec:
   activate:
   - 'projectiammembers.cloudplatform.gcp.upbound.io'
+  - 'registryrepositoryiammembers.artifact.gcp.upbound.io'
 
 {{- end }}
