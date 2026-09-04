@@ -13,6 +13,7 @@ loki:
             sectionName: https
         hostnames:
           - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
   loki:
