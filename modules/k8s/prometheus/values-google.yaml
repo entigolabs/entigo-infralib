@@ -2,11 +2,6 @@ global:
   cloudProvider: google
   providerConfigRefName: crossplane-google
 
-  google:
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
 
 prometheus:
   server:

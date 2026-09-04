@@ -1,4 +1,10 @@
-global:
-  google:
-    gateway:
-      name: google-gateway-external
+prometheus:
+  server:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
+            namespace: '{{ .toptmodule.google-gateway | required }}'
+            sectionName: https
