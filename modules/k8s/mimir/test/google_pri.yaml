@@ -1,7 +1,6 @@
 global:
-  google:
-    gateway:
-      name: google-gateway-external
+  gateway:
+    name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
 mimir-distributed:
   ingester:
     persistentVolume:

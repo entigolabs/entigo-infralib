@@ -2,12 +2,11 @@ global:
   cloudProvider: google
   providerConfigRefName: crossplane-google
 
+  # google has no ingress, the gateway route is always on
+  createRoute: true
+
   google:
     projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
     bucket:
       location: ""
 
