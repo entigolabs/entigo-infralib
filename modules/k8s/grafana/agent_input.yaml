@@ -11,6 +11,7 @@ grafana:
       root_url: https://{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}
     users:
       home_page: "https://{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}/dashboards"
+
   route:
     main:
       parentRefs:
