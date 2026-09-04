@@ -1,3 +1,14 @@
+global:
+  gateway:
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+
 kiali-server:
+  server:
+    web_fqdn: "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
   deployment:
+    instance_name: "{{ .module.name }}"
     image_name: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/kiali/kiali'
+  external_services:
+    prometheus:
+      url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"

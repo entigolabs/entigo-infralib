@@ -8,6 +8,5 @@ kiali-server:
       scopes: ["openid", "profile", "email", "roles"]
       username_claim: "email"
 global:
-  google:
-    gateway:
-      name: "google-gateway-external"
+  gateway:
+    name: '{{ .toptin.google-gateway.global.externalGateway | required }}'

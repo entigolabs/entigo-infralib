@@ -1,17 +1,7 @@
+global:
+  createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
+
 kiali-server:
-  server:
-    web_fqdn: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   deployment:
-    instance_name: "{{ .module.name }}"
     ingress:
       enabled: "{{ .tinput.aws-alb.global.createIngress }}"
-  external_services:
-    prometheus:
-      url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
-
-global:
-  aws:
-    createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
-    gateway:
-      name: "{{ .tinput.aws-alb.global.internalGateway }}"
-      namespace: "{{ .tmodule.aws-alb }}"
