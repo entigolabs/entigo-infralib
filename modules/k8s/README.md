@@ -462,3 +462,32 @@ environment. This is where cloud specific templates actually get verified.
 8. `test/static_values.yaml` only if the chart cannot render without it.
 9. Add the module to `test_k8s()` in `common/generate_config.sh`.
 10. Run `./test.sh` before opening the pull request.
+
+## Deprecating a module
+
+A module is never simply deleted. Platforms that have not run the migration yet
+would break on the next agent run, so a replaced module keeps shipping,
+unchanged, until everyone has moved off it.
+
+1. Set `deprecated: true` in the module's `Chart.yaml`. This is Helm's own
+   field, so `helm template` prints `this chart is deprecated` on stderr and
+   `helm show chart` reports it, and it is what the tooling keys off — the
+   reports in `common/*/report.sh` skip deprecated modules so an upstream
+   release does not turn into an update pull request for a module nobody is
+   supposed to adopt.
+2. Write the module's `README.md`, starting with a `## Deprecated` section that
+   names the replacement, followed by numbered migration steps: the agent
+   configuration before and after, how to verify the replacement is working,
+   and how to remove the old app and namespace. `promtail` and
+   `argocd-ecr-updater` are the examples to copy.
+3. Delete `test/<cloud>_<env>.yaml` and `test/*_test.go` together. The
+   environment inputs are what put the module into the test platforms, via
+   `full_k8s_conf`, and `common/k8s/unit.sh` derives the environments to deploy
+   into from those same files — so a unit test left behind would wait for a
+   deployment that no longer happens. Remove the module from `test_k8s()` in
+   `common/generate_config.sh` if it is listed there.
+4. Leave `Chart.yaml`'s dependency, `values*.yaml`, the agent inputs and
+   `templates/` exactly as they are. Existing installations keep rendering the
+   same manifests.
+
+The module can be deleted once no platform references it any more.
