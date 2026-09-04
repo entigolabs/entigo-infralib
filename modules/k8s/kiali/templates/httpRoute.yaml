@@ -1,31 +1,28 @@
-{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createRoute }}
-
+{{- if .Values.global.createRoute }}
 {{- $kiali := index .Values "kiali-server" }}
-kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
-    - kind: Gateway
-      name: {{ .Values.global.aws.gateway.name }}
-      namespace: {{ .Values.global.aws.gateway.namespace }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
       sectionName: https
   hostnames:
-{{- if eq .Values.global.cloudProvider "google" }}
-    - {{ .Values.global.google.hostname }}
-{{- else }}
     - {{ $kiali.server.web_fqdn | quote }}
-{{- end }}
   rules:
     - backendRefs:
-        - kind: Service
+        - group: ''
+          kind: Service
           name: {{ .Release.Name }}
           port: {{ $kiali.server.port }}
+          weight: 1
       matches:
         - path:
             type: PathPrefix
             value: {{ $kiali.server.web_root | default "/kiali" }}
-
 {{- end }}

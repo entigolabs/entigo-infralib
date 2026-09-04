@@ -1,5 +1,11 @@
 global:
   cloudProvider: ""
+  # Gateway the HTTPRoute attaches to. Both are chosen in agent_input.yaml,
+  # from aws-alb on AWS and google-gateway on google.
+  createRoute: false
+  gateway:
+    name: ""
+    namespace: ""
 
 kiali-server:
   server:
