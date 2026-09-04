@@ -1,8 +1,12 @@
-global:
-  google:
-    gateway:
-      name: "google-gateway-external"
 grafana:
+  route:
+    main:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
+          namespace: '{{ .toptmodule.google-gateway | required }}'
+          sectionName: https
   grafana.ini:
     auth.generic_oauth:
       enabled: true

@@ -4,10 +4,6 @@ global:
 
   google:
     projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
 
 grafana:
   ingress:

@@ -1,10 +1,14 @@
-global:
-  google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
-    gateway:
-      name: "google-gateway-external"
-
 grafana:
+  route:
+    main:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
+          namespace: '{{ .toptmodule.google-gateway | required }}'
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}
