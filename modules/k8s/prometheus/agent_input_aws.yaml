@@ -1,5 +1,8 @@
 prometheus:
   server:
+    route:
+      main:
+        enabled: "{{ .tinput.aws-alb.global.createRoute }}"
     ingress:
       enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:

@@ -2,7 +2,6 @@ prometheus:
   server:
     route:
       main:
-        enabled: '{{ .toptin.aws-alb.global.createRoute | "true" }}'
         parentRefs:
           - group: gateway.networking.k8s.io
             kind: Gateway

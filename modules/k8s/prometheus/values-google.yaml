@@ -7,3 +7,7 @@ prometheus:
   server:
     ingress:
       enabled: false
+    route:
+      main:
+        # google has no ingress, the gateway route is always on
+        enabled: true
