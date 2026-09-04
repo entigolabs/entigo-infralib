@@ -1,7 +1,6 @@
 global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
-  serviceAccount: contrib-provider-kafka
   aws:
     account: ""
     clusterOIDC: ""
