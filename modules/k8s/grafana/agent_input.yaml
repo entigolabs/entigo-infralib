@@ -13,7 +13,6 @@ grafana:
       home_page: "https://{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}/dashboards"
   route:
     main:
-      enabled: '{{ .toptin.aws-alb.global.createRoute | "true" }}'
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
