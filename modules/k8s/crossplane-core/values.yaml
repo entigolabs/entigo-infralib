@@ -76,7 +76,7 @@ crossplane:
     managementPolicy: All
     # -- Enable leader election for RBAC Managers pod.
     leaderElection: true
-    # -- A list of additional args to be pased to the RBAC manager's container.
+    # -- A list of additional args to be passed to the RBAC manager's container.
     args: []
     # -- Enable nodeSelector for RBAC Managers pod.
     affinity:
@@ -172,7 +172,7 @@ crossplane:
   # -- List of extra Volumes to add to Crossplane.
   extraVolumesCrossplane: {}
 
-  # -- List of extra volumesMounts to add to Crossplane.
+  # -- List of extra volumeMounts to add to Crossplane.
   extraVolumeMountsCrossplane: {}
 
   xfn:
