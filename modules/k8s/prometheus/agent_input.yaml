@@ -10,6 +10,7 @@ prometheus:
             sectionName: https
         hostnames:
           - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+
     image:
       repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/prometheus'
   prometheus-node-exporter:
