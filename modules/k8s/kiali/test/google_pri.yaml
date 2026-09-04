@@ -7,6 +7,3 @@ kiali-server:
       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
       scopes: ["openid", "profile", "email", "roles"]
       username_claim: "email"
-global:
-  gateway:
-    name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
