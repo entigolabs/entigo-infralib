@@ -480,13 +480,24 @@ unchanged, until everyone has moved off it.
    configuration before and after, how to verify the replacement is working,
    and how to remove the old app and namespace. `promtail` and
    `argocd-ecr-updater` are the examples to copy.
-3. Delete `test/<cloud>_<env>.yaml` and `test/*_test.go` together. The
-   environment inputs are what put the module into the test platforms, via
-   `full_k8s_conf`, and `common/k8s/unit.sh` derives the environments to deploy
-   into from those same files — so a unit test left behind would wait for a
-   deployment that no longer happens. Remove the module from `test_k8s()` in
+3. Delete `test/<cloud>_<env>.yaml`. Those files are what put the module into
+   the test platforms, through `full_k8s_conf`, so removing them takes it out
+   of the test clusters. Remove the module from `test_k8s()` in
    `common/generate_config.sh` if it is listed there.
-4. Leave `Chart.yaml`'s dependency, `values*.yaml`, the agent inputs and
+4. Short circuit `test.sh` so nothing tries to test a module that is no longer
+   deployed anywhere:
+
+   ```bash
+   #!/bin/bash
+   exit 0 # Disable k8s/<module> tests, deprecated in favour of k8s/<replacement>
+   #SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+   #cd $SCRIPTPATH
+   #exec $SCRIPTPATH/../../../common/test.sh "$@"
+   ```
+
+   Keep `test/k8s_unit_basic_test.go` in case the module is ever picked back
+   up. With `test.sh` returning 0 the file costs nothing.
+5. Leave `Chart.yaml`'s dependency, `values*.yaml`, the agent inputs and
    `templates/` exactly as they are. Existing installations keep rendering the
    same manifests.
 
