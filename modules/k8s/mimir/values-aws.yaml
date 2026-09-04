@@ -142,7 +142,7 @@ mimir-distributed:
         # Avoid caching results newer than 10m because some samples can be delayed
         # This presents caching incomplete results
         max_cache_freshness: 10m
-        #Per tenent series limit
+        #Per tenant series limit
         max_global_series_per_user: 1500000
         max_global_series_per_metric: 0
         max_label_names_per_series: 60
