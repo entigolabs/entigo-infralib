@@ -127,6 +127,7 @@ global:
 ```
 
 In this state only the Ingress-based routing resources (ALB IngressClasses) exist.
+During each phase the Ingralib Agent `run` command must be executed.
 
 ## Phase 1: Enable the Gateway objects
 
@@ -138,8 +139,23 @@ Set `routingResources` to `both` so the module creates the `GatewayClass` and
         source: aws-alb
         inputs:
           global:
-            routingResources: "both" #ingress, both, httproute
+            routingResources: "both"
 ```
+
+You might also want to specify what Gateways to create. For example if you do not use external `Gatway` and use a service `Gateway` then your configuration would be as follows:
+```yaml
+      - name: aws-alb
+        source: aws-alb
+        inputs:
+          global:
+            routingResources: "both"
+          gateways:
+            service:
+              enabled: true
+            external:
+              enabled: false
+```
+This would provision internal and service `Gateway`. Without these settings internal and external `Gateway` would be provisioned.
 
 Apply and wait until the Gateway load balancers are provisioned:
 
@@ -169,10 +185,20 @@ modules. Ingress and HTTPRoute objects will exist in parallel:
 > **Note on `createType`:** `createType` is only used by the **harbor** module.
 > It can be switched to `route` immediately.
 
+Verify that the old `Ingress` objects are equivalent to the new `HTTPRoute` objects
+```
+kubectl get ingress -A
+kubectl get httproute -A
+```
+
+> If for some modules the `Ingress` object is disabled then the `HTTProute` object needs to be disabled from a different input value as well.
+> If the `Ingress` object used annotations for fine tuning then the related `HTTPRoute` inputs need to be changed as well or a `TargetGroupConfiguration` to be created for it.
+
 ## Phase 3: Remove the module Ingress objects
 
 After the HTTPRoutes are created and DNS has been switched over to the new
 Gateway load balancers, remove the Ingress objects of the infralib modules:
+
 > **external-dns** will switch over the DNS automatically once Ingress objects are removed.
 > If you want to migrate without interuption you need to make sure the DNS records point to the new loadbalancers before removing the Ingress objects.
 
@@ -188,6 +214,8 @@ Gateway load balancers, remove the Ingress objects of the infralib modules:
 ```
 
 This removes the Ingress objects of the infralib modules.
+
+> If the DNS records were not changed then the `apps` step of the infralib agent will fail because it will lose connectivity with ArgoCD. Run the step again to fix the issue.
 
 ## Migrating your own applications
 
