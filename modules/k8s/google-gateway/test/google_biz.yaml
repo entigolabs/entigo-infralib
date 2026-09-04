@@ -1,3 +1,11 @@
+# Point the modules that ask for the internal gateway at the external one, the
+# same thing aws-alb/test/aws_*.yaml does with internalGateway: external. Test
+# environments are short lived and have to be reachable without a VPN, and the
+# unit tests ask for the external gateway. Google names its gateways
+# <release name>-<key>, so this resolves to google-gateway-external.
+global:
+  internalGateway: "{{ .module.name }}-external"
+
 gateways:
   external:
     sslPolicy: "{{ .toptout.dns.ssl_policy_restricted }}"
