@@ -10,6 +10,7 @@ argocd:
       hostnames:
         - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
       # default rules (single PathPrefix /) are correct, no override needed
+
   global:
     domain: |
       {{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}
