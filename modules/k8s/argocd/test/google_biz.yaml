@@ -1,3 +1,6 @@
+# No gateway pin here: the chain in agent_input.yaml resolves it, and
+# google-gateway/test points internalGateway at the external gateway,
+# which is the one this test probes.
 argocd:
   server:
     httproute:
