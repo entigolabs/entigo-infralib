@@ -117,6 +117,17 @@ fi
             mkdir -p "agents/${testname}/config/$STEP_NAME"
             cp "$MODULE_PATH/../aws-alb/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/aws-alb-${prefix}.yaml"
           fi
+          if [[ $testname == google_*  && $MODULE_NAME != "google-gateway" ]]
+          then
+            # Same hack for google: modules chain the gateway name and namespace
+            # off google-gateway, so it has to be in the step for .tinput and
+            # .tmodule to resolve. Note google-gateway's app name carries no
+            # -$prefix suffix, see get_app_name, so the input file is named
+            # google-gateway.yaml rather than google-gateway-${prefix}.yaml.
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "google-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../google-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/google-gateway.yaml"
+          fi
         fi
 
         # Append module to the apps step unless an entry with this name already exists
