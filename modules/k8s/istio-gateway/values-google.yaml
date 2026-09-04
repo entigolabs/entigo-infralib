@@ -1,7 +1,4 @@
 global:
   cloudProvider: google
-  google:
-    hostname: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
+  # google has no ingress, the gateway route is always on
+  createRoute: true
