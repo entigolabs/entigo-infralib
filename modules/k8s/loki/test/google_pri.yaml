@@ -10,15 +10,6 @@ global:
           condition:
             age: 100
 loki:
-  gateway:
-    route:
-      main:
-        parentRefs:
-          - group: gateway.networking.k8s.io
-            kind: Gateway
-            name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
-            namespace: '{{ .toptmodule.google-gateway | required }}'
-            sectionName: https
   fullnameOverride: "{{ .module.name }}"
   nameOverride: "{{ .module.name }}"
   write:
