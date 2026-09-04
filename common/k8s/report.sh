@@ -3,8 +3,20 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $SCRIPTPATH/../..
 
 
+# A deprecated module keeps shipping so platforms can finish migrating off it,
+# but its upstream chart and providers are no longer followed. Skipping them
+# keeps the report, and the update pull requests generated from it, clean.
+deprecated_module() {
+  local chart="$1/Chart.yaml"
+  [ -f "$chart" ] && [ "$(yq -r '.deprecated // false' "$chart")" == "true" ]
+}
+
 for chart in $(find modules/k8s/ -name Chart.yaml | sort)
 do
+  if deprecated_module "$(dirname $chart)"
+  then
+    continue
+  fi
   yq -r '.dependencies[] | "\(.name) \(.version) \(.repository)"' $chart | while read dep
   do
     if [ "$dep" != "" ]
@@ -63,6 +75,12 @@ done
 
 for providerfile in $(find modules/k8s/ -name provider.yaml | sort)
 do
+  # provider.yaml sits at varying depths under templates/, so take the module
+  # root, modules/k8s/<module>, rather than the file's own directory
+  if deprecated_module "$(echo $providerfile | cut -d/ -f1-3)"
+  then
+    continue
+  fi
   cat $providerfile | grep xpkg.upbound.io | grep -ve"\$provider" | cut -d"/" -f2- | while read provider
   do
     old_version=$(echo $provider | cut -d":" -f2)
