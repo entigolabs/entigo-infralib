@@ -127,7 +127,7 @@ global:
 ```
 
 In this state only the Ingress-based routing resources (ALB IngressClasses) exist.
-During each phase the Ingralib Agent `run` command must be executed.
+During each phase the Infralib Agent `run` command must be executed.
 
 ## Phase 1: Enable the Gateway objects
 
@@ -200,7 +200,7 @@ After the HTTPRoutes are created and DNS has been switched over to the new
 Gateway load balancers, remove the Ingress objects of the infralib modules:
 
 > **external-dns** will switch over the DNS automatically once Ingress objects are removed.
-> If you want to migrate without interuption you need to make sure the DNS records point to the new loadbalancers before removing the Ingress objects.
+> If you want to migrate without interruption you need to make sure the DNS records point to the new loadbalancers before removing the Ingress objects.
 
 ```yaml
       - name: aws-alb
