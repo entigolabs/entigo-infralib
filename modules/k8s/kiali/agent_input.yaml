@@ -6,6 +6,7 @@ global:
 kiali-server:
   server:
     web_fqdn: "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+
   deployment:
     instance_name: "{{ .module.name }}"
     image_name: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/kiali/kiali'
