@@ -4,5 +4,4 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
-    assumeRole: ""
     crossplaneSystemNamespace: ""
