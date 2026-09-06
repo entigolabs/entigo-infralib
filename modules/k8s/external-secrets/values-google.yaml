@@ -8,5 +8,4 @@ global:
     cluster:
       name: ""
     createGARNamespace: ""
-    createGARAccounts: []
-    createGARRepositories: []
+    createGARProjects: []

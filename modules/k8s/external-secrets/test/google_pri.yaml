@@ -1,2 +1,4 @@
 global:
   createClusterSecretStore: true
+
+# oci://europe-north1-docker.pkg.dev/entigo-infralib2/biz-net-gar-proxy-ghcr/entigolabs/entigo-infralib-release/k8s/trivy:1.22.30

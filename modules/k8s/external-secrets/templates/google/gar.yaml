@@ -1,37 +1,60 @@
 {{- if and 
     (eq .Values.global.cloudProvider "google")
-    (not (empty .Values.global.google.createGARAccounts))
+    (not (empty .Values.global.google.createGARProjects))
     (.Values.global.google.createGARNamespace)
 }}
-  {{- range .Values.global.google.createGARRepositories }}
-  {{- $parts := splitList "/" . }}
-  {{- if eq (len $parts) 3 }}
-
-# Repository-scoped read access, so ArgoCD cannot read unrelated repositories
-apiVersion: artifact.gcp.upbound.io/v1beta2
-kind: RegistryRepositoryIAMMember
+{{- $gsa := printf "%s-gar" .Release.Name }}
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ServiceAccount
 metadata:
-  name: {{ $.Release.Name }}-gar-{{ index $parts 2 }}
+  name: {{ $gsa }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
-    member: serviceAccount:{{ $.Values.global.google.projectID }}.svc.id.goog[{{ $.Values.global.google.createGARNamespace }}/gar-token]
-    project: {{ index $parts 1 }}
-    location: {{ trimSuffix "-docker.pkg.dev" (index $parts 0) }}
-    repository: {{ index $parts 2 }}
+    displayName: Artifact Registry token service account
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ServiceAccountIAMMember
+metadata:
+  name: {{ .Release.Name }}-gar-token
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Values.global.google.createGARNamespace }}/gar-token]
+    role: roles/iam.workloadIdentityUser
+    serviceAccountIdRef:
+      name: {{ $gsa }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+kind: ProjectIAMMember
+metadata:
+  name: {{ .Release.Name }}-gar-token
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    member: serviceAccount:{{ $gsa }}@{{ .Values.global.google.projectID }}.iam.gserviceaccount.com
+    project: {{ .Values.global.google.projectID }}
     role: roles/artifactregistry.reader
   providerConfigRef:
-    name: {{ $.Values.global.providerConfigRefName }}
+    name: {{ .Values.global.providerConfigRefName }}
 ---
-  {{- end }}
-  {{- end }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: gar-token
   namespace: {{ .Values.global.google.createGARNamespace }}
+  annotations:
+    iam.gke.io/gcp-service-account: {{ $gsa }}@{{ .Values.global.google.projectID }}.iam.gserviceaccount.com
 ---
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: GCRAccessToken
@@ -52,7 +75,7 @@ spec:
         name: gar-token
 ---
 
-  {{- range .Values.global.google.createGARAccounts }}
+  {{- range .Values.global.google.createGARProjects }}
 
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
@@ -83,6 +106,6 @@ spec:
           apiVersion: generators.external-secrets.io/v1alpha1
           kind: GCRAccessToken
           name: gar-token
-
+---
 {{- end }}
 {{- end }}
