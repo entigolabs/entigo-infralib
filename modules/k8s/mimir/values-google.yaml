@@ -2,12 +2,11 @@ global:
   cloudProvider: google
   providerConfigRefName: crossplane-google
 
+  # google has no ingress, the gateway route is always on
+  createRoute: true
+
   google:
     projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
     bucket:
       location: ""
 
@@ -17,7 +16,7 @@ mimir-distributed:
       enabled: false
 
   mimir:
-    # -- Base config file for Grafana Mimir and Grafana Enterprise Metrics. Contains Helm templates that are evaulated at install/upgrade.
+    # -- Base config file for Grafana Mimir and Grafana Enterprise Metrics. Contains Helm templates that are evaluated at install/upgrade.
     # To modify the resulting configuration, either copy and alter 'mimir.config' as a whole or use the 'mimir.structuredConfig' to add and modify certain YAML elements.
     config: |
       usage_stats:
@@ -128,7 +127,7 @@ mimir-distributed:
         # Avoid caching results newer than 10m because some samples can be delayed
         # This presents caching incomplete results
         max_cache_freshness: 10m
-        #Per tenent series limit
+        #Per tenant series limit
         max_global_series_per_user: 1500000
         max_global_series_per_metric: 0
         max_label_names_per_series: 60

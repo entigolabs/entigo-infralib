@@ -1,9 +1,4 @@
 logs:
-  image:
-    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  configReloader:
-    image:
-      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
   networkPolicy:
     egress:
       - ports:
@@ -23,10 +18,10 @@ logs:
         to:
           - namespaceSelector:
               matchLabels:
-                kubernetes.io/metadata.name: '{{ .tmodule.loki }}'
+                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
             podSelector:
               matchLabels:
-                app.kubernetes.io/name: '{{ .tmodule.loki }}'
+                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
                 app.kubernetes.io/component: gateway
       - ports:
           - port: 443

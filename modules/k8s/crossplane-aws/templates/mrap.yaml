@@ -1,4 +1,4 @@
-#Due to a bug we must activate the namesapced and non namespaced observers at differnet time.
+#Due to a bug we must activate the namespaced and non namespaced observers at different time.
 {{- if .Values.global.createNamespacedObservers }}
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
