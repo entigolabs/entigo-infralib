@@ -6,9 +6,9 @@ global:
         transition:
           - days: 1095
             storageClass: "GLACIER"
-    gateway:
-      name: service
-      namespace: "{{ .tmodule.aws-alb }}"
+  gateway:
+    name: service
+    namespace: "{{ .tmodule.aws-alb }}"
 
 mimir-distributed:
   ingester:

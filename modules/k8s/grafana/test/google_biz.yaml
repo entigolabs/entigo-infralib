@@ -1,10 +1,11 @@
-global:
-  google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
-    gateway:
-      name: "google-gateway-external"
-
+# No gateway pin here: the chain in agent_input.yaml resolves it, and
+# google-gateway/test points internalGateway at the external gateway,
+# which is the one this test probes.
 grafana:
+  route:
+    main:
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}
