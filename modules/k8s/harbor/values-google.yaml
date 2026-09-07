@@ -3,18 +3,15 @@ global:
   providerConfigRefName: crossplane-google
 
   google:
-    hostname: ""
     projectID: ""
-    gateway:
-      name: google-gateway-external
-      namespace: google-gateway
     bucket:
       location: ""
       kmsKeyId: ""
 
 harbor:
   expose:
-    type: clusterIP
+    # google has no ingress, the gateway route is always on
+    type: route
     tls:
       enabled: false
   persistence:
