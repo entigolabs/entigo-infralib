@@ -1,4 +1,7 @@
 global:
   cloudProvider: ""
   providerConfigRefName: ""
-  serviceAccount: ""
+  # The kafka provider itself is cloud neutral, so its ServiceAccount name is
+  # the same on every cloud. Only the IRSA annotation on that ServiceAccount,
+  # and the IAM resources under templates/aws/, are AWS specific.
+  serviceAccount: contrib-provider-kafka
