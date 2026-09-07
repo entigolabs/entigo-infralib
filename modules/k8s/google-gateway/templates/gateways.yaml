@@ -1,0 +1,131 @@
+{{- /*
+One Gateway (= one GKE load balancer) per entry in .Values.gateways, so users
+can add custom gateways in values instead of only getting the built-in
+internal/external pair. Any map entry with enabled: true becomes a gateway.
+Every gateway also gets its optional GCPGatewayPolicy and its http -> https
+redirect route.
+*/}}
+{{- $release := .Release.Name }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+
+{{- $class := required (printf "gateways.%s.gatewayClassName is required" $name) $cfg.gatewayClassName }}
+
+{{- /* Certificate Manager map, only supported by the global external gateway classes */}}
+{{- $certMap := $cfg.certificateMap }}
+
+{{- /* cert-manager certificates, used by the regional internal gateway classes */}}
+{{- $certs := $cfg.certManagerCerts }}
+
+{{- /*
+Compute SSL policy name. The policies themselves are created by the dns module,
+which makes each name exist both globally and regionally, so the same value
+works for a global and a regional gateway class.
+*/}}
+{{- $sslPolicyName := $cfg.sslPolicy }}
+
+{{- /*
+GKE allows only one GCPGatewayPolicy per Gateway - a second one targeting the
+same Gateway is rejected with a conflict, the oldest wins.
+*/}}
+{{- $policy := dict }}
+{{- if $cfg.allowGlobalAccess }}{{- $_ := set $policy "allowGlobalAccess" true }}{{- end }}
+{{- if $sslPolicyName }}{{- $_ := set $policy "sslPolicy" $sslPolicyName }}{{- end }}
+
+{{- /* sslRedirect defaults to true; hasKey is needed because "default" would override an explicit false */}}
+{{- $sslRedirect := true }}
+{{- if hasKey $cfg "sslRedirect" }}{{- $sslRedirect = $cfg.sslRedirect }}{{- end }}
+---
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $release }}-{{ $name }}
+  namespace: {{ $release }}
+  {{- if or $certMap $cfg.annotations }}
+  annotations:
+    {{- if $certMap }}
+    networking.gke.io/certmap: {{ $certMap }}
+    {{- end }}
+    {{- range $k, $v := $cfg.annotations }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if $cfg.labels }}
+  labels:
+    {{- range $k, $v := $cfg.labels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ $class }}
+  {{- if $cfg.addresses }}
+  addresses:
+    {{- toYaml $cfg.addresses | nindent 4 }}
+  {{- end }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+      {{- if $certs }}
+      tls:
+        mode: Terminate
+        options:
+          networking.gke.io/cert-manager-certs: {{ $certs }}
+      {{- end }}
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+
+{{- if $policy }}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPGatewayPolicy
+metadata:
+  name: {{ $release }}-{{ $name }}
+  namespace: {{ $release }}
+spec:
+  default:
+    {{- toYaml $policy | nindent 4 }}
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ $release }}-{{ $name }}
+{{- end }}
+
+{{- if $sslRedirect }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $release }}-{{ $name }}-redirect
+  namespace: {{ $release }}
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ $release }}-{{ $name }}
+    sectionName: http
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+{{- end }}
+
+{{- end }}
+{{- end }}

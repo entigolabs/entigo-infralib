@@ -1,5 +1,11 @@
 global:
   prefix: "{{ .config.prefix }}"
-  google:
-    externalCertificateMap: "{{ .toutput.dns.pub_zone_id }}"
-    internalCertificateMap: "{{ .toutput.dns.int_zone_id }}"
+  internalGateway: "{{ .module.name }}-internal"
+  externalGateway: "{{ .module.name }}-external"
+gateways:
+  external:
+    certificateMap: "{{ .toutput.dns.pub_zone_id }}"
+    sslPolicy: "{{ .toptout.dns.ssl_policy_modern }}"
+  internal:
+    certManagerCerts: "{{ .toutput.dns.int_zone_id }}"
+    sslPolicy: "{{ .toptout.dns.ssl_policy_modern }}"
