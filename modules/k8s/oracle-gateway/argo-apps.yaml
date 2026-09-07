@@ -1,8 +1,18 @@
 metadata:
   annotations:
-    # After istio-base/istio-istiod (1) and oci-ingress (2, which also ships the Gateway
-    # API CRDs - no separate gateway-api-crds module needed here).
-    infralib.entigo.io/sync-wave: "3"
+    # After istio-base/istio-istiod (1), alongside oci-ingress (2, which also ships the
+    # Gateway API CRDs - no separate gateway-api-crds module needed here) - matches the wave
+    # aws-alb/google-gateway use for their own Gateway objects. Same-wave, not after, is a
+    # real ordering gap unique to this cloud: aws-alb/google-gateway ship their own Gateway
+    # API CRDs inside their own Application, so ArgoCD's kind-ordering (CRDs before CRs)
+    # covers them within one sync; here the CRDs come from a *different* Application
+    # (oci-ingress), and ArgoCD gives no ordering guarantee between two Applications sharing
+    # a wave. In practice this self-heals the same way the argocd bootstrap circular
+    # dependency does (see modules/k8s/argocd's oracle HTTPRoute): the apps step's own
+    # plan/apply retry loop keeps this Application's sync attempts running long enough for
+    # oci-ingress's CRDs to land within the same overall run - not a hard guarantee, just
+    # what's been observed to hold in practice.
+    infralib.entigo.io/sync-wave: "2"
 spec:
   # See templates/secret.yaml - genSelfSignedCert churns every render, ignored for the
   # same reason oci-native-ingress-controller's webhook cert ignores its own.

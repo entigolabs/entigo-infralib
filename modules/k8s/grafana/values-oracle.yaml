@@ -7,10 +7,10 @@ global:
       # then skipped entirely. Set from `.toptmodule.loki` in agent_input_oracle.yaml.
       module: ""
   oracle:
-    # Internal/private instance of modules/k8s/oracle-gateway - reached only over WireGuard.
+    # Private gateway from modules/k8s/oracle-gateway's `gateways` map - reached only over WireGuard.
     gateway:
-      name: oracle-gateway-int
-      namespace: oracle-gateway-int
+      name: oracle-gateway-private
+      namespace: oracle-gateway
       sectionName: https
     hostname: ""
 

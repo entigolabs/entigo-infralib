@@ -1,13 +1,14 @@
 # oracle-gateway
 
-The shared ingress edge for OKE: one Kubernetes Gateway API `Gateway`, served by Istio
-(`gatewayClassName: istio`), fronted by `modules/k8s/oci-native-ingress-controller` (NIC)
-instead of a Kubernetes `LoadBalancer` Service. Plays the same role for Oracle that
-`modules/k8s/google-gateway` plays for GKE.
+The shared ingress edge for OKE: one or more Kubernetes Gateway API `Gateway`s, served by
+Istio (`gatewayClassName: istio`), each fronted by `modules/k8s/oci-native-ingress-controller`
+(NIC) instead of a Kubernetes `LoadBalancer` Service. Plays the same role for Oracle that
+`modules/k8s/aws-alb`/`modules/k8s/google-gateway` play for their own clouds, and follows the
+same `gateways` map convention those two modules use.
 
-Requires, in this order: `istio-base` + `istio-istiod` (wave 1), `oci-ingress` (wave 2,
-its `IngressClass` has to exist first and it already ships the Gateway API CRDs - no
-separate `gateway-api-crds` module needed), then this module (wave 3).
+Requires, in this order: `istio-base` + `istio-istiod` (wave 1), then this module (wave 2,
+alongside `oci-ingress` - see `argo-apps.yaml`'s comment for the one real ordering nuance
+that wave choice carries).
 
 ## Why NIC fronts this instead of a LoadBalancer Service
 
@@ -30,7 +31,7 @@ certificate's actual PEM content at all.
 
 `templates/ingress.yaml` is a wildcard-host `Ingress` using the real wildcard certificate
 by OCID - the client-facing TLS session, same as NIC has always worked.
-`templates/gateway.yaml`'s `Gateway` listener is a *second*, independent TLS session
+`templates/gateways.yaml`'s `Gateway` listener is a *second*, independent TLS session
 between NIC and Envoy, using a throwaway self-signed certificate (`templates/secret.yaml`)
 that exists only so this hop is encrypted rather than plaintext.
 
@@ -48,56 +49,69 @@ instance's expected IP address to the physical port it is connected to, with a r
 check against encapsulation tampering, so nothing else on the VCN can spoof its way onto
 this path in the first place.
 
-## Internal vs. external: two instances of this chart
+## One module, one namespace, a `gateways` map
 
-Each needs its own OCI load balancer and its own `IngressClass`, so each is its own Helm
-release - the same `oci-ic`/`oci-ic-int` split every app's `Ingress` already had:
+Unlike the two-Helm-release design this module started with, a single release now creates
+every Gateway named in `.Values.gateways` - any map entry with `enabled: true` becomes a
+`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named
+`<release name>-<key>`. The built-in entries:
 
 ```yaml
-modules:
-  - name: oracle-gateway
-    source: oracle-gateway
-    # public: uses agent_input_oracle.yaml's defaults (oci-ic, pub_cert_ocid) as-is
-  - name: oracle-gateway-int
-    source: oracle-gateway
-    inputs:
-      global:
-        oracle:
-          ingressClassName: oci-ic-int
-          certificateOcid: "{{ .toutput.dns.int_cert_ocid }}"
+gateways:
+  public:
+    enabled: true
+    ingressClassName: oci-ic
+    certificateOcid: ""   # set by agent_input_oracle.yaml from .toutput.dns.pub_cert_ocid
+    domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.pub_domain
+  private:
+    enabled: true
+    ingressClassName: oci-ic-int
+    certificateOcid: ""   # .toutput.dns.int_cert_ocid
+    domain: ""            # .toutput.dns.int_domain
 ```
 
-istiod (the control plane) stays a single shared install regardless of how many of these
-are deployed - only the data-plane Envoy workload duplicates.
+Each still gets its own OCI load balancer and `IngressClass` - the same `oci-ic`/`oci-ic-int`
+split every app's `Ingress` already had - but both now live in one namespace
+(`oracle-gateway`) under one Helm release, matching how `aws-alb`/`google-gateway` handle
+their own `external`/`internal` pair. istiod (the control plane) stays a single shared
+install regardless of how many gateways are enabled - only the data-plane Envoy workload
+duplicates per gateway.
+
+A deployment that needs a third gateway (a partner-facing one, say) adds another map entry
+with its own `ingressClassName`/`certificateOcid`/`domain` - no new module, no new Helm
+release.
 
 ## How apps attach
 
-Apps use a Gateway API `HTTPRoute` naming this Gateway (and, for the internal instance,
-its own namespace) via `parentRefs`:
+Apps use a Gateway API `HTTPRoute` naming the specific gateway they need via `parentRefs`:
 
 ```yaml
 parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway
-    name: oracle-gateway-int
-    namespace: oracle-gateway-int
+    name: oracle-gateway-private
+    namespace: oracle-gateway
     sectionName: https
 ```
 
-There is only one listener, so `sectionName` is not load-bearing the way it would be with
-multiple listeners - set anyway for clarity and so a future second listener can't silently
-start matching routes that never asked for it.
+(`oracle-gateway-public` for anything that must be reachable before the VPN is up - see
+`modules/k8s/wireguard`'s pubkey endpoint.) There is only one listener per gateway, so
+`sectionName` is not load-bearing the way it would be with multiple listeners - set anyway
+for clarity and so a future second listener can't silently start matching routes that never
+asked for it.
 
 ## Gotchas worth knowing
 
 - **The generated Service must stay `ClusterIP`.** Istio defaults a Gateway's Service to
   `LoadBalancer`, which the CCM would then provision into a second, unwanted, billed OCI
-  load balancer - `networking.istio.io/service-type: ClusterIP` on the `Gateway`'s own
+  load balancer - `networking.istio.io/service-type: ClusterIP` on each `Gateway`'s own
   `metadata.annotations` is what stops that.
 - **An Istio gateway pod does not listen on a port until a listener binds it.** The OCI
-  load balancer's backend stays unhealthy until this Gateway exists and is Programmed.
+  load balancer's backend stays unhealthy until its Gateway exists and is Programmed.
 - **The backend certificate churns on every Helm render unless reused.** `genSelfSignedCert`
-  produces fresh output every time, so `templates/secret.yaml` looks up the existing Secret
-  and reuses its key material across upgrades - same pattern, same reason, as
+  produces fresh output every time, so `templates/secret.yaml` looks up each gateway's
+  existing Secret and reuses its key material across upgrades - same pattern, same reason, as
   `oci-native-ingress-controller`'s own webhook certificate. `argo-apps.yaml` still ignores
   this Secret's `/data`, since a first sync (nothing to look up yet) renders fresh anyway.
+- **Sharing a wave with `oci-ingress` is a real, accepted ordering gap, not a guarantee.**
+  See `argo-apps.yaml`'s comment on `infralib.entigo.io/sync-wave`.

@@ -1,4 +1,8 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $release := .Release.Name }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+---
 # NIC (not CCM) provisions this load balancer and terminates client TLS with the real
 # wildcard cert by OCID - see the README for why. Host is a wildcard, not per-app: matches
 # the certificate's own shape, and gives external-dns's `ingress` source a real hostname to
@@ -6,28 +10,30 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ $release }}-{{ $name }}
   annotations:
-    oci-native-ingress.oraclecloud.com/certificate-ocid: {{ .Values.global.oracle.certificateOcid | quote }}
+    oci-native-ingress.oraclecloud.com/certificate-ocid: {{ $cfg.certificateOcid | quote }}
     oci-native-ingress.oraclecloud.com/https-listener-port: "443"
     # backend-tls-enabled left unset (true, default) - NIC re-encrypts to Envoy with
     # templates/secret.yaml's throwaway cert, unverified. See that template's comment.
 spec:
-  ingressClassName: {{ .Values.global.oracle.ingressClassName }}
+  ingressClassName: {{ $cfg.ingressClassName }}
   rules:
-    - host: {{ printf "*.%s" .Values.global.oracle.domain | quote }}
+    - host: {{ printf "*.%s" $cfg.domain | quote }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ .Release.Name }}-istio
+                name: {{ $release }}-{{ $name }}-istio
                 port:
                   number: 443
   defaultBackend:
     service:
-      name: {{ .Release.Name }}-istio
+      name: {{ $release }}-{{ $name }}-istio
       port:
         number: 443
+{{- end }}
+{{- end }}
 {{- end }}
