@@ -98,6 +98,10 @@ resource-types:
   - BedrockPrompt
   - BedrockEvaluationJob
   - BedrockModelCustomizationJob
+  - Inspector2
+  - InspectorAssessmentRun
+  - InspectorAssessmentTarget
+  - InspectorAssessmentTemplate
 
 accounts:
   "877483565445":
