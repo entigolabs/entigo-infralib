@@ -1,6 +1,17 @@
 global:
   cloudProvider: ""
 
+  # Public key download route, google only. On AWS the public key is served on
+  # an extra TCP 443 port of the wireguard NLB, which terminates TLS with an
+  # ACM certificate. Google's passthrough load balancer cannot terminate TLS,
+  # and it takes a regional address while the external gateway is global, so
+  # the two can share neither an address nor a hostname. All three are filled
+  # from agent_input_google.yaml, from google-gateway.
+  pubkeyHostname: ""
+  gateway:
+    name: ""
+    namespace: ""
+
 wireguard:
   wireguard:
     serverAddress: ""
