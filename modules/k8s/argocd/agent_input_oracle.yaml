@@ -1,4 +1,14 @@
 argocd:
+  server:
+    httproute:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: oracle-gateway-private
+          namespace: oracle-gateway
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
   global:
     domain: |
       {{ .module.name }}.{{ .toutput.dns.int_domain }}

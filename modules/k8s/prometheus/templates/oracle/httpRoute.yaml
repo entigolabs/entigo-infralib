@@ -5,19 +5,17 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
+  # Same input keys aws-alb/google-gateway use (agent_input.yaml/agent_input_oracle.yaml) -
+  # no Oracle-specific input shape needed here.
   parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: {{ .Values.global.oracle.gateway.name }}
-      namespace: {{ .Values.global.oracle.gateway.namespace }}
-      sectionName: {{ .Values.global.oracle.gateway.sectionName }}
+    {{- toYaml .Values.prometheus.server.route.main.parentRefs | nindent 4 }}
   hostnames:
-    - {{ .Values.global.oracle.hostname }}
+    {{- toYaml .Values.prometheus.server.route.main.hostnames | nindent 4 }}
   rules:
     - backendRefs:
         - group: ''
           kind: Service
-          name: grafana
+          name: {{ .Release.Name }}-server
           port: 80
           weight: 1
       matches:

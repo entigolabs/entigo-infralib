@@ -5,16 +5,10 @@ global:
     # The in-cluster kube-apiserver ClusterIP, for the kube-state-metrics egress policy
     # below. aws hardcodes its own equivalent (172.20.0.1) in values.yaml.
     kubernetesServiceIp: ""
-    # Private gateway from modules/k8s/oracle-gateway's `gateways` map - reached only over WireGuard.
-    gateway:
-      name: oracle-gateway-private
-      namespace: oracle-gateway
-      sectionName: https
-    hostname: ""
 
 prometheus:
   server:
-    # Exposed via HTTPRoute instead (templates/oracle/http-route.yaml).
+    # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
     ingress:
       enabled: false
     persistentVolume:

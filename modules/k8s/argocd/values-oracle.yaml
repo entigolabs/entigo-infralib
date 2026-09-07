@@ -1,18 +1,11 @@
 global:
   cloudProvider: oracle
 
-  oracle:
-    # Private gateway from modules/k8s/oracle-gateway's `gateways` map - reached only over WireGuard.
-    gateway:
-      name: oracle-gateway-private
-      namespace: oracle-gateway
-      sectionName: https
-
 argocd:
   configs:
     params:
       server.insecure: true
   server:
     ingress:
-      # Exposed via HTTPRoute instead (templates/oracle/http-route.yaml).
+      # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
       enabled: false

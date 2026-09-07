@@ -11,10 +11,18 @@ global:
       module: "{{ .toptmodule.loki }}"
     prometheus:
       hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
-  oracle:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
 
 grafana:
+  route:
+    main:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: oracle-gateway-private
+          namespace: oracle-gateway
+          sectionName: https
+      hostnames:
+        - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}

@@ -14,6 +14,15 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}"
 
 loki:
+  gateway:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: not-used-on-oracle
+            namespace: not-used-on-oracle
+            sectionName: https
   global:
     # The Customer Secret Key the client minted manually (see templates/oracle/credentials.yaml)
     # and handed to the agent via `ei-agent add-custom --key=loki-attribute-id/-key --value=...`.

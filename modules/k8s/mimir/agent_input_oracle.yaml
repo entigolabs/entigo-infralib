@@ -1,5 +1,8 @@
 global:
   prefix: "{{ .config.prefix }}"
+  gateway:
+    name: not-used-on-oracle
+    namespace: not-used-on-oracle
   oracle:
     compartmentId: "{{ .agent.accountId }}"
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"

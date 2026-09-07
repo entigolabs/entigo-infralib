@@ -6,16 +6,9 @@ global:
       # Name of the loki module, or empty when loki isn't deployed - the Loki datasource is
       # then skipped entirely. Set from `.toptmodule.loki` in agent_input_oracle.yaml.
       module: ""
-  oracle:
-    # Private gateway from modules/k8s/oracle-gateway's `gateways` map - reached only over WireGuard.
-    gateway:
-      name: oracle-gateway-private
-      namespace: oracle-gateway
-      sectionName: https
-    hostname: ""
 
 grafana:
-  # Exposed via HTTPRoute instead (templates/oracle/http-route.yaml).
+  # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
   ingress:
     enabled: false
   persistence:
