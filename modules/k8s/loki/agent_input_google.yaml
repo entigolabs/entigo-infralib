@@ -1,7 +1,6 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
   google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     publicSubnetCidrs: "{{.toutput.vpc.public_subnet_cidrs}}"
     bucket:

@@ -1,5 +1,12 @@
 global:
   cloudProvider: ""
+  # Route target. All three are filled from agent_input.yaml, from aws-alb on
+  # AWS and google-gateway on google.
+  createRoute: false
+  hostname: ""
+  gateway:
+    name: ""
+    namespace: ""
   providerConfigRefName: ""
   bucketName: "mimir"
   prefix: ""

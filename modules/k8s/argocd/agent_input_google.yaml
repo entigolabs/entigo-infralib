@@ -1,4 +1,0 @@
-argocd:
-  global:
-    domain: |
-      {{ .module.name }}.{{ .toutput.dns.int_domain }}

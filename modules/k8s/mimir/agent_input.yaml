@@ -1,8 +1,15 @@
+global:
+  hostname: "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+  gateway:
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+
 mimir-distributed:
   gateway:
     nginx:
       image:
         registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
+
   image:
     repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/grafana/mimir'
   nginx:

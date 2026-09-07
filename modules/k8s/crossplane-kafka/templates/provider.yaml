@@ -1,4 +1,3 @@
-{{- if eq .Values.global.cloudProvider "aws" }}
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
@@ -13,4 +12,3 @@ spec:
     apiVersion: pkg.crossplane.io/v1beta1
     kind: DeploymentRuntimeConfig
     name: contrib-provider-kafka
-{{- end }}

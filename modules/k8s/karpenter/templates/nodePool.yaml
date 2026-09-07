@@ -1,6 +1,6 @@
 {{- if eq .Values.global.cloudProvider "aws" }}
 
-{{- if .Values.createNodepool }}
+{{- if .Values.global.createNodepool }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:

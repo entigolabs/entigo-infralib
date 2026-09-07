@@ -1,7 +1,6 @@
 global:
-  aws:
-    gateway:
-      name: external
+  gateway:
+    name: '{{ .toptin.aws-alb.global.externalGateway | required }}'
 kiali-server:
   server:
     web_fqdn: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"

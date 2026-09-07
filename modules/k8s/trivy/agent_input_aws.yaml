@@ -1,5 +1,5 @@
 global:
-  prefix: "{{ .config.prefix}}"
+  prefix: "{{ .config.prefix }}"
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"

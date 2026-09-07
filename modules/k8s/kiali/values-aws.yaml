@@ -1,9 +1,5 @@
 global:
   cloudProvider: "aws"
-  aws:
-    gateway:
-      name: ""
-      namespace: ""
 kiali-server:
   deployment:
     ingress:

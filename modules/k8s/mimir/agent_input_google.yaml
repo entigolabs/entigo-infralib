@@ -1,7 +1,6 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
   google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     bucket:
       location: "{{ .toutput.gke.region }}"

@@ -1,5 +1,19 @@
 loki:
   gateway:
+    route:
+      main:
+        # Pin to avoid Capabilities auto-detect under ArgoCD repo-server discovery cache
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: HTTPRoute
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
+            namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+            sectionName: https
+        hostnames:
+          - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
   loki:
