@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "aws" }}
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.prometheus.server.route.main.enabled }}
 apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:
