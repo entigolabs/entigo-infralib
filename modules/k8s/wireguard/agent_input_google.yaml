@@ -1,7 +1,7 @@
 global:
   # Own hostname, because the wireguard load balancer cannot serve this
-  # endpoint on google. See the comment in values.yaml.
+  # endpoint on google. See README.md.
   pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
   gateway:
-    name: '{{ .toptin.google-gateway.global.externalGateway | required }}'
-    namespace: '{{ .toptmodule.google-gateway | required }}'
+    name: "{{ .tinput.google-gateway.global.externalGateway }}"
+    namespace: "{{ .tmodule.google-gateway }}"
