@@ -84,21 +84,49 @@ gateways:
     sslRedirect: true
     subnets: ""
     certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
   service:
     enabled: false
     scheme: internal
     sslRedirect: true
     subnets: ""
     certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
   external:
     enabled: true
     scheme: internet-facing
     sslRedirect: true
     subnets: ""
     certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
+  #   sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+  #   wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+  #   loadBalancerAttributes: {}
+  #   #  idle_timeout.timeout_seconds: "300"
+  #   targetGroupAttributes: {}
+  #   #  load_balancing.algorithm.type: least_outstanding_requests
+  #   #  deregistration_delay.timeout_seconds: "35"

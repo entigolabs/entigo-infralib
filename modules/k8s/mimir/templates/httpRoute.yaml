@@ -1,0 +1,27 @@
+{{- if .Values.global.createRoute }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
+      sectionName: https
+  hostnames:
+    - {{ .Values.global.hostname | quote }}
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: mimir-gateway
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}

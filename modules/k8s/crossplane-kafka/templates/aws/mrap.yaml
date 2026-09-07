@@ -1,9 +1,0 @@
-apiVersion: apiextensions.crossplane.io/v1alpha1
-kind: ManagedResourceActivationPolicy
-metadata:
-  name: {{ .Release.Name }}
-spec:
-  activate:
-  - 'topics.topic.kafka.crossplane.io'
-  - 'accesscontrollists.acl.kafka.crossplane.io'
-  - 'clusterproviderconfigusages.kafka.m.crossplane.io'
