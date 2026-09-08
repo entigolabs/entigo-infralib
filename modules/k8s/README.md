@@ -282,8 +282,6 @@ the longer per module value above. Reach for the tag when you are building a
 name, and for `global.prefix` when you want the identity of this one module in
 this one environment.
 
-The code is `updateArgoCDFiles` in the agent's `service/update.go`.
-
 ## Cloud specific resources
 
 Resources this repository owns live in `templates/`. A module that supports more
