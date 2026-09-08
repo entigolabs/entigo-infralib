@@ -7,5 +7,7 @@ argocd:
       server.insecure: true
   server:
     ingress:
-      # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
       enabled: false
+    httproute:
+      # oracle has no ingress, the gateway route is always on
+      enabled: true
