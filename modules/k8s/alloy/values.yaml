@@ -408,6 +408,15 @@ cluster-metrics:
   serviceMonitors: false
   podMonitors: false
 
+  # Multi-target proxy scrape of redis-exporter: each entry in redisExporterTargets is passed to
+  # the exporter's /scrape endpoint via the `target` query param.
+  redisExporterTargets: []
+  # No default - varies per environment. Required when redisExporterTargets is non-empty,
+  # e.g. "redis-exporter.monitoring.svc.cluster.local:9121"
+  redisExporterService: ""
+  redisExporterScrapeInterval: "30s"
+  redisExporterScrapeTimeout: "10s"
+
   extraConfig: ""
 
   alloy:
@@ -612,6 +621,36 @@ cluster-metrics:
           }
         }
 
+        {{- if .Values.redisExporterTargets }}
+        discovery.relabel "redis_exporter" {
+          targets = [
+            {{- range .Values.redisExporterTargets }}
+            {"__address__" = {{ . | quote }}},
+            {{- end }}
+          ]
+          rule {
+            source_labels = ["__address__"]
+            target_label  = "__param_target"
+          }
+          rule {
+            source_labels = ["__param_target"]
+            target_label  = "instance"
+          }
+          rule {
+            target_label = "__address__"
+            replacement  = {{ required "cluster-metrics.redisExporterService must be set when redisExporterTargets is non-empty" .Values.redisExporterService | quote }}
+          }
+        }
+
+        prometheus.scrape "redis_exporter" {
+          targets         = discovery.relabel.redis_exporter.output
+          forward_to      = [prometheus.remote_write.default.receiver]
+          job_name        = "redis-exporter"
+          metrics_path    = "/scrape"
+          scrape_interval = {{ .Values.redisExporterScrapeInterval | quote }}
+          scrape_timeout  = {{ .Values.redisExporterScrapeTimeout | quote }}
+        }
+        {{- end }}
         {{- if .Values.serviceMonitors }}
         // Scrape all ServiceMonitor CRDs cluster-wide (requires the operator CRDs)
         prometheus.operator.servicemonitors "servicemonitors" {
