@@ -1,3 +1,7 @@
+# Activates the crossplane managed resource kinds the S3 setup needs,
+# commented out together with it. Harbor's registry
+# cannot authenticate to S3 with IRSA yet — see values-aws.yaml for the
+# reason, the blocking Harbor issues and what to do when it is fixed.
 # {{- if eq .Values.global.cloudProvider "aws" }}
 # apiVersion: apiextensions.crossplane.io/v1alpha1
 # kind: ManagedResourceActivationPolicy
