@@ -3,11 +3,11 @@
 #
 # Empty rather than null when no CA is created: the agent renders this into a string input.
 output "certificate_authority_id" {
-  value = var.create_ca ? oci_certificates_management_certificate_authority.this[0].id : ""
+  value = local.ca_id
 }
 
 output "certificate_authority_name" {
-  value = var.create_ca ? oci_certificates_management_certificate_authority.this[0].name : ""
+  value = var.create_ca ? local.ca_name : ""
 }
 
 # Clients trust certificates from this CA only after importing the CA's own certificate, and
@@ -19,5 +19,5 @@ output "certificate_authority_name" {
 #     --query 'data."certificate-pem"' --raw-output > ca.pem
 output "certificate_authority_bundle_command" {
   description = "Ready-made CLI command that exports this CA's PEM, which terraform cannot read itself."
-  value       = var.create_ca ? "oci certificates certificate-authority-bundle get --certificate-authority-id ${oci_certificates_management_certificate_authority.this[0].id} --query 'data.\"certificate-pem\"' --raw-output" : ""
+  value       = var.create_ca ? "oci certificates certificate-authority-bundle get --certificate-authority-id ${local.ca_id} --query 'data.\"certificate-pem\"' --raw-output" : ""
 }

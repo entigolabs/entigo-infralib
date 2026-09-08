@@ -24,9 +24,22 @@ variable "ca_key_id" {
 }
 
 variable "ca_name" {
-  description = "Name of the certificate authority. Defaults to <prefix>-root-ca-<random suffix>; see name_salt for why the suffix exists."
+  description = "Name of the certificate authority. Defaults to <prefix>-root-ca-<random suffix>; see name_salt for why the suffix exists. When adopt_ca is true this must instead name an existing ACTIVE certificate authority in compartment_id."
   type        = string
   default     = ""
+}
+
+# Same adopt-instead-of-create shape as modules/oracle/kms's create_vault/create_keys: a
+# certificate authority only *schedules* deletion (7 days minimum) and keeps its name for the
+# whole wait, so name_salt exists to dodge that on every rebuild - but that means a rebuild
+# never reuses the last one either, and orphans pile up exactly like the kms module's keys did
+# before it got the same treatment. Separate from create_ca (which decides whether this
+# deployment has a CA at all) so create_ca = false still means "no CA, unambiguously" - this
+# only chooses how one gets sourced when create_ca is true.
+variable "adopt_ca" {
+  description = "Adopt an existing certificate authority named ca_name instead of creating a new one. Only applies when create_ca is true."
+  type        = bool
+  default     = false
 }
 
 variable "description" {

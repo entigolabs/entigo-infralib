@@ -33,10 +33,15 @@ locals {
   vault_id            = var.create_vault ? oci_kms_vault.this[0].id : data.oci_kms_vaults.this[0].vaults[0].id
   management_endpoint = var.create_vault ? oci_kms_vault.this[0].management_endpoint : data.oci_kms_vaults.this[0].vaults[0].management_endpoint
 
-  data_key_name      = "${var.prefix}-data-${random_string.suffix.result}"
-  config_key_name    = "${var.prefix}-config-${random_string.suffix.result}"
-  telemetry_key_name = "${var.prefix}-telemetry-${random_string.suffix.result}"
-  ca_key_name        = "${var.prefix}-ca-${random_string.suffix.result}"
+  data_key_name      = var.data_key_name != "" ? var.data_key_name : "${var.prefix}-data-${random_string.suffix.result}"
+  config_key_name    = var.config_key_name != "" ? var.config_key_name : "${var.prefix}-config-${random_string.suffix.result}"
+  telemetry_key_name = var.telemetry_key_name != "" ? var.telemetry_key_name : "${var.prefix}-telemetry-${random_string.suffix.result}"
+  ca_key_name        = var.ca_key_name != "" ? var.ca_key_name : "${var.prefix}-ca-${random_string.suffix.result}"
+
+  data_key_id      = var.create_keys ? oci_kms_key.data[0].id : data.oci_kms_keys.data[0].keys[0].id
+  config_key_id    = var.create_keys ? oci_kms_key.config[0].id : data.oci_kms_keys.config[0].keys[0].id
+  telemetry_key_id = var.create_keys ? oci_kms_key.telemetry[0].id : data.oci_kms_keys.telemetry[0].keys[0].id
+  ca_key_id        = var.create_ca_key ? (var.create_keys ? oci_kms_key.ca[0].id : data.oci_kms_keys.ca[0].keys[0].id) : ""
 }
 
 # Every name here carries a random suffix, for the same reason modules/oracle/dns's
@@ -84,6 +89,7 @@ resource "time_sleep" "vault_endpoint" {
 # authorises key use through IAM policies on the compartment rather than through a
 # document on the key itself.
 resource "oci_kms_key" "data" {
+  count               = var.create_keys ? 1 : 0
   depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.data_key_name
@@ -104,6 +110,7 @@ resource "oci_kms_key" "data" {
 }
 
 resource "oci_kms_key" "config" {
+  count               = var.create_keys ? 1 : 0
   depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.config_key_name
@@ -124,6 +131,7 @@ resource "oci_kms_key" "config" {
 }
 
 resource "oci_kms_key" "telemetry" {
+  count               = var.create_keys ? 1 : 0
   depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.telemetry_key_name
@@ -152,7 +160,7 @@ resource "oci_kms_key" "telemetry" {
 # No auto_key_rotation_details: rotating a CA's signing key mid-life would invalidate the
 # CA. Certificate rotation is handled by the renewal rule on the certificate itself.
 resource "oci_kms_key" "ca" {
-  count               = var.create_ca_key ? 1 : 0
+  count               = var.create_ca_key && var.create_keys ? 1 : 0
   depends_on          = [time_sleep.vault_endpoint]
   compartment_id      = var.compartment_id
   display_name        = local.ca_key_name

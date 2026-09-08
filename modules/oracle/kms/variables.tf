@@ -44,6 +44,36 @@ variable "vault_endpoint_wait" {
   default     = "180s"
 }
 
+variable "create_keys" {
+  description = "Create the data/config/telemetry/ca keys. Set false to adopt existing keys named by data_key_name/config_key_name/telemetry_key_name/ca_key_name instead of creating a fresh (randomly suffixed) set on every apply."
+  type        = bool
+  default     = true
+}
+
+variable "data_key_name" {
+  description = "Display name of the data key. Defaults to <prefix>-data-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  type        = string
+  default     = ""
+}
+
+variable "config_key_name" {
+  description = "Display name of the config key. Defaults to <prefix>-config-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  type        = string
+  default     = ""
+}
+
+variable "telemetry_key_name" {
+  description = "Display name of the telemetry key. Defaults to <prefix>-telemetry-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  type        = string
+  default     = ""
+}
+
+variable "ca_key_name" {
+  description = "Display name of the CA signing key. Defaults to <prefix>-ca-<random suffix> when creating; when create_keys is false and create_ca_key is true, this must name an existing ENABLED key in the vault."
+  type        = string
+  default     = ""
+}
+
 variable "key_protection_mode" {
   description = "SOFTWARE or HSM, for the data, config and telemetry keys."
   type        = string

@@ -12,6 +12,10 @@ locals {
   description = var.description != "" ? var.description : "${local.subordinate ? "Subordinate" : "Root"} CA for ${var.prefix}"
 
   create_policy = var.create_ca && var.create_ca_policy
+
+  ca_id = var.create_ca ? (
+    var.adopt_ca ? data.oci_certificates_management_certificate_authorities.this[0].certificate_authority_collection[0].items[0].id : oci_certificates_management_certificate_authority.this[0].id
+  ) : ""
 }
 
 resource "random_string" "suffix" {
@@ -66,12 +70,12 @@ resource "time_sleep" "ca_policy" {
 # is fine for a leaf certificate and wrong for a CA: replacing one means redistributing it to
 # every client that trusts it.
 resource "time_offset" "ca_validity" {
-  count        = var.create_ca ? 1 : 0
+  count        = var.create_ca && !var.adopt_ca ? 1 : 0
   offset_years = var.ca_validity_years
 }
 
 resource "oci_certificates_management_certificate_authority" "this" {
-  count          = var.create_ca ? 1 : 0
+  count          = var.create_ca && !var.adopt_ca ? 1 : 0
   depends_on     = [time_sleep.ca_policy]
   compartment_id = var.compartment_id
   name           = local.ca_name

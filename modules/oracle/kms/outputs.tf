@@ -24,17 +24,17 @@ output "vault_crypto_endpoint" {
 # that names one of these keys before the grant propagates is rejected outright rather than
 # retried, the same trap modules/oracle/pca has with its certificate authority.
 output "data_key_id" {
-  value      = oci_kms_key.data.id
+  value      = local.data_key_id
   depends_on = [time_sleep.key_policy]
 }
 
 output "config_key_id" {
-  value      = oci_kms_key.config.id
+  value      = local.config_key_id
   depends_on = [time_sleep.key_policy]
 }
 
 output "telemetry_key_id" {
-  value      = oci_kms_key.telemetry.id
+  value      = local.telemetry_key_id
   depends_on = [time_sleep.key_policy]
 }
 
@@ -46,5 +46,5 @@ output "telemetry_key_id" {
 # propagate, live in modules/oracle/pca: they are about the CA rather than the key, and the
 # module that creates the CA is the one that has to hold off until the grant lands.
 output "ca_key_id" {
-  value = var.create_ca_key ? oci_kms_key.ca[0].id : ""
+  value = local.ca_key_id
 }
