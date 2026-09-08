@@ -1,5 +1,5 @@
 image: 
-  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/priitrent/saml-proxy'
+  registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/saml-proxy'
 
 ingress:
   hostName: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
