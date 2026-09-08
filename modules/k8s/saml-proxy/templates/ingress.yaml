@@ -17,7 +17,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   rules:
-  - host: '{{ .Values.ingress.hostName }}'
+  - host: '{{ .Values.global.hostname }}'
     http:
       paths:
       - backend:
