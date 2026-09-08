@@ -411,8 +411,6 @@ cluster-metrics:
   # Multi-target proxy scrape of redis-exporter: each entry in redisExporterTargets is passed to
   # the exporter's /scrape endpoint via the `target` query param.
   redisExporterTargets: []
-  # No default - varies per environment. Required when redisExporterTargets is non-empty,
-  # e.g. "redis-exporter.monitoring.svc.cluster.local:9121"
   redisExporterService: ""
   redisExporterScrapeInterval: "30s"
   redisExporterScrapeTimeout: "10s"
