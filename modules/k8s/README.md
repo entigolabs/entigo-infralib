@@ -156,7 +156,7 @@ The tags used most in these modules:
 | Tag | Resolves to |
 |---|---|
 | `.module.name` | this module's name |
-| `.config.prefix` | the platform prefix |
+| `.config.prefix` | the platform prefix, which identifies the environment |
 | `.toutput.<source>.<key>` | a Terraform output of the module with that source |
 | `.toptout.<source>.<key>` | the same, empty string when absent |
 | `.tinput.<source>.<path>` | a value from another module in this step |
@@ -233,6 +233,46 @@ Two things do not chain and still need splitting or restructuring:
   the two copies in step.
 - **Whole blocks that only exist on one cloud.** Chain the values, not the
   block.
+
+### `global.prefix` arrives on its own
+
+One value reaches every module without the module asking for it. While
+generating the `Application`, the agent sets `global.prefix` on every
+`argocd-apps` module, whether or not it appears in any `agent_input` file:
+
+```
+<platform prefix>-<step name>-<module name>
+```
+
+The platform prefix is the environment identifier — the `prefix` the platform
+is deployed under, typically something short like `dev` or `test`. Step names
+are normally the same in every environment, so the platform prefix is the part
+that makes the value differ between them:
+
+```
+dev-apps-saml-proxy
+test-apps-saml-proxy
+```
+
+That makes it the right thing to reach for whenever a module needs a name that
+is stable for one installation and distinct from every other one — a cookie
+name, a resource name, a label value.
+
+Two rules follow from how it is set:
+
+- **Declare `prefix: ""` in `values.yaml`** like any other key the templates
+  read. The real value always comes from the agent, but the declaration is what
+  keeps the static tests rendering and what tells a reader the key exists.
+- **Do not set it yourself.** The agent fills it in only when nothing else
+  already has. `agent_input.yaml`, `agent_input_<cloud>.yaml` and the step's
+  `inputs:` are merged first, in that order, and the prefix is written only if
+  `global.prefix` is still missing afterwards. So putting
+  `prefix: "{{ .config.prefix }}"` in an agent input adds nothing — it replaces
+  the agent's value with a less unique one, dropping the step and module that
+  distinguish it. A couple of modules still carry such a line from earlier
+  work; nothing reads `global.prefix` in them.
+
+The code is `updateArgoCDFiles` in the agent's `service/update.go`.
 
 ## Cloud specific resources
 
