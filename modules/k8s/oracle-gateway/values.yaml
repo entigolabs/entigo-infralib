@@ -1,5 +1,11 @@
 global:
   cloudProvider: ""
+  # Name of the Gateway other modules attach their HTTPRoutes to. Gateways are
+  # named <release name>-<key under gateways>, so these must be kept in sync
+  # when the built-in entries are renamed or the module is deployed under a
+  # different name. The agent sets both from the module name.
+  internalGateway: ""
+  externalGateway: ""
 
 gatewayClassName: istio
 

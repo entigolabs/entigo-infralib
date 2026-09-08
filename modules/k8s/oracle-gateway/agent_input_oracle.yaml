@@ -1,3 +1,6 @@
+global:
+  internalGateway: "{{ .module.name }}-private"
+  externalGateway: "{{ .module.name }}-public"
 gateways:
   public:
     certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"

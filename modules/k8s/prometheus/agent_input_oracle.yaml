@@ -9,16 +9,6 @@ global:
 # ("short name mode is enforcing ... returns ambiguous list").
 prometheus:
   server:
-    route:
-      main:
-        parentRefs:
-          - group: gateway.networking.k8s.io
-            kind: Gateway
-            name: oracle-gateway-private
-            namespace: oracle-gateway
-            sectionName: https
-        hostnames:
-          - "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     image:
       repository: quay.io/prometheus/prometheus
   prometheus-node-exporter:
