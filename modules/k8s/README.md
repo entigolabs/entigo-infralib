@@ -256,21 +256,31 @@ test-apps-saml-proxy
 
 That makes it the right thing to reach for whenever a module needs a name that
 is stable for one installation and distinct from every other one — a cookie
-name, a resource name, a label value.
+name, a label value, an identifier in a shared external system.
 
-Two rules follow from how it is set:
+Two things follow from how it is set:
 
 - **Declare `prefix: ""` in `values.yaml`** like any other key the templates
   read. The real value always comes from the agent, but the declaration is what
   keeps the static tests rendering and what tells a reader the key exists.
-- **Do not set it yourself.** The agent fills it in only when nothing else
-  already has. `agent_input.yaml`, `agent_input_<cloud>.yaml` and the step's
-  `inputs:` are merged first, in that order, and the prefix is written only if
-  `global.prefix` is still missing afterwards. So putting
-  `prefix: "{{ .config.prefix }}"` in an agent input adds nothing — it replaces
-  the agent's value with a less unique one, dropping the step and module that
-  distinguish it. A couple of modules still carry such a line from earlier
-  work; nothing reads `global.prefix` in them.
+- **You can override it, and sometimes you want to.** The agent fills the key in
+  only when nothing else already has: `agent_input.yaml`,
+  `agent_input_<cloud>.yaml` and the step's `inputs:` are merged first, in that
+  order, and the prefix is written only if `global.prefix` is still missing
+  afterwards. So `prefix: "{{ .config.prefix }}"` in an agent input replaces it
+  with the bare environment identifier, dropping the step and module. That is
+  the right call whenever the name only has to be unique per environment rather
+  than per module — a bucket name, for instance, where `dev-loki` says
+  everything that `dev-apps-loki` would. Just remember that the override
+  applies to the whole module, so everything in it that reads `global.prefix`
+  gets the shorter value.
+
+Note that `.config.prefix` and `global.prefix` are not the same thing.
+`.config.prefix` is the environment identifier on its own, and is what most
+modules compose bucket names and IAM resource names out of. `global.prefix` is
+the longer per module value above. Reach for the tag when you are building a
+name, and for `global.prefix` when you want the identity of this one module in
+this one environment.
 
 The code is `updateArgoCDFiles` in the agent's `service/update.go`.
 
