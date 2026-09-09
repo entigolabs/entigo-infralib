@@ -23,8 +23,8 @@ secretStore:
   kind: ClusterSecretStore
 
 image:
-  registry: docker.io/priitrent/saml-proxy
-  tag: "43-20260211-1"
+  registry: docker.io/entigolabs/saml-proxy
+  tag: "v0.0.1"
 
 affinity:
   nodeAffinity:
