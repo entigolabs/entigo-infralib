@@ -21,10 +21,3 @@ grafana:
     # than the 2Gi the base values request.
     storageClassName: "oci-bv"
     size: 50Gi
-  serviceAccount:
-    # Created by templates/oracle/service-account.yaml. Unlike aws (IRSA role annotation)
-    # and google (Workload Identity + a GCP service account), it carries no cloud identity:
-    # grafana needs no OCI API access here, because there is no OCI equivalent of the
-    # CloudWatch/Cloud Monitoring datasource wired in (see templates/oracle/config-map.yaml).
-    create: false
-    name: grafana

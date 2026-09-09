@@ -9,7 +9,3 @@ global:
     # automatically the moment loki is added to the config.
     loki:
       module: "{{ .toptmodule.loki }}"
-
-grafana:
-  serviceAccount:
-    name: "{{ .module.name }}"
