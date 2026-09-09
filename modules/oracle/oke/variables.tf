@@ -77,14 +77,10 @@ variable "max_pods_per_node" {
   default     = 31
 }
 
-# Mirrors aws/eks and google/gke, which always bundle three node groups/pools
-# (main/mon/tools) by default - eks-node-group/gke-node-pool (our oke-node-pool) is only
-# for *additional* custom pools beyond these three. Set a pool's node_count to 0 to skip
-# creating it entirely.
 variable "oke_main_node_count" {
   type     = number
   nullable = false
-  default  = 1
+  default  = 0
 }
 
 variable "oke_main_ocpus" {
@@ -121,7 +117,7 @@ variable "oke_main_subnet_ids" {
 variable "oke_mon_node_count" {
   type     = number
   nullable = false
-  default  = 1
+  default  = 0
 }
 
 variable "oke_mon_ocpus" {
@@ -158,12 +154,12 @@ variable "oke_mon_subnet_ids" {
 variable "oke_tools_node_count" {
   type     = number
   nullable = false
-  default  = 1
+  default  = 2
 }
 
 variable "oke_tools_ocpus" {
   type    = number
-  default = 1
+  default = 2
 }
 
 variable "oke_tools_memory_in_gbs" {
@@ -192,11 +188,6 @@ variable "oke_tools_subnet_ids" {
   default     = []
 }
 
-# cluster-autoscaler sizing, mirroring aws/eks's eks_<pool>_min/max_size naming. Default 0
-# = pool not autoscaled; modules/k8s/cluster-autoscaler's agent_input_oracle.yaml only
-# wires pools whose max size is set. These are pass-through metadata for the autoscaler
-# (exported as outputs) - the pool resource itself ignores post-creation size changes so
-# terraform never fights the autoscaler (see oke-node-pool's lifecycle comment).
 variable "oke_main_min_size" {
   type     = number
   nullable = false
@@ -224,13 +215,13 @@ variable "oke_mon_max_size" {
 variable "oke_tools_min_size" {
   type     = number
   nullable = false
-  default  = 0
+  default  = 2
 }
 
 variable "oke_tools_max_size" {
   type     = number
   nullable = false
-  default  = 0
+  default  = 3
 }
 
 # Encrypts etcd, and therefore every Kubernetes Secret, with a customer-managed key.

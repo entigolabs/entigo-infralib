@@ -15,12 +15,8 @@ cluster-autoscaler:
     # k8s versions).
     repository: registry.k8s.io/autoscaling/cluster-autoscaler
   # Static --nodes=<min>:<max>:<nodepool-ocid> config (Oracle's documented approach; the
-  # chart's OCI auto-discovery values are dead code in 9.58.0). Only the main pool is
-  # autoscaled by default: Oracle recommends keeping at least one pool unmanaged by the
-  # autoscaler - the tools pool stays static since the autoscaler itself (and the other
-  # controllers) prefer running there. Add more entries here if an environment autoscales
-  # mon/tools too (wire oke_<pool>_min/max_size inputs in the oke step first).
+  # chart's OCI auto-discovery values are dead code in 9.58.0).
   autoscalingGroups:
-    - name: "{{ .toutput.oke.main_node_pool_id }}"
-      minSize: "{{ .toutput.oke.main_min_size }}"
-      maxSize: "{{ .toutput.oke.main_max_size }}"
+    - name: "{{ .toutput.oke.tools_node_pool_id }}"
+      minSize: "{{ .toutput.oke.tools_min_size }}"
+      maxSize: "{{ .toutput.oke.tools_max_size }}"
