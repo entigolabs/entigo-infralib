@@ -469,6 +469,11 @@ cluster-metrics:
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
           }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "kubernetes_pod_name"
+          }
           rule {
             target_label = "job"
             replacement  = "kube-state-metrics"
@@ -517,6 +522,11 @@ cluster-metrics:
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
+          }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "kubernetes_pod_name"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
@@ -579,6 +589,11 @@ cluster-metrics:
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
+          }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "kubernetes_pod_name"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
