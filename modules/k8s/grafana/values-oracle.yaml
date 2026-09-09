@@ -8,9 +8,12 @@ global:
       module: ""
 
 grafana:
-  # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
   ingress:
     enabled: false
+  route:
+    main:
+      # oracle has no ingress, the gateway route is always on
+      enabled: true
   persistence:
     # OKE's default StorageClass, named explicitly so the intent survives a cluster whose
     # default class differs. OCI Block Volume has a 50GB floor - a smaller request is

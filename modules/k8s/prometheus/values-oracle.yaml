@@ -8,9 +8,12 @@ global:
 
 prometheus:
   server:
-    # Exposed via HTTPRoute instead (templates/oracle/httpRoute.yaml).
     ingress:
       enabled: false
+    route:
+      main:
+        # oracle has no ingress, the gateway route is always on
+        enabled: true
     persistentVolume:
       # OKE's default StorageClass. Named explicitly rather than relying on the default so
       # the intent survives a cluster whose default class differs.
