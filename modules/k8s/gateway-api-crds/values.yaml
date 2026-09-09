@@ -1,5 +1,0 @@
-# The CRD bundle is a verbatim upstream manifest with no templating, so there is
-# nothing to configure here. Kept so the chart follows the same shape as every other
-# module in this repo.
-global:
-  cloudProvider: ""

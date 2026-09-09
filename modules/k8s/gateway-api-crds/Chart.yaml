@@ -1,7 +1,0 @@
-apiVersion: v2
-name: gateway-api-crds
-description: Kubernetes Gateway API CRDs (standard channel) for clusters that don't ship them
-type: application
-version: 0.1.0
-appVersion: "1.5.1"
-dependencies: []
