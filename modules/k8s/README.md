@@ -156,7 +156,7 @@ The tags used most in these modules:
 | Tag | Resolves to |
 |---|---|
 | `.module.name` | this module's name |
-| `.config.prefix` | the platform prefix |
+| `.config.prefix` | the platform prefix, which identifies the environment |
 | `.toutput.<source>.<key>` | a Terraform output of the module with that source |
 | `.toptout.<source>.<key>` | the same, empty string when absent |
 | `.tinput.<source>.<path>` | a value from another module in this step |
@@ -233,6 +233,54 @@ Two things do not chain and still need splitting or restructuring:
   the two copies in step.
 - **Whole blocks that only exist on one cloud.** Chain the values, not the
   block.
+
+### `global.prefix` arrives on its own
+
+One value reaches every module without the module asking for it. While
+generating the `Application`, the agent sets `global.prefix` on every
+`argocd-apps` module, whether or not it appears in any `agent_input` file:
+
+```
+<platform prefix>-<step name>-<module name>
+```
+
+The platform prefix is the environment identifier — the `prefix` the platform
+is deployed under, typically something short like `dev` or `test`. Step names
+are normally the same in every environment, so the platform prefix is the part
+that makes the value differ between them:
+
+```
+dev-apps-saml-proxy
+test-apps-saml-proxy
+```
+
+That makes it the right thing to reach for whenever a module needs a name that
+is stable for one installation and distinct from every other one — a cookie
+name, a label value, an identifier in a shared external system.
+
+Two things follow from how it is set:
+
+- **Declare `prefix: ""` in `values.yaml`** like any other key the templates
+  read. The real value always comes from the agent, but the declaration is what
+  keeps the static tests rendering and what tells a reader the key exists.
+- **You can override it, and sometimes you want to.** The agent fills the key in
+  only when nothing else already has: `agent_input.yaml`,
+  `agent_input_<cloud>.yaml` and the step's `inputs:` are merged first, in that
+  order, and the prefix is written only if `global.prefix` is still missing
+  afterwards. So `prefix: "{{ .config.prefix }}"` in an agent input replaces it
+  with the bare environment identifier, dropping the step and module. That is
+  the right call whenever the name only has to be unique per environment rather
+  than per module — a bucket name, for instance, where `dev-loki` says
+  everything that `dev-apps-loki` would. Just remember that the override
+  applies to the whole module, so everything in it that reads `global.prefix`
+  gets the shorter value.
+
+Note that `.config.prefix` and `global.prefix` are not the same thing.
+`.config.prefix` is the environment identifier on its own, and is what most
+modules compose bucket names and IAM resource names out of. `global.prefix` is
+the longer per module value above. Reach for the tag when you are building a
+name, and for `global.prefix` when you want the identity of this one module in
+this one environment.
 
 ## Cloud specific resources
 
