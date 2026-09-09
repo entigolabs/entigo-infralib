@@ -27,8 +27,3 @@ external-dns:
     # opposite mistake, dropping the public zone. Trailing "=" is deliberate and is how
     # upstream documents "both".
     - --oci-zone-scope=
-  image:
-    # No Oracle registry-proxy module exists yet (same gap noted in modules/k8s/argocd's
-    # agent_input_oracle.yaml) - hardcode the public default registry rather than
-    # referencing a .toptout.<proxy> module that doesn't exist for this cloud.
-    repository: registry.k8s.io/external-dns/external-dns

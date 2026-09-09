@@ -9,29 +9,7 @@ global:
     # automatically the moment loki is added to the config.
     loki:
       module: "{{ .toptmodule.loki }}"
-    prometheus:
-      hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
 
 grafana:
-  grafana.ini:
-    server:
-      root_url: https://{{ .module.name }}.{{ .toutput.dns.int_domain }}
-    users:
-      home_page: "https://{{ .module.name }}.{{ .toutput.dns.int_domain }}/dashboards"
   serviceAccount:
     name: "{{ .module.name }}"
-  # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded, fully
-  # qualified (OKE's runtime refuses unqualified image names).
-  image:
-    registry: docker.io
-  sidecar:
-    image:
-      registry: quay.io
-  initChownData:
-    image:
-      registry: docker.io
-  downloadDashboardsImage:
-    registry: docker.io
-  imageRenderer:
-    image:
-      registry: docker.io

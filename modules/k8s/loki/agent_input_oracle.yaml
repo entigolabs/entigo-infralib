@@ -57,17 +57,6 @@ loki:
             bucket_name: "{{ .config.prefix }}-{{ .module.name }}"
             access_key_id: "${OCI_ACCESS_KEY_ID}"
             secret_access_key: "${OCI_SECRET_ACCESS_KEY}"
-  # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded and must
-  # stay fully qualified - OKE's runtime refuses unqualified image names ("short name mode is
-  # enforcing ... returns ambiguous list").
-  image:
-    registry: docker.io
-  sidecar:
-    image:
-      registry: docker.io
-  memcached:
-    image:
-      repository: docker.io/library/memcached
   networkPolicy:
     externalStorage:
       # Object Storage has no fixed address range reachable from here, and the traffic leaves

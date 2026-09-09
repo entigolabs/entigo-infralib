@@ -3,16 +3,6 @@ global:
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
 
 logs:
-  # No Oracle registry-proxy module exists yet, so upstream registries are hardcoded rather
-  # than routed through a .toptout.<proxy> that does not exist for this cloud (same precedent
-  # as loki, prometheus, external-dns and crossplane-core). These must stay fully qualified:
-  # OKE's runtime refuses unqualified image names ("short name mode is enforcing ... returns
-  # ambiguous list").
-  image:
-    registry: docker.io
-  configReloader:
-    image:
-      registry: quay.io
   networkPolicy:
     egress:
       - ports:
