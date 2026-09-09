@@ -63,7 +63,7 @@ jobs:
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
         cd ${{ inputs.path }}
         docker buildx build --push --platform linux/arm64/v8,linux/amd64 \
-          --build-arg TOOLS_TAG=${IMAGE_TAG} \
+          --build-arg BASE_TAG=${IMAGE_TAG} \
           --sbom=true \
           --provenance=mode=max \
           -t public.ecr.aws/entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
