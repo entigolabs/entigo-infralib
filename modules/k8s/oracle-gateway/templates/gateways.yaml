@@ -13,6 +13,7 @@ metadata:
     # Istio defaults to a LoadBalancer Service, which would provision a second, unwanted
     # OCI load balancer - templates/ingress.yaml is the only public entry point.
     networking.istio.io/service-type: ClusterIP
+    external-dns.alpha.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
 spec:
   gatewayClassName: {{ $.Values.gatewayClassName }}
   infrastructure:
