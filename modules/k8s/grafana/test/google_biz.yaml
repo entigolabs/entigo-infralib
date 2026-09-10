@@ -13,7 +13,7 @@ grafana:
       enabled: true
       name: zitadel
       allow_sign_up: true
-      scopes: openid email profile roles 
+      scopes: openid email profile roles
       auth_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/authorize
       token_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/token
       api_url: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/userinfo
@@ -26,17 +26,18 @@ grafana:
     datasources.yaml:
       apiVersion: 1
       datasources:
-        - name: "{{ .config.prefix }}"
+        - name: Mimir
           type: prometheus
           url: http://mimir-gateway.{{ .tmodule.mimir }}/prometheus
           uid: "{{ .config.prefix }}"
-          access: proxy
           jsonData:
             httpHeaderName1: X-Scope-OrgID
             manageAlerts: false
+            prometheusType: Mimir
           secureJsonData:
             httpHeaderValue1: "{{ .config.prefix }}"
           isDefault: true
+          editable: false
         - name: Prometheus
           type: prometheus
           url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
