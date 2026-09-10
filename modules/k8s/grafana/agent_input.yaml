@@ -4,7 +4,6 @@ global:
       hostname: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
     prometheus:
       hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
-
 grafana:
   grafana.ini:
     server:

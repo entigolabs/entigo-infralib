@@ -14,3 +14,8 @@ prometheus:
             name: "{{ .tmodule.google-gateway }}-internal"
             namespace: "{{ .tmodule.google-gateway }}"
             sectionName: https
+    remoteWrite:
+      - name: "{{ .config.prefix }}"
+        url: http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push
+        headers:
+          X-Scope-OrgID: "{{ .config.prefix }}"

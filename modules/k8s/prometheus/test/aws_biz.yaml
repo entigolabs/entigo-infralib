@@ -11,3 +11,8 @@ prometheus:
             name: service
             namespace: "{{ .tmodule.aws-alb }}"
             sectionName: https
+    remoteWrite:
+      - name: "{{ .config.prefix }}"
+        url: http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push
+        headers:
+          X-Scope-OrgID: "{{ .config.prefix }}"
