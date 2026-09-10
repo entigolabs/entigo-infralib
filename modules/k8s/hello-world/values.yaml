@@ -1,3 +1,21 @@
 image:
   registry: docker.io/nginxinc/nginx-unprivileged
   tag: "1.31"
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tls: false
+  annotations: {}
+
+# Mutually exclusive with `ingress` - `host` above is shared between both.
+httpRoute:
+  enabled: false
+  gateway:
+    name: ""
+    namespace: ""
+    sectionName: ""

@@ -1,0 +1,13 @@
+global:
+  oracle:
+    # The public zone, not int_domain: this is the one thing that has to be reachable from
+    # outside before the VPN is up, so it cannot live behind the VPN.
+    pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
+
+wireguard:
+  service:
+    annotations:
+      # Opens UDP 51820 on the network load balancer. The OCI cloud-controller-manager does not
+      # create security rules when security-list-management-mode is None, so without this the
+      # load balancer comes up healthy and drops every handshake.
+      oci.oraclecloud.com/oci-network-security-groups: "{{ .toutput.oke.nlb_nsg_id }}"

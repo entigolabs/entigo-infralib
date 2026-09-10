@@ -1,0 +1,27 @@
+global:
+  prefix: "{{ .config.prefix }}"
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    clusterId: "{{ .toutput.oke.cluster_id }}"
+
+oci-native-ingress-controller:
+  compartment_id: "{{ .agent.accountId }}"
+  subnet_id: "{{ .toutput.vpc.public_subnet_id }}"
+  cluster_id: "{{ .toutput.oke.cluster_id }}"
+  # Feeds OCI_RESOURCE_PRINCIPAL_REGION. Mandatory under OKE Workload Identity and ignored
+  # under instance principal, which derives the region from instance metadata instead - leaving
+  # it empty produced requests to "containerengine..oci.oraclecloud.com" (note the empty label)
+  # and a DNS failure that looked nothing like an auth problem.
+  region: "{{ .toutput.oke.region }}"
+
+# Both classes are wired even though `private` ships disabled: a deployment then enables it
+# with one line (ingressClasses.private.enabled: true) instead of also having to look up a
+# subnet and an NSG OCID. Maps deep-merge across value files, so these fill in beside the
+# defaults in values.yaml rather than replacing them.
+ingressClasses:
+  public:
+    subnetId: "{{ .toutput.vpc.public_subnet_id }}"
+    nsgIds: "{{ .toutput.oke.lb_nsg_id }}"
+  private:
+    subnetId: "{{ .toutput.vpc.private_subnet_id }}"
+    nsgIds: "{{ .toutput.oke.lb_int_nsg_id }}"

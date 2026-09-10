@@ -51,10 +51,19 @@ terraform_plan() {
         echo "Failed to create TF plan!"
         exit 6
     fi
-    $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > ${TF_VAR_prefix}-plan.json
+    $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > plan.json
     if [ $? -ne 0 ]; then
         echo "Failed to create json plan from TF plan!"
         exit 6
+    fi
+}
+
+# Upload the JSON plan to the bucket
+upload_plan_json() {
+    local plan_json="steps/$TF_VAR_prefix/plan.json"
+    if [ -f "$plan_json" ]; then
+        echo "Copy json plan to bucket"
+        copy_to_bucket "$plan_json" "$INFRALIB_BUCKET" "$TF_VAR_prefix/plan.json"
     fi
 }
 
@@ -219,8 +228,13 @@ git_login() {
         fi
     done
 
-    # Only create ~/.tofurc if AWS_REGION is set
-    if [ -n "$AWS_REGION" ]; then
+    # OCI_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
+    # also sets AWS_REGION, which would otherwise match the AWS branch and try to
+    # hit AWS STS / write an ECR helper. Oracle OCIR credentials arrive via the
+    # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
+    if [ -n "$OCI_REGION" ]; then
+      :
+    elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 

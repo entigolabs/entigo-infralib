@@ -1,0 +1,77 @@
+global:
+  prefix: "{{ .config.prefix }}"
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
+    region: "{{ .toutput.oke.region }}"
+    kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+    # The telemetry key, matching loki and mimir on aws (telemetry_alias_arn) and google
+    # (telemetry_key_id). Optional (.toptout) so a deployment without a kms module still
+    # renders - the bucket then falls back to Oracle-managed encryption.
+    kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
+  # Bucket names are globally unique per namespace in OCI, not per account+region as on aws,
+  # so prefix + module name is enough to keep two deployments apart.
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}"
+
+loki:
+  gateway:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: not-used-on-oracle
+            namespace: not-used-on-oracle
+            sectionName: https
+  global:
+    # The Customer Secret Key the client minted manually (see templates/oracle/credentials.yaml)
+    # and handed to the agent via `ei-agent add-custom --key=loki-attribute-id/-key --value=...`.
+    # Rendered here as a literal value, not a Secret reference - see credentials.yaml's NOTE on
+    # why that's an accepted tradeoff for now.
+    extraEnv:
+      - name: OCI_ACCESS_KEY_ID
+        value: "{{ .output-custom.loki-attribute-id }}"
+      - name: OCI_SECRET_ACCESS_KEY
+        value: "{{ .output-custom.loki-attribute-key }}"
+  loki:
+    storage:
+      s3:
+        endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+        region: "{{ .toutput.oke.region }}"
+      bucketNames:
+        chunks: "{{ .config.prefix }}-{{ .module.name }}"
+        ruler: "{{ .config.prefix }}-{{ .module.name }}"
+        admin: "{{ .config.prefix }}-{{ .module.name }}"
+    structuredConfig:
+      storage_config:
+        # The thanos-io/objstore client instead of loki's own aws one - see values-oracle.yaml
+        # for why the aws client cannot write to OCI at all.
+        #
+        # Endpoint is a bare host here, not a URL: this client takes "hostname:port" and
+        # derives the scheme from `insecure`. Passing https:// makes every request fail on a
+        # malformed endpoint.
+        object_store:
+          s3:
+            endpoint: "{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+            region: "{{ .toutput.oke.region }}"
+            bucket_name: "{{ .config.prefix }}-{{ .module.name }}"
+            access_key_id: "${OCI_ACCESS_KEY_ID}"
+            secret_access_key: "${OCI_SECRET_ACCESS_KEY}"
+  networkPolicy:
+    externalStorage:
+      # Object Storage has no fixed address range reachable from here, and the traffic leaves
+      # through the NAT gateway.
+      cidrs:
+        - "0.0.0.0/0"
+    ingress:
+      namespaceSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: Exists
+      podSelector:
+        matchExpressions:
+          - key: netpol-loki
+            operator: In
+            values:
+              - 'loki'
+              - '{{ .module.name }}'

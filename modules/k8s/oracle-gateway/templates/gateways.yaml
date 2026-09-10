@@ -1,0 +1,49 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $release := .Release.Name }}
+{{- $namespace := .Release.Namespace }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $release }}-{{ $name }}
+  namespace: {{ $namespace }}
+  annotations:
+    # Istio defaults to a LoadBalancer Service, which would provision a second, unwanted
+    # OCI load balancer - templates/ingress.yaml is the only public entry point.
+    networking.istio.io/service-type: ClusterIP
+    external-dns.alpha.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
+spec:
+  gatewayClassName: {{ $.Values.gatewayClassName }}
+  infrastructure:
+    # Strategic-merge patch for the generated Deployment - the `restricted` Pod Security
+    # Standard this namespace enforces needs seccompProfile, which Istio's auto-provisioned
+    # gateway pod doesn't set on its own. See templates/gateway-options.yaml.
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: {{ $release }}-{{ $name }}-options
+  listeners:
+    # One shared listener, one wildcard cert - matches NIC's own one-cert-per-listener
+    # shape. This TLS session is separate from the client-facing one NIC terminates
+    # (templates/ingress.yaml); the cert here is a throwaway one NIC never actually
+    # verifies - see templates/secret.yaml.
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: {{ $release }}-{{ $name }}-backend-tls
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+{{- end }}
+{{- end }}
+{{- end }}

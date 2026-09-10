@@ -40,8 +40,15 @@ do
   else
     modulename="$providername"
   fi
-  
-  awk -v providername="$providername" -v modulename="$modulename" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"hashicorp/" modulename "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
+
+  if [ "$providername" == "oci" ]
+  then
+    sourceorg="oracle"
+  else
+    sourceorg="hashicorp"
+  fi
+
+  awk -v providername="$providername" -v modulename="$modulename" -v sourceorg="$sourceorg" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"" sourceorg "/" modulename "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
 
 done
 

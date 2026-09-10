@@ -1,0 +1,10 @@
+global:
+  internalGateway: "{{ .module.name }}-private"
+  externalGateway: "{{ .module.name }}-public"
+gateways:
+  public:
+    certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"
+    domain: "{{ .toutput.dns.pub_domain }}"
+  private:
+    certificateOcid: "{{ .toutput.dns.int_cert_ocid }}"
+    domain: "{{ .toutput.dns.int_domain }}"

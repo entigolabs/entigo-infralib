@@ -1,0 +1,32 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = 'external-dns'" .Values.global.oracle.clusterId .Release.Namespace }}
+# Per-app OCI IAM, applied by the crossplane-oracle provider.
+#
+# Granted to external-dns's own service account through OKE Workload Identity, not to the
+# node's identity: under instance principal every pod on a node inherits the grant, so any of
+# them could rewrite the zone. The condition pins the statement to one cluster, namespace and
+# service account.
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ .Release.Name }}
+    description: Grants external-dns permission to manage DNS zones and records, via OKE Workload Identity
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      # The aggregate "dns" resource-type covers dns-zones + dns-records together,
+      # matching what upstream external-dns's own OCI tutorial documents. It also covers
+      # dns-views and dns-resolver - Oracle defines an aggregate as equivalent to one
+      # statement per individual resource-type in the family - so private zones need nothing
+      # extra here, even though reaching one means resolving a VCN's resolver and its view.
+      - "Allow any-user to manage dns in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

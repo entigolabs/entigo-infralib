@@ -1,0 +1,11 @@
+global:
+  datasources:
+    # `.toptmodule` (optional) rather than `.tmodule` (required, as aws/google use): a
+    # missing module makes `.tmodule` fail the whole apps step, and Oracle is being rolled
+    # out incrementally - loki needs Crossplane object storage that isn't wired yet. The
+    # datasource name is passed rather than a full URL because an empty optional value would
+    # otherwise render the nonsense "http://-gateway."; templates/oracle/config-map.yaml
+    # builds the URL and skips the datasource entirely when this is empty, so Loki appears
+    # automatically the moment loki is added to the config.
+    loki:
+      module: "{{ .toptmodule.loki }}"

@@ -1,0 +1,256 @@
+variable "prefix" {
+  type = string
+}
+
+variable "compartment_id" {
+  description = "OCID of the compartment that will contain the cluster."
+  type        = string
+}
+
+variable "vcn_id" {
+  type = string
+}
+
+# Applies to both ingress load balancer NSGs: the public one accepts these ports from
+# 0.0.0.0/0, the internal one from the VCN CIDR only. NIC does not manage NSGs - it only
+# attaches a load balancer to the ones named in its IngressClass - so a listener on a port
+# missing from this list comes up healthy and receives nothing.
+variable "lb_ingress_ports" {
+  description = "TCP ports the ingress load balancer NSGs accept. 80 and 443 are what the default IngressClass listens on; add a port here before pointing an app's https-listener-port at it."
+  type        = list(number)
+  default     = [80, 443]
+}
+
+variable "private_subnet_id" {
+  description = "Subnet for the Kubernetes API endpoint when is_public_ip_enabled is false."
+  type        = string
+}
+
+variable "public_subnet_id" {
+  description = "Subnet for the Kubernetes API endpoint when is_public_ip_enabled is true. OCI requires the endpoint subnet to be public (prohibit_public_ip_on_vnic = false) whenever a public IP is assigned to it."
+  type        = string
+  default     = ""
+}
+
+variable "is_public_ip_enabled" {
+  type     = bool
+  nullable = false
+  default  = false
+}
+
+variable "service_lb_subnet_ids" {
+  description = "Subnets used for LoadBalancer-type Kubernetes services, typically a public subnet."
+  type        = list(string)
+  default     = []
+}
+
+variable "kubernetes_version" {
+  description = "Defaults to the latest version OKE offers in the compartment's region if unset."
+  type        = string
+  default     = ""
+}
+
+variable "pods_cidr" {
+  type    = string
+  default = "10.244.0.0/16"
+}
+
+variable "services_cidr" {
+  type    = string
+  default = "10.96.0.0/16"
+}
+
+variable "node_subnet_ids" {
+  description = "Default subnets nodes are placed in - one per availability domain, in order. Reused across ADs if fewer are given than ADs available. Used by main/mon/tools unless overridden per-pool below."
+  type        = list(string)
+  default     = []
+}
+
+variable "pod_subnet_ids" {
+  description = "Subnets pods draw their VCN IPs from. The cluster uses OCI_VCN_IP_NATIVE pod networking, so this is required; OKE rejects a pod subnet that is public or scoped to a single availability domain. Wired from modules/oracle/vpc's pod_subnets output."
+  type        = list(string)
+}
+
+variable "max_pods_per_node" {
+  description = "Pod capacity per node. Capped by the node shape: MIN((VNICs - 1) * 31, 110), since one VNIC serves the node and each of the rest carries 31 pod IPs. Flexible shapes get one VNIC per OCPU with a floor of two, so the 1-OCPU pool defaults allow exactly 31 - raise the pool's ocpus before raising this."
+  type        = number
+  default     = 31
+}
+
+variable "oke_main_node_count" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_main_ocpus" {
+  type    = number
+  default = 1
+}
+
+variable "oke_main_memory_in_gbs" {
+  type    = number
+  default = 8
+}
+
+variable "oke_main_node_shape" {
+  type    = string
+  default = "VM.Standard.E4.Flex"
+}
+
+variable "oke_main_node_pool_os_type" {
+  type    = string
+  default = "OL8"
+}
+
+variable "oke_main_boot_volume_size_in_gbs" {
+  type    = string
+  default = "50"
+}
+
+variable "oke_main_subnet_ids" {
+  description = "Overrides node_subnet_ids for the main pool. Defaults to node_subnet_ids when empty."
+  type        = list(string)
+  default     = []
+}
+
+variable "oke_mon_node_count" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_mon_ocpus" {
+  type    = number
+  default = 1
+}
+
+variable "oke_mon_memory_in_gbs" {
+  type    = number
+  default = 8
+}
+
+variable "oke_mon_node_shape" {
+  type    = string
+  default = "VM.Standard.E4.Flex"
+}
+
+variable "oke_mon_node_pool_os_type" {
+  type    = string
+  default = "OL8"
+}
+
+variable "oke_mon_boot_volume_size_in_gbs" {
+  type    = string
+  default = "50"
+}
+
+variable "oke_mon_subnet_ids" {
+  description = "Overrides node_subnet_ids for the mon pool. Defaults to node_subnet_ids when empty."
+  type        = list(string)
+  default     = []
+}
+
+variable "oke_tools_node_count" {
+  type     = number
+  nullable = false
+  default  = 2
+}
+
+variable "oke_tools_ocpus" {
+  type    = number
+  default = 2
+}
+
+variable "oke_tools_memory_in_gbs" {
+  type    = number
+  default = 8
+}
+
+variable "oke_tools_node_shape" {
+  type    = string
+  default = "VM.Standard.E4.Flex"
+}
+
+variable "oke_tools_node_pool_os_type" {
+  type    = string
+  default = "OL8"
+}
+
+variable "oke_tools_boot_volume_size_in_gbs" {
+  type    = string
+  default = "50"
+}
+
+variable "oke_tools_subnet_ids" {
+  description = "Overrides node_subnet_ids for the tools pool. Defaults to node_subnet_ids when empty."
+  type        = list(string)
+  default     = []
+}
+
+variable "oke_main_min_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_main_max_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_mon_min_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_mon_max_size" {
+  type     = number
+  nullable = false
+  default  = 0
+}
+
+variable "oke_tools_min_size" {
+  type     = number
+  nullable = false
+  default  = 2
+}
+
+variable "oke_tools_max_size" {
+  type     = number
+  nullable = false
+  default  = 3
+}
+
+# Encrypts etcd, and therefore every Kubernetes Secret, with a customer-managed key.
+#
+# NOT wired from modules/oracle/kms automatically, unlike node_kms_key_id below. OCI will not
+# re-key an existing cluster, so this is creation-time only: setting it on a live cluster makes
+# terraform plan a REPLACEMENT. The agent applies plans unattended, so auto-wiring it would
+# turn "add a kms module" into "silently rebuild the cluster". Set it explicitly in a
+# deployment's config, on a cluster that does not exist yet.
+variable "etcd_kms_key_id" {
+  description = "OCID of a key to encrypt etcd with. Empty leaves etcd on Oracle-managed encryption. Creation-time only - setting this on an existing cluster replaces it."
+  type        = string
+  default     = ""
+}
+
+# Passed to all three node pools. Wired from modules/oracle/kms by agent_input.yaml, matching
+# node_encryption_kms_key_arn in modules/aws/eks. Changing it replaces the pools' nodes, which
+# roll rather than take the cluster down.
+variable "node_kms_key_id" {
+  description = "OCID of a key to encrypt the worker nodes' boot volumes with. Empty leaves them on Oracle-managed encryption."
+  type        = string
+  default     = ""
+}
+
+# UDP ports the network load balancer NSG accepts. Defaults to WireGuard's, which is the only
+# UDP service in the repo; the NSG is unattached until a Service names it, so an unused port
+# here costs nothing.
+variable "nlb_ingress_udp_ports" {
+  description = "UDP ports the network load balancer NSG accepts from anywhere. 51820 is WireGuard."
+  type        = list(number)
+  default     = [51820]
+}

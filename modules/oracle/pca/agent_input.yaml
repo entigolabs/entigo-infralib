@@ -1,0 +1,4 @@
+# Optional on purpose (.toptout, not .toutput): a deployment that brings its own HSM key, or
+# that sets create_ca = false, still has to plan. An empty ca_key_id then fails the
+# precondition in main.tf with a message saying which module supplies it.
+ca_key_id: "{{ .toptout.kms.ca_key_id }}"

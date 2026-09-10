@@ -28,7 +28,7 @@ if kubectl get applications.argoproj.io $app_name -n $app_namespace -o jsonpath=
 
     # Module name comes from .path for git sources and from .chart for OCI sources
     module=$(yq -r '.spec.sources[0].path // .spec.sources[0].chart // ""' "$app_file")
-    if echo "$module" | grep -Evq "(^|/)(crossplane-core|crossplane-aws|crossplane-google|aws-storageclass)$"
+    if echo "$module" | grep -Evq "(^|/)(crossplane-core|crossplane-aws|crossplane-google|crossplane-oracle|aws-storageclass)$"
     then
       kubectl patch -n $app_namespace applications.argoproj.io $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1
       touch $app_file.sync-destroy

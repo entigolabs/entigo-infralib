@@ -1,0 +1,33 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = '%s'" .Values.global.oracle.clusterId .Release.Namespace .Values.global.oracle.serviceAccountName }}
+# Per-app OCI IAM, applied by the crossplane-oracle provider.
+#
+# Granted to the autoscaler's own service account through OKE Workload Identity, not to the
+# node's identity: under instance principal every pod on a node inherits the grant, and
+# "manage instance-family" is not something to hand out that widely. The condition pins each
+# statement to one cluster, namespace and service account.
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ .Release.Name }}
+    description: Grants cluster-autoscaler permission to resize OKE node pools, via OKE Workload Identity
+    freeformTags:
+      created-by: "entigo-infralib"
+    # The verbatim statement list from Oracle's OKE cluster-autoscaler doc - all six.
+    statements:
+      - "Allow any-user to manage cluster-node-pools in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage instance-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to use subnets in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to use vnics in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to inspect compartments in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

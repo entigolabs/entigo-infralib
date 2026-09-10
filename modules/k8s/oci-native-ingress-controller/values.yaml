@@ -1,0 +1,110 @@
+global:
+  providerConfigRefName: crossplane-oracle
+  # Filled by agent_input_oracle.yaml; prefixes the IAM policy name, matching every other IAM
+  # object across this repo, so it stays distinct from other modules' policies in the same
+  # compartment - see templates/policy.yaml.
+  prefix: ""
+  oracle:
+    # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
+    compartmentId: ""
+    # OKE Workload Identity policy conditions are scoped to a single cluster, so the policy
+    # needs the cluster's OCID as well as the namespace and service account below.
+    clusterId: ""
+
+# deploymentNamespace must match oci-native-ingress-controller.deploymentNamespace below -
+# both are hardcoded to the same literal rather than cross-referenced, since named
+# templates from the vendored subchart aren't safely callable from this parent chart's
+# own templates/webhook-certs.yaml (see that file's header comment for why).
+deploymentNamespace: native-ingress-controller-system
+
+oci-native-ingress-controller:
+  # fullnameOverride pins the subchart's resource names (Deployment, Service, ServiceAccount,
+  # and critically the webhook TLS secret name) to a literal, independent of whatever Helm
+  # release name ArgoCD assigns this Application - our own webhook-certs.yaml template needs
+  # to know the exact secret name up front, so it can't be discovered afterward.
+  fullnameOverride: oci-native-ingress-controller
+  # OKE Workload Identity rather than the chart's default "instance": the controller then acts
+  # as its own service account instead of inheriting the node's identity, which every pod on
+  # that node shares. Accepted values are instance/user/workloadIdentity
+  # (pkg/types.MapToPrincipalType); workloadIdentity resolves to the SDK's
+  # OkeWorkloadIdentityConfigurationProvider, which requires an ENHANCED cluster - it fails
+  # with "please ensure the cluster type is enhanced" otherwise.
+  authType: workloadIdentity
+  deploymentNamespace: native-ingress-controller-system
+  compartment_id: ""
+  subnet_id: ""
+  cluster_id: ""
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 1Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 24Mi
+
+# One IngressClass + IngressClassParameters pair per entry, and NIC gives each pair its own
+# OCI load balancer. This is how Oracle expresses what an ALB group does on AWS: there is no
+# per-Ingress annotation that picks or creates a load balancer, so an app chooses one by
+# setting spec.ingressClassName - or gets the class marked isDefaultClass.
+#
+# subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
+# falls back to global.oracle.compartmentId, which is already wired there.
+#
+# A deployment may add further entries (a second internal class for a different subnet, say).
+# Each one is a billed load balancer.
+ingressClasses:
+  public:
+    enabled: true
+    name: oci-ic
+    isDefaultClass: true
+    isPrivate: false
+    loadBalancerName: "oci-ic-lb"
+    subnetId: ""
+    # Comma-separated NSG OCIDs the controller attaches to the LB. Wired from
+    # modules/oracle/oke's lb_nsg_id, which accepts its ports from anywhere.
+    nsgIds: ""
+    minBandwidthMbps: 10
+    maxBandwidthMbps: 100
+
+  # An internal load balancer, in a private subnet and reachable only from inside the VCN.
+  #
+  # ON by default, because the platform tools live here: argocd, grafana and prometheus all set
+  # ingressClassName: oci-ic-int, matching aws where those three sit on the private int_domain
+  # rather than the public one. Turning it off therefore means those Ingresses reference a
+  # class that does not exist and never get a load balancer.
+  #
+  # It is a second, billed load balancer, and it makes the platform tools reachable only
+  # through the VPN (modules/k8s/wireguard). Both are deliberate: an argocd that answers the
+  # public internet is the thing worth avoiding.
+  #
+  # Note what a private load balancer does NOT give you on its own - a hostname on a *public*
+  # DNS zone still resolves for everyone. Pair it with a private = true domain in
+  # modules/oracle/dns, which is what int_domain points at.
+  private:
+    enabled: true
+    name: oci-ic-int
+    isDefaultClass: false
+    isPrivate: true
+    loadBalancerName: "oci-ic-lb-int"
+    subnetId: ""
+    # From modules/oracle/oke's lb_int_nsg_id, which accepts its ports from the VCN CIDR only.
+    nsgIds: ""
+    minBandwidthMbps: 10
+    maxBandwidthMbps: 100
