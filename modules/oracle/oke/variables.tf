@@ -254,3 +254,33 @@ variable "nlb_ingress_udp_ports" {
   type        = list(number)
   default     = [51820]
 }
+
+# OIDC identity provider for human access to the cluster's Kubernetes API, so a user can get a
+# kubeconfig and authenticate with their own identity instead of a cloud credential.
+#
+# SINGULAR, unlike modules/aws/eks's cluster_identity_providers: OCI accepts exactly one OIDC
+# configuration per cluster, so a map keyed by provider name would imply a second one is
+# possible. Same `any` convention as the AWS variable otherwise, so a deployment's config
+# passes an HCL object.
+#
+# The claim settings are what the platform's Zitadel expects - groups arrive as a flat array
+# and Kubernetes RBAC subjects are written as `oidc:<group>`:
+#
+#   cluster_identity_provider: |-
+#     {
+#       issuer_url      = "https://<tenant>.zitadel.cloud"
+#       client_id       = "<the workspace's OIDC application client id>"
+#       username_claim  = "sub"
+#       username_prefix = "oidc:"
+#       groups_claim    = "groups"
+#       groups_prefix   = "oidc:"
+#     }
+#
+# Enabling this only makes the cluster ACCEPT such tokens. A user authenticated this way still
+# has no permissions until something binds their group - see modules/k8s/rbac-bindings.
+variable "cluster_identity_provider" {
+  description = "OIDC identity provider for Kubernetes API access. OCI supports exactly one per cluster. Empty disables OIDC authentication."
+  type        = any
+  nullable    = false
+  default     = {}
+}
