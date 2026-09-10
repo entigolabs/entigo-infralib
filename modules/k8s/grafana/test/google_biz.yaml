@@ -36,3 +36,19 @@ grafana:
             manageAlerts: false
           secureJsonData:
             httpHeaderValue1: "{{ .config.prefix }}"
+          isDefault: true
+        - name: Prometheus
+          type: prometheus
+          url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+          access: proxy
+        - name: Loki
+          type: loki
+          access: proxy
+          url: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
+          jsonData:
+            maxLines: 1000
+        - name: Google Cloud Monitoring
+          type: stackdriver
+          access: proxy
+          jsonData:
+            authenticationType: gce
