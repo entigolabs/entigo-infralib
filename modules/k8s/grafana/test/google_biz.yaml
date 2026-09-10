@@ -21,3 +21,18 @@ grafana:
       use_refresh_token: true
       client_id: "343161092010274846"
       role_attribute_path: "contains(groups[*], 'web-admin-343159627493470238') && 'Admin'"
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: "{{ .config.prefix }}"
+          type: prometheus
+          url: http://mimir-gateway.{{ .tmodule.mimir }}/prometheus
+          uid: "{{ .config.prefix }}"
+          access: proxy
+          jsonData:
+            httpHeaderName1: X-Scope-OrgID
+            manageAlerts: false
+          secureJsonData:
+            httpHeaderValue1: "{{ .config.prefix }}"

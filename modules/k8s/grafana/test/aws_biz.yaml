@@ -24,3 +24,18 @@ grafana:
     main:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: "{{ .config.prefix }}"
+          type: prometheus
+          url: http://mimir-gateway.{{ .tmodule.mimir }}/prometheus
+          uid: "{{ .config.prefix }}"
+          access: proxy
+          jsonData:
+            httpHeaderName1: X-Scope-OrgID
+            manageAlerts: false
+          secureJsonData:
+            httpHeaderValue1: "{{ .config.prefix }}"
