@@ -1,5 +1,5 @@
-ARG TOOLS_TAG=latest
-FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
+ARG BASE_TAG=latest
+FROM entigolabs/entigo-infralib-tools:${BASE_TAG} AS tools
 FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 

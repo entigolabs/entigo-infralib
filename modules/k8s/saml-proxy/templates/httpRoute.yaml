@@ -1,4 +1,4 @@
-{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createRoute }}
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.createRoute }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -8,10 +8,11 @@ spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: {{ .Values.global.aws.gateway.name }}
-      namespace: {{ .Values.global.aws.gateway.namespace }}
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
       sectionName: https
-  hostnames: [ {{ .Values.global.aws.hostname }} ]
+  hostnames:
+    - {{ .Values.global.hostname | quote }}
   rules:
     - backendRefs:
         - group: ''

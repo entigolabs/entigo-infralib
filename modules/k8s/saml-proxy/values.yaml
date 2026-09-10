@@ -1,12 +1,20 @@
 global:
-  cloudProvider: aws
+  # Route target. All three are filled from agent_input_aws.yaml, from aws-alb.
+  createRoute: false
+  hostname: ""
+  gateway:
+    name: ""
+    namespace: ""
+
+  # Platform prefix, used for the session cookie name.
+  prefix: ""
+
   aws:
+    # Ingress is the AWS only alternative to the route, also from aws-alb.
+    createIngress: true
     scheme: internet-facing
     groupName: external
     additionalIngressAnnotations: {}
-
-ingress:
-  hostName: ""
 
 targetService: ""
 
@@ -15,8 +23,8 @@ secretStore:
   kind: ClusterSecretStore
 
 image:
-  registry: docker.io/priitrent/saml-proxy
-  tag: "43-20260211-1"
+  registry: docker.io/entigolabs/saml-proxy
+  tag: "v0.0.1"
 
 affinity:
   nodeAffinity:
