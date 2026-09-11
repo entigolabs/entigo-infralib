@@ -45,7 +45,7 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 		t.Fatal("external-dns deployment error:", err)
 	}
 	
-	vs, err := k8s.ReadObjectFromFile(t, "./templates/virtualservice.yaml")
+	vs, err := k8s.ReadObjectFromFile(t, "./templates/virtualService.yaml")
 	require.NoError(t, err)
 	vs.SetName(fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId())))
 

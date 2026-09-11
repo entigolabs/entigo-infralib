@@ -1,0 +1,80 @@
+# The IAM policy granting the registry access to its bucket, commented out
+# together with the S3 storage configuration itself. Harbor's registry
+# cannot authenticate to S3 with IRSA yet — see values-aws.yaml for the
+# reason, the blocking Harbor issues and what to do when it is fixed.
+# 
+# {{- if eq .Values.global.cloudProvider "aws" }}
+# 
+# apiVersion: iam.aws.upbound.io/v1beta1
+# kind: Policy
+# metadata:
+#   name: {{ .Release.Name }} 
+#   annotations:
+#     argocd.argoproj.io/sync-wave: '-2'
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   forProvider:
+#     policy: |
+#       {
+#         "Version": "2012-10-17",
+#         "Statement": [
+#           {{- if .Values.global.aws.kmsKeyId }}
+#           {
+#               "Action": [
+#                   "kms:RevokeGrant",
+#                   "kms:ListGrants",
+#                   "kms:CreateGrant"
+#               ],
+#               "Condition": {
+#                   "Bool": {
+#                       "kms:GrantIsForAWSResource": "true"
+#                   }
+#               },
+#               "Effect": "Allow",
+#               "Resource": [
+#                 "{{ .Values.global.aws.kmsKeyId }}"
+#               ]
+#           },
+#           {
+#               "Action": [
+#                   "kms:ReEncrypt*",
+#                   "kms:GenerateDataKey*",
+#                   "kms:Encrypt",
+#                   "kms:DescribeKey",
+#                   "kms:Decrypt"
+#               ],
+#               "Effect": "Allow",
+#               "Resource": [
+#                 "{{ .Values.global.aws.kmsKeyId }}"
+#               ]
+#           },
+#           {{- end }}
+#           {
+#             "Effect": "Allow",
+#             "Action": [
+#               "s3:ListObjects*",
+#               "s3:ListBucket",
+#               "s3:PutObject",
+#               "s3:GetObject",
+#               "s3:DeleteObject"
+#             ],
+#             "Resource": [
+#               "arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}/*"
+#             ]
+#           },
+#           {
+#             "Effect": "Allow",
+#             "Action": [
+#               "s3:ListBucket"
+#             ],
+#             "Resource": [
+#               "arn:aws:s3:::{{ .Values.harbor.persistence.imageChartStorage.s3.bucket }}"
+#             ]
+#           }
+#         ]
+#       }
+# 
+#   providerConfigRef:
+#     name: {{ .Values.global.providerConfigRefName }}
+# 
+# {{- end }}

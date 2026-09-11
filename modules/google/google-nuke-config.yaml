@@ -81,3 +81,6 @@ accounts:
         - property: Name
           type: glob
           value: "argocd-*_clientSecret"
+      KMSKeyRing:
+        - property: Name
+          value: "taivotest"

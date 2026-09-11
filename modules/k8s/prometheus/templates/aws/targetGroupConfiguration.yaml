@@ -1,0 +1,16 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.prometheus.server.route.main.enabled }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Release.Name }}-server
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Release.Name }}-server   # kind defaults to Service
+  defaultConfiguration:
+    targetType: ip
+    healthCheckConfig:
+      healthCheckPath: /
+      matcher:
+        httpCode: 200-499              # was alb.ingress.kubernetes.io/success-codes
+{{- end }}

@@ -1,3 +1,11 @@
+global:
+  gateway:
+    # google-gateway/test points internalGateway at the external gateway, but
+    # the unit test probes the internal one in biz, the same way aws_biz.yaml
+    # pins the service gateway.
+    name: "{{ .tmodule.google-gateway }}-internal"
+    namespace: "{{ .tmodule.google-gateway }}"
+
 mimir-distributed:
   ingester:
     persistentVolume:

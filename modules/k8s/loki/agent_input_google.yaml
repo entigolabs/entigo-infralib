@@ -1,30 +1,18 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
   google:
-    hostname: "{{ .module.name }}.{{ .toutput.dns.int_domain }}"
     projectID: "{{ .toutput.crossplane.project_id }}"
     publicSubnetCidrs: "{{.toutput.vpc.public_subnet_cidrs}}"
     bucket:
       location: "{{ .toutput.gke.region }}"
       kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
 loki:
-  gateway:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
   loki:
     storage:
       bucketNames:
         admin: "{{ .config.prefix }}-{{ .module.name }}-logs"
         chunks: "{{ .config.prefix }}-{{ .module.name }}-logs"
         ruler: "{{ .config.prefix }}-{{ .module.name }}-logs"
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  sidecar:
-    image:
-      registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
-  memcached:
-    image:
-      repository: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/library/memcached'
   networkPolicy:
     externalStorage:
       cidrs:

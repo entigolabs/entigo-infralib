@@ -1,0 +1,34 @@
+prometheus:
+  server:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
+            namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+            sectionName: https
+        hostnames:
+          - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/prometheus'
+  prometheus-node-exporter:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}'
+  kube-state-metrics:
+    image:
+      registry: '{{ .toptout.ecr-proxy.k8s_registry | .toptout.gar-proxy.k8s_registry | "registry.k8s.io" }}'
+  alertmanager:
+    image:
+      repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus/alertmanager'
+    configmapReload:
+      image:
+        repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
+  configmapReload:
+    prometheus:
+      image:
+        repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/prometheus-operator/prometheus-config-reloader'
+prometheus-blackbox-exporter:
+  image:
+    registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}'

@@ -1,17 +1,22 @@
 {{- if eq .Values.global.cloudProvider "google" }}
-
+# Public key download endpoint, google only. AWS serves it from an extra port
+# of the wireguard NLB, which terminates TLS itself. Google's passthrough load
+# balancer terminates no TLS and cannot share the global gateway's address, so
+# the endpoint gets a route and a hostname of its own. See README.md.
+apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
 metadata:
   name: {{ .Release.Name }}-pubkey
+  namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: {{ .Values.global.google.gateway.name }}
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
       sectionName: https
-      namespace: {{ .Values.global.google.gateway.namespace }}
-  hostnames: [ {{ .Values.global.google.hostname }} ]
+  hostnames:
+    - {{ .Values.global.pubkeyHostname | quote }}
   rules:
     - backendRefs:
         - group: ''
@@ -23,5 +28,4 @@ spec:
         - path:
             type: PathPrefix
             value: /
-
 {{- end }}

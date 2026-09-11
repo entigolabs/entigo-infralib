@@ -1,0 +1,16 @@
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.createRoute }}
+# Replaces alb.ingress.kubernetes.io/success-codes: 200,301,302,404
+# (404 because the istio gateway answers 404 for unknown hosts)
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetReference:
+    name: {{ .Values.gateway.name }}
+  defaultConfiguration:
+    healthCheckConfig:
+      matcher:
+        httpCode: "200,301,302,404"
+{{- end }}

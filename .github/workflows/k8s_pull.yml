@@ -37,10 +37,17 @@ jobs:
           # Use the manually provided module path
           MODULES='["${{ inputs.module }}"]'
         else
-          # Extract unique module paths from changed/deleted files
+          # Extract unique module paths from changed/deleted files, then keep
+          # only the ones that are an actual module, i.e. a directory with a
+          # test.sh. This drops files that live directly under modules/k8s,
+          # such as README.md, and modules deleted by this pull request.
           MODULES=$(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
             echo "$file" | grep "modules/k8s" | cut -d'/' -f1-3
-          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          done | sort -u | while read -r module; do
+            if [ -f "$module/test.sh" ]; then
+              echo "$module"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
         fi
         echo "Detected modules: $MODULES"
         if [ "$MODULES" == "[]" ] || [ -z "$MODULES" ]; then

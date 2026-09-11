@@ -1,8 +1,5 @@
 global:
+  createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
   aws:
     certificateArn: "{{ .toutput.route53.pub_cert_arn }}"
-    createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
     createIngress: "{{ .tinput.aws-alb.global.createIngress }}"
-    gateway:
-      name: "{{ .tinput.aws-alb.global.externalGateway }}"
-      namespace: "{{ .tmodule.aws-alb }}"

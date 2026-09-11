@@ -2,6 +2,12 @@
 locals {
   domain = var.parent_zone_id != "" ? data.google_dns_managed_zone.parent_zone[0].dns_name : var.parent_domain
 
+  ssl_policies = {
+    restricted = { profile = "RESTRICTED", min_tls_version = "TLS_1_2" }
+    modern     = { profile = "MODERN", min_tls_version = "TLS_1_2" }
+    compatible = { profile = "COMPATIBLE", min_tls_version = "TLS_1_0" }
+  }
+
   public_subdomain_name  = var.public_subdomain_name != "" ? var.public_subdomain_name : var.prefix
   private_subdomain_name = var.private_subdomain_name != "" ? var.private_subdomain_name : "${var.prefix}-int"
 
@@ -174,6 +180,21 @@ resource "google_certificate_manager_certificate_map_entry" "pub_cert_2" {
   map          = google_certificate_manager_certificate_map.pub_cert[0].name
   certificates = [google_certificate_manager_certificate.pub_cert[0].id]
   hostname     = "*.${trimsuffix(local.pub_domain, ".")}"
+}
+
+resource "google_compute_ssl_policy" "this" {
+  for_each        = local.ssl_policies
+  name            = "${var.prefix}-${each.key}"
+  profile         = each.value.profile
+  min_tls_version = each.value.min_tls_version
+}
+
+resource "google_compute_region_ssl_policy" "this" {
+  for_each        = local.ssl_policies
+  name            = "${var.prefix}-${each.key}"
+  region          = data.google_client_config.this.region
+  profile         = each.value.profile
+  min_tls_version = each.value.min_tls_version
 }
 
 resource "google_dns_policy" "dns_policy" {

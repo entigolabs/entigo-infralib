@@ -3,3 +3,5 @@ promtail:
     clients:
       - url: http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push
   priorityClassName: "{{ .module.name }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'

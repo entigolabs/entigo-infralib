@@ -10,8 +10,9 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 loki:
   gateway:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+    route:
+      main:
+        enabled: "{{ .tinput.aws-alb.global.createRoute }}"
     ingress:
       enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:
@@ -19,20 +20,6 @@ loki:
           paths:
             - path: "/"
               pathType: "Prefix"
-    route:
-      main:
-        enabled: "{{ .tinput.aws-alb.global.createRoute }}"
-        # Pin to avoid Capabilities auto-detect under ArgoCD repo-server discovery cache
-        apiVersion: gateway.networking.k8s.io/v1
-        kind: HTTPRoute
-        parentRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: "{{ .tinput.aws-alb.global.internalGateway }}"
-          namespace: "{{ .tmodule.aws-alb }}"
-          sectionName: https
-        hostnames:
-          - "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
   loki:
     storage:
       s3:
@@ -46,14 +33,6 @@ loki:
         aws:
           region: "{{ .toutput.eks.region }}"
           bucketnames: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
-  sidecar:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
-  memcached:
-    image:
-      repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/library/memcached'
   networkPolicy:
     externalStorage:
      cidrs:

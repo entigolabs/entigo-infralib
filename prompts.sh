@@ -96,6 +96,7 @@ run_claude() {
     -v "${HOME}/.ssh:${C_HOME}/.ssh:ro" \
     -v "${CONTAINER_GITCONFIG}:${C_HOME}/.gitconfig:ro" \
     -e "HOME=${C_HOME}" \
+    -e CLAUDE_CODE_DISABLE_MOUSE=1 \
     -e "GIT_SSH_COMMAND=ssh -i ${C_HOME}/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
     $gh_token_arg \
     -w /workspace \
