@@ -23,9 +23,6 @@ grafana:
     seccompProfile:
       type: RuntimeDefault
   shadowBundledPlugins: true
-  plugins:
-    - loki
-    - prometheus
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
