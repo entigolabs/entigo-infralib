@@ -11,6 +11,9 @@ harbor:
       hosts:
         core: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
 
+  # S3 storage for the registry. Commented out because Harbor's registry
+  # cannot authenticate to S3 with IRSA yet — see values-aws.yaml for the
+  # reason, the blocking Harbor issues and what to do when it is fixed.
   #persistence:
   #  imageChartStorage:
   #    s3:

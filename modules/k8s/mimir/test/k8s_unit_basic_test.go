@@ -43,6 +43,10 @@ func testK8sMimir(t *testing.T, cloudName string, envName string) {
 	if err != nil {
 		t.Fatal("mimir-distributor deployment error:", err)
 	}
+	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-query-scheduler", 20, 6*time.Second)
+	if err != nil {
+		t.Fatal("mimir-query-scheduler deployment error:", err)
+	}
 	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-querier", 20, 6*time.Second)
 	if err != nil {
 		t.Fatal("mimir-querier deployment error:", err)

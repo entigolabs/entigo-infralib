@@ -13,7 +13,7 @@ grafana:
       enabled: true
       name: zitadel
       allow_sign_up: true
-      scopes: openid email profile roles 
+      scopes: openid email profile roles
       auth_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/authorize
       token_url: https://entigo-dev-if3upz.zitadel.cloud/oauth/v2/token
       api_url: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/userinfo
@@ -21,3 +21,35 @@ grafana:
       use_refresh_token: true
       client_id: "343161092010274846"
       role_attribute_path: "contains(groups[*], 'web-admin-343159627493470238') && 'Admin'"
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Mimir
+          type: prometheus
+          url: http://mimir-gateway.{{ .tmodule.mimir }}/prometheus
+          uid: "{{ .config.prefix }}"
+          jsonData:
+            httpHeaderName1: X-Scope-OrgID
+            manageAlerts: false
+            prometheusType: Mimir
+          secureJsonData:
+            httpHeaderValue1: "{{ .config.prefix }}"
+          isDefault: true
+          editable: false
+        - name: Prometheus
+          type: prometheus
+          url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+          access: proxy
+        - name: Loki
+          type: loki
+          access: proxy
+          url: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
+          jsonData:
+            maxLines: 1000
+        - name: Google Cloud Monitoring
+          type: stackdriver
+          access: proxy
+          jsonData:
+            authenticationType: gce
