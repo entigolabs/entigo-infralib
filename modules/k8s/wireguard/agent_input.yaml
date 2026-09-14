@@ -1,4 +1,9 @@
 wireguard:
+  service:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
+      # Not consumed by the load balancer, agent.yaml reads it back as vpn_host
+      hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
   image:
     repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/wireguard'
   keygenJob:
@@ -11,3 +16,28 @@ wireguard:
   healthSideCar:
     image:
       repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/http-healthcheck-sidecar'
+  # Serves the generated public key. On AWS it is reached through the extra
+  # TCP 443 port of the wireguard NLB, on google through templates/google.
+  extraSideCars:
+  - name: pubkey
+    image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+    volumeMounts:
+    - name: pubkey
+      mountPath: /usr/share/nginx/html/index.html
+      subPath: publickey
+    resources:
+      requests:
+        cpu: 1m
+        memory: 1Mi
+        ephemeral-storage: 4Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+        ephemeral-storage: 128Mi
+  volumes:
+  - name: pubkey
+    secret:
+      secretName: '{{ .module.name }}-wg-generated-public'

@@ -17,6 +17,29 @@ mimir-distributed:
     create: false
     name: mimir
 
+  # Chart 6.x defaults to the ingest-storage architecture (distributors -> Kafka
+  # -> ingesters). We stay on the classic architecture (distributors push
+  # directly to ingesters), matching 5.8.0 behaviour. Revisit when the in-chart
+  # Kafka component matures.
+  #
+  # The chart's own classic-architecture.yaml nulls these keys out, but Helm
+  # strips null entries while coalescing subchart values, so the 6.x defaults
+  # would survive. They are restored to the Mimir defaults explicitly instead.
+  kafka:
+    enabled: false
+
+  mimir:
+    structuredConfig:
+      ingest_storage:
+        enabled: false
+      distributor:
+        # 6.x raises this to 5s because writing to Kafka is slower.
+        remote_timeout: 2s
+      ingester:
+        # 6.x sets this false so ingesters only accept data from Kafka. Mimir
+        # only permits disabling it when ingest-storage is enabled.
+        push_grpc_method_enabled: true
+
   alertmanager:
     enabled: false
 
@@ -81,6 +104,15 @@ mimir-distributed:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mimir
+                  app.kubernetes.io/component: ingester
     zoneAwareReplication:
       enabled: false
     tolerations:
@@ -228,6 +260,15 @@ mimir-distributed:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mimir
+                  app.kubernetes.io/component: querier
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -280,7 +321,7 @@ mimir-distributed:
         effect: "NoSchedule"
 
   query_scheduler:
-    enabled: false
+    enabled: true
     replicas: 2
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
@@ -311,6 +352,15 @@ mimir-distributed:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mimir
+                  app.kubernetes.io/component: query-scheduler
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -357,6 +407,15 @@ mimir-distributed:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mimir
+                  app.kubernetes.io/component: store-gateway
     tolerations:
       - key: "mon"
         operator: "Equal"
@@ -488,7 +547,6 @@ mimir-distributed:
         effect: "NoSchedule"
 
   metadata-cache:
-    # -- Specifies whether memcached based metadata-cache should be enabled
     enabled: false
     replicas: 1
     allocatedMemory: 512
@@ -590,7 +648,6 @@ mimir-distributed:
   # Configuration for nginx gateway.
   # Can only be enabled when 'enterprise.enabled' is false.
   nginx:
-    # -- Specifies whether nginx should be enabled
     enabled: false
 
   gateway:
@@ -626,6 +683,15 @@ mimir-distributed:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mimir
+                  app.kubernetes.io/component: gateway
     tolerations:
       - key: "mon"
         operator: "Equal"

@@ -97,7 +97,7 @@ jobs:
     concurrency:
       group: pr-modules-test
       cancel-in-progress: false
-    name: Release
+    name: Install and test stable K8s
     steps:
     - name: Free disk space
       run: |

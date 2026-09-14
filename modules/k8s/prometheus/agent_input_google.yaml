@@ -1,5 +1,4 @@
 prometheus:
-
   kube-state-metrics:
     networkPolicy:
       egress:
