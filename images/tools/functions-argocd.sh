@@ -101,6 +101,30 @@ stringData:
   password: \"${ecr_token}\"" | kubectl apply -f - || { echo "Failed to create ECR credential secret $ecr_secret"; exit 24; }
         fi
     fi
+
+    # Seed a temporary Artifact Registry credential secret on Google until External Secrets takes over
+    # GAR access tokens are valid for 1 hour, ESO adopts and keeps the secret refreshed afterwards
+    # The name and url must match the ExternalSecret in modules/k8s/external-secrets/templates/google/gar.yaml
+    if [ -n "$GOOGLE_REGION" ]; then
+        local gar_secret="repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}"
+        if ! kubectl -n $namespace get secret $gar_secret >/dev/null 2>&1; then
+            echo "Applying temporary Artifact Registry credential secret $gar_secret in namespace $namespace."
+            local gar_token=$(gcloud auth print-access-token) || { echo "Failed to get Artifact Registry token"; exit 24; }
+            echo "apiVersion: v1
+kind: Secret
+metadata:
+  name: ${gar_secret}
+  namespace: ${namespace}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: helm
+  enableOCI: \"true\"
+  url: ${GOOGLE_REGION}-docker.pkg.dev/${GOOGLE_PROJECT}
+  username: oauth2accesstoken
+  password: \"${gar_token}\"" | kubectl apply -f - || { echo "Failed to create Artifact Registry credential secret $gar_secret"; exit 24; }
+        fi
+    fi
     # Register credential-less OCI registries found in application files
     # ArgoCD requires a repository entry with enableOCI even for public OCI registries
     local done_urls=""

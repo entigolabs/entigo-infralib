@@ -4,3 +4,7 @@ global:
     region: "{{ .toutput.gke.region }}"
     cluster:
       name: "{{ .toutput.gke.cluster_name }}"
+    createGARNamespace: "{{ .tmodule.argocd }}"
+    createGARProjects:
+      - projectID: "{{ .toutput.crossplane.project_id }}"
+        projectRegion: "{{ .toutput.gke.region }}"
