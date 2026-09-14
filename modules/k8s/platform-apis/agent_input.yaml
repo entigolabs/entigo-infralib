@@ -18,12 +18,14 @@ platform-apis:
       # subnets leaves a trailing comma, which the chart drops.
       data:
         cidrs: "{{ .toutput.vpc.database_subnets_cidr_blocks }},{{ .toutput.vpc.elasticache_subnets_cidr_blocks }}"
-      # Internal services. Left empty on purpose: with the default subnet_split_mode the service
-      # subnets share their CIDR with the compute subnets, which is where Pod IPs come from, so
-      # filling this in also opens those ports to every Pod. Set it per environment when the
-      # cluster actually needs to reach internal services.
+      # Pod CIDRs, used only as a guard. With subnet_split_mode "default" the VPC returns the same
+      # private subnet CIDRs for the service and the compute subnets, so the service group below
+      # would open its ports to every Pod. platform-apis skips that group when the two overlap, so
+      # the service entry is created under "spoke" and skipped under "default" without the
+      # environment having to know which mode it uses.
+      podCidrs: "{{ .toutput.vpc.compute_subnets_cidr_blocks }}"
       service:
-        cidrs: ""
+        cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
   database:
