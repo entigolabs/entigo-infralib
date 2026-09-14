@@ -4,13 +4,14 @@ global:
     # Filled by agent_input_oracle.yaml.
     # Hostname the pubkey sidecar is served on, through the public oracle-gateway.
     pubkeyHostname: ""
+    # Filled by agent_input_oracle.yaml.
     # Public gateway from modules/k8s/oracle-gateway's `gateways` map - this is the one thing
     # that must be reachable before the VPN is up, so unlike argocd/grafana it cannot sit
     # behind the private (VPN-only) gateway.
     gateway:
-      name: oracle-gateway-public
-      namespace: oracle-gateway
-      sectionName: https
+      name: ""
+      namespace: ""
+      sectionName: ""
 
 wireguard:
   service:

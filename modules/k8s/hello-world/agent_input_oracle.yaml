@@ -1,2 +1,8 @@
 ingress:
   host: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
+
+httpRoute:
+  gateway:
+    name: '{{ .toptin.oracle-gateway.global.externalGateway | required }}'
+    namespace: '{{ .toptmodule.oracle-gateway | required }}'
+    sectionName: https

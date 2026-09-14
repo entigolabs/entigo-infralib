@@ -4,7 +4,3 @@ ingress:
 
 httpRoute:
   enabled: true
-  gateway:
-    name: oracle-gateway-public
-    namespace: oracle-gateway
-    sectionName: https
