@@ -12,6 +12,7 @@ blocklist:
 resource-types:
   alternatives:
   - AWS::ECR::RepositoryCreationTemplate
+  - AWS::MSK::ServerlessCluster
   excludes:
   - EC2KeyPair
   - IAMSAMLProvider
