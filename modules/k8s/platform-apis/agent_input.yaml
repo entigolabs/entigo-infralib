@@ -10,6 +10,22 @@ global:
 platform-apis:
   zone:
     kyvernoNamespace: "{{ .tmodule.kyverno }}"
+    istioServiceEntries:
+      istioNamespace: "{{ .tmodule.istio-istiod }}"
+      # Managed data services. The database and elasticache outputs are joined into one value
+      # because platform-apis does not separate them: a Valkey launched into the database subnet
+      # has to work the same as one in the elasticache subnet. An environment without elasticache
+      # subnets leaves a trailing comma, which the chart drops.
+      data:
+        cidrs: "{{ .toutput.vpc.database_subnets_cidr_blocks }},{{ .toutput.vpc.elasticache_subnets_cidr_blocks }}"
+      # Pod CIDRs, used only as a guard. With subnet_split_mode "default" the VPC returns the same
+      # private subnet CIDRs for the service and the compute subnets, so the service group below
+      # would open its ports to every Pod. platform-apis skips that group when the two overlap, so
+      # the service entry is created under "spoke" and skipped under "default" without the
+      # environment having to know which mode it uses.
+      podCidrs: "{{ .toutput.vpc.compute_subnets_cidr_blocks }}"
+      service:
+        cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
   database:
