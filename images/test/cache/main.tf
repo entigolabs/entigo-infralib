@@ -7,11 +7,11 @@ terraform {
     }
     google = {
       source = "hashicorp/google"
-      version = "8.1.0"
+      version = "8.2.0"
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "8.1.0"
+      version = "8.2.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -39,7 +39,7 @@ terraform {
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.9.0"
+      version = "3.9.1"
     }
   }
 }
