@@ -142,7 +142,7 @@ Set `routingResources` to `both` so the module creates the `GatewayClass` and
             routingResources: "both"
 ```
 
-You might also want to specify what Gateways to create. For example if you do not use external `Gatway` and use a service `Gateway` then your configuration would be as follows:
+You might also want to specify what Gateways to create. For example if you do not use external `Gateway` and use a service `Gateway` then your configuration would be as follows:
 ```yaml
       - name: aws-alb
         source: aws-alb

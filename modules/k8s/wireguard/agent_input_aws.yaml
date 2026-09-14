@@ -1,26 +1,5 @@
 wireguard:
   service:
-    annotations: 
-      external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
-      hostname: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+    annotations:
+      # The NLB terminates TLS for the pubkey port declared in values-aws.yaml
       service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "{{ .toutput.route53.pub_cert_arn }}"
-  extraSideCars:
-  - name: pubkey
-    image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
-    volumeMounts:
-    - name: pubkey
-      mountPath: /usr/share/nginx/html/index.html
-      subPath: publickey
-    resources:
-      requests:
-        cpu: 1m
-        memory: 1Mi
-        ephemeral-storage: 4Mi
-      limits:
-        cpu: 100m
-        memory: 64Mi
-        ephemeral-storage: 128Mi
-  volumes:
-  - name: pubkey
-    secret:
-      secretName: '{{ .module.name }}-wg-generated-public'
