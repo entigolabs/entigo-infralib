@@ -1,0 +1,30 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $release := .Release.Name }}
+{{- $namespace := .Release.Namespace }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+---
+# Referenced from the matching Gateway's spec.infrastructure.parametersRef
+# (templates/gateways.yaml) - Istio strategic-merge-applies this to the Deployment it
+# generates for that Gateway. Without it, the restricted Pod Security Standard this
+# namespace enforces refuses every pod (Istio's auto-provisioned gateway doesn't set
+# seccompProfile on its own), and the Service/load balancer end up with no backends at all.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $release }}-{{ $name }}-options
+  namespace: {{ $namespace }}
+  annotations:
+    # Ahead of the Gateway, so Istio sees the patch on its first reconcile.
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  deployment: |
+    spec:
+      template:
+        spec:
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+{{- end }}
+{{- end }}
+{{- end }}

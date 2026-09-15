@@ -1,0 +1,73 @@
+# The vendored controller (charts/oci-native-ingress-controller) unconditionally starts a
+# webhook HTTPS server at startup (pkg/server/server.go's SetupWebhookServer, called
+# unconditionally from main.go) and exits the process if it can't load a TLS cert from
+# /tmp/k8s-webhook-server/serving-certs - this isn't optional even though the webhook
+# feature itself (pod-readiness-gate injection) is opt-in per namespace. Upstream's own
+# chart assumes cert-manager is installed (its templates/webhook.yaml, which we did not
+# vendor, uses a cert-manager.io Certificate+Issuer) - we don't have a cert-manager module
+# in this repo, so this generates an equivalent self-signed CA+cert directly in Helm
+# instead of adding a whole new module dependency for one unused feature.
+#
+# The lookup guards reuse the existing secret's key material across `helm upgrade` runs so
+# the cert/CA don't churn (and the caBundle below doesn't drift) on every sync.
+{{- $secretName := "oci-native-ingress-controller-tls" }}
+{{- $ns := .Values.deploymentNamespace }}
+{{- $altNames := list (printf "oci-native-ingress-controller.%s" $ns) (printf "oci-native-ingress-controller.%s.svc" $ns) (printf "oci-native-ingress-controller.%s.svc.cluster.local" $ns) }}
+{{- $existingSecret := lookup "v1" "Secret" $ns $secretName }}
+{{- $ca := dict }}
+{{- $cert := dict }}
+{{- if $existingSecret }}
+{{- $ca = dict "Cert" (index $existingSecret.data "ca.crt" | b64dec) }}
+{{- $cert = dict "Cert" (index $existingSecret.data "tls.crt" | b64dec) "Key" (index $existingSecret.data "tls.key" | b64dec) }}
+{{- else }}
+{{- $ca = genCA "oci-native-ingress-controller-ca" 3650 }}
+{{- $cert = genSignedCert "oci-native-ingress-controller" nil $altNames 3650 $ca }}
+{{- end }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $secretName }}
+  namespace: {{ $ns }}
+type: kubernetes.io/tls
+data:
+  ca.crt: {{ $ca.Cert | b64enc }}
+  tls.crt: {{ $cert.Cert | b64enc }}
+  tls.key: {{ $cert.Key | b64enc }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: oci-native-ingress-controller-webhook
+webhooks:
+- clientConfig:
+    service:
+      name: oci-native-ingress-controller
+      namespace: {{ $ns }}
+      path: /mutate-v1-pod
+    caBundle: {{ $ca.Cert | b64enc }}
+  failurePolicy: Fail
+  name: podreadiness.ingress.oraclecloud.com
+  admissionReviewVersions:
+  - v1beta1
+  namespaceSelector:
+    matchExpressions:
+    - key: podreadiness.ingress.oraclecloud.com/pod-readiness-gate-inject
+      operator: In
+      values:
+      - enabled
+  objectSelector:
+    matchExpressions:
+    - key: app.kubernetes.io/name
+      operator: NotIn
+      values:
+      - oci-native-ingress-controller
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: None

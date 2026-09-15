@@ -80,7 +80,7 @@ stringData:
 
     # Seed a temporary ECR credential secret on AWS until External Secrets takes over
     # ECR tokens are valid for 12 hours, ESO keeps the secret refreshed afterwards
-    if [ -n "$AWS_REGION" ]; then
+    if [ "$PROVIDER" == "aws" ]; then
         local account_id=$(aws sts get-caller-identity --query Account --output text)
         local ecr_secret="repo-${account_id}-${AWS_REGION}"
         if ! kubectl -n $namespace get secret $ecr_secret >/dev/null 2>&1; then
@@ -181,8 +181,9 @@ helm_oci_login() {
             return
         fi
     done
-    # Only create helm registry config if AWS_REGION is set
-    if [ -n "$AWS_REGION" ]; then
+    # Oracle OCIR logins happen via the GIT_AUTH_SOURCE_* oci:// match above
+    # (helm registry login), so no credential helper config is needed there.
+    if [ "$PROVIDER" == "aws" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       mkdir -p "$HOME/.config/helm/registry"
@@ -327,6 +328,9 @@ argocd_plan() {
         CHANGE=$((CHANGE - 1))
     fi
     echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
+    cat > "plan.json" <<EOF
+{"type":"argocd","add":${ADD},"change":${CHANGE},"destroy":${DESTROY}}
+EOF
     rm -f *.log
 
     if [ ! -z "$FAIL" ]; then

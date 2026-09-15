@@ -1,0 +1,52 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+# Object Storage bucket for mimir's blocks (and ruler data, when metadata-cache is enabled -
+# see values-oracle.yaml's mimir.config), created through the crossplane-oracle provider -
+# same pattern as modules/k8s/loki/templates/oracle/bucket.yaml.
+#
+# Far fewer resources than the aws version needs: OCI buckets are private by default with no
+# ACL, ownership or public-access-block objects to configure, and encryption at rest is always
+# on. So there is nothing here but the bucket - the only choice is whose key encrypts it.
+apiVersion: objectstorage.oci.upbound.io/v1alpha1
+kind: Bucket
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    # No crossplane.io/external-name here, deliberately. Setting it to the bucket name looks
+    # right and creates an endless sync loop: after creating the bucket the provider rewrites
+    # the annotation to the composite OCI id, "n/<object storage namespace>/b/<bucket>", ArgoCD
+    # sees a field it authored being changed and sets it back, the provider rewrites it again.
+    # The app never reaches Synced and a manual sync cannot win the race.
+    #
+    # Nothing is lost by leaving it out: forProvider.name and forProvider.namespace already
+    # identify the bucket, and Crossplane fills the annotation in itself on create.
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan, matching loki and aws: losing metrics data to a helm uninstall would be an
+  # unpleasant surprise, and an empty orphaned bucket is cheap.
+  deletionPolicy: Orphan
+  forProvider:
+    name: {{ .Values.global.bucketName }}
+    # The Object Storage namespace, which is tenancy-wide and not the compartment - it also
+    # appears in the S3-compatibility hostname. Set from the oke module's output.
+    namespace: {{ .Values.global.oracle.objectStorageNamespace }}
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    accessType: NoPublicAccess
+    versioning: Disabled
+    {{- if .Values.global.oracle.kmsKeyId }}
+    # Customer-managed encryption, from modules/oracle/kms's telemetry key - the same key
+    # modules/k8s/loki and mimir use on aws and google, so "metrics storage is encrypted with
+    # the telemetry key" reads the same on every cloud. Without it the bucket is still
+    # encrypted, but with a key Oracle owns and rotates.
+    #
+    # Requires objectstorage-<region> to be allowed to use the key. modules/oracle/kms grants
+    # that and holds its key outputs behind a propagation wait, so by the time this OCID is
+    # rendered the grant exists - a bucket naming a key the service cannot use is rejected
+    # outright rather than retried.
+    kmsKeyId: {{ .Values.global.oracle.kmsKeyId }}
+    {{- end }}
+    freeformTags:
+      created-by: "entigo-infralib"
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

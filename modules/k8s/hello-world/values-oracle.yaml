@@ -1,0 +1,6 @@
+# Exposed via HTTPRoute instead of Ingress (templates/httproute.yaml).
+ingress:
+  enabled: false
+
+httpRoute:
+  enabled: true

@@ -1,0 +1,26 @@
+global:
+  cloudProvider: ""
+  # Name of the Gateway other modules attach their HTTPRoutes to. Gateways are
+  # named <release name>-<key under gateways>, so these must be kept in sync
+  # when the built-in entries are renamed or the module is deployed under a
+  # different name. The agent sets both from the module name.
+  internalGateway: ""
+  externalGateway: ""
+
+gatewayClassName: istio
+
+# One Gateway (= one NIC IngressClass + OCI load balancer) per entry. Any map entry with
+# enabled: true becomes a Gateway, its Ingress, its backend-tls Secret and its options
+# ConfigMap - all named <release name>-<key under gateways>. Matches the pattern
+# modules/k8s/aws-alb and modules/k8s/google-gateway use for their own gateways map.
+gateways:
+  public:
+    enabled: true
+    ingressClassName: oci-ic
+    certificateOcid: ""
+    domain: ""
+  private:
+    enabled: true
+    ingressClassName: oci-ic-int
+    certificateOcid: ""
+    domain: ""
