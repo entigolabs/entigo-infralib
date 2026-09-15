@@ -3,10 +3,6 @@ kind: VirtualService
 metadata:
   name: test
   annotations:
-    # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
-    # 0.22+ reads only the GA one. The alpha copy goes away once every
-    # environment runs 0.22+.
-    external-dns.alpha.kubernetes.io/target: 127.0.0.1
     external-dns.kubernetes.io/target: 127.0.0.1
 spec:
   hosts:
