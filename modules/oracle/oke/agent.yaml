@@ -3,5 +3,6 @@ metadata:
   cluster_arn: "{{ .sout.cluster_id }}"
   cluster_endpoint: "{{ .sout.kubernetes_endpoint }}"
   cluster_version: "{{ .sout.kubernetes_version }}"
+  cluster_certificate_authority_data: "{{ .sout.cluster_certificate_authority_data }}"
   cluster_identity_provider: "{{ .toptin.oke.cluster_identity_provider }}"
 module_types: [kubernetes-cluster, kubernetes-nodes]
