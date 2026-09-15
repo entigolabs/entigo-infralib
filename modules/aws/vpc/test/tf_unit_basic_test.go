@@ -204,7 +204,10 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Equal(t, 3, len(databaseSubnets), "Wrong number of database_subnets returned")
 
 	elasticacheSubnets := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets")
-	assert.Equal(t, 0, len(elasticacheSubnets), "Wrong number of elasticache_subnets returned")
+	assert.Equal(t, databaseSubnets, elasticacheSubnets, "spoke elasticache_subnets must reuse database_subnets")
+
+	elasticacheSubnetGroup := tf.GetStringValue(t, outputs, "vpc__elasticache_subnet_group")
+	assert.NotEmpty(t, elasticacheSubnetGroup, "spoke should expose an elasticache subnet group (reused database subnets)")
 
 	privateSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnets_cidr_blocks")
 	assert.Equal(t, "10.30.0.64/28", privateSubnetCidrs[0], "Wrong value for private_subnets_cidr_blocks returned")
@@ -243,7 +246,7 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Equal(t, "10.30.3.128/26", databaseSubnetCidrs[2], "Wrong value for database_subnets_cidr_blocks returned")
 
 	elasticacheSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets_cidr_blocks")
-	assert.Equal(t, 0, len(elasticacheSubnetCidrs), "Wrong number of elasticache_subnet_cidr_blocks returned")
+	assert.Equal(t, databaseSubnetCidrs, elasticacheSubnetCidrs, "spoke elasticache_subnets_cidr_blocks must reuse database_subnets_cidr_blocks")
 
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, "10.30.0.0/28", intraSubnetCidrs[0], "Wrong value for intra_subnets_cidr_blocks returned")
