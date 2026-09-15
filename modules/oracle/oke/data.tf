@@ -14,3 +14,9 @@ data "oci_core_vcn" "this" {
 data "oci_objectstorage_namespace" "this" {
   compartment_id = var.compartment_id
 }
+
+data "oci_containerengine_cluster_kube_config" "this" {
+  cluster_id    = oci_containerengine_cluster.this.id
+  token_version = "2.0.0"
+  endpoint      = var.is_public_ip_enabled ? "PUBLIC_ENDPOINT" : "PRIVATE_ENDPOINT"
+}

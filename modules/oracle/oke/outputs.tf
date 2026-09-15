@@ -19,7 +19,11 @@ output "private_endpoint" {
 }
 
 output "kubernetes_endpoint" {
-  value = oci_containerengine_cluster.this.endpoints[0].kubernetes
+  value = yamldecode(data.oci_containerengine_cluster_kube_config.this.content)["clusters"][0]["cluster"]["server"]
+}
+
+output "cluster_certificate_authority_data" {
+  value = yamldecode(data.oci_containerengine_cluster_kube_config.this.content)["clusters"][0]["cluster"]["certificate-authority-data"]
 }
 
 output "main_node_pool_id" {
