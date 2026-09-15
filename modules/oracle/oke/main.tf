@@ -8,9 +8,9 @@ locals {
   # ("must be a public subnet if public ip enabled"), so the subnet choice must follow it.
   endpoint_subnet_id = var.is_public_ip_enabled ? var.public_subnet_id : var.private_subnet_id
 
-  # An empty cluster_identity_provider means "no OIDC". The block below is still emitted, so
+  # An empty cluster_identity_providers means "no OIDC". The block below is still emitted, so
   # this drives is_open_id_connect_auth_enabled rather than the block's presence.
-  oidc_enabled = length(var.cluster_identity_provider) > 0
+  oidc_enabled = length(var.cluster_identity_providers) > 0
 
   main_subnet_ids  = length(var.oke_main_subnet_ids) > 0 ? var.oke_main_subnet_ids : var.node_subnet_ids
   mon_subnet_ids   = length(var.oke_mon_subnet_ids) > 0 ? var.oke_mon_subnet_ids : var.node_subnet_ids
@@ -346,17 +346,17 @@ resource "oci_containerengine_cluster" "this" {
     open_id_connect_token_authentication_config {
       is_open_id_connect_auth_enabled = local.oidc_enabled
 
-      issuer_url         = try(var.cluster_identity_provider.issuer_url, null)
-      client_id          = try(var.cluster_identity_provider.client_id, null)
-      username_claim     = try(var.cluster_identity_provider.username_claim, null)
-      username_prefix    = try(var.cluster_identity_provider.username_prefix, null)
-      groups_claim       = try(var.cluster_identity_provider.groups_claim, null)
-      groups_prefix      = try(var.cluster_identity_provider.groups_prefix, null)
-      ca_certificate     = try(var.cluster_identity_provider.ca_certificate, null)
-      signing_algorithms = try(var.cluster_identity_provider.signing_algorithms, null)
+      issuer_url         = try(var.cluster_identity_providers.issuer_url, null)
+      client_id          = try(var.cluster_identity_providers.client_id, null)
+      username_claim     = try(var.cluster_identity_providers.username_claim, null)
+      username_prefix    = try(var.cluster_identity_providers.username_prefix, null)
+      groups_claim       = try(var.cluster_identity_providers.groups_claim, null)
+      groups_prefix      = try(var.cluster_identity_providers.groups_prefix, null)
+      ca_certificate     = try(var.cluster_identity_providers.ca_certificate, null)
+      signing_algorithms = try(var.cluster_identity_providers.signing_algorithms, null)
 
       dynamic "required_claims" {
-        for_each = try(var.cluster_identity_provider.required_claims, {})
+        for_each = try(var.cluster_identity_providers.required_claims, {})
         content {
           key   = required_claims.key
           value = required_claims.value
