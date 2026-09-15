@@ -59,10 +59,7 @@ locals {
 }
 
 
-#When enabled (spoke mode, no explicit elasticache subnets), create an ElastiCache
-#subnet group over the existing database subnets. ElastiCache needs its own
-#subnet-group resource type; a subnet may belong to both an RDS and an ElastiCache
-#subnet group, so this reuses the database subnets without allocating new CIDRs.
+#Spoke mode without dedicated elasticache subnets: reuse the database subnets (a subnet can be in both an RDS and an ElastiCache subnet group).
 resource "aws_elasticache_subnet_group" "database_reuse" {
   count      = local.reuse_db_for_elasticache ? 1 : 0
   name       = coalesce(var.elasticache_subnet_group_name, module.vpc.database_subnet_group_name)
