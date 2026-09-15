@@ -5,7 +5,7 @@ kiali-server:
   auth:
     strategy: openid
     openid:
-      client_id: "343161107562659633"
+      client_id: "390879730326400097"
       disable_rbac: true
       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
       scopes: ["openid", "profile", "email", "roles"]
