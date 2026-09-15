@@ -53,6 +53,24 @@ resource "oci_core_network_security_group_security_rule" "endpoint_kube_api" {
   }
 }
 
+resource "oci_core_network_security_group_security_rule" "endpoint_kube_api_external" {
+  for_each = toset(var.oke_api_access_cidrs)
+
+  network_security_group_id = oci_core_network_security_group.endpoint.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = each.value
+  source_type               = "CIDR_BLOCK"
+  description               = "External -> Kubernetes API"
+
+  tcp_options {
+    destination_port_range {
+      min = 6443
+      max = 6443
+    }
+  }
+}
+
 resource "oci_core_network_security_group_security_rule" "endpoint_oke_control" {
   network_security_group_id = oci_core_network_security_group.endpoint.id
   direction                 = "INGRESS"

@@ -255,6 +255,13 @@ variable "nlb_ingress_udp_ports" {
   default     = [51820]
 }
 
+variable "oke_api_access_cidrs" {
+  description = "CIDRs allowed to reach the Kubernetes API endpoint on 6443, in addition to the VCN. Empty keeps the endpoint reachable only from inside the VCN."
+  type        = list(string)
+  nullable    = false
+  default     = []
+}
+
 # OIDC identity provider for human access to the cluster's Kubernetes API, so a user can get a
 # kubeconfig and authenticate with their own identity instead of a cloud credential.
 #
