@@ -13,7 +13,11 @@ metadata:
     # Istio defaults to a LoadBalancer Service, which would provision a second, unwanted
     # OCI load balancer - templates/ingress.yaml is the only public entry point.
     networking.istio.io/service-type: ClusterIP
+    # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
+    # 0.22+ reads only the GA one. The alpha copy goes away once every
+    # environment runs 0.22+.
     external-dns.alpha.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
+    external-dns.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
 spec:
   gatewayClassName: {{ $.Values.gatewayClassName }}
   infrastructure:
