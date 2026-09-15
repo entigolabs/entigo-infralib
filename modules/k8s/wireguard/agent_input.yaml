@@ -1,7 +1,11 @@
 wireguard:
   service:
     annotations:
+      # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
+      # 0.22+ reads only the GA one. The alpha copy goes away once every
+      # environment runs 0.22+.
       external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
+      external-dns.kubernetes.io/hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
       # Not consumed by the load balancer, agent.yaml reads it back as vpn_host
       hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
   image:
