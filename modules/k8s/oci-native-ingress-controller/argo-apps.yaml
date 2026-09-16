@@ -2,7 +2,7 @@ metadata:
   annotations:
     infralib.entigo.io/sync-wave: "2"
 spec:
-  # templates/webhook-certs.yaml builds the webhook's TLS material with Helm's genCA and
+  # templates/webhookCerts.yaml builds the webhook's TLS material with Helm's genCA and
   # genSignedCert, which produce fresh output on every render - so ArgoCD compares a newly
   # generated certificate against the stored one on each refresh and this app can never
   # report Synced. Ignoring the two fields that carry the material is what makes the

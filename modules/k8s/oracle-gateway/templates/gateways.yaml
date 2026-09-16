@@ -23,7 +23,7 @@ spec:
   infrastructure:
     # Strategic-merge patch for the generated Deployment - the `restricted` Pod Security
     # Standard this namespace enforces needs seccompProfile, which Istio's auto-provisioned
-    # gateway pod doesn't set on its own. See templates/gateway-options.yaml.
+    # gateway pod doesn't set on its own. See templates/gatewayOptions.yaml.
     parametersRef:
       group: ""
       kind: ConfigMap

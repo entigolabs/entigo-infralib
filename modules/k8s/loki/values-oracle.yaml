@@ -93,7 +93,7 @@ loki:
       size: 50Gi
 
   serviceAccount:
-    # Created by templates/oracle/service-account.yaml. It carries no cloud identity, unlike
+    # Created by templates/oracle/serviceAccount.yaml. It carries no cloud identity, unlike
     # aws (IRSA) and google (Workload Identity): loki authenticates to Object Storage with a
     # Customer Secret Key, because the S3-compatibility endpoint accepts nothing else.
     create: false
@@ -102,7 +102,7 @@ loki:
   gateway:
     ingress:
       # No Ingress. Grafana reaches loki in-cluster at http://<module>-gateway.<namespace>
-      # (see modules/k8s/grafana/templates/oracle/config-map.yaml), so exposing it publicly
+      # (see modules/k8s/grafana/templates/oracle/configMap.yaml), so exposing it publicly
       # would add a hostname on the shared load balancer for no one to use.
       enabled: false
 

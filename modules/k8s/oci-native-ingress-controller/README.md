@@ -79,7 +79,7 @@ looking perfectly healthy.
 
 ### Gateway API CRDs ###
 
-`templates/gateway-api-crds.yaml` is the upstream Gateway API v1.5.1 standard-channel
+`templates/gatewayApiCrds.yaml` is the upstream Gateway API v1.5.1 standard-channel
 bundle, byte-identical to the copy in `modules/k8s/aws-alb`. OKE ships no Gateway API CRDs
 at all, and NIC itself does not implement Gateway API - the bundle is here because it is
 the cluster-wide prerequisite that has to land before anything that *does* implement it
@@ -100,7 +100,7 @@ tag against this one and re-apply the three deviations below.
 
 1. **`templates/webhook.yaml` was dropped** (not copied). Upstream's version creates a
    `cert-manager.io` `Certificate`/`Issuer` for the webhook's TLS cert - this repo has no
-   `cert-manager` module. Instead, `templates/webhook-certs.yaml` (in this module, not the
+   `cert-manager` module. Instead, `templates/webhookCerts.yaml` (in this module, not the
    vendored subchart) generates an equivalent self-signed CA/cert directly via Helm's
    `genCA`/`genSignedCert`, stored as the same `oci-native-ingress-controller-tls` Secret
    the vendored `deployment.yaml` already expects, with the CA inlined directly as the
@@ -113,7 +113,7 @@ tag against this one and re-apply the three deviations below.
      (pod-readiness-gate injection) is opt-in per namespace and unused by default.
    - `fullnameOverride: oci-native-ingress-controller` is set in this module's
      `values.yaml` specifically so the generated Secret name is deterministic and known
-     ahead of time to `webhook-certs.yaml` - Helm subchart named templates aren't reliably
+     ahead of time to `webhookCerts.yaml` - Helm subchart named templates aren't reliably
      callable from a parent chart's own templates across chart boundaries.
 2. **`templates/deployment.yaml` sets `strategy: Recreate`.** Readiness depends on holding the
    leader-election lease, so with the chart's default RollingUpdate on a single replica the old

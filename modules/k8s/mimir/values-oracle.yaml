@@ -35,7 +35,7 @@ mimir-distributed:
       enabled: false
 
   serviceAccount:
-    # Created by templates/oracle/service-account.yaml. Carries no cloud identity, unlike aws
+    # Created by templates/oracle/serviceAccount.yaml. Carries no cloud identity, unlike aws
     # (IRSA) and google (Workload Identity): mimir authenticates to Object Storage with a
     # Customer Secret Key, because the S3-compatibility endpoint accepts nothing else.
     create: false
