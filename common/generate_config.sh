@@ -24,6 +24,19 @@ google_auth_login() {
     echo "Defaulting CLOUDSDK_CONFIG to $(echo ~)/.config/gcloud"
     export CLOUDSDK_CONFIG="$(echo ~)/.config/gcloud"
   fi
+
+  # ei-agent's own Go ADC client ignores CLOUDSDK_CONFIG and only ever checks
+  # $HOME/.config/gcloud, so the two fixed-path mounts below must stay. But gcloud
+  # CLI / gsutil do read CLOUDSDK_CONFIG and can bake this absolute host path into
+  # their own config store (.boto, credentials.db) — if CLOUDSDK_CONFIG isn't one of
+  # those two fixed paths, mount it at the identical path too and pass the env var
+  # through so any such reference still resolves inside the container.
+  export CLOUDSDK_CONFIG_DOCKER_MOUNT=""
+  if [ "$CLOUDSDK_CONFIG" != "/root/.config/gcloud" ] && [ "$CLOUDSDK_CONFIG" != "/home/runner/.config/gcloud" ]
+  then
+    export CLOUDSDK_CONFIG_DOCKER_MOUNT="-v $CLOUDSDK_CONFIG:$CLOUDSDK_CONFIG -e CLOUDSDK_CONFIG"
+  fi
+
   if [ "$GOOGLE_CREDENTIALS" != "" -a ! -f $CLOUDSDK_CONFIG/application_default_credentials.json ]
   then
     echo "Found GOOGLE_CREDENTIALS, creating $CLOUDSDK_CONFIG/application_default_credentials.json"
@@ -229,7 +242,7 @@ run_agents() {
         export GOOGLE_PROJECT="entigo-infralib2"
       fi
 
-      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS  &
+      docker run --rm -v $CLOUDSDK_CONFIG:/root/.config/gcloud -v $CLOUDSDK_CONFIG:/home/runner/.config/gcloud $CLOUDSDK_CONFIG_DOCKER_MOUNT -v "$(pwd)":"/conf" -e LOCATION="$GOOGLE_REGION" -e ZONE="$GOOGLE_ZONE" -e PROJECT_ID="$GOOGLE_PROJECT" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS  &
       PIDS="$PIDS $!=$agent"
     elif [[ $agent == aws_* ]]
     then
