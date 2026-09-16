@@ -105,7 +105,7 @@ stringData:
     # Seed a temporary Artifact Registry credential secret on Google until External Secrets takes over
     # GAR access tokens are valid for 1 hour, ESO adopts and keeps the secret refreshed afterwards
     # The name and url must match the ExternalSecret in modules/k8s/external-secrets/templates/google/gar.yaml
-    if [ -n "$GOOGLE_REGION" ]; then
+    if [ "$PROVIDER" == "google" ]; then
         local gar_secret="repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}"
         if ! kubectl -n $namespace get secret $gar_secret >/dev/null 2>&1; then
             echo "Applying temporary Artifact Registry credential secret $gar_secret in namespace $namespace."
@@ -194,7 +194,7 @@ helm_oci_login() {
   }
 }
 EOF
-    elif [ ! -z "$GOOGLE_REGION" ]; then
+    elif [ "$PROVIDER" == "google" ]; then
       mkdir -p "$HOME/.config/helm/registry"
       cat > "$HOME/.config/helm/registry/config.json" <<EOF
 {
