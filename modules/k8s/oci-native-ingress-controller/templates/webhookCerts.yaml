@@ -8,21 +8,15 @@
 # in this repo, so this generates an equivalent self-signed CA+cert directly in Helm
 # instead of adding a whole new module dependency for one unused feature.
 #
-# The lookup guards reuse the existing secret's key material across `helm upgrade` runs so
-# the cert/CA don't churn (and the caBundle below doesn't drift) on every sync.
+# Regenerated on every render: ArgoCD installs this with `helm template`, where `lookup` has
+# no cluster to read, so the existing Secret cannot be reused. argo-apps.yaml ignores the
+# resulting diff on the Secret and on the caBundle - both re-render together and stay
+# consistent.
 {{- $secretName := "oci-native-ingress-controller-tls" }}
 {{- $ns := .Values.deploymentNamespace }}
 {{- $altNames := list (printf "oci-native-ingress-controller.%s" $ns) (printf "oci-native-ingress-controller.%s.svc" $ns) (printf "oci-native-ingress-controller.%s.svc.cluster.local" $ns) }}
-{{- $existingSecret := lookup "v1" "Secret" $ns $secretName }}
-{{- $ca := dict }}
-{{- $cert := dict }}
-{{- if $existingSecret }}
-{{- $ca = dict "Cert" (index $existingSecret.data "ca.crt" | b64dec) }}
-{{- $cert = dict "Cert" (index $existingSecret.data "tls.crt" | b64dec) "Key" (index $existingSecret.data "tls.key" | b64dec) }}
-{{- else }}
-{{- $ca = genCA "oci-native-ingress-controller-ca" 3650 }}
-{{- $cert = genSignedCert "oci-native-ingress-controller" nil $altNames 3650 $ca }}
-{{- end }}
+{{- $ca := genCA "oci-native-ingress-controller-ca" 3650 }}
+{{- $cert := genSignedCert "oci-native-ingress-controller" nil $altNames 3650 $ca }}
 apiVersion: v1
 kind: Secret
 metadata:
