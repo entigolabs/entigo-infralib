@@ -45,9 +45,9 @@ variable "service_lb_subnet_ids" {
 }
 
 variable "kubernetes_version" {
-  description = "Defaults to the latest version OKE offers in the compartment's region if unset."
+  description = "Kubernetes version for the cluster and its node pools. A minor version takes the newest patch OKE offers for it; an exact one (1.36.1) pins that patch. Pinned so a released infralib is the stack it was tested on - override only to hold back an upgrade."
   type        = string
-  default     = ""
+  default     = "1.36"
 }
 
 variable "pods_cidr" {

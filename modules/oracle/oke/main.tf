@@ -1,8 +1,15 @@
 locals {
-  # OCI returns available versions oldest-first; take the last (newest) one when the
-  # caller doesn't pin a specific version.
-  versions           = data.oci_containerengine_cluster_option.this.kubernetes_versions
-  kubernetes_version = var.kubernetes_version != "" ? var.kubernetes_version : local.versions[length(local.versions) - 1]
+  # OCI returns available versions oldest-first. Match on the bare number so the request
+  # works whether or not OKE prefixes its versions with "v", and accept either a minor
+  # (newest patch of it) or an exact version. An empty list here means OKE no longer offers
+  # var.kubernetes_version, which fails the plan rather than silently moving the cluster.
+  versions  = data.oci_containerengine_cluster_option.this.kubernetes_versions
+  requested = trimprefix(var.kubernetes_version, "v")
+  matching_versions = [
+    for v in local.versions : v
+    if trimprefix(v, "v") == local.requested || startswith(trimprefix(v, "v"), "${local.requested}.")
+  ]
+  kubernetes_version = local.matching_versions[length(local.matching_versions) - 1]
 
   # OCI rejects a private subnet for the endpoint when is_public_ip_enabled is true
   # ("must be a public subnet if public ip enabled"), so the subnet choice must follow it.
@@ -319,6 +326,13 @@ resource "oci_containerengine_cluster" "this" {
   # only let a consumer pick the one that can't be undone.
   type               = "ENHANCED_CLUSTER"
   kubernetes_version = local.kubernetes_version
+
+  lifecycle {
+    precondition {
+      condition     = length(local.matching_versions) > 0
+      error_message = "OKE does not offer Kubernetes ${var.kubernetes_version} in this region. Available: ${join(", ", local.versions)}."
+    }
+  }
 
   # Encrypts etcd - and so every Kubernetes Secret - with a customer-managed key rather than
   # Oracle's. Null when unset, because the API rejects an empty string.
