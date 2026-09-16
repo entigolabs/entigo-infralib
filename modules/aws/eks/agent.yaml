@@ -4,4 +4,5 @@ metadata:
   cluster_endpoint: "{{ .sout.cluster_endpoint }}"
   cluster_version: "{{ .sout.cluster_version }}"
   cluster_certificate_authority_data: "{{ .sout.cluster_certificate_authority_data }}"
+  cluster_identity_providers: "{{ .toptin.eks.cluster_identity_providers }}"
 module_types: [kubernetes-cluster, kubernetes-nodes]

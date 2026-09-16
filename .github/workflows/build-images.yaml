@@ -21,7 +21,46 @@ jobs:
   build:
     name: Build image ${{ inputs.name }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
     steps:
+    # inputs.is_dev is only meaningful for push/pull_request/workflow_dispatch.
+    # On workflow_run the caller cannot tell whether the cascade started from a
+    # PR: github.event.workflow_run describes only the immediate parent, and two
+    # hops out (tools -> google -> test) that parent's own event is
+    # "workflow_run", not "pull_request". So read the tag the parent recorded
+    # instead. This is correct at any depth, because every build records its own.
+    - name: Resolve image tag
+      id: tag
+      env:
+        GH_TOKEN: ${{ github.token }}
+        EVENT_NAME: ${{ github.event_name }}
+        INPUT_IS_DEV: ${{ inputs.is_dev }}
+        PARENT_RUN_ID: ${{ github.event.workflow_run.id }}
+        PARENT_EVENT: ${{ github.event.workflow_run.event }}
+      run: |
+        set -euo pipefail
+        if [ "${EVENT_NAME}" != "workflow_run" ]; then
+          TAG=$([ "${INPUT_IS_DEV}" = "true" ] && echo dev || echo latest)
+          echo "Triggered by ${EVENT_NAME}, is_dev=${INPUT_IS_DEV} -> ${TAG}"
+        elif gh run download "${PARENT_RUN_ID}" -R "${GITHUB_REPOSITORY}" \
+               -n image-tag -D "${RUNNER_TEMP}/parent" 2>/dev/null; then
+          TAG=$(tr -d '[:space:]' < "${RUNNER_TEMP}/parent/image-tag.txt")
+          echo "Parent run ${PARENT_RUN_ID} recorded tag ${TAG}"
+        else
+          # No artifact: a run predating this change, or an expired artifact.
+          # Fall back to the single-hop guess rather than defaulting to latest.
+          TAG=$([ "${PARENT_EVENT}" = "pull_request" ] && echo dev || echo latest)
+          echo "Parent run ${PARENT_RUN_ID} recorded no tag, guessing ${TAG} from parent event ${PARENT_EVENT}"
+        fi
+        case "${TAG}" in
+          dev|latest) ;;
+          *) echo "Refusing to build unexpected tag '${TAG}'" >&2; exit 1 ;;
+        esac
+        echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+        echo "is_dev=$([ "${TAG}" = dev ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -57,21 +96,31 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        IMAGE_TAG: ${{ inputs.is_dev && 'dev' || 'latest' }}
+        IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
         cd ${{ inputs.path }}
         docker buildx build --push --platform linux/arm64/v8,linux/amd64 \
-          --build-arg TOOLS_TAG=${IMAGE_TAG} \
+          --build-arg BASE_TAG=${IMAGE_TAG} \
           --sbom=true \
           --provenance=mode=max \
           -t public.ecr.aws/entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
           -t entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
           .
 
+    - name: Record image tag for downstream builds
+      run: echo "${{ steps.tag.outputs.image_tag }}" > "${RUNNER_TEMP}/image-tag.txt"
+
+    - name: Upload image tag
+      uses: actions/upload-artifact@v4
+      with:
+        name: image-tag
+        path: ${{ runner.temp }}/image-tag.txt
+        retention-days: 1
+
     - name: Create Release
-      if: ${{ !inputs.is_dev }}
+      if: ${{ steps.tag.outputs.is_dev != 'true' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_TAG: ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
@@ -89,7 +138,7 @@ jobs:
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
 
     - name: Slack Success Release Message
-      if: ${{ success() && !inputs.is_dev }}
+      if: ${{ success() && steps.tag.outputs.is_dev != 'true' }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'
