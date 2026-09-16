@@ -373,6 +373,10 @@ test_tf() {
   then
     ./modules/oracle/vpc/test.sh testonly &
     PIDS="$PIDS $!=vpc"
+    ./modules/oracle/kms/test.sh testonly &
+    PIDS="$PIDS $!=kms"
+    ./modules/oracle/pca/test.sh testonly &
+    PIDS="$PIDS $!=pca"
     ./modules/oracle/dns/test.sh testonly &
     PIDS="$PIDS $!=dns"
     ./modules/oracle/oke/test.sh testonly &
@@ -476,7 +480,7 @@ default_google_conf() {
 }
 
 default_oracle_conf() {
-  generate_config "oracle" "net" "oracle/vpc" "oracle/dns"
+  generate_config "oracle" "net" "oracle/vpc" "oracle/kms" "oracle/pca" "oracle/dns"
   generate_config "oracle" "infra" "oracle/oke" "oracle/oke-node-pool"
 }
 
