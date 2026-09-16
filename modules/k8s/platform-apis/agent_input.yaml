@@ -12,6 +12,10 @@ platform-apis:
     kyvernoNamespace: "{{ .tmodule.kyverno }}"
     istioServiceEntries:
       istioNamespace: "{{ .tmodule.istio-istiod }}"
+      # Substituted into {region} in every host platform-apis opens by name. The AWS API endpoints
+      # a Zone Pod calls are regional, so without it that whole group renders nothing and an IRSA
+      # Pod under granularEgress cannot reach STS to get credentials.
+      region: "{{ .toutput.eks.region }}"
       # Managed data services. The database and elasticache outputs are joined into one value
       # because platform-apis does not separate them: a Valkey launched into the database subnet
       # has to work the same as one in the elasticache subnet. An environment without elasticache
@@ -26,11 +30,6 @@ platform-apis:
       podCidrs: "{{ .toutput.vpc.compute_subnets_cidr_blocks }}"
       service:
         cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
-      # The AWS API endpoints a Zone Pod calls are regional, and platform-apis substitutes this
-      # into each host it opens. Without it the whole group renders nothing, and an IRSA Pod under
-      # granularEgress cannot reach STS to get credentials.
-      awsApis:
-        region: "{{ .toutput.eks.region }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
   database:
