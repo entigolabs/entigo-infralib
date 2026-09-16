@@ -2,7 +2,7 @@
 # annotation), the service account carries no cloud-identity annotation: the provider
 # authenticates via Instance Principal - the node's own identity - which needs no per-pod
 # wiring. OKE Workload Identity would scope this per pod and is available on ENHANCED
-# clusters; see providerconfig.yaml.
+# clusters; see providerConfig.yaml.
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:

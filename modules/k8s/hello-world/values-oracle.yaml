@@ -1,4 +1,4 @@
-# Exposed via HTTPRoute instead of Ingress (templates/httproute.yaml).
+# Exposed via HTTPRoute instead of Ingress (templates/httpRoute.yaml).
 ingress:
   enabled: false
 
