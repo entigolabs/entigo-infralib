@@ -330,32 +330,32 @@ output "redshift_network_acl_arn" {
 
 output "elasticache_subnets" {
   description = "List of IDs of elasticache subnets"
-  value = module.vpc.elasticache_subnets
+  value = local.reuse_db_for_elasticache ? module.vpc.database_subnets : module.vpc.elasticache_subnets
 }
 
 output "elasticache_subnet_arns" {
   description = "List of ARNs of elasticache subnets"
-  value = module.vpc.elasticache_subnet_arns
+  value = local.reuse_db_for_elasticache ? module.vpc.database_subnet_arns : module.vpc.elasticache_subnet_arns
 }
 
 output "elasticache_subnets_cidr_blocks" {
   description = "List of cidr_blocks of elasticache subnets"
-  value = module.vpc.elasticache_subnets_cidr_blocks
+  value = local.reuse_db_for_elasticache ? module.vpc.database_subnets_cidr_blocks : module.vpc.elasticache_subnets_cidr_blocks
 }
 
 output "elasticache_subnets_ipv6_cidr_blocks" {
   description = "List of IPv6 cidr_blocks of elasticache subnets in an IPv6 enabled VPC"
-  value = module.vpc.elasticache_subnets_ipv6_cidr_blocks
+  value = local.reuse_db_for_elasticache ? module.vpc.database_subnets_ipv6_cidr_blocks : module.vpc.elasticache_subnets_ipv6_cidr_blocks
 }
 
 output "elasticache_subnet_group" {
   description = "ID of elasticache subnet group"
-  value = module.vpc.elasticache_subnet_group
+  value = local.reuse_db_for_elasticache ? aws_elasticache_subnet_group.database_reuse[0].id : module.vpc.elasticache_subnet_group
 }
 
 output "elasticache_subnet_group_name" {
   description = "Name of elasticache subnet group"
-  value = module.vpc.elasticache_subnet_group_name
+  value = local.reuse_db_for_elasticache ? aws_elasticache_subnet_group.database_reuse[0].name : module.vpc.elasticache_subnet_group_name
 }
 
 output "elasticache_route_table_ids" {
