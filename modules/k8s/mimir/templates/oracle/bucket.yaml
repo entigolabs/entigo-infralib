@@ -22,9 +22,9 @@ metadata:
     argocd.argoproj.io/sync-wave: '-2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  # Orphan, matching loki and aws: losing metrics data to a helm uninstall would be an
-  # unpleasant surprise, and an empty orphaned bucket is cheap.
-  deletionPolicy: Orphan
+  # Delete rather than Orphan, same as loki: OCI will not delete a non-empty bucket, so this
+  # blocks until it is emptied by hand - deliberately.
+  deletionPolicy: Delete
   forProvider:
     name: {{ .Values.global.bucketName }}
     # The Object Storage namespace, which is tenancy-wide and not the compartment - it also
