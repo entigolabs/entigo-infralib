@@ -96,6 +96,13 @@ only an in-repo chart at `github.com/oracle/oci-native-ingress-controller/helm/o
 To upgrade: diff the upstream `helm/oci-native-ingress-controller` directory at the new
 tag against this one and re-apply the three deviations below.
 
+Redistributing it here is permitted: the chart is Oracle's own, under the Universal
+Permissive License v1.0, whose only condition is keeping the copyright notice and a
+reference to the license - every vendored file carries both. `THIRD-PARTY-LICENSE.txt` is
+upstream's own license text, kept in this chart rather than in `charts/` so the vendored
+directory stays byte-comparable with upstream - it has no license file of its own, that
+sits at the root of Oracle's repository, outside the chart.
+
 ### Deviations from the upstream chart ###
 
 1. **`templates/webhook.yaml` was dropped** (not copied). Upstream's version creates a
