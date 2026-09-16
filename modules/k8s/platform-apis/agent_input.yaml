@@ -26,6 +26,11 @@ platform-apis:
       podCidrs: "{{ .toutput.vpc.compute_subnets_cidr_blocks }}"
       service:
         cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
+      # The AWS API endpoints a Zone Pod calls are regional, and platform-apis substitutes this
+      # into each host it opens. Without it the whole group renders nothing, and an IRSA Pod under
+      # granularEgress cannot reach STS to get credentials.
+      awsApis:
+        region: "{{ .toutput.eks.region }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
   database:
