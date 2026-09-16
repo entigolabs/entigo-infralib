@@ -31,11 +31,11 @@ spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: {{ .Values.global.oracle.gateway.name }}
-      namespace: {{ .Values.global.oracle.gateway.namespace }}
-      sectionName: {{ .Values.global.oracle.gateway.sectionName }}
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
+      sectionName: https
   hostnames:
-    - {{ .Values.global.oracle.pubkeyHostname }}
+    - {{ .Values.global.pubkeyHostname | quote }}
   rules:
     - backendRefs:
         - group: ''

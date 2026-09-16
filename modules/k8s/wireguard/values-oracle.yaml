@@ -1,17 +1,9 @@
 global:
   cloudProvider: "oracle"
-  oracle:
-    # Filled by agent_input_oracle.yaml.
-    # Hostname the pubkey sidecar is served on, through the public oracle-gateway.
-    pubkeyHostname: ""
-    # Filled by agent_input_oracle.yaml.
-    # Public gateway from modules/k8s/oracle-gateway's `gateways` map - this is the one thing
-    # that must be reachable before the VPN is up, so unlike argocd/grafana it cannot sit
-    # behind the private (VPN-only) gateway.
-    gateway:
-      name: ""
-      namespace: ""
-      sectionName: ""
+  # pubkeyHostname and gateway come from the shared block in values.yaml, same as google -
+  # filled by agent_input_oracle.yaml. The gateway is the *public* one from
+  # modules/k8s/oracle-gateway's `gateways` map: this is the one thing that must be reachable
+  # before the VPN is up, so unlike argocd/grafana it cannot sit behind the private gateway.
 
 wireguard:
   service:

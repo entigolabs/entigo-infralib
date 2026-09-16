@@ -1,12 +1,10 @@
 global:
-  oracle:
-    # The public zone, not int_domain: this is the one thing that has to be reachable from
-    # outside before the VPN is up, so it cannot live behind the VPN.
-    pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
-    gateway:
-      name: '{{ .toptin.oracle-gateway.global.externalGateway | required }}'
-      namespace: '{{ .toptmodule.oracle-gateway | required }}'
-      sectionName: https
+  # The public zone, not int_domain: this is the one thing that has to be reachable from
+  # outside before the VPN is up, so it cannot live behind the VPN.
+  pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
+  gateway:
+    name: '{{ .toptin.oracle-gateway.global.externalGateway | required }}'
+    namespace: '{{ .toptmodule.oracle-gateway | required }}'
 
 wireguard:
   service:
