@@ -388,8 +388,7 @@ module "main" {
   count  = var.oke_main_node_count > 0 ? 1 : 0
   source = "../oke-node-pool"
 
-  prefix                  = var.prefix
-  pool_name               = "main"
+  prefix                  = "${var.prefix}-main"
   compartment_id          = var.compartment_id
   cluster_id              = oci_containerengine_cluster.this.id
   kubernetes_version      = local.kubernetes_version
@@ -412,8 +411,7 @@ module "mon" {
   count  = var.oke_mon_node_count > 0 ? 1 : 0
   source = "../oke-node-pool"
 
-  prefix                  = var.prefix
-  pool_name               = "mon"
+  prefix                  = "${var.prefix}-mon"
   compartment_id          = var.compartment_id
   cluster_id              = oci_containerengine_cluster.this.id
   kubernetes_version      = local.kubernetes_version
@@ -438,8 +436,7 @@ module "tools" {
   count  = var.oke_tools_node_count > 0 ? 1 : 0
   source = "../oke-node-pool"
 
-  prefix                  = var.prefix
-  pool_name               = "tools"
+  prefix                  = "${var.prefix}-tools"
   compartment_id          = var.compartment_id
   cluster_id              = oci_containerengine_cluster.this.id
   kubernetes_version      = local.kubernetes_version

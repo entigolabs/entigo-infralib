@@ -2,12 +2,6 @@ variable "prefix" {
   type = string
 }
 
-variable "pool_name" {
-  description = "Suffix appended to prefix to name this node pool, e.g. main/mon/tools for the cluster's default pools, or a custom name for additional pools."
-  type        = string
-  default     = "pool"
-}
-
 variable "compartment_id" {
   description = "OCID of the compartment that will contain the node pool."
   type        = string
