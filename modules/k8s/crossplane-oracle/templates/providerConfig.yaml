@@ -1,9 +1,10 @@
 {{- if .Values.installProviderConfig }}
-# Instance Principal rather than the OKEWorkloadIdentity auth
-# variant (Enhanced-only) is unavailable. The provider acts as the node instances via
-# the shared dynamic group created in modules/oracle/oke, whose policy grants it
-# "manage policies" in the compartment - per-app permissions are then created by
-# Crossplane Policy CRs in each consuming module's templates/oracle/.
+# OKE Workload Identity, so the provider acts as its own service account rather than as
+# every instance in the compartment. The bootstrap policy in modules/oracle/oke scopes its
+# grant to this cluster, namespace and service account - the service account name is pinned
+# by deploymentRuntimeConfig.yaml rather than generated per provider revision, which is what
+# makes it nameable from terraform. Per-app permissions are then created by Crossplane
+# Policy CRs in each consuming module's templates/oracle/.
 apiVersion: oci.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:

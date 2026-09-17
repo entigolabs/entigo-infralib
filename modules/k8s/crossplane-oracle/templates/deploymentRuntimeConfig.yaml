@@ -1,8 +1,8 @@
 # Unlike crossplane-aws (IRSA role annotation) and crossplane-google (Workload Identity
-# annotation), the service account carries no cloud-identity annotation: the provider
-# authenticates via Instance Principal - the node's own identity - which needs no per-pod
-# wiring. OKE Workload Identity would scope this per pod and is available on ENHANCED
-# clusters; see providerConfig.yaml.
+# annotation), the service account carries no cloud-identity annotation - OKE Workload
+# Identity needs none. What matters instead is that the name is pinned below rather than
+# generated per provider revision, so modules/oracle/oke can name it in the IAM policy that
+# grants this provider its permissions.
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:

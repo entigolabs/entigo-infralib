@@ -278,7 +278,7 @@ resource "oci_identity_policy" "controllers" {
   # the crossplane-oracle provider - which is what this statement authorizes.
   compartment_id = var.compartment_id
   name           = "${var.prefix}-oke-controllers"
-  description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via instance principal"
+  description    = "Bootstrap grant letting the in-cluster Crossplane OCI provider manage the per-app IAM policies, via OKE Workload Identity"
 
   statements = [
     # The bucket those chunks go into. loki's own Policy CR grants its IAM *user* "manage
@@ -290,7 +290,7 @@ resource "oci_identity_policy" "controllers" {
     #
     # Scoped to the compartment rather than the tenancy, because nothing needs to create
     # buckets outside it.
-    "Allow any-user to manage buckets in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+    "Allow any-user to manage buckets in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
 
     # A bucket that names a customer-managed key needs the *caller* authorised too, not only
     # Object Storage - modules/oracle/kms grants the service, this grants whoever asks. Without
@@ -302,14 +302,14 @@ resource "oci_identity_policy" "controllers" {
     # "keys" to perform the cryptography, while a caller uses "key-delegate" to *associate* a
     # resource with a key without being able to use the key itself. Granting "use keys" here
     # instead changes nothing - tried, and the bucket failed identically.
-    "Allow any-user to use key-delegates in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+    "Allow any-user to use key-delegates in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
 
     # And read, so the provider can resolve the key it was handed.
-    "Allow any-user to read keys in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+    "Allow any-user to read keys in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
 
     # Each k8s module's own scoped IAM Policy is itself a Crossplane Policy CR, created
-    # through this same instance principal - needs the grant too.
-    "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'instance', request.principal.compartment.id = '${var.compartment_id}' }",
+    # through this same workload identity - needs the grant too.
+    "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
   ]
 }
 

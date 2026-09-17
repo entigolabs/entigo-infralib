@@ -44,6 +44,23 @@ variable "service_lb_subnet_ids" {
   default     = []
 }
 
+# The in-cluster Crossplane OCI provider's identity, named in the bootstrap policy so the
+# grant can be scoped to that workload rather than to every instance in the compartment.
+# Same pair aws/crossplane and google/crossplane take, with the same defaults - the service
+# account name is pinned by modules/k8s/crossplane-oracle's DeploymentRuntimeConfig rather
+# than generated per provider revision, which is what makes it nameable from here.
+variable "kubernetes_service_account" {
+  type        = string
+  description = "Kubernetes service account name for oracle crossplane provider"
+  default     = "crossplane-oracle"
+}
+
+variable "kubernetes_namespace" {
+  type        = string
+  description = "Kubernetes namespace name for crossplane"
+  default     = "crossplane-system"
+}
+
 variable "kubernetes_version" {
   description = "Kubernetes version for the cluster and its node pools. A minor version takes the newest patch OKE offers for it; an exact one (1.36.1) pins that patch. Pinned so a released infralib is the stack it was tested on - override only to hold back an upgrade."
   type        = string
