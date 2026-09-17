@@ -127,7 +127,7 @@ variable "subordinate_ca_max_validity" {
 }
 
 variable "signing_algorithm" {
-  description = "Signing algorithm for the CA, e.g. SHA256_WITH_RSA. Null leaves OCI to pick one appropriate to ca_key_id."
+  description = "Signing algorithm for the CA. Null leaves OCI to pick one appropriate to ca_key_id, which is what every deployment so far has used."
   type        = string
   default     = null
 }

@@ -163,17 +163,18 @@ variable "ca_key_protection_mode" {
   default     = "HSM"
 }
 
-# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. Only RSA is wired
-# here: key_shape.length is required by the provider and is meaningless for ECDSA, so
-# supporting both would mean a branch that cannot be exercised without a live ECDSA CA.
+# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. key_shape.length is
+# required for either and is what selects the ECDSA curve - 32 is P-256, 48 is P-384, 66 is
+# P-521 - so an ECDSA CA key is algorithm + length and nothing else. key_shape.curve_id is
+# computed from the length; setting it as well would only be a second place to get it wrong.
 variable "ca_key_algorithm" {
-  description = "Algorithm for the CA signing key. RSA only - OCI Certificates also allows ECDSA NIST_P384, but this module does not wire the curve."
+  description = "Algorithm for the CA signing key: ECDSA or RSA. OCI Certificates takes ECDSA on NIST P-384 only, so ECDSA means ca_key_length = 48."
   type        = string
-  default     = "RSA"
+  default     = "ECDSA"
 }
 
 variable "ca_key_length" {
-  description = "CA signing key length in BYTES: 256 for RSA-2048, 512 for RSA-4096."
+  description = "CA signing key length in BYTES: 48 for ECDSA P-384, or 256/512 for RSA-2048/RSA-4096."
   type        = number
-  default     = 512
+  default     = 48
 }
