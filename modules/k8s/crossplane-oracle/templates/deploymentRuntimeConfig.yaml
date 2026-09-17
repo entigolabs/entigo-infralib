@@ -34,6 +34,11 @@ spec:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
+              env:
+                - name: OCI_RESOURCE_PRINCIPAL_VERSION
+                  value: "2.2"
+                - name: OCI_RESOURCE_PRINCIPAL_REGION
+                  value: {{ .Values.global.oracle.region }}
               resources:
                 requests:
                   cpu: 3m
@@ -92,6 +97,11 @@ spec:
                 {{- with .Values.global.deploymentRuntimeConfig.args }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
+              env:
+                - name: OCI_RESOURCE_PRINCIPAL_VERSION
+                  value: "2.2"
+                - name: OCI_RESOURCE_PRINCIPAL_REGION
+                  value: {{ .Values.global.oracle.region }}
               resources:
                 requests:
                   cpu: 3m
