@@ -15,9 +15,14 @@ import (
 
 const controllerNamespace = "native-ingress-controller-system"
 
+// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
+// There is no OKE cluster behind this test yet, so it only ever fails in
+// CheckKubectlConnection.
+/*
 func TestK8sOciNativeIngressControllerDev(t *testing.T) {
 	testK8sOciNativeIngressController(t, "oracle", "dev")
 }
+*/
 
 func testK8sOciNativeIngressController(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
