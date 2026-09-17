@@ -13,16 +13,16 @@ means more IngressClasses**. `ingressClasses` in `values.yaml` is a map of them:
 
 | entry | class name | load balancer | NSG |
 |---|---|---|---|
-| `public` | `oci-ic` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
-| `private` | `oci-ic-int` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
+| `external` | `oci-ic` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
+| `internal` | `oci-ic-int` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
 
-`private` ships **disabled**, because enabling it provisions a second load balancer that is
+`internal` ships **disabled**, because enabling it provisions a second load balancer that is
 billed whether or not an `Ingress` uses it. Both are wired with their subnet and NSG regardless,
 so turning it on is one line in a deployment's config:
 
 ```yaml
 ingressClasses:
-  private:
+  internal:
     enabled: true
 ```
 

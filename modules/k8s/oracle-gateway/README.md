@@ -58,12 +58,12 @@ every Gateway named in `.Values.gateways` - any map entry with `enabled: true` b
 
 ```yaml
 gateways:
-  public:
+  external:
     enabled: true
     ingressClassName: oci-ic
     certificateOcid: ""   # set by agent_input_oracle.yaml from .toutput.dns.pub_cert_ocid
     domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.pub_domain
-  private:
+  internal:
     enabled: true
     ingressClassName: oci-ic-int
     certificateOcid: ""   # .toutput.dns.int_cert_ocid
@@ -89,12 +89,12 @@ Apps use a Gateway API `HTTPRoute` naming the specific gateway they need via `pa
 parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway
-    name: oracle-gateway-private
+    name: oracle-gateway-internal
     namespace: oracle-gateway
     sectionName: https
 ```
 
-(`oracle-gateway-public` for anything that must be reachable before the VPN is up - see
+(`oracle-gateway-external` for anything that must be reachable before the VPN is up - see
 `modules/k8s/wireguard`'s pubkey endpoint.) There is only one listener per gateway, so
 `sectionName` is not load-bearing the way it would be with multiple listeners - set anyway
 for clarity and so a future second listener can't silently start matching routes that never

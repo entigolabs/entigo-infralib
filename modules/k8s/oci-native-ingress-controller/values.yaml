@@ -70,7 +70,7 @@ oci-native-ingress-controller:
 # A deployment may add further entries (a second internal class for a different subnet, say).
 # Each one is a billed load balancer.
 ingressClasses:
-  public:
+  external:
     enabled: true
     name: oci-ic
     isDefaultClass: true
@@ -97,7 +97,7 @@ ingressClasses:
   # Note what a private load balancer does NOT give you on its own - a hostname on a *public*
   # DNS zone still resolves for everyone. Pair it with a private = true domain in
   # modules/oracle/dns, which is what int_domain points at.
-  private:
+  internal:
     enabled: true
     name: oci-ic-int
     isDefaultClass: false

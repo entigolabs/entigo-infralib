@@ -14,12 +14,12 @@ gatewayClassName: istio
 # ConfigMap - all named <release name>-<key under gateways>. Matches the pattern
 # modules/k8s/aws-alb and modules/k8s/google-gateway use for their own gateways map.
 gateways:
-  public:
+  external:
     enabled: true
     ingressClassName: oci-ic
     certificateOcid: ""
     domain: ""
-  private:
+  internal:
     enabled: true
     ingressClassName: oci-ic-int
     certificateOcid: ""

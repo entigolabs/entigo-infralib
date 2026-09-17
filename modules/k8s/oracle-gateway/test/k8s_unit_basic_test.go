@@ -27,13 +27,13 @@ func testK8sOracleGateway(t *testing.T, cloudName string, envName string) {
 
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 
-	_, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-public", namespaceName), 50, 6*time.Second)
+	_, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", namespaceName), 50, 6*time.Second)
 	require.NoError(t, err, "oracle-gateway not available error")
 
 	switch envName {
 	case "biz":
-		// pri disables the private gateway, see test/oracle_pri.yaml
-		_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-private", namespaceName), 50, 6*time.Second)
+		// pri disables the internal gateway, see test/oracle_pri.yaml
+		_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", namespaceName), 50, 6*time.Second)
 		require.NoError(t, err, "oracle-gateway not available error")
 	}
 }
