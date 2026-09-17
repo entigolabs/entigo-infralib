@@ -95,7 +95,12 @@ next run, with nothing to bump by hand.
       - name: dns
         source: oracle/dns
         inputs:
-          parent_domain: "example.entigo.dev"
+          domains: |
+            {
+              "public" = {
+                domain_name = "dev.example.com"
+              }
+            }
 ```
 
 `ca_key_id` is wired from `kms` by `agent_input.yaml` and `certificate_authority_id` into
