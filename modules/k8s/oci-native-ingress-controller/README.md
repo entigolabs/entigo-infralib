@@ -2,8 +2,7 @@
 
 Deploys Oracle's [OCI Native Ingress Controller](https://github.com/oracle/oci-native-ingress-controller)
 (NIC) and one or more `IngressClass`/`IngressClassParameters` pairs, each backed by its own OCI
-Load Balancer, so other modules (e.g. `argocd`) can get a real hostname via a standard
-`Ingress` resource.
+Load Balancer.
 
 ### Load balancers are chosen by IngressClass ###
 
