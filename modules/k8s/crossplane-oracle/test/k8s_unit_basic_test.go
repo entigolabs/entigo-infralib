@@ -17,9 +17,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
+// There is no OKE cluster behind this test yet, so it only ever fails in
+// CheckKubectlConnection.
+/*
 func TestK8sCrossplaneOracleDev(t *testing.T) {
 	testK8sCrossplaneOracle(t, "oracle", "dev")
 }
+*/
 
 func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
