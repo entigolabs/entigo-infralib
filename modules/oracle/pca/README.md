@@ -90,16 +90,15 @@ next run, with nothing to bump by hand.
       - name: pca
         source: oracle/pca
         inputs:
-          compartment_id: '{{ .agent.accountId }}'
           organization: "Entigo AS"
           country: "EE"
       - name: dns
         source: oracle/dns
         inputs:
-          compartment_id: '{{ .agent.accountId }}'
           parent_domain: "example.entigo.dev"
 ```
 
-`ca_key_id` is wired from `kms` by `agent_input.yaml` and `certificate_authority_id` into
-`dns` the same way, so neither appears in the config. To use a CA held elsewhere, leave this
+`compartment_id` comes from the agent's own compartment through `agent_input.yaml`, and
+`ca_key_id` is wired from `kms` the same way, as is `certificate_authority_id` into `dns`, so
+none of the three appears in the config. To use a CA held elsewhere, leave this
 module out and set `certificate_authority_id` on `dns` explicitly.

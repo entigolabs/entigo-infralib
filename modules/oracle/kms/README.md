@@ -77,6 +77,4 @@ collide with its own pending-deletion leftovers.
     modules:
       - name: kms
         source: oracle/kms
-        inputs:
-          compartment_id: '{{ .agent.accountId }}'
 ```

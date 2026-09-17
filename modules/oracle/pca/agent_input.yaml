@@ -1,3 +1,7 @@
+# Every resource this module creates is compartment-scoped, and the agent already knows
+# which compartment it is deploying into, so this never has to be repeated in the config.
+compartment_id: "{{ .agent.accountId }}"
+
 # Optional on purpose (.toptout, not .toutput): a deployment that brings its own HSM key, or
 # that sets create_ca = false, still has to plan. An empty ca_key_id then fails the
 # precondition in main.tf with a message saying which module supplies it.
