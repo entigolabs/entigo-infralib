@@ -1,22 +1,16 @@
 locals {
-  # Same default subnet split as the Google VPC module.
-  # First range
-  public_subnets = var.public_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 0)] : var.public_subnets
-  intra_subnets  = var.intra_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 1)] : var.intra_subnets
+  first_half  = cidrsubnet(var.vpc_cidr, 1, 0)
+  second_half = cidrsubnet(var.vpc_cidr, 1, 1)
 
-  # Second range
-  private_subnets = var.private_subnets == null ? [cidrsubnet(var.vpc_cidr, 1, 0)] : var.private_subnets
+  # Pods get a quarter of the VCN and instances an eighth: pods are the tier that runs out, at
+  # max_pods_per_node (31) VCN IPs reserved per node. The other way round caps a /21 at 8 nodes.
+  # The eighth between them is unallocated - OKE's services_cidr is virtual, outside the VCN.
+  private_subnets = var.private_subnets == null ? [cidrsubnet(local.first_half, 2, 0)] : var.private_subnets
+  pod_subnets     = var.pod_subnets == null ? [cidrsubnet(local.first_half, 1, 1)] : var.pod_subnets
 
-  # Third range
-  database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 2)] : var.database_subnets
-
-  # Fourth range - pods, for OKE's VCN-native pod networking (see modules/oracle/oke).
-  # Every pod gets a real VCN IP off this subnet, the way EKS pods get VPC IPs. Takes the
-  # previously unused fourth quarter of the second range rather than resizing any existing
-  # tier, so adding this cannot renumber a deployed VCN. A /19 out of the default /16 holds
-  # ~8190 addresses; OKE reserves 31 per worker node (one secondary VNIC's worth), so that
-  # is room for roughly 260 nodes.
-  pod_subnets = var.pod_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 3)] : var.pod_subnets
+  public_subnets   = var.public_subnets == null ? [cidrsubnet(local.second_half, 2, 0)] : var.public_subnets
+  intra_subnets    = var.intra_subnets == null ? [cidrsubnet(local.second_half, 2, 1)] : var.intra_subnets
+  database_subnets = var.database_subnets == null ? [cidrsubnet(local.second_half, 2, 2)] : var.database_subnets
 
   services_cidr = data.oci_core_services.all.services[0].cidr_block
 
