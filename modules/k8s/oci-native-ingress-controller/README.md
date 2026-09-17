@@ -13,8 +13,8 @@ means more IngressClasses**. `ingressClasses` in `values.yaml` is a map of them:
 
 | entry | class name | load balancer | NSG |
 |---|---|---|---|
-| `external` | `oci-ic` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
-| `internal` | `oci-ic-int` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
+| `external` | `external` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
+| `internal` | `internal` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
 
 `internal` ships **disabled**, because enabling it provisions a second load balancer that is
 billed whether or not an `Ingress` uses it. Both are wired with their subnet and NSG regardless,
@@ -30,7 +30,7 @@ An app then selects it, in the deployment's own `config/apps/<module>.yaml`:
 
 ```yaml
 ingress:
-  ingressClassName: oci-ic-int
+  ingressClassName: internal
 ```
 
 Add further entries for further load balancers; nothing about the map is limited to two.

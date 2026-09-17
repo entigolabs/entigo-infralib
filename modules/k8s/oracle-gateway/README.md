@@ -60,20 +60,20 @@ every Gateway named in `.Values.gateways` - any map entry with `enabled: true` b
 gateways:
   external:
     enabled: true
-    ingressClassName: oci-ic
+    ingressClassName: external
     certificateOcid: ""   # set by agent_input_oracle.yaml from .toutput.dns.pub_cert_ocid
     domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.pub_domain
   internal:
     enabled: true
-    ingressClassName: oci-ic-int
+    ingressClassName: internal
     certificateOcid: ""   # .toutput.dns.int_cert_ocid
     domain: ""            # .toutput.dns.int_domain
 ```
 
-Each still gets its own OCI load balancer and `IngressClass` - the same `oci-ic`/`oci-ic-int`
+Each still gets its own OCI load balancer and `IngressClass` - the same `external`/`internal`
 split every app's `Ingress` already had - but both now live in one namespace
-(`oracle-gateway`) under one Helm release, matching how `aws-alb`/`google-gateway` handle
-their own `external`/`internal` pair. istiod (the control plane) stays a single shared
+(`oracle-gateway`) under one Helm release, the way `aws-alb`/`google-gateway` handle
+theirs. istiod (the control plane) stays a single shared
 install regardless of how many gateways are enabled - only the data-plane Envoy workload
 duplicates per gateway.
 

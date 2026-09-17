@@ -16,11 +16,11 @@ gatewayClassName: istio
 gateways:
   external:
     enabled: true
-    ingressClassName: oci-ic
+    ingressClassName: external
     certificateOcid: ""
     domain: ""
   internal:
     enabled: true
-    ingressClassName: oci-ic-int
+    ingressClassName: internal
     certificateOcid: ""
     domain: ""

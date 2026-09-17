@@ -72,7 +72,7 @@ oci-native-ingress-controller:
 ingressClasses:
   external:
     enabled: true
-    name: oci-ic
+    name: external
     isDefaultClass: true
     isPrivate: false
     loadBalancerName: "oci-ic-lb"
@@ -86,7 +86,7 @@ ingressClasses:
   # An internal load balancer, in a private subnet and reachable only from inside the VCN.
   #
   # ON by default, because the platform tools live here: argocd, grafana and prometheus all set
-  # ingressClassName: oci-ic-int, matching aws where those three sit on the private int_domain
+  # ingressClassName: internal, matching aws where those three sit on the private int_domain
   # rather than the public one. Turning it off therefore means those Ingresses reference a
   # class that does not exist and never get a load balancer.
   #
@@ -99,7 +99,7 @@ ingressClasses:
   # modules/oracle/dns, which is what int_domain points at.
   internal:
     enabled: true
-    name: oci-ic-int
+    name: internal
     isDefaultClass: false
     isPrivate: true
     loadBalancerName: "oci-ic-lb-int"
