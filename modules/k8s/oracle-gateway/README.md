@@ -53,8 +53,8 @@ this path in the first place.
 
 Unlike the two-Helm-release design this module started with, a single release now creates
 every Gateway named in `.Values.gateways` - any map entry with `enabled: true` becomes a
-`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named
-`<release name>-<key>`. The built-in entries:
+`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named after the entry's
+key, the way `aws-alb` names its own. The built-in entries:
 
 ```yaml
 gateways:
@@ -89,12 +89,12 @@ Apps use a Gateway API `HTTPRoute` naming the specific gateway they need via `pa
 parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway
-    name: oracle-gateway-internal
+    name: internal
     namespace: oracle-gateway
     sectionName: https
 ```
 
-(`oracle-gateway-external` for anything that must be reachable before the VPN is up - see
+(`external` for anything that must be reachable before the VPN is up - see
 `modules/k8s/wireguard`'s pubkey endpoint.) There is only one listener per gateway, so
 `sectionName` is not load-bearing the way it would be with multiple listeners - set anyway
 for clarity and so a future second listener can't silently start matching routes that never

@@ -1,5 +1,4 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
-{{- $release := .Release.Name }}
 {{- $namespace := .Release.Namespace }}
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
@@ -7,7 +6,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: {{ $release }}-{{ $name }}
+  name: {{ $name }}
   namespace: {{ $namespace }}
   annotations:
     # Istio defaults to a LoadBalancer Service, which would provision a second, unwanted
@@ -16,8 +15,8 @@ metadata:
     # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
     # 0.22+ reads only the GA one. The alpha copy goes away once every
     # environment runs 0.22+.
-    external-dns.alpha.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
-    external-dns.kubernetes.io/ingress: {{ $namespace }}/{{ $release }}-{{ $name }}
+    external-dns.alpha.kubernetes.io/ingress: {{ $namespace }}/{{ $name }}
+    external-dns.kubernetes.io/ingress: {{ $namespace }}/{{ $name }}
 spec:
   gatewayClassName: {{ $.Values.gatewayClassName }}
   infrastructure:
@@ -27,7 +26,7 @@ spec:
     parametersRef:
       group: ""
       kind: ConfigMap
-      name: {{ $release }}-{{ $name }}-options
+      name: {{ $name }}-options
   listeners:
     # One shared listener, one wildcard cert - matches NIC's own one-cert-per-listener
     # shape. This TLS session is separate from the client-facing one NIC terminates
@@ -41,7 +40,7 @@ spec:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: {{ $release }}-{{ $name }}-backend-tls
+            name: {{ $name }}-backend-tls
       allowedRoutes:
         kinds:
           - group: gateway.networking.k8s.io
