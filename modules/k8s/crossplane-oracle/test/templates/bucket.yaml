@@ -1,0 +1,25 @@
+# Provisioned and removed by the unit test to prove the provider can actually reach OCI.
+# name, forProvider.name, forProvider.namespace and compartmentId are set by the test.
+#
+# deletionPolicy: Delete, unlike the loki/mimir buckets this mirrors - the test bucket is
+# created empty and must go again, so there is nothing to block the delete.
+#
+# No crossplane.io/external-name, for the same reason as
+# modules/k8s/loki/templates/oracle/bucket.yaml: the provider rewrites it to the composite
+# OCI id after create, and anything that authored it would fight the provider forever.
+apiVersion: objectstorage.oci.upbound.io/v1alpha1
+kind: Bucket
+metadata:
+  name: set-by-test
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    name: set-by-test
+    namespace: set-by-test
+    compartmentId: set-by-test
+    accessType: NoPublicAccess
+    versioning: Disabled
+    freeformTags:
+      created-by: "entigo-infralib"
+  providerConfigRef:
+    name: crossplane-oracle

@@ -119,6 +119,33 @@ func WaitUntilOCIBucketExists(t testing.TestingT, region string, name string, re
 	return nil
 }
 
+// The Object Storage namespace is tenancy-wide and not derivable from the compartment,
+// so a caller building a Bucket managed resource has to look it up.
+func GetObjectStorageNamespace(region string) (string, error) {
+	_, namespace, err := newClient(region)
+	return namespace, err
+}
+
+func WaitUntilOCIBucketDeleted(t testing.TestingT, region string, name string, retries int, sleepBetweenRetries time.Duration) error {
+	statusMsg := fmt.Sprintf("Wait for bucket %s in %s region to be deleted", name, region)
+	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
+		exists, err := BucketExistsE(region, name)
+		if err != nil {
+			return "", err
+		}
+		if exists {
+			return "", fmt.Errorf("bucket %s still exists", name)
+		}
+		return "Bucket is now deleted", nil
+	})
+	if err != nil {
+		logger.Log(t, "Timed out waiting for bucket to be deleted: %s", err)
+		return err
+	}
+	logger.Log(t, message)
+	return nil
+}
+
 func WaitUntilBucketFileAvailable(t testing.TestingT, region, bucket, file string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for bucket %s file %s", bucket, file)
 	message, err := retry.DoWithRetryE(t, statusMsg, retries, sleepBetweenRetries, func() (string, error) {
