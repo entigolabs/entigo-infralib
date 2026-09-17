@@ -98,16 +98,11 @@ kubectl rollout restart -n native-ingress-controller-system deploy/oci-native-in
     modules:
       - name: kms
         source: oracle/kms
-        inputs:
-          compartment_id: '{{ .agent.accountId }}'
       - name: pca
         source: oracle/pca
-        inputs:
-          compartment_id: '{{ .agent.accountId }}'
       - name: dns
         source: oracle/dns
         inputs:
-          compartment_id: '{{ .agent.accountId }}'
           domains: |
             {
               "public" = {

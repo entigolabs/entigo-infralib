@@ -1,3 +1,7 @@
+# Every resource this module creates is compartment-scoped, and the agent already knows
+# which compartment it is deploying into, so this never has to be repeated in the config.
+compartment_id: "{{ .agent.accountId }}"
+
 vcn_id: "{{ .toutput.vpc.vpc_id }}"
 private_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
 public_subnet_id: "{{ .toutput.vpc.public_subnets[0] }}"

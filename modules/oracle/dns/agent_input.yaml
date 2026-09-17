@@ -1,3 +1,7 @@
+# Every resource this module creates is compartment-scoped, and the agent already knows
+# which compartment it is deploying into, so this never has to be repeated in the config.
+compartment_id: "{{ .agent.accountId }}"
+
 # Both optional on purpose (.toptout, not .toutput): a deployment with no oracle/pca module,
 # or none with private zones and so no need for a VCN, still has to plan.
 #
