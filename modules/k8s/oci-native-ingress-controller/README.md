@@ -11,10 +11,13 @@ annotation - nothing on an `Ingress` picks or creates a load balancer. The load 
 from the `IngressClassParameters` that the `Ingress`'s class points at, so **more load balancers
 means more IngressClasses**. `ingressClasses` in `values.yaml` is a map of them:
 
-| entry | class name | load balancer | NSG |
-|---|---|---|---|
-| `external` | `external` (default class) | public subnet | `oke.lb_nsg_id` - ports from anywhere |
-| `internal` | `internal` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
+The entry's key is the `IngressClass` name, so an app selects one with
+`ingressClassName: <key>`:
+
+| entry | load balancer | NSG |
+|---|---|---|
+| `external` | public subnet, default class | `oke.lb_nsg_id` - ports from anywhere |
+| `internal` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
 
 `internal` ships **disabled**, because enabling it provisions a second load balancer that is
 billed whether or not an `Ingress` uses it. Both are wired with their subnet and NSG regardless,

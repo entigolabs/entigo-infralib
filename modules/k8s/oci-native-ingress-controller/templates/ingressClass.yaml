@@ -4,7 +4,7 @@
 apiVersion: "ingress.oraclecloud.com/v1beta1"
 kind: IngressClassParameters
 metadata:
-  name: {{ $class.name }}-parameters
+  name: {{ $key }}-parameters
   namespace: {{ $.Values.deploymentNamespace }}
   annotations:
     # Prune before the controller Deployment (wave 0), while it can still clear our finalizer.
@@ -20,7 +20,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: {{ $class.name }}
+  name: {{ $key }}
   annotations:
     # Same reasoning as IngressClassParameters above.
     argocd.argoproj.io/sync-wave: '1'
@@ -40,6 +40,6 @@ spec:
     namespace: {{ $.Values.deploymentNamespace }}
     apiGroup: ingress.oraclecloud.com
     kind: ingressclassparameters
-    name: {{ $class.name }}-parameters
+    name: {{ $key }}-parameters
 {{- end }}
 {{- end }}

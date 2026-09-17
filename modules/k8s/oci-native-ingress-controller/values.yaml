@@ -59,10 +59,11 @@ oci-native-ingress-controller:
       memory: 64Mi
       ephemeral-storage: 24Mi
 
-# One IngressClass + IngressClassParameters pair per entry, and NIC gives each pair its own
-# OCI load balancer. This is how Oracle expresses what an ALB group does on AWS: there is no
-# per-Ingress annotation that picks or creates a load balancer, so an app chooses one by
-# setting spec.ingressClassName - or gets the class marked isDefaultClass.
+# One IngressClass + IngressClassParameters pair per entry, named after the entry's key
+# (<key> and <key>-parameters), and NIC gives each pair its own OCI load balancer. This is
+# how Oracle expresses what an ALB group does on AWS: there is no per-Ingress annotation that
+# picks or creates a load balancer, so an app chooses one by setting spec.ingressClassName -
+# or gets the class marked isDefaultClass.
 #
 # subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
 # falls back to global.oracle.compartmentId, which is already wired there.
@@ -72,7 +73,6 @@ oci-native-ingress-controller:
 ingressClasses:
   external:
     enabled: true
-    name: external
     isDefaultClass: true
     isPrivate: false
     loadBalancerName: "oci-ic-lb"
@@ -99,7 +99,6 @@ ingressClasses:
   # modules/oracle/dns, which is what int_domain points at.
   internal:
     enabled: true
-    name: internal
     isDefaultClass: false
     isPrivate: true
     loadBalancerName: "oci-ic-lb-int"
