@@ -163,10 +163,9 @@ variable "ca_key_protection_mode" {
   default     = "HSM"
 }
 
-# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. key_shape.length is
-# required for either and is what selects the ECDSA curve - 32 is P-256, 48 is P-384, 66 is
-# P-521 - so an ECDSA CA key is algorithm + length and nothing else. key_shape.curve_id is
-# computed from the length; setting it as well would only be a second place to get it wrong.
+# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. For ECDSA the length
+# pairs with a curve - 32 is P-256, 48 is P-384, 66 is P-521 - and CreateKey needs both, so
+# main.tf derives curve_id from the length.
 variable "ca_key_algorithm" {
   description = "Algorithm for the CA signing key: ECDSA or RSA. OCI Certificates takes ECDSA on NIST P-384 only, so ECDSA means ca_key_length = 48."
   type        = string

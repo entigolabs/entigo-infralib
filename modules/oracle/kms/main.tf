@@ -38,6 +38,12 @@ locals {
   telemetry_key_name = var.telemetry_key_name != "" ? var.telemetry_key_name : "${var.prefix}-telemetry-${random_string.suffix.result}"
   ca_key_name        = var.ca_key_name != "" ? var.ca_key_name : "${var.prefix}-ca-${random_string.suffix.result}"
 
+  ca_key_curve_id = lookup({
+    32 = "NIST_P256"
+    48 = "NIST_P384"
+    66 = "NIST_P521"
+  }, var.ca_key_length, null)
+
   data_key_id      = var.create_keys ? oci_kms_key.data[0].id : data.oci_kms_keys.data[0].keys[0].id
   config_key_id    = var.create_keys ? oci_kms_key.config[0].id : data.oci_kms_keys.config[0].keys[0].id
   telemetry_key_id = var.create_keys ? oci_kms_key.telemetry[0].id : data.oci_kms_keys.telemetry[0].keys[0].id
@@ -170,6 +176,8 @@ resource "oci_kms_key" "ca" {
   key_shape {
     algorithm = var.ca_key_algorithm
     length    = var.ca_key_length
+    # Optional in the provider, mandatory in CreateKey for ECDSA.
+    curve_id = var.ca_key_algorithm == "ECDSA" ? local.ca_key_curve_id : null
   }
 }
 
