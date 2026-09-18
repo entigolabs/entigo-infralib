@@ -2,7 +2,8 @@ global:
   providerConfigRefName: crossplane-oracle
   # Filled by agent_input_oracle.yaml; prefixes the IAM policy name, matching every other IAM
   # object across this repo, so it stays distinct from other modules' policies in the same
-  # compartment - see templates/policy.yaml.
+  # compartment - see templates/policy.yaml. Also prefixes each load balancer's display name,
+  # see templates/ingressClass.yaml.
   prefix: ""
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/policy.yaml.
@@ -60,10 +61,11 @@ oci-native-ingress-controller:
       ephemeral-storage: 24Mi
 
 # One IngressClass + IngressClassParameters pair per entry, named after the entry's key
-# (<key> and <key>-parameters), and NIC gives each pair its own OCI load balancer, whose
-# display name is that same key. This is how Oracle expresses what an ALB group does on AWS:
-# there is no per-Ingress annotation that picks or creates a load balancer, so an app chooses
-# one by setting spec.ingressClassName - or gets the class marked isDefaultClass.
+# (<key> and <key>-parameters), and NIC gives each pair its own OCI load balancer, named
+# <global.prefix>-<key> so two clusters in one compartment stay apart. This is how Oracle
+# expresses what an ALB group does on AWS: there is no per-Ingress annotation that picks or
+# creates a load balancer, so an app chooses one by setting spec.ingressClassName - or gets
+# the class marked isDefaultClass.
 #
 # subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
 # falls back to global.oracle.compartmentId, which is already wired there.
