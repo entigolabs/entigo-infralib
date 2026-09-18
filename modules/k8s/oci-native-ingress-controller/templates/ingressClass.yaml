@@ -12,7 +12,7 @@ metadata:
 spec:
   compartmentId: {{ $class.compartmentId | default $.Values.global.oracle.compartmentId | quote }}
   subnetId: {{ $class.subnetId | quote }}
-  loadBalancerName: {{ $class.loadBalancerName | quote }}
+  loadBalancerName: {{ $key | quote }}
   isPrivate: {{ $class.isPrivate }}
   minBandwidthMbps: {{ $class.minBandwidthMbps }}
   maxBandwidthMbps: {{ $class.maxBandwidthMbps }}
