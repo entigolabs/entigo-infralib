@@ -12,8 +12,9 @@ global:
     # The in-cluster kube-apiserver ClusterIP, for the egress network policy.
     kubernetesServiceIp: ""
     # Name of the classic tenancy Group the client puts loki's manually-created User into -
-    # see templates/oracle/credentials.yaml. Client-provided; no default, since infralib has
-    # no way to create or discover it itself.
+    # see templates/oracle/credentials.yaml. agent_input_oracle.yaml names it
+    # <prefix>-<module>, matching the bucket; the Group itself is still the client's to
+    # create, since infralib cannot mint one.
     serviceAccountGroupName: ""
     # OCID of the key the chunk bucket is encrypted with. Empty leaves it on Oracle-managed
     # encryption, which is always on either way. Wired to kms's telemetry key by
