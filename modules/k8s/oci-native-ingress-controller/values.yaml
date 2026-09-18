@@ -75,7 +75,7 @@ ingressClasses:
     enabled: true
     isDefaultClass: true
     isPrivate: false
-    loadBalancerName: "oci-ic-lb"
+    loadBalancerName: "external"
     subnetId: ""
     # Comma-separated NSG OCIDs the controller attaches to the LB. Wired from
     # modules/oracle/oke's lb_nsg_id, which accepts its ports from anywhere.
@@ -101,7 +101,7 @@ ingressClasses:
     enabled: true
     isDefaultClass: false
     isPrivate: true
-    loadBalancerName: "oci-ic-lb-int"
+    loadBalancerName: "internal"
     subnetId: ""
     # From modules/oracle/oke's lb_int_nsg_id, which accepts its ports from the VCN CIDR only.
     nsgIds: ""
