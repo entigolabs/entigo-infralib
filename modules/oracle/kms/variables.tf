@@ -80,10 +80,17 @@ variable "key_protection_mode" {
   default     = "SOFTWARE"
 }
 
+# These three are master encryption keys - etcd, boot and block volumes, and buckets wrap their
+# data keys with them. ECDSA is not an option: it signs, it has no encryption operation at all.
 variable "key_algorithm" {
-  description = "Key algorithm for the data, config and telemetry keys: AES, RSA or ECDSA."
+  description = "Algorithm for the data, config and telemetry keys: AES or RSA."
   type        = string
   default     = "AES"
+
+  validation {
+    condition     = contains(["AES", "RSA"], var.key_algorithm)
+    error_message = "key_algorithm must be AES or RSA. ECDSA cannot encrypt, so it cannot serve as a master encryption key."
+  }
 }
 
 # NB: OCI expresses key length in BYTES, not bits - 32 is AES-256. RSA takes 256/384/512
@@ -92,6 +99,11 @@ variable "key_length" {
   description = "Key length in BYTES for the data, config and telemetry keys. 16, 24 or 32 for AES; 256, 384 or 512 for RSA."
   type        = number
   default     = 32
+
+  validation {
+    condition     = contains([16, 24, 32, 256, 384, 512], var.key_length)
+    error_message = "key_length must be 16, 24 or 32 (AES) or 256, 384 or 512 (RSA). It is expressed in bytes, not bits."
+  }
 }
 
 variable "key_rotation_interval_in_days" {
@@ -170,6 +182,11 @@ variable "ca_key_algorithm" {
   description = "Algorithm for the CA signing key: ECDSA or RSA. OCI Certificates takes ECDSA on NIST P-384 only, so ECDSA means ca_key_length = 48."
   type        = string
   default     = "ECDSA"
+
+  validation {
+    condition     = contains(["ECDSA", "RSA"], var.ca_key_algorithm)
+    error_message = "ca_key_algorithm must be ECDSA or RSA."
+  }
 }
 
 variable "ca_key_length" {
