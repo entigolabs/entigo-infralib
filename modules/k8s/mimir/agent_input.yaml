@@ -1,8 +1,8 @@
 global:
   hostname: "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
   gateway:
-    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
-    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | required }}'
 
 mimir-distributed:
   gateway:

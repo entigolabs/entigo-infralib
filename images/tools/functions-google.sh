@@ -69,9 +69,10 @@ fetch_plan_artifact() {
 upload_plan_artifact() {
     if [ "$LOCAL_MODE" != "true" ]; then
       cd ../..
-      tar -czf tf.tar.gz "steps/$prefix"
+      tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
       echo "Copy plan to Google Storage"
       gsutil -m -q cp tf.tar.gz "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz"
+      upload_plan_json
     fi
 }
 

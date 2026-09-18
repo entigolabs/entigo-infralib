@@ -1,0 +1,9 @@
+# Creating a real CA needs an HSM key from modules/oracle/kms, which a harness applying one
+# module at a time cannot supply - and an HSM key version is billed and cannot be deleted on
+# the spot, so a CA created here would leave a paid, undeletable object behind on every run.
+# Worse, a CA holds its name for 7 days after deletion is scheduled, so repeated runs would
+# collide with each other.
+#
+# What is left is a plan-and-apply smoke test: the module has to be valid and produce its
+# outputs. The CA itself is covered against a real deployment, through modules/oracle/dns.
+create_ca: false

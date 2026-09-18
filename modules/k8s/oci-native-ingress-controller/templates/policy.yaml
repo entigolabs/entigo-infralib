@@ -1,0 +1,49 @@
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = 'oci-native-ingress-controller'" .Values.global.oracle.clusterId .Values.deploymentNamespace }}
+{{- $iamName := printf "%s-%s" .Values.global.prefix .Release.Name }}
+# Per-app OCI IAM, applied by the crossplane-oracle provider - see
+# https://github.com/oracle/oci-native-ingress-controller/blob/main/GettingStarted.md#access-policies
+#
+# All statements compartment-scoped, including public-ips/floating-ips/tag-namespaces, which
+# upstream's own docs grant "in tenancy" with no stated reason - unverified against OCI whether
+# these three resource-types actually support compartment scoping; if they don't, this policy
+# will fail to create and needs its tenancy-scoped statements split back out (see git history
+# for the previous two-policy shape and modules/oracle/oke's matching "manage policies in
+# tenancy" grant).
+#
+# Granted to the controller's own service account through OKE Workload Identity, not to the
+# node's identity: under instance principal every pod on a node inherits the same grant, so
+# "manage load-balancers" and the certificate verbs would be held by everything scheduled
+# there. The condition pins each statement to one cluster, namespace and service account.
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ $iamName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ .Values.global.oracle.compartmentId }}
+    name: {{ $iamName }}
+    description: Grants oci-native-ingress-controller its OCI IAM permissions (LBs, certificates, WAF, IPs, tags), via OKE Workload Identity
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      - "Allow any-user to manage load-balancers in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to use virtual-network-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage cabundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage cabundle-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage leaf-certificates in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage leaf-certificate-versions in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read leaf-certificate-bundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage certificate-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read certificate-authorities in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage certificate-authority-associations in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read certificate-authority-bundles in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage waf-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read cluster-family in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to read public-ips in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to manage floating-ips in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+      - "Allow any-user to use tag-namespaces in compartment id {{ .Values.global.oracle.compartmentId }} where all { {{ $wl }} }"
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}

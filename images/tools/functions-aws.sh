@@ -71,6 +71,7 @@ upload_plan_artifact() {
       # Just create the tar.gz for CodeBuild to pick up
       cd ../..
       tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
+      upload_plan_json
     fi
 }
 
