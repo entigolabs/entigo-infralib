@@ -113,6 +113,14 @@ resource "oci_kms_key" "data" {
       rotation_interval_in_days = var.key_rotation_interval_in_days
     }
   }
+
+  # All three storage keys take the same shape, so checking it once here covers them.
+  lifecycle {
+    precondition {
+      condition     = var.key_algorithm == "AES" ? contains([16, 24, 32], var.key_length) : contains([256, 384, 512], var.key_length)
+      error_message = "key_length ${var.key_length} does not match key_algorithm ${var.key_algorithm}: 16, 24 or 32 bytes for AES, 256, 384 or 512 for RSA."
+    }
+  }
 }
 
 resource "oci_kms_key" "config" {
@@ -178,6 +186,17 @@ resource "oci_kms_key" "ca" {
     length    = var.ca_key_length
     # Optional in the provider, mandatory in CreateKey for ECDSA.
     curve_id = var.ca_key_algorithm == "ECDSA" ? local.ca_key_curve_id : null
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.ca_key_algorithm != "ECDSA" || local.ca_key_curve_id != null
+      error_message = "ca_key_length ${var.ca_key_length} names no ECDSA curve: use 32 (P-256), 48 (P-384) or 66 (P-521). OCI Certificates accepts a CA on P-384 only, so 48."
+    }
+    precondition {
+      condition     = var.ca_key_algorithm != "RSA" || contains([256, 384, 512], var.ca_key_length)
+      error_message = "ca_key_length must be 256, 384 or 512 bytes for RSA (RSA-2048/3072/4096)."
+    }
   }
 }
 
