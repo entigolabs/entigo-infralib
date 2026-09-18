@@ -60,10 +60,10 @@ oci-native-ingress-controller:
       ephemeral-storage: 24Mi
 
 # One IngressClass + IngressClassParameters pair per entry, named after the entry's key
-# (<key> and <key>-parameters), and NIC gives each pair its own OCI load balancer. This is
-# how Oracle expresses what an ALB group does on AWS: there is no per-Ingress annotation that
-# picks or creates a load balancer, so an app chooses one by setting spec.ingressClassName -
-# or gets the class marked isDefaultClass.
+# (<key> and <key>-parameters), and NIC gives each pair its own OCI load balancer, whose
+# display name is that same key. This is how Oracle expresses what an ALB group does on AWS:
+# there is no per-Ingress annotation that picks or creates a load balancer, so an app chooses
+# one by setting spec.ingressClassName - or gets the class marked isDefaultClass.
 #
 # subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
 # falls back to global.oracle.compartmentId, which is already wired there.
@@ -75,7 +75,6 @@ ingressClasses:
     enabled: true
     isDefaultClass: true
     isPrivate: false
-    loadBalancerName: "external"
     subnetId: ""
     # Comma-separated NSG OCIDs the controller attaches to the LB. Wired from
     # modules/oracle/oke's lb_nsg_id, which accepts its ports from anywhere.
@@ -101,7 +100,6 @@ ingressClasses:
     enabled: true
     isDefaultClass: false
     isPrivate: true
-    loadBalancerName: "internal"
     subnetId: ""
     # From modules/oracle/oke's lb_int_nsg_id, which accepts its ports from the VCN CIDR only.
     nsgIds: ""
