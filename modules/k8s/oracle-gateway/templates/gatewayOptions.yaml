@@ -1,5 +1,4 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
-{{- $release := .Release.Name }}
 {{- $namespace := .Release.Namespace }}
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
@@ -12,7 +11,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $release }}-{{ $name }}-options
+  name: {{ $name }}-options
   namespace: {{ $namespace }}
   annotations:
     # Ahead of the Gateway, so Istio sees the patch on its first reconcile.

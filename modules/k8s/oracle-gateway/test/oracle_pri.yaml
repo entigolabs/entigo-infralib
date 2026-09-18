@@ -1,11 +1,10 @@
-# Point the modules that ask for the internal gateway at the public one, the
+# Point the modules that ask for the internal gateway at the external one, the
 # same thing aws-alb/test/aws_*.yaml and google-gateway/test/google_*.yaml do.
 # Test environments are short lived and have to be reachable without a VPN, and
-# the unit tests ask for the internal gateway. Oracle names its gateways
-# <release name>-<key>, so this resolves to oracle-gateway-public.
+# the unit tests ask for the internal gateway.
 global:
-  internalGateway: "{{ .module.name }}-public"
+  internalGateway: "external"
 
 gateways:
-  private:
+  internal:
     enabled: false

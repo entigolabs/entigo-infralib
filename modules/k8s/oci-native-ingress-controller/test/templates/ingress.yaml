@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: test
 spec:
-  ingressClassName: oci-ic
+  ingressClassName: external
   rules:
     - host: change-domain
       http:

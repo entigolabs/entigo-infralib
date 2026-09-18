@@ -53,27 +53,27 @@ this path in the first place.
 
 Unlike the two-Helm-release design this module started with, a single release now creates
 every Gateway named in `.Values.gateways` - any map entry with `enabled: true` becomes a
-`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named
-`<release name>-<key>`. The built-in entries:
+`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named after the entry's
+key, the way `aws-alb` names its own. The built-in entries:
 
 ```yaml
 gateways:
-  public:
+  external:
     enabled: true
-    ingressClassName: oci-ic
+    ingressClassName: external
     certificateOcid: ""   # set by agent_input_oracle.yaml from .toutput.dns.pub_cert_ocid
     domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.pub_domain
-  private:
+  internal:
     enabled: true
-    ingressClassName: oci-ic-int
+    ingressClassName: internal
     certificateOcid: ""   # .toutput.dns.int_cert_ocid
     domain: ""            # .toutput.dns.int_domain
 ```
 
-Each still gets its own OCI load balancer and `IngressClass` - the same `oci-ic`/`oci-ic-int`
+Each still gets its own OCI load balancer and `IngressClass` - the same `external`/`internal`
 split every app's `Ingress` already had - but both now live in one namespace
-(`oracle-gateway`) under one Helm release, matching how `aws-alb`/`google-gateway` handle
-their own `external`/`internal` pair. istiod (the control plane) stays a single shared
+(`oracle-gateway`) under one Helm release, the way `aws-alb`/`google-gateway` handle
+theirs. istiod (the control plane) stays a single shared
 install regardless of how many gateways are enabled - only the data-plane Envoy workload
 duplicates per gateway.
 
@@ -89,12 +89,12 @@ Apps use a Gateway API `HTTPRoute` naming the specific gateway they need via `pa
 parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway
-    name: oracle-gateway-private
+    name: internal
     namespace: oracle-gateway
     sectionName: https
 ```
 
-(`oracle-gateway-public` for anything that must be reachable before the VPN is up - see
+(`external` for anything that must be reachable before the VPN is up - see
 `modules/k8s/wireguard`'s pubkey endpoint.) There is only one listener per gateway, so
 `sectionName` is not load-bearing the way it would be with multiple listeners - set anyway
 for clarity and so a future second listener can't silently start matching routes that never

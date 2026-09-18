@@ -1,5 +1,4 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
-{{- $release := .Release.Name }}
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
 ---
@@ -10,7 +9,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $release }}-{{ $name }}
+  name: {{ $name }}
   annotations:
     oci-native-ingress.oraclecloud.com/certificate-ocid: {{ $cfg.certificateOcid | quote }}
     oci-native-ingress.oraclecloud.com/https-listener-port: "443"
@@ -26,12 +25,12 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ $release }}-{{ $name }}-istio
+                name: {{ $name }}-istio
                 port:
                   number: 443
   defaultBackend:
     service:
-      name: {{ $release }}-{{ $name }}-istio
+      name: {{ $name }}-istio
       port:
         number: 443
 {{- end }}
