@@ -8,9 +8,9 @@ variable "compartment_id" {
 }
 
 variable "create_vault" {
-  description = "Create the vault. Set false to place the keys in the existing vault named by vault_id."
+  description = "Create a vault for these keys instead of using the one vault_id names."
   type        = bool
-  default     = true
+  default     = false
 }
 
 # An OCID rather than a display name: names are not unique in KMS - a compartment can hold

@@ -9,7 +9,7 @@ data "oci_kms_vault" "this" {
     # "can not marshal a nil pointer".
     precondition {
       condition     = var.vault_id != ""
-      error_message = "vault_id is empty: set it to the OCID of the vault to use, or leave create_vault = true to make one."
+      error_message = "vault_id is empty: set it to the OCID of the vault to hold these keys, or set create_vault = true."
     }
   }
 }
