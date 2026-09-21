@@ -11,7 +11,10 @@ platform-apis:
   zone:
     kyvernoNamespace: "{{ .tmodule.kyverno }}"
     istioServiceEntries:
-      istioNamespace: "{{ .tmodule.istio-istiod }}"
+      # Optional, because the ServiceEntries these values feed are Istio's own CRD and a platform
+      # without Istio cannot apply one at all. Empty where istio-istiod is not installed, and
+      # platform-apis then renders no entry rather than a manifest that fails the whole sync.
+      istioNamespace: "{{ .toptmodule.istio-istiod }}"
       # Substituted into {region} in every host platform-apis opens by name. The AWS API endpoints
       # a Zone Pod calls are regional, so without it that whole group renders nothing and an IRSA
       # Pod under granularEgress cannot reach STS to get credentials.
