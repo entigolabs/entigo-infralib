@@ -30,8 +30,8 @@ locals {
 
   vault_name = var.vault_name != "" ? var.vault_name : "${var.prefix}-${random_string.suffix.result}"
 
-  vault_id            = var.create_vault ? oci_kms_vault.this[0].id : data.oci_kms_vaults.this[0].vaults[0].id
-  management_endpoint = var.create_vault ? oci_kms_vault.this[0].management_endpoint : data.oci_kms_vaults.this[0].vaults[0].management_endpoint
+  vault_id            = var.create_vault ? oci_kms_vault.this[0].id : var.vault_id
+  management_endpoint = var.create_vault ? oci_kms_vault.this[0].management_endpoint : data.oci_kms_vault.this[0].management_endpoint
 
   data_key_name      = var.data_key_name != "" ? var.data_key_name : "${var.prefix}-data-${random_string.suffix.result}"
   config_key_name    = var.config_key_name != "" ? var.config_key_name : "${var.prefix}-config-${random_string.suffix.result}"

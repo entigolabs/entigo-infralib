@@ -6,3 +6,9 @@ compartment_id: "{{ .agent.accountId }}"
 # objectstorage - so the grant that lets a bucket use one of these keys cannot be written
 # without knowing the region. Every other principal in key_service_principals is global.
 region: "{{ .agent.region }}"
+
+# The agent's own vault, so a deployment that sets create_vault = false shares it rather
+# than spending another slot against the tenancy-wide limit of ten per region. Optional
+# (.agent.vaultId is empty on an agent that does not publish one), and unread while
+# create_vault is true, so this never forces a choice on a deployment that wants its own.
+vault_id: "{{ .agent.vaultId }}"

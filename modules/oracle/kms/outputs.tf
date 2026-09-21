@@ -2,8 +2,10 @@ output "vault_id" {
   value = local.vault_id
 }
 
+# The name the vault actually carries, which is only the one this module chose when it
+# created it - an adopted vault came with its own.
 output "vault_name" {
-  value = local.vault_name
+  value = var.create_vault ? local.vault_name : data.oci_kms_vault.this[0].display_name
 }
 
 # Needed by anything that creates further keys in this vault - key operations do not go to
@@ -13,7 +15,7 @@ output "vault_management_endpoint" {
 }
 
 output "vault_crypto_endpoint" {
-  value = var.create_vault ? oci_kms_vault.this[0].crypto_endpoint : data.oci_kms_vaults.this[0].vaults[0].crypto_endpoint
+  value = var.create_vault ? oci_kms_vault.this[0].crypto_endpoint : data.oci_kms_vault.this[0].crypto_endpoint
 }
 
 # Named to match modules/aws/kms and modules/google/kms, so a module consuming "the data
