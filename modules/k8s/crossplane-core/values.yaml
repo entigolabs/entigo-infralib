@@ -230,7 +230,7 @@ job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.22.18"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: false
+  deleteInactiveProviderRevisions: true
   deleteInactiveFunctionRevisions: false
 
 imageConfigs:
