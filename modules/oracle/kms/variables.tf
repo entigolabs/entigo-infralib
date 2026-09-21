@@ -79,10 +79,47 @@ variable "telemetry_key_name" {
   default     = ""
 }
 
+variable "create_ca_key" {
+  description = "Create the asymmetric key that modules/oracle/pca's certificate authority signs with. Set false if nothing in the deployment issues certificates from an OCI CA."
+  type        = bool
+  default     = true
+}
+
 variable "ca_key_name" {
   description = "Display name of the CA signing key. Defaults to <prefix>-ca-<random suffix> when creating; when create_keys is false and create_ca_key is true, this must name an existing ENABLED key in the vault."
   type        = string
   default     = ""
+}
+
+# OCI Certificates will not accept a software-protected key for a certificate authority -
+# the Console key picker lists HSM-protected asymmetric keys only, and the docs say so
+# outright ("Certificates doesn't support the use of software-protected keys"). This is
+# the one key in the module that costs money, and it is a per-key-version charge in the
+# shared HSM, not a Virtual Private Vault.
+variable "ca_key_protection_mode" {
+  description = "Protection mode for the CA signing key. OCI Certificates rejects SOFTWARE keys, so changing this away from HSM will break certificate authority creation."
+  type        = string
+  default     = "HSM"
+}
+
+# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. For ECDSA the length
+# pairs with a curve - 32 is P-256, 48 is P-384, 66 is P-521 - and CreateKey needs both, so
+# main.tf derives curve_id from the length.
+variable "ca_key_algorithm" {
+  description = "Algorithm for the CA signing key: ECDSA or RSA. OCI Certificates takes ECDSA on NIST P-384 only, so ECDSA means ca_key_length = 48."
+  type        = string
+  default     = "ECDSA"
+
+  validation {
+    condition     = contains(["ECDSA", "RSA"], var.ca_key_algorithm)
+    error_message = "ca_key_algorithm must be ECDSA or RSA."
+  }
+}
+
+variable "ca_key_length" {
+  description = "CA signing key length in BYTES: 48 for ECDSA P-384, or 256/512 for RSA-2048/RSA-4096."
+  type        = number
+  default     = 48
 }
 
 variable "key_protection_mode" {
@@ -167,41 +204,4 @@ variable "key_policy_wait" {
   description = "How long to wait after granting the service principals key use, before anything encrypts with these keys."
   type        = string
   default     = "60s"
-}
-
-variable "create_ca_key" {
-  description = "Create the asymmetric key that modules/oracle/pca's certificate authority signs with. Set false if nothing in the deployment issues certificates from an OCI CA."
-  type        = bool
-  default     = true
-}
-
-# OCI Certificates will not accept a software-protected key for a certificate authority -
-# the Console key picker lists HSM-protected asymmetric keys only, and the docs say so
-# outright ("Certificates doesn't support the use of software-protected keys"). This is
-# the one key in the module that costs money, and it is a per-key-version charge in the
-# shared HSM, not a Virtual Private Vault.
-variable "ca_key_protection_mode" {
-  description = "Protection mode for the CA signing key. OCI Certificates rejects SOFTWARE keys, so changing this away from HSM will break certificate authority creation."
-  type        = string
-  default     = "HSM"
-}
-
-# OCI Certificates accepts RSA 2048/4096 or ECDSA NIST_P384 for a CA. For ECDSA the length
-# pairs with a curve - 32 is P-256, 48 is P-384, 66 is P-521 - and CreateKey needs both, so
-# main.tf derives curve_id from the length.
-variable "ca_key_algorithm" {
-  description = "Algorithm for the CA signing key: ECDSA or RSA. OCI Certificates takes ECDSA on NIST P-384 only, so ECDSA means ca_key_length = 48."
-  type        = string
-  default     = "ECDSA"
-
-  validation {
-    condition     = contains(["ECDSA", "RSA"], var.ca_key_algorithm)
-    error_message = "ca_key_algorithm must be ECDSA or RSA."
-  }
-}
-
-variable "ca_key_length" {
-  description = "CA signing key length in BYTES: 48 for ECDSA P-384, or 256/512 for RSA-2048/RSA-4096."
-  type        = number
-  default     = 48
 }
