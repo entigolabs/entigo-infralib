@@ -18,11 +18,11 @@ func testTerraformPcaBiz(t *testing.T) {
 
 	// biz.yaml turns the CA off - see the comment there for why it is not exercised here.
 	caId := tf.GetStringValue(t, outputs, "pca__certificate_authority_id")
-	assert.Empty(t, caId, "certificate_authority_id should be empty when create_ca is false")
+	assert.Empty(t, caId, "certificate_authority_id should be empty when create_ca is false and ca_name is unset")
 
 	caName := tf.GetStringValue(t, outputs, "pca__certificate_authority_name")
-	assert.Empty(t, caName, "certificate_authority_name should be empty when create_ca is false")
+	assert.Empty(t, caName, "certificate_authority_name should be empty when create_ca is false and ca_name is unset")
 
 	bundleCommand := tf.GetStringValue(t, outputs, "pca__certificate_authority_bundle_command")
-	assert.Empty(t, bundleCommand, "certificate_authority_bundle_command should be empty when create_ca is false")
+	assert.Empty(t, bundleCommand, "certificate_authority_bundle_command should be empty when create_ca is false and ca_name is unset")
 }

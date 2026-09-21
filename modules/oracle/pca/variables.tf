@@ -7,11 +7,6 @@ variable "compartment_id" {
   type        = string
 }
 
-variable "create_ca" {
-  description = "Create the certificate authority. Set false to plan a deployment that consumes a CA from elsewhere - the certificate_authority_id output is then empty, and modules/oracle/dns brings its own certificate instead."
-  type        = bool
-  default     = true
-}
 
 # An HSM key is not a preference. OCI Certificates refuses software-protected keys for a
 # certificate authority ("Certificates doesn't support the use of software-protected keys" -
@@ -24,22 +19,30 @@ variable "ca_key_id" {
 }
 
 variable "ca_name" {
-  description = "Name of the certificate authority. Defaults to <prefix>-root-ca-<random suffix>; see name_salt for why the suffix exists. When adopt_ca is true this must instead name an existing ACTIVE certificate authority in compartment_id."
+  description = "Name of an existing ACTIVE certificate authority in compartment_id to adopt, with create_ca = false. Leave unset when creating: the name is then <prefix>-root-ca-<random suffix>, see name_salt for why the suffix exists."
   type        = string
   default     = ""
 }
 
-# Same adopt-instead-of-create shape as modules/oracle/kms's create_vault/create_keys: a
-# certificate authority only *schedules* deletion (7 days minimum) and keeps its name for the
-# whole wait, so name_salt exists to dodge that on every rebuild - but that means a rebuild
-# never reuses the last one either, and orphans pile up exactly like the kms module's keys did
-# before it got the same treatment. Separate from create_ca (which decides whether this
-# deployment has a CA at all) so create_ca = false still means "no CA, unambiguously" - this
-# only chooses how one gets sourced when create_ca is true.
-variable "adopt_ca" {
-  description = "Adopt an existing certificate authority named ca_name instead of creating a new one. Only applies when create_ca is true."
+# create_ca and ca_name together, the same shape modules/oracle/kms uses for its vault and
+# keys: create one, or name an existing one to adopt.
+#
+#   create_ca = true,  ca_name unset  ->  create, named <prefix>-root-ca<salt>
+#   create_ca = false, ca_name set    ->  adopt that one
+#   create_ca = false, ca_name unset  ->  nothing
+#
+# Adoption exists because a certificate authority only *schedules* deletion, keeping its name
+# for the whole wait, so a rebuild either salts the name (see name_salt) and leaves an orphan
+# behind, or takes over the one already there.
+#
+# The third row is not how a deployment says it wants no CA - it leaves this module out of the
+# config, and modules/oracle/dns reads the id through .toptout so an absent module renders
+# empty. It is what lets the module be planned and applied on its own, without an HSM key from
+# modules/oracle/kms and without leaving a billed, undeletable CA behind. See test/biz.yaml.
+variable "create_ca" {
+  description = "Create a certificate authority. Set false to adopt the one named by ca_name, or to have no CA at all when ca_name is also unset."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "description" {

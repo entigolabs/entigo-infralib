@@ -11,11 +11,15 @@ locals {
 
   description = var.description != "" ? var.description : "${local.subordinate ? "Subordinate" : "Root"} CA for ${var.prefix}"
 
-  create_policy = var.create_ca && var.create_ca_policy
+  create = var.create_ca
+  adopt  = !var.create_ca && var.ca_name != ""
+  has_ca = local.create || local.adopt
 
-  ca_id = var.create_ca ? (
-    var.adopt_ca ? data.oci_certificates_management_certificate_authorities.this[0].certificate_authority_collection[0].items[0].id : oci_certificates_management_certificate_authority.this[0].id
-  ) : ""
+  create_policy = local.create && var.create_ca_policy
+
+  ca_id = local.adopt ? data.oci_certificates_management_certificate_authorities.this[0].certificate_authority_collection[0].items[0].id : (
+    local.create ? oci_certificates_management_certificate_authority.this[0].id : ""
+  )
 }
 
 resource "random_string" "suffix" {
@@ -70,12 +74,12 @@ resource "time_sleep" "ca_policy" {
 # is fine for a leaf certificate and wrong for a CA: replacing one means redistributing it to
 # every client that trusts it.
 resource "time_offset" "ca_validity" {
-  count        = var.create_ca && !var.adopt_ca ? 1 : 0
+  count        = local.create ? 1 : 0
   offset_years = var.ca_validity_years
 }
 
 resource "oci_certificates_management_certificate_authority" "this" {
-  count          = var.create_ca && !var.adopt_ca ? 1 : 0
+  count          = local.create ? 1 : 0
   depends_on     = [time_sleep.ca_policy]
   compartment_id = var.compartment_id
   name           = local.ca_name
@@ -123,8 +127,12 @@ resource "oci_certificates_management_certificate_authority" "this" {
 
   lifecycle {
     precondition {
+      condition     = !(var.create_ca && var.ca_name != "")
+      error_message = "ca_name names a CA to adopt, so it goes with create_ca = false. A created CA is named from prefix and name_salt."
+    }
+    precondition {
       condition     = var.ca_key_id != ""
-      error_message = "ca_key_id is empty: add an oracle/kms module to the same step (it supplies ca_key_id through .toptout), or set create_ca = false."
+      error_message = "ca_key_id is empty: add an oracle/kms module to the same step (it supplies ca_key_id through .toptout), or leave this module out of the deployment if it needs no CA."
     }
   }
 }

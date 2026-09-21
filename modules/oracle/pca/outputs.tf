@@ -7,7 +7,7 @@ output "certificate_authority_id" {
 }
 
 output "certificate_authority_name" {
-  value = var.create_ca ? local.ca_name : ""
+  value = local.has_ca ? local.ca_name : ""
 }
 
 # Clients trust certificates from this CA only after importing the CA's own certificate, and
@@ -19,5 +19,5 @@ output "certificate_authority_name" {
 #     --query 'data."certificate-pem"' --raw-output > ca.pem
 output "certificate_authority_bundle_command" {
   description = "Ready-made CLI command that exports this CA's PEM, which terraform cannot read itself."
-  value       = var.create_ca ? "oci certificates certificate-authority-bundle get --certificate-authority-id ${local.ca_id} --query 'data.\"certificate-pem\"' --raw-output" : ""
+  value       = local.has_ca ? "oci certificates certificate-authority-bundle get --certificate-authority-id ${local.ca_id} --query 'data.\"certificate-pem\"' --raw-output" : ""
 }
