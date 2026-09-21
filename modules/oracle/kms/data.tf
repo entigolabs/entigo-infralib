@@ -1,19 +1,16 @@
-# Looked up by name rather than taken as an OCID input, so that create_vault = false reads
-# the same way as create_key_ring = false does in modules/google/kms. oci_kms_vaults (the
-# plural, list-and-filter data source) is used because the singular oci_kms_vault requires
-# the OCID that we are trying to find.
-data "oci_kms_vaults" "this" {
-  count          = var.create_vault ? 0 : 1
-  compartment_id = var.compartment_id
+# Read for its management endpoint: every key operation goes to the vault's own hostname
+# rather than the regional one, and only the vault knows it.
+data "oci_kms_vault" "this" {
+  count    = var.create_vault ? 0 : 1
+  vault_id = var.vault_id
 
-  filter {
-    name   = "display_name"
-    values = [var.vault_name]
-  }
-
-  filter {
-    name   = "state"
-    values = ["ACTIVE"]
+  lifecycle {
+    # Caught here rather than left to the provider, which reports an empty OCID as
+    # "can not marshal a nil pointer".
+    precondition {
+      condition     = var.vault_id != ""
+      error_message = "vault_id is empty: set it to the OCID of the vault to use, or leave create_vault = true to make one."
+    }
   }
 }
 

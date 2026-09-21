@@ -8,13 +8,24 @@ variable "compartment_id" {
 }
 
 variable "create_vault" {
-  description = "Create the vault. Set false to place the keys in an existing vault named by vault_name."
+  description = "Create the vault. Set false to place the keys in the existing vault named by vault_id."
   type        = bool
   default     = true
 }
 
+# An OCID rather than a display name: names are not unique in KMS - a compartment can hold
+# several vaults called the same thing, including ones only scheduled for deletion - so a
+# lookup by name has no single right answer. The agent supplies its own vault's OCID through
+# agent_input.yaml, which is how a deployment shares one vault across every module rather
+# than spending a slot against the tenancy-wide limit of ten per region.
+variable "vault_id" {
+  description = "OCID of the vault to place the keys in. Required when create_vault is false, ignored otherwise. Wired from the agent by agent_input.yaml."
+  type        = string
+  default     = ""
+}
+
 variable "vault_name" {
-  description = "Display name of the vault. Defaults to <prefix>-<random suffix> when creating; when create_vault is false this must name an existing vault in compartment_id."
+  description = "Display name for the vault this module creates. Defaults to <prefix>-<random suffix>. Ignored when create_vault is false, which takes vault_id instead."
   type        = string
   default     = ""
 }
