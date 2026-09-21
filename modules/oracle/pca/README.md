@@ -41,7 +41,7 @@ that key is the one line of a deployment's encryption setup that costs money.
 A CA reaches for its signing key *as itself*, and is refused unless a policy allows it. The
 symptom is bad: the CA is created, goes to FAILED seconds later, and the only explanation is in
 the Console - `lifecycle-details` is empty over the API and terraform reports nothing but an
-unexpected state. This module creates the dynamic group and policy, then **waits 300 seconds**
+unexpected state. This module creates that policy, then **waits 300 seconds**
 before creating the CA, because IAM is eventually consistent and a CA that starts too early
 fails permanently instead of retrying. 60s was tried and was not enough.
 
