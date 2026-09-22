@@ -57,6 +57,18 @@ do
 
         latest=$(echo "$all_tags" | tr ' ' '\n' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
 
+      elif [[ "$url" == file://* ]]
+      then
+        # A vendored chart - there is no registry to query, so follow the upstream
+        # repository's releases instead. Which repository that is comes from an annotation on
+        # our own Chart.yaml, since the dependency entry only records the local path.
+        upstream=$(yq -r '.annotations."infralib.entigo.io/upstream-repo" // ""' $chart)
+        if [ "$upstream" == "" ]
+        then
+          echo "$name is vendored from $url, but $chart has no infralib.entigo.io/upstream-repo annotation to check against"
+          continue
+        fi
+        latest=$(curl -s "https://api.github.com/repos/$upstream/releases/latest" | jq -r '.tag_name // ""' | sed 's/^v//')
       else
         helm repo add $name $url > /dev/null
         latest=$(helm search repo -r "\v$name/$name\v" --output json | jq -r '.[0].version')

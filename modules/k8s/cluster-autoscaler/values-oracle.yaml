@@ -1,0 +1,43 @@
+global:
+  cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+
+  oracle:
+    # Filled by agent_input_oracle.yaml; consumed by templates/oracle/policy.yaml.
+    compartmentId: ""
+    # OKE Workload Identity policy conditions are scoped to one cluster, so the policy needs
+    # the cluster OCID alongside the namespace and service account.
+    clusterId: ""
+    # The service account the policy grants to. Pinned rather than left to the chart, which
+    # derives it as <release>-oci-cluster-autoscaler: that name would be embedded in an IAM
+    # condition, so an upstream fullname change would silently revoke access instead of
+    # failing loudly.
+    serviceAccountName: "cluster-autoscaler"
+
+cluster-autoscaler:
+  cloudProvider: oci
+  # OKE Workload Identity: the autoscaler acts as its own service account rather than
+  # inheriting the node's identity, which every pod on that node shares. Its OCI provider
+  # checks OCI_USE_WORKLOAD_IDENTITY before OCI_USE_INSTANCE_PRINCIPAL and then calls the
+  # SDK's OkeWorkloadIdentityConfigurationProvider, which needs an ENHANCED cluster.
+  # The node-pool policy is created by this module's own templates/oracle/policy.yaml via
+  # crossplane-oracle.
+  #
+  # The two OCI_RESOURCE_PRINCIPAL_* variables are not optional and not obvious: despite the
+  # name, OkeWorkloadIdentityConfigurationProvider is built on the resource-principal
+  # plumbing and reads both directly from the environment. Without the version it exits
+  # immediately with "can not create resource principal, environment variable:
+  # OCI_RESOURCE_PRINCIPAL_VERSION, not present" - having already logged "using workload
+  # identity provider", which makes it look like the workload identity setup is at fault.
+  # Region has no default either; the SDK cannot infer it here the way instance principal
+  # does from instance metadata. Set to "2.2" because that is what the SDK accepts for OKE
+  # (1.1 is the only other value).
+  extraEnv:
+    OCI_USE_WORKLOAD_IDENTITY: "true"
+    OCI_RESOURCE_PRINCIPAL_VERSION: "2.2"
+    OCI_SDK_APPEND_USER_AGENT: oci-oke-cluster-autoscaler
+  rbac:
+    serviceAccount:
+      create: true
+      # Must match global.oracle.serviceAccountName above - it is named in the IAM condition.
+      name: cluster-autoscaler

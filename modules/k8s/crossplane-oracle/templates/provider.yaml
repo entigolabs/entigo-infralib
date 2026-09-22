@@ -1,0 +1,50 @@
+# Oracle-official upjet-based provider (github.com/oracle/crossplane-provider-oci),
+# packages published on ghcr.io - chosen over upbound's marketplace provider-family-oci
+# (marketplace lock-in, support window ending). v1.x requires Crossplane v2
+# (crossplane-core ships 2.2.2). The family provider must install before the
+# per-service providers so the right image version gets pulled.
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: oracle-provider-family-oci
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: ghcr.io/oracle/provider-family-oci:v1.3.0
+  runtimeConfigRef:
+    name: {{ .Release.Name }}-family
+
+# Build the final list of providers based on conditions
+{{- $allProviders := list }}
+
+# Always include requiredProviders and extraProviders
+{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
+{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+
+# Deduplicate the list
+{{- $uniqueProviders := list }}
+{{- range $provider := $allProviders }}
+  {{- if not (has $provider $uniqueProviders) }}
+    {{- $uniqueProviders = append $uniqueProviders $provider }}
+  {{- end }}
+{{- end }}
+
+# Create Provider resources for each unique provider
+{{- range $index, $provider := $uniqueProviders }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: oracle-provider-oci-{{ $provider }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 4) }}'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  skipDependencyResolution: true
+  package: ghcr.io/oracle/provider-oci-{{ $provider }}:v1.3.0
+  runtimeConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}

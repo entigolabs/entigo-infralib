@@ -1,0 +1,35 @@
+logs:
+  networkPolicy:
+    # The whole egress list, not just the oracle-specific rule: Helm replaces lists rather
+    # than merging them, so the DNS and loki rules have to be repeated to survive. Nothing
+    # enforces any of it today - OKE ships no policy controller with either CNI - but it
+    # documents intent and is ready for the day one is added.
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.oke.kubernetes_service_ip }}/32"

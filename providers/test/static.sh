@@ -20,10 +20,18 @@ do
 
   for verfile in `find ../modules/ -name versions.tf`
   do
-    versionfound=`awk -v keyword="$providername" '$0 ~ " " keyword { getline; while($1 != "}") { if($1 == "version") print $3; getline; } }' $verfile | tr -d '\"'`
-    if [ "$versionfound" != "" ]
-    then
+    while read -r versionfound
+    do
+      if [ "$versionfound" == "" ]
+      then
+        continue
+      fi
       echo "Found $providername version $versionfound in $verfile"
+      if ! [[ "$versionfound" =~ ^[0-9]+(\.[0-9]+)*$ ]]
+      then
+        echo "Skipping $verfile, $providername version $versionfound is a constraint and not a pinned version"
+        continue
+      fi
       if [ "$lastversion" == "" ]
       then
         lastversion=$versionfound
@@ -32,7 +40,7 @@ do
         echo "Version mismatch for $providername $lastversion != $versionfound in $verfile"
         exit 1
       fi
-    fi
+    done < <(awk -v keyword="$providername" '$1 == keyword && $2 == "=" { while(getline > 0 && $1 != "}") { if($1 == "version") { sub(/^[[:space:]]*version[[:space:]]*=[[:space:]]*/, ""); sub(/[[:space:]]*$/, ""); gsub(/"/, ""); print; } } }' $verfile)
   done
   if [ "$providername" == "helmaws" -o "$providername" == "helmgoogle" ]
   then
@@ -40,8 +48,15 @@ do
   else
     modulename="$providername"
   fi
-  
-  awk -v providername="$providername" -v modulename="$modulename" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"hashicorp/" modulename "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
+
+  if [ "$providername" == "oci" ]
+  then
+    sourceorg="oracle"
+  else
+    sourceorg="hashicorp"
+  fi
+
+  awk -v providername="$providername" -v modulename="$modulename" -v sourceorg="$sourceorg" -v lastversion="$lastversion" '/required_providers {/ { print; print "    " providername " = {\n      source  = \"" sourceorg "/" modulename "\"\n      version = \"" lastversion "\"\n    }"; next }1' test_base.tf > tmp && mv tmp test_base.tf
 
 done
 
