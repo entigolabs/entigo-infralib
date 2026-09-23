@@ -69,3 +69,39 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
+
+  nuke_oracle:
+    name: Nuke Oracle compartment
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sleep for 5 minutes
+      if: github.event_name == 'schedule'
+      run: sleep 300
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Write OCI credentials
+      env:
+        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.oci
+        echo "${OCI_CONFIG}" > ~/.oci/config
+        echo "${OCI_PRIVATE_KEY}" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
+    - name: Nuke entigo-infralib oracle compartment
+      env:
+        OCI_REGION: eu-frankfurt-1
+        OCI_CONFIG_FILE: /home/runner/.oci/config
+        PREFIX: biz
+      run: |
+        modules/oracle/nuke.sh || modules/oracle/nuke.sh
+    - name: Slack Failed To Nuke Oracle Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Failed to Nuke the entigo-infralib oracle compartment!'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
