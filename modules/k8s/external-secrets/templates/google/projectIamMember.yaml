@@ -1,6 +1,6 @@
 {{- if and (eq .Values.global.cloudProvider "google") .Values.global.createClusterSecretStore }}
 
-apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+apiVersion: cloudplatform.gcp.upbound.io/v1beta2
 kind: ProjectIAMMember
 metadata:
   name: {{ .Release.Name }}

@@ -6,6 +6,7 @@ global:
 
   deploymentRuntimeConfig:
     googleServiceAccount: ""
+    imageRegistry: "docker.io/entigolabs"
     args:
       - --enable-management-policies
 
