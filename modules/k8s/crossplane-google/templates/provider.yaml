@@ -46,5 +46,5 @@ spec:
   skipDependencyResolution: true
   package: xpkg.upbound.io/upbound/provider-gcp-{{ $provider }}:v3.0.3
   runtimeConfigRef:
-    name: {{ $.Release.Name }}-sv-migration-{{ $provider }}
+    name: {{ $.Release.Name }}
 {{- end }}

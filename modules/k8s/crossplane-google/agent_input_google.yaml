@@ -3,4 +3,3 @@ global:
     projectID: "{{ .toutput.crossplane.project_id }}"
   deploymentRuntimeConfig:
     googleServiceAccount: "{{ .toutput.crossplane.service_account_email }}"
-    imageRegistry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs'
