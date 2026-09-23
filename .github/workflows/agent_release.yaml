@@ -192,7 +192,7 @@ jobs:
             [ -f "${chart_dir}Chart.yaml" ] && \
               echo "entigo-infralib-release/k8s/$(basename "$chart_dir")"
           done
-          for module_type in aws aws-v2 google; do
+          for module_type in aws aws-v2 google oracle; do
             for module_dir in modules/${module_type}/*/; do
               [ -f "${module_dir}main.tf" ] && \
                 echo "entigo-infralib-release/${module_type}/$(basename "$module_dir")"
@@ -458,7 +458,7 @@ jobs:
         export RELEASE_VERSION
 
         # Run up to 6 modules in parallel across all module types
-        printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ \
+        printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ \
           | xargs -P 6 -I{} bash -c 'publish_module "$@"' _ {}
 
         # Merge per-module fragments into the shared JSONL the index step consumes.
@@ -491,7 +491,7 @@ jobs:
         # Stage 1: expected count (filesystem) must equal recorded entries.
         expected=$(
           for d in modules/k8s/*/; do [ -f "${d}Chart.yaml" ] && echo x; done
-          for d in modules/aws/*/ modules/aws-v2/*/ modules/google/*/; do [ -f "${d}main.tf" ] && echo x; done
+          for d in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/; do [ -f "${d}main.tf" ] && echo x; done
         )
         expected_count=$(echo "${expected}" | grep -c x || true)
         recorded_count=$(wc -l < /tmp/agent-manifest/entries.jsonl | tr -d ' ')
@@ -613,7 +613,7 @@ jobs:
         RELEASE_NOTES: ${{ steps.get_release_notes.outputs.notes }}
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' modules entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' --exclude 'modules/oracle/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release
