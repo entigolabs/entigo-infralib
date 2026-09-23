@@ -12,6 +12,7 @@ blocklist:
 resource-types:
   alternatives:
   - AWS::ECR::RepositoryCreationTemplate
+  - AWS::MSK::ServerlessCluster
   excludes:
   - EC2KeyPair
   - IAMSAMLProvider
@@ -131,6 +132,8 @@ accounts:
       - "/ecr-proxy/ghcr/username"
       Route53ResourceRecordSet:
       - "gcp.infralib.entigo.io." 
+      - "oci.infralib.entigo.io."
+      - "azure.infralib.entigo.io."
       IAMUser:
       - "github"
       - "eks-test"

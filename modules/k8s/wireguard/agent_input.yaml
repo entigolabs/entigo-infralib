@@ -1,7 +1,7 @@
 wireguard:
   service:
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
+      external-dns.kubernetes.io/hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
       # Not consumed by the load balancer, agent.yaml reads it back as vpn_host
       hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
   image:

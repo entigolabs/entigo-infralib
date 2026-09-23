@@ -1,0 +1,13 @@
+global:
+  cloudProvider: oracle
+
+argocd:
+  configs:
+    params:
+      server.insecure: true
+  server:
+    ingress:
+      enabled: false
+    httproute:
+      # oracle has no ingress, the gateway route is always on
+      enabled: true

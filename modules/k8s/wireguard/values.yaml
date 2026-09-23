@@ -1,9 +1,9 @@
 global:
   cloudProvider: ""
 
-  # Public key download route, google only, filled from agent_input_google.yaml.
+  # Public key download route, google and oracle, filled from their agent inputs.
   # On AWS the public key is served from an extra port of the wireguard NLB
-  # instead and these stay empty. README.md explains why the two differ.
+  # instead and these stay empty. README.md explains why the clouds differ.
   pubkeyHostname: ""
   gateway:
     name: ""

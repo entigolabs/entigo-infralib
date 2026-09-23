@@ -1,0 +1,22 @@
+global:
+  prefix: "{{ .config.prefix }}"
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
+    region: "{{ .toutput.oke.region }}"
+    # The telemetry key, matching loki. Optional (.toptout) so a deployment without a kms
+    # module still renders - the bucket then falls back to Oracle-managed encryption.
+    kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
+    # The classic tenancy Group holding mimir's manually-created User - see
+    # templates/oracle/credentials.yaml. infralib cannot create the Group, but it can name it:
+    # same <prefix>-<module> shape as bucketName below, so a deployment that follows the
+    # documented naming needs nothing in its config.yaml. Override it there when the Group
+    # already exists under another name.
+    serviceAccountGroupName: "{{ .config.prefix }}-{{ .module.name }}"
+    # The Customer Secret Key the client minted manually (see templates/oracle/credentials.yaml)
+    # and handed to the agent via `ei-agent add-custom --key=mimir-attribute-id/-key --value=...`
+    accessKeyId: "{{ .output-custom.mimir-attribute-id }}"
+    secretAccessKey: "{{ .output-custom.mimir-attribute-key }}"
+  # Bucket names are globally unique per namespace in OCI, not per account+region as on aws,
+  # so prefix + module name is enough to keep two deployments apart - same as loki.
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}"
