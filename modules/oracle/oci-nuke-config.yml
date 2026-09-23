@@ -1,0 +1,28 @@
+regions:
+- eu-frankfurt-1
+
+accounts:
+  ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q:
+    filters:
+      OCIDnsZone:
+      - property: Name
+        type: In
+        values:
+        - oci.infralib.entigo.io
+      OCIUser:
+      - property: Name
+        type: In
+        values:
+        - biz-loki
+        - biz-mimir
+      OCIGroup:
+      - property: Name
+        type: In
+        values:
+        - biz-loki
+        - biz-mimir
+      OCIPolicy:
+      - property: Name
+        type: In
+        values:
+        - infralib-agent-bootstrap
