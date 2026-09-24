@@ -32,12 +32,6 @@ then
 fi
 OCI_CONFIG_DIR="$(dirname "$OCI_CONFIG_FILE")"
 
-NUKE_OPTS=""
-if [ "$DRY_RUN" != "true" ]
-then
-  NUKE_OPTS="--no-dry-run"
-fi
-
 DOCKER_OPTS=""
 PROMPT_OPTS=""
 if [ "$GITHUB_ACTION" == "" ]
@@ -69,4 +63,4 @@ docker run --rm $DOCKER_OPTS --user "$(id -u):$(id -g)" \
 	--compartment-id "$ORACLE_COMPARTMENT_ID" \
 	--region "$OCI_REGION" \
 	--prefix "$PREFIX" \
-	$NUKE_OPTS $PROMPT_OPTS "$@"
+	--no-dry-run $PROMPT_OPTS "$@"

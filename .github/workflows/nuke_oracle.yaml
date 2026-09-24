@@ -26,8 +26,6 @@ jobs:
         chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
     - name: Nuke entigo-infralib oracle compartment
       env:
-        # TESTING ONLY - do not merge. Forces every run, scheduled included, to scan.
-        DRY_RUN: "true"
         OCI_REGION: eu-frankfurt-1
         OCI_CONFIG_FILE: /home/runner/.oci/config
         PREFIX: biz
