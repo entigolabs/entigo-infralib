@@ -50,7 +50,9 @@ echo "  image:       $OCI_NUKE_IMAGE"
 
 # Mounted twice on purpose: at the image user's ~/.oci where the SDK looks, and at its own
 # host path, because key_file= and security_token_file= in the config are absolute.
-docker run --rm $DOCKER_OPTS \
+# The image's own user is uid 1000, and the mounted config is 0600, so the container can
+# only read it when it runs as the uid that wrote it.
+docker run --rm $DOCKER_OPTS --user "$(id -u):$(id -g)" \
 	-v "$OCI_CONFIG_DIR":"/home/oci-nuke/.oci":ro \
 	-v "$OCI_CONFIG_DIR":"$OCI_CONFIG_DIR":ro \
 	-v "$SCRIPTPATH/oci-nuke-config.yml":"/home/oci-nuke/config.yml":ro \
