@@ -329,6 +329,7 @@ jobs:
         aws ecr-public get-login-password --region us-east-1 | oras login public.ecr.aws -u AWS --password-stdin
 
         mkdir -p /tmp/agent-manifest
+        source common/retry.sh
 
         # Per-chart worker; runs in parallel via xargs. Each worker writes its own
         # manifest fragment to avoid concurrent-append corruption on a shared file.
@@ -349,16 +350,19 @@ jobs:
           rm -rf "${chart_dir}test" "${chart_dir}test.sh"
           helm package "$chart_dir" --version ${RELEASE_VERSION} --destination /tmp/helm-charts
 
-          # Push to ghcr only. Keep the full output in a file: piping it straight into awk
-          # threw the error text away, so a failed push showed nothing but xargs exit 123.
+          # Push to ghcr only, with retries for transient registry errors. Keep the full
+          # output in a file: piping it straight into awk threw the error text away, so a
+          # failed push showed nothing but xargs exit 123.
           push_log="/tmp/${chart_name}-helm-push.log"
-          if ! helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
+          if ! retry helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
               oci://ghcr.io/entigolabs/entigo-infralib-release/k8s > "${push_log}" 2>&1; then
             echo "ERROR: helm push failed for k8s/${chart_name}:" >&2
             sed "s/^/  [${chart_name}] /" "${push_log}" >&2
             return 1
           fi
-          GHCR_DIGEST=$(awk '/Digest:/ {print $2}' "${push_log}")
+          # Retried attempts are worth seeing even when the push eventually succeeded
+          grep '^WARN' "${push_log}" >&2 || true
+          GHCR_DIGEST=$(awk '/Digest:/ {print $2}' "${push_log}" | tail -n1)
           if [ -z "${GHCR_DIGEST}" ]; then
             echo "ERROR: failed to capture digest for k8s/${chart_name}, helm push output was:" >&2
             sed "s/^/  [${chart_name}] /" "${push_log}" >&2
@@ -366,7 +370,7 @@ jobs:
           fi
 
           # Attach the SBOM on ghcr, capture its digest
-          GHCR_SBOM_DIGEST=$(oras attach \
+          GHCR_SBOM_DIGEST=$(retry oras attach \
             --artifact-type application/vnd.syft.sbom \
             --disable-path-validation \
             --format go-template --template "{{.digest}}" \
@@ -375,7 +379,7 @@ jobs:
           if [ -z "${GHCR_SBOM_DIGEST}" ]; then echo "ERROR: failed to attach SBOM for ${chart_name}"; return 1; fi
 
           # Mirror subject + SBOM to ecr (byte-identical digests)
-          oras cp -r --no-tty \
+          retry oras cp -r --no-tty \
             ghcr.io/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} \
             public.ecr.aws/entigolabs/entigo-infralib-release/k8s/${chart_name}:${RELEASE_VERSION} >/dev/null
 
@@ -403,7 +407,7 @@ jobs:
             }' > /tmp/agent-manifest/entry-k8s-${chart_name}.json
           echo "Published  k8s/${chart_name} (${GHCR_DIGEST})"
         }
-        export -f publish_chart
+        export -f publish_chart retry
         export RELEASE_VERSION
 
         # Run up to 6 charts in parallel; -I{} passes each dir. xargs only reports a
@@ -440,6 +444,7 @@ jobs:
         set -o pipefail
 
         mkdir -p /tmp/agent-manifest
+        source common/retry.sh
 
         # Per-module worker; arg is the full path "modules/<type>/<name>/".
         # No cd (parallel workers can't share a cwd) — use repo-root-relative paths.
@@ -458,8 +463,8 @@ jobs:
           # zip from inside modules/<type> so archive paths stay "<name>/..."
           ( cd "${module_path}" && zip -r "${zip_file}" . >/dev/null )
 
-          # Push to ghcr only; capture digest from push output
-          GHCR_DIGEST=$(oras push \
+          # Push to ghcr only, with retries for transient registry errors; capture digest from push output
+          GHCR_DIGEST=$(retry oras push \
             --artifact-type=application/vnd.opentofu.modulepkg \
             --disable-path-validation \
             --format go-template --template "{{.digest}}" \
@@ -470,7 +475,7 @@ jobs:
           # Create and attach SBOM on ghcr, capture its digest
           sbom_file="/tmp/${module_type}-${module_name}-sbom.spdx.json"
           python3 common/sbom.py tofu "${module_path}" "${module_name}" "${RELEASE_VERSION}" "${module_type}" > "${sbom_file}"
-          GHCR_SBOM_DIGEST=$(oras attach \
+          GHCR_SBOM_DIGEST=$(retry oras attach \
             --artifact-type application/vnd.syft.sbom \
             --disable-path-validation \
             --format go-template --template "{{.digest}}" \
@@ -479,7 +484,7 @@ jobs:
           if [ -z "${GHCR_SBOM_DIGEST}" ]; then echo "ERROR: failed to attach SBOM for ${module_type}/${module_name}"; return 1; fi
 
           # Mirror subject + SBOM to ecr (byte-identical digests)
-          oras cp -r --no-tty \
+          retry oras cp -r --no-tty \
             ghcr.io/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} \
             public.ecr.aws/entigolabs/entigo-infralib-release/${module_type}/${module_name}:${RELEASE_VERSION} >/dev/null
 
@@ -506,7 +511,7 @@ jobs:
             }' > /tmp/agent-manifest/entry__${module_type}__${module_name}.json
           echo "Published  ${module_type}/${module_name} (${GHCR_DIGEST})"
         }
-        export -f publish_module
+        export -f publish_module retry
         export RELEASE_VERSION
 
         # Run up to 6 modules in parallel across all module types. xargs only reports a
@@ -543,6 +548,7 @@ jobs:
         RELEASE_VERSION: ${{ steps.get_latest_release.outputs.oci_version }}
       run: |
         set -o pipefail
+        source common/retry.sh
 
         STAGE=$(mktemp -d)
 
@@ -613,7 +619,7 @@ jobs:
 
         # Push to ghcr only; ecr gets a byte-identical copy below.
         # Capture the digest directly from the push output.
-        GHCR_DIGEST=$(oras push \
+        GHCR_DIGEST=$(retry oras push \
           --artifact-type=application/vnd.entigo.agentpkg \
           --format go-template --template "{{.digest}}" \
           ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
@@ -624,7 +630,7 @@ jobs:
         cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/index@${GHCR_DIGEST}
 
         # Attach the umbrella SBOM as a referrer on ghcr
-        GHCR_SBOM_DIGEST=$(oras attach \
+        GHCR_SBOM_DIGEST=$(retry oras attach \
           --artifact-type application/vnd.syft.sbom \
           --format go-template --template "{{.digest}}" \
           ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
@@ -632,15 +638,15 @@ jobs:
         cosign sign --yes ghcr.io/entigolabs/entigo-infralib-release/index@${GHCR_SBOM_DIGEST}
 
         # Mirror subject + SBOM to ecr (byte-identical digests)
-        oras cp -r --no-tty \
+        retry oras cp -r --no-tty \
           ghcr.io/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} \
           public.ecr.aws/entigolabs/entigo-infralib-release/index:${RELEASE_VERSION} >/dev/null
 
         # Copy the cosign signatures (.sig tags) from ghcr to ecr instead of re-signing
         REPO_GHCR="ghcr.io/entigolabs/entigo-infralib-release/index"
         REPO_ECR="public.ecr.aws/entigolabs/entigo-infralib-release/index"
-        oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
-        oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
+        retry oras cp ${REPO_GHCR}:sha256-${GHCR_DIGEST#sha256:}.sig      ${REPO_ECR}:sha256-${GHCR_DIGEST#sha256:}.sig
+        retry oras cp ${REPO_GHCR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig ${REPO_ECR}:sha256-${GHCR_SBOM_DIGEST#sha256:}.sig
 
         # ---- Consumer instructions ----------------------------------------------
         IDENTITY_RE='^https://github\.com/entigolabs/entigo-infralib/\.github/workflows/.*@refs/.*$'
