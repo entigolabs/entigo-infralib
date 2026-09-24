@@ -145,8 +145,30 @@ jobs:
                 core.setOutput('oci_version', new_version.replace(/^v/, ''));  // bare semver for OCI
                 core.info('Latest release is not the same as main branch, need to make a new release ' + new_version);
               } else {
-                core.info('Latest release is same as main branch, no need to make a new release');
-                core.setOutput('new_release_needed', "false");
+                // main is already released, but an earlier run may have died after creating the
+                // GitHub release and before publishing the OCI packages and tagging
+                // entigo-infralib-release. That tag is pushed by the very last step, so its
+                // presence is the only reliable sign that the whole release went through.
+                // Without it a re-run resumes the publish of the existing release.
+                const tag = latestStableRelease.data.tag_name;
+                let releaseRepoTagged = true;
+                try {
+                  await github.rest.git.getRef({ owner: context.repo.owner, repo: 'entigo-infralib-release', ref: 'tags/' + tag });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                  releaseRepoTagged = false;
+                }
+                if (releaseRepoTagged) {
+                  core.info('Latest release is same as main branch, no need to make a new release');
+                  core.setOutput('new_release_needed', "false");
+                } else {
+                  core.warning('Release ' + tag + ' exists but entigo-infralib-release has no ' + tag + ' tag, resuming the publish of ' + tag);
+                  core.setOutput('new_release_needed', "true");
+                  core.setOutput('release_exists', "true");
+                  core.setOutput('new_version', tag);
+                  core.setOutput('oci_version', tag.replace(/^v/, ''));
+                  core.exportVariable('RELEASE_URL', latestStableRelease.data.html_url);
+                }
               }
             } else {
                core.setFailed('No main branch found');
@@ -248,7 +270,7 @@ jobs:
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
+      if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' && steps.get_latest_release.outputs.release_exists != 'true' }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -315,6 +337,8 @@ jobs:
           chart_dir="$1"
           chart_name=$(basename "$chart_dir")
           if [ ! -f "${chart_dir}Chart.yaml" ]; then return 0; fi
+          # set -e aborts the worker silently; say which chart and which command died
+          trap 'rc=$?; echo "ERROR: k8s/${chart_name} failed (exit ${rc}) in: ${BASH_COMMAND}" >&2' ERR
           echo "Publishing k8s/${chart_name}"
 
           # Generate SBOM first, while the test folder still exists.
@@ -325,11 +349,21 @@ jobs:
           rm -rf "${chart_dir}test" "${chart_dir}test.sh"
           helm package "$chart_dir" --version ${RELEASE_VERSION} --destination /tmp/helm-charts
 
-          # Push to ghcr only; capture digest from helm push output
-          GHCR_DIGEST=$(helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
-            oci://ghcr.io/entigolabs/entigo-infralib-release/k8s 2>&1 \
-            | awk '/Digest:/ {print $2}')
-          if [ -z "${GHCR_DIGEST}" ]; then echo "ERROR: failed to capture digest for ${chart_name}"; return 1; fi
+          # Push to ghcr only. Keep the full output in a file: piping it straight into awk
+          # threw the error text away, so a failed push showed nothing but xargs exit 123.
+          push_log="/tmp/${chart_name}-helm-push.log"
+          if ! helm push /tmp/helm-charts/${chart_name}-${RELEASE_VERSION}.tgz \
+              oci://ghcr.io/entigolabs/entigo-infralib-release/k8s > "${push_log}" 2>&1; then
+            echo "ERROR: helm push failed for k8s/${chart_name}:" >&2
+            sed "s/^/  [${chart_name}] /" "${push_log}" >&2
+            return 1
+          fi
+          GHCR_DIGEST=$(awk '/Digest:/ {print $2}' "${push_log}")
+          if [ -z "${GHCR_DIGEST}" ]; then
+            echo "ERROR: failed to capture digest for k8s/${chart_name}, helm push output was:" >&2
+            sed "s/^/  [${chart_name}] /" "${push_log}" >&2
+            return 1
+          fi
 
           # Attach the SBOM on ghcr, capture its digest
           GHCR_SBOM_DIGEST=$(oras attach \
@@ -372,9 +406,25 @@ jobs:
         export -f publish_chart
         export RELEASE_VERSION
 
-        # Run up to 6 charts in parallel; -I{} passes each dir, fail if any worker fails
+        # Run up to 6 charts in parallel; -I{} passes each dir. xargs only reports a
+        # bare exit 123 when a worker fails, so finish with a list of what is missing.
+        workers_rc=0
         printf '%s\n' modules/k8s/*/ \
-          | xargs -P 6 -I{} bash -c 'publish_chart "$@"' _ {}
+          | xargs -P 6 -I{} bash -c 'publish_chart "$@"' _ {} || workers_rc=$?
+
+        missing=""
+        for chart_dir in modules/k8s/*/; do
+          chart_name=$(basename "$chart_dir")
+          if [ -f "${chart_dir}Chart.yaml" ] && [ ! -f "/tmp/agent-manifest/entry-k8s-${chart_name}.json" ]; then
+            missing="${missing}  k8s/${chart_name}"$'\n'
+          fi
+        done
+        if [ "${workers_rc}" -ne 0 ] || [ -n "${missing}" ]; then
+          echo "ERROR: chart publish failed (xargs exit ${workers_rc}). Charts without a published package:"
+          if [ -n "${missing}" ]; then printf '%s' "${missing}"; else echo "  (none missing, a worker failed after recording its entry)"; fi
+          echo "See the ERROR lines above for the failing command and its output."
+          exit 1
+        fi
 
         # Merge per-chart fragments into the shared JSONL the index step consumes
         cat /tmp/agent-manifest/entry-k8s-*.json 2>/dev/null >> /tmp/agent-manifest/entries.jsonl
@@ -399,6 +449,8 @@ jobs:
           module_type=$(basename "$(dirname "$module_path")")
           module_name=$(basename "$module_path")
           if [ ! -f "${module_path}main.tf" ]; then return 0; fi
+          # set -e aborts the worker silently; say which module and which command died
+          trap 'rc=$?; echo "ERROR: ${module_type}/${module_name} failed (exit ${rc}) in: ${BASH_COMMAND}" >&2' ERR
           echo "Publishing ${module_type}/${module_name}"
 
           rm -rf "${module_path}test" "${module_path}test.sh"
@@ -457,9 +509,26 @@ jobs:
         export -f publish_module
         export RELEASE_VERSION
 
-        # Run up to 6 modules in parallel across all module types
+        # Run up to 6 modules in parallel across all module types. xargs only reports a
+        # bare exit 123 when a worker fails, so finish with a list of what is missing.
+        workers_rc=0
         printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ \
-          | xargs -P 6 -I{} bash -c 'publish_module "$@"' _ {}
+          | xargs -P 6 -I{} bash -c 'publish_module "$@"' _ {} || workers_rc=$?
+
+        missing=""
+        for module_path in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/; do
+          module_type=$(basename "$(dirname "$module_path")")
+          module_name=$(basename "$module_path")
+          if [ -f "${module_path}main.tf" ] && [ ! -f "/tmp/agent-manifest/entry__${module_type}__${module_name}.json" ]; then
+            missing="${missing}  ${module_type}/${module_name}"$'\n'
+          fi
+        done
+        if [ "${workers_rc}" -ne 0 ] || [ -n "${missing}" ]; then
+          echo "ERROR: module publish failed (xargs exit ${workers_rc}). Modules without a published package:"
+          if [ -n "${missing}" ]; then printf '%s' "${missing}"; else echo "  (none missing, a worker failed after recording its entry)"; fi
+          echo "See the ERROR lines above for the failing command and its output."
+          exit 1
+        fi
 
         # Merge per-module fragments into the shared JSONL the index step consumes.
         # Single glob — type names like aws / aws-v2 can't prefix-collide thanks to __.
@@ -617,7 +686,22 @@ jobs:
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release
-        git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git add --all && git commit -a -m "Release $NEW_VERSION" -m "$RELEASE_NOTES" && git push && git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION" -m "$RELEASE_NOTES" && git push origin "$NEW_VERSION" || echo "Nothing to release"
+        git config user.name "GitHub Actions" && git config user.email "actions@github.com"
+        git add --all
+        # Idempotent so a resumed run can finish what an earlier attempt left undone.
+        # The tag is what "Get latest release" checks to decide whether a release is complete.
+        if git diff --cached --quiet; then
+          echo "Nothing to commit, files already match $NEW_VERSION"
+        else
+          git commit -m "Release $NEW_VERSION" -m "$RELEASE_NOTES"
+          git push
+        fi
+        if git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null; then
+          echo "Tag $NEW_VERSION already exists in entigo-infralib-release"
+        else
+          git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION" -m "$RELEASE_NOTES"
+          git push origin "$NEW_VERSION"
+        fi
       if: ${{ steps.get_latest_release.outputs.new_release_needed == 'true' }}
 
     - name: Slack Success Release Message
