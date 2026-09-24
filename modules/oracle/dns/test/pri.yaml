@@ -1,0 +1,11 @@
+# One public zone, delegated from oci.infralib.entigo.io the same way the biz zones are.
+# No certificate: pri carries no oracle/pca module, so there is no authority to issue from.
+domains: |
+  {
+    "public" = {
+      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
+      parent_zone_id     = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
+      create_certificate = false
+      default_public     = true
+    }
+  }

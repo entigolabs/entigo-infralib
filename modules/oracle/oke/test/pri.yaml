@@ -1,0 +1,8 @@
+# The API endpoint has to be public: the agent runs outside the VCN, and vpc.attach has no
+# OCI implementation to put it inside one.
+is_public_ip_enabled: true
+
+# Non-default cluster-internal ranges. Both are virtual and per-cluster, so they neither
+# consume VCN address space nor have to differ from another deployment's.
+pods_cidr: "10.245.0.0/16"
+services_cidr: "10.97.0.0/16"
