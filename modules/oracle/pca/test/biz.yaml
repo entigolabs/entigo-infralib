@@ -1,9 +1,7 @@
-# Creating a real CA needs an HSM key from modules/oracle/kms, which a harness applying one
-# module at a time cannot supply - and an HSM key version is billed and cannot be deleted on
-# the spot, so a CA created here would leave a paid, undeletable object behind on every run.
-# Worse, a CA holds its name for 7 days after deletion is scheduled, so repeated runs would
-# collide with each other.
-#
-# What is left is a plan-and-apply smoke test: the module has to be valid and produce its
-# outputs. The CA itself is covered against a real deployment, through modules/oracle/dns.
+# The CA outlives a teardown: it holds its name for 7 days after deletion is scheduled, so a
+# run that created its own would collide with the previous one. oci-nuke-config.yml keeps the
+# existing CA standing and this adopts it by the name the module would itself have given it.
 create_ca: false
+# The step is named literally rather than taken from {{ .step.name }}: a per-module test run
+# renames the step after its branch, and the CA to adopt keeps the name the net step gave it.
+ca_name: "{{ .config.prefix }}-net-{{ .module.name }}-root-ca"
