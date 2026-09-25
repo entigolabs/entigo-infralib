@@ -853,3 +853,8 @@ output "zoned_compute_subnets_cidr_blocks" {
     ]
   }
 }
+
+output "vpc_endpoints" {
+  description = "Map of VPC endpoint IDs by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs)"
+  value       = { for k, v in try(module.vpc_endpoints[0].endpoints, {}) : k => v.id }
+}
