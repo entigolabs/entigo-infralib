@@ -1,6 +1,7 @@
 # One public zone and one private, so the pub_*/int_* selection and the map outputs are both
 # exercised: with a single domain every default falls out of a shortcut and the multi-zone
-# logic is never reached.
+# logic is never reached. Neither names itself the default - the module infers that for the
+# only domain of each kind.
 #
 # parent_zone_id is oci.infralib.entigo.io, created by hand and kept by oci-nuke-config.yml.
 # The public zone is a child of it and the module writes the NS delegation into it on every
@@ -13,11 +14,9 @@ domains: |
     "public" = {
       domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
       parent_zone_id = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
-      default_public = true
     },
     "private" = {
-      domain_name     = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.oci.infralib.entigo.io"
-      private         = true
-      default_private = true
+      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.oci.infralib.entigo.io"
+      private     = true
     }
   }
