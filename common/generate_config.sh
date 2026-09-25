@@ -437,6 +437,7 @@ test_k8s() {
       "./modules/k8s/karpenter/test.sh"
       "./modules/k8s/kiali/test.sh"
       "./modules/k8s/loki/test.sh"
+      "./modules/k8s/tempo/test.sh"
       "./modules/k8s/mimir/test.sh"
       "./modules/k8s/prometheus/test.sh"
       "./modules/k8s/alloy/test.sh"
