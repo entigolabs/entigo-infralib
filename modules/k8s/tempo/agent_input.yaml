@@ -1,0 +1,6 @@
+# VERIFY: the upstream chart's image key path (image.registry vs a top-level
+# repository/tag pair) before relying on this — copied from loki's shape, not confirmed
+# against tempo's actual values.yaml.
+tempo:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'

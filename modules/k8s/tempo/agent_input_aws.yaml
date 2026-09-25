@@ -1,0 +1,14 @@
+global:
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+    kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+
+tempo:
+  storage:
+    trace:
+      s3:
+        region: "{{ .toutput.eks.region }}"
+        bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"

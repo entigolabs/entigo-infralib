@@ -1,0 +1,12 @@
+   apiVersion: v2
+   name: tempo
+   description: A Tempo chart for Kubernetes
+   type: application
+   version: 0.1.0
+   appVersion: "1.0"
+
+   dependencies:
+     - name: tempo
+       version: <latest>
+       repository: https://grafana-community.github.io/helm-charts
+

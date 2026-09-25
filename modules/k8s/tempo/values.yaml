@@ -1,0 +1,106 @@
+# Cloud neutral defaults. Keys under `tempo:` mirror the upstream chart 1:1 (see
+# modules/k8s/README.md's "values.yaml" section) and MUST be checked against
+# `helm show values grafana-community/tempo --version <x>` — this file was written from
+# the loki/mimir module pattern plus general knowledge of Tempo's monolithic chart, not
+# a fetch of the actual upstream values.yaml, so treat the "VERIFY" comments as
+# unconfirmed until you've diffed them.
+
+global:
+  cloudProvider: ""
+  providerConfigRefName: ""
+  bucketName: "tempo"
+  prefix: ""
+
+tempo:
+  fullnameOverride: tempo
+  nameOverride: tempo
+
+  serviceAccount:
+    create: false # VERIFY key name/path — we create our own SA in templates/aws/serviceAccount.yaml
+    name: tempo
+
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
+  # VERIFY the exact path — recent tempo charts nest storage under `tempo.storage.trace`.
+  storage:
+    trace:
+      backend: local # overridden to "s3" in values-aws.yaml
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+      s3:
+        endpoint: null
+        region: ""
+        bucket: ""
+        access_key: null
+        secret_key: null
+        insecure: false
+        forcepathstyle: false
+
+  # VERIFY — recent Tempo defaults to receiving OTLP only; confirm protocol/port keys
+  # match the vendored chart version before relying on this.
+  distributor:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+
+  server:
+    http_listen_port: 3100
+    log_level: warn
+
+  compactor:
+    compaction:
+      block_retention: 336h # 14 days — cheap first default, tune once real trace volume is known
+
+  ingress:
+    enabled: false
+
+  networkPolicy:
+    enabled: false # this repo owns network policy for the module instead, see templates/
+
+  persistence:
+    enabled: false # single binary keeps its working set on local disk + S3; no PVC needed to start
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+      ephemeral-storage: 1Gi
+    requests:
+      cpu: 50m
+      memory: 256Mi
+      ephemeral-storage: 100Mi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: mon
+                operator: In
+                values:
+                  - "true"
+        - weight: 10
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"

@@ -1,0 +1,21 @@
+# Only what differs on AWS. global.cloudProvider set here and nowhere else, per
+# modules/k8s/README.md.
+
+global:
+  cloudProvider: aws
+  providerConfigRefName: crossplane-aws
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
+    kmsKeyId: ""
+    bucketLifecycleRules: []
+
+tempo:
+  storage:
+    trace:
+      backend: s3
+      s3:
+        region: eu-north-1 # placeholder, agent_input_aws.yaml overrides to the real region
+        insecure: false
+        forcepathstyle: false
