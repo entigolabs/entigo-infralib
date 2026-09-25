@@ -1,7 +1,8 @@
-# The CA outlives a teardown: it holds its name for 7 days after deletion is scheduled, so a
-# run that created its own would collide with the previous one. oci-nuke-config.yml keeps the
-# existing CA standing and this adopts it by the name the module would itself have given it.
+# The CA outlives a teardown: OCI holds a CA's name for 7 days after deletion is scheduled, so
+# one created per run would collide with the previous one. oci-nuke-config.yml keeps an existing
+# CA standing and this adopts it.
 create_ca: false
-# The step is named literally rather than taken from {{ .step.name }}: a per-module test run
-# renames the step after its branch, and the CA to adopt keeps the name the net step gave it.
-ca_name: "{{ .config.prefix }}-net-{{ .module.name }}-root-ca"
+# A literal rather than a name derived from the prefix, because the plain biz-net-pca-root-ca is
+# taken by the CA this one replaces. The salt is the same convention modules/oracle/pca follows
+# when name_salt is on.
+ca_name: "biz-net-pca-root-ca-3pbbwkcu"
