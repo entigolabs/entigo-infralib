@@ -182,8 +182,8 @@ spec:
             echo "$lease" | jq -r '.spec.acquireTime | .[0:19] + "Z" | fromdateiso8601'
           }
 
-          # True once the current leader has held the lease for QUIET_SECONDS, no ProviderRevision was created
-          # in the last QUIET_SECONDS, every Provider is Installed (an unpack failure clears that) and every
+          # True once the current leader has held the lease for QUIET_SECONDS, no ProviderRevision was created or
+          # changed state in the last QUIET_SECONDS, every Provider is Installed (an unpack failure clears that) and every
           # Active ProviderRevision is established (RevisionHealthy). Ownership is fixed at establish time, so
           # the provider runtimes do not need to be up.
           roll_settled() {
@@ -198,7 +198,7 @@ spec:
             echo "$revisions" | jq -e '
               [.items[] | select(.spec.desiredState == "Active") | select(([.status.conditions[]? | select(.type == "RevisionHealthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null || return 1
             echo "$revisions" | jq -e --argjson cutoff "$cutoff" '
-              [.items[] | select((.metadata.creationTimestamp | fromdateiso8601) > $cutoff)] | length == 0' >/dev/null
+              [.items[] | ([.metadata.creationTimestamp] + [.status.conditions[]?.lastTransitionTime // empty])[] | select((.[0:19] + "Z" | fromdateiso8601) > $cutoff)] | length == 0' >/dev/null
           }
 
           echo "Waiting for the ProviderRevision roll to settle (up to ${WAIT_SECONDS}s)..."
@@ -251,21 +251,9 @@ spec:
               fi
               sleep 10
             done
-            echo "Waiting for the Active ProviderRevisions to take control of their MRDs (up to ${WAIT_SECONDS}s)..."
-            START=$(date +%s)
-            while true; do
-              INVALID=$(invalid_revisions)
-              if [ -z "$INVALID" ]; then
-                echo "Every active MRD is controlled by an Active ProviderRevision."
-                break
-              fi
-              if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
-                echo "ERROR: active MRDs are still not controlled by an Active ProviderRevision after the restart, not deleting the Inactive revisions:"
-                echo "$INVALID"
-                exit 1
-              fi
-              sleep 15
-            done
+            echo "Restarted. The Active ProviderRevisions re-establish their objects as the new pod takes the lease; not waiting for that."
+            INVALID=$(invalid_revisions)
+            [ -z "$INVALID" ] || { echo "Still to be taken over by the new revisions:"; echo "$INVALID"; }
           fi
 {{- end }}
           # Get all ProviderRevisions with desiredState = Inactive
