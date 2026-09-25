@@ -858,8 +858,3 @@ output "vpc_endpoints" {
   description = "Map of VPC endpoint IDs by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs)"
   value       = { for k, v in try(module.vpc_endpoints[0].endpoints, {}) : k => v.id }
 }
-
-output "vpc_endpoint_security_group_id" {
-  description = "ID of the security group attached to the interface VPC endpoints"
-  value       = try(module.vpc_endpoints[0].security_group_id, null)
-}

@@ -103,7 +103,6 @@ func testTerraformVpcBiz(t *testing.T) {
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
-	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_endpoint_security_group_id"), "vpc_endpoint_security_group_id was not returned")
 	assert.Contains(t, getEndpointPolicy(t, endpoints["efs"]), "CustomEfsPolicy", "Custom efs endpoint policy was not applied")
 	for key, action := range map[string]string{"s3": "s3:*", "ecr_api": "ecr:*", "ecr_dkr": "ecr:*", "ec2": "ec2:*", "sts": "sts:*"} {
 		assertServicePolicy(t, getEndpointPolicy(t, endpoints[key]), key, action)
