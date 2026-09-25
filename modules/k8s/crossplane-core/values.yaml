@@ -230,7 +230,16 @@ job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.22.18"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: false
+  # -- Delete Inactive ProviderRevisions after a sync.
+  deleteInactiveProviderRevisions: true
+  # -- Before deleting Inactive ProviderRevisions, wait for the revision roll to settle and restart the crossplane
+  # deployment when an Active revision came up with a truncated status.objectRefs (package fetch timed out, see
+  # crossplane/crossplane#7817). Only used when deleteInactiveProviderRevisions is true.
+  restartOnInvalidProviderRevisions: true
+  # -- How long to wait for the roll to settle, for the restarted deployment, and for the revisions to become valid (each).
+  invalidProviderRevisionsWaitSeconds: 900
+  # -- Quiet period: how long after an invalid revision is seen (or after the last revision was created) before acting.
+  invalidProviderRevisionsSettleSeconds: 60
   deleteInactiveFunctionRevisions: false
 
 imageConfigs:

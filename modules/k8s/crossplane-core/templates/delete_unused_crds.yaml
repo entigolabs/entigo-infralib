@@ -13,6 +13,9 @@ rules:
 - apiGroups: ["pkg.crossplane.io"]
   resources: ["providerrevisions", "functionrevisions"]
   verbs: ["*"]
+- apiGroups: ["pkg.crossplane.io"]
+  resources: ["providers"]
+  verbs: ["get", "list"]
 - apiGroups: ["apiextensions.crossplane.io"]
   resources: ["managedresourceactivationpolicies", "managedresourcedefinitions"]
   verbs: ["*"]
@@ -35,6 +38,31 @@ roleRef:
   kind: ClusterRole
   name: {{ .Release.Name }}-cleanup
   apiGroup: rbac.authorization.k8s.io
+{{- if and .Values.job.deleteInactiveProviderRevisions .Values.job.restartOnInvalidProviderRevisions }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-cleanup
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  resourceNames: ["crossplane"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-cleanup
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-cleanup
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-cleanup
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -44,7 +72,11 @@ metadata:
     argocd.argoproj.io/sync-wave: "10"
     kube-score/ignore: pod-networkpolicy
 spec:
+{{- if and .Values.job.deleteInactiveProviderRevisions .Values.job.restartOnInvalidProviderRevisions }}
+  activeDeadlineSeconds: {{ add (mul 2 (.Values.job.invalidProviderRevisionsWaitSeconds | default 900)) 900 }}
+{{- else }}
   activeDeadlineSeconds: 600
+{{- end }}
   parallelism: 1
   completions: 1
   template:
@@ -92,6 +124,123 @@ spec:
         - |
           #!/bin/bash
 {{- if .Values.job.deleteInactiveProviderRevisions | default false }}
+{{- if .Values.job.restartOnInvalidProviderRevisions | default false }}
+          # Crossplane can mark a ProviderRevision Healthy with a truncated
+          # status.objectRefs when the package fetch times out mid-stream (every
+          # package re-fetches at once on a Crossplane upgrade, see
+          # crossplane/crossplane#7817). Such a revision never takes control of
+          # the objects missing from its list: SafeStart providers stay scaled to
+          # zero and the rbac-manager ClusterRoles miss API groups. The Inactive
+          # revisions must not be deleted while that is the case, because their
+          # ClusterRoles are what keeps the cluster working. So: wait for the
+          # revision roll to settle, restart the crossplane deployment if any
+          # revision is invalid (every Active revision re-parses its package on
+          # start), wait for them to become valid, and only then clean up.
+          NAMESPACE="{{ .Release.Namespace }}"
+          WAIT_SECONDS={{ .Values.job.invalidProviderRevisionsWaitSeconds | default 900 }}
+          SETTLE_SECONDS={{ .Values.job.invalidProviderRevisionsSettleSeconds | default 60 }}
+
+          # Prints one line per invalid revision, nothing when all are valid.
+          invalid_revisions() {
+            local revisions mrds
+            revisions=$(kubectl get providerrevisions.pkg.crossplane.io -o json)
+            mrds=$(kubectl get managedresourcedefinitions.apiextensions.crossplane.io -o json)
+            # An Active revision that lists fewer objects than the Inactive revision it replaced.
+            echo "$revisions" | jq -r '
+              [.items[] | {p: .metadata.labels["pkg.crossplane.io/package"], s: .spec.desiredState, n: (.status.objectRefs // [] | length), name: .metadata.name}]
+              | group_by(.p)
+              | .[]
+              | select(any(.[]; .s == "Active") and any(.[]; .s == "Inactive"))
+              | (map(select(.s == "Active"))[0]) as $a
+              | (map(select(.s == "Inactive")) | map(.n) | max) as $old
+              | select($a.n < $old)
+              | "\($a.name) lists \($a.n) objects, previous revision listed \($old)"'
+            # An Active MRD still controlled by an Inactive revision (this is what keeps a SafeStart provider at 0 replicas).
+            echo "$mrds" | jq -r --argjson inactive "$(echo "$revisions" | jq '[.items[] | select(.spec.desiredState == "Inactive") | .metadata.name]')" '
+              .items[]
+              | select(.spec.state == "Active")
+              | .metadata.name as $mrd
+              | (.metadata.ownerReferences // [])[]
+              | select(.controller == true and .kind == "ProviderRevision" and (.name as $n | $inactive | index($n)))
+              | "\(.name) still controls active MRD \($mrd)"'
+          }
+
+          # True once every Provider reports Healthy=True and no ProviderRevision was created in the last SETTLE_SECONDS.
+          roll_settled() {
+            local cutoff
+            cutoff=$(( $(date +%s) - SETTLE_SECONDS ))
+            kubectl get providers.pkg.crossplane.io -o json | jq -e '
+              [.items[] | select(([.status.conditions[]? | select(.type == "Healthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null \
+            && kubectl get providerrevisions.pkg.crossplane.io -o json | jq -e --argjson cutoff "$cutoff" '
+              [.items[] | select((.metadata.creationTimestamp | fromdateiso8601) > $cutoff)] | length == 0' >/dev/null
+          }
+
+          echo "Waiting for the ProviderRevision roll to settle (up to ${WAIT_SECONDS}s)..."
+          START=$(date +%s)
+          sleep "$SETTLE_SECONDS"
+          INVALID=""
+          while true; do
+            INVALID=$(invalid_revisions)
+            if [ -n "$INVALID" ]; then
+              echo "Invalid ProviderRevisions detected, waiting ${SETTLE_SECONDS}s for the rest of the roll to land:"
+              echo "$INVALID"
+              sleep "$SETTLE_SECONDS"
+              INVALID=$(invalid_revisions)
+              break
+            fi
+            if roll_settled; then
+              echo "All Providers are Healthy and no new ProviderRevisions appeared in the last ${SETTLE_SECONDS}s."
+              break
+            fi
+            if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
+              echo "WARNING: Providers did not all become Healthy within ${WAIT_SECONDS}s, continuing with what is there:"
+              kubectl get providers.pkg.crossplane.io
+              break
+            fi
+            sleep 15
+          done
+
+          if [ -z "$INVALID" ]; then
+            echo "No invalid ProviderRevisions found, no restart needed."
+          else
+            echo "Invalid ProviderRevisions after settling, restarting the crossplane deployment:"
+            echo "$INVALID"
+            kubectl -n "$NAMESPACE" rollout restart deployment crossplane
+            echo "Waiting for the crossplane deployment to roll out..."
+            START=$(date +%s)
+            while true; do
+              if kubectl -n "$NAMESPACE" get deployment crossplane -o json | jq -e '
+                  .status.observedGeneration >= .metadata.generation
+                  and .status.updatedReplicas == .spec.replicas
+                  and .status.availableReplicas == .spec.replicas
+                  and ((.status.unavailableReplicas // 0) == 0)' >/dev/null; then
+                echo "crossplane deployment rolled out."
+                break
+              fi
+              if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
+                echo "ERROR: crossplane deployment did not roll out within ${WAIT_SECONDS}s."
+                kubectl -n "$NAMESPACE" get deployment crossplane
+                exit 1
+              fi
+              sleep 10
+            done
+            echo "Waiting for the Active ProviderRevisions to re-establish their objects (up to ${WAIT_SECONDS}s)..."
+            START=$(date +%s)
+            while true; do
+              INVALID=$(invalid_revisions)
+              if [ -z "$INVALID" ]; then
+                echo "All ProviderRevisions are valid."
+                break
+              fi
+              if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
+                echo "ERROR: ProviderRevisions are still invalid after the restart, not deleting the Inactive revisions:"
+                echo "$INVALID"
+                exit 1
+              fi
+              sleep 15
+            done
+          fi
+{{- end }}
           # Get all ProviderRevisions with desiredState = Inactive
           INACTIVE_REVISIONS=$(kubectl get providerrevisions.pkg.crossplane.io -o json | \
           jq -r '.items[] | select(.spec.desiredState == "Inactive") | .metadata.name')
