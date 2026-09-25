@@ -31,11 +31,14 @@ accounts:
         type: In
         values:
         - ocid1.vault.oc1.eu-frankfurt-1.envk2olmaaesq.abtheljtcbual5hyzu2ocm5dromy3me6n4ryjgq2uw32d5qegafa7z4o67uq
+        - ocid1.vault.oc1.eu-frankfurt-1.envljyqqaad4s.abtheljrcfnm5irztmbva6j2gh4of3kiybutyj2ivub6ror5ncvkdlvg6nrq
+        - ocid1.vault.oc1.eu-frankfurt-1.envk2qdlaag2y.abtheljrpbrh2tlu4cgpopjpayo6huii5grp44yhoje66bdkrhoowa6z7nzq
       OCIKey:
       - property: ID
         type: In
         values:
         - ocid1.key.oc1.eu-frankfurt-1.envk2olmaaesq.abtheljt4srb5zld776mk2mulaeolptjidkueqtg3x7tqz7j6figmsjzuzyq
+        - ocid1.key.oc1.eu-frankfurt-1.envljyqqaad4s.abtheljt7piecm7cy5wzyimxfeikni2kldmgjtl5thsqih2dv3jipuqjfhtq
       OCICertificateAuthority:
       - property: ID
         type: In
