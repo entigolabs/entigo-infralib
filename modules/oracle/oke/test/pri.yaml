@@ -2,7 +2,6 @@
 # OCI implementation to put it inside one.
 is_public_ip_enabled: true
 
-# Non-default cluster-internal ranges. Both are virtual and per-cluster, so they neither
-# consume VCN address space nor have to differ from another deployment's.
-pods_cidr: "10.245.0.0/16"
+# A non-default service range. Kubernetes ClusterIPs are allocated from it and it is virtual,
+# so unlike the pod addresses it takes no VCN space and comes from no subnet.
 services_cidr: "10.97.0.0/16"
