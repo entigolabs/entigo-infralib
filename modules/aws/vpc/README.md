@@ -137,3 +137,66 @@ If you hit this with a specific client, either disable DNS64 (`subnet_enable_dns
 
 **DNS64 + NAT64 (`subnet_enable_dns64`, default: `false`)**
 DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances with IPv6 addresses, or a dual-stack EKS cluster) that need to reach IPv4-only destinations. AWS NAT Gateway supports NAT64 natively — when `subnet_enable_dns64 = true` and a NAT Gateway is present, this module automatically creates a `64:ff9b::/96` route via the NAT Gateway to handle the translation. IPv4-mode EKS pods have no IPv6 source address and cannot use this path.
+
+### VPC endpoint policies ###
+
+Every endpoint gets a default policy scoped to its own service instead of the AWS default `Action: *`:
+
+| Endpoint key | Default actions |
+|---|---|
+| `s3` (gateway), `s3e` (interface) | `s3:*` |
+| `ecr_api`, `ecr_dkr` | `ecr:*` |
+| `ec2` | `ec2:*` |
+| `sts` | `sts:*` |
+| `efs` | `elasticfilesystem:*` |
+
+The default policy allows any principal (`Principal: *`), so access is the same as with the AWS default. IAM policies still decide what a caller can do.
+
+To restrict an endpoint further set `endpoint_policies`, a map of endpoint key to JSON policy. It replaces the default policy for that endpoint. A multi-line value is passed to terraform as an expression, so use `jsonencode()`.
+
+Example that only allows principals from this account or organization on the STS endpoint:
+```
+    modules:
+      - name: vpc
+        source: aws/vpc
+        inputs:
+          endpoint_policies: |
+            {
+              sts = jsonencode({
+                Version = "2012-10-17"
+                Statement = [
+                  {
+                    Sid       = "TrustedAccount"
+                    Effect    = "Allow"
+                    Principal = "*"
+                    Action    = "sts:*"
+                    Resource  = "*"
+                    Condition = { StringEquals = { "aws:PrincipalAccount" = "111111111111" } }
+                  },
+                  {
+                    Sid       = "TrustedOrganization"
+                    Effect    = "Allow"
+                    Principal = "*"
+                    Action    = "sts:*"
+                    Resource  = "*"
+                    Condition = { StringEquals = { "aws:PrincipalOrgID" = "o-a1b2c3d4e5" } }
+                  },
+                  {
+                    Sid       = "WebIdentity"
+                    Effect    = "Allow"
+                    Principal = "*"
+                    Action    = ["sts:AssumeRoleWithWebIdentity", "sts:AssumeRoleWithSAML"]
+                    Resource  = "*"
+                    Condition = { StringEquals = { "aws:ResourceAccount" = "111111111111" } }
+                  }
+                ]
+              })
+            }
+```
+Notes for writing restrictive policies:
+- Use the service prefix in actions (`s3:*`) or list actions, never a bare `*`.
+- `aws:PrincipalOrgID` needs the organization ID (`o-...`). In a standalone account it never matches, so keep an `aws:PrincipalAccount` statement too. Conditions in one statement are ANDed, so account OR organization needs two statements.
+- STS: `AssumeRoleWithWebIdentity` (IRSA) and `AssumeRoleWithSAML` have no caller account, allow them with `aws:ResourceAccount`.
+- S3: ECR image layers (`prod-<region>-starport-layer-bucket`) and Amazon Linux repositories (`al2023-repos-<region>-*`, `amazonlinux-2-repos-<region>`) are AWS owned buckets not read with your credentials. Allow `s3:GetObject` on them without principal conditions or image pulls and `dnf` break.
+- A too strict policy cuts traffic immediately, roll changes out on a dev environment first.
+- Removing a key from `endpoint_policies` puts the default service scoped policy back.

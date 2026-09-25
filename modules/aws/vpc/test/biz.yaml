@@ -19,3 +19,16 @@ create_endpoint_sts: true
 create_endpoint_efs: true
 endpoints_sg_extra_rules: |
   ["10.0.0.0/8"]
+endpoint_policies: |
+  {
+    efs = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Sid       = "CustomEfsPolicy"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "elasticfilesystem:*"
+        Resource  = "*"
+      }]
+    })
+  }
