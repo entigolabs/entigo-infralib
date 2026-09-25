@@ -155,13 +155,16 @@ spec:
               | "active MRD \($mrd) is controlled by \($ctrl.name // "no ProviderRevision")"'
           }
 
-          # True once every Provider reports Healthy=True and no ProviderRevision was created in the last SETTLE_SECONDS.
+          # True once every Active ProviderRevision has been established (RevisionHealthy=True) and no
+          # ProviderRevision was created in the last SETTLE_SECONDS. Ownership is fixed at establish time,
+          # so there is no need to wait for the provider runtimes to come up as well.
           roll_settled() {
-            local cutoff
+            local cutoff revisions
             cutoff=$(( $(date +%s) - SETTLE_SECONDS ))
-            kubectl get providers.pkg.crossplane.io -o json | jq -e '
-              [.items[] | select(([.status.conditions[]? | select(.type == "Healthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null \
-            && kubectl get providerrevisions.pkg.crossplane.io -o json | jq -e --argjson cutoff "$cutoff" '
+            revisions=$(kubectl get providerrevisions.pkg.crossplane.io -o json)
+            echo "$revisions" | jq -e '
+              [.items[] | select(.spec.desiredState == "Active") | select(([.status.conditions[]? | select(.type == "RevisionHealthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null \
+            && echo "$revisions" | jq -e --argjson cutoff "$cutoff" '
               [.items[] | select((.metadata.creationTimestamp | fromdateiso8601) > $cutoff)] | length == 0' >/dev/null
           }
 
@@ -179,15 +182,15 @@ spec:
               break
             fi
             if roll_settled; then
-              echo "All Providers are Healthy and no new ProviderRevisions appeared in the last ${SETTLE_SECONDS}s."
+              echo "All Active ProviderRevisions are established and no new ProviderRevisions appeared in the last ${SETTLE_SECONDS}s."
               break
             fi
             if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
-              echo "WARNING: Providers did not all become Healthy within ${WAIT_SECONDS}s, continuing with what is there:"
-              kubectl get providers.pkg.crossplane.io
+              echo "WARNING: not every Active ProviderRevision was established within ${WAIT_SECONDS}s, continuing with what is there:"
+              kubectl get providerrevisions.pkg.crossplane.io
               break
             fi
-            sleep 15
+            sleep 10
           done
 
           if [ -z "$INVALID" ]; then
