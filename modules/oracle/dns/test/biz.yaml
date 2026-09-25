@@ -1,20 +1,22 @@
-# Two public domains rather than one, so the pub_*/int_* selection and the map outputs are
-# actually exercised: with a single domain every default falls out of a shortcut and the
-# multi-zone logic is never reached.
+# One public zone and one private, so the pub_*/int_* selection and the map outputs are both
+# exercised: with a single domain every default falls out of a shortcut and the multi-zone
+# logic is never reached. Neither names itself the default - the module infers that for the
+# only domain of each kind.
 #
-# Both are public and neither creates a certificate. A private zone needs a VCN, and a
-# certificate needs a certificate authority from modules/oracle/pca whose HSM key is billed
-# and cannot be deleted on the spot - neither is available to a harness that applies one
-# module at a time. The zones and the default selection are what this test covers.
+# parent_zone_id is oci.infralib.entigo.io, created by hand and kept by oci-nuke-config.yml.
+# The public zone is a child of it and the module writes the NS delegation into it on every
+# rebuild, so a torn-down zone resolves again once recreated. The private zone is resolvable
+# only inside the VCN, is never delegated, and takes its vcn_id from modules/oracle/vpc.
+#
+# Both issue a certificate from the authority modules/oracle/pca adopts.
 domains: |
   {
     "public" = {
-      domain_name        = "biz.biz.internal.test"
-      create_certificate = false
-      default_public     = true
+      domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
+      parent_zone_id = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
     },
-    "secondary" = {
-      domain_name        = "biz2.biz.internal.test"
-      create_certificate = false
+    "private" = {
+      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.oci.infralib.entigo.io"
+      private     = true
     }
   }

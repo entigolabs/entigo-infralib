@@ -1,0 +1,4 @@
+node_count: 1
+# Ubuntu rather than the OL8 default, so a second OS family's image lookup is exercised on a
+# node that actually boots - the cluster's own main and mon pools default to no nodes at all.
+node_pool_os_type: "UBUNTU"

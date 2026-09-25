@@ -1,0 +1,11 @@
+# One public zone, delegated from oci.infralib.entigo.io the same way the biz zones are. With a
+# single domain the module infers it as the public default, so no default_public is needed.
+#
+# The certificate is issued by the authority modules/oracle/pca adopts for pri.
+domains: |
+  {
+    "public" = {
+      domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
+      parent_zone_id = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
+    }
+  }
