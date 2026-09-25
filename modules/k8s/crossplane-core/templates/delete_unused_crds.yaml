@@ -129,40 +129,30 @@ spec:
           # status.objectRefs when the package fetch times out mid-stream (every
           # package re-fetches at once on a Crossplane upgrade, see
           # crossplane/crossplane#7817). Such a revision never takes control of
-          # the objects missing from its list: SafeStart providers stay scaled to
-          # zero and the rbac-manager ClusterRoles miss API groups. The Inactive
-          # revisions must not be deleted while that is the case, because their
+          # the MRDs missing from its list, so they stay controlled by the old
+          # revision: SafeStart providers stay scaled to zero and the
+          # rbac-manager ClusterRoles miss API groups. The Inactive revisions
+          # must not be deleted while that is the case, because their
           # ClusterRoles are what keeps the cluster working. So: wait for the
           # revision roll to settle, restart the crossplane deployment if any
-          # revision is invalid (every Active revision re-parses its package on
-          # start), wait for them to become valid, and only then clean up.
+          # Active MRD is not controlled by an Active revision (every Active
+          # revision re-parses its package on start), wait for that to clear,
+          # and only then clean up.
           NAMESPACE="{{ .Release.Namespace }}"
           WAIT_SECONDS={{ .Values.job.invalidProviderRevisionsWaitSeconds | default 900 }}
           SETTLE_SECONDS={{ .Values.job.invalidProviderRevisionsSettleSeconds | default 60 }}
 
-          # Prints one line per invalid revision, nothing when all are valid.
+          # Prints one line per Active MRD whose controller is not an Active ProviderRevision, nothing when all is well.
           invalid_revisions() {
-            local revisions mrds
-            revisions=$(kubectl get providerrevisions.pkg.crossplane.io -o json)
-            mrds=$(kubectl get managedresourcedefinitions.apiextensions.crossplane.io -o json)
-            # An Active revision that lists fewer objects than the Inactive revision it replaced.
-            echo "$revisions" | jq -r '
-              [.items[] | {p: .metadata.labels["pkg.crossplane.io/package"], s: .spec.desiredState, n: (.status.objectRefs // [] | length), name: .metadata.name}]
-              | group_by(.p)
-              | .[]
-              | select(any(.[]; .s == "Active") and any(.[]; .s == "Inactive"))
-              | (map(select(.s == "Active"))[0]) as $a
-              | (map(select(.s == "Inactive")) | map(.n) | max) as $old
-              | select($a.n < $old)
-              | "\($a.name) lists \($a.n) objects, previous revision listed \($old)"'
-            # An Active MRD still controlled by an Inactive revision (this is what keeps a SafeStart provider at 0 replicas).
-            echo "$mrds" | jq -r --argjson inactive "$(echo "$revisions" | jq '[.items[] | select(.spec.desiredState == "Inactive") | .metadata.name]')" '
+            local active
+            active=$(kubectl get providerrevisions.pkg.crossplane.io -o json | jq '[.items[] | select(.spec.desiredState == "Active") | .metadata.name]')
+            kubectl get managedresourcedefinitions.apiextensions.crossplane.io -o json | jq -r --argjson active "$active" '
               .items[]
               | select(.spec.state == "Active")
               | .metadata.name as $mrd
-              | (.metadata.ownerReferences // [])[]
-              | select(.controller == true and .kind == "ProviderRevision" and (.name as $n | $inactive | index($n)))
-              | "\(.name) still controls active MRD \($mrd)"'
+              | ([.metadata.ownerReferences[]? | select(.controller == true and .kind == "ProviderRevision")] | first) as $ctrl
+              | select($ctrl == null or (($active | index($ctrl.name)) == null))
+              | "active MRD \($mrd) is controlled by \($ctrl.name // "no ProviderRevision")"'
           }
 
           # True once every Provider reports Healthy=True and no ProviderRevision was created in the last SETTLE_SECONDS.
@@ -182,7 +172,7 @@ spec:
           while true; do
             INVALID=$(invalid_revisions)
             if [ -n "$INVALID" ]; then
-              echo "Invalid ProviderRevisions detected, waiting ${SETTLE_SECONDS}s for the rest of the roll to land:"
+              echo "Active MRDs not controlled by an Active ProviderRevision, waiting ${SETTLE_SECONDS}s for the rest of the roll to land:"
               echo "$INVALID"
               sleep "$SETTLE_SECONDS"
               INVALID=$(invalid_revisions)
@@ -201,9 +191,9 @@ spec:
           done
 
           if [ -z "$INVALID" ]; then
-            echo "No invalid ProviderRevisions found, no restart needed."
+            echo "Every active MRD is controlled by an Active ProviderRevision, no restart needed."
           else
-            echo "Invalid ProviderRevisions after settling, restarting the crossplane deployment:"
+            echo "Still not controlled after settling, restarting the crossplane deployment:"
             echo "$INVALID"
             kubectl -n "$NAMESPACE" rollout restart deployment crossplane
             echo "Waiting for the crossplane deployment to roll out..."
@@ -224,16 +214,16 @@ spec:
               fi
               sleep 10
             done
-            echo "Waiting for the Active ProviderRevisions to re-establish their objects (up to ${WAIT_SECONDS}s)..."
+            echo "Waiting for the Active ProviderRevisions to take control of their MRDs (up to ${WAIT_SECONDS}s)..."
             START=$(date +%s)
             while true; do
               INVALID=$(invalid_revisions)
               if [ -z "$INVALID" ]; then
-                echo "All ProviderRevisions are valid."
+                echo "Every active MRD is controlled by an Active ProviderRevision."
                 break
               fi
               if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
-                echo "ERROR: ProviderRevisions are still invalid after the restart, not deleting the Inactive revisions:"
+                echo "ERROR: active MRDs are still not controlled by an Active ProviderRevision after the restart, not deleting the Inactive revisions:"
                 echo "$INVALID"
                 exit 1
               fi
