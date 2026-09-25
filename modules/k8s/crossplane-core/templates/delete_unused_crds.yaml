@@ -205,16 +205,15 @@ spec:
           START=$(date +%s)
           INVALID=""
           while true; do
-            INVALID=$(invalid_revisions)
-            if [ -n "$INVALID" ]; then
-              echo "Active MRDs not controlled by an Active ProviderRevision, waiting ${SETTLE_SECONDS}s for the rest of the roll to land:"
-              echo "$INVALID"
-              sleep "$SETTLE_SECONDS"
-              INVALID=$(invalid_revisions)
-              break
-            fi
             if roll_settled; then
               echo "Leader stable, every Provider installed, every Active ProviderRevision established, nothing new in the last ${QUIET_SECONDS}s."
+              INVALID=$(invalid_revisions)
+              if [ -n "$INVALID" ]; then
+                echo "Active MRDs not controlled by an Active ProviderRevision, waiting ${SETTLE_SECONDS}s before acting:"
+                echo "$INVALID"
+                sleep "$SETTLE_SECONDS"
+                INVALID=$(invalid_revisions)
+              fi
               break
             fi
             if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
@@ -222,6 +221,7 @@ spec:
               kubectl -n "$NAMESPACE" get lease.coordination.k8s.io crossplane-leader-election-core -o jsonpath='{.spec.holderIdentity} {.spec.acquireTime}{"\n"}'
               kubectl get providers.pkg.crossplane.io
               kubectl get providerrevisions.pkg.crossplane.io
+              INVALID=$(invalid_revisions)
               break
             fi
             sleep 10
