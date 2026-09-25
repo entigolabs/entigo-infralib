@@ -230,7 +230,20 @@ job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.22.18"
   deleteUnusedCrds: false
-  deleteInactiveProviderRevisions: false
+  # -- Delete Inactive ProviderRevisions after a sync.
+  deleteInactiveProviderRevisions: true
+  # -- Before deleting Inactive ProviderRevisions, wait for the revision roll to settle and restart the crossplane
+  # deployment when an active ManagedResourceDefinition is not controlled by an Active ProviderRevision (the revision
+  # came up with a truncated package because the fetch timed out, see crossplane/crossplane#7817). Only used when
+  # deleteInactiveProviderRevisions is true.
+  restartOnInvalidProviderRevisions: true
+  # -- How long to wait for the roll to settle, for the restarted deployment, and for the revisions to become valid (each).
+  invalidProviderRevisionsWaitSeconds: 900
+  # -- How long after an orphaned ManagedResourceDefinition is seen before restarting, so the rest of the roll lands.
+  invalidProviderRevisionsSettleSeconds: 60
+  # -- The roll counts as settled once the crossplane leader has held its lease this long and no ProviderRevision was
+  # created for this long. Keep it above Crossplane's 1 minute Provider reconcile timeout.
+  providerRevisionRollQuietSeconds: 120
   deleteInactiveFunctionRevisions: false
 
 imageConfigs:
