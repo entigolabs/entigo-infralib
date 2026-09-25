@@ -32,3 +32,4 @@ endpoint_policies: |
       }]
     })
   }
+endpoint_policy_org_id: "o-cipguslp2x"

@@ -6,3 +6,4 @@ intra_subnets: |
   ["10.24.4.0/23", "10.24.6.0/23"]
 database_subnets: |
   ["10.24.14.0/24", "10.24.15.0/24"]
+endpoint_policy_org_id: ""

@@ -105,8 +105,12 @@ func testTerraformVpcBiz(t *testing.T) {
 	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
 	assert.Contains(t, getEndpointPolicy(t, endpoints["efs"]), "CustomEfsPolicy", "Custom efs endpoint policy was not applied")
 	for key, action := range map[string]string{"s3": "s3:*", "ecr_api": "ecr:*", "ecr_dkr": "ecr:*", "ec2": "ec2:*", "sts": "sts:*"} {
-		assertServicePolicy(t, getEndpointPolicy(t, endpoints[key]), key, action)
+		policy := getEndpointPolicy(t, endpoints[key])
+		assertServicePolicy(t, policy, key, action)
+		assert.Contains(t, policy, "o-cipguslp2x", "%s endpoint policy must trust the organization", key)
 	}
+	assert.Contains(t, getEndpointPolicy(t, endpoints["s3"]), "starport-layer-bucket", "s3 endpoint policy must allow the ECR layer bucket")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["sts"]), "sts:AssumeRoleWithWebIdentity", "sts endpoint policy must allow IRSA")
 }
 
 func testTerraformVpcPri(t *testing.T) {
@@ -181,7 +185,9 @@ func testTerraformVpcPri(t *testing.T) {
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
-	assertServicePolicy(t, getEndpointPolicy(t, endpoints["s3"]), "s3", "s3:*")
+	s3Policy := getEndpointPolicy(t, endpoints["s3"])
+	assertServicePolicy(t, s3Policy, "s3", "s3:*")
+	assert.NotContains(t, s3Policy, "aws:PrincipalOrgID", "s3 endpoint policy must not have an organization statement without endpoint_policy_org_id")
 }
 
 func testTerraformVpcSpoke(t *testing.T) {
@@ -280,6 +286,7 @@ func testTerraformVpcSpoke(t *testing.T) {
 
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"sts"}, keys(endpoints), "Wrong vpc_endpoints returned, sts only must still create the endpoints module")
 	assertServicePolicy(t, getEndpointPolicy(t, endpoints["sts"]), "sts", "sts:*")
@@ -313,5 +320,6 @@ func getEndpointPolicy(t *testing.T, endpointId string) string {
 
 func assertServicePolicy(t *testing.T, policy string, key string, action string) {
 	assert.Contains(t, policy, action, "Wrong actions in %s endpoint policy", key)
-	assert.NotRegexp(t, `"Action"\s*:\s*"\*"`, policy, "%s endpoint policy must not allow bare * action", key)
+	assert.Contains(t, policy, "aws:PrincipalAccount", "%s endpoint policy must only trust the current account", key)
+	assert.NotRegexp(t, `"Action"\s*:\s*(\[\s*)?"\*"`, policy, "%s endpoint policy must not allow bare * action", key)
 }
