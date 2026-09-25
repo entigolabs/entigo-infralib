@@ -49,6 +49,13 @@ rules:
   resources: ["deployments"]
   resourceNames: ["crossplane"]
   verbs: ["get", "patch"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  resourceNames: ["crossplane-leader-election-core"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -141,6 +148,7 @@ spec:
           NAMESPACE="{{ .Release.Namespace }}"
           WAIT_SECONDS={{ .Values.job.invalidProviderRevisionsWaitSeconds | default 900 }}
           SETTLE_SECONDS={{ .Values.job.invalidProviderRevisionsSettleSeconds | default 60 }}
+          QUIET_SECONDS={{ .Values.job.providerRevisionRollQuietSeconds | default 120 }}
 
           # Prints one line per Active MRD whose controller is not an Active ProviderRevision, nothing when all is well.
           invalid_revisions() {
@@ -155,22 +163,46 @@ spec:
               | "active MRD \($mrd) is controlled by \($ctrl.name // "no ProviderRevision")"'
           }
 
-          # True once every Active ProviderRevision has been established (RevisionHealthy=True) and no
-          # ProviderRevision was created in the last SETTLE_SECONDS. Ownership is fixed at establish time,
-          # so there is no need to wait for the provider runtimes to come up as well.
+          # Epoch seconds at which the current crossplane leader took the lease, or empty while the leader is
+          # not a running, non-terminating pod of a fully rolled-out deployment. After an upgrade the new pod
+          # can only start rolling revisions once it holds the lease, which took 95s on biz on 2026-09-25.
+          leader_since() {
+            kubectl -n "$NAMESPACE" get deployment crossplane -o json | jq -e '
+              .status.observedGeneration >= .metadata.generation
+              and .status.updatedReplicas == .spec.replicas
+              and .status.availableReplicas == .spec.replicas
+              and ((.status.unavailableReplicas // 0) == 0)' >/dev/null || return 0
+            local lease holder pod
+            lease=$(kubectl -n "$NAMESPACE" get lease.coordination.k8s.io crossplane-leader-election-core -o json 2>/dev/null) || return 0
+            holder=$(echo "$lease" | jq -r '.spec.holderIdentity // ""')
+            pod="${holder%%_*}"
+            [ -n "$pod" ] || return 0
+            kubectl -n "$NAMESPACE" get pod "$pod" -o json 2>/dev/null | jq -e '
+              .metadata.deletionTimestamp == null and .status.phase == "Running"' >/dev/null || return 0
+            echo "$lease" | jq -r '.spec.acquireTime | .[0:19] + "Z" | fromdateiso8601'
+          }
+
+          # True once the current leader has held the lease for QUIET_SECONDS, no ProviderRevision was created
+          # in the last QUIET_SECONDS, every Provider is Installed (an unpack failure clears that) and every
+          # Active ProviderRevision is established (RevisionHealthy). Ownership is fixed at establish time, so
+          # the provider runtimes do not need to be up.
           roll_settled() {
-            local cutoff revisions
-            cutoff=$(( $(date +%s) - SETTLE_SECONDS ))
+            local now cutoff since revisions
+            now=$(date +%s)
+            cutoff=$(( now - QUIET_SECONDS ))
+            since=$(leader_since)
+            [ -n "$since" ] && [ "$since" -le "$cutoff" ] || return 1
+            kubectl get providers.pkg.crossplane.io -o json | jq -e '
+              [.items[] | select(([.status.conditions[]? | select(.type == "Installed" and .status == "True")] | length) == 0)] | length == 0' >/dev/null || return 1
             revisions=$(kubectl get providerrevisions.pkg.crossplane.io -o json)
             echo "$revisions" | jq -e '
-              [.items[] | select(.spec.desiredState == "Active") | select(([.status.conditions[]? | select(.type == "RevisionHealthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null \
-            && echo "$revisions" | jq -e --argjson cutoff "$cutoff" '
+              [.items[] | select(.spec.desiredState == "Active") | select(([.status.conditions[]? | select(.type == "RevisionHealthy" and .status == "True")] | length) == 0)] | length == 0' >/dev/null || return 1
+            echo "$revisions" | jq -e --argjson cutoff "$cutoff" '
               [.items[] | select((.metadata.creationTimestamp | fromdateiso8601) > $cutoff)] | length == 0' >/dev/null
           }
 
           echo "Waiting for the ProviderRevision roll to settle (up to ${WAIT_SECONDS}s)..."
           START=$(date +%s)
-          sleep "$SETTLE_SECONDS"
           INVALID=""
           while true; do
             INVALID=$(invalid_revisions)
@@ -182,11 +214,13 @@ spec:
               break
             fi
             if roll_settled; then
-              echo "All Active ProviderRevisions are established and no new ProviderRevisions appeared in the last ${SETTLE_SECONDS}s."
+              echo "Leader stable, every Provider installed, every Active ProviderRevision established, nothing new in the last ${QUIET_SECONDS}s."
               break
             fi
             if [ $(( $(date +%s) - START )) -ge "$WAIT_SECONDS" ]; then
-              echo "WARNING: not every Active ProviderRevision was established within ${WAIT_SECONDS}s, continuing with what is there:"
+              echo "WARNING: the roll did not settle within ${WAIT_SECONDS}s, continuing with what is there:"
+              kubectl -n "$NAMESPACE" get lease.coordination.k8s.io crossplane-leader-election-core -o jsonpath='{.spec.holderIdentity} {.spec.acquireTime}{"\n"}'
+              kubectl get providers.pkg.crossplane.io
               kubectl get providerrevisions.pkg.crossplane.io
               break
             fi

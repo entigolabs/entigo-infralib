@@ -239,8 +239,11 @@ job:
   restartOnInvalidProviderRevisions: true
   # -- How long to wait for the roll to settle, for the restarted deployment, and for the revisions to become valid (each).
   invalidProviderRevisionsWaitSeconds: 900
-  # -- Quiet period: how long after an invalid revision is seen (or after the last revision was created) before acting.
+  # -- How long after an orphaned ManagedResourceDefinition is seen before restarting, so the rest of the roll lands.
   invalidProviderRevisionsSettleSeconds: 60
+  # -- The roll counts as settled once the crossplane leader has held its lease this long and no ProviderRevision was
+  # created for this long. Keep it above Crossplane's 1 minute Provider reconcile timeout.
+  providerRevisionRollQuietSeconds: 120
   deleteInactiveFunctionRevisions: false
 
 imageConfigs:
