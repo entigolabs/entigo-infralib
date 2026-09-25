@@ -1,23 +1,23 @@
-# Two public domains rather than one, so the pub_*/int_* selection and the map outputs are
-# actually exercised: with a single domain every default falls out of a shortcut and the
-# multi-zone logic is never reached.
+# One public zone and one private, so the pub_*/int_* selection and the map outputs are both
+# exercised: with a single domain every default falls out of a shortcut and the multi-zone
+# logic is never reached.
 #
-# parent_zone_id is oci.infralib.entigo.io, which is created by hand and kept by
-# oci-nuke-config.yml. Each zone here is a child of it, and the module writes the NS
-# delegation into it on every rebuild, so a torn-down zone resolves again once recreated.
+# parent_zone_id is oci.infralib.entigo.io, created by hand and kept by oci-nuke-config.yml.
+# The public zone is a child of it and the module writes the NS delegation into it on every
+# rebuild, so a torn-down zone resolves again once recreated. The private zone is resolvable
+# only inside the VCN, is never delegated, and takes its vcn_id from modules/oracle/vpc.
 #
-# The public domain issues a certificate from the authority modules/oracle/pca adopts; the
-# secondary one does not, so both paths through create_certificate are covered.
+# Both issue a certificate from the authority modules/oracle/pca adopts.
 domains: |
   {
     "public" = {
-      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
-      parent_zone_id     = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
-      default_public     = true
+      domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.oci.infralib.entigo.io"
+      parent_zone_id = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
+      default_public = true
     },
-    "secondary" = {
-      domain_name        = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-secondary.oci.infralib.entigo.io"
-      parent_zone_id     = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
-      create_certificate = false
+    "private" = {
+      domain_name     = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.oci.infralib.entigo.io"
+      private         = true
+      default_private = true
     }
   }
