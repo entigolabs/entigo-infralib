@@ -140,7 +140,7 @@ DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances 
 
 ### VPC endpoint policies ###
 
-Every endpoint gets a default policy scoped to its own service instead of the AWS default `Action: *`:
+Every endpoint gets a default policy that allows only its own service's actions, instead of the AWS default `Action: *`:
 
 | Endpoint key | Default actions |
 |---|---|
@@ -150,11 +150,9 @@ Every endpoint gets a default policy scoped to its own service instead of the AW
 | `sts` | `sts:*` |
 | `efs` | `elasticfilesystem:*` |
 
-The default policy allows any principal (`Principal: *`), so access is the same as with the AWS default. IAM policies still decide what a caller can do.
+To use your own policy, set `endpoint_policies` (endpoint key => JSON policy). It replaces the default for that endpoint. Use `jsonencode()`, because the agent passes multi-line values to terraform as expressions.
 
-To restrict an endpoint further set `endpoint_policies`, a map of endpoint key to JSON policy. It replaces the default policy for that endpoint. A multi-line value is passed to terraform as an expression, so use `jsonencode()`.
-
-Example that only allows principals from this account or organization on the STS endpoint:
+Example that only allows this account to use the `ecr_api` endpoint:
 ```
     modules:
       - name: vpc
@@ -162,41 +160,19 @@ Example that only allows principals from this account or organization on the STS
         inputs:
           endpoint_policies: |
             {
-              sts = jsonencode({
+              ecr_api = jsonencode({
                 Version = "2012-10-17"
-                Statement = [
-                  {
-                    Sid       = "TrustedAccount"
-                    Effect    = "Allow"
-                    Principal = "*"
-                    Action    = "sts:*"
-                    Resource  = "*"
-                    Condition = { StringEquals = { "aws:PrincipalAccount" = "111111111111" } }
-                  },
-                  {
-                    Sid       = "TrustedOrganization"
-                    Effect    = "Allow"
-                    Principal = "*"
-                    Action    = "sts:*"
-                    Resource  = "*"
-                    Condition = { StringEquals = { "aws:PrincipalOrgID" = "o-a1b2c3d4e5" } }
-                  },
-                  {
-                    Sid       = "WebIdentity"
-                    Effect    = "Allow"
-                    Principal = "*"
-                    Action    = ["sts:AssumeRoleWithWebIdentity", "sts:AssumeRoleWithSAML"]
-                    Resource  = "*"
-                    Condition = { StringEquals = { "aws:ResourceAccount" = "111111111111" } }
-                  }
-                ]
+                Statement = [{
+                  Effect    = "Allow"
+                  Principal = "*"
+                  Action    = "ecr:*"
+                  Resource  = "*"
+                  Condition = { StringEquals = { "aws:PrincipalAccount" = "111111111111" } }
+                }]
               })
             }
 ```
-Notes for writing restrictive policies:
-- Use the service prefix in actions (`s3:*`) or list actions, never a bare `*`.
-- `aws:PrincipalOrgID` needs the organization ID (`o-...`). In a standalone account it never matches, so keep an `aws:PrincipalAccount` statement too. Conditions in one statement are ANDed, so account OR organization needs two statements.
-- STS: `AssumeRoleWithWebIdentity` (IRSA) and `AssumeRoleWithSAML` have no caller account, allow them with `aws:ResourceAccount`.
-- S3: ECR image layers (`prod-<region>-starport-layer-bucket`) and Amazon Linux repositories (`al2023-repos-<region>-*`, `amazonlinux-2-repos-<region>`) are AWS owned buckets not read with your credentials. Allow `s3:GetObject` on them without principal conditions or image pulls and `dnf` break.
-- A too strict policy cuts traffic immediately, roll changes out on a dev environment first.
-- Removing a key from `endpoint_policies` puts the default service scoped policy back.
+Notes:
+- Never use a bare `*` in `Action`.
+- S3: allow `s3:GetObject` on AWS owned buckets (`prod-<region>-starport-layer-bucket`, `al2023-repos-<region>-*`) for any principal, or image pulls and `dnf` break.
+- STS: allow `sts:AssumeRoleWithWebIdentity` with an `aws:ResourceAccount` condition, or IRSA breaks.
