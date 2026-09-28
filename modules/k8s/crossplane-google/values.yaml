@@ -14,3 +14,22 @@ global:
   requiredProviders: ["cloudplatform", "storage", "secretmanager"]
   createObservers: false
   createNamespacedObservers: false
+
+job:
+  image: docker.io/entigolabs/entigo-infralib-kubectl
+  tag: "v1.22.18"
+  # -- Namespace of the crossplane core deployment (the crossplane-core module).
+  crossplaneNamespace: crossplane-system
+  # -- After this module's provider roll, delete the Inactive ProviderRevisions.
+  deleteInactiveProviderRevisions: true
+  # -- Before that, wait for the roll to settle and restart the crossplane deployment when an active
+  # ManagedResourceDefinition is not controlled by an Active ProviderRevision (truncated package fetch, see
+  # crossplane/crossplane#7817). Same flow as the crossplane-core cleanup Job.
+  restartOnInvalidProviderRevisions: true
+  # -- How long to wait for the roll to settle and for the restarted deployment (each).
+  invalidProviderRevisionsWaitSeconds: 900
+  # -- How long after an orphaned ManagedResourceDefinition is seen before restarting.
+  invalidProviderRevisionsSettleSeconds: 60
+  # -- The roll counts as settled once the crossplane leader has held its lease this long and no ProviderRevision
+  # was created or changed state for this long. Keep it above Crossplane's 1 minute Provider reconcile timeout.
+  providerRevisionRollQuietSeconds: 120
