@@ -6,11 +6,21 @@ on:
       - main
     paths:
       - 'images/test/**'
+      # The image caches the Go modules of the shared test library, so a
+      # dependency change there must rebuild it or every module test downloads.
+      - 'common/go.mod'
+      - 'common/go.sum'
+      - 'common/**/*.go'
   pull_request:
     branches:
       - main
     paths:
       - 'images/test/**'
+      # The image caches the Go modules of the shared test library, so a
+      # dependency change there must rebuild it or every module test downloads.
+      - 'common/go.mod'
+      - 'common/go.sum'
+      - 'common/**/*.go'
   workflow_dispatch:
   workflow_run:
     workflows: ["Build images/google"]

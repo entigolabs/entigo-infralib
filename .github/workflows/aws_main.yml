@@ -54,9 +54,16 @@ jobs:
         
         PIDS=""
         echo "Changed modules:"
+        # Keep only the paths that are an actual module, i.e. a directory with
+        # a test.sh. This drops files that live directly under modules/aws,
+        # such as README.md, and modules deleted by this push.
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
             echo "$file" | grep -e "modules/aws\|modules/aws-v2" | cut -d'/' -f1-3
-        done | sort -u )
+        done | sort -u | while read -r module; do
+            if [ -f "$module/test.sh" ]; then
+              echo "$module"
+            fi
+          done )
         do
           ${module}/test.sh testonly &
           PIDS="$PIDS $!=${module}"

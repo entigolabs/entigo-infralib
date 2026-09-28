@@ -17,7 +17,7 @@ spec:
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 ---
-apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+apiVersion: cloudplatform.gcp.upbound.io/v1beta2
 kind: ServiceAccountIAMMember
 metadata:
   name: {{ .Release.Name }}-gar-token
@@ -33,7 +33,7 @@ spec:
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 ---
-apiVersion: cloudplatform.gcp.upbound.io/v1beta1
+apiVersion: cloudplatform.gcp.upbound.io/v1beta2
 kind: ProjectIAMMember
 metadata:
   name: {{ .Release.Name }}-gar-token
