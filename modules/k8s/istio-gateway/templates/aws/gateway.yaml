@@ -6,7 +6,7 @@ metadata:
   name: '{{ .Values.gateway.name }}'
 {{- if .Values.global.aws.createIngress }}
   annotations:
-    external-dns.alpha.kubernetes.io/ingress: {{ .Release.Namespace }}/{{ .Values.gateway.name }}
+    external-dns.kubernetes.io/ingress: {{ .Release.Namespace }}/{{ .Values.gateway.name }}
 {{- end }}
 spec:
   selector:

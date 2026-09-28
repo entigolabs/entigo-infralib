@@ -22,6 +22,16 @@ grafana:
     fsGroup: 472
     seccompProfile:
       type: RuntimeDefault
+  # Grafana 13 ships loki, prometheus and 11 other datasources as bundled plugins under
+  # /usr/share/grafana/data/plugins-bundled instead of compiled into core. On startup the
+  # background installer replaces any of them that has a newer release upstream, and that
+  # unlinks the bundled directory first. The chart's 12.x -> 13.x bump defaulted
+  # containerSecurityContext.readOnlyRootFilesystem to true, so the unlink fails, the
+  # running plugin process is killed, and the datasource silently disappears. Keeping the
+  # root filesystem writable restores the pre-13 behaviour; the update lands in
+  # /var/lib/grafana/plugins on the PVC.
+  containerSecurityContext:
+    readOnlyRootFilesystem: false
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1

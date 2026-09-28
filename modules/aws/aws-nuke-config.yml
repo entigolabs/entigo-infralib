@@ -12,6 +12,7 @@ blocklist:
 resource-types:
   alternatives:
   - AWS::ECR::RepositoryCreationTemplate
+  - AWS::MSK::ServerlessCluster
   excludes:
   - EC2KeyPair
   - IAMSAMLProvider
@@ -98,6 +99,10 @@ resource-types:
   - BedrockPrompt
   - BedrockEvaluationJob
   - BedrockModelCustomizationJob
+  - Inspector2
+  - InspectorAssessmentRun
+  - InspectorAssessmentTarget
+  - InspectorAssessmentTemplate
 
 accounts:
   "877483565445":
@@ -127,6 +132,8 @@ accounts:
       - "/ecr-proxy/ghcr/username"
       Route53ResourceRecordSet:
       - "gcp.infralib.entigo.io." 
+      - "oci.infralib.entigo.io."
+      - "azure.infralib.entigo.io."
       IAMUser:
       - "github"
       - "eks-test"
@@ -141,6 +148,7 @@ accounts:
       - "github -> AKIA4YTQYUGC4RTLXD6W"
       - "github -> AKIA4YTQYUGCUQMU3R4L"
       - "maintainer -> AKIA4YTQYUGCXECEMVON"
+      - "maintainer -> AKIA4YTQYUGC7QHRLMAL"
       - "contributor -> AKIA4YTQYUGCXBN2REI6"
       EC2TGW:
       - "tgw-092384f97967bfffe"

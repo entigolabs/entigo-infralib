@@ -1,5 +1,9 @@
 platform-apis:
   zone:
+    # The sweep that picks up edits to an existing Application runs on this interval, so the
+    # tests would otherwise wait 10 minutes to see one.
+    namespaceMetadata:
+      syncInterval: 1m
     environmentConfig:
       granularEgress: false
       roleMapping:

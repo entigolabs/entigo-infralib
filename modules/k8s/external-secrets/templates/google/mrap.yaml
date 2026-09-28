@@ -8,5 +8,7 @@ metadata:
 spec:
   activate:
   - 'projectiammembers.cloudplatform.gcp.upbound.io'
+  - 'serviceaccountiammembers.cloudplatform.gcp.upbound.io'
+  - 'serviceaccounts.cloudplatform.gcp.upbound.io'
 
 {{- end }}
