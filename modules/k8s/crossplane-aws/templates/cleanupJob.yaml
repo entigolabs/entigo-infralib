@@ -1,5 +1,5 @@
 {{- if .Values.job.deleteInactiveProviderRevisions }}
-# Same remedy as the crossplane-core cleanup Job, run after this module's provider roll: a provider
+# Same remedy as the crossplane-core cleanup Job, run as a PostSync hook after every sync of this module: a provider
 # package bump re-fetches every package at once and a fetch cut short by the deadline leaves a Healthy
 # ProviderRevision with a truncated object list (crossplane/crossplane#7817). Keep the script in sync
 # with modules/k8s/crossplane-core/templates/delete_unused_crds.yaml.
@@ -75,7 +75,10 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-cleanup
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    # A PostSync hook: runs after every sync of this module (every provider bump), is deleted and
+    # recreated each time, so a changed template never hits the immutable Job spec.
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     kube-score/ignore: pod-networkpolicy
 spec:
 {{- if .Values.job.restartOnInvalidProviderRevisions }}
