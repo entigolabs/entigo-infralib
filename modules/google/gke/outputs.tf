@@ -5,12 +5,22 @@ output "cluster_id" {
 
 output "cluster_endpoint" {
   description = "Endpoint for GKE control plane"
-  value       = nonsensitive(module.gke.endpoint)
+  value       = "https://${nonsensitive(module.gke.endpoint)}"
+}
+
+output "cluster_certificate_authority_data" {
+  description = "Base64 encoded certificate data required to communicate with the cluster"
+  value       = nonsensitive(module.gke.ca_certificate)
 }
 
 output "cluster_name" {
   description = "Google Kubernetes Cluster Name"
   value       = module.gke.name
+}
+
+output "cluster_version" {
+  description = "GKE cluster version"
+  value       = module.gke.master_version
 }
 
 output "region" {

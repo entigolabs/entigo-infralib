@@ -47,6 +47,12 @@ func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string
 		contextName = fmt.Sprintf("arn:aws:eks:eu-north-1:877483565445:cluster/%s-infra-eks", envName)
 	case "google":
 		contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
+	case "oracle":
+		// Best-effort guess following the aws/google naming convention above - unlike
+		// EKS/GKE, `oci ce cluster create-kubeconfig` doesn't deterministically name the
+		// context after the cluster's display name by default, so this needs confirming
+		// once a real shared Oracle test cluster/kubeconfig exists in CI.
+		contextName = fmt.Sprintf("%s-infra-oke", envName)
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -138,6 +144,27 @@ func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, 
 	}
 	namespacedObject := defaultNamespacedObject(name, resource)
 	return waitUntilObjectDeleted(t, options, namespacedObject, retries, sleepBetweenRetries)
+}
+
+// Crossplane managed resources whose GroupVersionResource varies per cloud - the
+// bucket helpers above hardcode aws/google, and oracle's Bucket differs in both group
+// and version (objectstorage.oci.upbound.io/v1alpha1). These take the resource from the
+// caller instead. "Available" means the MR reports Ready and Synced, i.e. the external
+// resource really exists, not just that the object was accepted.
+func WaitUntilCrossplaneResourceAvailable(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	availability := defaultObjectAvailability(name, resource)
+	availability.isAvailable = isCrossplaneObjectAvailable
+	availability.objectError = NewCrossplaneObjectNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func DeleteCrossplaneResource(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string) error {
+	logger.Logf(t, "Deleting %s %s", resource.Resource, name)
+	return deleteObject(t, options, name, "", resource)
+}
+
+func WaitUntilCrossplaneResourceDeleted(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string, retries int, sleepBetweenRetries time.Duration) error {
+	return waitUntilObjectDeleted(t, options, defaultNamespacedObject(name, resource), retries, sleepBetweenRetries)
 }
 
 func CreateK8SBucket(t testing.TestingT, options *k8s.KubectlOptions, name string, templateFile string) (*unstructured.Unstructured, error) {
@@ -502,7 +529,9 @@ func isIngressAvailable(ingress *unstructured.Unstructured) bool {
 		return false
 	}
 	ingressMap := ingresses[0].(map[string]interface{})
-	return ingressMap["hostname"] != ""
+	// AWS ALB populates .hostname; OCI's Native Ingress Controller (and most other
+	// cloud LBs) populate .ip instead - a real Ingress status can carry either.
+	return ingressMap["hostname"] != "" || ingressMap["ip"] != ""
 }
 
 func isHTTPRouteAvailable(httpRoute *unstructured.Unstructured) bool {

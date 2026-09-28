@@ -1,0 +1,39 @@
+{{- if .Values.global.createRoute }}
+# Replaces the ALB Ingress in front of the istio ingressgateway.
+# With no hostnames this has the lowest Gateway API route precedence, so it
+# acts as the fallback for any host not claimed by other HTTPRoutes on the
+# shared gateway, replacing group.order: 800 on AWS. Setting global.hostnames
+# claims specific (wildcard) hosts instead; wildcards still rank below exact
+# hostnames of other routes, so fallback behaviour is preserved.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: istio
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
+      sectionName: https
+  {{- with .Values.global.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .Values.gateway.name }}
+          # http2 port of the istio ingressgateway Service; Gateway API
+          # backendRefs require a port number, port names are not supported
+          port: 80
+          weight: 1
+{{- end }}

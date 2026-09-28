@@ -2,9 +2,15 @@ metadata:
   annotations:
     infralib.entigo.io/sync-wave: "101"
 spec:
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: AppProject
+      jqPathExpressions:
+        - '.spec.roles[]?.jwtTokens'
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
+    - RespectIgnoreDifferences=true
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: restricted
