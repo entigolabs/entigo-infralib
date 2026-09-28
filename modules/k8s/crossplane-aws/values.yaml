@@ -17,7 +17,7 @@ global:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.18"
+  tag: "v1.24.6"
   # -- Namespace of the crossplane core deployment (the crossplane-core module).
   crossplaneNamespace: crossplane-system
   # -- After this module's provider roll, delete the Inactive ProviderRevisions.
