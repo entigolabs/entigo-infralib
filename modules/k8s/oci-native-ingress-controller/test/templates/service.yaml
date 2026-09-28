@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: test
+spec:
+  # ClusterIP is enough: the cluster uses VCN-native pod networking, so NIC points the load
+  # balancer at pod IPs taken from this service's endpoints. On a Flannel cluster it would
+  # instead build nodeIP:nodePort backends and reject a service with no nodePort.
+  type: ClusterIP
+  selector:
+    app: test-backend
+  ports:
+  - port: 80
+    targetPort: 8080

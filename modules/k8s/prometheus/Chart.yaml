@@ -7,7 +7,7 @@ appVersion: "1.0"
 
 dependencies:
   - name: prometheus
-    version: 29.29.0
+    version: 29.31.1
     repository: https://prometheus-community.github.io/helm-charts
   - name: prometheus-operator-crds
     version: 32.0.0

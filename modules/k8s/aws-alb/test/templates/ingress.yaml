@@ -11,10 +11,6 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/group.name: change-release-name
     alb.ingress.kubernetes.io/target-type: ip
-    # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
-    # 0.22+ reads only the GA one. The alpha copies go away once every
-    # environment runs 0.22+.
-    external-dns.alpha.kubernetes.io/ttl: "60"
     external-dns.kubernetes.io/ttl: "60"
 spec:
   ingressClassName: change-release-name

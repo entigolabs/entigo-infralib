@@ -91,6 +91,57 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
   
+  install_stable_oracle:
+    name: Install stable Oracle
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release
+      id: get_latest_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
+          if (latestStableRelease) {
+            core.setOutput('release_tag', latestStableRelease.data.tag_name);
+            core.info('Latest stable release tag: ' + latestStableRelease.data.tag_name);
+          } else {
+            core.setFailed('No stable releases found');
+          }
+
+    - name: Checkout code of latest release
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    - name: Write OCI credentials
+      env:
+        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.oci
+        echo "${OCI_CONFIG}" > ~/.oci/config
+        echo "${OCI_PRIVATE_KEY}" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
+    - name: Create resources based on latest release
+      id: create_latest_release
+      env:
+        OCI_REGION: eu-frankfurt-1
+        OCI_CONFIG_FILE: /home/runner/.oci/config
+        ORACLE_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
+        PR_BRANCH: "main"
+        ENTIGO_INFRALIB_DESTROY: false
+      run: |
+        ./stable.sh tf
+    - name: Slack Failed To Install Latest Release Message
+      if: ${{ failure() }}
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Fresh installation of latest release failed for Oracle.'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
   testk8s:   
     runs-on: ubuntu-latest
     needs: [install_stable_aws,install_stable_google]

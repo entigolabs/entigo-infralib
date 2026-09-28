@@ -5,8 +5,8 @@ prometheus:
         parentRefs:
           - group: gateway.networking.k8s.io
             kind: Gateway
-            name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | required }}'
-            namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+            name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | required }}'
+            namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | required }}'
             sectionName: https
         hostnames:
           - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"

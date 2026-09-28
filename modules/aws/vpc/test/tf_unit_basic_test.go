@@ -1,10 +1,15 @@
 package test
 
 import (
+	"os"
 	"testing"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/entigolabs/entigo-infralib-common/aws"
+	awsSDK "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	terratestAws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTerraformVpc(t *testing.T) {
@@ -95,6 +100,13 @@ func testTerraformVpcBiz(t *testing.T) {
 
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["efs"]), "CustomEfsPolicy", "Custom efs endpoint policy was not applied")
+	for key, action := range map[string]string{"s3": "s3:*", "ecr_api": "ecr:*", "ecr_dkr": "ecr:*", "ec2": "ec2:*", "sts": "sts:*"} {
+		assertServicePolicy(t, getEndpointPolicy(t, endpoints[key]), key, action)
+	}
 }
 
 func testTerraformVpcPri(t *testing.T) {
@@ -166,6 +178,10 @@ func testTerraformVpcPri(t *testing.T) {
 
 	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
 	assert.Equal(t, 0, len(privateSubnetsIpv6CidrBlocks), "private_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
+
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
+	assertServicePolicy(t, getEndpointPolicy(t, endpoints["s3"]), "s3", "s3:*")
 }
 
 func testTerraformVpcSpoke(t *testing.T) {
@@ -264,4 +280,38 @@ func testTerraformVpcSpoke(t *testing.T) {
 
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"sts"}, keys(endpoints), "Wrong vpc_endpoints returned, sts only must still create the endpoints module")
+	assertServicePolicy(t, getEndpointPolicy(t, endpoints["sts"]), "sts", "sts:*")
+}
+
+func getEndpoints(t *testing.T, outputs map[string]interface{}) map[string]string {
+	value, ok := tf.GetValue(t, outputs, "vpc__vpc_endpoints").(map[string]interface{})
+	require.True(t, ok, "vpc__vpc_endpoints is not a map")
+	result := make(map[string]string, len(value))
+	for k, v := range value {
+		result[k] = v.(string)
+	}
+	return result
+}
+
+func keys(m map[string]string) []string {
+	result := make([]string, 0, len(m))
+	for k := range m {
+		result = append(result, k)
+	}
+	return result
+}
+
+func getEndpointPolicy(t *testing.T, endpointId string) string {
+	client := terratestAws.NewEc2Client(t, os.Getenv("AWS_REGION"))
+	out, err := client.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{VpcEndpointIds: []*string{awsSDK.String(endpointId)}})
+	require.NoError(t, err, "Failed to describe vpc endpoint %s", endpointId)
+	require.Equal(t, 1, len(out.VpcEndpoints), "vpc endpoint %s not found", endpointId)
+	return awsSDK.StringValue(out.VpcEndpoints[0].PolicyDocument)
+}
+
+func assertServicePolicy(t *testing.T, policy string, key string, action string) {
+	assert.Contains(t, policy, action, "Wrong actions in %s endpoint policy", key)
+	assert.NotRegexp(t, `"Action"\s*:\s*"\*"`, policy, "%s endpoint policy must not allow bare * action", key)
 }

@@ -128,6 +128,17 @@ fi
             mkdir -p "agents/${testname}/config/$STEP_NAME"
             cp "$MODULE_PATH/../google-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/google-gateway.yaml"
           fi
+          if [[ $testname == oracle_*  && $MODULE_NAME != "oracle-gateway" ]]
+          then
+            # Same hack for oracle: modules chain the gateway name and namespace
+            # off oracle-gateway, so it has to be in the step for .tinput and
+            # .toptin to resolve. Unlike google-gateway, oracle-gateway is not
+            # in get_app_name's no-prefix list, so its app name carries the
+            # -$prefix suffix like aws-alb.
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "oracle-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../oracle-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/oracle-gateway-${prefix}.yaml"
+          fi
         fi
 
         # Append module to the apps step unless an entry with this name already exists
