@@ -282,6 +282,42 @@ the longer per module value above. Reach for the tag when you are building a
 name, and for `global.prefix` when you want the identity of this one module in
 this one environment.
 
+## Module metadata
+
+`agent.yaml` is what the module tells the platform about itself — the URL its UI
+is served on, and the `module_types` other modules find it by. Its `metadata:`
+values take replacement tags too, resolved after the module's inputs are merged,
+with two tags of its own:
+
+| Tag | Resolves to |
+|---|---|
+| `.sout.<key>` | a Terraform output of this module |
+| `.input.<path>` | a value from this module's own merged inputs |
+
+`.sout` is what the Terraform modules use — `aws/eks` and `oracle/dns` publish
+their cluster and domain details that way. `.input` starts at the values root,
+so it is `.input.grafana.ingress.hosts.0` for the wrapped chart's values and
+`.input.<module>.<path>` in general.
+
+Chains work here exactly as they do in the agent inputs, and `.input` is already
+optional — a path that is not set resolves to an empty string instead of
+failing, so it can be chained without an `opt` variant:
+
+```yaml
+metadata:
+  ui_url: "https://{{ .input.grafana.ingress.hosts.0 | .input.grafana.route.main.hostnames.0 }}"
+```
+
+That is the shape to reach for whenever the hostname lives under the Ingress on
+one cloud and under the Gateway API route on the rest. Prefer a value that is
+templated for every cloud when the module has one — `argocd` sets
+`global.domain` in `agent_input.yaml`, so its `ui_url` needs no chain at all.
+
+The metadata keys are the portable part, so they keep the same names on every
+cloud even when the outputs behind them do not: `oracle/oke` answers
+`cluster_arn` with `{{ .sout.cluster_id }}`, and `oracle/dns` answers
+`pub_cert_arn` with the certificate OCID.
+
 ## Cloud specific resources
 
 Resources this repository owns live in `templates/`. A module that supports more

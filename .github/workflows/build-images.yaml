@@ -101,8 +101,14 @@ jobs:
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
         cd ${{ inputs.path }}
+        # The images/test Dockerfile warms its Go caches from the repo's shared
+        # test library in common/ and the module tests under modules/, both
+        # outside the image's build context. Hand them over as named contexts;
+        # images that do not declare stages of these names simply ignore them.
         docker buildx build --push --platform linux/arm64/v8,linux/amd64 \
           --build-arg BASE_TAG=${IMAGE_TAG} \
+          --build-context common="${GITHUB_WORKSPACE}/common" \
+          --build-context modules="${GITHUB_WORKSPACE}/modules" \
           --sbom=true \
           --provenance=mode=max \
           -t public.ecr.aws/entigolabs/${{ inputs.name }}:${IMAGE_TAG} \

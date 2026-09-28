@@ -6,10 +6,6 @@ metadata:
   name: '{{ .Values.gateway.name }}'
 {{- if .Values.global.aws.createIngress }}
   annotations:
-    # Both prefixes on purpose: external-dns <0.22 reads only the alpha one,
-    # 0.22+ reads only the GA one. The alpha copy goes away once every
-    # environment runs 0.22+.
-    external-dns.alpha.kubernetes.io/ingress: {{ .Release.Namespace }}/{{ .Values.gateway.name }}
     external-dns.kubernetes.io/ingress: {{ .Release.Namespace }}/{{ .Values.gateway.name }}
 {{- end }}
 spec:
