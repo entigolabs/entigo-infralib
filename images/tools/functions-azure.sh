@@ -130,5 +130,6 @@ get_acr_token() {
 # Get Kubernetes credentials for an AKS cluster, kubelogin reuses the az session
 get_k8s_credentials() {
     az aks get-credentials -g "$AZURE_RESOURCE_GROUP" -n "$KUBERNETES_CLUSTER_NAME" --overwrite-existing || exit 1
-    kubelogin convert-kubeconfig -l azurecli
+    kubelogin convert-kubeconfig -l azurecli || exit 1
+    echo "Kubeconfig set for AKS cluster $KUBERNETES_CLUSTER_NAME in $AZURE_RESOURCE_GROUP"
 }
