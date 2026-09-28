@@ -1,5 +1,32 @@
 installProviderConfig: true
 
+# Resources of the provider package-runtime containers. `family` is upbound-provider-family-aws,
+# `default` every upbound-provider-aws-* subpackage. A subpackage named under `providers` gets its
+# own DeploymentRuntimeConfig with `default` deep-merged with the given fields, so a partial override
+# (say only requests.cpu) is fine. This does not change which providers are installed.
+providerResources:
+  family:
+    requests:
+      cpu: 100m
+      memory: 320Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+  default:
+    requests:
+      cpu: 100m
+      memory: 320Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+  providers: {}
+    # ec2:
+    #   requests:
+    #     cpu: 150m
+    #     memory: 384Mi
+    #   limits:
+    #     memory: 1536Mi
+
 global:
   extraProviders: []
   observerProviders: ["ecr", "rds", "kms", "secretsmanager", "ec2", "eks", "elasticache"]
