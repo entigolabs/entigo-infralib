@@ -1,0 +1,23 @@
+global:
+  cloudProvider: "oracle"
+  providerConfigRefName: "crossplane-oracle"
+  datasources:
+    loki:
+      # Name of the loki module, or empty when loki isn't deployed - the Loki datasource is
+      # then skipped entirely. Set from `.toptmodule.loki` in agent_input_oracle.yaml.
+      module: ""
+
+grafana:
+  ingress:
+    enabled: false
+  route:
+    main:
+      # oracle has no ingress, the gateway route is always on
+      enabled: true
+  persistence:
+    # OKE's default StorageClass, named explicitly so the intent survives a cluster whose
+    # default class differs. OCI Block Volume has a 50GB floor - a smaller request is
+    # rounded up and billed at 50GB regardless - so ask for what we actually get rather
+    # than the 2Gi the base values request.
+    storageClassName: "oci-bv"
+    size: 50Gi

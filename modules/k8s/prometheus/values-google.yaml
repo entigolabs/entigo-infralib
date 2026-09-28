@@ -2,13 +2,12 @@ global:
   cloudProvider: google
   providerConfigRefName: crossplane-google
 
-  google:
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
 
 prometheus:
   server:
     ingress:
       enabled: false
+    route:
+      main:
+        # google has no ingress, the gateway route is always on
+        enabled: true

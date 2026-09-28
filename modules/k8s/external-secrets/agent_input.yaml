@@ -1,0 +1,9 @@
+external-secrets:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
+  webhook:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
+  certController:
+    image:
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'

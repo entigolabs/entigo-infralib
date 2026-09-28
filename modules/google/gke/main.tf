@@ -131,7 +131,9 @@ locals {
 
   # Quantize to the 1st of the current month so the value only changes
   # once a month instead of producing a diff on every plan
-  exclusion_start = formatdate("YYYY-MM-01'T'00:00:00'Z'", timestamp())
+  # plantimestamp() (not timestamp()) so the value is known at plan time,
+  # otherwise the block is "known after apply" and diffs on every run
+  exclusion_start = formatdate("YYYY-MM-01'T'00:00:00'Z'", plantimestamp())
 
   # ~9 months forward (timeadd only takes h/m/s, no month unit)
   exclusion_end = timeadd(local.exclusion_start, "${var.maintenance_exclusion_window_days * 24}h")

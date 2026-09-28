@@ -1,3 +1,6 @@
 global:
-  google:
-    hostname: "{{ .toutput.dns.pub_domain }}"
+  # AWS leaves hostnames empty so the route is the lowest precedence fallback.
+  # Google has no equivalent, so the istio domains are claimed explicitly.
+  hostnames:
+    - "*.{{ .toutput.dns.pub_domain }}"
+    - "{{ .toutput.dns.pub_domain }}"

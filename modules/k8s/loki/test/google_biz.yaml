@@ -1,4 +1,16 @@
 loki:
+  gateway:
+    route:
+      main:
+        # google-gateway/test points internalGateway at the external gateway,
+        # but the unit test probes the internal one in biz, the same way
+        # aws_biz.yaml pins the service gateway.
+        parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .tmodule.google-gateway }}-internal"
+          namespace: "{{ .tmodule.google-gateway }}"
+          sectionName: https
   fullnameOverride: "{{ .module.name }}"
   nameOverride: "{{ .module.name }}"
   write:

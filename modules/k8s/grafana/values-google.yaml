@@ -4,13 +4,13 @@ global:
 
   google:
     projectID: ""
-    hostname: ""
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
 
 grafana:
   ingress:
     enabled: false
+  route:
+    main:
+      # google has no ingress, the gateway route is always on
+      enabled: true
   persistence:
     storageClassName: "standard"
