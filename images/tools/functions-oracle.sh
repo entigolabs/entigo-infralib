@@ -133,29 +133,29 @@ oci_cli_auth() {
 
 # Get Kubernetes credentials for an OKE cluster.
 # KUBERNETES_CLUSTER_NAME may be the cluster OCID directly, or a display name resolved
-# via ORACLE_COMPARTMENT_ID. Requires the oci CLI in the image.
+# via OCI_COMPARTMENT_ID. Requires the oci CLI in the image.
 get_k8s_credentials() {
     local cluster_id="$KUBERNETES_CLUSTER_NAME"
     if [[ "$cluster_id" != ocid1.cluster.* ]]; then
-        if [ -z "$ORACLE_COMPARTMENT_ID" ]; then
-            echo "ORACLE_COMPARTMENT_ID must be set to resolve OKE cluster '$KUBERNETES_CLUSTER_NAME' by name"
+        if [ -z "$OCI_COMPARTMENT_ID" ]; then
+            echo "OCI_COMPARTMENT_ID must be set to resolve OKE cluster '$KUBERNETES_CLUSTER_NAME' by name"
             exit 1
         fi
         cluster_id=$(oci ce cluster list $(oci_cli_auth) \
-            --compartment-id "$ORACLE_COMPARTMENT_ID" \
+            --compartment-id "$OCI_COMPARTMENT_ID" \
             --name "$KUBERNETES_CLUSTER_NAME" \
             --lifecycle-state ACTIVE \
             --region "$OCI_REGION" \
             --query 'data[0].id' --raw-output 2>/dev/null)
         if [ -z "$cluster_id" ] || [ "$cluster_id" = "null" ]; then
-            echo "Unable to find an active OKE cluster named '$KUBERNETES_CLUSTER_NAME' in compartment $ORACLE_COMPARTMENT_ID"
+            echo "Unable to find an active OKE cluster named '$KUBERNETES_CLUSTER_NAME' in compartment $OCI_COMPARTMENT_ID"
             exit 1
         fi
     fi
     mkdir -p "$HOME/.kube"
     # Default to the private endpoint: OKE clusters are private-only in most
     # setups, and the in-container (Container Instances, same VCN) execution model
-    # can reach it. Override with ORACLE_KUBE_ENDPOINT=PUBLIC_ENDPOINT when needed.
+    # can reach it. Override with OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT when needed.
     #
     # --with-auth-context is required: $(oci_cli_auth) only affects this one
     # create-kubeconfig call, but every later kubectl/helm request re-invokes the exec
@@ -170,5 +170,5 @@ get_k8s_credentials() {
         --region "$OCI_REGION" \
         --token-version 2.0.0 \
         --with-auth-context \
-        --kube-endpoint "${ORACLE_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
+        --kube-endpoint "${OCI_KUBE_ENDPOINT:-PRIVATE_ENDPOINT}"
 }
