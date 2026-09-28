@@ -15,7 +15,7 @@ metadata:
 rules:
 - apiGroups: ["pkg.crossplane.io"]
   resources: ["providerrevisions"]
-  verbs: ["get", "list", "delete"]
+  verbs: ["get", "list", "watch", "delete"]
 - apiGroups: ["pkg.crossplane.io"]
   resources: ["providers"]
   verbs: ["get", "list"]
