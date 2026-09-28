@@ -2,12 +2,11 @@
 # Removes every Entigo Infralib resource from the Oracle Cloud test compartment.
 #
 # The compartment must also be listed in oci-nuke-config.yml; --compartment-id alone is
-# refused. A compartment still holding certificates ends the run with its CA failed and a
-# non-zero exit, and only a run a day later can finish it - retrying now will not.
+# refused.
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "$SCRIPTPATH" || exit 1
 
-OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.8}"
+OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.9}"
 ORACLE_COMPARTMENT_ID="${ORACLE_COMPARTMENT_ID:-ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q}"
 
 if [ "$PREFIX" == "" ]
