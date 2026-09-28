@@ -4,6 +4,12 @@ installProviderConfig: true
 # `default` every upbound-provider-aws-* subpackage. A subpackage named under `providers` gets its
 # own DeploymentRuntimeConfig with `default` deep-merged with the given fields, so a partial override
 # (say only requests.cpu) is fine. This does not change which providers are installed.
+# Resources of the provider package-runtime containers, sized from Prometheus on biz and pri
+# (2026-09-28): a subpackage idles at 2-10m CPU and 250-330Mi, and bursts to 300-424m CPU and
+# 450-630Mi for a few minutes while a new revision starts. `family` is upbound-provider-family-aws,
+# `default` every upbound-provider-aws-* subpackage. A subpackage named under `providers` gets its
+# own DeploymentRuntimeConfig with `default` deep-merged with the given fields, so a partial override
+# (say only requests.cpu) is fine. This does not change which providers are installed.
 providerResources:
   family:
     requests:
@@ -19,13 +25,22 @@ providerResources:
     limits:
       cpu: 1000m
       memory: 1024Mi
-  providers: {}
-    # ec2:
-    #   requests:
-    #     cpu: 150m
-    #     memory: 384Mi
-    #   limits:
-    #     memory: 1536Mi
+  providers:
+    # 208 CRDs: highest steady state (10m, 322Mi) and slowest to establish.
+    ec2:
+      requests:
+        cpu: 150m
+        memory: 384Mi
+    # Idles at 1m and peaks at 7m CPU / 345Mi.
+    eks:
+      requests:
+        cpu: 50m
+      limits:
+        memory: 512Mi
+    # Peaks at 290Mi.
+    sqs:
+      limits:
+        memory: 512Mi
 
 global:
   extraProviders: []
