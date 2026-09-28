@@ -1,6 +1,6 @@
-{{- include "crossplane-aws.runtimeConfig" (dict "root" . "name" (printf "%s-family" .Release.Name) "resources" .Values.providerResources.family "serviceAccount" true) }}
+{{ include "crossplane-aws.runtimeConfig" (dict "root" . "name" (printf "%s-family" .Release.Name) "resources" .Values.providerResources.family "serviceAccount" true) }}
 ---
-{{- include "crossplane-aws.runtimeConfig" (dict "root" . "name" .Release.Name "resources" .Values.providerResources.default "serviceAccount" false) }}
+{{ include "crossplane-aws.runtimeConfig" (dict "root" . "name" .Release.Name "resources" .Values.providerResources.default "serviceAccount" false) }}
 {{- $providers := include "crossplane-aws.providers" . | fromYamlArray }}
 {{- range $provider := $providers }}
 {{- if hasKey $.Values.providerResources.providers $provider }}
