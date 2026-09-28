@@ -7,7 +7,7 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "$SCRIPTPATH" || exit 1
 
 OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.9}"
-ORACLE_COMPARTMENT_ID="${ORACLE_COMPARTMENT_ID:-ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q}"
+OCI_COMPARTMENT_ID="${OCI_COMPARTMENT_ID:-ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q}"
 
 if [ "$PREFIX" == "" ]
 then
@@ -42,7 +42,7 @@ else
 fi
 
 echo "Nuking Oracle Cloud test resources"
-echo "  compartment: $ORACLE_COMPARTMENT_ID"
+echo "  compartment: $OCI_COMPARTMENT_ID"
 echo "  region:      $OCI_REGION"
 echo "  prefix:      $PREFIX"
 echo "  image:       $OCI_NUKE_IMAGE"
@@ -59,7 +59,7 @@ docker run --rm $DOCKER_OPTS --user "$(id -u):$(id -g)" \
 	-e OCI_REGION="$OCI_REGION" \
 	"$OCI_NUKE_IMAGE" run \
 	--config /home/oci-nuke/config.yml \
-	--compartment-id "$ORACLE_COMPARTMENT_ID" \
+	--compartment-id "$OCI_COMPARTMENT_ID" \
 	--region "$OCI_REGION" \
 	--prefix "$PREFIX" \
 	--no-dry-run $PROMPT_OPTS "$@"

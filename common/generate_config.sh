@@ -257,9 +257,9 @@ run_agents() {
           echo "Defaulting OCI_REGION to eu-frankfurt-1"
           export OCI_REGION="eu-frankfurt-1"
         fi
-        if [ "$ORACLE_COMPARTMENT_ID" == "" ]
+        if [ "$OCI_COMPARTMENT_ID" == "" ]
         then
-          echo "ERROR: ORACLE_COMPARTMENT_ID should be set to the compartment used for testing."
+          echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
           exit 5
         fi
         if [ "$OCI_CONFIG_FILE" == "" ]
@@ -267,7 +267,7 @@ run_agents() {
           echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
           export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
         fi
-        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e ORACLE_COMPARTMENT_ID="$ORACLE_COMPARTMENT_ID" -e OCI_COMPARTMENT_ID="$ORACLE_COMPARTMENT_ID" -e ORACLE_REGION="$OCI_REGION" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
