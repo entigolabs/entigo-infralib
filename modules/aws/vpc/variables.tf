@@ -236,6 +236,17 @@ variable "create_endpoint_efs" {
   default  = false
 }
 
+variable "endpoint_policies" {
+  description = "Custom JSON policies by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs). Replaces the default service scoped policy for that endpoint"
+  type        = map(string)
+  nullable    = false
+  default     = {}
+  validation {
+    condition     = alltrue([for k, v in var.endpoint_policies : contains(["s3", "s3e", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"], k) && can(jsondecode(v))])
+    error_message = "endpoint_policies keys must be one of s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs and values valid JSON policy documents."
+  }
+}
+
 variable "endpoints_sg_extra_rules" {
   type     = list(string)
   nullable = false

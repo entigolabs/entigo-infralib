@@ -1,5 +1,5 @@
 module "vpc_endpoints" {
-  count = var.create_endpoint_ecr || var.create_gateway_s3 || var.create_endpoint_s3 ? 1 : 0
+  count = var.create_endpoint_ecr || var.create_gateway_s3 || var.create_endpoint_s3 || var.create_endpoint_ec2 || var.create_endpoint_sts || var.create_endpoint_efs ? 1 : 0
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "6.7.0"
   
@@ -20,6 +20,7 @@ module "vpc_endpoints" {
         service             = "s3"
         service_type    = "Gateway"
         route_table_ids = module.vpc.private_route_table_ids
+        policy          = local.endpoint_policy["s3"]
         tags                = { Name = "${var.prefix}-s3" }
       }
     } : {} ,var.create_endpoint_s3 ? {
@@ -29,35 +30,41 @@ module "vpc_endpoints" {
         dns_options = {
           private_dns_only_for_inbound_resolver_endpoint = var.create_gateway_s3
         }
+        policy              = local.endpoint_policy["s3e"]
         tags                = { Name = "${var.prefix}-s3e" }
       }
     } : {} , var.create_endpoint_ecr ? {
       ecr_api = {
         service             = "ecr.api"
         private_dns_enabled = true
+        policy              = local.endpoint_policy["ecr_api"]
         tags                = { Name = "${var.prefix}-ecr.api-vpc-endpoint" }
       },
       ecr_dkr = {
         service             = "ecr.dkr"
         private_dns_enabled = true
+        policy              = local.endpoint_policy["ecr_dkr"]
         tags                = { Name = "${var.prefix}-ecr.dkr-vpc-endpoint" }
       }
     } : {}, var.create_endpoint_ec2 ? {
       ec2 = {
         service             = "ec2"
         private_dns_enabled = true
+        policy              = local.endpoint_policy["ec2"]
         tags                = { Name = "${var.prefix}-ec2.vpc-endpoint" }
       }
     } : {}, var.create_endpoint_sts ? {
       sts = {
         service             = "sts"
         private_dns_enabled = true
+        policy              = local.endpoint_policy["sts"]
         tags                = { Name = "${var.prefix}-sts.vpc-endpoint" }
       }
     } : {}, var.create_endpoint_efs ? {
       efs = {
         service             = "elasticfilesystem"
         private_dns_enabled = true
+        policy              = local.endpoint_policy["efs"]
         tags                = { Name = "${var.prefix}-elasticfilesystem.vpc-endpoint" }
       }
     } : {})

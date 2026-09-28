@@ -1,9 +1,9 @@
 dependencies:
 - name: istiod
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.30.3
+  version: 1.30.4
 - name: cni
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.30.3
-digest: sha256:e8979fcea929eca511b94e75919959be1da4b9f386bcbdc672581fcacadf2ffc
-generated: "2026-08-03T12:36:29.963039638Z"
+  version: 1.30.4
+digest: sha256:9962c52ae93404e4e4ebd25c8534193b8d3977a726cbf467321d81bd3bdaaa98
+generated: "2026-08-31T08:33:44.58011239Z"

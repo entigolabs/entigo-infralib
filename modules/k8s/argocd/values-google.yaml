@@ -1,9 +1,5 @@
 global:
   cloudProvider: google
-  google:
-    gateway:
-      name: google-gateway-internal
-      namespace: google-gateway
 
 argocd:
   configs:
@@ -12,3 +8,6 @@ argocd:
   server:
     ingress:
       enabled: false
+    httproute:
+      # google has no ingress, the gateway route is always on
+      enabled: true

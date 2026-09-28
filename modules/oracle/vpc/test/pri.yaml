@@ -1,0 +1,3 @@
+# Only the CIDR is given, so all five subnets come from the module's own sizing rather than
+# being listed. A /18 is the smallest range that still leaves the pod subnet room to matter.
+vpc_cidr: "10.202.0.0/18"

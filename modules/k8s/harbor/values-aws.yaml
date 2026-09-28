@@ -24,6 +24,45 @@ harbor:
   updateStrategy:
     type: Recreate
 
+  # S3 storage for the registry, commented out and not usable yet.
+  #
+  # Harbor's registry cannot authenticate to S3 with IRSA. Its registry-photon
+  # image is built from distribution v2.8, pinned in Harbor's own Makefile as
+  # REGISTRYVERSION=v2.8.3-patch-redis, and that S3 driver builds a fixed
+  # credential chain of static keys, environment, shared credentials file and
+  # the EC2 instance role. There is no AssumeRoleWithWebIdentity provider in
+  # it, and because the driver always sets credentials explicitly the AWS SDK
+  # never gets to resolve them itself. The service account token is therefore
+  # ignored and the registry silently falls back to the node instance role.
+  #
+  # Turning this on would mean putting static access keys in the registry
+  # configmap, or granting the node role bucket access, and neither is
+  # acceptable. So the registry keeps using the PersistentVolumeClaim from
+  # values.yaml instead.
+  #
+  # Upstream state, checked 2026-09-08 against Harbor 2.15.2:
+  #
+  #   goharbor/harbor#12888  the tracking issue, "Harbor Registry does not
+  #                          support AssumeRoleWithWebIdentity". Open since
+  #                          2020, labelled dependency/upstream/distribution.
+  #   goharbor/harbor#18686  an attempt to patch web identity into Harbor's
+  #                          distribution fork. Closed unmerged, the author
+  #                          called it a hack and pointed at distribution v3.
+  #   goharbor/harbor#21896  "Upgrade to distribution (registry) v3". Open,
+  #                          needs/investigation, no milestone. This is the
+  #                          one to watch.
+  #
+  # distribution v3 already fixes it: it sets static credentials only when
+  # both keys are given and otherwise leaves resolution to the AWS SDK, which
+  # does handle web identity. That shipped in v3.0.0 and is now at v3.1.1, so
+  # the only thing missing is Harbor adopting it.
+  #
+  # To pick this up once a Harbor release ships distribution v3: uncomment the
+  # blocks here and in agent_input_aws.yaml, uncomment the six commented files
+  # under templates/aws/ (s3, role, policy, rolePolicyAttachment,
+  # serviceAccount, mrap — everything there except targetGroupConfiguration),
+  # and leave accesskey and secretkey unset so the SDK picks up the service
+  # account token.
   #persistence:
   #  imageChartStorage:
   #    type: s3

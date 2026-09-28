@@ -19,6 +19,8 @@ spec:
 {{- $scheme := required (printf "gateways.%s.scheme is required (internal | internet-facing)" $name) $cfg.scheme }}
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
+# Also carries settings that used to be per-Ingress annotations but apply to
+# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:
@@ -27,13 +29,18 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   scheme: {{ $scheme }}
-  {{- if $cfg.certificates }}
-  # Static certs on the HTTPS listener, for hosts that ACM discovery cannot
-  # find via route hostnames (e.g. istio-managed domains behind the fallback route)
-  {{- $certs := splitList "," $cfg.certificates }}
+  {{- if or $cfg.certificates $cfg.sslPolicy }}
+  # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
+  # via route hostnames, e.g. istio-managed domains behind the fallback route)
+  # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
   listenerConfigurations:
     - protocolPort: HTTPS:443
       alpnPolicy: None
+      {{- if $cfg.sslPolicy }}
+      sslPolicy: {{ $cfg.sslPolicy }}
+      {{- end }}
+      {{- if $cfg.certificates }}
+      {{- $certs := splitList "," $cfg.certificates }}
       defaultCertificate: {{ first $certs | trim }}
       {{- if gt (len $certs) 1 }}
       certificates:
@@ -41,6 +48,22 @@ spec:
         - {{ . | trim }}
         {{- end }}
       {{- end }}
+      {{- end }}
+  {{- end }}
+  {{- if $cfg.wafv2AclArn }}
+  # Replaces alb.ingress.kubernetes.io/wafv2-acl-arn
+  wafV2:
+    webACL: {{ $cfg.wafv2AclArn }}
+  {{- end }}
+  {{- if $cfg.loadBalancerAttributes }}
+  # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
+  # values format: map of attribute -> value; converted to the CRD's key/value list,
+  # values quoted since the CRD expects strings
+  loadBalancerAttributes:
+    {{- range $k, $v := $cfg.loadBalancerAttributes }}
+    - key: {{ $k }}
+      value: {{ $v | quote }}
+    {{- end }}
   {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:
@@ -59,7 +82,9 @@ spec:
   defaultTargetGroupConfiguration:
     name: {{ $name }}-defaults
 ---
-# Replaces targetType: ip from IngressClassParams; must not set targetReference
+# Replaces targetType: ip from IngressClassParams; must not set targetReference.
+# targetGroupAttributes here are gateway-wide defaults; per-Service TGCs created
+# by app teams override/extend them (merged at the key level by the controller)
 apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:
@@ -69,6 +94,16 @@ metadata:
 spec:
   defaultConfiguration:
     targetType: ip
+    {{- if $cfg.targetGroupAttributes }}
+    # Replaces alb.ingress.kubernetes.io/target-group-attributes
+    # values format: map of attribute -> value; converted to the CRD's key/value list,
+    # values quoted since the CRD expects strings
+    targetGroupAttributes:
+      {{- range $k, $v := $cfg.targetGroupAttributes }}
+      - key: {{ $k }}
+        value: {{ $v | quote }}
+      {{- end }}
+    {{- end }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway

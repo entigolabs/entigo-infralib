@@ -6,11 +6,11 @@ global:
 
   google:
     projectID: ""
-    hostname: ""
     gateway:
+      # Still read by templates/google/healthCheckPolicy.yaml and
+      # templates/google/networkPolicy.yaml. The gateway the route attaches to
+      # is chosen in agent_input.yaml, not here.
       enabled: true
-      name: google-gateway-internal
-      namespace: google-gateway
       extraHealthCheckCidrs: []
     bucket:
       location: ""
@@ -47,6 +47,10 @@ loki:
   gateway:
     ingress:
       enabled: false
+    route:
+      main:
+        # google has no ingress, the gateway route is always on
+        enabled: true
 
   networkPolicy:
     externalStorage:
