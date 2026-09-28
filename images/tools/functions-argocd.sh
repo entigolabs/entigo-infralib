@@ -80,7 +80,7 @@ stringData:
 
     # Seed a temporary ECR credential secret on AWS until External Secrets takes over
     # ECR tokens are valid for 12 hours, ESO keeps the secret refreshed afterwards
-    if [ -n "$AWS_REGION" ]; then
+    if [ "$PROVIDER" == "aws" ]; then
         local account_id=$(aws sts get-caller-identity --query Account --output text)
         local ecr_secret="repo-${account_id}-${AWS_REGION}"
         if ! kubectl -n $namespace get secret $ecr_secret >/dev/null 2>&1; then
@@ -99,6 +99,30 @@ stringData:
   url: ${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com
   username: AWS
   password: \"${ecr_token}\"" | kubectl apply -f - || { echo "Failed to create ECR credential secret $ecr_secret"; exit 24; }
+        fi
+    fi
+
+    # Seed a temporary Artifact Registry credential secret on Google until External Secrets takes over
+    # GAR access tokens are valid for 1 hour, ESO adopts and keeps the secret refreshed afterwards
+    # The name and url must match the ExternalSecret in modules/k8s/external-secrets/templates/google/gar.yaml
+    if [ "$PROVIDER" == "google" ]; then
+        local gar_secret="repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}"
+        if ! kubectl -n $namespace get secret $gar_secret >/dev/null 2>&1; then
+            echo "Applying temporary Artifact Registry credential secret $gar_secret in namespace $namespace."
+            local gar_token=$(gcloud auth print-access-token) || { echo "Failed to get Artifact Registry token"; exit 24; }
+            echo "apiVersion: v1
+kind: Secret
+metadata:
+  name: ${gar_secret}
+  namespace: ${namespace}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: helm
+  enableOCI: \"true\"
+  url: ${GOOGLE_REGION}-docker.pkg.dev/${GOOGLE_PROJECT}
+  username: oauth2accesstoken
+  password: \"${gar_token}\"" | kubectl apply -f - || { echo "Failed to create Artifact Registry credential secret $gar_secret"; exit 24; }
         fi
     fi
     # Register credential-less OCI registries found in application files
@@ -157,8 +181,9 @@ helm_oci_login() {
             return
         fi
     done
-    # Only create helm registry config if AWS_REGION is set
-    if [ -n "$AWS_REGION" ]; then
+    # Oracle OCIR logins happen via the GIT_AUTH_SOURCE_* oci:// match above
+    # (helm registry login), so no credential helper config is needed there.
+    if [ "$PROVIDER" == "aws" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       mkdir -p "$HOME/.config/helm/registry"
@@ -169,7 +194,7 @@ helm_oci_login() {
   }
 }
 EOF
-    elif [ ! -z "$GOOGLE_REGION" ]; then
+    elif [ "$PROVIDER" == "google" ]; then
       mkdir -p "$HOME/.config/helm/registry"
       cat > "$HOME/.config/helm/registry/config.json" <<EOF
 {
@@ -303,6 +328,9 @@ argocd_plan() {
         CHANGE=$((CHANGE - 1))
     fi
     echo "ArgoCD Applications: ${ADD} to add, ${CHANGE} to change, ${DESTROY} to destroy."
+    cat > "plan.json" <<EOF
+{"type":"argocd","add":${ADD},"change":${CHANGE},"destroy":${DESTROY}}
+EOF
     rm -f *.log
 
     if [ ! -z "$FAIL" ]; then

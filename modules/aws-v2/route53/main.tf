@@ -184,8 +184,13 @@ resource "aws_acm_certificate" "this" {
   # Use the key algorithm from the domain configuration
   key_algorithm             = each.value.certificate_key_algorithm
 
-  options {
-    export = each.value.certificate_authority_arn != "" ? "ENABLED" : each.value.certificate_export
+  # options is rejected by the ACM API for private certs;
+  # PCA-issued certs are always exportable anyway
+  dynamic "options" {
+    for_each = each.value.certificate_authority_arn == "" ? [1] : []
+    content {
+      export = each.value.certificate_export
+    }
   }
   
   lifecycle {

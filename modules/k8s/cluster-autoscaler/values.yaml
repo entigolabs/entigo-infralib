@@ -1,3 +1,5 @@
+global:
+  cloudProvider: ""
 
 cluster-autoscaler:
   securityContext:

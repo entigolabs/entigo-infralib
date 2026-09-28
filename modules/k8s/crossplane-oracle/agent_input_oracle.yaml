@@ -1,0 +1,4 @@
+global:
+  oracle:
+    tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
+    region: "{{ .toutput.oke.region }}"

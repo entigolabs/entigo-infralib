@@ -45,6 +45,9 @@ locals {
   database_subnets    = var.database_subnets == null    ? var.subnet_split_mode == "default" ? local.default_database    : local.spoke_database : var.database_subnets
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
 
+  #In spoke mode, when no dedicated elasticache subnets are defined, reuse the database subnets for the elasticache subnet group.
+  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null
+
   #IPv6 prefix indices — each subnet needs a unique /64 slot within the VPC's /56 block.
   #Only populated when enable_ipv6 is true; assigned sequentially across all subnet types.
   public_subnet_ipv6_prefixes      = var.enable_ipv6 ? [for i in range(length(local.public_subnets)) : i] : []
@@ -53,6 +56,14 @@ locals {
   elasticache_subnet_ipv6_prefixes = var.enable_ipv6 ? [for i in range(length(local.elasticache_subnets)) : length(local.public_subnets) + length(local.private_subnets) + length(local.database_subnets) + i] : []
   intra_subnet_ipv6_prefixes       = var.enable_ipv6 ? [for i in range(length(local.intra_subnets)) : length(local.public_subnets) + length(local.private_subnets) + length(local.database_subnets) + length(local.elasticache_subnets) + i] : []
 
+}
+
+
+#Spoke mode without dedicated elasticache subnets: reuse the database subnets (a subnet can be in both an RDS and an ElastiCache subnet group).
+resource "aws_elasticache_subnet_group" "database_reuse" {
+  count      = local.reuse_db_for_elasticache ? 1 : 0
+  name       = coalesce(var.elasticache_subnet_group_name, module.vpc.database_subnet_group_name)
+  subnet_ids = module.vpc.database_subnets
 }
 
 
