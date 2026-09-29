@@ -5,3 +5,13 @@ global:
   # the same on every cloud. Only the IRSA annotation on that ServiceAccount,
   # and the IAM resources under templates/aws/, are AWS specific.
   serviceAccount: contrib-provider-kafka
+
+# Resources of the provider-kafka package-runtime container, sized from Prometheus on biz
+# (2026-09-28/29): 93-117Mi steady, 146Mi peak; 2-5m CPU steady, 9m peak.
+providerResources:
+  requests:
+    cpu: 10m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
