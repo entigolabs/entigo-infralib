@@ -5,7 +5,7 @@
 # Sets ARGOCD_HOSTNAME, ARGOCD_AUTH_TOKEN, USE_ARGOCD_CLI
 init_argocd_connection() {
     setup_ca_certificates
-    echo "COMMAND $COMMAND, cluster $KUBERNETES_CLUSTER_NAME region ${GOOGLE_REGION:-${AWS_REGION:-${OCI_REGION:-$AZURE_LOCATION}}}"
+    echo "COMMAND $COMMAND, cluster $KUBERNETES_CLUSTER_NAME region ${GOOGLE_REGION:-${AWS_REGION:-$AZURE_LOCATION}}"
 
     get_k8s_credentials
     export ARGOCD_HOSTNAME=$(get_argocd_hostname)
