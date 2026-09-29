@@ -17,3 +17,14 @@ The Helm package is made up of 2 ArgoCD sync waves.
 
 ```
 
+### Provider resources ###
+
+All provider pods share the requests and limits in `providerResources.default` (`providerResources.family` for `upbound-provider-family-aws`); the defaults come from measured usage on the test clusters. To size one subpackage differently, add it under `providerResources.providers`; the given fields are deep-merged over `default` and that provider gets its own DeploymentRuntimeConfig. The chart ships memory request overrides for `ec2`, `mq` and `sqs`. Which providers are installed is still decided by `global.requiredProviders`, `global.extraProviders` and the observer settings.
+
+```
+providerResources:
+  providers:
+    ec2:
+      requests:
+        memory: 380Mi
+```
