@@ -1,0 +1,4 @@
+developer-portal-agent:
+  resources:
+    requests:
+      memory: 150Mi
