@@ -28,7 +28,11 @@ spec:
   skipDependencyResolution: true
   package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.6.3
   runtimeConfigRef:
-    name: {{ include "crossplane-aws.runtimeConfigName" (dict "Values" $.Values "Release" $.Release "provider" $provider) }}
+{{- if hasKey $.Values.providerResources.providers $provider }}
+    name: {{ $.Release.Name }}-{{ $provider }}
+{{- else }}
+    name: {{ $.Release.Name }}
+{{- end }}
 {{- end }}
 
 
