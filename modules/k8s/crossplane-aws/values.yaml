@@ -60,11 +60,11 @@ job:
   # -- Namespace of the crossplane core deployment (the crossplane-core module).
   crossplaneNamespace: crossplane-system
   # -- After this module's provider roll, delete the Inactive ProviderRevisions.
-  deleteInactiveProviderRevisions: true
+  deleteInactiveProviderRevisions: false
   # -- Before that, wait for the roll to settle and restart the crossplane deployment when an active
   # ManagedResourceDefinition is not controlled by an Active ProviderRevision (truncated package fetch, see
   # crossplane/crossplane#7817). Same flow as the crossplane-core cleanup Job.
-  restartOnInvalidProviderRevisions: true
+  restartOnInvalidProviderRevisions: false
   # -- How long to wait for the roll to settle and for the restarted deployment (each).
   invalidProviderRevisionsWaitSeconds: 900
   # -- How long after an orphaned ManagedResourceDefinition is seen before restarting.
