@@ -5,40 +5,43 @@ installProviderConfig: true
 # own DeploymentRuntimeConfig with `default` deep-merged with the given fields, so a partial override
 # (say only requests.cpu) is fine. This does not change which providers are installed.
 # Resources of the provider package-runtime containers, sized from Prometheus on biz and pri
-# (2026-09-28): a subpackage idles at 2-10m CPU and 250-330Mi, and bursts to 300-424m CPU and
-# 450-630Mi for a few minutes while a new revision starts. `family` is upbound-provider-family-aws,
+# (2026-09-28/29): a subpackage idles at 3-7m CPU and 230-310Mi, and bursts to 300-875m CPU and
+# 450-630Mi for a few minutes while a new revision starts or under load. `family` is upbound-provider-family-aws,
 # `default` every upbound-provider-aws-* subpackage. A subpackage named under `providers` gets its
 # own DeploymentRuntimeConfig with `default` deep-merged with the given fields, so a partial override
 # (say only requests.cpu) is fine. This does not change which providers are installed.
 providerResources:
   family:
     requests:
-      cpu: 100m
-      memory: 320Mi
+      cpu: 5m
+      memory: 290Mi
     limits:
       cpu: 1000m
       memory: 1024Mi
   default:
     requests:
-      cpu: 100m
-      memory: 320Mi
+      cpu: 5m
+      memory: 290Mi
     limits:
       cpu: 1000m
       memory: 1024Mi
   providers:
-    # 208 CRDs: highest steady state (10m, 322Mi) and slowest to establish.
+    # 208 CRDs: highest steady state (287Mi) and slowest to establish.
     ec2:
       requests:
-        cpu: 150m
-        memory: 384Mi
-    # Idles at 1m and peaks at 7m CPU / 345Mi.
+        memory: 380Mi
+    # Idles at 1m and peaks at 20m CPU / 345Mi.
     eks:
-      requests:
-        cpu: 50m
       limits:
         memory: 512Mi
-    # Peaks at 290Mi.
+    # Steady state 311Mi.
+    mq:
+      requests:
+        memory: 300Mi
+    # Steady state 228Mi, peaks at 343Mi.
     sqs:
+      requests:
+        memory: 230Mi
       limits:
         memory: 512Mi
 
