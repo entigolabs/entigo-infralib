@@ -6,7 +6,7 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "$SCRIPTPATH" || exit 1
 
-OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.9}"
+OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.10}"
 OCI_COMPARTMENT_ID="${OCI_COMPARTMENT_ID:-ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q}"
 
 if [ "$PREFIX" == "" ]

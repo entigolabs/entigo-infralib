@@ -9,3 +9,4 @@ domains: |
       parent_zone_id = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
     }
   }
+name_salt: true

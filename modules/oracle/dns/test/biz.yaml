@@ -20,3 +20,4 @@ domains: |
       private     = true
     }
   }
+name_salt: true
