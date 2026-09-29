@@ -13,14 +13,14 @@ installProviderConfig: true
 providerResources:
   family:
     requests:
-      cpu: 5m
+      cpu: 10m
       memory: 290Mi
     limits:
       cpu: 1000m
       memory: 1024Mi
   default:
     requests:
-      cpu: 5m
+      cpu: 10m
       memory: 290Mi
     limits:
       cpu: 1000m
@@ -30,20 +30,14 @@ providerResources:
     ec2:
       requests:
         memory: 380Mi
-    # Idles at 1m and peaks at 20m CPU / 345Mi.
-    eks:
-      limits:
-        memory: 512Mi
     # Steady state 311Mi.
     mq:
       requests:
         memory: 300Mi
-    # Steady state 228Mi, peaks at 343Mi.
+    # Steady state 228Mi.
     sqs:
       requests:
         memory: 230Mi
-      limits:
-        memory: 512Mi
 
 global:
   extraProviders: []
