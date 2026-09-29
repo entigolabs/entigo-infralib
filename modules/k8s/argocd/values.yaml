@@ -23,7 +23,7 @@ mcp:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.18"
+  tag: "v1.24.6"
 
 argocd:
   crds:
