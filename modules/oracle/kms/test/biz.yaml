@@ -1,4 +1,3 @@
-key_rotation_interval_in_days: 90
 # modules/oracle/pca adopts an existing certificate authority rather than creating one, and an
 # adopted CA's signing key is fixed for its lifetime, so no key is needed here. Creating one
 # anyway would cost: an HSM key version is billed and cannot be deleted for 7 days.

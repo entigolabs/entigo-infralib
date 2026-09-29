@@ -14,3 +14,7 @@ The Helm package is made up of 2 ArgoCD sync waves.
         source: crossplane-kafka
 
 ```
+
+### Provider resources ###
+
+`providerResources` sets the requests and limits of the provider-kafka pod; the defaults come from measured usage on the test clusters.

@@ -31,7 +31,8 @@ resource "random_string" "suffix" {
 # FAILED a few seconds later, and reports only "Authorization failed or requested resource
 # not found: Key Id ocid1.key..." in the Console - `lifecycle-details` on the API is empty,
 # and terraform just says the service reported an unexpected state. Every CA created here
-# failed this way until the grant existed.
+# failed this way until the grant existed. Issuing needs it too: an adopted CA without it signs
+# nothing, and each certificate it is asked for goes to FAILED with the same message.
 #
 # any-user + where, not a dynamic group: CreateDynamicGroup always targets the tenancy as its
 # compartmentId no matter what compartment_id is passed, so an identity holding only
@@ -39,7 +40,7 @@ resource "random_string" "suffix" {
 # way a dynamic group's matching_rule would, but as an ordinary compartment-scoped policy
 # statement - creating one of those needs no tenancy-level privilege.
 resource "oci_identity_policy" "certificate_authorities" {
-  count          = var.create_ca && var.create_ca_policy ? 1 : 0
+  count          = var.create_ca_policy ? 1 : 0
   compartment_id = var.compartment_id
   name           = "${var.prefix}-certificate-authorities"
   description    = "Lets certificate authorities in this compartment use the keys in it"
@@ -55,7 +56,7 @@ resource "oci_identity_policy" "certificate_authorities" {
 # IAM is eventually consistent, and a CA that starts before the grant lands does not retry -
 # it goes to FAILED and stays there, needing a teardown that OCI will not do for 7 days.
 resource "time_sleep" "ca_policy" {
-  count           = var.create_ca && var.create_ca_policy ? 1 : 0
+  count           = var.create_ca_policy ? 1 : 0
   depends_on      = [oci_identity_policy.certificate_authorities]
   create_duration = var.ca_policy_wait
 
