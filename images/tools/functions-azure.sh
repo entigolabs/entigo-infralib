@@ -5,6 +5,7 @@
 # blob container, same as the agent (azure/blob.go parseFilePath).
 
 export PROVIDER="azure"
+[ -z "$AZURE_SUBSCRIPTION_ID" ] && echo "AZURE_SUBSCRIPTION_ID must be set" && exit 1
 export ARM_SUBSCRIPTION_ID="$AZURE_SUBSCRIPTION_ID"
 AZ_CONTAINER="tfstate"
 

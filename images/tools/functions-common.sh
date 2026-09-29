@@ -232,7 +232,7 @@ git_login() {
     # also sets AWS_REGION, which would otherwise match the AWS branch and try to
     # hit AWS STS / write an ECR helper. Oracle OCIR credentials arrive via the
     # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
-    if [ -n "$OCI_REGION" ] || [ -n "$AZURE_SUBSCRIPTION_ID" ]; then
+    if [ -n "$OCI_REGION" ] || [ -n "$AZURE_LOCATION" ]; then
       :
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
