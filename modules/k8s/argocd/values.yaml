@@ -72,7 +72,11 @@ argocd:
         "pkg.crossplane.io/Provider":
           health.lua: |
             -- Healthy only when the package is both installed and its
-            -- revision/runtime is healthy (deployment Available)
+            -- revision/runtime is healthy. The message always carries the
+            -- Healthy condition's reason, so a provider that Crossplane 2.4
+            -- scaled to zero (reason AwaitingActivation: no ManagedResource-
+            -- Definition it controls is active, so its webhooks have no
+            -- endpoints) can be told apart from a running one in the UI.
             health_status = {
               status = "Progressing",
               message = "Waiting for provider to become healthy"
@@ -82,6 +86,7 @@ argocd:
             end
             local installed = false
             local healthy = false
+            local reason = nil
             for i, condition in ipairs(obj.status.conditions) do
               if condition.type == "Installed" then
                 if condition.status == "True" then
@@ -92,6 +97,7 @@ argocd:
                 end
               end
               if condition.type == "Healthy" then
+                reason = condition.reason
                 if condition.status == "True" then
                   healthy = true
                 else
@@ -101,7 +107,11 @@ argocd:
             end
             if installed and healthy then
               health_status.status = "Healthy"
-              health_status.message = "Provider is installed and healthy"
+              if reason == "AwaitingActivation" then
+                health_status.message = "Provider runtime scaled to zero: no active ManagedResourceDefinition is controlled by its current revision, so its conversion webhooks have no endpoints"
+              else
+                health_status.message = "Provider is installed and healthy (" .. (reason or "unknown") .. ")"
+              end
             end
             return health_status
         "*.upbound.io/*":
