@@ -124,8 +124,8 @@ grafana:
       memory: 512Mi
       ephemeral-storage: 1Gi
     requests:
-      cpu: 10m
-      memory: 192Mi
+      cpu: 20m
+      memory: 448Mi
       ephemeral-storage: 100Mi
   networkPolicy:
     enabled: false
@@ -165,7 +165,7 @@ grafana:
         ephemeral-storage: 1Gi
       requests:
         cpu: 10m
-        memory: 32Mi
+        memory: 96Mi
         ephemeral-storage: 100Mi
     alerts:
       enabled: true
