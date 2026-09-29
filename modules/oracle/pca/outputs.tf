@@ -4,6 +4,10 @@
 # Empty rather than null when no CA is created: the agent renders this into a string input.
 output "certificate_authority_id" {
   value = local.ca_id
+
+  # Issuing from the CA needs the grant to have propagated, so consumers get the id only after
+  # the wait.
+  depends_on = [time_sleep.ca_policy]
 }
 
 output "certificate_authority_name" {

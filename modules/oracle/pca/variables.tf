@@ -163,7 +163,7 @@ variable "ca_policy_wait" {
 }
 
 variable "create_ca_policy" {
-  description = "Create the policy that lets certificate authorities in this compartment use its keys. Set false only if an equivalent grant already exists - without one, CA creation fails permanently."
+  description = "Create the policy that lets certificate authorities in this compartment use its keys, both to be created and to issue certificates. Set false only if an equivalent grant already exists - without one, CA creation and every certificate the CA issues fail permanently."
   type        = bool
   default     = true
 }
