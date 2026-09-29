@@ -94,7 +94,7 @@ jobs:
       env:
         OCI_REGION: eu-frankfurt-1
         OCI_CONFIG_FILE: /home/runner/.oci/config
-        ORACLE_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
+        OCI_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
         PR_BRANCH: "main"
       run: |
         ./release.sh tf

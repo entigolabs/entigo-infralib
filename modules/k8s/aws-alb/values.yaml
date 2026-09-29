@@ -62,7 +62,7 @@ aws-load-balancer-controller:
     kube-score/ignore: pod-networkpolicy,pod-probes
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.18"
+  tag: "v1.24.6"
 
 ingressClass:
   tags: {}

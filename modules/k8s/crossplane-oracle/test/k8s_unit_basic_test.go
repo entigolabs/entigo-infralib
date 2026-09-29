@@ -62,8 +62,8 @@ func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	// can actually reach OCI - a provider can be Healthy and still fail on credentials or IAM.
 	region := os.Getenv("OCI_REGION")
 	require.NotEmpty(t, region, "OCI_REGION must be set")
-	compartmentId := os.Getenv("ORACLE_COMPARTMENT_ID")
-	require.NotEmpty(t, compartmentId, "ORACLE_COMPARTMENT_ID must be set")
+	compartmentId := os.Getenv("OCI_COMPARTMENT_ID")
+	require.NotEmpty(t, compartmentId, "OCI_COMPARTMENT_ID must be set")
 
 	// Tenancy-wide and not derivable from the compartment, so it has to be looked up.
 	objectStorageNamespace, err := oracle.GetObjectStorageNamespace(region)
