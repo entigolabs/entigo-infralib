@@ -1,7 +1,3 @@
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
 locals {
   endpoint_policy_service = {
     s3      = "s3"
@@ -17,7 +13,6 @@ locals {
     for k, service in local.endpoint_policy_service : k => lookup(var.endpoint_policies, k, data.aws_iam_policy_document.endpoint[service].json)
   }
   account_id = data.aws_caller_identity.current.account_id
-  partition  = data.aws_partition.current.partition
   region     = data.aws_region.current.region
 }
 
@@ -80,9 +75,9 @@ data "aws_iam_policy_document" "endpoint" {
       sid     = "AWSOwnedBuckets"
       actions = ["s3:GetObject"]
       resources = [
-        "arn:${local.partition}:s3:::prod-${local.region}-starport-layer-bucket/*",
-        "arn:${local.partition}:s3:::al2023-repos-${local.region}-*/*",
-        "arn:${local.partition}:s3:::amazonlinux-2-repos-${local.region}/*",
+        "arn:aws:s3:::prod-${local.region}-starport-layer-bucket/*",
+        "arn:aws:s3:::al2023-repos-${local.region}-*/*",
+        "arn:aws:s3:::amazonlinux-2-repos-${local.region}/*",
       ]
       principals {
         type        = "*"
