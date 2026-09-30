@@ -18,6 +18,7 @@ azure_login() {
     elif [ -n "$IDENTITY_ENDPOINT" ] || [ "$AZURE_CONTAINER_APP_JOB" == "true" ]; then
         az login --identity ${AZURE_CLIENT_ID:+--client-id "$AZURE_CLIENT_ID"} >/dev/null || exit 1
         export ARM_USE_MSI=false ARM_USE_CLI=true
+        unset ARM_TENANT_ID
     else
         echo "No Azure credentials found: mount ~/.azure, set ARM_CLIENT_ID/ARM_CLIENT_SECRET/ARM_TENANT_ID or run with a managed identity"
         exit 1
