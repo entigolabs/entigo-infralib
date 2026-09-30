@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" == "" ]; then
-    VERSION="v3.0.3"
+    VERSION="v3.0.4"
     echo "Defaulting to version $VERSION"
 else
     VERSION=$1

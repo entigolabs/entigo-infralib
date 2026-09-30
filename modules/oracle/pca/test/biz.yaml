@@ -1,9 +1,8 @@
-# Creating a real CA needs an HSM key from modules/oracle/kms, which a harness applying one
-# module at a time cannot supply - and an HSM key version is billed and cannot be deleted on
-# the spot, so a CA created here would leave a paid, undeletable object behind on every run.
-# Worse, a CA holds its name for 7 days after deletion is scheduled, so repeated runs would
-# collide with each other.
-#
-# What is left is a plan-and-apply smoke test: the module has to be valid and produce its
-# outputs. The CA itself is covered against a real deployment, through modules/oracle/dns.
+# The CA outlives a teardown: OCI holds a CA's name for 7 days after deletion is scheduled, so
+# one created per run would collide with the previous one. oci-nuke-config.yml keeps an existing
+# CA standing and this adopts it.
 create_ca: false
+# A literal rather than a name derived from the prefix, because the plain biz-net-pca-root-ca is
+# taken by the CA this one replaces. The salt is the same convention modules/oracle/pca follows
+# when name_salt is on.
+ca_name: "biz-net-pca-root-ca-3pbbwkcu"

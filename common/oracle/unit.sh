@@ -6,9 +6,9 @@ then
   export OCI_REGION="eu-frankfurt-1"
 fi
 
-if [ "$ORACLE_COMPARTMENT_ID" == "" ]
+if [ "$OCI_COMPARTMENT_ID" == "" ]
 then
-  echo "ERROR: ORACLE_COMPARTMENT_ID should be set to the compartment used for testing."
+  echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
   exit 5
 fi
 
@@ -77,7 +77,7 @@ steps:" > agents/config.yaml
         fi
         mkdir -p "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME"
         cp "$test" "agents/${MODULE_TYPE}_${testname}/config/$STEP_NAME/$MODULE_NAME.yaml"
-        docker run --rm -v "$OCI_CONFIG_FILE":"$OCI_CONFIG_FILE":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e ORACLE_COMPARTMENT_ID="$ORACLE_COMPARTMENT_ID" -e ORACLE_REGION="$OCI_REGION" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
+        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/${MODULE_TYPE}_${testname}/config.yaml --steps "$STEP_NAME" --pipeline-type=local --prefix $testname &
         PIDS="$PIDS $!=$testname"
   done
   FAIL=""
@@ -114,9 +114,9 @@ then
 fi
 
 docker run -e OCI_REGION="$OCI_REGION" \
-	-e ORACLE_COMPARTMENT_ID="$ORACLE_COMPARTMENT_ID" \
+	-e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" \
 	-e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" \
 	-e COMMAND="test" \
 	-e STEP_NAME="$STEP_NAME" \
-	-v "$OCI_CONFIG_FILE":"$OCI_CONFIG_FILE":ro \
+	-v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro \
         $TIMEOUT_OPTS $DOCKER_OPTS --rm -v "$(pwd)":"/app" -v "$(pwd)/../../../common":"/common" -w /app $ENTIGO_INFRALIB_IMAGE
