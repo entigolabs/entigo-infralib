@@ -12,8 +12,6 @@ locals {
   endpoint_policy = {
     for k, service in local.endpoint_policy_service : k => lookup(var.endpoint_policies, k, data.aws_iam_policy_document.endpoint[service].json)
   }
-  account_id = data.aws_caller_identity.current.account_id
-  region     = data.aws_region.current.region
 }
 
 # Default policy: only the current account, the organization (if set) and AWS services can use the endpoint
@@ -31,7 +29,7 @@ data "aws_iam_policy_document" "endpoint" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalAccount"
-      values   = [local.account_id]
+      values   = [data.aws_caller_identity.current.account_id]
     }
   }
 
@@ -75,9 +73,9 @@ data "aws_iam_policy_document" "endpoint" {
       sid     = "AWSOwnedBuckets"
       actions = ["s3:GetObject"]
       resources = [
-        "arn:aws:s3:::prod-${local.region}-starport-layer-bucket/*",
-        "arn:aws:s3:::al2023-repos-${local.region}-*/*",
-        "arn:aws:s3:::amazonlinux-2-repos-${local.region}/*",
+        "arn:aws:s3:::prod-${data.aws_region.current.region}-starport-layer-bucket/*",
+        "arn:aws:s3:::al2023-repos-${data.aws_region.current.region}-*/*",
+        "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.current.region}/*",
       ]
       principals {
         type        = "*"
@@ -100,7 +98,7 @@ data "aws_iam_policy_document" "endpoint" {
       condition {
         test     = "StringEquals"
         variable = "aws:ResourceAccount"
-        values   = [local.account_id]
+        values   = [data.aws_caller_identity.current.account_id]
       }
     }
   }
