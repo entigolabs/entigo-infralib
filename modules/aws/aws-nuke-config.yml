@@ -169,3 +169,10 @@ accounts:
       - "OrganizationAccountAccessRole -> AdministratorAccess"
       CloudTrailTrail:
       - "entigo-org-trail"
+      # AWS-managed ElastiCache IAM defaults, created in every region alongside
+      # AWSServiceRoleForElastiCache. Not deletable: the dot in the ID fails
+      # DeleteUser/DeleteUserGroup validation. Upstream: ekristen/aws-nuke#1039
+      ElasticacheUser:
+      - "default.iam-user"
+      ElasticacheUserGroup:
+      - "default.iam-user-group"
