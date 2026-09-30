@@ -7,8 +7,9 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
 
 tempo:
-  storage:
-    trace:
-      s3:
-        region: "{{ .toutput.eks.region }}"
-        bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+  tempo:
+    storage:
+      trace:
+        s3:
+          region: "{{ .toutput.eks.region }}"
+          bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"

@@ -12,10 +12,11 @@ global:
     bucketLifecycleRules: []
 
 tempo:
-  storage:
-    trace:
-      backend: s3
-      s3:
-        region: eu-north-1 # placeholder, agent_input_aws.yaml overrides to the real region
-        insecure: false
-        forcepathstyle: false
+  tempo:
+    storage:
+      trace:
+        backend: s3
+        s3:
+          region: eu-north-1 # placeholder, agent_input_aws.yaml overrides to the real region
+          insecure: false
+          forcepathstyle: false

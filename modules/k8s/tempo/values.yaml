@@ -1,9 +1,10 @@
-# Cloud neutral defaults. Keys under `tempo:` mirror the upstream chart 1:1 (see
-# modules/k8s/README.md's "values.yaml" section) and MUST be checked against
-# `helm show values grafana-community/tempo --version <x>` — this file was written from
-# the loki/mimir module pattern plus general knowledge of Tempo's monolithic chart, not
-# a fetch of the actual upstream values.yaml, so treat the "VERIFY" comments as
-# unconfirmed until you've diffed them.
+# Cloud neutral defaults. Keys under `tempo.tempo:` mirror the upstream chart's
+# own `tempo:` config block 1:1 — verified against
+# https://github.com/grafana-community/helm-charts/blob/tempo-2.2.3/charts/tempo/values.yaml
+# (the version pinned in Chart.yaml). Re-diff this file whenever that version
+# is bumped: `distributor`/`compactor` are NOT keys in this chart's values —
+# the config template fills `distributor.receivers` from `tempo.tempo.receivers`
+# and `compactor.compaction.block_retention` from `tempo.tempo.retention`.
 
 global:
   cloudProvider: ""
@@ -16,48 +17,12 @@ tempo:
   nameOverride: tempo
 
   serviceAccount:
-    create: false # VERIFY key name/path — we create our own SA in templates/aws/serviceAccount.yaml
+    create: false # we create our own SA in templates/aws/serviceAccount.yaml
     name: tempo
 
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
-
-  # VERIFY the exact path — recent tempo charts nest storage under `tempo.storage.trace`.
-  storage:
-    trace:
-      backend: local # overridden to "s3" in values-aws.yaml
-      local:
-        path: /var/tempo/traces
-      wal:
-        path: /var/tempo/wal
-      s3:
-        endpoint: null
-        region: ""
-        bucket: ""
-        access_key: null
-        secret_key: null
-        insecure: false
-        forcepathstyle: false
-
-  # VERIFY — recent Tempo defaults to receiving OTLP only; confirm protocol/port keys
-  # match the vendored chart version before relying on this.
-  distributor:
-    receivers:
-      otlp:
-        protocols:
-          grpc:
-            endpoint: "0.0.0.0:4317"
-          http:
-            endpoint: "0.0.0.0:4318"
-
-  server:
-    http_listen_port: 3100
-    log_level: warn
-
-  compactor:
-    compaction:
-      block_retention: 336h # 14 days — cheap first default, tune once real trace volume is known
 
   ingress:
     enabled: false
@@ -104,3 +69,32 @@ tempo:
       operator: "Equal"
       value: "true"
       effect: "NoSchedule"
+
+  # The upstream chart's own config block — this whole map is dumped verbatim
+  # into Tempo's config file, so keys here are tempo.tempo.*, not tempo.*.
+  tempo:
+    # Chart default is 24h; 14 days is a cheap first default for a new
+    # install, tune once real trace volume is known.
+    retention: 336h
+
+    storage:
+      trace:
+        backend: local # overridden to "s3" in values-aws.yaml
+        local:
+          path: /var/tempo/traces
+        wal:
+          path: /var/tempo/wal
+        s3:
+          endpoint: null
+          region: ""
+          bucket: ""
+          access_key: null
+          secret_key: null
+          insecure: false
+          forcepathstyle: false
+
+    # Chart default already enables both jaeger and otlp receivers; only
+    # override `receivers` here if you need to narrow that down.
+
+    server:
+      http_listen_port: 3200
