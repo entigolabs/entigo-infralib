@@ -110,6 +110,7 @@ func testTerraformVpcBiz(t *testing.T) {
 		assert.Contains(t, policy, "o-cipguslp2x", "%s endpoint policy must trust the organization", key)
 	}
 	assert.Contains(t, getEndpointPolicy(t, endpoints["s3"]), "starport-layer-bucket", "s3 endpoint policy must allow the ECR layer bucket")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["s3"]), "OwnBucketsRead", "s3 endpoint policy must allow anonymous reads of own buckets")
 	assert.Contains(t, getEndpointPolicy(t, endpoints["sts"]), "sts:AssumeRoleWithWebIdentity", "sts endpoint policy must allow IRSA")
 }
 

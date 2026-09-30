@@ -84,6 +84,43 @@ data "aws_iam_policy_document" "endpoint" {
     }
   }
 
+  # Public buckets of the account/organization are also read anonymously (no caller account), so check the bucket owner
+  dynamic "statement" {
+    for_each = each.key == "s3" ? [1] : []
+    content {
+      sid       = "OwnBucketsRead"
+      actions   = ["s3:GetObject"]
+      resources = ["*"]
+      principals {
+        type        = "*"
+        identifiers = ["*"]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "aws:ResourceAccount"
+        values   = [data.aws_caller_identity.current.account_id]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = each.key == "s3" && var.endpoint_policy_org_id != "" ? [1] : []
+    content {
+      sid       = "OrganizationBucketsRead"
+      actions   = ["s3:GetObject"]
+      resources = ["*"]
+      principals {
+        type        = "*"
+        identifiers = ["*"]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "aws:ResourceOrgID"
+        values   = [var.endpoint_policy_org_id]
+      }
+    }
+  }
+
   # AssumeRoleWithWebIdentity (IRSA) has no caller account, so check the account that owns the role
   dynamic "statement" {
     for_each = each.key == "sts" ? [1] : []
