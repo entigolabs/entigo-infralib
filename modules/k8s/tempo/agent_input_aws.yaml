@@ -13,3 +13,8 @@ tempo:
         s3:
           region: "{{ .toutput.eks.region }}"
           bucket: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+          # Required: Tempo's minio-based S3 client fails startup if this is
+          # empty ("Endpoint:  does not follow ip address or domain name
+          # standards") — unlike the AWS SDK, it does not derive an endpoint
+          # from region on its own.
+          endpoint: "s3.{{ .toutput.eks.region }}.amazonaws.com"
