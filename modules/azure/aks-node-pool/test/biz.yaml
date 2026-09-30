@@ -1,0 +1,12 @@
+spot_nodes: true
+min_size: 0
+max_size: 1
+max_pods: 32
+labels: |
+  {
+    team = "entigo-team"
+  }
+tags: |
+  {
+    team = "entigo-team"
+  }

@@ -1,0 +1,7 @@
+name: "extra"
+min_size: 0
+max_size: 1
+instance_type: "Standard_D2s_v6"
+volume_size: 30
+taints: |
+  ["dedicated=extra:NoSchedule"]

@@ -1,0 +1,2 @@
+location: "{{ .agent.region }}"
+key_vault_id: "{{ .agent.vaultId }}"

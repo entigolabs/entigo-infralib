@@ -1,0 +1,6 @@
+location: "{{ .agent.region }}"
+vnet_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
+api_server_subnet_id: "{{ .toutput.vpc.apiserver_subnets[0] }}"
+acr_id: "{{ .toptout.acr-proxy.acr_id }}"
+kms_key_vault_id: "{{ .toptout.kms.key_vault_id }}"
+disk_encryption_key_id: "{{ .toptout.kms.data_key_versionless_id }}"

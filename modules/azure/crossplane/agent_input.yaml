@@ -1,0 +1,3 @@
+location: "{{ .agent.region }}"
+oidc_issuer_url: "{{ .toutput.aks.oidc_issuer_url }}"
+acr_id: "{{ .toptout.acr-proxy.acr_id }}"

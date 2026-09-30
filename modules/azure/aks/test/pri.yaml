@@ -1,0 +1,9 @@
+# The agent runs outside the VNet
+private_cluster_enabled: false
+api_server_authorized_ip_ranges: |
+  ["0.0.0.0/0"]
+aks_main_min_size: 1
+aks_main_max_size: 2
+aks_mon_max_size: 0
+aks_tools_min_size: 2
+aks_tools_max_size: 3

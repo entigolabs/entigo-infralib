@@ -1,0 +1,6 @@
+domains: |
+  {
+    "pri" = {
+      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+    }
+  }
