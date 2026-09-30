@@ -7,29 +7,11 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-family-aws:v2.6.3
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.8.1
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
-# Build the final list of providers based on conditions
-{{- $allProviders := list }}
-
-# Always include requiredProviders and extraProviders
-{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
-{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
-
-# Add observerProviders if observers are enabled
-{{- if or .Values.global.createObservers .Values.global.createNamespacedObservers }}
-  {{- $allProviders = concat $allProviders .Values.global.observerProviders }}
-{{- end }}
-
-# Deduplicate the list
-{{- $uniqueProviders := list }}
-{{- range $provider := $allProviders }}
-  {{- if not (has $provider $uniqueProviders) }}
-    {{- $uniqueProviders = append $uniqueProviders $provider }}
-  {{- end }}
-{{- end }}
+{{- $uniqueProviders := include "crossplane-aws.providers" . | fromYamlArray }}
 
 # Create Provider resources for each unique provider
 {{- range $index, $provider := $uniqueProviders }}
@@ -44,9 +26,13 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
-  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.6.3
+  package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.8.1
   runtimeConfigRef:
+{{- if hasKey $.Values.providerResources.providers $provider }}
+    name: {{ $.Release.Name }}-{{ $provider }}
+{{- else }}
     name: {{ $.Release.Name }}
+{{- end }}
 {{- end }}
 
 

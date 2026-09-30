@@ -30,12 +30,7 @@ spec:
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
               resources:
-                requests:
-                  cpu: 3m
-                  memory: 275Mi
-                limits:
-                  cpu: 2000m
-                  memory: 1024Mi
+                {{- toYaml .Values.providerResources.family | nindent 16 }}
               securityContext:
                 runAsNonRoot: true
                 seccompProfile:
@@ -90,12 +85,7 @@ spec:
                 {{- toYaml . | nindent 16 }}
                 {{- end }}
               resources:
-                requests:
-                  cpu: 3m
-                  memory: 250Mi
-                limits:
-                  cpu: 2000m
-                  memory: 1024Mi
+                {{- toYaml .Values.providerResources.default | nindent 16 }}
               securityContext:
                 runAsNonRoot: true
                 seccompProfile:
@@ -112,3 +102,60 @@ spec:
               operator: Equal
               value: 'true'
   serviceTemplate: {}
+
+{{- /* A subpackage listed under providerResources.providers gets its own runtime config: the default
+       one above with the given resource fields merged over providerResources.default. */}}
+{{- range $provider, $override := .Values.providerResources.providers }}
+{{- if has $provider (include "crossplane-aws.providers" $ | fromYamlArray) }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{ $.Release.Name }}-{{ $provider }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '1'
+    helm.sh/resource-policy: keep
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      strategy: {}
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: tools
+                        operator: In
+                        values:
+                          - 'true'
+                  weight: 90
+          containers:
+            - name: package-runtime
+              args:
+                {{- with $.Values.global.deploymentRuntimeConfig.args }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              resources:
+                {{- toYaml (mergeOverwrite (deepCopy $.Values.providerResources.default) $override) | nindent 16 }}
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 2000
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          serviceAccountName: {{ $.Release.Name }}
+          tolerations:
+            - effect: NoSchedule
+              key: tools
+              operator: Equal
+              value: 'true'
+  serviceTemplate: {}
+{{- end }}
+{{- end }}
