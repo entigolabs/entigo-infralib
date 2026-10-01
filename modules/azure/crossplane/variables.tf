@@ -16,6 +16,17 @@ variable "oidc_issuer_url" {
   type = string
 }
 
+variable "node_resource_group_id" {
+  type        = string
+  description = "AKS node resource group (aks node_resource_group_id), Crossplane may only grant Monitoring Reader there"
+}
+
+variable "telemetry_key_resource_id" {
+  type        = string
+  default     = ""
+  description = "kms telemetry key (kms telemetry_key_resource_id), the agent storage account may encrypt with it"
+}
+
 variable "acr_id" {
   type        = string
   default     = ""

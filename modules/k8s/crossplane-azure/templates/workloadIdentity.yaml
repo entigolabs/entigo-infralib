@@ -1,6 +1,7 @@
 {{- if .Values.workloadIdentity.enabled }}
 {{- $az := .Values.global.azure }}
-{{- $rgScope := printf "/subscriptions/%s/resourcegroups/%s/providers/" $az.subscriptionID $az.resourceGroupName | lower }}
+{{- $rg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.resourceGroupName | lower }}
+{{- $nodeRg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.nodeResourceGroupName | lower }}
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
@@ -56,13 +57,16 @@ spec:
                       role:
                         type: string
                         enum:
-                          {{- toYaml .Values.workloadIdentity.allowedRoles | nindent 26 }}
+                          {{- toYaml (concat .Values.workloadIdentity.allowedRoles .Values.workloadIdentity.readOnlyRoles) | nindent 26 }}
                       scope:
                         type: string
                         maxLength: 1024
                     x-kubernetes-validations:
-                      - rule: self.scope.lowerAscii().startsWith({{ $rgScope | quote }})
-                        message: scope must be a resource in resource group {{ $az.resourceGroupName }}
+                      - rule: >-
+                          self.scope.lowerAscii().startsWith({{ printf "%s/providers/" $rg | quote }}) ||
+                          (self.role in {{ .Values.workloadIdentity.readOnlyRoles | toJson }} &&
+                          (self.scope.lowerAscii() in [{{ $rg | quote }}, {{ $nodeRg | quote }}] || self.scope.lowerAscii().startsWith({{ printf "%s/providers/" $nodeRg | quote }})))
+                        message: scope must be a resource in resource group {{ $az.resourceGroupName }}, read-only roles also the resource group or the AKS node resource group
                       - rule: "!self.role.startsWith('Storage ') || (self.scope.lowerAscii().matches('/blobservices/default/containers/[^/]+$') && !self.scope.lowerAscii().endsWith('/containers/tfstate'))"
                         message: storage roles only on a blob container other than tfstate
             status:

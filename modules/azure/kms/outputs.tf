@@ -34,3 +34,8 @@ output "telemetry_key_id" {
 output "telemetry_key_versionless_id" {
   value = azurerm_key_vault_key.this["telemetry"].versionless_id
 }
+
+output "telemetry_key_resource_id" {
+  description = "Resource id of the telemetry key, scope for its role assignments"
+  value       = azurerm_key_vault_key.this["telemetry"].resource_versionless_id
+}

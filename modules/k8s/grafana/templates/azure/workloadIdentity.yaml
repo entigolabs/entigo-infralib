@@ -1,0 +1,17 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+# Azure Monitor datasource: read access to the agent and AKS node resource groups
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountName: {{ .Values.grafana.serviceAccount.name }}
+  roleAssignments:
+    - role: Monitoring Reader
+      scope: {{ required "global.azure.resourceGroupId" .Values.global.azure.resourceGroupId }}
+    - role: Monitoring Reader
+      scope: {{ required "global.azure.nodeResourceGroupId" .Values.global.azure.nodeResourceGroupId }}
+{{- end }}

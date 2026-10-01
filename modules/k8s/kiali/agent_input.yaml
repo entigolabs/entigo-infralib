@@ -1,7 +1,7 @@
 global:
   gateway:
-    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | required }}'
-    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | required }}'
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptin.azure-gateway.global.internalGatewayNamespace | required }}'
 
 kiali-server:
   server:
@@ -9,7 +9,7 @@ kiali-server:
 
   deployment:
     instance_name: "{{ .module.name }}"
-    image_name: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/kiali/kiali'
+    image_name: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}/kiali/kiali'
   external_services:
     prometheus:
       url: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"

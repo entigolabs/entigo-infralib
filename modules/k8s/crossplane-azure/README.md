@@ -25,7 +25,8 @@ spec:
 ```
 
 Roles: `workloadIdentity.allowedRoles`, only on resources in the agent resource group, storage roles only on a blob
-container other than `tfstate`. Whoever can create a WorkloadIdentity in a namespace can grant these roles.
+container other than `tfstate`. `workloadIdentity.readOnlyRoles` (Monitoring Reader) also on the agent resource group
+itself and the AKS node resource group. Whoever can create a WorkloadIdentity in a namespace can grant these roles.
 
 ### Example code ###
 

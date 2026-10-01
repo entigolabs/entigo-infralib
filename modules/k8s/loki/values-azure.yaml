@@ -1,0 +1,108 @@
+global:
+  cloudProvider: azure
+  providerConfigRefName: crossplane-azure
+  bucketName: ""
+  azure:
+    # Agent storage account (modules/azure/crossplane), the container bucketName is created in it
+    storageAccountId: ""
+    # kms telemetry key (versionless), "" = storage account key
+    telemetryKeyId: ""
+    # AGC HealthCheckPolicy and gateway ingress from the AGC subnet, only for a route on an azure-gateway (AGC) gateway
+    agcHealthCheck: false
+    agcSubnetCidrs: ""
+
+loki:
+  # Created by the WorkloadIdentity (templates/azure)
+  serviceAccount:
+    create: false
+    name: loki
+  loki:
+    podLabels:
+      azure.workload.identity/use: "true"
+    storage:
+      type: azure
+      azure:
+        useFederatedToken: true
+    # tsdb/v13 only like oracle, no history to keep
+    schemaConfig:
+      configs:
+        - from: "2026-01-01"
+          store: tsdb
+          object_store: azure
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+  read:
+    persistence:
+      storageClass: managed-csi
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  gateway:
+    ingress:
+      enabled: false
+    route:
+      main:
+        enabled: true
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  networkPolicy:
+    externalStorage:
+      ports:
+        - 443
+    discovery:
+      port: 53
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+  write:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  backend:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

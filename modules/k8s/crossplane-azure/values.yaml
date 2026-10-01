@@ -9,6 +9,7 @@ global:
     location: ""
     oidcIssuerUrl: ""
     identityPrefix: ""
+    nodeResourceGroupName: ""
 
   providerVersion: v2.7.2
 
@@ -30,6 +31,9 @@ workloadIdentity:
     - Storage Blob Data Contributor
     - DNS Zone Contributor
     - Private DNS Zone Contributor
+  # Also on the agent resource group itself and the AKS node resource group
+  readOnlyRoles:
+    - Monitoring Reader
   functions:
     goTemplating:
       image: docker.io/entigolabs/function-go-templating

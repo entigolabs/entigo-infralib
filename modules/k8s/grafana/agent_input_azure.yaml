@@ -1,0 +1,8 @@
+global:
+  azure:
+    subscriptionID: "{{ .toutput.crossplane.subscription_id }}"
+    resourceGroupId: "/subscriptions/{{ .toutput.crossplane.subscription_id }}/resourceGroups/{{ .toutput.crossplane.resource_group_name }}"
+    nodeResourceGroupId: "{{ .toutput.aks.node_resource_group_id }}"
+  datasources:
+    loki:
+      module: "{{ .toptmodule.loki }}"

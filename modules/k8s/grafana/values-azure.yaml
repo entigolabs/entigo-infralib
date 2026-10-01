@@ -1,0 +1,42 @@
+global:
+  cloudProvider: "azure"
+  providerConfigRefName: "crossplane-azure"
+  azure:
+    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
+    agcHealthCheck: false
+    # Azure Monitor datasource
+    subscriptionID: ""
+    resourceGroupId: ""
+    nodeResourceGroupId: ""
+  datasources:
+    loki:
+      # Name of the loki module, "" = no Loki datasource
+      module: ""
+
+grafana:
+  podLabels:
+    azure.workload.identity/use: "true"
+  grafana.ini:
+    azure:
+      workload_identity_enabled: true
+  ingress:
+    enabled: false
+  route:
+    main:
+      enabled: true
+      annotations:
+        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  persistence:
+    storageClassName: "managed-csi"
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"

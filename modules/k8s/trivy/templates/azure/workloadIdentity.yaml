@@ -1,0 +1,16 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountName: {{ index .Values "trivy-operator" "serviceAccount" "name" }}
+  {{- with .Values.global.azure.acrId }}
+  roleAssignments:
+    - role: AcrPull
+      scope: {{ . }}
+  {{- end }}
+{{- end }}
