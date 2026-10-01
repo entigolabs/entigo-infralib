@@ -1,2 +1,6 @@
+resource_group_name: "{{ .config.prefix }}-infralib-{{ .agent.region }}"
 location: "{{ .agent.region }}"
 key_vault_id: "{{ .agent.vaultId }}"
+private_endpoint_subnet_id: |
+  try(flatten([{{ .toptout.vpc.private_subnets }}])[0], "")
+private_endpoint_vnet_id: "{{ .toptout.vpc.vpc_id }}"

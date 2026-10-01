@@ -1,8 +1,5 @@
 sku: "Premium"
 private_endpoint_enabled: true
-private_endpoint_subnet_id: |
-  flatten([{{ .toutput.vpc.intra_subnets }}])[0]
-private_endpoint_vnet_id: "{{ .toutput.vpc.vpc_id }}"
 aks_bootstrap_cache_rule: true
 hub_username_secret: "acr-proxy-hub-username"
 hub_access_token_secret: "acr-proxy-hub-token"

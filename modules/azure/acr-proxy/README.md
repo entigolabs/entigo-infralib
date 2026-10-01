@@ -20,9 +20,9 @@ ei-agent add-custom -k /acr-proxy/hub/username -v <username>
 ei-agent add-custom -k /acr-proxy/hub/token -v <token>
 ```
 
-`sku = "Premium"` is needed for `private_endpoint_enabled` (pulls from the VNet use private IPs), the AKS bootstrap
-artifact cache rule (`aks_bootstrap_cache_rule`), customer managed keys (`encryption`, only at creation) and untagged
-manifest retention.
+`sku = "Premium"` is needed for `private_endpoint_enabled` (pulls from the VNet use private IPs, the endpoint is in
+the vpc private subnet next to the AKS nodes), the AKS bootstrap artifact cache rule (`aks_bootstrap_cache_rule`),
+customer managed keys (`encryption`, only at creation) and untagged manifest retention.
 
 ### Example code ###
 ```
@@ -32,9 +32,6 @@ manifest retention.
         inputs:
           sku: "Premium"
           private_endpoint_enabled: true
-          private_endpoint_subnet_id: |
-            flatten([{{ .toutput.vpc.intra_subnets }}])[0]
-          private_endpoint_vnet_id: "{{ .toutput.vpc.vpc_id }}"
           hub_username_secret: "acr-proxy-hub-username"
           hub_access_token_secret: "acr-proxy-hub-token"
 ```
