@@ -134,6 +134,12 @@ variable "bootstrap_cache_enabled" {
   description = "Nodes pull AKS system images from acr_id (Premium, private endpoint, aks_bootstrap_cache_rule). Existing cluster: needs a node image upgrade of all pools"
 }
 
+variable "agc_subnet_ids" {
+  type        = list(string)
+  default     = []
+  description = "Application Gateway for Containers subnets (vpc agc_subnets), creates the ALB controller identity for the azure-gateway k8s module"
+}
+
 variable "kms_key_vault_id" {
   type    = string
   default = ""

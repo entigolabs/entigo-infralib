@@ -73,3 +73,7 @@ output "service_cidr" {
 output "disk_encryption_set_id" {
   value = local.disk_encryption ? azurerm_disk_encryption_set.this[0].id : ""
 }
+
+output "alb_controller_client_id" {
+  value = length(var.agc_subnet_ids) > 0 ? azurerm_user_assigned_identity.alb_controller[0].client_id : ""
+}

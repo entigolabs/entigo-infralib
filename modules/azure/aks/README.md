@@ -27,6 +27,10 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   `private_cluster_enabled: false` the public endpoint is limited to `api_server_authorized_ip_ranges` (`[]` = open).
 * Access: the Terraform caller (the agent) and `admin_object_ids` get Azure Kubernetes Service RBAC Cluster Admin.
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
+* `agc_subnet_ids` (vpc `agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one
+  per cluster, service account `azure-alb-system/alb-controller-sa`): Reader + AppGw for Containers Configuration
+  Manager on the node resource group, Network Contributor on every AGC subnet (one Application Gateway for Containers
+  per /24). Output `alb_controller_client_id`.
 * Encryption: when the kms module exists, its data key (`disk_encryption_key_id`) encrypts the OS disks of all pools
   (incl. azure/aks-node-pool) and by default the PVC disks through a disk encryption set, **only at cluster creation**
   (adding kms later fails the apply, the cluster isn't replaced). No etcd encryption with the kms config key yet:

@@ -350,3 +350,35 @@ resource "azurerm_monitor_diagnostic_setting" "control_plane" {
     }
   }
 }
+
+# ALB controller (azure-gateway k8s module): its chart needs the client id at render time and ALB-managed AGC lives in the node resource group
+resource "azurerm_user_assigned_identity" "alb_controller" {
+  count               = length(var.agc_subnet_ids) > 0 ? 1 : 0
+  name                = "${var.prefix}-alb-controller"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+}
+
+resource "azurerm_federated_identity_credential" "alb_controller" {
+  count                     = length(var.agc_subnet_ids) > 0 ? 1 : 0
+  name                      = "alb-controller"
+  user_assigned_identity_id = azurerm_user_assigned_identity.alb_controller[0].id
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = module.aks.oidc_issuer_profile_issuer_url
+  subject                   = "system:serviceaccount:azure-alb-system:alb-controller-sa"
+}
+
+resource "azurerm_role_assignment" "alb_controller" {
+  for_each = length(var.agc_subnet_ids) > 0 ? merge(
+    {
+      node-rg-reader = { scope = module.aks.node_resource_group_id, role = "Reader" }
+      config-manager = { scope = module.aks.node_resource_group_id, role = "AppGw for Containers Configuration Manager" }
+    },
+    { for i, id in var.agc_subnet_ids : "agc-subnet-${i}" => { scope = id, role = "Network Contributor" } }
+  ) : {}
+  scope                            = each.value.scope
+  role_definition_name             = each.value.role
+  principal_id                     = azurerm_user_assigned_identity.alb_controller[0].principal_id
+  skip_service_principal_aad_check = true
+}
