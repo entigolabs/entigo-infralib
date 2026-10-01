@@ -1,0 +1,17 @@
+global:
+  azure:
+    tenantID: "{{ .toutput.crossplane.tenant_id }}"
+    pubZoneId: "{{ .toutput.dns.pub_zone_id }}"
+    intZoneId: "{{ .toptout.dns.int_zone_id }}"
+external-dns:
+  txtOwnerId: "{{ .config.prefix }}-{{ .module.name }}"
+  domainFilters:
+    - "{{ .toutput.dns.pub_domain }}"
+  excludeDomains:
+    - "{{ .toptout.dns.int_domain }}"
+external-dns-private:
+  image:
+    repository: '{{ .toptout.acr-proxy.k8s_registry | "registry.k8s.io" }}/external-dns/external-dns'
+  txtOwnerId: "{{ .config.prefix }}-{{ .module.name }}-private"
+  domainFilters:
+    - "{{ .toptout.dns.int_domain }}"

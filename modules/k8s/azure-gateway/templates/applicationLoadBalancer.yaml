@@ -1,0 +1,12 @@
+{{- if .Values.applicationLoadBalancer.create }}
+apiVersion: alb.networking.azure.io/v1
+kind: ApplicationLoadBalancer
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  associations:
+    - {{ required "global.azure.agcSubnetId" .Values.global.azure.agcSubnetId }}
+{{- end }}

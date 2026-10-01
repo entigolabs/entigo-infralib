@@ -1,0 +1,13 @@
+istiod:
+  pilot:
+    # No sidecars yet; the istio CNI chains to the AKS-managed Cilium, which can't be configured for it
+    cni:
+      enabled: false
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

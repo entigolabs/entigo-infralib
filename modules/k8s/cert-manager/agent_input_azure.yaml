@@ -1,0 +1,4 @@
+global:
+  azure:
+    pubZoneId: "{{ .toutput.dns.pub_zone_id }}"
+    intCertZoneId: "{{ .toptout.dns.int_cert_zone_id }}"

@@ -1,0 +1,28 @@
+global:
+  cloudProvider: azure
+  # Public entry: route on azure-gateway (AGC) to these pods
+  createRoute: true
+
+  # Internal Gateway API gateway (HTTPRoute sectionName https) behind an internal Azure load balancer, until AGC has a private frontend.
+  # https://github.com/Azure/AKS/issues/5739
+  internalGateway:
+    namespace: ""
+    name: internal
+    domain: ""
+    certificateIssuer: letsencrypt
+    certificatePrivateKey:
+      algorithm: ECDSA
+      size: 384
+      rotationPolicy: Always
+    sslRedirect: true
+
+gateway:
+  # Count only zones of nodes the pods can run on
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      nodeTaintsPolicy: Honor
+      labelSelector:
+        matchLabels:
+          app: istio-gateway

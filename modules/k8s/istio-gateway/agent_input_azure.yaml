@@ -1,0 +1,9 @@
+global:
+  hostnames:
+    - "*.{{ .toutput.dns.pub_domain }}"
+    - "{{ .toutput.dns.pub_domain }}"
+  internalGateway:
+    namespace: '{{ .toptin.azure-gateway.global.internalGatewayNamespace }}'
+    name: '{{ .toptin.azure-gateway.global.internalGateway | "internal" }}'
+    domain: "{{ .toutput.dns.int_domain }}"
+    certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'

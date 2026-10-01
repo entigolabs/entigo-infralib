@@ -1,0 +1,22 @@
+metadata:
+  annotations:
+    infralib.entigo.io/sync-wave: "2"
+spec:
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/warn: restricted
+        tenancy.entigo.com/zone: infralib
+  # cainjector injects the webhook CA at runtime
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[]?.clientConfig.caBundle'
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[]?.clientConfig.caBundle'

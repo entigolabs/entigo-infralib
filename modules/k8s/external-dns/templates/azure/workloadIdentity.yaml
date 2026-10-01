@@ -1,0 +1,18 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountName: {{ index .Values "external-dns" "serviceAccount" "name" }}
+  roleAssignments:
+    - role: DNS Zone Contributor
+      scope: {{ .Values.global.azure.pubZoneId }}
+    {{- if and (index .Values "external-dns-private" "enabled") .Values.global.azure.intZoneId }}
+    - role: Private DNS Zone Contributor
+      scope: {{ .Values.global.azure.intZoneId }}
+    {{- end }}
+{{- end }}

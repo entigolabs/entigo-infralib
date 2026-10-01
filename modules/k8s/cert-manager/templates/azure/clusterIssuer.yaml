@@ -1,0 +1,39 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuer.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  acme:
+    server: {{ .Values.acme.server }}
+    {{- with .Values.acme.email }}
+    email: {{ . }}
+    {{- end }}
+    privateKeySecretRef:
+      name: {{ .Values.clusterIssuer.name }}-account-key
+    {{- with .Values.acme.externalAccountBinding }}
+    {{- if .keyID }}
+    externalAccountBinding:
+      keyID: {{ .keyID }}
+      keySecretRef:
+        {{- toYaml .keySecretRef | nindent 8 }}
+    {{- end }}
+    {{- end }}
+    solvers:
+      {{- range $zoneId := compact (list .Values.global.azure.pubZoneId .Values.global.azure.intCertZoneId) }}
+      {{- $id := splitList "/" $zoneId }}
+      - selector:
+          dnsZones:
+            - {{ index $id 8 | quote }}
+        dns01:
+          azureDNS:
+            subscriptionID: {{ index $id 2 }}
+            resourceGroupName: {{ index $id 4 }}
+            hostedZoneName: {{ index $id 8 }}
+            environment: AzurePublicCloud
+            managedIdentity: {}
+      {{- end }}
+{{- end }}
