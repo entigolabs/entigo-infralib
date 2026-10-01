@@ -1,0 +1,8 @@
+global:
+  azure:
+    tenantID: "{{ .toutput.crossplane.tenant_id }}"
+    vaultId: "{{ .agent.vaultId }}"
+    createACRNamespace: "{{ .tmodule.argocd }}"
+    createACRRegistries:
+      - loginServer: "{{ .toutput.acr-proxy.acr_login_server }}"
+        id: "{{ .toutput.acr-proxy.acr_id }}"

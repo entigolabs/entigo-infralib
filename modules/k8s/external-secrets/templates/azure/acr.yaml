@@ -1,0 +1,75 @@
+{{- if and
+    (eq .Values.global.cloudProvider "azure")
+    (not (empty .Values.global.azure.createACRRegistries))
+    (.Values.global.azure.createACRNamespace)
+}}
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: acr-token
+  namespace: {{ .Values.global.azure.createACRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountName: acr-token
+  # The ACR generator reads the tenant from the service account
+  serviceAccountAnnotations:
+    azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantID | quote }}
+  roleAssignments:
+    {{- range .Values.global.azure.createACRRegistries }}
+    - role: AcrPull
+      scope: {{ .id }}
+    {{- end }}
+---
+  {{- range .Values.global.azure.createACRRegistries }}
+  {{- $name := index (splitList "." .loginServer) 0 }}
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: ACRAccessToken
+metadata:
+  name: "acr-token-{{ $name }}"
+  namespace: {{ $.Values.global.azure.createACRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  registry: {{ .loginServer }}
+  tenantId: {{ $.Values.global.azure.tenantID }}
+  auth:
+    workloadIdentity:
+      serviceAccountRef:
+        name: acr-token
+---
+# Name and url match the secret the tools image seeds (images/tools/functions-argocd.sh)
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "repo-{{ $name }}"
+  namespace: {{ $.Values.global.azure.createACRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 30m
+  target:
+    name: "repo-{{ $name }}"
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repo-creds
+      data:
+        name: "repo-{{ $name }}"
+        type: helm
+        enableOCI: "true"
+        url: {{ .loginServer }}
+        password: "{{`{{ .password }}`}}"
+        username: "{{`{{ .username }}`}}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ACRAccessToken
+          name: "acr-token-{{ $name }}"
+---
+  {{- end }}
+{{- end }}

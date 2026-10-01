@@ -9,7 +9,8 @@ mirrored with `pullpush.sh`). Providers use the workload identity of modules/azu
 ### WorkloadIdentity ###
 
 Creates the managed identity `<cluster name>-<namespace>-<service account>`, its federated credential, the role
-assignments and the service account with the client id (charts set `serviceAccount.create: false`).
+assignments and the service account with the client id (charts set `serviceAccount.create: false`), plus
+`serviceAccountAnnotations` if set.
 
 ```
 apiVersion: azure.entigo.com/v1alpha1

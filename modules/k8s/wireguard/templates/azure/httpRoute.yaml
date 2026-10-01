@@ -1,0 +1,30 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+# Public key download endpoint: the Azure load balancer is L4 and terminates no TLS, so like google the endpoint
+# gets its own hostname and route on the AGC gateway. See README.md.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-pubkey
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.global.gateway.name }}
+      namespace: {{ .Values.global.gateway.namespace }}
+      sectionName: https
+  hostnames:
+    - {{ .Values.global.pubkeyHostname | quote }}
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .Release.Name }}-pubkey
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}

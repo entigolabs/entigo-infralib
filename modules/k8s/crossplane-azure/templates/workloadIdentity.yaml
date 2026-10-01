@@ -40,6 +40,10 @@ spec:
                   x-kubernetes-validations:
                     - rule: self == oldSelf
                       message: serviceAccountName is immutable
+                serviceAccountAnnotations:
+                  type: object
+                  additionalProperties:
+                    type: string
                 roleAssignments:
                   type: array
                   maxItems: 20
@@ -177,6 +181,9 @@ spec:
                 gotemplating.fn.crossplane.io/composition-resource-name: service-account
                 gotemplating.fn.crossplane.io/ready: "True"
                 azure.workload.identity/client-id: [[ $clientId ]]
+                [[- range $k, $v := $xr.spec.serviceAccountAnnotations ]]
+                [[ $k ]]: [[ $v | quote ]]
+                [[- end ]]
             [[- end ]]
             ---
             apiVersion: [[ $xr.apiVersion ]]
