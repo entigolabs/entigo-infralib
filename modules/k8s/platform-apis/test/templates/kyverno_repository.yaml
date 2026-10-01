@@ -1,0 +1,7 @@
+apiVersion: artifact.entigo.com/v1alpha1
+kind: Repository
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Namespace }}
+# Empty spec is mandatory
+spec: {}
