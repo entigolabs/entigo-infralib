@@ -1,5 +1,7 @@
 global:
   cloudProvider: ""
+  azure:
+    agcHealthCheck: false
   addPrometheusAnnotations: true
   logging:
     format: json

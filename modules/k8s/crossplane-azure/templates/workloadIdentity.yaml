@@ -1,0 +1,206 @@
+{{- if .Values.workloadIdentity.enabled }}
+{{- $az := .Values.global.azure }}
+{{- $rgScope := printf "/subscriptions/%s/resourcegroups/%s/providers/" $az.subscriptionID $az.resourceGroupName | lower }}
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: workloadidentities.azure.entigo.com
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  group: azure.entigo.com
+  names:
+    kind: WorkloadIdentity
+    plural: workloadidentities
+  scope: Namespaced
+  defaultCompositionRef:
+    name: workloadidentities.azure.entigo.com
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      additionalPrinterColumns:
+        - name: CLIENT-ID
+          type: string
+          jsonPath: .status.clientId
+      schema:
+        openAPIV3Schema:
+          description: Azure managed identity federated with a service account in this namespace, the service account is created with the client id annotation
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - serviceAccountName
+              properties:
+                serviceAccountName:
+                  type: string
+                  minLength: 1
+                  maxLength: 63
+                  x-kubernetes-validations:
+                    - rule: self == oldSelf
+                      message: serviceAccountName is immutable
+                roleAssignments:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: object
+                    required:
+                      - role
+                      - scope
+                    properties:
+                      role:
+                        type: string
+                        enum:
+                          {{- toYaml .Values.workloadIdentity.allowedRoles | nindent 26 }}
+                      scope:
+                        type: string
+                        maxLength: 1024
+                    x-kubernetes-validations:
+                      - rule: self.scope.lowerAscii().startsWith({{ $rgScope | quote }})
+                        message: scope must be a resource in resource group {{ $az.resourceGroupName }}
+                      - rule: "!self.role.startsWith('Storage ') || (self.scope.lowerAscii().matches('/blobservices/default/containers/[^/]+$') && !self.scope.lowerAscii().endsWith('/containers/tfstate'))"
+                        message: storage roles only on a blob container other than tfstate
+            status:
+              type: object
+              properties:
+                clientId:
+                  type: string
+                principalId:
+                  type: string
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: workloadidentities.azure.entigo.com
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  compositeTypeRef:
+    apiVersion: azure.entigo.com/v1alpha1
+    kind: WorkloadIdentity
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef:
+        name: {{ .Release.Name }}-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        # Helm keeps the default delimiters
+        delims:
+          left: "[["
+          right: "]]"
+        source: Inline
+        inline:
+          template: |
+            [[- $xr := .observed.composite.resource ]]
+            [[- $ns := $xr.metadata.namespace ]]
+            [[- $sa := $xr.spec.serviceAccountName ]]
+            [[- $name := printf "%s-%s-%s" "{{ $az.identityPrefix }}" $ns $sa ]]
+            [[- if gt (len $name) 128 ]][[ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) ]][[ end ]]
+            [[- /* Fall back to the rendered values: a missing status must not delete resources */]]
+            [[- $observed := dig "resources" dict .observed ]]
+            [[- $identity := dig "identity" "resource" "status" "atProvider" dict $observed ]]
+            [[- $id := dig "id" "" $identity | default (dig "federated-credential" "resource" "spec" "forProvider" "parentId" "" $observed) ]]
+            [[- $principalId := dig "principalId" "" $identity ]]
+            [[- $clientId := dig "clientId" "" $identity | default (dig "service-account" "resource" "metadata" "annotations" "azure.workload.identity/client-id" "" $observed) ]]
+            ---
+            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
+            kind: UserAssignedIdentity
+            metadata:
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: identity
+            spec:
+              providerConfigRef:
+                kind: ClusterProviderConfig
+                name: {{ .Release.Name }}
+              forProvider:
+                name: [[ $name ]]
+                location: {{ $az.location }}
+                resourceGroupName: {{ $az.resourceGroupName }}
+                tags:
+                  created-by: entigo-infralib
+                  kubernetes-namespace: [[ $ns ]]
+                  kubernetes-service-account: [[ $sa ]]
+            [[- if $id ]]
+            ---
+            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
+            kind: FederatedIdentityCredential
+            metadata:
+              name: [[ $xr.metadata.name ]]
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: federated-credential
+            spec:
+              providerConfigRef:
+                kind: ClusterProviderConfig
+                name: {{ .Release.Name }}
+              forProvider:
+                audience:
+                  - api://AzureADTokenExchange
+                issuer: {{ $az.oidcIssuerUrl }}
+                subject: system:serviceaccount:[[ $ns ]]:[[ $sa ]]
+                parentId: [[ $id ]]
+                resourceGroupName: {{ $az.resourceGroupName }}
+            [[- end ]]
+            [[- /* RoleAssignment has no principalIdRef */]]
+            [[- range $ra := $xr.spec.roleAssignments ]]
+            [[- $key := printf "role-%s" (sha1sum (printf "%s|%s" $ra.role (lower $ra.scope)) | trunc 10) ]]
+            [[- $principal := $principalId | default (dig $key "resource" "spec" "forProvider" "principalId" "" $observed) ]]
+            [[- if $principal ]]
+            ---
+            apiVersion: authorization.azure.m.upbound.io/v1beta1
+            kind: RoleAssignment
+            metadata:
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: [[ $key ]]
+            spec:
+              providerConfigRef:
+                kind: ClusterProviderConfig
+                name: {{ .Release.Name }}
+              forProvider:
+                principalId: [[ $principal ]]
+                principalType: ServicePrincipal
+                roleDefinitionName: [[ $ra.role | quote ]]
+                scope: [[ $ra.scope | quote ]]
+                skipServicePrincipalAadCheck: true
+            [[- end ]]
+            [[- end ]]
+                        [[- if $clientId ]]
+            ---
+            apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: [[ $sa ]]
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: service-account
+                gotemplating.fn.crossplane.io/ready: "True"
+                azure.workload.identity/client-id: [[ $clientId ]]
+            [[- end ]]
+            ---
+            apiVersion: [[ $xr.apiVersion ]]
+            kind: [[ $xr.kind ]]
+            [[- if not $clientId ]]
+            metadata:
+              annotations:
+                gotemplating.fn.crossplane.io/ready: "False"
+            [[- end ]]
+            status:
+              clientId: [[ $clientId | quote ]]
+              principalId: [[ $principalId | quote ]]
+    - step: ready
+      functionRef:
+        name: {{ .Release.Name }}-auto-ready
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-workload-identity
+  labels:
+    rbac.crossplane.io/aggregate-to-crossplane: "true"
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- end }}

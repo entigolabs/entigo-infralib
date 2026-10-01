@@ -1,0 +1,71 @@
+{{- if .Values.workloadIdentity.enabled }}
+{{- range $name, $fn := dict "go-templating" .Values.workloadIdentity.functions.goTemplating "auto-ready" .Values.workloadIdentity.functions.autoReady }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: {{ $fn.image }}:{{ $fn.tag }}
+  runtimeConfigRef:
+    apiVersion: pkg.crossplane.io/v1beta1
+    kind: DeploymentRuntimeConfig
+    name: {{ $.Release.Name }}-function
+{{- end }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: {{ .Release.Name }}-function
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: tools
+                        operator: In
+                        values:
+                          - 'true'
+                  weight: 90
+          containers:
+            - name: package-runtime
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 1000m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+          securityContext:
+            fsGroup: 2000
+            runAsUser: 65532
+            runAsGroup: 65532
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          tolerations:
+            - effect: NoSchedule
+              key: tools
+              operator: Equal
+              value: 'true'
+            - effect: NoSchedule
+              key: CriticalAddonsOnly
+              operator: Exists
+{{- end }}

@@ -1,0 +1,45 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-azure
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: xpkg.upbound.io/upbound/provider-family-azure:{{ .Values.global.providerVersion }}
+  runtimeConfigRef:
+    name: {{ .Release.Name }}-family
+
+{{- $allProviders := list }}
+
+{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
+{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+
+{{- if or .Values.global.createObservers .Values.global.createNamespacedObservers }}
+  {{- $allProviders = concat $allProviders .Values.global.observerProviders }}
+{{- end }}
+
+{{- $uniqueProviders := list }}
+{{- range $provider := $allProviders }}
+  {{- if not (has $provider $uniqueProviders) }}
+    {{- $uniqueProviders = append $uniqueProviders $provider }}
+  {{- end }}
+{{- end }}
+
+{{- range $index, $provider := $uniqueProviders }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-azure-{{ $provider }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 5) }}'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  skipDependencyResolution: true
+  package: xpkg.upbound.io/upbound/provider-azure-{{ $provider }}:{{ $.Values.global.providerVersion }}
+  runtimeConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}

@@ -29,6 +29,11 @@ spec:
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
+        {{- if eq .Values.global.cloudProvider "azure" }}
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"
+        {{- end }}
       containers:
         - name: mcp-for-argocd
           image: {{ .Values.mcp.image }}:{{ .Values.mcp.tag }}

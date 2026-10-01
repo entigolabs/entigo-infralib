@@ -1,0 +1,15 @@
+global:
+  azure:
+    clientID: "{{ .toutput.crossplane.client_id }}"
+    tenantID: "{{ .toutput.crossplane.tenant_id }}"
+    subscriptionID: "{{ .toutput.crossplane.subscription_id }}"
+    resourceGroupName: "{{ .toutput.crossplane.resource_group_name }}"
+    location: "{{ .toutput.aks.region }}"
+    oidcIssuerUrl: "{{ .toutput.aks.oidc_issuer_url }}"
+    identityPrefix: "{{ .toutput.aks.cluster_name }}"
+workloadIdentity:
+  functions:
+    goTemplating:
+      image: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/function-go-templating'
+    autoReady:
+      image: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/function-auto-ready'
