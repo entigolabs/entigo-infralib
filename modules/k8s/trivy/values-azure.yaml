@@ -1,0 +1,50 @@
+global:
+  cloudProvider: azure
+  providerConfigRefName: crossplane-azure
+  azure:
+    acrId: ""
+
+trivy-operator:
+  # Created by the WorkloadIdentity (templates/azure)
+  serviceAccount:
+    create: false
+  trivyOperator:
+    # Scan jobs run with the operator service account and pull from ACR with workload identity
+    scanJobPodTemplateLabels: "azure.workload.identity/use=true"
+    scanJobTolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+  nodeCollector:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

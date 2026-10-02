@@ -234,6 +234,8 @@ git_login() {
     # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
     if [ -n "$OCI_REGION" ]; then
       :
+    elif [ -n "$AZURE_LOCATION" ]; then
+      :
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)

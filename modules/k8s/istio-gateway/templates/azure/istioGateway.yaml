@@ -1,0 +1,16 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+spec:
+  selector:
+    app: {{ .Values.gateway.name }}
+  servers:
+  - hosts:
+    - "*"
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+{{- end }}

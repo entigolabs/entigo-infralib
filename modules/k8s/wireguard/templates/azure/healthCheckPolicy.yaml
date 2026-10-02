@@ -1,0 +1,26 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: alb.networking.azure.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ .Release.Name }}-pubkey
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Release.Name }}-pubkey
+    namespace: {{ .Release.Namespace }}
+  default:
+    interval: 5s
+    timeout: 5s
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    port: 8080
+    http:
+      path: /
+      match:
+        statusCodes:
+          - start: 200
+            end: 299
+{{- end }}

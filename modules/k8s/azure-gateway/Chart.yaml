@@ -1,0 +1,12 @@
+apiVersion: v2
+name: azure-gateway
+description: Gateway API gateways on Application Gateway for Containers
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: alb-controller
+    version: 1.12.1
+    repository: oci://mcr.microsoft.com/application-lb/charts
+    condition: installAlbController

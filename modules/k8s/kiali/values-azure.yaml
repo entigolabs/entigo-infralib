@@ -1,0 +1,21 @@
+global:
+  cloudProvider: "azure"
+  createRoute: true
+
+kiali-server:
+  deployment:
+    ingress:
+      enabled: false
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  # server.port stays at the chart's 20001 like oracle: the gateway terminates TLS

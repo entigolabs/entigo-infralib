@@ -1,0 +1,16 @@
+domains: |
+  {
+    "bizpublic" = {
+      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+    },
+    "bizprivate" = {
+      domain_name     = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.azure.infralib.entigo.io"
+      private         = true
+      default_private = true
+    },
+    "bizprivateextra" = {
+      domain_name       = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-extra-int.azure.infralib.entigo.io"
+      private           = true
+      create_validation = false
+    }
+  }

@@ -1,0 +1,15 @@
+{{- if and (eq .Values.global.cloudProvider "azure") .Values.global.createClusterSecretStore }}
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: secret-manager-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # No tenant-id annotation: the ClusterSecretStore sets the tenant, both fail with "multiple tenantID found"
+  serviceAccountName: secret-manager-operator
+  roleAssignments:
+    - role: Key Vault Secrets User
+      scope: {{ required "global.azure.vaultId" .Values.global.azure.vaultId }}
+{{- end }}

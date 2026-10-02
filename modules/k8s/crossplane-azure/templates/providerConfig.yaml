@@ -1,0 +1,37 @@
+{{- if .Values.installProviderConfig }}
+
+apiVersion: azure.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  credentials:
+    source: OIDCTokenFile
+  oidcTokenFilePath: /var/run/secrets/azure/tokens/azure-identity-token
+  clientID: {{ .Values.global.azure.clientID | quote }}
+  tenantID: {{ .Values.global.azure.tenantID | quote }}
+  subscriptionID: {{ .Values.global.azure.subscriptionID | quote }}
+  storageUseAzureAD: true
+---
+apiVersion: azure.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    helm.sh/resource-policy: keep
+spec:
+  credentials:
+    source: OIDCTokenFile
+  oidcTokenFilePath: /var/run/secrets/azure/tokens/azure-identity-token
+  clientID: {{ .Values.global.azure.clientID | quote }}
+  tenantID: {{ .Values.global.azure.tenantID | quote }}
+  subscriptionID: {{ .Values.global.azure.subscriptionID | quote }}
+  storageUseAzureAD: true
+
+{{- end }}

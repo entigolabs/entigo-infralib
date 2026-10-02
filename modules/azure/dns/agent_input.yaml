@@ -1,0 +1,3 @@
+resource_group_name: "{{ .config.prefix }}-infralib-{{ .agent.region }}"
+vpc_ids: |
+  ["{{ .toutput.vpc.vpc_id }}"]

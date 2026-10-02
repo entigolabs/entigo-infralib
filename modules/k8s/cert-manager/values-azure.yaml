@@ -1,0 +1,58 @@
+global:
+  cloudProvider: azure
+  azure:
+    pubZoneId: ""
+    # Public twin zone of the private int domain, "" = no int solver
+    intCertZoneId: ""
+
+cert-manager:
+  # Split horizon: the private int zone has no public NS, challenge records are in its public twin
+  dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
+  dns01RecursiveNameserversOnly: true
+  serviceAccount:
+    create: false
+    name: cert-manager
+  podLabels:
+    azure.workload.identity/use: "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+  webhook:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+    # AKS Admissions Enforcer adds the last two expressions
+    validatingWebhookConfiguration:
+      namespaceSelector:
+        matchExpressions:
+          - key: "cert-manager.io/disable-validation"
+            operator: "NotIn"
+            values:
+              - "true"
+          - key: "control-plane"
+            operator: "NotIn"
+            values:
+              - "true"
+          - key: "kubernetes.azure.com/managedby"
+            operator: "NotIn"
+            values:
+              - "aks"
+  cainjector:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

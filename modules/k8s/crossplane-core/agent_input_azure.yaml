@@ -1,0 +1,4 @@
+crossplane:
+  serviceAccount:
+    customAnnotations:
+      azure.workload.identity/client-id: "{{ .toutput.crossplane.core_client_id }}"

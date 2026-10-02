@@ -1,0 +1,14 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  activate:
+{{- if .Values.workloadIdentity.enabled }}
+  - 'userassignedidentities.managedidentity.azure.m.upbound.io'
+  - 'federatedidentitycredentials.managedidentity.azure.m.upbound.io'
+  - 'roleassignments.authorization.azure.m.upbound.io'
+{{- end }}

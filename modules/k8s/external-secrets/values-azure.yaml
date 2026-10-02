@@ -1,0 +1,39 @@
+global:
+  cloudProvider: azure
+  providerConfigRefName: crossplane-azure
+
+  azure:
+    tenantID: ""
+    # Agent Key Vault resource id
+    vaultId: ""
+    # ArgoCD repo-creds for ACR: argocd namespace, registries as [{loginServer: <acr>.azurecr.io, id: <acr resource id>}]
+    createACRNamespace: ""
+    createACRRegistries: []
+
+external-secrets:
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+  webhook:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  certController:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

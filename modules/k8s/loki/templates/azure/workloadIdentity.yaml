@@ -1,0 +1,14 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountName: {{ .Values.loki.serviceAccount.name }}
+  roleAssignments:
+    - role: Storage Blob Data Contributor
+      scope: {{ printf "%s/blobServices/default/containers/%s" .Values.global.azure.storageAccountId .Values.global.bucketName }}
+{{- end }}

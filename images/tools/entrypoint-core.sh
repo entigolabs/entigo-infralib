@@ -16,12 +16,14 @@ source "$SCRIPT_DIR/functions-common.sh"
 # also sets AWS_REGION, which would otherwise match the AWS branch below.
 if [ ! -z "$OCI_REGION" ]; then
     source "$SCRIPT_DIR/functions-oracle.sh"
+elif [ ! -z "$AZURE_LOCATION" ]; then
+    source "$SCRIPT_DIR/functions-azure.sh"
 elif [ ! -z "$GOOGLE_REGION" ]; then
     source "$SCRIPT_DIR/functions-google.sh"
 elif [ ! -z "$AWS_REGION" ]; then
     source "$SCRIPT_DIR/functions-aws.sh"
 else
-    echo "AWS_REGION, GOOGLE_REGION or OCI_REGION must be set"
+    echo "AWS_REGION, GOOGLE_REGION, OCI_REGION or AZURE_LOCATION must be set"
     exit 1
 fi
 

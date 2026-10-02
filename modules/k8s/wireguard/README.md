@@ -181,3 +181,24 @@ public and a private IP, the Service reports both, and external-dns publishes bo
 one name. WireGuard resolves the hostname once at startup and picks one - so roughly half the
 time it picks the in-VCN address and the tunnel silently never establishes. Until that is
 fixed, put the public IP in `Endpoint` rather than the hostname.
+
+## Azure ##
+
+The Service is a public Azure Standard Load Balancer (UDP 51820, AKS opens the NSG). It is L4 and terminates no TLS,
+so like google the public key gets its own hostname and an HTTPRoute on the azure-gateway external gateway (AGC) with
+an AGC HealthCheckPolicy (`templates/azure/`). The load balancer IP is not static; external-dns updates the record.
+
+Client: the private int zone resolves through CoreDNS, which forwards to the VNet resolver.
+
+```ini
+[Interface]
+PrivateKey = <your wg-private.key>
+Address    = 172.31.201.2/32
+DNS        = 10.11.0.10       # aks dns_service_ip (kube-dns)
+
+[Peer]
+PublicKey           = <curl https://<module name>-pubkey.<pub_domain>>
+AllowedIPs          = 10.0.0.0/16, 10.11.0.0/16   # vpc_cidr, aks service_cidr
+Endpoint            = <module name>.<pub_domain>:51820
+PersistentKeepalive = 15
+```

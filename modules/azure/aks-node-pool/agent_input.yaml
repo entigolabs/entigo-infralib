@@ -1,0 +1,5 @@
+name: "{{ .module.name }}"
+location: "{{ .toutput.aks.region }}"
+cluster_id: "{{ .toutput.aks.cluster_id }}"
+kubernetes_version: "{{ .toutput.aks.kubernetes_version }}"
+vnet_subnet_id: "{{ .toutput.aks.vnet_subnet_id }}"

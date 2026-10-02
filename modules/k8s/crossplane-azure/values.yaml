@@ -1,0 +1,43 @@
+installProviderConfig: true
+
+global:
+  azure:
+    subscriptionID: ""
+    tenantID: ""
+    clientID: ""
+    resourceGroupName: ""
+    location: ""
+    oidcIssuerUrl: ""
+    identityPrefix: ""
+    nodeResourceGroupName: ""
+
+  providerVersion: v2.7.2
+
+  deploymentRuntimeConfig:
+    args:
+      - --enable-management-policies
+
+  extraProviders: []
+  observerProviders: []
+  requiredProviders: ["managedidentity", "authorization", "storage"]
+  createObservers: false
+  createNamespacedObservers: false
+
+workloadIdentity:
+  enabled: true
+  allowedRoles:
+    - AcrPull
+    - Key Vault Secrets User
+    - Storage Blob Data Contributor
+    - DNS Zone Contributor
+    - Private DNS Zone Contributor
+  # Also on the agent resource group itself and the AKS node resource group
+  readOnlyRoles:
+    - Monitoring Reader
+  functions:
+    goTemplating:
+      image: docker.io/entigolabs/function-go-templating
+      tag: v0.12.4
+    autoReady:
+      image: docker.io/entigolabs/function-auto-ready
+      tag: v0.7.0

@@ -1,0 +1,71 @@
+global:
+  cloudProvider: azure
+  providerConfigRefName: crossplane-azure
+  azure:
+    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
+    agcHealthCheck: false
+
+prometheus:
+  server:
+    ingress:
+      enabled: false
+    route:
+      main:
+        enabled: true
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  kube-state-metrics:
+    metricLabelsAllowlist:
+      - nodes=[kubernetes.azure.com/agentpool,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,kubernetes.azure.com/scalesetpriority,topology.kubernetes.io/zone]
+      - namespaces=[tenancy.entigo.com/zone]
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  alertmanager:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+prometheus-blackbox-exporter:
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"

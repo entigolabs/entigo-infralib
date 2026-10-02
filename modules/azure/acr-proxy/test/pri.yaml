@@ -1,0 +1,7 @@
+sku: "Standard"
+hub_username_secret: "acr-proxy-hub-username"
+hub_access_token_secret: "acr-proxy-hub-token"
+ghcr_username_secret: "acr-proxy-ghcr-username"
+ghcr_access_token_secret: "acr-proxy-ghcr-token"
+quay_username_secret: "acr-proxy-quay-username"
+quay_access_token_secret: "acr-proxy-quay-token"

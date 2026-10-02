@@ -1,0 +1,110 @@
+{{- if and (eq .Values.global.cloudProvider "azure") (eq .Release.Namespace .Values.global.internalGateway.namespace) }}
+{{- $cfg := .Values.global.internalGateway }}
+{{- $domain := required "global.internalGateway.domain" $cfg.domain }}
+{{- $secret := printf "%s-internal-tls" .Release.Name }}
+{{- $service := printf "%s-internal" .Values.gateway.name }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.gateway.name }}
+    istio: {{ .Values.gateway.name | trimPrefix "istio-" }}
+  ports:
+    - name: http2
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $secret }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: {{ $secret }}
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: {{ $cfg.certificateIssuer }}
+  dnsNames:
+    - {{ $domain | quote }}
+    - {{ printf "*.%s" $domain | quote }}
+  privateKey:
+    {{- toYaml $cfg.certificatePrivateKey | nindent 4 }}
+---
+# Istio manual deployment: spec.addresses points at the internal Service, istiod programs these pods
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $cfg.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  gatewayClassName: istio
+  addresses:
+    - type: Hostname
+      value: {{ printf "%s.%s.svc.cluster.local" $service .Release.Namespace }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            group: ""
+            name: {{ $secret }}
+    # Port 80 is shared with the public istio Gateway: only the internal hostnames here
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: {{ printf "*.%s" $domain | quote }}
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+{{- if $cfg.sslRedirect }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $cfg.name }}-redirect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $cfg.name }}
+      sectionName: http
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}
+{{- end }}

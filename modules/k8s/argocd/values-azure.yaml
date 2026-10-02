@@ -1,0 +1,113 @@
+global:
+  cloudProvider: azure
+
+argocd:
+  configs:
+    params:
+      server.insecure: true
+  server:
+    ingress:
+      enabled: false
+    httproute:
+      enabled: true
+      annotations:
+        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  dex:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  redis:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  redisSecretInit:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  redis-ha:
+    redis:
+      tolerations:
+      - key: tools
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+        effect: NoSchedule
+    sentinel:
+      tolerations:
+      - key: tools
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+        effect: NoSchedule
+    haproxy:
+      tolerations:
+      - key: tools
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+        effect: NoSchedule
+  repoServer:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  applicationSet:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  notifications:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+  controller:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule

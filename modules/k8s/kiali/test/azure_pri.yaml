@@ -1,0 +1,10 @@
+# TODO: Zitadel login for the azure test environments (client ids added later)
+# kiali-server:
+#   auth:
+#     strategy: openid
+#     openid:
+#       client_id: ""
+#       disable_rbac: true
+#       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
+#       scopes: ["openid", "profile", "email", "roles"]
+#       username_claim: "email"

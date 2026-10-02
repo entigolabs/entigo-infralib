@@ -1,0 +1,10 @@
+global:
+  installPrometheusOperatorCRDs: true
+  installBlackbox: true
+prometheus:
+  server:
+    remoteWrite:
+      - name: "{{ .config.prefix }}"
+        url: http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push
+        headers:
+          X-Scope-OrgID: "{{ .config.prefix }}"
