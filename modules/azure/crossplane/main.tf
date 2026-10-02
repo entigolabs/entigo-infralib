@@ -93,19 +93,17 @@ data "azurerm_resources" "agent_storage" {
   }
 }
 
-# The agent identity encrypts its storage account; loki/mimir containers use the kms telemetry key through it
-data "azurerm_resources" "agent_identity" {
+# The storage account's own identity (agent v1.15+: <prefix>-storage) reads the CMK keys, also for loki/mimir encryption scopes
+data "azurerm_storage_account" "agent" {
+  count               = var.telemetry_key_resource_id != "" ? 1 : 0
+  name                = data.azurerm_resources.agent_storage.resources[0].name
   resource_group_name = var.resource_group_name
-  type                = "Microsoft.ManagedIdentity/userAssignedIdentities"
-  required_tags = {
-    created-by = "entigo-infralib-agent"
-  }
 }
 
 data "azurerm_user_assigned_identity" "agent" {
   count               = var.telemetry_key_resource_id != "" ? 1 : 0
-  name                = data.azurerm_resources.agent_identity.resources[0].name
-  resource_group_name = var.resource_group_name
+  name                = provider::azurerm::parse_resource_id(data.azurerm_storage_account.agent[0].identity[0].identity_ids[0]).resource_name
+  resource_group_name = provider::azurerm::parse_resource_id(data.azurerm_storage_account.agent[0].identity[0].identity_ids[0]).resource_group_name
 }
 
 resource "azurerm_role_assignment" "agent_telemetry_key" {
