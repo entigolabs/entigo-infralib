@@ -25,6 +25,11 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   inside the VNet, so agent steps that use the cluster run in the vpc pipeline subnet (argocd steps attach by
   default) and people use the VPN. With
   `private_cluster_enabled: false` the public endpoint is limited to `api_server_authorized_ip_ranges` (`[]` = open).
+* `private_dns_zone_id`: central private DNS zone `private.<location>.azmk8s.io` (or `<subzone>.private...`) for the
+  private API server, create time only. Without it AKS creates a zone per cluster (`<guid>.private...`) linked only to
+  the cluster VNet, so hub/on-prem DNS can't resolve several clusters; one central zone per region, linked to the hub
+  VNets, resolves all of them. The module gives the cluster identity Private DNS Zone Contributor on the zone and
+  Network Contributor on the VNet, AKS links the zone to the cluster VNet.
 * Access: the Terraform caller (the agent) and `admin_object_ids` get Azure Kubernetes Service RBAC Cluster Admin.
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
 * `agc_subnet_ids` (vpc `agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one

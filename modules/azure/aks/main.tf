@@ -121,6 +121,10 @@ resource "azurerm_user_assigned_identity" "aks" {
       error_message = "api_server_vnet_integration_enabled needs api_server_subnet_id (vpc apiserver_subnets)."
     }
     precondition {
+      condition     = var.private_dns_zone_id == "" || (var.private_cluster_enabled && can(regex("/privatednszones/([a-z0-9-]{1,32}\\.)?private\\.${lower(var.location)}\\.azmk8s\\.io$", lower(var.private_dns_zone_id))))
+      error_message = "private_dns_zone_id needs private_cluster_enabled and a zone named private.${var.location}.azmk8s.io or <subzone>.private.${var.location}.azmk8s.io."
+    }
+    precondition {
       condition     = !local.disk_encryption || var.kms_key_vault_id != ""
       error_message = "disk_encryption_key_id needs kms_key_vault_id."
     }
@@ -140,6 +144,30 @@ resource "azurerm_role_assignment" "aks_apiserver_network" {
   role_definition_name             = "Network Contributor"
   principal_id                     = azurerm_user_assigned_identity.aks.principal_id
   skip_service_principal_aad_check = true
+}
+
+# Central private DNS zone: AKS writes the API server record and links the zone to the cluster VNet
+resource "azurerm_role_assignment" "aks_private_dns_zone" {
+  count                            = var.private_dns_zone_id != "" ? 1 : 0
+  scope                            = var.private_dns_zone_id
+  role_definition_name             = "Private DNS Zone Contributor"
+  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "aks_vnet" {
+  count                            = var.private_dns_zone_id != "" ? 1 : 0
+  scope                            = regex("^(.*)/subnets/[^/]+$", var.vnet_subnet_id)[0]
+  role_definition_name             = "Network Contributor"
+  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  skip_service_principal_aad_check = true
+}
+
+# AKS checks the zone permissions at creation
+resource "time_sleep" "private_dns_roles" {
+  count           = var.private_dns_zone_id != "" ? 1 : 0
+  create_duration = "60s"
+  depends_on      = [azurerm_role_assignment.aks_private_dns_zone, azurerm_role_assignment.aks_vnet]
 }
 
 # Bootstrap cache: the kubelet identity needs AcrPull before the nodes bootstrap, so it can't be the AKS-created one
@@ -265,6 +293,7 @@ module "aks" {
     authorized_ip_ranges    = var.private_cluster_enabled ? [] : var.api_server_authorized_ip_ranges
     enable_vnet_integration = var.api_server_vnet_integration_enabled
     subnet_id               = var.api_server_vnet_integration_enabled ? var.api_server_subnet_id : null
+    private_dns_zone        = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
   }
 
   network_profile = {
@@ -300,6 +329,7 @@ module "aks" {
     azurerm_role_assignment.kubelet_identity_operator,
     azurerm_role_assignment.kubelet_bootstrap_acr_pull,
     time_sleep.key_roles,
+    time_sleep.private_dns_roles,
   ]
 }
 

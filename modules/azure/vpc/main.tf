@@ -4,13 +4,20 @@ locals {
   public_subnets   = var.public_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 0)] : var.public_subnets
   intra_subnets    = var.intra_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 1)] : var.intra_subnets
   database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 2)] : var.database_subnets
-  # Fourth part: AGC /24, API server /28, pipeline /27
-  agc_block         = cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 3)
-  agc_subnets       = var.agc_subnets == null ? [cidrsubnet(local.agc_block, 24 - tonumber(split("/", local.agc_block)[1]), 0)] : var.agc_subnets
-  apiserver_subnets = var.apiserver_subnets == null ? [cidrsubnet(local.agc_block, 28 - tonumber(split("/", local.agc_block)[1]), 16)] : var.apiserver_subnets
-  pipeline_subnets  = var.pipeline_subnets == null ? [cidrsubnet(local.agc_block, 27 - tonumber(split("/", local.agc_block)[1]), 9)] : var.pipeline_subnets
+  # Fourth part, delegated subnets
+  delegated_block = cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 3)
+  delegated_bits  = tonumber(split("/", local.delegated_block)[1])
+  apiserver_bits  = max(24, local.delegated_bits + 5)
+  # AGC /24, API server and pipeline next to each other: /24 each for a /16, /28 and /27 for a /20
+  # Smaller than /20: no room, the delegated subnet lists must be explicit
+  delegated_subnets = local.delegated_bits <= 23 ? cidrsubnets(local.delegated_block, 24 - local.delegated_bits, local.apiserver_bits - local.delegated_bits, min(27, local.apiserver_bits) - local.delegated_bits) : []
+  agc_subnets       = var.agc_subnets == null ? try([local.delegated_subnets[0]], []) : var.agc_subnets
+  apiserver_subnets = var.apiserver_subnets == null ? try([local.delegated_subnets[1]], []) : var.apiserver_subnets
+  pipeline_subnets  = var.pipeline_subnets == null ? try([local.delegated_subnets[2]], []) : var.pipeline_subnets
+  # Last quarter of the delegated block for MSSQL Managed Instances
+  mssql_subnets = var.enable_mssql_subnets ? (var.mssql_subnets == null ? [cidrsubnet(local.delegated_block, 2, 3)] : var.mssql_subnets) : []
 
-  # Overlaps are only rejected at apply by Azure, check them at plan time
+  # Plan time validations
   all_subnets = flatten([for type, cidrs in {
     private   = local.private_subnets
     public    = local.public_subnets
@@ -19,6 +26,7 @@ locals {
     agc       = local.agc_subnets
     apiserver = local.apiserver_subnets
     pipeline  = local.pipeline_subnets
+    mssql     = local.mssql_subnets
   } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]])
   subnet_ranges = [for s in concat([{ name = "vpc", cidr = var.vpc_cidr }], local.all_subnets) : merge(s, {
     start = sum([for i, octet in split(".", cidrhost(s.cidr, 0)) : tonumber(octet) * pow(256, 3 - i)])
@@ -50,6 +58,14 @@ resource "azurerm_virtual_network" "this" {
     precondition {
       condition     = length(local.subnets_outside_vpc) == 0
       error_message = "Subnets outside vpc_cidr ${var.vpc_cidr}: ${join(", ", local.subnets_outside_vpc)}."
+    }
+    precondition {
+      condition     = local.delegated_bits <= 23 || (var.agc_subnets != null && var.apiserver_subnets != null && var.pipeline_subnets != null)
+      error_message = "vpc_cidr is smaller than /20: set agc_subnets, apiserver_subnets and pipeline_subnets explicitly (or [])."
+    }
+    precondition {
+      condition     = alltrue([for cidr in local.mssql_subnets : tonumber(split("/", cidr)[1]) <= 27])
+      error_message = "SQL Managed Instance subnets must be /27 or larger: ${join(", ", local.mssql_subnets)}."
     }
     precondition {
       condition     = length(local.subnet_overlaps) == 0
@@ -166,6 +182,94 @@ resource "azurerm_subnet" "pipeline" {
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
   }
+}
+
+resource "azurerm_log_analytics_workspace" "pipeline" {
+  count               = length(local.pipeline_subnets) > 0 ? 1 : 0
+  name                = "${var.prefix}-pipeline"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  tags                = local.tags
+}
+
+resource "azurerm_container_app_environment" "pipeline" {
+  count                              = length(local.pipeline_subnets)
+  name                               = azurerm_subnet.pipeline[count.index].name
+  location                           = var.location
+  resource_group_name                = var.resource_group_name
+  infrastructure_subnet_id           = azurerm_subnet.pipeline[count.index].id
+  infrastructure_resource_group_name = "${azurerm_subnet.pipeline[count.index].name}-${var.location}"
+  internal_load_balancer_enabled     = true
+  logs_destination                   = "log-analytics"
+  log_analytics_workspace_id         = azurerm_log_analytics_workspace.pipeline[0].id
+  tags                               = local.tags
+
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
+
+  depends_on = [azurerm_subnet_nat_gateway_association.pipeline]
+}
+
+resource "azurerm_subnet" "mssql" {
+  count                           = length(local.mssql_subnets)
+  name                            = try(var.mssql_subnet_names[count.index], "${var.prefix}-mssql-${count.index}")
+  resource_group_name             = var.resource_group_name
+  virtual_network_name            = azurerm_virtual_network.this.name
+  address_prefixes                = [local.mssql_subnets[count.index]]
+  default_outbound_access_enabled = false
+
+  delegation {
+    name = "mssql-delegation"
+
+    service_delegation {
+      name = "Microsoft.Sql/managedInstances"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
+        "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action",
+      ]
+    }
+  }
+}
+
+resource "azurerm_network_security_group" "mssql" {
+  count               = length(local.mssql_subnets)
+  name                = azurerm_subnet.mssql[count.index].name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+
+  lifecycle {
+    ignore_changes = [security_rule]
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "mssql" {
+  count                     = length(local.mssql_subnets)
+  subnet_id                 = azurerm_subnet.mssql[count.index].id
+  network_security_group_id = azurerm_network_security_group.mssql[count.index].id
+}
+
+resource "azurerm_route_table" "mssql" {
+  count               = length(local.mssql_subnets)
+  name                = azurerm_subnet.mssql[count.index].name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+
+  lifecycle {
+    ignore_changes = [route]
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "mssql" {
+  count          = length(local.mssql_subnets)
+  subnet_id      = azurerm_subnet.mssql[count.index].id
+  route_table_id = azurerm_route_table.mssql[count.index].id
 }
 
 resource "azurerm_public_ip" "nat" {

@@ -76,3 +76,15 @@ output "pipeline_subnets" {
 output "pipeline_subnet_cidrs" {
   value = local.pipeline_subnets
 }
+
+output "pipeline_environment_ids" {
+  value = azurerm_container_app_environment.pipeline[*].id
+}
+
+output "mssql_subnets" {
+  value = azurerm_subnet.mssql[*].id
+}
+
+output "mssql_subnet_cidrs" {
+  value = local.mssql_subnets
+}

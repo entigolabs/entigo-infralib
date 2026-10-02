@@ -7,3 +7,4 @@ database_subnets: |
   ["10.146.16.0/22", "10.146.20.0/22"]
 intra_subnets: |
   []
+enable_mssql_subnets: true

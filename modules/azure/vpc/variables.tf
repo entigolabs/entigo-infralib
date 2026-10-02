@@ -117,10 +117,27 @@ variable "apiserver_subnets" {
 variable "pipeline_subnets" {
   type        = list(string)
   default     = null
-  description = "Container Apps environment subnet (agent jobs of vpc attached steps), min /27, one environment per subnet, size fixed once used"
+  description = "Container Apps environment subnet"
 }
 
 variable "pipeline_subnet_names" {
+  type    = list(string)
+  default = []
+}
+
+variable "enable_mssql_subnets" {
+  type        = bool
+  default     = false
+  description = "Create the Azure SQL Managed Instance subnets"
+}
+
+variable "mssql_subnets" {
+  type        = list(string)
+  default     = null
+  description = "Azure SQL Managed Instance subnets"
+}
+
+variable "mssql_subnet_names" {
   type    = list(string)
   default = []
 }

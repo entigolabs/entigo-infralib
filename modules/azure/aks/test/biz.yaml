@@ -4,9 +4,9 @@ api_server_authorized_ip_ranges: |
 bootstrap_cache_enabled: true
 aks_main_min_size: 2
 aks_main_max_size: 6
-aks_main_spot_nodes: true
+aks_main_spot_nodes: false
 aks_mon_min_size: 2
 aks_mon_max_size: 6
-aks_mon_spot_nodes: true
+aks_mon_spot_nodes: false
 aks_tools_min_size: 2
 aks_tools_max_size: 6
