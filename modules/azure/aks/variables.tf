@@ -18,9 +18,8 @@ variable "vnet_subnet_id" {
 }
 
 variable "kubernetes_version" {
-  type        = string
-  default     = "1.35"
-  description = "Minor version, AKS picks the latest patch"
+  type    = string
+  default = "1.35"
 }
 
 variable "sku_tier" {
@@ -30,23 +29,13 @@ variable "sku_tier" {
 }
 
 variable "upgrade_channel" {
-  type        = string
-  default     = "none"
-  description = "none or patch, stable/rapid would change the minor version under kubernetes_version"
-  validation {
-    condition     = contains(["none", "patch"], var.upgrade_channel)
-    error_message = "upgrade_channel must be none or patch."
-  }
+  type    = string
+  default = "none"
 }
 
 variable "node_os_upgrade_channel" {
-  type        = string
-  default     = "None"
-  description = "None, NodeImage, SecurityPatch or Unmanaged. None = new node images only with Kubernetes upgrades or az aks nodepool upgrade --node-image-only"
-  validation {
-    condition     = contains(["None", "Unmanaged", "SecurityPatch", "NodeImage"], var.node_os_upgrade_channel)
-    error_message = "node_os_upgrade_channel must be None, Unmanaged, SecurityPatch or NodeImage."
-  }
+  type    = string
+  default = "None"
 }
 
 variable "maintenance_window" {
@@ -56,8 +45,7 @@ variable "maintenance_window" {
     duration_hours = optional(number, 4)
     utc_offset     = optional(string, "+00:00")
   })
-  default     = {}
-  description = "Weekly window for upgrade_channel patch and the NodeImage/SecurityPatch channels, 4-24 hours"
+  default = {}
 }
 
 variable "pod_cidr" {
@@ -82,9 +70,8 @@ variable "outbound_type" {
 }
 
 variable "api_server_vnet_integration_enabled" {
-  type        = bool
-  default     = true
-  description = "API server IP in api_server_subnet_id. One-way on an existing cluster, needs az aks stop/start"
+  type    = bool
+  default = true
 }
 
 variable "api_server_subnet_id" {
@@ -93,13 +80,8 @@ variable "api_server_subnet_id" {
 }
 
 variable "private_cluster_enabled" {
-  type        = bool
-  default     = true
-  description = "No public API server endpoint, agent steps then need vpc attach"
-  validation {
-    condition     = !var.private_cluster_enabled || var.api_server_vnet_integration_enabled
-    error_message = "private_cluster_enabled requires api_server_vnet_integration_enabled."
-  }
+  type    = bool
+  default = true
 }
 
 # https://learn.microsoft.com/azure/aks/private-clusters#configuration-options-for-private-dns
@@ -115,13 +97,16 @@ variable "api_server_authorized_ip_ranges" {
     "13.51.186.14/32",  # Entigo VPN 1
     "13.53.208.166/32", # Entigo VPN 2
   ]
-  description = "Public endpoint allowlist, [] = open"
+}
+
+variable "nat_public_ips" {
+  type    = list(string)
+  default = []
 }
 
 variable "admin_object_ids" {
-  type        = list(string)
-  default     = []
-  description = "Entra ID object ids with Azure Kubernetes Service RBAC Cluster Admin, the caller is always added"
+  type    = list(string)
+  default = []
 }
 
 variable "disable_local_accounts" {
@@ -130,44 +115,42 @@ variable "disable_local_accounts" {
 }
 
 variable "acr_id" {
-  type        = string
-  default     = ""
-  description = "Registry with AcrPull for the kubelet identity"
-}
-
-variable "bootstrap_cache_enabled" {
-  type        = bool
-  default     = false
-  description = "Nodes pull AKS system images from acr_id (Premium, private endpoint, aks_bootstrap_cache_rule). Existing cluster: needs a node image upgrade of all pools"
-}
-
-variable "agc_subnet_ids" {
-  type        = list(string)
-  default     = []
-  description = "Application Gateway for Containers subnets (vpc agc_subnets), creates the ALB controller identity for the azure-gateway k8s module"
-}
-
-variable "kms_key_vault_id" {
   type    = string
   default = ""
 }
 
+variable "bootstrap_cache_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "agc_subnet_ids" {
+  type    = list(string)
+  default = []
+}
+
 variable "disk_encryption_key_id" {
-  type        = string
-  default     = ""
-  description = "Versionless key id for the disk encryption set (node OS and PVC disks). Only at cluster creation"
+  type    = string
+  default = ""
+}
+
+variable "disk_encryption_key_resource_id" {
+  type    = string
+  default = ""
+  validation {
+    condition     = var.disk_encryption_key_id == "" || var.disk_encryption_key_resource_id != ""
+    error_message = "disk_encryption_key_id needs disk_encryption_key_resource_id (kms data_key_resource_id)."
+  }
 }
 
 variable "control_plane_logs_enabled" {
-  type        = bool
-  default     = false
-  description = "Diagnostic setting to a Log Analytics workspace (Microsoft managed keys)"
+  type    = bool
+  default = false
 }
 
 variable "control_plane_log_categories" {
-  type        = list(string)
-  default     = ["kube-apiserver", "guard"]
-  description = "guard = Entra ID authentication, like aws/eks api + authenticator"
+  type    = list(string)
+  default = ["kube-apiserver", "guard"]
 }
 
 variable "control_plane_logs_retention_days" {
@@ -176,21 +159,18 @@ variable "control_plane_logs_retention_days" {
 }
 
 variable "availability_zones" {
-  type        = list(string)
-  default     = null
-  description = "null = all zones where the pool's VM size is available, [] = no zones. Fixed at pool creation"
+  type    = list(string)
+  default = null
 }
 
 variable "max_surge" {
-  type        = string
-  default     = "10%"
-  description = "Upgrade surge of non-spot pools"
+  type    = string
+  default = "10%"
 }
 
 variable "node_resource_group_name" {
-  type        = string
-  default     = ""
-  description = "\"\" = <prefix>-nodes-<location>. Only at cluster creation"
+  type    = string
+  default = ""
 }
 
 variable "kubelet_additional_role_assignments" {
@@ -224,8 +204,7 @@ variable "auto_scaler_profile" {
     skip_nodes_with_local_storage         = optional(string)
     skip_nodes_with_system_pods           = optional(string)
   })
-  default     = null
-  description = "AKS cluster autoscaler settings for all pools, null = AKS defaults"
+  default = null
 }
 
 variable "os_sku" {
@@ -313,8 +292,9 @@ variable "aks_tools_instance_type" {
 }
 
 variable "aks_tools_min_size" {
-  type    = number
-  default = 2
+  type        = number
+  default     = 2
+  description = "System pool, at least 1"
 }
 
 variable "aks_tools_max_size" {
@@ -338,10 +318,28 @@ variable "aks_tools_max_pods" {
   default = 64
 }
 
-variable "aks_managed_node_groups_extra" {
-  type        = any
-  default     = {}
-  description = "Extra pools in the AVM agent_pools format"
+variable "aks_node_pools_extra" {
+  type = map(object({
+    name                    = optional(string)
+    mode                    = optional(string, "User")
+    vm_size                 = optional(string, "Standard_D2s_v6")
+    min_count               = optional(number, 1)
+    max_count               = optional(number, 3)
+    max_pods                = optional(number, 64)
+    os_disk_size_gb         = optional(number, 50)
+    os_disk_type            = optional(string, "Managed")
+    os_sku                  = optional(string)
+    zones                   = optional(list(string))
+    node_labels             = optional(map(string), {})
+    node_taints             = optional(list(string), [])
+    spot                    = optional(bool, false)
+    spot_max_price          = optional(number, -1)
+    max_surge               = optional(string)
+    host_encryption_enabled = optional(bool)
+    gpu_instance            = optional(string)
+    tags                    = optional(map(string), {})
+  }))
+  default = {}
 }
 
 variable "tags" {

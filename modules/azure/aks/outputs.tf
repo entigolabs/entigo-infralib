@@ -51,7 +51,8 @@ output "kubelet_identity_client_id" {
 }
 
 output "kubernetes_version" {
-  value = var.kubernetes_version
+  value      = var.kubernetes_version
+  depends_on = [module.aks]
 }
 
 output "vnet_subnet_id" {

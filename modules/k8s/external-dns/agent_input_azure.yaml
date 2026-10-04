@@ -7,11 +7,12 @@ external-dns:
   txtOwnerId: "{{ .config.prefix }}-{{ .module.name }}"
   domainFilters:
     - "{{ .toutput.dns.pub_domain }}"
+  # Empty with a single public domain (int = pub), external-dns drops empty entries
   excludeDomains:
-    - "{{ .toptout.dns.int_domain }}"
+    - "{{ .toptout.dns.int_private_domain }}"
 external-dns-private:
   image:
     repository: '{{ .toptout.acr-proxy.k8s_registry | "registry.k8s.io" }}/external-dns/external-dns'
   txtOwnerId: "{{ .config.prefix }}-{{ .module.name }}-private"
   domainFilters:
-    - "{{ .toptout.dns.int_domain }}"
+    - "{{ .toptout.dns.int_private_domain }}"

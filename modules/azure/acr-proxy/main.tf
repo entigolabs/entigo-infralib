@@ -35,6 +35,7 @@ locals {
   cache_rules = { for k, v in local.registries : k => v if k != "hub" || contains(local.registries_with_credentials, "hub") }
 
   private_endpoint = var.private_endpoint_enabled
+  private_dns_zone = var.private_dns_zone_id != "" ? var.private_dns_zone_id : try(azurerm_private_dns_zone.acr[0].id, "")
 
   tags = merge(var.tags, {
     Terraform  = "true"
@@ -54,9 +55,12 @@ resource "azurerm_container_registry" "this" {
   public_network_access_enabled = var.public_network_access_enabled
   tags                          = local.tags
 
-  identity {
-    type         = var.encryption == null ? "SystemAssigned" : "SystemAssigned, UserAssigned"
-    identity_ids = var.encryption == null ? null : [var.encryption.identity_id]
+  dynamic "identity" {
+    for_each = var.encryption == null ? [] : [var.encryption]
+    content {
+      type         = "UserAssigned"
+      identity_ids = [identity.value.identity_id]
+    }
   }
 
   dynamic "encryption" {
@@ -64,21 +68,6 @@ resource "azurerm_container_registry" "this" {
     content {
       key_vault_key_id   = encryption.value.key_vault_key_id
       identity_client_id = encryption.value.identity_client_id
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition     = var.encryption == null || var.sku == "Premium"
-      error_message = "ACR customer managed keys (encryption) require sku = \"Premium\"."
-    }
-    precondition {
-      condition     = (!local.private_endpoint && var.public_network_access_enabled) || var.sku == "Premium"
-      error_message = "ACR private endpoint and disabled public network access require sku = \"Premium\"."
-    }
-    precondition {
-      condition     = !local.private_endpoint || (var.private_endpoint_subnet_id != null && var.private_endpoint_vnet_id != null)
-      error_message = "private_endpoint_enabled needs private_endpoint_subnet_id and private_endpoint_vnet_id."
     }
   }
 }
@@ -135,17 +124,19 @@ resource "azurerm_container_registry_cache_rule" "this" {
   source_repo           = "${each.value}/*"
   target_repo           = "${each.value}/*"
   credential_set_id     = contains(local.registries_with_credentials, each.key) ? azurerm_container_registry_credential_set.this[each.key].id : null
+  # Otherwise the first pulls can run before the credential set can read its secrets
+  depends_on = [azurerm_role_assignment.credential_secrets]
 }
 
 resource "azurerm_private_dns_zone" "acr" {
-  count               = local.private_endpoint ? 1 : 0
+  count               = local.private_endpoint && var.private_dns_zone_id == "" ? 1 : 0
   name                = "privatelink.azurecr.io"
   resource_group_name = var.resource_group_name
   tags                = local.tags
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "acr" {
-  count                = local.private_endpoint ? 1 : 0
+  count                = local.private_endpoint && var.private_dns_zone_id == "" ? 1 : 0
   name                 = "${var.prefix}-acr"
   private_dns_zone_id  = azurerm_private_dns_zone.acr[0].id
   virtual_network_id   = var.private_endpoint_vnet_id
@@ -170,7 +161,7 @@ resource "azurerm_private_endpoint" "acr" {
 
   private_dns_zone_group {
     name                 = "acr"
-    private_dns_zone_ids = [azurerm_private_dns_zone.acr[0].id]
+    private_dns_zone_ids = [local.private_dns_zone]
   }
 }
 
@@ -178,6 +169,7 @@ resource "azurerm_container_registry_task" "purge" {
   count                 = var.purge_enabled ? 1 : 0
   name                  = "acr-proxy-purge"
   container_registry_id = azurerm_container_registry.this.id
+  timeout_in_seconds    = 7200
   tags                  = local.tags
 
   platform {

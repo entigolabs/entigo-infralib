@@ -10,32 +10,44 @@ output "key_vault_uri" {
   value = azurerm_key_vault.this.vault_uri
 }
 
-# Versionless ids follow key rotation
+# Versionless, follows key rotation (like the aws alias / google key ids)
 output "data_key_id" {
-  value = azurerm_key_vault_key.this["data"].id
-}
-
-output "data_key_versionless_id" {
   value = azurerm_key_vault_key.this["data"].versionless_id
 }
 
-output "config_key_id" {
-  value = azurerm_key_vault_key.this["config"].id
+output "data_key_version_id" {
+  value = azurerm_key_vault_key.this["data"].id
 }
 
-output "config_key_versionless_id" {
+# Scope for role assignments on the key
+output "data_key_resource_id" {
+  value = azurerm_key_vault_key.this["data"].resource_versionless_id
+}
+
+# Versionless, follows key rotation (like the aws alias / google key ids)
+output "config_key_id" {
   value = azurerm_key_vault_key.this["config"].versionless_id
 }
 
-output "telemetry_key_id" {
-  value = azurerm_key_vault_key.this["telemetry"].id
+output "config_key_version_id" {
+  value = azurerm_key_vault_key.this["config"].id
 }
 
-output "telemetry_key_versionless_id" {
+# Scope for role assignments on the key
+output "config_key_resource_id" {
+  value = azurerm_key_vault_key.this["config"].resource_versionless_id
+}
+
+# Versionless, follows key rotation (like the aws alias / google key ids)
+output "telemetry_key_id" {
   value = azurerm_key_vault_key.this["telemetry"].versionless_id
 }
 
+output "telemetry_key_version_id" {
+  value = azurerm_key_vault_key.this["telemetry"].id
+}
+
+# Scope for role assignments on the key
 output "telemetry_key_resource_id" {
-  description = "Resource id of the telemetry key, scope for its role assignments"
-  value       = azurerm_key_vault_key.this["telemetry"].resource_versionless_id
+  value = azurerm_key_vault_key.this["telemetry"].resource_versionless_id
 }

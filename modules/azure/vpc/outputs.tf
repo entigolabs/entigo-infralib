@@ -10,10 +10,14 @@ output "vpc_cidr" {
   value = var.vpc_cidr
 }
 
-# Waits for the NAT association, AKS userAssignedNATGateway needs it at cluster creation
+# Waits for the NAT gateway (association and its public IPs) or the egress route, AKS needs egress at cluster creation
 output "private_subnets" {
-  value      = azurerm_subnet.private[*].id
-  depends_on = [azurerm_subnet_nat_gateway_association.private]
+  value = azurerm_subnet.private[*].id
+  depends_on = [
+    azurerm_subnet_nat_gateway_association.private,
+    azurerm_nat_gateway_public_ip_association.this,
+    azurerm_subnet_route_table_association.egress_private,
+  ]
 }
 
 output "public_subnets" {
@@ -70,7 +74,7 @@ output "apiserver_subnet_cidrs" {
 
 # Agent default subnet for vpc attached steps
 output "pipeline_subnets" {
-  value = azurerm_subnet.pipeline[*].id
+  value = [for n in local.pipeline_names : azurerm_subnet.pipeline[n].id]
 }
 
 output "pipeline_subnet_cidrs" {
@@ -78,7 +82,7 @@ output "pipeline_subnet_cidrs" {
 }
 
 output "pipeline_environment_ids" {
-  value = azurerm_container_app_environment.pipeline[*].id
+  value = [for n in local.pipeline_names : azurerm_container_app_environment.pipeline[n].id]
 }
 
 output "mssql_subnets" {
@@ -87,4 +91,82 @@ output "mssql_subnets" {
 
 output "mssql_subnet_cidrs" {
   value = local.mssql_subnets
+}
+
+# Same names as aws/vpc for shared consumers (e.g. platform-apis). AKS nodes use the private subnets,
+# Redis/Postgres/MySQL private endpoints the database subnets.
+output "name" {
+  value = azurerm_virtual_network.this.name
+}
+
+output "nat_public_ips" {
+  value = azurerm_public_ip.nat[*].ip_address
+}
+
+output "private_subnet_names" {
+  value = azurerm_subnet.private[*].name
+}
+
+output "public_subnet_names" {
+  value = azurerm_subnet.public[*].name
+}
+
+output "intra_subnet_names" {
+  value = azurerm_subnet.intra[*].name
+}
+
+output "database_subnet_names" {
+  value = azurerm_subnet.database[*].name
+}
+
+output "private_subnets_cidr_blocks" {
+  value = local.private_subnets
+}
+
+output "public_subnets_cidr_blocks" {
+  value = local.public_subnets
+}
+
+output "intra_subnets_cidr_blocks" {
+  value = local.intra_subnets
+}
+
+output "database_subnets_cidr_blocks" {
+  value = local.database_subnets
+}
+
+output "elasticache_subnets_cidr_blocks" {
+  value = local.database_subnets
+}
+
+output "control_subnets" {
+  value = azurerm_subnet.private[*].id
+}
+
+output "service_subnets" {
+  value = azurerm_subnet.private[*].id
+}
+
+output "compute_subnets" {
+  value = azurerm_subnet.private[*].id
+}
+
+output "control_subnets_cidr_blocks" {
+  value = local.private_subnets
+}
+
+output "service_subnets_cidr_blocks" {
+  value = local.private_subnets
+}
+
+output "compute_subnets_cidr_blocks" {
+  value = local.private_subnets
+}
+
+output "vpc_flow_log_id" {
+  value = var.enable_flow_log ? azurerm_network_watcher_flow_log.this[0].id : null
+}
+
+output "vpc_flow_log_destination_id" {
+  value = var.enable_flow_log ? azurerm_storage_account.flow_log[0].id : null
 }

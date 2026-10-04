@@ -4,5 +4,5 @@ global:
     vaultId: "{{ .agent.vaultId }}"
     createACRNamespace: "{{ .tmodule.argocd }}"
     createACRRegistries:
-      - loginServer: "{{ .toutput.acr-proxy.acr_login_server }}"
-        id: "{{ .toutput.acr-proxy.acr_id }}"
+      - loginServer: "{{ .toptout.acr-proxy.acr_login_server }}"
+        id: "{{ .toptout.acr-proxy.acr_id }}"

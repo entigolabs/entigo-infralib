@@ -6,7 +6,7 @@ global:
     tenantID: ""
     # Agent Key Vault resource id
     vaultId: ""
-    # ArgoCD repo-creds for ACR: argocd namespace, registries as [{loginServer: <acr>.azurecr.io, id: <acr resource id>}]
+    # ArgoCD repo-creds for ACR: argocd namespace, registries as [{loginServer: <acr>.azurecr.io, id: <acr resource id>}], entries without loginServer are skipped
     createACRNamespace: ""
     createACRRegistries: []
 

@@ -3,11 +3,11 @@ output "prefix" {
 }
 
 output "node_pool_name" {
-  value = module.aks_node_pool.name
+  value = azurerm_kubernetes_cluster_node_pool.this.name
 }
 
 output "node_pool_id" {
-  value = module.aks_node_pool.resource_id
+  value = azurerm_kubernetes_cluster_node_pool.this.id
 }
 
 output "cluster_id" {

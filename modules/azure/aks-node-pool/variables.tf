@@ -3,9 +3,8 @@ variable "prefix" {
 }
 
 variable "name" {
-  type        = string
-  default     = ""
-  description = "Agent sets the module name. Only a-z and 0-9 are kept, cut to 12 (AKS limit), must start with a letter. \"\" = prefix"
+  type    = string
+  default = ""
 }
 
 variable "cluster_id" {
@@ -13,9 +12,8 @@ variable "cluster_id" {
 }
 
 variable "kubernetes_version" {
-  type        = string
-  default     = null
-  description = "Minor version, AKS picks the latest patch"
+  type    = string
+  default = null
 }
 
 variable "vnet_subnet_id" {
@@ -43,21 +41,18 @@ variable "instance_type" {
 }
 
 variable "location" {
-  type        = string
-  default     = ""
-  description = "Cluster region, for the zone lookup"
+  type    = string
+  default = ""
 }
 
 variable "availability_zones" {
-  type        = list(string)
-  default     = null
-  description = "null = all zones where instance_type is available, [] = no zones. Fixed at pool creation"
+  type    = list(string)
+  default = null
 }
 
 variable "spot_nodes" {
-  type        = bool
-  default     = false
-  description = "AKS taints and labels spot nodes with kubernetes.azure.com/scalesetpriority=spot"
+  type    = bool
+  default = false
 }
 
 variable "spot_max_price" {
@@ -109,7 +104,11 @@ variable "max_surge" {
 }
 
 variable "upgrade_settings" {
-  type        = any
+  type = object({
+    max_surge                     = string
+    drain_timeout_in_minutes      = optional(number)
+    node_soak_duration_in_minutes = optional(number)
+  })
   default     = null
-  description = "AVM upgrade_settings, overrides max_surge. Ignored for spot pools"
+  description = "Overrides max_surge. Ignored for spot pools"
 }

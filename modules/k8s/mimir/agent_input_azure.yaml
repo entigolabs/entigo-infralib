@@ -2,5 +2,5 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
   azure:
     storageAccountId: "{{ .toutput.crossplane.agent_storage_account_id }}"
-    telemetryKeyId: "{{ .toptout.kms.telemetry_key_versionless_id }}"
+    telemetryKeyId: "{{ .toptout.kms.telemetry_key_id }}"
     storageAccountName: "{{ .toutput.crossplane.agent_storage_account_name }}"

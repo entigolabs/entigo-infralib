@@ -46,11 +46,53 @@ Any subnet list can be set explicitly. The split does not shift for explicit lis
 rejected at plan time.
 
 Default outbound access is off on all subnets: the private and pipeline subnets egress through the NAT gateway
-(`nat_static_ip_count` public IPs, about 64k SNAT ports each), intra and database subnets have no internet access and
-public subnets only through a resource's own public IP or load balancer. Subnet names default to
-`<prefix>-<type>-<n>`, override them with `*_subnet_names`. The private subnets have service endpoints for Storage and
-Key Vault: these services then see the subnet's private IP instead of the NAT IP, so IP firewall rules need VNet
-rules instead.
+(`nat_static_ip_count` public IPs, about 64k SNAT ports each; `nat_gateway_sku` StandardV2 is zone redundant, Standard
+single zone, changing it replaces the gateway and its IPs; `nat_idle_timeout_minutes`), intra and database subnets have
+no internet access and public subnets only through a resource's own public IP or load balancer. With
+`enable_nat_gateway: false` the private and pipeline subnets have no internet egress at all: AKS
+(`outbound_type: userAssignedNATGateway`) fails and pipeline jobs can't pull images. To egress through a firewall/NVA
+(e.g. a peered hub) instead, set `enable_nat_gateway: false`, `egress_next_hop_ip` (0.0.0.0/0 route on the private and
+pipeline subnets) and aks `outbound_type: userDefinedRouting`.
+
+Subnet names default to `<prefix>-<type>-<n>`, override them with `*_subnet_names`. Pipeline subnets and their
+environments are keyed by name: with explicit `pipeline_subnet_names` (valid environment names: lowercase letters,
+digits, hyphens, max 60) removing or reordering one doesn't recreate the others (10+ min each). The private and
+pipeline subnets have service endpoints for Storage and Key Vault (`*_subnet_service_endpoints`): these services then
+see the subnet's private IP instead of the NAT IP, so IP firewall rules need VNet rules instead. Pipeline environments
+are zone redundant by default (`pipeline_zone_redundancy_enabled`, create time only).
+
+Plan time checks: overlapping subnets, subnets outside the VNet, AGC exactly /24, unique pipeline subnet names,
+`mssql_subnets` only with `enable_mssql_subnets`. Azure itself requires the API server subnet /28 or larger, pipeline
+and mssql /27 or larger and pipeline subnet names that are valid Container Apps environment names (lowercase).
+
+Outputs use both the google style (`*_subnet_cidrs`, `nat_static_ips`) and the aws/vpc names (`name`,
+`*_subnets_cidr_blocks`, `*_subnet_names`, `nat_public_ips`, and `control/service/compute_subnets(_cidr_blocks)` =
+private, `elasticache_subnets_cidr_blocks` = database) for modules shared between clouds, e.g. platform-apis.
+
+VNet flow logs (`enable_flow_log`, default true like aws/vpc): all IP flows of the VNet go to a dedicated storage account
+`<prefix alnum>fl<random>` (Entra ID only, Microsoft-managed keys, network access only for trusted Azure services and the
+private subnets) with `flow_log_retention_days` retention (7, like aws). The flow log resource itself lives in the
+region's Network Watcher resource group (`NetworkWatcherRG`/`NetworkWatcher_<location>`, one per region and subscription,
+override with `network_watcher_name`/`network_watcher_resource_group_name`). `flow_log_traffic_analytics_enabled`
+adds Traffic Analytics into a `<prefix>-flow-log` Log Analytics workspace (charged per GB).
+Deleting the VNet (also by deleting its resource group) deletes its flow log in `NetworkWatcherRG` too, so a nuke leaves
+nothing behind there.
+- Why a dedicated account with Microsoft-managed keys: rotating a customer-managed key of the storage account stops
+  the flow logs until they are disabled and enabled again ([VNet flow logs, Storage account: "Self-managed key
+  rotation"](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#storage-account)). The agent
+  storage account rotates its key every 18 months and the kms keys rotate with `key_rotation_period`, so the logs
+  would stop without any error. Customer-managed keys are set per storage account; encryption scopes per container are
+  not documented to avoid this, so they aren't used here.
+- Not logged: Container Apps (pipeline environment), SQL Managed Instance and PostgreSQL/MySQL flexible server
+  traffic ([incompatible services](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#incompatible-services)).
+- Cost: flow logs collected per GB, 5 GB/month free per subscription, plus storage
+  ([pricing](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#pricing)).
+
+Known issue: azurerm 5.7.0 ends a Container Apps environment delete with "polling support for the Content-Type \"\"
+was not implemented" although the environment is gone; run the destroy again
+([hashicorp/terraform-provider-azurerm#33433](https://github.com/hashicorp/terraform-provider-azurerm/issues/33433)).
+
+Not supported yet (roadmap): IPv6 / dual stack (aws `enable_ipv6`) and a spoke split mode (aws `subnet_split_mode`).
 
 ### Example code ###
 ```
@@ -74,6 +116,6 @@ agc-0 ( 10.156.224.0/24 )
 
 apiserver-0 ( 10.156.225.0/24 )
 
-pipeline-0 ( 10.156.226.0/24 )
+pipeline-0 ( 10.156.226.0/24, Container Apps environment `<prefix>-pipeline-0` )
 
 mssql-0 ( 10.156.248.0/21 ) with `enable_mssql_subnets: true`

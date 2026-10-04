@@ -8,7 +8,7 @@ resource "random_string" "suffix" {
 
 locals {
   # Globally unique and reserved while soft-deleted
-  name = "${substr(var.prefix, 0, 19)}-${random_string.suffix.result}"
+  name = "${replace(substr(var.prefix, 0, 19), "/-+$/", "")}-${random_string.suffix.result}"
   keys = toset(["data", "config", "telemetry"])
 
   users = {
@@ -17,7 +17,8 @@ locals {
     telemetry = var.telemetry_key_users
   }
 
-  # AKS etcd KMS encrypts/decrypts, disk encryption sets and storage CMK wrap/unwrap
+  # data: disks and other data, telemetry: monitoring data (wrap/unwrap by Azure services),
+  # config: customer app secrets (apps encrypt/decrypt with it)
   key_user_roles = {
     data      = "Key Vault Crypto Service Encryption User"
     config    = "Key Vault Crypto User"
@@ -47,13 +48,6 @@ resource "azurerm_key_vault" "this" {
   purge_protection_enabled   = var.purge_protection_enabled
   soft_delete_retention_days = var.soft_delete_retention_days
   tags                       = local.tags
-
-  lifecycle {
-    precondition {
-      condition     = var.key_type != "RSA-HSM" || var.sku_name == "premium"
-      error_message = "key_type RSA-HSM needs sku_name premium."
-    }
-  }
 }
 
 resource "azurerm_management_lock" "this" {
@@ -64,11 +58,27 @@ resource "azurerm_management_lock" "this" {
   notes      = "Customer managed keys: deleting the vault makes encrypted data unrecoverable"
 }
 
+# The installing identity (normally the agent job identity) keeps the role, later callers don't replace it
+resource "terraform_data" "installer" {
+  input = data.azurerm_client_config.this.object_id
+
+  lifecycle {
+    ignore_changes = [input]
+  }
+}
+
 resource "azurerm_role_assignment" "admin" {
-  for_each             = toset(concat([data.azurerm_client_config.this.object_id], var.admin_object_ids))
+  for_each             = merge({ installer = terraform_data.installer.input }, { for id in toset([for i in var.admin_object_ids : lower(i)]) : id => id })
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Crypto Officer"
   principal_id         = each.value
+
+  lifecycle {
+    precondition {
+      condition     = each.key == "installer" || each.value != lower(terraform_data.installer.input)
+      error_message = "admin_object_ids must not list the installing identity ${terraform_data.installer.input}, it has the role already."
+    }
+  }
 }
 
 # Data plane role assignments take up to a minute

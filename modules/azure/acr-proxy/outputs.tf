@@ -34,7 +34,6 @@ output "k8s_registry" {
   value = "${azurerm_container_registry.this.login_server}/registry.k8s.io"
 }
 
-# AKS bootstrap from the cache must wait for the private endpoint
 output "private_endpoint_id" {
   value = local.private_endpoint ? azurerm_private_endpoint.acr[0].id : null
 }

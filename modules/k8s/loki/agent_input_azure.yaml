@@ -2,7 +2,7 @@ global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
   azure:
     storageAccountId: "{{ .toutput.crossplane.agent_storage_account_id }}"
-    telemetryKeyId: "{{ .toptout.kms.telemetry_key_versionless_id }}"
+    telemetryKeyId: "{{ .toptout.kms.telemetry_key_id }}"
     agcSubnetCidrs: "{{ .toutput.vpc.agc_subnet_cidrs }}"
 loki:
   loki:

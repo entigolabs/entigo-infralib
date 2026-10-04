@@ -1,6 +1,12 @@
 output "pub_zone_id" {
   description = "Zone ID of the domain marked as default public"
   value       = try(local.zone_ids[local.default_public_keys[0]], null)
+
+  # Also covers create_zone = false only and an empty map, like the aws-v2/route53 index lookup
+  precondition {
+    condition     = length(local.default_public_keys) == 1 && length(local.default_private_keys) == 1
+    error_message = "Exactly one domain must be default_public = true and exactly one default_private = true."
+  }
 }
 
 output "pub_domain" {
@@ -16,6 +22,11 @@ output "int_zone_id" {
 output "int_domain" {
   description = "Domain name of the zone marked as default private"
   value       = try(local.domains[local.default_private_keys[0]].domain_name, null)
+}
+
+output "int_private_domain" {
+  description = "Default private domain when it is a private zone, empty otherwise (e.g. a single public domain)"
+  value       = try(local.domains[local.default_private_keys[0]].private ? local.domains[local.default_private_keys[0]].domain_name : "", "")
 }
 
 output "int_cert_zone_id" {

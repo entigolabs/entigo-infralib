@@ -14,9 +14,9 @@ locals {
       )
       # Public twin of a private zone for ACME DNS-01 challenges (cert-manager)
       needs_validation_zone = d.private && d.create_zone && d.create_validation
-      # NS records only in a parent zone in the same resource group, otherwise they are added manually
+      # NS records in the parent zone, also in another resource group (e.g. a root zone shared by environments)
       parent_zone_name = d.parent_zone_id != "" ? provider::azurerm::parse_resource_id(d.parent_zone_id).resource_name : ""
-      delegate         = d.parent_zone_id != "" && lower(provider::azurerm::parse_resource_id(d.parent_zone_id).resource_group_name) == lower(var.resource_group_name)
+      parent_zone_rg   = d.parent_zone_id != "" ? provider::azurerm::parse_resource_id(d.parent_zone_id).resource_group_name : ""
     })
   }
 
@@ -41,28 +41,20 @@ resource "azurerm_dns_zone" "this" {
   for_each            = { for k, v in local.domains : k => v if !v.private && v.create_zone }
   name                = each.value.domain_name
   resource_group_name = var.resource_group_name
-  tags                = merge(local.tags, { DefaultPublic = each.value.default_public == true ? "true" : "false" })
-
-  lifecycle {
-    precondition {
-      condition     = length(local.default_public_keys) == 1 && length(local.default_private_keys) == 1
-      error_message = "Exactly one domain must be default_public = true and exactly one default_private = true."
-    }
-  }
+  tags = merge(local.tags, {
+    DefaultPublic  = each.value.default_public == true ? "true" : "false"
+    DefaultPrivate = each.value.default_private == true ? "true" : "false"
+  })
 }
 
 resource "azurerm_private_dns_zone" "this" {
   for_each            = { for k, v in local.domains : k => v if v.private && v.create_zone }
   name                = each.value.domain_name
   resource_group_name = var.resource_group_name
-  tags                = merge(local.tags, { DefaultPrivate = each.value.default_private == true ? "true" : "false" })
-
-  lifecycle {
-    precondition {
-      condition     = length(local.default_public_keys) == 1 && length(local.default_private_keys) == 1
-      error_message = "Exactly one domain must be default_public = true and exactly one default_private = true."
-    }
-  }
+  tags = merge(local.tags, {
+    DefaultPublic  = each.value.default_public == true ? "true" : "false"
+    DefaultPrivate = each.value.default_private == true ? "true" : "false"
+  })
 }
 
 data "azurerm_dns_zone" "existing" {
@@ -97,21 +89,35 @@ resource "azurerm_dns_zone" "validation" {
 }
 
 resource "azurerm_dns_ns_record" "delegation" {
-  for_each            = { for k, v in local.domains : k => v if v.delegate && !v.private && v.create_zone }
+  for_each            = { for k, v in local.domains : k => v if v.parent_zone_id != "" && !v.private && v.create_zone }
   name                = trimsuffix(each.value.domain_name, ".${each.value.parent_zone_name}")
   zone_name           = each.value.parent_zone_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = each.value.parent_zone_rg
   ttl                 = 300
   records             = azurerm_dns_zone.this[each.key].name_servers
   tags                = local.tags
+
+  lifecycle {
+    precondition {
+      condition     = endswith(lower(each.value.domain_name), ".${lower(each.value.parent_zone_name)}")
+      error_message = "${each.value.domain_name} is not a subdomain of its parent zone ${each.value.parent_zone_name}."
+    }
+  }
 }
 
 resource "azurerm_dns_ns_record" "validation_delegation" {
-  for_each            = { for k, v in local.domains : k => v if v.delegate && v.needs_validation_zone }
+  for_each            = { for k, v in local.domains : k => v if v.parent_zone_id != "" && v.needs_validation_zone }
   name                = trimsuffix(each.value.domain_name, ".${each.value.parent_zone_name}")
   zone_name           = each.value.parent_zone_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = each.value.parent_zone_rg
   ttl                 = 300
   records             = azurerm_dns_zone.validation[each.key].name_servers
   tags                = local.tags
+
+  lifecycle {
+    precondition {
+      condition     = endswith(lower(each.value.domain_name), ".${lower(each.value.parent_zone_name)}")
+      error_message = "${each.value.domain_name} is not a subdomain of its parent zone ${each.value.parent_zone_name}."
+    }
+  }
 }

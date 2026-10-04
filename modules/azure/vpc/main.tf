@@ -14,6 +14,9 @@ locals {
   agc_subnets       = var.agc_subnets == null ? try([local.delegated_subnets[0]], []) : var.agc_subnets
   apiserver_subnets = var.apiserver_subnets == null ? try([local.delegated_subnets[1]], []) : var.apiserver_subnets
   pipeline_subnets  = var.pipeline_subnets == null ? try([local.delegated_subnets[2]], []) : var.pipeline_subnets
+  # Keyed by name: explicit pipeline_subnet_names keep environments when the list changes
+  pipeline_names = [for i, cidr in local.pipeline_subnets : try(var.pipeline_subnet_names[i], "${var.prefix}-pipeline-${i}")]
+  pipeline       = zipmap(local.pipeline_names, local.pipeline_subnets)
   # Last quarter of the delegated block for MSSQL Managed Instances
   mssql_subnets = var.enable_mssql_subnets ? (var.mssql_subnets == null ? [cidrsubnet(local.delegated_block, 2, 3)] : var.mssql_subnets) : []
 
@@ -64,8 +67,16 @@ resource "azurerm_virtual_network" "this" {
       error_message = "vpc_cidr is smaller than /20: set agc_subnets, apiserver_subnets and pipeline_subnets explicitly (or [])."
     }
     precondition {
-      condition     = alltrue([for cidr in local.mssql_subnets : tonumber(split("/", cidr)[1]) <= 27])
-      error_message = "SQL Managed Instance subnets must be /27 or larger: ${join(", ", local.mssql_subnets)}."
+      condition     = alltrue([for cidr in local.agc_subnets : tonumber(split("/", cidr)[1]) == 24])
+      error_message = "Application Gateway for Containers subnets must be exactly /24: ${join(", ", local.agc_subnets)}."
+    }
+    precondition {
+      condition     = length(distinct(local.pipeline_names)) == length(local.pipeline_names)
+      error_message = "Pipeline subnet names must be unique: ${join(", ", local.pipeline_names)}."
+    }
+    precondition {
+      condition     = var.mssql_subnets == null || var.enable_mssql_subnets
+      error_message = "mssql_subnets is set but enable_mssql_subnets is false."
     }
     precondition {
       condition     = length(local.subnet_overlaps) == 0
@@ -167,12 +178,19 @@ resource "azurerm_subnet" "apiserver" {
 }
 
 resource "azurerm_subnet" "pipeline" {
-  count                           = length(local.pipeline_subnets)
-  name                            = try(var.pipeline_subnet_names[count.index], "${var.prefix}-pipeline-${count.index}")
+  for_each                        = local.pipeline
+  name                            = each.key
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.pipeline_subnets[count.index]]
+  address_prefixes                = [each.value]
   default_outbound_access_enabled = false
+
+  dynamic "service_endpoint" {
+    for_each = var.pipeline_subnet_service_endpoints
+    content {
+      service = service_endpoint.value
+    }
+  }
 
   delegation {
     name = "pipeline-delegation"
@@ -195,13 +213,14 @@ resource "azurerm_log_analytics_workspace" "pipeline" {
 }
 
 resource "azurerm_container_app_environment" "pipeline" {
-  count                              = length(local.pipeline_subnets)
-  name                               = azurerm_subnet.pipeline[count.index].name
+  for_each                           = local.pipeline
+  name                               = each.key
   location                           = var.location
   resource_group_name                = var.resource_group_name
-  infrastructure_subnet_id           = azurerm_subnet.pipeline[count.index].id
-  infrastructure_resource_group_name = "${azurerm_subnet.pipeline[count.index].name}-${var.location}"
+  infrastructure_subnet_id           = azurerm_subnet.pipeline[each.key].id
+  infrastructure_resource_group_name = "${each.key}-${var.location}"
   internal_load_balancer_enabled     = true
+  zone_redundancy_enabled            = var.pipeline_zone_redundancy_enabled
   logs_destination                   = "log-analytics"
   log_analytics_workspace_id         = azurerm_log_analytics_workspace.pipeline[0].id
   tags                               = local.tags
@@ -211,7 +230,17 @@ resource "azurerm_container_app_environment" "pipeline" {
     workload_profile_type = "Consumption"
   }
 
-  depends_on = [azurerm_subnet_nat_gateway_association.pipeline]
+  # azurerm 5.7.0 delete ends with a polling error although the delete succeeded, re-run the destroy:
+  # https://github.com/hashicorp/terraform-provider-azurerm/issues/33433
+  timeouts {
+    delete = "60m"
+  }
+
+  depends_on = [
+    azurerm_subnet_nat_gateway_association.pipeline,
+    azurerm_nat_gateway_public_ip_association.this,
+    azurerm_subnet_route_table_association.egress_pipeline,
+  ]
 }
 
 resource "azurerm_subnet" "mssql" {
@@ -278,17 +307,18 @@ resource "azurerm_public_ip" "nat" {
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
-  sku                 = "Standard"
+  sku                 = var.nat_gateway_sku
   tags                = local.tags
 }
 
 resource "azurerm_nat_gateway" "this" {
-  count               = var.enable_nat_gateway ? 1 : 0
-  name                = var.prefix
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  sku_name            = "Standard"
-  tags                = local.tags
+  count                   = var.enable_nat_gateway ? 1 : 0
+  name                    = var.prefix
+  location                = var.location
+  resource_group_name     = var.resource_group_name
+  sku_name                = var.nat_gateway_sku
+  idle_timeout_in_minutes = var.nat_idle_timeout_minutes
+  tags                    = local.tags
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "this" {
@@ -304,7 +334,106 @@ resource "azurerm_subnet_nat_gateway_association" "private" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "pipeline" {
-  count          = var.enable_nat_gateway ? length(local.pipeline_subnets) : 0
-  subnet_id      = azurerm_subnet.pipeline[count.index].id
+  for_each       = var.enable_nat_gateway ? local.pipeline : {}
+  subnet_id      = azurerm_subnet.pipeline[each.key].id
   nat_gateway_id = azurerm_nat_gateway.this[0].id
+}
+
+# Egress through a firewall/NVA instead of the NAT gateway
+resource "azurerm_route_table" "egress" {
+  count               = var.egress_next_hop_ip != null ? 1 : 0
+  name                = "${var.prefix}-egress"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+
+  route {
+    name                   = "default"
+    address_prefix         = "0.0.0.0/0"
+    next_hop_type          = "VirtualAppliance"
+    next_hop_in_ip_address = var.egress_next_hop_ip
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "egress_private" {
+  count          = var.egress_next_hop_ip != null ? length(local.private_subnets) : 0
+  subnet_id      = azurerm_subnet.private[count.index].id
+  route_table_id = azurerm_route_table.egress[0].id
+}
+
+resource "azurerm_subnet_route_table_association" "egress_pipeline" {
+  for_each       = var.egress_next_hop_ip != null ? local.pipeline : {}
+  subnet_id      = azurerm_subnet.pipeline[each.key].id
+  route_table_id = azurerm_route_table.egress[0].id
+}
+
+# VNet flow logs to a dedicated storage account with Microsoft-managed keys: rotating a customer-managed key of the
+# storage account stops the flow logs until they are disabled and enabled again:
+# https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#storage-account
+resource "random_string" "flow_log" {
+  count   = var.enable_flow_log ? 1 : 0
+  length  = 4
+  special = false
+  upper   = false
+}
+
+resource "azurerm_storage_account" "flow_log" {
+  count                           = var.enable_flow_log ? 1 : 0
+  name                            = "${substr(replace(lower(var.prefix), "/[^a-z0-9]/", ""), 0, 18)}fl${random_string.flow_log[0].result}"
+  resource_group_name             = var.resource_group_name
+  location                        = var.location
+  account_kind                    = "StorageV2"
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  min_tls_version                 = "TLS1_2"
+  shared_access_key_enabled       = false
+  default_to_oauth_authentication = true
+  allow_nested_items_to_be_public = false
+  tags                            = local.tags
+
+  # Network Watcher writes as a trusted Azure service; readers come from the private subnets
+  network_rules {
+    default_action             = "Deny"
+    bypass                     = ["AzureServices", "Logging", "Metrics"]
+    virtual_network_subnet_ids = azurerm_subnet.private[*].id
+  }
+}
+
+resource "azurerm_log_analytics_workspace" "flow_log" {
+  count               = var.enable_flow_log && var.flow_log_traffic_analytics_enabled ? 1 : 0
+  name                = "${var.prefix}-flow-log"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  tags                = local.tags
+}
+
+resource "azurerm_network_watcher_flow_log" "this" {
+  count                = var.enable_flow_log ? 1 : 0
+  name                 = var.prefix
+  network_watcher_name = var.network_watcher_name != "" ? var.network_watcher_name : "NetworkWatcher_${var.location}"
+  resource_group_name  = var.network_watcher_resource_group_name
+  location             = var.location
+  target_resource_id   = azurerm_virtual_network.this.id
+  storage_account_id   = azurerm_storage_account.flow_log[0].id
+  enabled              = true
+  version              = 2
+  tags                 = local.tags
+
+  retention_policy {
+    enabled = true
+    days    = var.flow_log_retention_days
+  }
+
+  dynamic "traffic_analytics" {
+    for_each = var.flow_log_traffic_analytics_enabled ? [1] : []
+    content {
+      enabled               = true
+      workspace_id          = azurerm_log_analytics_workspace.flow_log[0].workspace_id
+      workspace_region      = var.location
+      workspace_resource_id = azurerm_log_analytics_workspace.flow_log[0].id
+      interval_in_minutes   = 10
+    }
+  }
 }

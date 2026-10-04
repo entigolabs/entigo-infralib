@@ -8,9 +8,8 @@ variable "resource_group_name" {
 }
 
 variable "vpc_ids" {
-  type        = list(string)
-  default     = []
-  description = "VNets linked to the private zones by default"
+  type    = list(string)
+  default = []
 }
 
 variable "domains" {

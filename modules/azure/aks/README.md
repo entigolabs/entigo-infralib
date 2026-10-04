@@ -8,9 +8,19 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
   AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration. The
   system pool can't be spot and can't be removed; `main` and `mon` are left out with `aks_<pool>_max_size: 0`.
-  More pools: `aks_managed_node_groups_extra` or azure/aks-node-pool.
-* Pools are spread over every zone where their VM size is available in the region (read from the Compute SKU list),
-  `availability_zones` overrides it (`[]` = no zones). Zones, VM size and max pods are fixed per pool at creation.
+  More pools: `aks_node_pools_extra` (key = pool name, 1-9 lowercase letters and digits, not main/mon/tools;
+  unset settings default like main/mon) or azure/aks-node-pool.
+* `main`, `mon` and the extra pools are `azurerm_kubernetes_cluster_node_pool` resources created after the cluster, so
+  on a `kubernetes_version` change they upgrade after the control plane (AVM's own `agent_pools` upgrade in parallel
+  and AKS rejects pools newer than the control plane). Changing their VM size, zones, max pods, disks or subnet
+  rotates the pool (azurerm `temporary_name_for_rotation`): a temporary pool `<name>tmp` with the new settings is
+  created, the old pool is deleted (AKS evicts its pods respecting PodDisruptionBudgets), the pool is recreated and the
+  temporary one deleted, so pods move twice and the pool briefly needs twice its nodes. Switching spot deletes and
+  recreates the pool. `tools` is the cluster's default system pool: AKS rejects those changes on it,
+  they need a manual system pool swap (or a new cluster).
+* Pools are spread over every zone where their VM size is available in the region for the subscription (read from the
+  Compute SKU list, zones restricted for the subscription are left out), `availability_zones` overrides it (`[]` = no
+  zones). A VM size that isn't available in the region fails the plan.
 * Non-spot pools upgrade with `max_surge` (default 10%), disks are `aks_<pool>_volume_type` (Managed or Ephemeral),
   nodes carry `created-by=entigo-infralib`. Cluster autoscaler settings: `auto_scaler_profile` (AKS defaults when
   null); the k8s cluster-autoscaler module is not used on Azure.
@@ -24,13 +34,16 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
 * API server: private by default (`private_cluster_enabled`, like aws/eks and google/gke): the FQDN only resolves
   inside the VNet, so agent steps that use the cluster run in the vpc pipeline subnet (argocd steps attach by
   default) and people use the VPN. With
-  `private_cluster_enabled: false` the public endpoint is limited to `api_server_authorized_ip_ranges` (`[]` = open).
+  `private_cluster_enabled: false` the public endpoint is limited to `api_server_authorized_ip_ranges` (`[]` = open)
+  plus the vpc NAT gateway IPs (`nat_public_ips`), where agent jobs come from.
 * `private_dns_zone_id`: central private DNS zone `private.<location>.azmk8s.io` (or `<subzone>.private...`) for the
   private API server, create time only. Without it AKS creates a zone per cluster (`<guid>.private...`) linked only to
   the cluster VNet, so hub/on-prem DNS can't resolve several clusters; one central zone per region, linked to the hub
   VNets, resolves all of them. The module gives the cluster identity Private DNS Zone Contributor on the zone and
   Network Contributor on the VNet, AKS links the zone to the cluster VNet.
-* Access: the Terraform caller (the agent) and `admin_object_ids` get Azure Kubernetes Service RBAC Cluster Admin.
+* Access: the identity that installs the module (normally the agent job identity) gets Azure Kubernetes Service RBAC
+  Cluster Admin and keeps it, a later run by someone else doesn't replace it. Others who run the module or need admin
+  access go to `admin_object_ids` (not the installing identity, the plan rejects it).
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
 * `agc_subnet_ids` (vpc `agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one
   per cluster, service account `azure-alb-system/alb-controller-sa`): Reader + AppGw for Containers Configuration

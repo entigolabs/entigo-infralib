@@ -18,7 +18,8 @@ In addition to installing external-dns with Helm it also created the needed IRSA
 Azure private zones need their own provider, so on Azure a second instance `<module name>-external-dns-private`
 (`azure-private-dns`, HTTPRoutes only) writes the private int zone. Both share one WorkloadIdentity (crossplane-azure):
 DNS Zone Contributor on `pub_zone_id`, Private DNS Zone Contributor on `int_zone_id`. Set
-`external-dns-private.enabled: false` when the int zone is not private.
+`external-dns-private.enabled: false` when the int zone is not private (e.g. a single public domain): dns
+`int_private_domain` is then empty, so the public instance excludes nothing.
 
 ### DNSEndpoint ###
 

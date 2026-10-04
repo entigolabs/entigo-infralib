@@ -3,23 +3,17 @@ variable "prefix" {
 }
 
 variable "resource_group_name" {
-  description = "Resource group for all resources."
-  type        = string
+  type = string
 }
 
 variable "location" {
-  description = "Azure region, defaults to the agent location."
-  type        = string
+  type = string
 }
 
 variable "sku" {
   type        = string
   default     = "Standard"
-  description = "Basic has no cache rules. Premium adds private endpoints, customer managed keys and untagged retention"
-  validation {
-    condition     = contains(["Standard", "Premium"], var.sku)
-    error_message = "sku must be Standard or Premium (Basic has no artifact cache rules)."
-  }
+  description = "Premium adds private endpoints, customer managed keys and untagged retention"
 }
 
 variable "retention_policy_in_days" {
@@ -49,57 +43,48 @@ variable "purge_schedule" {
 }
 
 variable "key_vault_id" {
-  type        = string
-  default     = ""
-  description = "RBAC Key Vault with the registry credentials, the agent vault by default"
+  type    = string
+  default = ""
 }
 
 variable "hub_username_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous. Docker Hub has no cache without credentials"
+  type    = string
+  default = ""
 }
 
 variable "hub_access_token_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "ghcr_username_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "ghcr_access_token_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "gcr_username_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "gcr_access_token_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "quay_username_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "quay_access_token_secret" {
-  type        = string
-  default     = ""
-  description = "Key Vault secret name, \"\" = anonymous"
+  type    = string
+  default = ""
 }
 
 variable "encryption" {
@@ -119,13 +104,30 @@ variable "private_endpoint_enabled" {
 }
 
 variable "private_endpoint_subnet_id" {
-  type    = string
-  default = null
+  type     = string
+  nullable = false
+  default  = ""
+  validation {
+    condition     = !var.private_endpoint_enabled || var.private_endpoint_subnet_id != ""
+    error_message = "private_endpoint_enabled needs private_endpoint_subnet_id."
+  }
 }
 
 variable "private_endpoint_vnet_id" {
-  type    = string
-  default = null
+  type     = string
+  nullable = false
+  default  = ""
+  validation {
+    condition     = !var.private_endpoint_enabled || var.private_endpoint_vnet_id != "" || var.private_dns_zone_id != ""
+    error_message = "private_endpoint_enabled needs private_endpoint_vnet_id (or private_dns_zone_id)."
+  }
+}
+
+variable "private_dns_zone_id" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Existing privatelink.azurecr.io zone (e.g. central hub zone, already linked to the VNet), \"\" = create one"
 }
 
 variable "public_network_access_enabled" {
@@ -137,7 +139,7 @@ variable "public_network_access_enabled" {
 variable "aks_bootstrap_cache_rule" {
   type        = bool
   default     = false
-  description = "Cache rule for the AKS bootstrap artifact cache, needs the private endpoint"
+  description = "Cache rule for the AKS bootstrap artifact cache (aks bootstrap_cache_enabled needs a Premium registry with the private endpoint)"
 }
 
 variable "tags" {

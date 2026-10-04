@@ -11,7 +11,7 @@ spec:
   roleAssignments:
     - role: DNS Zone Contributor
       scope: {{ .Values.global.azure.pubZoneId }}
-    {{- if and (index .Values "external-dns-private" "enabled") .Values.global.azure.intZoneId }}
+    {{- if and (index .Values "external-dns-private" "enabled") (contains "/privatednszones/" (lower .Values.global.azure.intZoneId)) }}
     - role: Private DNS Zone Contributor
       scope: {{ .Values.global.azure.intZoneId }}
     {{- end }}

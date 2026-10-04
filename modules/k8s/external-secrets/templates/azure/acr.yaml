@@ -1,6 +1,12 @@
+{{- $registries := list }}
+{{- range (dig "azure" "createACRRegistries" list .Values.global) }}
+  {{- if .loginServer }}
+    {{- $registries = append $registries . }}
+  {{- end }}
+{{- end }}
 {{- if and
     (eq .Values.global.cloudProvider "azure")
-    (not (empty .Values.global.azure.createACRRegistries))
+    (not (empty $registries))
     (.Values.global.azure.createACRNamespace)
 }}
 apiVersion: azure.entigo.com/v1alpha1
@@ -17,12 +23,12 @@ spec:
   serviceAccountAnnotations:
     azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantID | quote }}
   roleAssignments:
-    {{- range .Values.global.azure.createACRRegistries }}
+    {{- range $registries }}
     - role: AcrPull
       scope: {{ .id }}
     {{- end }}
 ---
-  {{- range .Values.global.azure.createACRRegistries }}
+  {{- range $registries }}
   {{- $name := index (splitList "." .loginServer) 0 }}
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: ACRAccessToken

@@ -5,23 +5,44 @@ data "azurerm_resource_group" "this" {
 }
 
 data "azapi_resource_list" "vm_skus" {
+  count                  = local.zone_lookup ? 1 : 0
   type                   = "Microsoft.Compute/skus@2021-07-01"
   parent_id              = "/subscriptions/${data.azurerm_client_config.this.subscription_id}"
   query_parameters       = { "$filter" = ["location eq '${var.location}'"] }
-  response_export_values = { vms = "value[?resourceType=='virtualMachines'].{name: name, zones: locationInfo[0].zones}" }
+  response_export_values = { vms = "value[?resourceType=='virtualMachines'].{name: name, zones: locationInfo[0].zones, restricted_zones: restrictions[?type=='Zone'].restrictionInfo.zones[], location_restrictions: restrictions[?type=='Location'].reasonCode}" }
 }
 
 locals {
-  # AKS adds it to spot pools, declared to avoid drift
+  # AKS adds them to spot pools, declared to avoid drift
   spot_taint = "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+  spot_label = { "kubernetes.azure.com/scalesetpriority" = "spot" }
 
   disk_encryption = var.disk_encryption_key_id != ""
 
-  sku_zones = { for v in data.azapi_resource_list.vm_skus.output.vms : v.name => sort(coalesce(v.zones, [])) }
-  pool_zones = {
-    for pool, size in { main = var.aks_main_instance_type, mon = var.aks_mon_instance_type, tools = var.aks_tools_instance_type } :
-    pool => var.availability_zones != null ? var.availability_zones : lookup(local.sku_zones, size, [])
+  extra_pools_without_zones = [for k, v in var.aks_node_pools_extra : k if v.zones == null]
+  zone_lookup               = var.availability_zones == null || length(local.extra_pools_without_zones) > 0
+
+  # Zones restricted for the subscription (NotAvailableForSubscription) are left out
+  skus = { for v in try(data.azapi_resource_list.vm_skus[0].output.vms, []) : v.name => v }
+  sku_zones = {
+    for name, v in local.skus : name => sort(setsubtract(coalesce(try(v.zones, null), []), coalesce(try(v.restricted_zones, null), [])))
+    if length(coalesce(try(v.location_restrictions, null), [])) == 0
   }
+  zones_for = { for size in distinct(concat(
+    [var.aks_main_instance_type, var.aks_mon_instance_type, var.aks_tools_instance_type],
+    [for k, v in var.aks_node_pools_extra : v.vm_size]
+  )) : size => var.availability_zones != null ? var.availability_zones : lookup(local.sku_zones, size, []) }
+
+  # Sizes checked against the SKU list: built-in pools without explicit zones, extra pools without their own zones
+  checked_sizes = merge(
+    var.availability_zones == null ? merge(
+      { tools = var.aks_tools_instance_type },
+      var.aks_main_max_size > 0 ? { main = var.aks_main_instance_type } : {},
+      var.aks_mon_max_size > 0 ? { mon = var.aks_mon_instance_type } : {},
+    ) : {},
+    { for k in local.extra_pools_without_zones : k => var.aks_node_pools_extra[k].vm_size },
+  )
+  unavailable_sizes = [for pool, size in local.checked_sizes : "${pool} (${size})" if !contains(keys(local.sku_zones), size)]
 
   maintenance_window = {
     duration_hours = var.maintenance_window.duration_hours
@@ -41,72 +62,104 @@ locals {
     created-by = "entigo-infralib"
   })
 
-  # tools is the AKS system pool: CriticalAddonsOnly taint instead of tools=true, AKS system pods only tolerate that
-  pools = {
+  # tools is the AKS system pool (AVM default pool): CriticalAddonsOnly taint instead of tools=true, AKS system pods
+  # only tolerate that
+  default_agent_pool = {
+    name                 = "tools"
+    mode                 = "System"
+    type                 = "VirtualMachineScaleSets"
+    vm_size              = var.aks_tools_instance_type
+    enable_auto_scaling  = true
+    min_count            = var.aks_tools_min_size
+    max_count            = var.aks_tools_max_size
+    max_pods             = var.aks_tools_max_pods
+    os_disk_size_gb      = var.aks_tools_volume_size
+    os_disk_type         = var.aks_tools_volume_type
+    os_sku               = var.os_sku
+    availability_zones   = local.zones_for[var.aks_tools_instance_type]
+    node_labels          = { "tools" = "true", created-by = "entigo-infralib" }
+    node_taints          = ["CriticalAddonsOnly=true:NoSchedule"]
+    upgrade_settings     = { max_surge = var.max_surge }
+    orchestrator_version = var.kubernetes_version
+    vnet_subnet_id       = var.vnet_subnet_id
+    tags                 = local.tags
+  }
+
+  builtin_pools = {
     main = {
-      name                      = "main"
-      vm_size                   = var.aks_main_instance_type
-      enable_auto_scaling       = true
-      min_count                 = var.aks_main_min_size
-      max_count                 = var.aks_main_max_size
-      max_pods                  = var.aks_main_max_pods
-      os_disk_size_gb           = var.aks_main_volume_size
-      os_disk_type              = var.aks_main_volume_type
-      os_sku                    = var.os_sku
-      availability_zones        = local.pool_zones["main"]
-      node_labels               = { "main" = "true", created-by = "entigo-infralib" }
-      node_taints               = var.aks_main_spot_nodes ? [local.spot_taint] : null
-      scale_set_priority        = var.aks_main_spot_nodes ? "Spot" : null
-      scale_set_eviction_policy = var.aks_main_spot_nodes ? "Delete" : null
-      spot_max_price            = var.aks_main_spot_nodes ? -1 : null
-      upgrade_settings          = var.aks_main_spot_nodes ? null : { max_surge = var.max_surge }
-      orchestrator_version      = var.kubernetes_version
-      vnet_subnet_id            = var.vnet_subnet_id
-      tags                      = local.tags
+      vm_size         = var.aks_main_instance_type
+      min_count       = var.aks_main_min_size
+      max_count       = var.aks_main_max_size
+      max_pods        = var.aks_main_max_pods
+      os_disk_size_gb = var.aks_main_volume_size
+      os_disk_type    = var.aks_main_volume_type
+      spot            = var.aks_main_spot_nodes
+      node_labels     = { "main" = "true" }
+      node_taints     = []
     }
     mon = {
-      name                      = "mon"
-      vm_size                   = var.aks_mon_instance_type
-      enable_auto_scaling       = true
-      min_count                 = var.aks_mon_min_size
-      max_count                 = var.aks_mon_max_size
-      max_pods                  = var.aks_mon_max_pods
-      os_disk_size_gb           = var.aks_mon_volume_size
-      os_disk_type              = var.aks_mon_volume_type
-      os_sku                    = var.os_sku
-      availability_zones        = local.pool_zones["mon"]
-      node_labels               = { "mon" = "true", created-by = "entigo-infralib" }
-      node_taints               = concat(["mon=true:NoSchedule"], var.aks_mon_spot_nodes ? [local.spot_taint] : [])
-      scale_set_priority        = var.aks_mon_spot_nodes ? "Spot" : "Regular"
-      scale_set_eviction_policy = var.aks_mon_spot_nodes ? "Delete" : null
-      spot_max_price            = var.aks_mon_spot_nodes ? -1 : null
-      upgrade_settings          = var.aks_mon_spot_nodes ? null : { max_surge = var.max_surge }
-      orchestrator_version      = var.kubernetes_version
-      vnet_subnet_id            = var.vnet_subnet_id
-      tags                      = local.tags
-    }
-    tools = {
-      name                 = "tools"
-      vm_size              = var.aks_tools_instance_type
-      enable_auto_scaling  = true
-      min_count            = var.aks_tools_min_size
-      max_count            = var.aks_tools_max_size
-      max_pods             = var.aks_tools_max_pods
-      os_disk_size_gb      = var.aks_tools_volume_size
-      os_disk_type         = var.aks_tools_volume_type
-      os_sku               = var.os_sku
-      availability_zones   = local.pool_zones["tools"]
-      node_labels          = { "tools" = "true", created-by = "entigo-infralib" }
-      node_taints          = ["CriticalAddonsOnly=true:NoSchedule"]
-      upgrade_settings     = { max_surge = var.max_surge }
-      orchestrator_version = var.kubernetes_version
-      vnet_subnet_id       = var.vnet_subnet_id
-      tags                 = local.tags
+      vm_size         = var.aks_mon_instance_type
+      min_count       = var.aks_mon_min_size
+      max_count       = var.aks_mon_max_size
+      max_pods        = var.aks_mon_max_pods
+      os_disk_size_gb = var.aks_mon_volume_size
+      os_disk_type    = var.aks_mon_volume_type
+      spot            = var.aks_mon_spot_nodes
+      node_labels     = { "mon" = "true" }
+      node_taints     = ["mon=true:NoSchedule"]
     }
   }
 
-  default_agent_pool = merge(local.pools["tools"], { mode = "System", type = "VirtualMachineScaleSets" })
-  agent_pools        = { for k, v in local.pools : k => merge(v, { mode = "User" }) if k != "tools" && v.max_count > 0 }
+  # User pools, created after the cluster and its version update
+  node_pools = merge(
+    { for k, p in local.builtin_pools : k => {
+      name                    = k
+      mode                    = "User"
+      vm_size                 = p.vm_size
+      min_count               = p.min_count
+      max_count               = p.max_count
+      max_pods                = p.max_pods
+      os_disk_size_gb         = p.os_disk_size_gb
+      os_disk_type            = p.os_disk_type
+      os_sku                  = var.os_sku
+      zones                   = local.zones_for[p.vm_size]
+      node_labels             = merge(p.node_labels, p.spot ? local.spot_label : {}, { created-by = "entigo-infralib" })
+      node_taints             = concat(p.node_taints, p.spot ? [local.spot_taint] : [])
+      spot                    = p.spot
+      spot_max_price          = -1
+      max_surge               = var.max_surge
+      vnet_subnet_id          = var.vnet_subnet_id
+      host_encryption_enabled = null
+      gpu_instance            = null
+      tags                    = local.tags
+    } if p.max_count > 0 },
+    { for k, p in var.aks_node_pools_extra : k => {
+      name                    = coalesce(p.name, k)
+      mode                    = p.mode
+      vm_size                 = p.vm_size
+      min_count               = p.min_count
+      max_count               = p.max_count
+      max_pods                = p.max_pods
+      os_disk_size_gb         = p.os_disk_size_gb
+      os_disk_type            = p.os_disk_type
+      os_sku                  = coalesce(p.os_sku, var.os_sku)
+      zones                   = p.zones != null ? p.zones : local.zones_for[p.vm_size]
+      node_labels             = merge(p.node_labels, p.spot ? local.spot_label : {}, { created-by = "entigo-infralib" })
+      node_taints             = distinct(concat(p.node_taints, p.spot ? [local.spot_taint] : []))
+      spot                    = p.spot
+      spot_max_price          = p.spot_max_price
+      max_surge               = coalesce(p.max_surge, var.max_surge)
+      vnet_subnet_id          = var.vnet_subnet_id
+      host_encryption_enabled = p.host_encryption_enabled
+      gpu_instance            = p.gpu_instance
+      tags                    = merge(p.tags, local.tags)
+    } },
+  )
+
+  # Agent jobs reach a public API server from the NAT gateway IPs
+  authorized_ip_ranges = length(var.api_server_authorized_ip_ranges) == 0 ? [] : distinct(concat(
+    var.api_server_authorized_ip_ranges, [for ip in var.nat_public_ips : "${ip}/32"]
+  ))
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
@@ -117,16 +170,16 @@ resource "azurerm_user_assigned_identity" "aks" {
 
   lifecycle {
     precondition {
-      condition     = !var.api_server_vnet_integration_enabled || var.api_server_subnet_id != ""
-      error_message = "api_server_vnet_integration_enabled needs api_server_subnet_id (vpc apiserver_subnets)."
+      condition     = length(local.unavailable_sizes) == 0
+      error_message = "VM sizes not available in ${var.location} for this subscription: ${join(", ", local.unavailable_sizes)}."
     }
     precondition {
-      condition     = var.private_dns_zone_id == "" || (var.private_cluster_enabled && can(regex("/privatednszones/([a-z0-9-]{1,32}\\.)?private\\.${lower(var.location)}\\.azmk8s\\.io$", lower(var.private_dns_zone_id))))
-      error_message = "private_dns_zone_id needs private_cluster_enabled and a zone named private.${var.location}.azmk8s.io or <subzone>.private.${var.location}.azmk8s.io."
+      condition     = alltrue([for k, p in var.aks_node_pools_extra : can(regex("^[a-z][a-z0-9]{0,8}$", coalesce(p.name, k))) && !contains(["main", "mon", "tools"], coalesce(p.name, k))])
+      error_message = "aks_node_pools_extra pool names (key or name) must be 1-9 lowercase letters and digits starting with a letter (AKS limit 12 minus the rotation suffix) and not main, mon or tools."
     }
     precondition {
-      condition     = !local.disk_encryption || var.kms_key_vault_id != ""
-      error_message = "disk_encryption_key_id needs kms_key_vault_id."
+      condition     = length(distinct(values(local.node_pools)[*].name)) == length(local.node_pools) && length(setintersection(values(local.node_pools)[*].name, [for p in values(local.node_pools) : "${p.name}tmp"])) == 0
+      error_message = "Node pool names must be unique and must not be another pool's rotation name (<name>tmp)."
     }
   }
 }
@@ -163,13 +216,6 @@ resource "azurerm_role_assignment" "aks_vnet" {
   skip_service_principal_aad_check = true
 }
 
-# AKS checks the zone permissions at creation
-resource "time_sleep" "private_dns_roles" {
-  count           = var.private_dns_zone_id != "" ? 1 : 0
-  create_duration = "60s"
-  depends_on      = [azurerm_role_assignment.aks_private_dns_zone, azurerm_role_assignment.aks_vnet]
-}
-
 # Bootstrap cache: the kubelet identity needs AcrPull before the nodes bootstrap, so it can't be the AKS-created one
 resource "azurerm_user_assigned_identity" "kubelet" {
   count               = var.bootstrap_cache_enabled ? 1 : 0
@@ -177,13 +223,6 @@ resource "azurerm_user_assigned_identity" "kubelet" {
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = local.tags
-
-  lifecycle {
-    precondition {
-      condition     = var.acr_id != ""
-      error_message = "bootstrap_cache_enabled needs acr_id (Premium acr-proxy with private endpoint and aks_bootstrap_cache_rule)."
-    }
-  }
 }
 
 resource "azurerm_role_assignment" "kubelet_identity_operator" {
@@ -218,7 +257,7 @@ resource "azurerm_disk_encryption_set" "this" {
 
 resource "azurerm_role_assignment" "disk_encryption_key" {
   count                            = local.disk_encryption ? 1 : 0
-  scope                            = "${var.kms_key_vault_id}/keys/${element(split("/", var.disk_encryption_key_id), 4)}"
+  scope                            = var.disk_encryption_key_resource_id
   role_definition_name             = "Key Vault Crypto Service Encryption User"
   principal_id                     = azurerm_disk_encryption_set.this[0].identity[0].principal_id
   skip_service_principal_aad_check = true
@@ -232,12 +271,19 @@ resource "azurerm_role_assignment" "disk_encryption_reader" {
   skip_service_principal_aad_check = true
 }
 
-
-# AKS checks key access at creation, role assignments take up to a minute
-resource "time_sleep" "key_roles" {
-  count           = local.disk_encryption ? 1 : 0
+# AKS checks its role assignments at creation, they take up to a minute to propagate
+resource "time_sleep" "roles" {
   create_duration = "60s"
-  depends_on      = [azurerm_role_assignment.disk_encryption_key, azurerm_role_assignment.disk_encryption_reader]
+  depends_on = [
+    azurerm_role_assignment.aks_network,
+    azurerm_role_assignment.aks_apiserver_network,
+    azurerm_role_assignment.aks_private_dns_zone,
+    azurerm_role_assignment.aks_vnet,
+    azurerm_role_assignment.kubelet_identity_operator,
+    azurerm_role_assignment.kubelet_bootstrap_acr_pull,
+    azurerm_role_assignment.disk_encryption_key,
+    azurerm_role_assignment.disk_encryption_reader,
+  ]
 }
 
 # https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster
@@ -290,7 +336,7 @@ module "aks" {
     enable_private_cluster             = var.private_cluster_enabled
     enable_private_cluster_public_fqdn = var.private_cluster_enabled ? false : null
     # [] not null: AVM drops nulls and AKS would keep the old ranges, which private mode rejects
-    authorized_ip_ranges    = var.private_cluster_enabled ? [] : var.api_server_authorized_ip_ranges
+    authorized_ip_ranges    = var.private_cluster_enabled ? [] : local.authorized_ip_ranges
     enable_vnet_integration = var.api_server_vnet_integration_enabled
     subnet_id               = var.api_server_vnet_integration_enabled ? var.api_server_subnet_id : null
     private_dns_zone        = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
@@ -321,16 +367,51 @@ module "aks" {
 
   default_agent_pool = local.default_agent_pool
 
-  agent_pools = merge(local.agent_pools, var.aks_managed_node_groups_extra)
+  depends_on = [time_sleep.roles]
+}
 
-  depends_on = [
-    azurerm_role_assignment.aks_network,
-    azurerm_role_assignment.aks_apiserver_network,
-    azurerm_role_assignment.kubelet_identity_operator,
-    azurerm_role_assignment.kubelet_bootstrap_acr_pull,
-    time_sleep.key_roles,
-    time_sleep.private_dns_roles,
-  ]
+# Not AVM agent_pools: AVM upgrades them in parallel with the control plane (AKS rejects pools newer than it) and only
+# replaces them on a VM size change. Changes to zones, VM size, max pods, disks or subnets rotate the pool through a
+# temporary pool, priority (spot) changes replace it
+resource "azurerm_kubernetes_cluster_node_pool" "this" {
+  for_each                    = local.node_pools
+  name                        = each.value.name
+  temporary_name_for_rotation = "${each.value.name}tmp"
+  kubernetes_cluster_id       = module.aks.resource_id
+  mode                        = each.value.mode
+  orchestrator_version        = var.kubernetes_version
+  vm_size                     = each.value.vm_size
+  auto_scaling_enabled        = true
+  min_count                   = each.value.min_count
+  max_count                   = each.value.max_count
+  max_pods                    = each.value.max_pods
+  os_disk_size_gb             = each.value.os_disk_size_gb
+  os_disk_type                = each.value.os_disk_type
+  os_sku                      = each.value.os_sku
+  zones                       = each.value.zones
+  vnet_subnet_id              = each.value.vnet_subnet_id
+  host_encryption_enabled     = each.value.host_encryption_enabled
+  gpu_instance                = each.value.gpu_instance
+  node_labels                 = each.value.node_labels
+  node_taints                 = each.value.node_taints
+  priority                    = each.value.spot ? "Spot" : "Regular"
+  eviction_policy             = each.value.spot ? "Delete" : null
+  spot_max_price              = each.value.spot ? each.value.spot_max_price : null
+  tags                        = each.value.tags
+
+  # AKS rejects surge settings on spot pools
+  dynamic "upgrade_settings" {
+    for_each = each.value.spot ? [] : [each.value.max_surge]
+    content {
+      max_surge = upgrade_settings.value
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [node_count]
+  }
+
+  depends_on = [module.aks]
 }
 
 resource "azurerm_role_assignment" "kubelet_acr_pull" {
@@ -342,18 +423,34 @@ resource "azurerm_role_assignment" "kubelet_acr_pull" {
 }
 
 resource "azurerm_role_assignment" "kubelet_additional" {
-  for_each                         = { for i, a in var.kubelet_additional_role_assignments : tostring(i) => a }
+  for_each                         = { for a in var.kubelet_additional_role_assignments : "${a.role}|${a.scope}" => a }
   scope                            = each.value.scope
   role_definition_name             = each.value.role
   principal_id                     = var.bootstrap_cache_enabled ? azurerm_user_assigned_identity.kubelet[0].principal_id : module.aks.kubelet_identity.objectId
   skip_service_principal_aad_check = true
 }
 
+# The installing identity (normally the agent job identity) keeps the role, later callers don't replace it
+resource "terraform_data" "installer" {
+  input = data.azurerm_client_config.this.object_id
+
+  lifecycle {
+    ignore_changes = [input]
+  }
+}
+
 resource "azurerm_role_assignment" "cluster_admin" {
-  for_each             = toset(concat([data.azurerm_client_config.this.object_id], var.admin_object_ids))
+  for_each             = merge({ installer = terraform_data.installer.input }, { for id in toset([for i in var.admin_object_ids : lower(i)]) : id => id })
   scope                = module.aks.resource_id
   role_definition_name = "Azure Kubernetes Service RBAC Cluster Admin"
   principal_id         = each.value
+
+  lifecycle {
+    precondition {
+      condition     = each.key == "installer" || each.value != lower(terraform_data.installer.input)
+      error_message = "admin_object_ids must not list the installing identity ${terraform_data.installer.input}, it has the role already."
+    }
+  }
 }
 
 resource "azurerm_log_analytics_workspace" "control_plane" {

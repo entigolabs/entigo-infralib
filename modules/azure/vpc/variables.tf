@@ -91,14 +91,57 @@ variable "enable_nat_gateway" {
   default = true
 }
 
+# https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview
+variable "enable_flow_log" {
+  type     = bool
+  nullable = false
+  default  = true
+}
+
+variable "flow_log_retention_days" {
+  type    = number
+  default = 7
+}
+
+variable "flow_log_traffic_analytics_enabled" {
+  type    = bool
+  default = false
+}
+
+# Azure creates one Network Watcher per region and subscription, the flow log resource has to live in its resource group
+variable "network_watcher_name" {
+  type        = string
+  default     = ""
+  description = "\"\" = NetworkWatcher_<location>"
+}
+
+variable "network_watcher_resource_group_name" {
+  type    = string
+  default = "NetworkWatcherRG"
+}
+
+variable "nat_gateway_sku" {
+  type        = string
+  default     = "StandardV2"
+  description = "StandardV2 is zone redundant, Standard is single zone. Changing it replaces the NAT gateway and its public IPs (new egress IPs)"
+}
+
+variable "nat_idle_timeout_minutes" {
+  type    = number
+  default = 4
+}
+
+# https://learn.microsoft.com/azure/aks/egress-outboundtype#outbound-type-of-userdefinedrouting
+variable "egress_next_hop_ip" {
+  type        = string
+  default     = null
+  description = "Private IP of a firewall/NVA (e.g. in a peered hub): 0.0.0.0/0 of the private and pipeline subnets goes through it. Needs enable_nat_gateway = false and aks outbound_type = userDefinedRouting"
+}
+
 variable "nat_static_ip_count" {
   type        = number
   default     = 1
   description = "About 64k SNAT ports per public IP, max 16"
-  validation {
-    condition     = var.nat_static_ip_count >= 1 && var.nat_static_ip_count <= 16
-    error_message = "nat_static_ip_count must be between 1 and 16."
-  }
 }
 
 variable "tags" {
@@ -115,9 +158,8 @@ variable "apiserver_subnets" {
 
 # https://learn.microsoft.com/azure/container-apps/custom-virtual-networks?tabs=workload-profiles-env#subnet
 variable "pipeline_subnets" {
-  type        = list(string)
-  default     = null
-  description = "Container Apps environment subnet"
+  type    = list(string)
+  default = null
 }
 
 variable "pipeline_subnet_names" {
@@ -125,16 +167,24 @@ variable "pipeline_subnet_names" {
   default = []
 }
 
+variable "pipeline_subnet_service_endpoints" {
+  type    = list(string)
+  default = ["Microsoft.Storage", "Microsoft.KeyVault"]
+}
+
+variable "pipeline_zone_redundancy_enabled" {
+  type    = bool
+  default = true
+}
+
 variable "enable_mssql_subnets" {
-  type        = bool
-  default     = false
-  description = "Create the Azure SQL Managed Instance subnets"
+  type    = bool
+  default = false
 }
 
 variable "mssql_subnets" {
-  type        = list(string)
-  default     = null
-  description = "Azure SQL Managed Instance subnets"
+  type    = list(string)
+  default = null
 }
 
 variable "mssql_subnet_names" {
