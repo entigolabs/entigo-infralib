@@ -33,7 +33,7 @@ loki:
   loki:
     storage:
       s3:
-        endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+        endpoint: "https://{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.{{ .agent.providerDomain }}"
         region: "{{ .toutput.oke.region }}"
       bucketNames:
         chunks: "{{ .config.prefix }}-{{ .module.name }}"
@@ -49,7 +49,7 @@ loki:
         # malformed endpoint.
         object_store:
           s3:
-            endpoint: "{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.oraclecloud.com"
+            endpoint: "{{ .toutput.oke.object_storage_namespace }}.compat.objectstorage.{{ .toutput.oke.region }}.{{ .agent.providerDomain }}"
             region: "{{ .toutput.oke.region }}"
             bucket_name: "{{ .config.prefix }}-{{ .module.name }}"
             access_key_id: "${OCI_ACCESS_KEY_ID}"
