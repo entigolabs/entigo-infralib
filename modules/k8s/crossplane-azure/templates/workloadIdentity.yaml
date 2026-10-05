@@ -2,6 +2,8 @@
 {{- $az := .Values.global.azure }}
 {{- $rg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.resourceGroupName | lower }}
 {{- $nodeRg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.nodeResourceGroupName | lower }}
+{{- $keys := compact .Values.workloadIdentity.encryptionKeyIds }}
+{{- $encryptionRole := "Key Vault Crypto Service Encryption User" }}
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
@@ -26,13 +28,11 @@ spec:
           jsonPath: .status.clientId
       schema:
         openAPIV3Schema:
-          description: Azure managed identity federated with a service account in this namespace, the service account is created with the client id annotation
+          description: Azure managed identity federated with a service account in this namespace, the service account is created with the client id annotation. Without serviceAccountName only the identity and its role assignments (e.g. for a customer managed key)
           type: object
           properties:
             spec:
               type: object
-              required:
-                - serviceAccountName
               properties:
                 serviceAccountName:
                   type: string
@@ -57,7 +57,7 @@ spec:
                       role:
                         type: string
                         enum:
-                          {{- toYaml (concat .Values.workloadIdentity.allowedRoles .Values.workloadIdentity.readOnlyRoles) | nindent 26 }}
+                          {{- toYaml (concat .Values.workloadIdentity.allowedRoles .Values.workloadIdentity.readOnlyRoles (ternary (list $encryptionRole) list (gt (len $keys) 0))) | nindent 26 }}
                       scope:
                         type: string
                         maxLength: 1024
@@ -69,9 +69,13 @@ spec:
                         message: scope must be a resource in resource group {{ $az.resourceGroupName }}, read-only roles also the resource group or the AKS node resource group
                       - rule: "!self.role.startsWith('Storage ') || (self.scope.lowerAscii().matches('/blobservices/default/containers/[^/]+$') && !self.scope.lowerAscii().endsWith('/containers/tfstate'))"
                         message: storage roles only on a blob container other than tfstate
+                      - rule: {{ printf "self.role != %q || self.scope.lowerAscii() in %s" $encryptionRole (toJson (splitList "," (lower (join "," $keys)))) | quote }}
+                        message: {{ $encryptionRole }} only on workloadIdentity.encryptionKeyIds
             status:
               type: object
               properties:
+                id:
+                  type: string
                 clientId:
                   type: string
                 principalId:
@@ -105,8 +109,8 @@ spec:
           template: |
             [[- $xr := .observed.composite.resource ]]
             [[- $ns := $xr.metadata.namespace ]]
-            [[- $sa := $xr.spec.serviceAccountName ]]
-            [[- $name := printf "%s-%s-%s" "{{ $az.identityPrefix }}" $ns $sa ]]
+            [[- $sa := dig "serviceAccountName" "" $xr.spec ]]
+            [[- $name := printf "%s-%s-%s" "{{ $az.identityPrefix }}" $ns ($sa | default $xr.metadata.name) ]]
             [[- if gt (len $name) 128 ]][[ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) ]][[ end ]]
             [[- /* Fall back to the rendered values: a missing status must not delete resources */]]
             [[- $observed := dig "resources" dict .observed ]]
@@ -131,8 +135,10 @@ spec:
                 tags:
                   created-by: entigo-infralib
                   kubernetes-namespace: [[ $ns ]]
+                  [[- if $sa ]]
                   kubernetes-service-account: [[ $sa ]]
-            [[- if $id ]]
+                  [[- end ]]
+            [[- if and $id $sa ]]
             ---
             apiVersion: managedidentity.azure.m.upbound.io/v1beta1
             kind: FederatedIdentityCredential
@@ -175,7 +181,7 @@ spec:
                 skipServicePrincipalAadCheck: true
             [[- end ]]
             [[- end ]]
-                        [[- if $clientId ]]
+            [[- if and $clientId $sa ]]
             ---
             apiVersion: v1
             kind: ServiceAccount
@@ -198,6 +204,7 @@ spec:
                 gotemplating.fn.crossplane.io/ready: "False"
             [[- end ]]
             status:
+              id: [[ $id | quote ]]
               clientId: [[ $clientId | quote ]]
               principalId: [[ $principalId | quote ]]
     - step: ready

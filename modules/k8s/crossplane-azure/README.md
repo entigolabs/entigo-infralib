@@ -6,6 +6,9 @@ Installs the [provider-azure](https://github.com/crossplane-contrib/provider-upj
 mirrored with `pullpush.sh`). Providers use the workload identity of modules/azure/crossplane, federated with
 `crossplane-system/crossplane-azure`: keep the module name `crossplane-azure`. One per cluster.
 
+Namespaced managed resources only (`*.azure.m.upbound.io`) with
+`providerConfigRef: {kind: ClusterProviderConfig, name: crossplane-azure}`; there is no cluster-scoped `ProviderConfig`.
+
 ### WorkloadIdentity ###
 
 Creates the managed identity `<cluster name>-<namespace>-<service account>`, its federated credential, the role
@@ -27,6 +30,11 @@ spec:
 Roles: `workloadIdentity.allowedRoles`, only on resources in the agent resource group, storage roles only on a blob
 container other than `tfstate`. `workloadIdentity.readOnlyRoles` (Monitoring Reader) also on the agent resource group
 itself and the AKS node resource group. Whoever can create a WorkloadIdentity in a namespace can grant these roles.
+
+Without `serviceAccountName` only the identity `<cluster name>-<namespace>-<name>` and its role assignments are
+created (no federated credential, no service account), e.g. for a storage account customer managed key (loki/mimir
+`<release>-cmk`). Key Vault Crypto Service Encryption User is only allowed on the keys in
+`workloadIdentity.encryptionKeyIds` (kms telemetry key).
 
 ### Example code ###
 

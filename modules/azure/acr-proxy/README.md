@@ -1,6 +1,6 @@
 ## Azure Container Registry pull-through cache ##
 
-Creates an ACR (`<prefix alphanumerics><4 char suffix>`, globally unique) with cache rules for Docker Hub, GitHub,
+Creates an ACR (`<prefix alphanumerics><agent uniqueSuffix>`, globally unique) with cache rules for Docker Hub, GitHub,
 Google (gcr.io), AWS public ECR, Quay, Microsoft and Kubernetes registries. Images are pulled as
 `<acr>.azurecr.io/<source registry>/<repository>`, see the `*_registry` outputs. AWS public ECR and Microsoft
 (both only allow unauthenticated pulls in ACR) and Kubernetes registries are always anonymous.

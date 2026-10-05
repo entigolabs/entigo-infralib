@@ -4,11 +4,23 @@ global:
   createRoute: true
   bucketName: ""
   azure:
-    # Agent storage account (modules/azure/crossplane), the container bucketName is created in it
-    storageAccountId: ""
-    # kms telemetry key (versionless), "" = storage account key
-    telemetryKeyId: ""
+    subscriptionId: ""
+    resourceGroupName: ""
+    location: ""
+    # Own storage account (templates/azure/storage.yaml), globally unique: storageAccountPrefix alphanumerics (max 16)
+    # + uniqueSuffix, or storageAccountName (3-24 lowercase letters and digits) as is
     storageAccountName: ""
+    storageAccountPrefix: ""
+    uniqueSuffix: ""
+    # Standard (HDD, like S3/GCS Standard) or Premium (SSD block blob, ~11x storage price), create time only
+    storageTier: Standard
+    storageReplication: ZRS
+    # kms telemetry key: versionless key id (CMK) and resource id (key role of the <release>-cmk WorkloadIdentity),
+    # "" = Microsoft-managed keys, create time only
+    telemetryKeyId: ""
+    telemetryKeyResourceId: ""
+    # crossplane-azure identityPrefix (AKS cluster name), for the id of the <release>-cmk identity
+    identityPrefix: ""
     # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
     agcHealthCheck: false
 
@@ -261,7 +273,7 @@ mimir-distributed:
 
         azure:
 
-          account_name: {{ .Values.global.azure.storageAccountName }}
+          account_name: {{ include "entigo.azureStorageAccountName" . }}
 
           container_name: {{ .Values.global.bucketName }}
 
@@ -357,7 +369,7 @@ mimir-distributed:
         backend: azure
         storage_prefix: ruler
         azure:
-          account_name: {{ .Values.global.azure.storageAccountName }}
+          account_name: {{ include "entigo.azureStorageAccountName" . }}
           container_name: {{ .Values.global.bucketName }}
           
         cache:
@@ -379,7 +391,7 @@ mimir-distributed:
         backend: azure
         storage_prefix: alertmanager
         azure:
-          account_name: {{ .Values.global.azure.storageAccountName }}
+          account_name: {{ include "entigo.azureStorageAccountName" . }}
           container_name: {{ .Values.global.bucketName }}
 
       server:

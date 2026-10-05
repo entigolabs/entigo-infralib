@@ -1,0 +1,75 @@
+{{- define "entigo.azureStorageAccountName" -}}
+{{- $az := .Values.global.azure -}}
+{{- $az.storageAccountName | default (printf "%s%s" (regexReplaceAll "[^a-z0-9]" (lower $az.storageAccountPrefix) "" | trunc 16) $az.uniqueSuffix) -}}
+{{- end }}
+{{/* Composed by the crossplane-azure WorkloadIdentity <release>-cmk: <identityPrefix>-<namespace>-<release>-cmk */}}
+{{- define "entigo.azureCmkIdentityId" -}}
+{{- $az := .Values.global.azure -}}
+{{- $name := printf "%s-%s-%s-cmk" $az.identityPrefix .Release.Namespace .Release.Name -}}
+{{- if gt (len $name) 128 }}{{ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) }}{{ end -}}
+{{- printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" $az.subscriptionId $az.resourceGroupName $name -}}
+{{- end }}
+{{- if eq .Values.global.cloudProvider "azure" }}
+{{- $az := .Values.global.azure }}
+{{- $name := include "entigo.azureStorageAccountName" . }}
+{{- if not (regexMatch "^[a-z0-9]{3,24}$" $name) }}
+{{- fail (printf "storage account name %q must be 3-24 lowercase letters and digits, set global.azure.storageAccountName" $name) }}
+{{- end }}
+apiVersion: storage.azure.m.upbound.io/v1beta1
+kind: Account
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: {{ $name }}
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan: no Delete
+  managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+  forProvider:
+    resourceGroupName: {{ required "global.azure.resourceGroupName" $az.resourceGroupName }}
+    location: {{ required "global.azure.location" $az.location }}
+    accountKind: {{ eq $az.storageTier "Premium" | ternary "BlockBlobStorage" "StorageV2" }}
+    accountTier: {{ $az.storageTier }}
+    accountReplicationType: {{ $az.storageReplication }}
+    minTlsVersion: TLS1_2
+    httpsTrafficOnlyEnabled: true
+    sharedAccessKeyEnabled: false
+    defaultToOauthAuthentication: true
+    allowNestedItemsToBePublic: false
+    blobProperties:
+      versioningEnabled: false
+    {{- if and $az.telemetryKeyId $az.telemetryKeyResourceId }}
+    {{- $cmk := include "entigo.azureCmkIdentityId" . }}
+    identity:
+      type: UserAssigned
+      identityIds:
+        - {{ $cmk }}
+    customerManagedKey:
+      keyVaultKeyId: {{ $az.telemetryKeyId }}
+      userAssignedIdentityId: {{ $cmk }}
+    {{- end }}
+    tags:
+      created-by: entigo-infralib
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: storage.azure.m.upbound.io/v1beta1
+kind: Container
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan: no Delete
+  managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+  forProvider:
+    storageAccountIdRef:
+      name: {{ .Release.Name }}
+    containerAccessType: private
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

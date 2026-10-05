@@ -18,11 +18,6 @@ variable "node_resource_group_id" {
   type = string
 }
 
-variable "telemetry_key_resource_id" {
-  type    = string
-  default = ""
-}
-
 variable "acr_id" {
   type    = string
   default = ""

@@ -7,6 +7,15 @@ variable "resource_group_name" {
   default = ""
 }
 
+variable "unique_suffix" {
+  type        = string
+  description = "Agent uniqueSuffix (8 chars) for the globally unique flow log storage account name"
+  validation {
+    condition     = can(regex("^[a-z0-9]{8}$", var.unique_suffix))
+    error_message = "unique_suffix must be 8 lowercase letters or digits"
+  }
+}
+
 variable "location" {
   type    = string
   default = ""

@@ -1,6 +1,5 @@
-resource_group_name: "{{ .config.prefix }}-infralib-{{ .agent.region }}"
+resource_group_name: "{{ .agent.resourceGroup }}"
 location: "{{ .agent.region }}"
 oidc_issuer_url: "{{ .toutput.aks.oidc_issuer_url }}"
 node_resource_group_id: "{{ .toutput.aks.node_resource_group_id }}"
 acr_id: "{{ .toptout.acr-proxy.acr_id }}"
-telemetry_key_resource_id: "{{ .toptout.kms.telemetry_key_resource_id }}"

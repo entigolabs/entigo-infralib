@@ -7,6 +7,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-3"
 spec:
   activate:
-  - 'containers.storage.azure.upbound.io'
-  - 'encryptionscopes.storage.azure.upbound.io'
+  - 'accounts.storage.azure.m.upbound.io'
+  - 'containers.storage.azure.m.upbound.io'
 {{- end }}

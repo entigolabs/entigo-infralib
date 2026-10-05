@@ -34,6 +34,8 @@ workloadIdentity:
   # Also on the agent resource group itself and the AKS node resource group
   readOnlyRoles:
     - Monitoring Reader
+  # Key resource ids allowed for Key Vault Crypto Service Encryption User (customer managed keys), nothing else
+  encryptionKeyIds: []
   functions:
     goTemplating:
       image: docker.io/entigolabs/function-go-templating

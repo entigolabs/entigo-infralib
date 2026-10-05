@@ -1,6 +1,11 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-metrics"
   azure:
-    storageAccountId: "{{ .toutput.crossplane.agent_storage_account_id }}"
+    subscriptionId: "{{ .agent.accountId }}"
+    resourceGroupName: "{{ .agent.resourceGroup }}"
+    location: "{{ .agent.region }}"
+    storageAccountPrefix: "{{ .config.prefix }}{{ .module.name }}"
+    uniqueSuffix: "{{ .agent.uniqueSuffix }}"
     telemetryKeyId: "{{ .toptout.kms.telemetry_key_id }}"
-    storageAccountName: "{{ .toutput.crossplane.agent_storage_account_name }}"
+    telemetryKeyResourceId: "{{ .toptout.kms.telemetry_key_resource_id }}"
+    identityPrefix: "{{ .toutput.aks.cluster_name }}"

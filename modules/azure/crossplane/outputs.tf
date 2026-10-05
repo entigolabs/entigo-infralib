@@ -37,11 +37,3 @@ output "kubernetes_service_account" {
 output "kubernetes_core_service_account" {
   value = var.kubernetes_core_service_account
 }
-
-output "agent_storage_account_name" {
-  value = try(data.azurerm_resources.agent_storage.resources[0].name, "")
-}
-
-output "agent_storage_account_id" {
-  value = try(data.azurerm_resources.agent_storage.resources[0].id, "")
-}

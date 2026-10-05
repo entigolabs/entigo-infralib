@@ -70,7 +70,7 @@ Outputs use both the google style (`*_subnet_cidrs`, `nat_static_ips`) and the a
 private, `elasticache_subnets_cidr_blocks` = database) for modules shared between clouds, e.g. platform-apis.
 
 VNet flow logs (`enable_flow_log`, default true like aws/vpc): all IP flows of the VNet go to a dedicated storage account
-`<prefix alnum>fl<random>` (Entra ID only, Microsoft-managed keys, network access only for trusted Azure services and the
+`<prefix alnum>fl<agent uniqueSuffix>` (Entra ID only, Microsoft-managed keys, network access only for trusted Azure services and the
 private subnets) with `flow_log_retention_days` retention (7, like aws). The flow log resource itself lives in the
 region's Network Watcher resource group (`NetworkWatcherRG`/`NetworkWatcher_<location>`, one per region and subscription,
 override with `network_watcher_name`/`network_watcher_resource_group_name`). `flow_log_traffic_analytics_enabled`

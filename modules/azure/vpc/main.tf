@@ -370,16 +370,9 @@ resource "azurerm_subnet_route_table_association" "egress_pipeline" {
 # VNet flow logs to a dedicated storage account with Microsoft-managed keys: rotating a customer-managed key of the
 # storage account stops the flow logs until they are disabled and enabled again:
 # https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#storage-account
-resource "random_string" "flow_log" {
-  count   = var.enable_flow_log ? 1 : 0
-  length  = 4
-  special = false
-  upper   = false
-}
-
 resource "azurerm_storage_account" "flow_log" {
   count                           = var.enable_flow_log ? 1 : 0
-  name                            = "${substr(replace(lower(var.prefix), "/[^a-z0-9]/", ""), 0, 18)}fl${random_string.flow_log[0].result}"
+  name                            = "${substr(replace(lower(var.prefix), "/[^a-z0-9]/", ""), 0, 14)}fl${var.unique_suffix}"
   resource_group_name             = var.resource_group_name
   location                        = var.location
   account_kind                    = "StorageV2"

@@ -4,15 +4,9 @@ data "azurerm_key_vault" "credentials" {
   resource_group_name = provider::azurerm::parse_resource_id(var.key_vault_id).resource_group_name
 }
 
-resource "random_string" "suffix" {
-  length  = 4
-  upper   = false
-  special = false
-}
-
 locals {
   # Globally unique, alphanumerics, max 50
-  name = "${substr(replace(var.prefix, "/[^a-zA-Z0-9]/", ""), 0, 46)}${random_string.suffix.result}"
+  name = "${substr(replace(var.prefix, "/[^a-zA-Z0-9]/", ""), 0, 42)}${var.unique_suffix}"
 
   registries = {
     hub  = "docker.io"

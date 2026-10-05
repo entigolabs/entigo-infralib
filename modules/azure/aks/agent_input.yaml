@@ -1,4 +1,4 @@
-resource_group_name: "{{ .config.prefix }}-infralib-{{ .agent.region }}"
+resource_group_name: "{{ .agent.resourceGroup }}"
 location: "{{ .agent.region }}"
 vnet_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
 api_server_subnet_id: "{{ .toutput.vpc.apiserver_subnets[0] }}"

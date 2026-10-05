@@ -10,5 +10,20 @@ spec:
   serviceAccountName: {{ "mimir" }}
   roleAssignments:
     - role: Storage Blob Data Contributor
-      scope: {{ printf "%s/blobServices/default/containers/%s" .Values.global.azure.storageAccountId .Values.global.bucketName }}
+      scope: {{ printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s/blobServices/default/containers/%s" .Values.global.azure.subscriptionId .Values.global.azure.resourceGroupName (include "entigo.azureStorageAccountName" .) .Values.global.bucketName }}
+{{- if and .Values.global.azure.telemetryKeyId .Values.global.azure.telemetryKeyResourceId }}
+---
+# Customer managed key of the storage account (templates/azure/storage.yaml), no service account
+apiVersion: azure.entigo.com/v1alpha1
+kind: WorkloadIdentity
+metadata:
+  name: {{ .Release.Name }}-cmk
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  roleAssignments:
+    - role: Key Vault Crypto Service Encryption User
+      scope: {{ .Values.global.azure.telemetryKeyResourceId }}
+{{- end }}
 {{- end }}

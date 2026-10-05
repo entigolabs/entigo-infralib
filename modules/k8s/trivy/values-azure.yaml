@@ -1,6 +1,5 @@
 global:
   cloudProvider: azure
-  providerConfigRefName: crossplane-azure
   azure:
     acrId: ""
 

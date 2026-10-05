@@ -1,14 +1,18 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
   azure:
-    storageAccountId: "{{ .toutput.crossplane.agent_storage_account_id }}"
+    subscriptionId: "{{ .agent.accountId }}"
+    resourceGroupName: "{{ .agent.resourceGroup }}"
+    location: "{{ .agent.region }}"
+    storageAccountPrefix: "{{ .config.prefix }}{{ .module.name }}"
+    uniqueSuffix: "{{ .agent.uniqueSuffix }}"
     telemetryKeyId: "{{ .toptout.kms.telemetry_key_id }}"
+    telemetryKeyResourceId: "{{ .toptout.kms.telemetry_key_resource_id }}"
+    identityPrefix: "{{ .toutput.aks.cluster_name }}"
     agcSubnetCidrs: "{{ .toutput.vpc.agc_subnet_cidrs }}"
 loki:
   loki:
     storage:
-      azure:
-        accountName: "{{ .toutput.crossplane.agent_storage_account_name }}"
       bucketNames:
         admin: "{{ .config.prefix }}-{{ .module.name }}-logs"
         chunks: "{{ .config.prefix }}-{{ .module.name }}-logs"
