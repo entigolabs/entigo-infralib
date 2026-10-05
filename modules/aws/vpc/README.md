@@ -138,6 +138,28 @@ If you hit this with a specific client, either disable DNS64 (`subnet_enable_dns
 **DNS64 + NAT64 (`subnet_enable_dns64`, default: `false`)**
 DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances with IPv6 addresses, or a dual-stack EKS cluster) that need to reach IPv4-only destinations. AWS NAT Gateway supports NAT64 natively — when `subnet_enable_dns64 = true` and a NAT Gateway is present, this module automatically creates a `64:ff9b::/96` route via the NAT Gateway to handle the translation. IPv4-mode EKS pods have no IPv6 source address and cannot use this path.
 
+### VPC flow logs ###
+
+Flow logs are enabled by default (`enable_flow_log = true`) and capture all traffic of the VPC (`flow_log_traffic_type`, default `ALL`).
+
+By default they go to a CloudWatch log group `<prefix>/vpc-flow-log/<vpc-id>` that the module creates, together with the IAM role used to write to it. Retention is `flow_log_cloudwatch_log_group_retention_in_days` (default 7) and the agent encrypts the group with the `telemetry` KMS key.
+
+To send them to S3 instead, set `flow_log_destination_type = "s3"`. No CloudWatch log group or IAM role is created then. `flow_log_file_format` can be `plain-text` (AWS default) or `parquet`.
+
+- Without `flow_log_destination_arn` the module creates a bucket in the same account, named `<prefix>-<account id>-<region>-flow-logs` (cut to 63 characters). The bucket blocks public access, only accepts TLS, allows log delivery from this account only and deletes logs after `flow_log_s3_retention_in_days` (default 90). The name and ARN are in the `vpc_flow_log_bucket_name` and `vpc_flow_log_bucket_arn` outputs.
+- With `flow_log_destination_arn` set to a bucket ARN, optionally with a folder, the logs go there and no bucket is created. Use this for a central log archive bucket, also in another account. That bucket must exist and its policy must allow `delivery.logs.amazonaws.com` to write from this account.
+
+```
+    modules:
+      - name: vpc
+        source: aws/vpc
+        inputs:
+          flow_log_destination_type: s3
+          #Optional, without it a bucket is created in this account
+          flow_log_destination_arn: arn:aws:s3:::my-log-archive-bucket
+```
+Switching the destination replaces the flow log. Switching from CloudWatch deletes the log group with the logs in it. The created bucket is not emptied automatically, so switching away from it (setting `flow_log_destination_arn`, back to CloudWatch or `enable_flow_log = false`) fails until the bucket is emptied.
+
 ### VPC endpoint policies ###
 
 Every endpoint gets a default policy that allows only its own service's actions, instead of the AWS default `Action: *`:

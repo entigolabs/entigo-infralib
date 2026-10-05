@@ -523,6 +523,16 @@ output "vpc_flow_log_id" {
   value = module.vpc.vpc_flow_log_id
 }
 
+output "vpc_flow_log_bucket_name" {
+  description = "The name of the S3 bucket created for VPC Flow Logs, empty when not created"
+  value = one(aws_s3_bucket.flow_log[*].id)
+}
+
+output "vpc_flow_log_bucket_arn" {
+  description = "The ARN of the S3 bucket created for VPC Flow Logs, empty when not created"
+  value = one(aws_s3_bucket.flow_log[*].arn)
+}
+
 output "vpc_flow_log_destination_arn" {
   description = "The ARN of the destination for VPC Flow Logs"
   value = module.vpc.vpc_flow_log_destination_arn

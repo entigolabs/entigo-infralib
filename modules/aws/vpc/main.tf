@@ -124,6 +124,11 @@ module "vpc" {
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   enable_flow_log                                 = var.enable_flow_log
+  flow_log_destination_type                       = var.flow_log_destination_type
+  flow_log_destination_arn                        = local.flow_log_destination_arn
+  flow_log_traffic_type                           = var.flow_log_traffic_type
+  flow_log_file_format                            = var.flow_log_file_format != "" ? var.flow_log_file_format : null
+  # The upstream module skips the CloudWatch log group and IAM role when flow_log_destination_type is s3
   create_flow_log_cloudwatch_log_group            = var.enable_flow_log
   create_flow_log_cloudwatch_iam_role             = var.enable_flow_log
   flow_log_cloudwatch_log_group_name_prefix       = "${var.prefix}/vpc-flow-log/"

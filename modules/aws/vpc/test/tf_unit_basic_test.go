@@ -101,6 +101,12 @@ func testTerraformVpcBiz(t *testing.T) {
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
 
+	flowLogId := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id")
+	assert.NotEmpty(t, flowLogId, "vpc_flow_log_id was not returned")
+	assert.Equal(t, "cloud-watch-logs", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to CloudWatch by default")
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "CloudWatch flow log IAM role was not returned")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name"), "No flow log bucket should be created for CloudWatch flow logs")
+
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
 	assert.Contains(t, getEndpointPolicy(t, endpoints["efs"]), "CustomEfsPolicy", "Custom efs endpoint policy was not applied")
@@ -183,6 +189,13 @@ func testTerraformVpcPri(t *testing.T) {
 
 	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
 	assert.Equal(t, 0, len(privateSubnetsIpv6CidrBlocks), "private_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
+
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "s3", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to S3")
+	flowLogBucket := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name")
+	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_destination_arn is not set")
+	assert.Equal(t, "arn:aws:s3:::"+flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_arn"), "Flow logs must go to the created bucket")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "No CloudWatch IAM role should be created for S3 flow logs")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
@@ -287,6 +300,8 @@ func testTerraformVpcSpoke(t *testing.T) {
 
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id should be empty when enable_flow_log is false")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"sts"}, keys(endpoints), "Wrong vpc_endpoints returned, sts only must still create the endpoints module")
