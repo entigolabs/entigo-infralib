@@ -4,7 +4,7 @@ locals {
   flow_log_bucket_name   = trim(substr(lower("${var.prefix}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-flow-logs"), 0, 63), "-")
   #Built from the policy so the flow log is created only after delivery is allowed, otherwise AWS adds its own policy to the bucket.
   flow_log_destination_arn = var.flow_log_destination_arn != "" ? var.flow_log_destination_arn : (
-    local.create_flow_log_bucket ? "arn:${data.aws_partition.current.partition}:s3:::${one(aws_s3_bucket_policy.flow_log[*].bucket)}" : ""
+    local.create_flow_log_bucket ? "arn:aws:s3:::${one(aws_s3_bucket_policy.flow_log[*].bucket)}" : ""
   )
 }
 
@@ -62,7 +62,7 @@ resource "aws_s3_bucket_policy" "flow_log" {
             "s3:x-amz-acl"      = "bucket-owner-full-control"
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+            "aws:SourceArn" = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
           }
         }
       },
@@ -77,7 +77,7 @@ resource "aws_s3_bucket_policy" "flow_log" {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+            "aws:SourceArn" = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
           }
         }
       },

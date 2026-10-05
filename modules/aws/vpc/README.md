@@ -140,14 +140,9 @@ DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances 
 
 ### VPC flow logs ###
 
-Flow logs are enabled by default (`enable_flow_log = true`) and capture all traffic of the VPC (`flow_log_traffic_type`, default `ALL`).
-
-By default they go to a CloudWatch log group `<prefix>/vpc-flow-log/<vpc-id>` that the module creates, together with the IAM role used to write to it. Retention is `flow_log_cloudwatch_log_group_retention_in_days` (default 7) and the agent encrypts the group with the `telemetry` KMS key.
-
-To send them to S3 instead, set `flow_log_destination_type = "s3"`. No CloudWatch log group or IAM role is created then. `flow_log_file_format` can be `plain-text` (AWS default) or `parquet`.
-
-- Without `flow_log_destination_arn` the module creates a bucket in the same account, named `<prefix>-<account id>-<region>-flow-logs` (cut to 63 characters). The bucket blocks public access, only accepts TLS, allows log delivery from this account only and deletes logs after `flow_log_s3_retention_in_days` (default 90). The name and ARN are in the `vpc_flow_log_bucket_name` and `vpc_flow_log_bucket_arn` outputs.
-- With `flow_log_destination_arn` set to a bucket ARN, optionally with a folder, the logs go there and no bucket is created. Use this for a central log archive bucket, also in another account. That bucket must exist and its policy must allow `delivery.logs.amazonaws.com` to write from this account.
+Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<prefix>/vpc-flow-log/` (7 days retention) unless `flow_log_destination_type = "s3"` is set:
+- without `flow_log_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90)
+- with `flow_log_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
 
 ```
     modules:
@@ -155,10 +150,9 @@ To send them to S3 instead, set `flow_log_destination_type = "s3"`. No CloudWatc
         source: aws/vpc
         inputs:
           flow_log_destination_type: s3
-          #Optional, without it a bucket is created in this account
-          flow_log_destination_arn: arn:aws:s3:::my-log-archive-bucket
+          flow_log_destination_arn: arn:aws:s3:::my-log-archive-bucket #Optional
 ```
-Switching the destination replaces the flow log. Switching from CloudWatch deletes the log group with the logs in it. The created bucket is not emptied automatically, so switching away from it (setting `flow_log_destination_arn`, back to CloudWatch or `enable_flow_log = false`) fails until the bucket is emptied.
+Changing the destination deletes the old CloudWatch log group. The created bucket must be emptied before it can be removed.
 
 ### VPC endpoint policies ###
 
