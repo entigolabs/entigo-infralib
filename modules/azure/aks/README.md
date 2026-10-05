@@ -4,6 +4,11 @@ AKS cluster with the [AVM managed cluster module](https://github.com/Azure/terra
 Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC issuer, Entra ID auth with Azure RBAC
 (no local admin account) and API Server VNet Integration in the vpc apiserver subnet.
 
+* Networking: [Azure CNI Overlay](https://learn.microsoft.com/azure/aks/concepts-network-cni-overview) with the
+  AKS-managed Cilium dataplane. Pods get IPs from `pod_cidr` (default `10.244.0.0/16`), Services from `service_cidr`
+  (`10.96.0.0/16`, kube-dns `10.96.0.10`), the Kubernetes conventions. Both are outside the VNet (pod traffic leaves
+  with the node IP) and must not overlap the VNet, peered VNets or networks reachable over VPN/ExpressRoute. Create
+  time only.
 * Node pools `main`, `mon` and `tools` like aws/eks and google/gke (labels `<pool>=true`, `mon=true:NoSchedule`).
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
   AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration. The

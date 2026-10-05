@@ -50,18 +50,18 @@ variable "maintenance_window" {
 
 variable "pod_cidr" {
   type        = string
-  default     = "10.10.0.0/16"
+  default     = "10.244.0.0/16"
   description = "CNI Overlay pod range, must not overlap the VNet"
 }
 
 variable "service_cidr" {
   type    = string
-  default = "10.11.0.0/16"
+  default = "10.96.0.0/16"
 }
 
 variable "dns_service_ip" {
   type    = string
-  default = "10.11.0.10"
+  default = "10.96.0.10"
 }
 
 variable "outbound_type" {

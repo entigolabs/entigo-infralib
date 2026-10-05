@@ -342,6 +342,7 @@ module "aks" {
     private_dns_zone        = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
   }
 
+  # https://learn.microsoft.com/azure/aks/concepts-network-cni-overview
   network_profile = {
     network_plugin      = "azure"
     network_plugin_mode = "overlay"

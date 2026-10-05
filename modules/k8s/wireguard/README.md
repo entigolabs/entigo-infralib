@@ -194,11 +194,11 @@ Client: the private int zone resolves through CoreDNS, which forwards to the VNe
 [Interface]
 PrivateKey = <your wg-private.key>
 Address    = 172.31.201.2/32
-DNS        = 10.11.0.10       # aks dns_service_ip (kube-dns)
+DNS        = 10.96.0.10       # aks dns_service_ip (kube-dns)
 
 [Peer]
 PublicKey           = <curl https://<module name>-pubkey.<pub_domain>>
-AllowedIPs          = 10.0.0.0/16, 10.11.0.0/16   # vpc_cidr, aks service_cidr
+AllowedIPs          = 10.0.0.0/16, 10.96.0.0/16   # vpc_cidr, aks service_cidr
 Endpoint            = <module name>.<pub_domain>:51820
 PersistentKeepalive = 15
 ```
