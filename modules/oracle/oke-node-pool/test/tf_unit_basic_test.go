@@ -37,8 +37,13 @@ func testTerraformOkeNodePool(t *testing.T, prefix string) {
 	nodePoolId := tf.GetStringValue(t, outputs, "oke-node-pool__node_pool_id")
 	require.NotEmpty(t, nodePoolId, "node_pool_id was not returned")
 
+	// The module truncates the name to OCI's 32-character limit, dropping any trailing hyphen.
+	expectedName := fmt.Sprintf("%s-%s-oke-node-pool", prefix, strings.ToLower(os.Getenv("STEP_NAME")))
+	if len(expectedName) > 32 {
+		expectedName = strings.TrimRight(expectedName[:32], "-")
+	}
 	nodePoolName := tf.GetStringValue(t, outputs, "oke-node-pool__node_pool_name")
-	assert.Equal(t, fmt.Sprintf("%s-%s-oke-node-pool", prefix, strings.ToLower(os.Getenv("STEP_NAME"))), nodePoolName, "Wrong node_pool_name returned")
+	assert.Equal(t, expectedName, nodePoolName, "Wrong node_pool_name returned")
 
 	// node_count is not an output, so the pool itself is read.
 	nodePool := getNodePool(t, nodePoolId)
