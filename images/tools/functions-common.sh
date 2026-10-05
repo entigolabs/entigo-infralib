@@ -1,8 +1,9 @@
 #!/bin/bash
 # Common functions shared across all cloud providers
 
-# TF_TOOL controls which binary is used: terraform (default) or tofu
-TF_TOOL=${TF_TOOL:-terraform}
+# TF_TOOL controls which binary is used. Only tofu ships in the image; the agent
+# sets TF_TOOL=tofu explicitly, this default covers running the scripts without it.
+TF_TOOL=${TF_TOOL:-tofu}
 
 # Run Go tests
 run_tests() {
