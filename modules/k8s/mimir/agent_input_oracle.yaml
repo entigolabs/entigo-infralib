@@ -3,6 +3,7 @@ global:
   oracle:
     compartmentId: "{{ .agent.accountId }}"
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
+    providerDomain: "{{ .agent.providerDomain }}"
     region: "{{ .toutput.oke.region }}"
     # The telemetry key, matching loki. Optional (.toptout) so a deployment without a kms
     # module still renders - the bucket then falls back to Oracle-managed encryption.
