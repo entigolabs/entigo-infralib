@@ -19,7 +19,7 @@ variable "vnet_subnet_id" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.35"
+  default = "1.36"
 }
 
 variable "sku_tier" {
