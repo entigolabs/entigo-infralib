@@ -236,8 +236,15 @@ variable "create_endpoint_efs" {
   default  = false
 }
 
+variable "endpoint_policy_org_id" {
+  description = "AWS organization ID (o-xxxxxxxxxx) trusted by the default endpoint policies in addition to the current account. Empty trusts only the current account"
+  type        = string
+  nullable    = false
+  default     = ""
+}
+
 variable "endpoint_policies" {
-  description = "Custom JSON policies by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs). Replaces the default service scoped policy for that endpoint"
+  description = "Custom JSON policies by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs). Replaces the default policy for that endpoint"
   type        = map(string)
   nullable    = false
   default     = {}
