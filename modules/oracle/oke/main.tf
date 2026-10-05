@@ -400,7 +400,7 @@ resource "oci_containerengine_cluster" "this" {
 
 module "main" {
   count  = var.oke_main_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-main"
   compartment_id          = var.compartment_id
@@ -423,7 +423,7 @@ module "main" {
 
 module "mon" {
   count  = var.oke_mon_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-mon"
   compartment_id          = var.compartment_id
@@ -448,7 +448,7 @@ module "mon" {
 
 module "tools" {
   count  = var.oke_tools_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-tools"
   compartment_id          = var.compartment_id
