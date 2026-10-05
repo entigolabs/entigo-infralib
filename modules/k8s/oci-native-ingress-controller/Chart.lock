@@ -1,0 +1,6 @@
+dependencies:
+- name: oci-native-ingress-controller
+  repository: file://./charts/oci-native-ingress-controller
+  version: 1.4.5
+digest: sha256:044f837de19e1c20acfe91a0142d1f89a9802c0a005e5adb00d07e99efb14f6a
+generated: "2026-10-05T06:57:07.355509018Z"
