@@ -3,7 +3,7 @@ FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 
 FROM alpine:3.24
 ARG TARGETARCH
-ENV KUBECTL_VERSION=v1.35.6 TERRAFORM_VERSION=1.7.5 HELM_VERSION=v3.21.4 ARGOCD_CLI=v3.5.2 OPENTOFU_VERSION=1.12.6
+ENV KUBECTL_VERSION=v1.35.6 HELM_VERSION=v3.21.4 ARGOCD_CLI=v3.5.2 OPENTOFU_VERSION=1.12.6
 
 COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 
@@ -24,12 +24,6 @@ RUN wget -O "helm.tar.gz" "https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARG
     && rm -rf helm.tar.gz linux-* \
     && chmod +x /entigo-bin/helm \
     && strip /entigo-bin/helm
-
-RUN wget -O "terraform.zip" "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip" \
-    && unzip terraform.zip \
-    && mv terraform /entigo-bin/ \
-    && rm terraform.zip \
-    && strip /entigo-bin/terraform
 
 RUN wget -O "opentofu.zip" "https://github.com/opentofu/opentofu/releases/download/v${OPENTOFU_VERSION}/tofu_${OPENTOFU_VERSION}_linux_${TARGETARCH}.zip" \
     && unzip opentofu.zip \

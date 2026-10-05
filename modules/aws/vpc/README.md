@@ -150,6 +150,8 @@ Every endpoint gets a default policy that allows only its own service's actions,
 | `sts` | `sts:*` |
 | `efs` | `elasticfilesystem:*` |
 
+Only callers from the current account, the organization in `endpoint_policy_org_id` and AWS services can use the endpoints. The agent sets `endpoint_policy_org_id` automatically (`{{ .agent.organizationId }}`), it is empty for accounts without an organization. This needs entigo-infralib-agent v1.14.2 or newer, older agents fail with `unknown agent replace type organizationId`. The S3 policy also allows reading objects from buckets of the current account/organization without credentials (public buckets), AWS owned buckets (ECR image layers, Amazon Linux repositories) and the STS policy allows `AssumeRoleWithWebIdentity` (IRSA).
+
 To use your own policy, set `endpoint_policies` (endpoint key => JSON policy). It replaces the default for that endpoint. Use `jsonencode()`, because the agent passes multi-line values to terraform as expressions.
 
 Example that only allows this account to use the `ecr_api` endpoint:
