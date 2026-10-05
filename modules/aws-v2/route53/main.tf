@@ -13,8 +13,6 @@ locals {
       create_validation          = domain.create_validation
       certificate_authority_arn  = domain.certificate_authority_arn
       private                    = domain.private
-      default_public             = domain.default_public
-      default_private            = domain.default_private
       
       # Use domain-specific VPC ID if provided, otherwise use default module VPC ID
       effective_vpc_id           = domain.vpc_id != "" ? domain.vpc_id : var.vpc_id
