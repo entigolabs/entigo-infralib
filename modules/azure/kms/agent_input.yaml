@@ -1,2 +1,3 @@
 resource_group_name: "{{ .agent.resourceGroup }}"
 location: "{{ .agent.region }}"
+unique_suffix: "{{ .agent.uniqueSuffix }}"

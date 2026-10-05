@@ -1,3 +1,5 @@
+data "azurerm_client_config" "this" {}
+
 locals {
   public_domains_count  = length([for k, v in var.domains : k if !v.private])
   private_domains_count = length([for k, v in var.domains : k if v.private])
@@ -14,9 +16,11 @@ locals {
       )
       # Public twin of a private zone for ACME DNS-01 challenges (cert-manager)
       needs_validation_zone = d.private && d.create_zone && d.create_validation
-      # NS records in the parent zone, also in another resource group (e.g. a root zone shared by environments)
+      # NS records in the parent zone, also in another resource group (e.g. a root zone shared by environments);
+      # a parent in another subscription is delegated by hand (manual_delegations output)
       parent_zone_name = d.parent_zone_id != "" ? provider::azurerm::parse_resource_id(d.parent_zone_id).resource_name : ""
       parent_zone_rg   = d.parent_zone_id != "" ? provider::azurerm::parse_resource_id(d.parent_zone_id).resource_group_name : ""
+      delegate         = d.parent_zone_id != "" && lower(provider::azurerm::parse_resource_id(d.parent_zone_id).subscription_id) == lower(data.azurerm_client_config.this.subscription_id)
     })
   }
 
@@ -89,7 +93,7 @@ resource "azurerm_dns_zone" "validation" {
 }
 
 resource "azurerm_dns_ns_record" "delegation" {
-  for_each            = { for k, v in local.domains : k => v if v.parent_zone_id != "" && !v.private && v.create_zone }
+  for_each            = { for k, v in local.domains : k => v if v.delegate && !v.private && v.create_zone }
   name                = trimsuffix(each.value.domain_name, ".${each.value.parent_zone_name}")
   zone_name           = each.value.parent_zone_name
   resource_group_name = each.value.parent_zone_rg
@@ -106,7 +110,7 @@ resource "azurerm_dns_ns_record" "delegation" {
 }
 
 resource "azurerm_dns_ns_record" "validation_delegation" {
-  for_each            = { for k, v in local.domains : k => v if v.parent_zone_id != "" && v.needs_validation_zone }
+  for_each            = { for k, v in local.domains : k => v if v.delegate && v.needs_validation_zone }
   name                = trimsuffix(each.value.domain_name, ".${each.value.parent_zone_name}")
   zone_name           = each.value.parent_zone_name
   resource_group_name = each.value.parent_zone_rg

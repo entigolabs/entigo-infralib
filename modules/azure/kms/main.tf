@@ -1,14 +1,8 @@
 data "azurerm_client_config" "this" {}
 
-resource "random_string" "suffix" {
-  length  = 4
-  upper   = false
-  special = false
-}
-
 locals {
-  # Globally unique and reserved while soft-deleted
-  name = "${replace(substr(var.prefix, 0, 19), "/-+$/", "")}-${random_string.suffix.result}"
+  # Globally unique and reserved while soft-deleted, max 24
+  name = "${replace(substr(var.prefix, 0, 15), "/-+$/", "")}-${var.unique_suffix}"
   keys = toset(["data", "config", "telemetry"])
 
   users = {

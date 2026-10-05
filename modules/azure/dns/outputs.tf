@@ -66,3 +66,14 @@ output "validation_nameservers" {
   description = "Map of domain keys to their validation zone name servers, for delegation from the parent zone"
   value       = { for k, v in azurerm_dns_zone.validation : k => v.name_servers }
 }
+
+output "manual_delegations" {
+  description = "NS records to add by hand in a parent zone in another subscription: domain key => parent zone id, record name, name servers"
+  value = {
+    for k, v in local.domains : k => {
+      parent_zone_id = v.parent_zone_id
+      record_name    = trimsuffix(v.domain_name, ".${v.parent_zone_name}")
+      name_servers   = v.private ? azurerm_dns_zone.validation[k].name_servers : (v.create_zone ? azurerm_dns_zone.this[k].name_servers : data.azurerm_dns_zone.existing[k].name_servers)
+    } if v.parent_zone_id != "" && !v.delegate && ((!v.private && v.create_zone) || v.needs_validation_zone)
+  }
+}

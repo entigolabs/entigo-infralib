@@ -7,9 +7,10 @@ certificates are issued by the cert-manager k8s module, not here.
 domains - map of objects:
 ```
     domain_name       - FQDN
-    parent_zone_id    - Azure DNS zone resource id (any resource group in the subscription), the NS records of the zone
-                        and its validation twin are created there (default "", then add them manually from the
-                        nameservers / validation_nameservers outputs)
+    parent_zone_id    - Azure DNS zone resource id, the NS records of the zone and its validation twin are created there
+                        when it is in the same subscription (any resource group). A parent in another subscription
+                        (e.g. a platform subscription with the root zone) is delegated by hand from the
+                        manual_delegations output (default "": by hand from nameservers / validation_nameservers)
     create_zone       - false uses an existing zone in the resource group (default true)
     create_validation - public validation zone (twin) for a private domain, used by cert-manager DNS-01 (default true).
                         Not the aws-v2/route53 meaning: there it switches off the zone/lookup and the ACM validation

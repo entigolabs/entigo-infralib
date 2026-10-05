@@ -2,6 +2,15 @@ variable "prefix" {
   type = string
 }
 
+variable "unique_suffix" {
+  type        = string
+  description = "Agent uniqueSuffix (8 chars) for the globally unique vault name"
+  validation {
+    condition     = can(regex("^[a-z0-9]{8}$", var.unique_suffix))
+    error_message = "unique_suffix must be 8 lowercase letters or digits"
+  }
+}
+
 variable "resource_group_name" {
   type    = string
   default = ""

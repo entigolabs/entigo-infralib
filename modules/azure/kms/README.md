@@ -17,8 +17,11 @@ Keys are software protected by default (like google/kms and oracle/kms). The vau
 Standard for software keys, so HSM protected keys only need `key_type: "RSA-HSM"`. Set it at install time: changing
 `key_type` replaces the keys.
 
-With purge protection a deleted vault and its keys stay recoverable and the name reserved for
-`soft_delete_retention_days` (default 30, like the aws/kms deletion window). The vault is RBAC mode: Owner and
+The vault name is `<prefix, max 15>-<agent uniqueSuffix>`, the same on every run of an environment. With purge
+protection a deleted vault and its keys stay recoverable and the name reserved for `soft_delete_retention_days`
+(default 30, like the aws/kms deletion window). Re-creating the environment within that time recovers the deleted
+vault with its keys (azurerm default), and the keys then fail with "already exists": delete the recovered keys
+(`az keyvault key delete --vault-name <vault> -n <key>`) and run again, they are recovered as soft-deleted keys. The vault is RBAC mode: Owner and
 Contributor don't give access to its keys, admins need a Key Vault data role. The identity that installs the module
 (normally the agent job identity) gets Key Vault Crypto Officer and keeps it: a later run by someone else doesn't
 replace it, so a local run can't remove the agent's key access. Everyone else who runs the module (people, CI) needs
