@@ -1,10 +1,10 @@
 locals {
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.8-20260923"
-     "AL2023_ARM_64_STANDARD"     = "1.35.8-20260923"
-     "AL2023_x86_64_NEURON"       = "1.35.8-20260923"
-     "AL2023_x86_64_NVIDIA"       = "1.35.8-20260923"
-     "AL2023_x86_64_STANDARD"     = "1.35.8-20260923"
+     "AL2023_ARM_64_NVIDIA"       = "1.35.8-20260930"
+     "AL2023_ARM_64_STANDARD"     = "1.35.8-20260930"
+     "AL2023_x86_64_NEURON"       = "1.35.8-20260930"
+     "AL2023_x86_64_NVIDIA"       = "1.35.8-20260930"
+     "AL2023_x86_64_STANDARD"     = "1.35.8-20260930"
      "BOTTLEROCKET_ARM_64"        = "1.66.0-1ad6b4a4"
      "BOTTLEROCKET_ARM_64_FIPS"   = "1.66.0-1ad6b4a4"
      "BOTTLEROCKET_ARM_64_NVIDIA" = "1.66.0-1ad6b4a4"
