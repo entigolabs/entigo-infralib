@@ -7,7 +7,7 @@ else
   export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.24.2"
 fi
 
-export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.50.3"
+export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.64.0"
 export KUBESCORE_IMAGE="martivo/kube-score:latest"
 
 prepare_agent() {
