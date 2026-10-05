@@ -520,17 +520,17 @@ output "default_vpc_main_route_table_id" {
 
 output "vpc_flow_log_id" {
   description = "The ID of the Flow Log resource"
-  value = module.vpc.vpc_flow_log_id
+  value = module.vpc.vpc_flow_log_id != null ? module.vpc.vpc_flow_log_id : ""
 }
 
 output "vpc_flow_log_bucket_name" {
   description = "The name of the S3 bucket created for VPC Flow Logs, empty when not created"
-  value = one(aws_s3_bucket.flow_log[*].id)
+  value = join("", aws_s3_bucket.flow_log[*].id)
 }
 
 output "vpc_flow_log_bucket_arn" {
   description = "The ARN of the S3 bucket created for VPC Flow Logs, empty when not created"
-  value = one(aws_s3_bucket.flow_log[*].arn)
+  value = join("", aws_s3_bucket.flow_log[*].arn)
 }
 
 output "vpc_flow_log_destination_arn" {
