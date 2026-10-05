@@ -1,8 +1,14 @@
 {{- if .Values.workloadIdentity.enabled }}
 {{- $az := .Values.global.azure }}
+{{- $wi := .Values.workloadIdentity }}
 {{- $rg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.resourceGroupName | lower }}
-{{- $nodeRg := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.nodeResourceGroupName | lower }}
-{{- $keys := compact .Values.workloadIdentity.encryptionKeyIds }}
+{{- $readOnlyScopes := list }}
+{{- range $name := list $az.resourceGroupName $az.nodeResourceGroupName }}
+{{- if and $az.subscriptionID $name }}
+{{- $readOnlyScopes = append $readOnlyScopes (printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $name | lower) }}
+{{- end }}
+{{- end }}
+{{- $keys := compact $wi.encryptionKeyIds }}
 {{- $encryptionRole := "Key Vault Crypto Service Encryption User" }}
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
@@ -33,11 +39,16 @@ spec:
           properties:
             spec:
               type: object
+              x-kubernetes-validations:
+                - rule: has(self.serviceAccountName) == has(oldSelf.serviceAccountName)
+                  message: serviceAccountName can't be added or removed
+                - rule: {{ printf "!has(self.serviceAccountName) || !has(self.roleAssignments) || self.roleAssignments.all(r, r.role != %q)" $encryptionRole | quote }}
+                  message: {{ $encryptionRole }} only without serviceAccountName
               properties:
                 serviceAccountName:
                   type: string
-                  minLength: 1
                   maxLength: 63
+                  pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
                   x-kubernetes-validations:
                     - rule: self == oldSelf
                       message: serviceAccountName is immutable
@@ -45,6 +56,10 @@ spec:
                   type: object
                   additionalProperties:
                     type: string
+                keepOnDelete:
+                  description: Keep the Azure identity, federated credential and role assignments when the WorkloadIdentity is deleted (adopted again on re-create), e.g. for a customer managed key of a kept storage account
+                  type: boolean
+                  default: false
                 roleAssignments:
                   type: array
                   maxItems: 20
@@ -57,18 +72,22 @@ spec:
                       role:
                         type: string
                         enum:
-                          {{- toYaml (concat .Values.workloadIdentity.allowedRoles .Values.workloadIdentity.readOnlyRoles (ternary (list $encryptionRole) list (gt (len $keys) 0))) | nindent 26 }}
+                          {{- toYaml (concat $wi.allowedRoles $wi.readOnlyRoles (ternary (list $encryptionRole) list (gt (len $keys) 0))) | nindent 26 }}
                       scope:
                         type: string
                         maxLength: 1024
                     x-kubernetes-validations:
-                      - rule: >-
-                          self.scope.lowerAscii().startsWith({{ printf "%s/providers/" $rg | quote }}) ||
-                          (self.role in {{ .Values.workloadIdentity.readOnlyRoles | toJson }} &&
-                          (self.scope.lowerAscii() in [{{ $rg | quote }}, {{ $nodeRg | quote }}] || self.scope.lowerAscii().startsWith({{ printf "%s/providers/" $nodeRg | quote }})))
+                      # ARM resolves dot segments and percent-encoding, the rules below compare strings
+                      - rule: "self.scope.matches('^(/[A-Za-z0-9_()-][A-Za-z0-9._()-]*)+$')"
+                        message: scope must be a plain resource id (no empty or dot segments, no encoded characters, no trailing slash)
+                      - rule: {{ printf "self.scope.lowerAscii().startsWith(%q) || (self.role in %s && (self.scope.lowerAscii() in %s || %s.exists(s, self.scope.lowerAscii().startsWith(s + '/providers/'))))" (printf "%s/providers/" $rg) (toJson $wi.readOnlyRoles) (toJson $readOnlyScopes) (toJson $readOnlyScopes) | quote }}
                         message: scope must be a resource in resource group {{ $az.resourceGroupName }}, read-only roles also the resource group or the AKS node resource group
-                      - rule: "!self.role.startsWith('Storage ') || (self.scope.lowerAscii().matches('/blobservices/default/containers/[^/]+$') && !self.scope.lowerAscii().endsWith('/containers/tfstate'))"
-                        message: storage roles only on a blob container other than tfstate
+                      {{- range $role, $pattern := $wi.scopePatterns }}
+                      - rule: {{ printf "self.role != %q || self.scope.lowerAscii().matches(r\"^%s/providers/%s$\")" $role (regexQuoteMeta $rg) $pattern | toJson }}
+                        message: {{ printf "%s only on %s/providers/%s" $role $rg $pattern | quote }}
+                      {{- end }}
+                      - rule: "!self.role.startsWith('Storage ') || !self.scope.lowerAscii().endsWith('/containers/tfstate')"
+                        message: storage roles not on the tfstate container
                       - rule: {{ printf "self.role != %q || self.scope.lowerAscii() in %s" $encryptionRole (toJson (splitList "," (lower (join "," $keys)))) | quote }}
                         message: {{ $encryptionRole }} only on workloadIdentity.encryptionKeyIds
             status:
@@ -109,22 +128,35 @@ spec:
           template: |
             [[- $xr := .observed.composite.resource ]]
             [[- $ns := $xr.metadata.namespace ]]
-            [[- $sa := dig "serviceAccountName" "" $xr.spec ]]
-            [[- $name := printf "%s-%s-%s" "{{ $az.identityPrefix }}" $ns ($sa | default $xr.metadata.name) ]]
+            [[- $spec := $xr.spec | default dict ]]
+            [[- $sa := dig "serviceAccountName" "" $spec ]]
+            [[- /* <prefix>_<namespace>_<name>: Kubernetes names have no "_", so names can't collide; dots aren't allowed in Azure */]]
+            [[- $base := replace "." "-" $xr.metadata.name ]]
+            [[- if ne $base $xr.metadata.name ]][[ $base = printf "%s-%s" $base (sha1sum $xr.metadata.name | trunc 6) ]][[ end ]]
+            [[- $name := printf "%s_%s_%s" "{{ $az.identityPrefix }}" $ns $base ]]
             [[- if gt (len $name) 128 ]][[ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) ]][[ end ]]
+            [[- $id := printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" "{{ $az.subscriptionID }}" "{{ $az.resourceGroupName }}" $name ]]
+            [[- $keep := dig "keepOnDelete" false $spec ]]
             [[- /* Fall back to the rendered values: a missing status must not delete resources */]]
             [[- $observed := dig "resources" dict .observed ]]
             [[- $identity := dig "identity" "resource" "status" "atProvider" dict $observed ]]
-            [[- $id := dig "id" "" $identity | default (dig "federated-credential" "resource" "spec" "forProvider" "parentId" "" $observed) ]]
             [[- $principalId := dig "principalId" "" $identity ]]
+            [[- range $k, $r := $observed ]]
+            [[- if and (not $principalId) (hasPrefix "role-" $k) ]][[ $principalId = dig "resource" "spec" "forProvider" "principalId" "" $r ]][[ end ]]
+            [[- end ]]
             [[- $clientId := dig "clientId" "" $identity | default (dig "service-account" "resource" "metadata" "annotations" "azure.workload.identity/client-id" "" $observed) ]]
+            [[- $created := or (dig "id" "" $identity) (hasKey $observed "federated-credential") ]]
             ---
             apiVersion: managedidentity.azure.m.upbound.io/v1beta1
             kind: UserAssignedIdentity
             metadata:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: identity
+                crossplane.io/external-name: [[ $id ]]
             spec:
+              [[- if $keep ]]
+              managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+              [[- end ]]
               providerConfigRef:
                 kind: ClusterProviderConfig
                 name: {{ .Release.Name }}
@@ -135,10 +167,11 @@ spec:
                 tags:
                   created-by: entigo-infralib
                   kubernetes-namespace: [[ $ns ]]
+                  kubernetes-name: [[ $xr.metadata.name ]]
                   [[- if $sa ]]
                   kubernetes-service-account: [[ $sa ]]
                   [[- end ]]
-            [[- if and $id $sa ]]
+            [[- if and $sa $created ]]
             ---
             apiVersion: managedidentity.azure.m.upbound.io/v1beta1
             kind: FederatedIdentityCredential
@@ -146,7 +179,12 @@ spec:
               name: [[ $xr.metadata.name ]]
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: federated-credential
+                [[- /* Azure: 3-120 characters */]]
+                crossplane.io/external-name: [[ printf "%s-%s" $ns $sa | trunc 120 | trimSuffix "-" ]]
             spec:
+              [[- if $keep ]]
+              managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+              [[- end ]]
               providerConfigRef:
                 kind: ClusterProviderConfig
                 name: {{ .Release.Name }}
@@ -159,29 +197,36 @@ spec:
                 resourceGroupName: {{ $az.resourceGroupName }}
             [[- end ]]
             [[- /* RoleAssignment has no principalIdRef */]]
-            [[- range $ra := $xr.spec.roleAssignments ]]
+            [[- range $ra := (dig "roleAssignments" list $spec) ]]
             [[- $key := printf "role-%s" (sha1sum (printf "%s|%s" $ra.role (lower $ra.scope)) | trunc 10) ]]
-            [[- $principal := $principalId | default (dig $key "resource" "spec" "forProvider" "principalId" "" $observed) ]]
-            [[- if $principal ]]
+            [[- /* Deterministic name: re-created assignments are adopted, Azure rejects a second one for the same principal, role and scope */]]
+            [[- $h := sha1sum (printf "%s|%s|%s" $name $ra.role (lower $ra.scope)) ]]
+            [[- $guid := printf "%s-%s-5%s-a%s-%s" (substr 0 8 $h) (substr 8 12 $h) (substr 13 16 $h) (substr 17 20 $h) (substr 20 32 $h) ]]
+            [[- if $principalId ]]
             ---
             apiVersion: authorization.azure.m.upbound.io/v1beta1
             kind: RoleAssignment
             metadata:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: [[ $key ]]
+                crossplane.io/external-name: [[ printf "%s/providers/Microsoft.Authorization/roleAssignments/%s" $ra.scope $guid ]]
             spec:
+              [[- if $keep ]]
+              managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+              [[- end ]]
               providerConfigRef:
                 kind: ClusterProviderConfig
                 name: {{ .Release.Name }}
               forProvider:
-                principalId: [[ $principal ]]
+                name: [[ $guid ]]
+                principalId: [[ $principalId ]]
                 principalType: ServicePrincipal
                 roleDefinitionName: [[ $ra.role | quote ]]
                 scope: [[ $ra.scope | quote ]]
                 skipServicePrincipalAadCheck: true
             [[- end ]]
             [[- end ]]
-            [[- if and $clientId $sa ]]
+            [[- if and $sa $clientId ]]
             ---
             apiVersion: v1
             kind: ServiceAccount
@@ -190,21 +235,21 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: service-account
                 gotemplating.fn.crossplane.io/ready: "True"
-                azure.workload.identity/client-id: [[ $clientId ]]
-                [[- range $k, $v := $xr.spec.serviceAccountAnnotations ]]
+                azure.workload.identity/client-id: [[ $clientId | quote ]]
+                [[- range $k, $v := (dig "serviceAccountAnnotations" dict $spec) ]]
                 [[ $k ]]: [[ $v | quote ]]
                 [[- end ]]
             [[- end ]]
             ---
             apiVersion: [[ $xr.apiVersion ]]
             kind: [[ $xr.kind ]]
-            [[- if not $clientId ]]
+            [[- if not (and $principalId (or (not $sa) $clientId)) ]]
             metadata:
               annotations:
                 gotemplating.fn.crossplane.io/ready: "False"
             [[- end ]]
             status:
-              id: [[ $id | quote ]]
+              id: [[ ternary $id "" (not (empty $principalId)) | quote ]]
               clientId: [[ $clientId | quote ]]
               principalId: [[ $principalId | quote ]]
     - step: ready

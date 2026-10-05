@@ -2,10 +2,13 @@
 {{- $az := .Values.global.azure -}}
 {{- $az.storageAccountName | default (printf "%s%s" (regexReplaceAll "[^a-z0-9]" (lower $az.storageAccountPrefix) "" | trunc 16) $az.uniqueSuffix) -}}
 {{- end }}
-{{/* Composed by the crossplane-azure WorkloadIdentity <release>-cmk: <identityPrefix>-<namespace>-<release>-cmk */}}
+{{/* Same name as the crossplane-azure WorkloadIdentity composition: <identityPrefix>_<namespace>_<release>-cmk */}}
 {{- define "entigo.azureCmkIdentityId" -}}
 {{- $az := .Values.global.azure -}}
-{{- $name := printf "%s-%s-%s-cmk" $az.identityPrefix .Release.Namespace .Release.Name -}}
+{{- $xrName := printf "%s-cmk" .Release.Name -}}
+{{- $base := replace "." "-" $xrName -}}
+{{- if ne $base $xrName }}{{ $base = printf "%s-%s" $base (sha1sum $xrName | trunc 6) }}{{ end -}}
+{{- $name := printf "%s_%s_%s" $az.identityPrefix .Release.Namespace $base -}}
 {{- if gt (len $name) 128 }}{{ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) }}{{ end -}}
 {{- printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" $az.subscriptionId $az.resourceGroupName $name -}}
 {{- end }}

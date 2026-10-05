@@ -36,6 +36,13 @@ workloadIdentity:
     - Monitoring Reader
   # Key resource ids allowed for Key Vault Crypto Service Encryption User (customer managed keys), nothing else
   encryptionKeyIds: []
+  # Scope per role (lower case regex after <resource group id>/providers/), roles without one: any resource in the RG
+  scopePatterns:
+    AcrPull: 'microsoft\.containerregistry/registries/[a-z0-9]+'
+    Key Vault Secrets User: 'microsoft\.keyvault/vaults/[a-z0-9-]+(/secrets/[a-z0-9-]+)?'
+    Storage Blob Data Contributor: 'microsoft\.storage/storageaccounts/[a-z0-9]+/blobservices/default/containers/[a-z0-9-]+'
+    DNS Zone Contributor: 'microsoft\.network/dnszones/[a-z0-9][a-z0-9.-]*'
+    Private DNS Zone Contributor: 'microsoft\.network/privatednszones/[a-z0-9][a-z0-9.-]*'
   functions:
     goTemplating:
       image: docker.io/entigolabs/function-go-templating
