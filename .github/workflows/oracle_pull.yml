@@ -1,0 +1,100 @@
+---
+name: PR modules/oracle
+on:
+  pull_request:
+    branches:
+    - main
+    paths:
+    - "modules/oracle/**"
+  workflow_dispatch:
+    inputs:
+      module:
+        description: Module path to test (e.g. modules/oracle/my-module)
+        required: true
+        type: string
+jobs:
+  detect:
+    name: Detect changed modules
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_modules: ${{ steps.set-matrix.outputs.has_modules }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get changed files
+      if: github.event_name == 'pull_request'
+      id: changed-files
+      uses: tj-actions/changed-files@v42
+      with:
+        base_sha: ${{ github.event.pull_request.base.sha }}
+        sha: ${{ github.event.pull_request.head.sha }}
+    - name: Build matrix
+      id: set-matrix
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Use the manually provided module path
+            MODULES='["${{ inputs.module }}"]'
+        else
+            # Extract unique module paths, excluding nuke files, then keep only
+            # the ones that are an actual module, i.e. a directory with a test.sh.
+            # This drops files that live directly under modules/oracle, such as
+            # README.md, and modules deleted by this pull request.
+            MODULES=$(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
+                echo "$file" | grep "modules/oracle" | grep -ve"nuke\.sh\|oci-nuke-config\.yml" | cut -d'/' -f1-3
+            done | sort -u | while read -r module; do
+                if [ -f "$module/test.sh" ]; then
+                    echo "$module"
+                fi
+            done | jq -R -s -c 'split("\n") | map(select(length > 0))')
+        fi
+
+        echo "Detected modules: $MODULES"
+
+        if [ "$MODULES" == "[]" ] || [ -z "$MODULES" ]; then
+            echo "has_modules=false" >> $GITHUB_OUTPUT
+            echo "matrix={\"module\":[]}" >> $GITHUB_OUTPUT
+        else
+            echo "has_modules=true" >> $GITHUB_OUTPUT
+            echo "matrix={\"module\":$MODULES}" >> $GITHUB_OUTPUT
+        fi
+
+  test:
+    name: Test ${{ matrix.module }}
+    needs: detect
+    if: needs.detect.outputs.has_modules == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      max-parallel: 1
+      fail-fast: false
+    env:
+      OCI_REGION: eu-frankfurt-1
+      OCI_CONFIG_FILE: /home/runner/.oci/config
+      OCI_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
+      PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Wait for other workflow runs
+      uses: softprops/turnstyle@v3
+      with:
+        abort-after-seconds: 3600
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Write OCI credentials
+      env:
+        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.oci
+        echo "${OCI_CONFIG}" > ~/.oci/config
+        echo "${OCI_PRIVATE_KEY}" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
+
+    - name: Run test
+      run: |
+        echo "Testing module: ${{ matrix.module }}"
+        ${{ matrix.module }}/test.sh
