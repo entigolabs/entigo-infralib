@@ -6,9 +6,7 @@
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
 {{- $gwAccessLogs := $cfg.accessLogs | default dict }}
-{{- $accessLogsEnabled := $.Values.accessLogs.enabled }}
-{{- if hasKey $gwAccessLogs "enabled" }}{{- $accessLogsEnabled = and $accessLogsEnabled $gwAccessLogs.enabled }}{{- end }}
-{{- if $accessLogsEnabled }}{{- $createBucket = true }}{{- end }}
+{{- if or (not (hasKey $gwAccessLogs "enabled")) $gwAccessLogs.enabled }}{{- $createBucket = true }}{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
