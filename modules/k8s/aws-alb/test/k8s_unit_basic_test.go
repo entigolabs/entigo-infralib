@@ -20,7 +20,8 @@ import (
 const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
-	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{})
+	// access logs are off by default
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{"external", "service"})
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
@@ -91,7 +92,7 @@ func testGatewayAccessLogs(t *testing.T, kubectlOptions *terrak8s.KubectlOptions
 	bucket := getAttribute("access_logs.s3.bucket")
 	require.NotEmpty(t, bucket, "Gateway %s access_logs.s3.bucket is empty", gatewayName)
 
-	// No accessLogs.bucket in the test values, so the bucket is created by the module with crossplane
+	// No gateways.<name>.accessLogs.bucket in the test values, so each gateway gets its own bucket created with crossplane
 	ready, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
 		"get", "buckets.s3.aws.upbound.io", bucket,
 		"-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)

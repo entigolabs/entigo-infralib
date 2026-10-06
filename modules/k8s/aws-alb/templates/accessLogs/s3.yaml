@@ -1,16 +1,13 @@
-{{- /* Bucket for the gateway ALB access logs, created when access logs are on, accessLogs.bucket is empty and at least
-       one gateway has not turned them off (same logic and bucket name as in gateways.yaml) */}}
+{{- /* One bucket per gateway for the ALB access logs, created when access logs are on for the gateway and
+       gateways.<name>.accessLogs.bucket is empty (same logic and bucket name as in gateways.yaml) */}}
 {{- $routing := .Values.global.routingResources | default "ingress" }}
-{{- $createBucket := false }}
-{{- if and (or (eq $routing "httproute") (eq $routing "both")) .Values.accessLogs.enabled (not .Values.accessLogs.bucket) }}
+{{- if and (or (eq $routing "httproute") (eq $routing "both")) .Values.accessLogs.enabled }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled (dig "accessLogs" "enabled" true $cfg) }}
-{{- $createBucket = true }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- if $createBucket }}
-{{- $bucket := printf "%s-%s-%s-alb-logs" .Release.Name (toString .Values.global.aws.account) .Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled (dig "accessLogs" "enabled" true $cfg) (not (dig "accessLogs" "bucket" "" $cfg)) }}
+{{- /* gateways.<name>.accessLogs.lifecycleRules replaces accessLogs.lifecycleRules for this gateway, [] keeps logs forever */}}
+{{- $lifecycleRules := dig "accessLogs" "lifecycleRules" $.Values.accessLogs.lifecycleRules $cfg }}
+{{- $bucket := printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
+---
 apiVersion: s3.aws.upbound.io/v1beta2
 kind: Bucket
 metadata:
@@ -24,9 +21,9 @@ spec:
   forProvider:
     tags:
       created-by: entigo-infralib
-    region: {{ required "global.aws.region is required" .Values.global.aws.region }}
+    region: {{ required "global.aws.region is required" $.Values.global.aws.region }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ $.Values.global.providerConfigRefName }}
 ---
 apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketOwnershipControls
@@ -39,13 +36,13 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
-    region: {{ .Values.global.aws.region }}
+    region: {{ $.Values.global.aws.region }}
     rule:
       objectOwnership: BucketOwnerEnforced
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ $.Values.global.providerConfigRefName }}
 ---
 apiVersion: s3.aws.upbound.io/v1beta1
 kind: BucketPublicAccessBlock
@@ -58,7 +55,7 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
-    region: {{ .Values.global.aws.region }}
+    region: {{ $.Values.global.aws.region }}
     blockPublicPolicy: true
     blockPublicAcls: true
     ignorePublicAcls: true
@@ -66,7 +63,7 @@ spec:
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ $.Values.global.providerConfigRefName }}
 ---
 # ALB access logs only support SSE-S3, not KMS
 apiVersion: s3.aws.upbound.io/v1beta2
@@ -80,14 +77,14 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
-    region: {{ .Values.global.aws.region }}
+    region: {{ $.Values.global.aws.region }}
     rule:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ $.Values.global.providerConfigRefName }}
 ---
 # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
 apiVersion: s3.aws.upbound.io/v1beta1
@@ -101,7 +98,7 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
-    region: {{ .Values.global.aws.region }}
+    region: {{ $.Values.global.aws.region }}
     policy: |
       {
         "Version": "2012-10-17",
@@ -112,7 +109,7 @@ spec:
             "Principal": { "Service": "logdelivery.elasticloadbalancing.amazonaws.com" },
             "Action": "s3:PutObject",
             "Resource": "arn:aws:s3:::{{ $bucket }}/*",
-            "Condition": { "StringEquals": { "aws:SourceAccount": "{{ .Values.global.aws.account }}" } }
+            "Condition": { "StringEquals": { "aws:SourceAccount": "{{ $.Values.global.aws.account }}" } }
           },
           {
             "Sid": "DenyInsecureTransport",
@@ -127,8 +124,8 @@ spec:
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
-{{- if .Values.accessLogs.lifecycleRules }}
+    name: {{ $.Values.global.providerConfigRefName }}
+{{- if $lifecycleRules }}
 ---
 apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketLifecycleConfiguration
@@ -141,12 +138,14 @@ metadata:
 spec:
   deletionPolicy: Orphan
   forProvider:
-    region: {{ .Values.global.aws.region }}
+    region: {{ $.Values.global.aws.region }}
     rule:
-      {{- toYaml .Values.accessLogs.lifecycleRules | nindent 6 }}
+      {{- toYaml $lifecycleRules | nindent 6 }}
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
-    name: {{ .Values.global.providerConfigRefName }}
+    name: {{ $.Values.global.providerConfigRefName }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}

@@ -80,9 +80,8 @@ ingressClass:
 # ALB access logs of the Gateway API gateways, each gateway logs under its own name as prefix.
 # Do not set access_logs.* in gateways.<name>.loadBalancerAttributes, use these instead
 accessLogs:
-  enabled: true
-  bucket: ""                   # empty creates a bucket <module>-<account>-<region>-alb-logs with crossplane
-  lifecycleRules:              # only for the created bucket
+  enabled: false
+  lifecycleRules:              # only for the buckets created by this module
     - id: expire-alb-logs
       status: Enabled
       filter:
@@ -136,6 +135,8 @@ gateways:
   #   enabled: true
   #   accessLogs:
   #     enabled: false         # turns access logs off for this gateway only
+  #     bucket: ""             # empty creates a bucket <module>-<gateway>-<account>-<region>-alb-logs with crossplane
+  #     lifecycleRules: []     # replaces accessLogs.lifecycleRules for this gateway's created bucket, [] keeps logs forever
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"

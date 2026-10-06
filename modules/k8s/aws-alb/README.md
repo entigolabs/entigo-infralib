@@ -90,18 +90,29 @@ those are controlled by `global.externalGateway`.
 
 ### Access logs
 
-Every gateway ALB writes access logs to S3, under the gateway name as prefix. Only the Gateway API gateways, not the ALBs of Ingress objects. Without `accessLogs.bucket` the module creates a bucket `<module>-<account>-<region>-alb-logs` with crossplane, logs expire after 90 days (`accessLogs.lifecycleRules`). With `accessLogs.bucket` the logs go to that existing bucket. Its policy must allow `logdelivery.elasticloadbalancing.amazonaws.com` to write from this account and it must use SSE-S3 encryption.
+With `accessLogs.enabled: true` every gateway ALB writes access logs to S3, under the gateway name as prefix. Off by default. Only the Gateway API gateways, not the ALBs of Ingress objects. Each gateway gets its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with crossplane, logs expire after 90 days (`accessLogs.lifecycleRules`). With `gateways.<name>.accessLogs.bucket` the logs of that gateway go to an existing bucket instead. Its policy must allow `logdelivery.elasticloadbalancing.amazonaws.com` to write from this account and it must use SSE-S3 encryption.
 
 ```yaml
 accessLogs:
-  enabled: true                  # false turns access logs off for all gateways
-  bucket: my-log-archive-bucket  # optional
+  enabled: true                    # default false
 gateways:
   external:
     accessLogs:
-      enabled: false             # off for this gateway only
+      bucket: my-log-archive-bucket  # optional, own bucket for this gateway
+  internal:
+    accessLogs:
+      lifecycleRules:              # optional, replaces accessLogs.lifecycleRules for this gateway
+        - id: expire-alb-logs
+          status: Enabled
+          filter:
+            prefix: ""
+          expiration:
+            days: 365
+  service:
+    accessLogs:
+      enabled: false               # off for this gateway only
 ```
-The created bucket and its settings are kept when the module or access logs are removed.
+The created buckets and their settings are kept when the module or access logs are removed.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)

@@ -2,11 +2,6 @@
 # Created only when routingResources is "httproute" or "both"
 {{- $routing := .Values.global.routingResources | default "ingress" }}
 {{- if or (eq $routing "httproute") (eq $routing "both") }}
-{{- /* Access logs bucket: accessLogs.bucket, or the one created in accessLogs/s3.yaml when empty */}}
-{{- $accessLogsBucket := .Values.accessLogs.bucket }}
-{{- if not $accessLogsBucket }}
-{{- $accessLogsBucket = printf "%s-%s-%s-alb-logs" .Release.Name (toString .Values.global.aws.account) .Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
-{{- end }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -63,6 +58,8 @@ spec:
   {{- /* accessLogs.enabled is the main switch, gateways.<name>.accessLogs.enabled: false turns them off for one gateway.
          false is rendered explicitly, so turning it off also turns logging off on an existing ALB */}}
   {{- $accessLogs := and $.Values.accessLogs.enabled (dig "accessLogs" "enabled" true $cfg) }}
+  {{- /* gateways.<name>.accessLogs.bucket, or the bucket created for this gateway in accessLogs/s3.yaml when empty */}}
+  {{- $accessLogsBucket := dig "accessLogs" "bucket" "" $cfg | default (printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-") }}
   # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
   # values format: map of attribute -> value; converted to the CRD's key/value list,
   # values quoted since the CRD expects strings
