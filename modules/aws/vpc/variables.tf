@@ -212,13 +212,13 @@ variable "flow_log_destination_type" {
 
 # S3 bucket ARN, optionally with a folder: arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/
 # Empty with flow_log_destination_type = "s3" creates a bucket in this account
-variable "flow_log_destination_arn" {
+variable "flow_log_s3_destination_arn" {
   type     = string
   nullable = false
   default  = ""
   validation {
-    condition     = var.flow_log_destination_arn == "" || can(regex("^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", var.flow_log_destination_arn))
-    error_message = "flow_log_destination_arn must be an S3 bucket ARN, e.g. arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/."
+    condition     = var.flow_log_s3_destination_arn == "" || can(regex("^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", var.flow_log_s3_destination_arn))
+    error_message = "flow_log_s3_destination_arn must be an S3 bucket ARN, e.g. arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/."
   }
 }
 

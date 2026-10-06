@@ -1,6 +1,6 @@
-#S3 bucket for VPC flow logs, created when flow_log_destination_type is s3 and no flow_log_destination_arn is given.
+#S3 bucket for VPC flow logs, created when flow_log_destination_type is s3 and no flow_log_s3_destination_arn is given.
 resource "aws_s3_bucket" "flow_log" {
-  count  = var.enable_flow_log && var.flow_log_destination_type == "s3" && var.flow_log_destination_arn == "" ? 1 : 0
+  count  = var.enable_flow_log && var.flow_log_destination_type == "s3" && var.flow_log_s3_destination_arn == "" ? 1 : 0
   bucket = trim(substr(lower("${var.prefix}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-flow-logs"), 0, 63), "-")
   tags = {
     created-by = "entigo-infralib"

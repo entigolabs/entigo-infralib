@@ -141,8 +141,8 @@ DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances 
 ### VPC flow logs ###
 
 Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<prefix>/vpc-flow-log/` (7 days retention) unless `flow_log_destination_type = "s3"` is set:
-- without `flow_log_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90)
-- with `flow_log_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
+- without `flow_log_s3_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90)
+- with `flow_log_s3_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
 
 ```
     modules:
@@ -150,7 +150,7 @@ Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<pref
         source: aws/vpc
         inputs:
           flow_log_destination_type: s3
-          flow_log_destination_arn: arn:aws:s3:::my-log-archive-bucket #Optional
+          flow_log_s3_destination_arn: arn:aws:s3:::my-log-archive-bucket #Optional
 ```
 Changing the destination deletes the old CloudWatch log group. The created bucket must be emptied before it can be removed.
 
