@@ -15,14 +15,6 @@ data "oci_objectstorage_namespace" "this" {
   compartment_id = var.compartment_id
 }
 
-# The cluster as OCI has it now, looked up by name because reading oci_containerengine_cluster.this
-# would be a cycle. Only its OIDC setting is used - see local.oidc_on_in_oci.
-data "oci_containerengine_clusters" "current" {
-  compartment_id = var.compartment_id
-  name           = var.prefix
-  state          = ["ACTIVE", "UPDATING"]
-}
-
 data "oci_containerengine_cluster_kube_config" "this" {
   cluster_id    = oci_containerengine_cluster.this.id
   token_version = "2.0.0"
