@@ -94,9 +94,11 @@ this module does not delete Gateways other things may still depend on.
 Unlike every other `modules/k8s/*` module, this one does **not** use a `dependencies:`
 entry + `Chart.lock` pointing at a Helm chart repository - NIC has no chart repository,
 only an in-repo chart at `github.com/oracle/oci-native-ingress-controller/helm/oci-native-ingress-controller`.
-`charts/oci-native-ingress-controller/` is a manual copy of that chart at tag `v1.4.3`.
-To upgrade: diff the upstream `helm/oci-native-ingress-controller` directory at the new
-tag against this one and re-apply the three deviations below.
+`charts/oci-native-ingress-controller/` is a byte-for-byte copy of that chart at tag
+`v1.4.5`, minus `templates/webhook.yaml` (deviation 1 below). Nothing in it is edited;
+every other deviation lives in this module. To upgrade: replace the directory with
+upstream's at the new tag, delete `templates/webhook.yaml` again, and bump the dependency
+version in `Chart.yaml`.
 
 Redistributing it here is permitted: the chart is Oracle's own, under the Universal
 Permissive License v1.0, whose only condition is keeping the copyright notice and a
@@ -115,6 +117,9 @@ sits at the root of Oracle's repository, outside the chart.
    the vendored `deployment.yaml` already expects, with the CA inlined directly as the
    `MutatingWebhookConfiguration`'s `caBundle` instead of relying on cert-manager's
    `cert-manager.io/inject-ca-from` annotation.
+   - Upstream has no value to turn `webhook.yaml` off. A toggle requested upstream at
+     github.com/oracle/oci-native-ingress-controller would let the copy be complete; no
+     such issue exists as of v1.4.5.
    - This is **not optional/cosmetic**: `main.go` unconditionally starts a webhook HTTPS
      server at boot (`pkg/server/server.go`'s `SetupWebhookServer`) and calls `os.Exit(1)`
      if it can't load a cert from `/tmp/k8s-webhook-server/serving-certs` - the controller
@@ -124,7 +129,7 @@ sits at the root of Oracle's repository, outside the chart.
      `values.yaml` specifically so the generated Secret name is deterministic and known
      ahead of time to `webhookCerts.yaml` - Helm subchart named templates aren't reliably
      callable from a parent chart's own templates across chart boundaries.
-2. **`templates/deployment.yaml` sets `strategy: Recreate`.** Readiness depends on holding the
+2. **`values.yaml` sets `oci-native-ingress-controller.updateStrategy.type: Recreate`.** Readiness depends on holding the
    leader-election lease, so with the chart's default RollingUpdate on a single replica the old
    pod will not terminate until the new one is Ready, and the new one cannot become Ready until
    the old one releases the lease. Every upgrade deadlocks until a pod is deleted by hand.
