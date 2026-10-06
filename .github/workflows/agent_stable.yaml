@@ -114,8 +114,8 @@ jobs:
         ref: ${{ steps.get_latest_release.outputs.release_tag }}
     - name: Write OCI credentials
       env:
-        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
-        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+        OCI_CONFIG: ${{ secrets.OCI_OC19_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_OC19_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.oci
         echo "${OCI_CONFIG}" > ~/.oci/config
