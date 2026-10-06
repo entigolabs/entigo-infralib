@@ -9,6 +9,7 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    region: ""
 
 aws-load-balancer-controller:
   defaultTags:
@@ -76,6 +77,18 @@ ingressClass:
     enabled: true
     subnets: ""
 
+# ALB access logs of the Gateway API gateways, each gateway logs under its own name as prefix
+accessLogs:
+  enabled: true
+  bucket: ""                   # empty creates a bucket <module>-<account>-<region>-alb-logs with crossplane
+  lifecycleRules:              # only for the created bucket
+    - id: expire-alb-logs
+      status: Enabled
+      filter:
+        prefix: ""
+      expiration:
+        days: 90
+
 gateways:
   tags: {}
   internal:
@@ -120,6 +133,8 @@ gateways:
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
+  #   accessLogs:
+  #     enabled: false         # turns access logs off for this gateway only
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"

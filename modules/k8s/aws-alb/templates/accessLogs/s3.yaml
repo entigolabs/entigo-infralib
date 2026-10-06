@@ -1,0 +1,155 @@
+{{- /* Bucket for the gateway ALB access logs, created when access logs are on, accessLogs.bucket is empty and at least
+       one gateway has not turned them off (same logic and bucket name as in gateways.yaml) */}}
+{{- $routing := .Values.global.routingResources | default "ingress" }}
+{{- $createBucket := false }}
+{{- if and (or (eq $routing "httproute") (eq $routing "both")) .Values.accessLogs.enabled (not .Values.accessLogs.bucket) }}
+{{- range $name, $cfg := .Values.gateways }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- $gwAccessLogs := $cfg.accessLogs | default dict }}
+{{- $accessLogsEnabled := $.Values.accessLogs.enabled }}
+{{- if hasKey $gwAccessLogs "enabled" }}{{- $accessLogsEnabled = and $accessLogsEnabled $gwAccessLogs.enabled }}{{- end }}
+{{- if $accessLogsEnabled }}{{- $createBucket = true }}{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if $createBucket }}
+{{- $bucket := printf "%s-%s-%s-alb-logs" .Release.Name (toString .Values.global.aws.account) .Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: Bucket
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    tags:
+      created-by: entigo-infralib
+    region: {{ required "global.aws.region is required" .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketOwnershipControls
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      objectOwnership: BucketOwnerEnforced
+    bucketRef:
+      name: {{ $bucket }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    blockPublicPolicy: true
+    blockPublicAcls: true
+    ignorePublicAcls: true
+    restrictPublicBuckets: true
+    bucketRef:
+      name: {{ $bucket }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# ALB access logs only support SSE-S3, not KMS
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketServerSideEncryptionConfiguration
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      - applyServerSideEncryptionByDefault:
+          sseAlgorithm: AES256
+    bucketRef:
+      name: {{ $bucket }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPolicy
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "AllowALBLogDelivery",
+            "Effect": "Allow",
+            "Principal": { "Service": "logdelivery.elasticloadbalancing.amazonaws.com" },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::{{ $bucket }}/*",
+            "Condition": { "StringEquals": { "aws:SourceAccount": "{{ .Values.global.aws.account }}" } }
+          },
+          {
+            "Sid": "DenyInsecureTransport",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": ["arn:aws:s3:::{{ $bucket }}", "arn:aws:s3:::{{ $bucket }}/*"],
+            "Condition": { "Bool": { "aws:SecureTransport": "false" } }
+          }
+        ]
+      }
+    bucketRef:
+      name: {{ $bucket }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- if .Values.accessLogs.lifecycleRules }}
+---
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketLifecycleConfiguration
+metadata:
+  name: {{ $bucket }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      {{- toYaml .Values.accessLogs.lifecycleRules | nindent 6 }}
+    bucketRef:
+      name: {{ $bucket }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}
+{{- end }}

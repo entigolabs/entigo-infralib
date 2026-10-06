@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -19,15 +20,15 @@ import (
 const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
-	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"})
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{})
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
-	// service gateway is disabled in pri
-	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"})
+	// service gateway is disabled in pri, internal gateway has access logs disabled
+	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"})
 }
 
-func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string) {
+func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string, accessLogsDisabled []string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
@@ -58,6 +59,10 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gat
 
 	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, resourceName, 20, 6*time.Second)
 
+	for _, gatewayName := range gatewayNames {
+		testGatewayAccessLogs(t, kubectlOptions, gatewayName, !slices.Contains(accessLogsDisabled, gatewayName))
+	}
+
 	// Every enabled gateway gets its own HTTPRoute with a unique hostname
 	for _, gatewayName := range gatewayNames {
 		testGatewayHTTPRoute(t, kubectlOptions, namespaceName, gatewayName, hostName, resourceName)
@@ -67,6 +72,31 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gat
 	require.NoError(t, err, "Deleting Service error")
 	err = k8s.DeleteK8SDeployment(t, kubectlOptions, resourceName)
 	require.NoError(t, err, "Deleting Deployment error")
+}
+
+func testGatewayAccessLogs(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, gatewayName string, enabled bool) {
+	getAttribute := func(key string) string {
+		value, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
+			"get", "loadbalancerconfigurations.gateway.k8s.aws", gatewayName,
+			"-o", fmt.Sprintf(`jsonpath={.spec.loadBalancerAttributes[?(@.key=="%s")].value}`, key))
+		require.NoError(t, err, "Getting LoadBalancerConfiguration %s error", gatewayName)
+		return value
+	}
+
+	require.Equal(t, fmt.Sprintf("%t", enabled), getAttribute("access_logs.s3.enabled"), "Gateway %s access_logs.s3.enabled", gatewayName)
+	if !enabled {
+		return
+	}
+	require.Equal(t, gatewayName, getAttribute("access_logs.s3.prefix"), "Gateway %s access_logs.s3.prefix", gatewayName)
+	bucket := getAttribute("access_logs.s3.bucket")
+	require.NotEmpty(t, bucket, "Gateway %s access_logs.s3.bucket is empty", gatewayName)
+
+	// No accessLogs.bucket in the test values, so the bucket is created by the module with crossplane
+	ready, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
+		"get", "buckets.s3.aws.upbound.io", bucket,
+		"-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
+	require.NoError(t, err, "Getting access logs Bucket %s error", bucket)
+	require.Equal(t, "True", ready, "Access logs Bucket %s is not Ready", bucket)
 }
 
 func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayName string, hostName string, backendName string) {

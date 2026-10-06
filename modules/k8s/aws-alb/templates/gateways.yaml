@@ -2,6 +2,11 @@
 # Created only when routingResources is "httproute" or "both"
 {{- $routing := .Values.global.routingResources | default "ingress" }}
 {{- if or (eq $routing "httproute") (eq $routing "both") }}
+{{- /* Access logs bucket: accessLogs.bucket, or the one created in accessLogs/s3.yaml when empty */}}
+{{- $accessLogsBucket := .Values.accessLogs.bucket }}
+{{- if not $accessLogsBucket }}
+{{- $accessLogsBucket = printf "%s-%s-%s-alb-logs" .Release.Name (toString .Values.global.aws.account) .Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
+{{- end }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -55,16 +60,26 @@ spec:
   wafV2:
     webACL: {{ $cfg.wafv2AclArn }}
   {{- end }}
-  {{- if $cfg.loadBalancerAttributes }}
+  {{- /* Access logs: accessLogs.enabled is the main switch, gateways.<name>.accessLogs.enabled: false turns them off
+         for one gateway. Disabled is rendered explicitly, so turning it off also turns logging off on an existing ALB */}}
+  {{- $gwAccessLogs := $cfg.accessLogs | default dict }}
+  {{- $accessLogsEnabled := $.Values.accessLogs.enabled }}
+  {{- if hasKey $gwAccessLogs "enabled" }}{{- $accessLogsEnabled = and $accessLogsEnabled $gwAccessLogs.enabled }}{{- end }}
+  {{- $attributes := dict "access_logs.s3.enabled" (toString $accessLogsEnabled) }}
+  {{- if $accessLogsEnabled }}
+  {{- $_ := set $attributes "access_logs.s3.bucket" $accessLogsBucket }}
+  {{- $_ := set $attributes "access_logs.s3.prefix" $name }}
+  {{- end }}
+  {{- /* the gateway's own loadBalancerAttributes win over the access log defaults */}}
+  {{- $attributes = merge (deepCopy ($cfg.loadBalancerAttributes | default dict)) $attributes }}
   # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
   # values format: map of attribute -> value; converted to the CRD's key/value list,
   # values quoted since the CRD expects strings
   loadBalancerAttributes:
-    {{- range $k, $v := $cfg.loadBalancerAttributes }}
+    {{- range $k, $v := $attributes }}
     - key: {{ $k }}
       value: {{ $v | quote }}
     {{- end }}
-  {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:
     {{- range split "," $cfg.subnets }}
