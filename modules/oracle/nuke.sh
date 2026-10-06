@@ -7,7 +7,7 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "$SCRIPTPATH" || exit 1
 
 OCI_NUKE_IMAGE="${OCI_NUKE_IMAGE:-ghcr.io/entigolabs/oci-nuke:0.1.10}"
-OCI_COMPARTMENT_ID="${OCI_COMPARTMENT_ID:-ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q}"
+OCI_COMPARTMENT_ID="${OCI_COMPARTMENT_ID:-ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q}"
 
 if [ "$PREFIX" == "" ]
 then
@@ -20,8 +20,8 @@ fi
 
 if [ "$OCI_REGION" == "" ]
 then
-  echo "Defaulting OCI_REGION to eu-frankfurt-1"
-  export OCI_REGION="eu-frankfurt-1"
+  echo "Defaulting OCI_REGION to eu-frankfurt-2"
+  export OCI_REGION="eu-frankfurt-2"
 fi
 
 if [ "$OCI_CONFIG_FILE" == "" ]

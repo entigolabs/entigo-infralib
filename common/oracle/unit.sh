@@ -2,8 +2,8 @@
 
 if [ "$OCI_REGION" == "" ]
 then
-  echo "Defaulting OCI_REGION to eu-frankfurt-1"
-  export OCI_REGION="eu-frankfurt-1"
+  echo "Defaulting OCI_REGION to eu-frankfurt-2"
+  export OCI_REGION="eu-frankfurt-2"
 fi
 
 if [ "$OCI_COMPARTMENT_ID" == "" ]
