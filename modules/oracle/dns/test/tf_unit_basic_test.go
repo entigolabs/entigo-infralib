@@ -17,52 +17,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// oci.infralib.entigo.io, the parent_zone_id both test configurations delegate from.
-const parentZoneId = "ocid1.dns-zone.oc1..aaaaaaaagynypxeneyf5an3eojldoicg6iyqj7od6nmd67kh5xjts5q2eq4q"
-
 func TestTerraformDns(t *testing.T) {
 	t.Run("Biz", testTerraformDnsBiz)
 	t.Run("Pri", testTerraformDnsPri)
 }
 
-// biz.yaml has a public and a private domain, so int_* is the private one.
+// biz.yaml has two private domains with private as the default, so pub_* fall back to it.
 func testTerraformDnsBiz(t *testing.T) {
 	t.Parallel()
 	testTerraformDns(t, "biz", true)
 }
 
-// pri.yaml has only a public domain, so int_* falls back to it.
+// pri.yaml has a single private domain, so it is both the public and the private default.
 func testTerraformDnsPri(t *testing.T) {
 	t.Parallel()
 	testTerraformDns(t, "pri", false)
 }
 
-func testTerraformDns(t *testing.T, prefix string, withPrivate bool) {
+func testTerraformDns(t *testing.T, prefix string, withExtra bool) {
 	outputs := oracle.GetTFOutputs(t, prefix)
 	// vpc and pca are in the net step, wherever this module is deployed.
 	netOutputs := oracle.GetTFOutputsStep(t, prefix, "net")
 	modulePrefix := fmt.Sprintf("%s-%s-dns", prefix, strings.ToLower(os.Getenv("STEP_NAME")))
 
-	domains := map[string]interface{}{"public": modulePrefix + ".oci.infralib.entigo.io"}
-	intKey := "public"
-	if withPrivate {
-		domains["private"] = modulePrefix + "-int.oci.infralib.entigo.io"
-		intKey = "private"
+	domains := map[string]interface{}{"private": modulePrefix + "-int.oci.infralib.entigo.io"}
+	if withExtra {
+		domains["extra"] = modulePrefix + "-extra.oci.infralib.entigo.io"
 	}
 
 	assert.Equal(t, domains, tf.GetValue(t, outputs, "dns__domain_names"), "Wrong domain_names returned")
-	assert.Equal(t, domains["public"], tf.GetStringValue(t, outputs, "dns__pub_domain"), "Wrong pub_domain returned")
-	assert.Equal(t, domains[intKey], tf.GetStringValue(t, outputs, "dns__int_domain"), "Wrong int_domain returned")
+	assert.Equal(t, domains["private"], tf.GetStringValue(t, outputs, "dns__pub_domain"), "Wrong pub_domain returned")
+	assert.Equal(t, domains["private"], tf.GetStringValue(t, outputs, "dns__int_domain"), "Wrong int_domain returned")
 
 	zoneIds := getMap(t, outputs, "dns__zone_ids")
 	assert.ElementsMatch(t, keys(domains), keys(zoneIds), "zone_ids does not carry every domain")
-	assert.Equal(t, zoneIds["public"], tf.GetStringValue(t, outputs, "dns__pub_zone_id"), "pub_zone_id is not the public zone")
-	assert.Equal(t, zoneIds[intKey], tf.GetStringValue(t, outputs, "dns__int_zone_id"), "int_zone_id is not the %s zone", intKey)
+	assert.Equal(t, zoneIds["private"], tf.GetStringValue(t, outputs, "dns__pub_zone_id"), "pub_zone_id is not the default private zone")
+	assert.Equal(t, zoneIds["private"], tf.GetStringValue(t, outputs, "dns__int_zone_id"), "int_zone_id is not the default private zone")
 
 	certificateIds := getMap(t, outputs, "dns__certificate_ocids")
 	assert.ElementsMatch(t, keys(domains), keys(certificateIds), "certificate_ocids does not carry every domain")
-	assert.Equal(t, certificateIds["public"], tf.GetStringValue(t, outputs, "dns__pub_cert_ocid"), "pub_cert_ocid is not the public certificate")
-	assert.Equal(t, certificateIds[intKey], tf.GetStringValue(t, outputs, "dns__int_cert_ocid"), "int_cert_ocid is not the %s certificate", intKey)
+	assert.Equal(t, certificateIds["private"], tf.GetStringValue(t, outputs, "dns__pub_cert_ocid"), "pub_cert_ocid is not the default private certificate")
+	assert.Equal(t, certificateIds["private"], tf.GetStringValue(t, outputs, "dns__int_cert_ocid"), "int_cert_ocid is not the default private certificate")
 
 	caId := tf.GetStringValue(t, netOutputs, "pca__certificate_authority_id")
 	assert.Equal(t, caId, tf.GetStringValue(t, outputs, "dns__certificate_authority_id"), "certificate_authority_id is not the pca module's CA")
@@ -76,36 +71,13 @@ func testTerraformDns(t *testing.T, prefix string, withPrivate bool) {
 	require.NoError(t, err, "Failed to create the DNS client")
 	setRegion(&dnsClient)
 
-	// The public zone is delegated from the parent with its own nameservers.
-	publicZone := getZone(t, dnsClient, zoneIds["public"].(string))
-	assert.Equal(t, domains["public"], *publicZone.Name, "Wrong public zone name")
-	assert.Equal(t, dns.ScopeGlobal, publicZone.Scope, "Public zone is not GLOBAL")
-	assert.Equal(t, dns.ZoneZoneTypePrimary, publicZone.ZoneType, "Public zone is not PRIMARY")
-	publicNameservers := toStrings(nameservers["public"])
-	zoneNameservers := []string{}
-	for _, nameserver := range publicZone.Nameservers {
-		zoneNameservers = append(zoneNameservers, *nameserver.Hostname)
-	}
-	assert.ElementsMatch(t, zoneNameservers, publicNameservers, "nameservers is not the public zone's")
-
-	delegation, err := dnsClient.GetDomainRecords(context.Background(), dns.GetDomainRecordsRequest{
-		ZoneNameOrId: ocicommon.String(parentZoneId),
-		Domain:       ocicommon.String(domains["public"].(string)),
-		Rtype:        ocicommon.String("NS"),
-	})
-	require.NoError(t, err, "Failed to read the NS delegation from the parent zone")
-	delegatedNameservers := []string{}
-	for _, record := range delegation.Items {
-		delegatedNameservers = append(delegatedNameservers, *record.Rdata)
-	}
-	assert.ElementsMatch(t, publicNameservers, delegatedNameservers, "Parent zone does not delegate to the public zone's nameservers")
-
-	// The private zone is in the view the vpc module's VCN resolves against.
-	if withPrivate {
-		privateZone := getZone(t, dnsClient, zoneIds["private"].(string))
-		assert.Equal(t, domains["private"], *privateZone.Name, "Wrong private zone name")
-		assert.Equal(t, dns.ScopePrivate, privateZone.Scope, "Private zone is not PRIVATE")
-		assert.Equal(t, vcnDefaultViewId(t, provider, dnsClient, tf.GetStringValue(t, netOutputs, "vpc__vpc_id")), *privateZone.ViewId, "Private zone is not in the VCN's default view")
+	// Every zone is in the view the vpc module's VCN resolves against.
+	viewId := vcnDefaultViewId(t, provider, dnsClient, tf.GetStringValue(t, netOutputs, "vpc__vpc_id"))
+	for key, domain := range domains {
+		zone := getZone(t, dnsClient, zoneIds[key].(string))
+		assert.Equal(t, domain, *zone.Name, "Wrong name for the %s zone", key)
+		assert.Equal(t, dns.ScopePrivate, zone.Scope, "The %s zone is not PRIVATE", key)
+		assert.Equal(t, viewId, *zone.ViewId, "The %s zone is not in the VCN's default view", key)
 	}
 
 	// Each domain gets a wildcard certificate from the pca module's CA.
@@ -175,14 +147,6 @@ func keys(m map[string]interface{}) []string {
 	result := []string{}
 	for key := range m {
 		result = append(result, key)
-	}
-	return result
-}
-
-func toStrings(value interface{}) []string {
-	result := []string{}
-	for _, item := range value.([]interface{}) {
-		result = append(result, item.(string))
 	}
 	return result
 }

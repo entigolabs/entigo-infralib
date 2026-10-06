@@ -82,8 +82,8 @@ jobs:
         ref: main
     - name: Write OCI credentials
       env:
-        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
-        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+        OCI_CONFIG: ${{ secrets.OCI_OC19_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_OC19_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.oci
         echo "${OCI_CONFIG}" > ~/.oci/config
@@ -92,9 +92,9 @@ jobs:
     - name: Create resources based on latest release
       id: create_latest_release
       env:
-        OCI_REGION: eu-frankfurt-1
+        OCI_REGION: eu-frankfurt-2
         OCI_CONFIG_FILE: /home/runner/.oci/config
-        OCI_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
+        OCI_COMPARTMENT_ID: ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q
         PR_BRANCH: "main"
       run: |
         ./release.sh tf

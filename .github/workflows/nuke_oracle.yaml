@@ -17,8 +17,8 @@ jobs:
       uses: actions/checkout@v4
     - name: Write OCI credentials
       env:
-        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
-        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+        OCI_CONFIG: ${{ secrets.OCI_OC19_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_OC19_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.oci
         echo "${OCI_CONFIG}" > ~/.oci/config
@@ -26,7 +26,7 @@ jobs:
         chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
     - name: Nuke entigo-infralib oracle compartment
       env:
-        OCI_REGION: eu-frankfurt-1
+        OCI_REGION: eu-frankfurt-2
         OCI_CONFIG_FILE: /home/runner/.oci/config
         PREFIX: biz
       run: |
