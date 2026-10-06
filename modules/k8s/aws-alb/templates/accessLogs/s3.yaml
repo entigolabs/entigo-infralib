@@ -1,9 +1,9 @@
 {{- /* One bucket per gateway for the ALB access logs, created when access logs are on for the gateway and
        gateways.<name>.accessLogs.bucket is empty (same logic and bucket name as in gateways.yaml) */}}
 {{- $routing := .Values.global.routingResources | default "ingress" }}
-{{- if and (or (eq $routing "httproute") (eq $routing "both")) .Values.accessLogs.enabled }}
+{{- if and (or (eq $routing "httproute") (eq $routing "both")) (eq (toString .Values.accessLogs.enabled) "true") }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled (dig "accessLogs" "enabled" true $cfg) (not (dig "accessLogs" "bucket" "" $cfg)) }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled (ne (toString (dig "accessLogs" "enabled" true $cfg)) "false") (not (dig "accessLogs" "bucket" "" $cfg)) }}
 {{- /* gateways.<name>.accessLogs.lifecycleRules replaces accessLogs.lifecycleRules for this gateway, [] keeps logs forever */}}
 {{- $lifecycleRules := dig "accessLogs" "lifecycleRules" $.Values.accessLogs.lifecycleRules $cfg }}
 {{- $bucket := printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
