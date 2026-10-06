@@ -318,30 +318,6 @@ variable "aks_tools_max_pods" {
   default = 64
 }
 
-variable "aks_node_pools_extra" {
-  type = map(object({
-    name                    = optional(string)
-    mode                    = optional(string, "User")
-    vm_size                 = optional(string, "Standard_D2s_v6")
-    min_count               = optional(number, 1)
-    max_count               = optional(number, 3)
-    max_pods                = optional(number, 64)
-    os_disk_size_gb         = optional(number, 50)
-    os_disk_type            = optional(string, "Managed")
-    os_sku                  = optional(string)
-    zones                   = optional(list(string))
-    node_labels             = optional(map(string), {})
-    node_taints             = optional(list(string), [])
-    spot                    = optional(bool, false)
-    spot_max_price          = optional(number, -1)
-    max_surge               = optional(string)
-    host_encryption_enabled = optional(bool)
-    gpu_instance            = optional(string)
-    tags                    = optional(map(string), {})
-  }))
-  default = {}
-}
-
 variable "tags" {
   type    = map(string)
   default = {}

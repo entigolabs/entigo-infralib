@@ -82,7 +82,8 @@ nothing behind there.
   rotation"](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#storage-account)). The agent
   storage account rotates its key every 18 months and the kms keys rotate with `key_rotation_period`, so the logs
   would stop without any error. Customer-managed keys are set per storage account; encryption scopes per container are
-  not documented to avoid this, so they aren't used here.
+  not documented to avoid this, so they aren't used here. Roadmap: an optional kms key without rotation only for the
+  flow logs (compliance scanners flag keys without a rotation policy, a manual rotation still stops the logs).
 - Not logged: Container Apps (pipeline environment), SQL Managed Instance and PostgreSQL/MySQL flexible server
   traffic ([incompatible services](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#incompatible-services)).
 - Cost: flow logs collected per GB, 5 GB/month free per subscription, plus storage

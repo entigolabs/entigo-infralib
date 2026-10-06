@@ -5,7 +5,7 @@ data "azurerm_resource_group" "this" {
 }
 
 data "azapi_resource_list" "vm_skus" {
-  count                  = local.zone_lookup ? 1 : 0
+  count                  = var.availability_zones == null ? 1 : 0
   type                   = "Microsoft.Compute/skus@2021-07-01"
   parent_id              = "/subscriptions/${data.azurerm_client_config.this.subscription_id}"
   query_parameters       = { "$filter" = ["location eq '${var.location}'"] }
@@ -13,14 +13,7 @@ data "azapi_resource_list" "vm_skus" {
 }
 
 locals {
-  # AKS adds them to spot pools, declared to avoid drift
-  spot_taint = "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
-  spot_label = { "kubernetes.azure.com/scalesetpriority" = "spot" }
-
   disk_encryption = var.disk_encryption_key_id != ""
-
-  extra_pools_without_zones = [for k, v in var.aks_node_pools_extra : k if v.zones == null]
-  zone_lookup               = var.availability_zones == null || length(local.extra_pools_without_zones) > 0
 
   # Zones restricted for the subscription (NotAvailableForSubscription) are left out
   skus = { for v in try(data.azapi_resource_list.vm_skus[0].output.vms, []) : v.name => v }
@@ -28,20 +21,16 @@ locals {
     for name, v in local.skus : name => sort(setsubtract(coalesce(try(v.zones, null), []), coalesce(try(v.restricted_zones, null), [])))
     if length(coalesce(try(v.location_restrictions, null), [])) == 0
   }
-  zones_for = { for size in distinct(concat(
-    [var.aks_main_instance_type, var.aks_mon_instance_type, var.aks_tools_instance_type],
-    [for k, v in var.aks_node_pools_extra : v.vm_size]
-  )) : size => var.availability_zones != null ? var.availability_zones : lookup(local.sku_zones, size, []) }
+  zones_for = { for size in distinct([var.aks_main_instance_type, var.aks_mon_instance_type, var.aks_tools_instance_type]) :
+    size => var.availability_zones != null ? var.availability_zones : lookup(local.sku_zones, size, [])
+  }
 
-  # Sizes checked against the SKU list: built-in pools without explicit zones, extra pools without their own zones
-  checked_sizes = merge(
-    var.availability_zones == null ? merge(
-      { tools = var.aks_tools_instance_type },
-      var.aks_main_max_size > 0 ? { main = var.aks_main_instance_type } : {},
-      var.aks_mon_max_size > 0 ? { mon = var.aks_mon_instance_type } : {},
-    ) : {},
-    { for k in local.extra_pools_without_zones : k => var.aks_node_pools_extra[k].vm_size },
-  )
+  # Sizes checked against the SKU list when the zones aren't set
+  checked_sizes = var.availability_zones == null ? merge(
+    { tools = var.aks_tools_instance_type },
+    var.aks_main_max_size > 0 ? { main = var.aks_main_instance_type } : {},
+    var.aks_mon_max_size > 0 ? { mon = var.aks_mon_instance_type } : {},
+  ) : {}
   unavailable_sizes = [for pool, size in local.checked_sizes : "${pool} (${size})" if !contains(keys(local.sku_zones), size)]
 
   maintenance_window = {
@@ -85,77 +74,6 @@ locals {
     tags                 = local.tags
   }
 
-  builtin_pools = {
-    main = {
-      vm_size         = var.aks_main_instance_type
-      min_count       = var.aks_main_min_size
-      max_count       = var.aks_main_max_size
-      max_pods        = var.aks_main_max_pods
-      os_disk_size_gb = var.aks_main_volume_size
-      os_disk_type    = var.aks_main_volume_type
-      spot            = var.aks_main_spot_nodes
-      node_labels     = { "main" = "true" }
-      node_taints     = []
-    }
-    mon = {
-      vm_size         = var.aks_mon_instance_type
-      min_count       = var.aks_mon_min_size
-      max_count       = var.aks_mon_max_size
-      max_pods        = var.aks_mon_max_pods
-      os_disk_size_gb = var.aks_mon_volume_size
-      os_disk_type    = var.aks_mon_volume_type
-      spot            = var.aks_mon_spot_nodes
-      node_labels     = { "mon" = "true" }
-      node_taints     = ["mon=true:NoSchedule"]
-    }
-  }
-
-  # User pools, created after the cluster and its version update
-  node_pools = merge(
-    { for k, p in local.builtin_pools : k => {
-      name                    = k
-      mode                    = "User"
-      vm_size                 = p.vm_size
-      min_count               = p.min_count
-      max_count               = p.max_count
-      max_pods                = p.max_pods
-      os_disk_size_gb         = p.os_disk_size_gb
-      os_disk_type            = p.os_disk_type
-      os_sku                  = var.os_sku
-      zones                   = local.zones_for[p.vm_size]
-      node_labels             = merge(p.node_labels, p.spot ? local.spot_label : {}, { created-by = "entigo-infralib" })
-      node_taints             = concat(p.node_taints, p.spot ? [local.spot_taint] : [])
-      spot                    = p.spot
-      spot_max_price          = -1
-      max_surge               = var.max_surge
-      vnet_subnet_id          = var.vnet_subnet_id
-      host_encryption_enabled = null
-      gpu_instance            = null
-      tags                    = local.tags
-    } if p.max_count > 0 },
-    { for k, p in var.aks_node_pools_extra : k => {
-      name                    = coalesce(p.name, k)
-      mode                    = p.mode
-      vm_size                 = p.vm_size
-      min_count               = p.min_count
-      max_count               = p.max_count
-      max_pods                = p.max_pods
-      os_disk_size_gb         = p.os_disk_size_gb
-      os_disk_type            = p.os_disk_type
-      os_sku                  = coalesce(p.os_sku, var.os_sku)
-      zones                   = p.zones != null ? p.zones : local.zones_for[p.vm_size]
-      node_labels             = merge(p.node_labels, p.spot ? local.spot_label : {}, { created-by = "entigo-infralib" })
-      node_taints             = distinct(concat(p.node_taints, p.spot ? [local.spot_taint] : []))
-      spot                    = p.spot
-      spot_max_price          = p.spot_max_price
-      max_surge               = coalesce(p.max_surge, var.max_surge)
-      vnet_subnet_id          = var.vnet_subnet_id
-      host_encryption_enabled = p.host_encryption_enabled
-      gpu_instance            = p.gpu_instance
-      tags                    = merge(p.tags, local.tags)
-    } },
-  )
-
   # Agent jobs reach a public API server from the NAT gateway IPs
   authorized_ip_ranges = length(var.api_server_authorized_ip_ranges) == 0 ? [] : distinct(concat(
     var.api_server_authorized_ip_ranges, [for ip in var.nat_public_ips : "${ip}/32"]
@@ -172,14 +90,6 @@ resource "azurerm_user_assigned_identity" "aks" {
     precondition {
       condition     = length(local.unavailable_sizes) == 0
       error_message = "VM sizes not available in ${var.location} for this subscription: ${join(", ", local.unavailable_sizes)}."
-    }
-    precondition {
-      condition     = alltrue([for k, p in var.aks_node_pools_extra : can(regex("^[a-z][a-z0-9]{0,8}$", coalesce(p.name, k))) && !contains(["main", "mon", "tools"], coalesce(p.name, k))])
-      error_message = "aks_node_pools_extra pool names (key or name) must be 1-9 lowercase letters and digits starting with a letter (AKS limit 12 minus the rotation suffix) and not main, mon or tools."
-    }
-    precondition {
-      condition     = length(distinct(values(local.node_pools)[*].name)) == length(local.node_pools) && length(setintersection(values(local.node_pools)[*].name, [for p in values(local.node_pools) : "${p.name}tmp"])) == 0
-      error_message = "Node pool names must be unique and must not be another pool's rotation name (<name>tmp)."
     }
   }
 }
@@ -371,46 +281,55 @@ module "aks" {
   depends_on = [time_sleep.roles]
 }
 
-# Not AVM agent_pools: AVM upgrades them in parallel with the control plane (AKS rejects pools newer than it) and only
-# replaces them on a VM size change. Changes to zones, VM size, max pods, disks or subnets rotate the pool through a
-# temporary pool, priority (spot) changes replace it
-resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each                    = local.node_pools
-  name                        = each.value.name
-  temporary_name_for_rotation = "${each.value.name}tmp"
-  kubernetes_cluster_id       = module.aks.resource_id
-  mode                        = each.value.mode
-  orchestrator_version        = var.kubernetes_version
-  vm_size                     = each.value.vm_size
-  auto_scaling_enabled        = true
-  min_count                   = each.value.min_count
-  max_count                   = each.value.max_count
-  max_pods                    = each.value.max_pods
-  os_disk_size_gb             = each.value.os_disk_size_gb
-  os_disk_type                = each.value.os_disk_type
-  os_sku                      = each.value.os_sku
-  zones                       = each.value.zones
-  vnet_subnet_id              = each.value.vnet_subnet_id
-  host_encryption_enabled     = each.value.host_encryption_enabled
-  gpu_instance                = each.value.gpu_instance
-  node_labels                 = each.value.node_labels
-  node_taints                 = each.value.node_taints
-  priority                    = each.value.spot ? "Spot" : "Regular"
-  eviction_policy             = each.value.spot ? "Delete" : null
-  spot_max_price              = each.value.spot ? each.value.spot_max_price : null
-  tags                        = each.value.tags
+module "main" {
+  count  = var.aks_main_max_size > 0 ? 1 : 0
+  source = "./aks-node-pool"
 
-  # AKS rejects surge settings on spot pools
-  dynamic "upgrade_settings" {
-    for_each = each.value.spot ? [] : [each.value.max_surge]
-    content {
-      max_surge = upgrade_settings.value
-    }
-  }
+  prefix             = var.prefix
+  name               = "main"
+  cluster_id         = module.aks.resource_id
+  kubernetes_version = var.kubernetes_version
+  vnet_subnet_id     = var.vnet_subnet_id
+  location           = var.location
+  availability_zones = local.zones_for[var.aks_main_instance_type]
+  instance_type      = var.aks_main_instance_type
+  min_size           = var.aks_main_min_size
+  max_size           = var.aks_main_max_size
+  max_pods           = var.aks_main_max_pods
+  volume_size        = var.aks_main_volume_size
+  volume_type        = var.aks_main_volume_type
+  os_sku             = var.os_sku
+  spot_nodes         = var.aks_main_spot_nodes
+  max_surge          = var.max_surge
+  labels             = { "main" = "true" }
+  tags               = var.tags
 
-  lifecycle {
-    ignore_changes = [node_count]
-  }
+  depends_on = [module.aks]
+}
+
+module "mon" {
+  count  = var.aks_mon_max_size > 0 ? 1 : 0
+  source = "./aks-node-pool"
+
+  prefix             = var.prefix
+  name               = "mon"
+  cluster_id         = module.aks.resource_id
+  kubernetes_version = var.kubernetes_version
+  vnet_subnet_id     = var.vnet_subnet_id
+  location           = var.location
+  availability_zones = local.zones_for[var.aks_mon_instance_type]
+  instance_type      = var.aks_mon_instance_type
+  min_size           = var.aks_mon_min_size
+  max_size           = var.aks_mon_max_size
+  max_pods           = var.aks_mon_max_pods
+  volume_size        = var.aks_mon_volume_size
+  volume_type        = var.aks_mon_volume_type
+  os_sku             = var.os_sku
+  spot_nodes         = var.aks_mon_spot_nodes
+  max_surge          = var.max_surge
+  labels             = { "mon" = "true" }
+  taints             = ["mon=true:NoSchedule"]
+  tags               = var.tags
 
   depends_on = [module.aks]
 }

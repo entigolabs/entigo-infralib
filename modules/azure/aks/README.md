@@ -13,9 +13,8 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
   AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration. The
   system pool can't be spot and can't be removed; `main` and `mon` are left out with `aks_<pool>_max_size: 0`.
-  More pools: `aks_node_pools_extra` (key = pool name, 1-9 lowercase letters and digits, not main/mon/tools;
-  unset settings default like main/mon) or azure/aks-node-pool.
-* `main`, `mon` and the extra pools are `azurerm_kubernetes_cluster_node_pool` resources created after the cluster, so
+  More pools: azure/aks-node-pool (one module per pool, not named main, mon or tools).
+* `main` and `mon` are azure/aks-node-pool modules (`./aks-node-pool`) created after the cluster, so
   on a `kubernetes_version` change they upgrade after the control plane (AVM's own `agent_pools` upgrade in parallel
   and AKS rejects pools newer than the control plane). Changing their VM size, zones, max pods, disks or subnet
   rotates the pool (azurerm `temporary_name_for_rotation`): a temporary pool `<name>tmp` with the new settings is
