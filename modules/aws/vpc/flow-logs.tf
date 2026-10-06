@@ -1,23 +1,14 @@
 #S3 bucket for VPC flow logs, created when flow_log_destination_type is s3 and no flow_log_destination_arn is given.
-locals {
-  create_flow_log_bucket = var.enable_flow_log && var.flow_log_destination_type == "s3" && var.flow_log_destination_arn == ""
-  flow_log_bucket_name   = trim(substr(lower("${var.prefix}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-flow-logs"), 0, 63), "-")
-  #Built from the policy so the flow log is created only after delivery is allowed, otherwise AWS adds its own policy to the bucket.
-  flow_log_destination_arn = var.flow_log_destination_arn != "" ? var.flow_log_destination_arn : (
-    local.create_flow_log_bucket ? "arn:aws:s3:::${one(aws_s3_bucket_policy.flow_log[*].bucket)}" : ""
-  )
-}
-
 resource "aws_s3_bucket" "flow_log" {
-  count  = local.create_flow_log_bucket ? 1 : 0
-  bucket = local.flow_log_bucket_name
+  count  = var.enable_flow_log && var.flow_log_destination_type == "s3" && var.flow_log_destination_arn == "" ? 1 : 0
+  bucket = trim(substr(lower("${var.prefix}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-flow-logs"), 0, 63), "-")
   tags = {
     created-by = "entigo-infralib"
   }
 }
 
 resource "aws_s3_bucket_public_access_block" "flow_log" {
-  count  = local.create_flow_log_bucket ? 1 : 0
+  count  = length(aws_s3_bucket.flow_log)
   bucket = aws_s3_bucket.flow_log[0].id
 
   block_public_acls       = true
@@ -27,7 +18,7 @@ resource "aws_s3_bucket_public_access_block" "flow_log" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "flow_log" {
-  count  = local.create_flow_log_bucket ? 1 : 0
+  count  = length(aws_s3_bucket.flow_log)
   bucket = aws_s3_bucket.flow_log[0].id
 
   rule {
@@ -45,7 +36,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "flow_log" {
 
 #https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-s3-permissions.html
 resource "aws_s3_bucket_policy" "flow_log" {
-  count  = local.create_flow_log_bucket ? 1 : 0
+  count  = length(aws_s3_bucket.flow_log)
   bucket = aws_s3_bucket.flow_log[0].id
   policy = jsonencode({
     Version = "2012-10-17"
