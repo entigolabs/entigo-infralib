@@ -85,9 +85,9 @@ accessLogs:
     - id: expire-alb-logs
       status: Enabled
       filter:
-        prefix: ""
+        - prefix: ""
       expiration:
-        days: 90
+        - days: 90
 
 gateways:
   tags: {}

@@ -105,9 +105,9 @@ gateways:
         - id: expire-alb-logs
           status: Enabled
           filter:
-            prefix: ""
+            - prefix: ""
           expiration:
-            days: 365
+            - days: 365
   service:
     accessLogs:
       enabled: false               # off for this gateway only
