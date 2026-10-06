@@ -77,7 +77,8 @@ ingressClass:
     enabled: true
     subnets: ""
 
-# ALB access logs of the Gateway API gateways, each gateway logs under its own name as prefix
+# ALB access logs of the Gateway API gateways, each gateway logs under its own name as prefix.
+# Do not set access_logs.* in gateways.<name>.loadBalancerAttributes, use these instead
 accessLogs:
   enabled: true
   bucket: ""                   # empty creates a bucket <module>-<account>-<region>-alb-logs with crossplane

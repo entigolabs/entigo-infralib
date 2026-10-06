@@ -60,23 +60,22 @@ spec:
   wafV2:
     webACL: {{ $cfg.wafv2AclArn }}
   {{- end }}
-  {{- /* Access logs: accessLogs.enabled is the main switch, gateways.<name>.accessLogs.enabled: false turns them off
-         for one gateway. Disabled is rendered explicitly, so turning it off also turns logging off on an existing ALB */}}
-  {{- $gwAccessLogs := $cfg.accessLogs | default dict }}
-  {{- $accessLogsEnabled := $.Values.accessLogs.enabled }}
-  {{- if hasKey $gwAccessLogs "enabled" }}{{- $accessLogsEnabled = and $accessLogsEnabled $gwAccessLogs.enabled }}{{- end }}
-  {{- $attributes := dict "access_logs.s3.enabled" (toString $accessLogsEnabled) }}
-  {{- if $accessLogsEnabled }}
-  {{- $_ := set $attributes "access_logs.s3.bucket" $accessLogsBucket }}
-  {{- $_ := set $attributes "access_logs.s3.prefix" $name }}
-  {{- end }}
-  {{- /* the gateway's own loadBalancerAttributes win over the access log defaults */}}
-  {{- $attributes = merge (deepCopy ($cfg.loadBalancerAttributes | default dict)) $attributes }}
+  {{- /* accessLogs.enabled is the main switch, gateways.<name>.accessLogs.enabled: false turns them off for one gateway.
+         false is rendered explicitly, so turning it off also turns logging off on an existing ALB */}}
+  {{- $accessLogs := and $.Values.accessLogs.enabled (dig "accessLogs" "enabled" true $cfg) }}
   # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
   # values format: map of attribute -> value; converted to the CRD's key/value list,
   # values quoted since the CRD expects strings
   loadBalancerAttributes:
-    {{- range $k, $v := $attributes }}
+    - key: access_logs.s3.enabled
+      value: {{ $accessLogs | quote }}
+    {{- if $accessLogs }}
+    - key: access_logs.s3.bucket
+      value: {{ $accessLogsBucket }}
+    - key: access_logs.s3.prefix
+      value: {{ $name }}
+    {{- end }}
+    {{- range $k, $v := $cfg.loadBalancerAttributes }}
     - key: {{ $k }}
       value: {{ $v | quote }}
     {{- end }}

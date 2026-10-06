@@ -4,9 +4,8 @@
 {{- $createBucket := false }}
 {{- if and (or (eq $routing "httproute") (eq $routing "both")) .Values.accessLogs.enabled (not .Values.accessLogs.bucket) }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled }}
-{{- $gwAccessLogs := $cfg.accessLogs | default dict }}
-{{- if or (not (hasKey $gwAccessLogs "enabled")) $gwAccessLogs.enabled }}{{- $createBucket = true }}{{- end }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled (dig "accessLogs" "enabled" true $cfg) }}
+{{- $createBucket = true }}
 {{- end }}
 {{- end }}
 {{- end }}
