@@ -90,18 +90,25 @@ those are controlled by `global.externalGateway`.
 
 ### Access logs
 
-With `accessLogs.enabled: true` every gateway ALB writes access logs to S3, under the gateway name as prefix. Off by default. Only the Gateway API gateways, not the ALBs of Ingress objects. Each gateway gets its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with crossplane, logs expire after 90 days (`accessLogs.lifecycleRules`). With `gateways.<name>.accessLogs.bucket` the logs of that gateway go to an existing bucket instead. Its policy must allow `logdelivery.elasticloadbalancing.amazonaws.com` to write from this account and it must use SSE-S3 encryption.
+The gateway ALBs can write access logs to S3. They are off by default and cover only the Gateway API gateways, not the ALBs of Ingress objects.
 
 ```yaml
 accessLogs:
-  enabled: true                    # default false
+  enabled: true
+```
+
+Every gateway then logs to its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with Crossplane. The logs are stored under the gateway name and deleted after 90 days.
+
+A gateway can turn its logs off, use an existing bucket or keep the logs for a different time:
+
+```yaml
 gateways:
   external:
     accessLogs:
-      bucket: my-log-archive-bucket  # optional, own bucket for this gateway
+      bucket: my-log-archive-bucket   # existing bucket
   internal:
     accessLogs:
-      lifecycleRules:              # optional, replaces accessLogs.lifecycleRules for this gateway
+      lifecycleRules:                 # keep the logs for a year, [] keeps them forever
         - id: expire-alb-logs
           status: Enabled
           filter:
@@ -110,9 +117,14 @@ gateways:
             - days: 365
   service:
     accessLogs:
-      enabled: false               # off for this gateway only
+      enabled: false
 ```
-The created buckets and their settings are kept when the module or access logs are removed.
+
+An existing bucket must use SSE-S3 encryption and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
+
+Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
+
+The buckets created by the module are kept, with their settings, when access logs or the module are removed.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)

@@ -25,7 +25,7 @@ func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
-	// service gateway is disabled in pri, internal gateway has access logs disabled
+	// service gateway is disabled in pri, access logs are off for the internal gateway
 	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"})
 }
 
@@ -92,7 +92,7 @@ func testGatewayAccessLogs(t *testing.T, kubectlOptions *terrak8s.KubectlOptions
 	bucket := getAttribute("access_logs.s3.bucket")
 	require.NotEmpty(t, bucket, "Gateway %s access_logs.s3.bucket is empty", gatewayName)
 
-	// No gateways.<name>.accessLogs.bucket in the test values, so each gateway gets its own bucket created with crossplane
+	// The test values set no bucket, so the gateway uses a bucket created by the module
 	ready, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
 		"get", "buckets.s3.aws.upbound.io", bucket,
 		"-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)

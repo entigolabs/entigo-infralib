@@ -1,10 +1,9 @@
-{{- /* One bucket per gateway for the ALB access logs, created when access logs are on for the gateway and
-       gateways.<name>.accessLogs.bucket is empty (same logic and bucket name as in gateways.yaml) */}}
+{{- /* Creates an access logs bucket for every gateway that has access logs on and no bucket of its own */}}
 {{- $routing := .Values.global.routingResources | default "ingress" }}
 {{- if and (or (eq $routing "httproute") (eq $routing "both")) (eq (toString .Values.accessLogs.enabled) "true") }}
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled (ne (toString (dig "accessLogs" "enabled" true $cfg)) "false") (not (dig "accessLogs" "bucket" "" $cfg)) }}
-{{- /* gateways.<name>.accessLogs.lifecycleRules replaces accessLogs.lifecycleRules for this gateway, [] keeps logs forever */}}
+{{- /* The gateway's lifecycleRules replace the default ones, [] keeps the logs forever */}}
 {{- $lifecycleRules := dig "accessLogs" "lifecycleRules" $.Values.accessLogs.lifecycleRules $cfg }}
 {{- $bucket := printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-" }}
 ---
@@ -65,7 +64,7 @@ spec:
   providerConfigRef:
     name: {{ $.Values.global.providerConfigRefName }}
 ---
-# ALB access logs only support SSE-S3, not KMS
+# ALB access logs only support SSE-S3 (AES256), not KMS
 apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketServerSideEncryptionConfiguration
 metadata:
@@ -86,6 +85,7 @@ spec:
   providerConfigRef:
     name: {{ $.Values.global.providerConfigRefName }}
 ---
+# Allows ALB log delivery from this account and denies access without TLS
 # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
 apiVersion: s3.aws.upbound.io/v1beta1
 kind: BucketPolicy
