@@ -233,27 +233,6 @@ variable "flow_log_s3_retention_in_days" {
   }
 }
 
-variable "flow_log_traffic_type" {
-  type     = string
-  nullable = false
-  default  = "ALL"
-  validation {
-    condition     = contains(["ACCEPT", "REJECT", "ALL"], var.flow_log_traffic_type)
-    error_message = "flow_log_traffic_type must be ACCEPT, REJECT or ALL."
-  }
-}
-
-# Only used with flow_log_destination_type = "s3", empty uses the AWS default (plain-text)
-variable "flow_log_file_format" {
-  type     = string
-  nullable = false
-  default  = ""
-  validation {
-    condition     = contains(["", "plain-text", "parquet"], var.flow_log_file_format)
-    error_message = "flow_log_file_format must be plain-text or parquet."
-  }
-}
-
 variable "create_gateway_s3" {
   type     = bool
   nullable = false
