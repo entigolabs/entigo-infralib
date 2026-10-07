@@ -62,7 +62,7 @@ spec:
     metadata:
       name: {{ .Release.Name }}
       annotations:
-        azure.workload.identity/client-id: {{ .Values.global.azure.clientID | quote }}
+        azure.workload.identity/client-id: {{ .Values.global.azure.clientId | quote }}
 ---
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig

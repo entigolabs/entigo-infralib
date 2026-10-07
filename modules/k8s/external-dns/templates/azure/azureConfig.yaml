@@ -9,7 +9,7 @@ type: Opaque
 stringData:
   azure.json: |
     {
-      "tenantId": {{ .Values.global.azure.tenantID | quote }},
+      "tenantId": {{ .Values.global.azure.tenantId | quote }},
       "subscriptionId": {{ index $id 2 | quote }},
       "resourceGroup": {{ index $id 4 | quote }},
       "useWorkloadIdentityExtension": true

@@ -36,6 +36,6 @@ data:
         jsonData:
           azureAuthType: workloadidentity
           cloudName: azuremonitor
-          subscriptionId: {{ .Values.global.azure.subscriptionID | quote }}
+          subscriptionId: {{ .Values.global.azure.subscriptionId | quote }}
 {{- end }}
 {{- end }}

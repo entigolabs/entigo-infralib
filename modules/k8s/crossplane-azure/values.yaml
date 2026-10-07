@@ -2,9 +2,9 @@ installProviderConfig: true
 
 global:
   azure:
-    subscriptionID: ""
-    tenantID: ""
-    clientID: ""
+    subscriptionId: ""
+    tenantId: ""
+    clientId: ""
     resourceGroupName: ""
     location: ""
     oidcIssuerUrl: ""

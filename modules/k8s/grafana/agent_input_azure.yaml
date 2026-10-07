@@ -1,6 +1,6 @@
 global:
   azure:
-    subscriptionID: "{{ .toutput.crossplane.subscription_id }}"
+    subscriptionId: "{{ .toutput.crossplane.subscription_id }}"
     resourceGroupId: "/subscriptions/{{ .agent.accountId }}/resourceGroups/{{ .agent.resourceGroup }}"
     nodeResourceGroupId: "{{ .toutput.aks.node_resource_group_id }}"
   datasources:

@@ -4,7 +4,7 @@ global:
     # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
     agcHealthCheck: false
     # Azure Monitor datasource
-    subscriptionID: ""
+    subscriptionId: ""
     resourceGroupId: ""
     nodeResourceGroupId: ""
   datasources:

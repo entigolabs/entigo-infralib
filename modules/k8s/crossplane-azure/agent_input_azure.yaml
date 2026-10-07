@@ -1,8 +1,8 @@
 global:
   azure:
-    clientID: "{{ .toutput.crossplane.client_id }}"
-    tenantID: "{{ .toutput.crossplane.tenant_id }}"
-    subscriptionID: "{{ .toutput.crossplane.subscription_id }}"
+    clientId: "{{ .toutput.crossplane.client_id }}"
+    tenantId: "{{ .toutput.crossplane.tenant_id }}"
+    subscriptionId: "{{ .toutput.crossplane.subscription_id }}"
     resourceGroupName: "{{ .agent.resourceGroup }}"
     location: "{{ .toutput.aks.region }}"
     oidcIssuerUrl: "{{ .toutput.aks.oidc_issuer_url }}"

@@ -1,6 +1,6 @@
 global:
   azure:
-    tenantID: "{{ .toutput.crossplane.tenant_id }}"
+    tenantId: "{{ .toutput.crossplane.tenant_id }}"
     pubZoneId: "{{ .toutput.dns.pub_zone_id }}"
     intZoneId: "{{ .toptout.dns.int_zone_id }}"
 external-dns:

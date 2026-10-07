@@ -12,9 +12,9 @@ spec:
   credentials:
     source: OIDCTokenFile
   oidcTokenFilePath: /var/run/secrets/azure/tokens/azure-identity-token
-  clientID: {{ .Values.global.azure.clientID | quote }}
-  tenantID: {{ .Values.global.azure.tenantID | quote }}
-  subscriptionID: {{ .Values.global.azure.subscriptionID | quote }}
+  clientID: {{ .Values.global.azure.clientId | quote }}
+  tenantID: {{ .Values.global.azure.tenantId | quote }}
+  subscriptionID: {{ .Values.global.azure.subscriptionId | quote }}
   storageUseAzureAD: true
 
 {{- end }}

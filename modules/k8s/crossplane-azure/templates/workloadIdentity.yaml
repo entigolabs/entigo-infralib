@@ -1,29 +1,21 @@
 {{- if .Values.workloadIdentity.enabled }}
 {{- $az := .Values.global.azure }}
-{{- range $k := list "subscriptionID" "resourceGroupName" "location" "oidcIssuerUrl" "identityPrefix" }}
+{{- range $k := list "subscriptionId" "resourceGroupName" "location" "oidcIssuerUrl" "identityPrefix" }}
 {{- $_ := required (printf "global.azure.%s is required for workloadIdentity" $k) (get $az $k) }}
 {{- end }}
 {{- $wi := .Values.workloadIdentity }}
-{{- $rgId := printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.resourceGroupName | lower }}
-{{- $rg := regexQuoteMeta $rgId }}
-{{- $nodeRg := "" }}
-{{- if $az.nodeResourceGroupName }}
-{{- $nodeRg = printf "/subscriptions/%s/resourcegroups/%s" $az.subscriptionID $az.nodeResourceGroupName | lower | regexQuoteMeta }}
-{{- end }}
-{{- $keys := list }}
-{{- range $k := compact $wi.encryptionKeyIds }}
-{{- $keys = append $keys (lower $k | regexQuoteMeta) }}
-{{- end }}
-{{- /* role -> scope regexes with the placeholders filled in, roles without any are left out */}}
+{{- $rgPrefix := printf "/subscriptions/%s/resourcegroups/" $az.subscriptionId }}
+{{- /* placeholder -> values, a pattern is repeated per value and dropped without one (one placeholder per pattern) */}}
+{{- $vars := dict "{rg}" (list (print $rgPrefix $az.resourceGroupName)) "{nodeRg}" list "{encryptionKeyIds}" (compact $wi.encryptionKeyIds) }}
+{{- if $az.nodeResourceGroupName }}{{ $_ := set $vars "{nodeRg}" (list (print $rgPrefix $az.nodeResourceGroupName)) }}{{ end }}
 {{- $roles := dict }}
 {{- range $role, $patterns := $wi.roles }}
 {{- $out := list }}
 {{- range $p := $patterns }}
-{{- if contains "{encryptionKeyIds}" $p }}
-{{- range $k := $keys }}{{ $out = append $out (replace "{encryptionKeyIds}" $k $p) }}{{ end }}
-{{- else if not (and (contains "{nodeRg}" $p) (not $nodeRg)) }}
-{{- $out = append $out (replace "{rg}" $rg $p | replace "{nodeRg}" $nodeRg) }}
-{{- end }}
+{{- $var := "" }}
+{{- range $k, $_ := $vars }}{{ if contains $k $p }}{{ $var = $k }}{{ end }}{{ end }}
+{{- if not $var }}{{ $out = append $out $p }}{{ end }}
+{{- range $v := dig $var list $vars }}{{ $out = append $out (replace $var (lower $v | regexQuoteMeta) $p) }}{{ end }}
 {{- end }}
 {{- if $out }}{{ $_ := set $roles $role $out }}{{ end }}
 {{- end }}
@@ -156,7 +148,7 @@ spec:
             [[- /* <prefix>_<namespace>_<name>: Kubernetes names have no "_", so names can't collide (the XRD rejects dots) */]]
             [[- $name := printf "%s_%s_%s" "{{ $az.identityPrefix }}" $ns $xr.metadata.name ]]
             [[- if gt (len $name) 128 ]][[ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) ]][[ end ]]
-            [[- $id := printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" "{{ $az.subscriptionID }}" "{{ $az.resourceGroupName }}" $name ]]
+            [[- $id := printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" "{{ $az.subscriptionId }}" "{{ $az.resourceGroupName }}" $name ]]
             [[- $policies := ternary `["Observe", "Create", "Update", "LateInitialize"]` `["*"]` (dig "keepOnDelete" false $spec) ]]
             [[- /* Fall back to the rendered values: a missing status must not delete resources */]]
             [[- $observed := dig "resources" dict .observed ]]

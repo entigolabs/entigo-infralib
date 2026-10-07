@@ -2,7 +2,7 @@ global:
   cloudProvider: azure
 
   azure:
-    tenantID: ""
+    tenantId: ""
     # Agent Key Vault resource id
     vaultId: ""
     # ArgoCD repo-creds for ACR: argocd namespace, registries as [{loginServer: <acr>.azurecr.io, id: <acr resource id>}], entries without loginServer are skipped

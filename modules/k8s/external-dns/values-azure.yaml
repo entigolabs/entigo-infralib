@@ -1,7 +1,7 @@
 global:
   cloudProvider: azure
   azure:
-    tenantID: ""
+    tenantId: ""
     pubZoneId: ""
     # Private int zone, written by external-dns-private (azure-private-dns provider)
     intZoneId: ""

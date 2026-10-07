@@ -21,7 +21,7 @@ spec:
   serviceAccountName: acr-token
   # The ACR generator reads the tenant from the service account
   serviceAccountAnnotations:
-    azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantID | quote }}
+    azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantId | quote }}
   roleAssignments:
     {{- range $registries }}
     - role: AcrPull
@@ -40,7 +40,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   registry: {{ .loginServer }}
-  tenantId: {{ $.Values.global.azure.tenantID }}
+  tenantId: {{ $.Values.global.azure.tenantId }}
   auth:
     workloadIdentity:
       serviceAccountRef:

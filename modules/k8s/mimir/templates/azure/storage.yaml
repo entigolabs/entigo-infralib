@@ -7,7 +7,7 @@
 {{- $az := .Values.global.azure -}}
 {{- $name := printf "%s_%s_%s-cmk" $az.identityPrefix .Release.Namespace .Release.Name -}}
 {{- if gt (len $name) 128 }}{{ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) }}{{ end -}}
-{{- printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" $az.subscriptionID $az.resourceGroupName $name -}}
+{{- printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" $az.subscriptionId $az.resourceGroupName $name -}}
 {{- end }}
 {{- if eq .Values.global.cloudProvider "azure" }}
 {{- $az := .Values.global.azure }}

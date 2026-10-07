@@ -50,7 +50,7 @@ are deterministic). loki/mimir use it for the CMK identity, so an uninstall keep
 It also applies to a role assignment removed from `roleAssignments` (or a changed scope): it stays in Azure and has to
 be removed by hand, Crossplane can't tell a removed entry from a deleted WorkloadIdentity.
 
-The composition needs `global.azure.subscriptionID`, `resourceGroupName`, `location`, `oidcIssuerUrl` and
+The composition needs `global.azure.subscriptionId`, `resourceGroupName`, `location`, `oidcIssuerUrl` and
 `identityPrefix` (agent inputs), the chart fails to render without them.
 
 ### Example code ###
