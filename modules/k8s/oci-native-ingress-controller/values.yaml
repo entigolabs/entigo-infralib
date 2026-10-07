@@ -31,6 +31,9 @@ oci-native-ingress-controller:
   # OkeWorkloadIdentityConfigurationProvider, which requires an ENHANCED cluster - it fails
   # with "please ensure the cluster type is enhanced" otherwise.
   authType: workloadIdentity
+  # A RollingUpdate deadlocks on the leader-election lease - see README.md.
+  updateStrategy:
+    type: Recreate
   deploymentNamespace: native-ingress-controller-system
   compartment_id: ""
   subnet_id: ""

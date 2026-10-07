@@ -1,14 +1,15 @@
 regions:
-- eu-frankfurt-1
+- eu-frankfurt-2
 
 accounts:
-  ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q:
+  ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q:
     filters:
-      OCIDnsZone:
+      OCICustomerSecretKey:
       - property: Name
         type: In
         values:
-        - oci.infralib.entigo.io
+        - entigo-infralib-biz-state
+        - entigo-infralib-pri-state
       OCIUser:
       - property: Name
         type: In
@@ -26,20 +27,21 @@ accounts:
         type: In
         values:
         - infralib-agent-bootstrap
+        - infralib-github-bootstrap
       OCIVault:
       - property: Name
         type: In
         values:
-        - biz-eu-frankfurt-1
-        - at-eu-frankfurt-1
-        - pri-eu-frankfurt-1
+        - biz-eu-frankfurt-2
+        - at-eu-frankfurt-2
+        - pri-eu-frankfurt-2
       OCIKey:
       - property: Name
         type: In
         values:
-        - biz-eu-frankfurt-1-agent
-        - at-eu-frankfurt-1-agent
-        - pri-eu-frankfurt-1-agent
+        - biz-eu-frankfurt-2-agent
+        - at-eu-frankfurt-2-agent
+        - pri-eu-frankfurt-2-agent
         - biz-net-pca-ca
         - at-net-pca-ca
         - pri-net-pca-ca
@@ -47,5 +49,5 @@ accounts:
       - property: Name
         type: In
         values:
-        - biz-net-pca-root-ca-3pbbwkcu
+        - biz-net-pca-root-ca
         - pri-net-pca-root-ca

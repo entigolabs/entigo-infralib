@@ -200,6 +200,39 @@ variable "flow_log_cloudwatch_log_group_kms_key_id" {
   default = ""
 }
 
+variable "flow_log_destination_type" {
+  type     = string
+  nullable = false
+  default  = "cloud-watch-logs"
+  validation {
+    condition     = contains(["cloud-watch-logs", "s3"], var.flow_log_destination_type)
+    error_message = "flow_log_destination_type must be cloud-watch-logs or s3."
+  }
+}
+
+# S3 bucket ARN, optionally with a folder: arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/
+# Empty with flow_log_destination_type = "s3" creates a bucket in this account
+variable "flow_log_s3_destination_arn" {
+  type     = string
+  nullable = false
+  default  = ""
+  validation {
+    condition     = var.flow_log_s3_destination_arn == "" || can(regex("^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", var.flow_log_s3_destination_arn))
+    error_message = "flow_log_s3_destination_arn must be an S3 bucket ARN, e.g. arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/."
+  }
+}
+
+# Only used for the bucket created by this module
+variable "flow_log_s3_retention_in_days" {
+  type     = number
+  nullable = false
+  default  = 90
+  validation {
+    condition     = var.flow_log_s3_retention_in_days >= 1
+    error_message = "flow_log_s3_retention_in_days must be at least 1."
+  }
+}
+
 variable "create_gateway_s3" {
   type     = bool
   nullable = false

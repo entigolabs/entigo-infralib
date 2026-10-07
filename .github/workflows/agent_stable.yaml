@@ -124,9 +124,9 @@ jobs:
     - name: Create resources based on latest release
       id: create_latest_release
       env:
-        OCI_REGION: eu-frankfurt-1
+        OCI_REGION: eu-frankfurt-2
         OCI_CONFIG_FILE: /home/runner/.oci/config
-        OCI_COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaa4s6svm4opv5vovkdccgs72xlkmfab25tmblrszb6weyk6qpt255q
+        OCI_COMPARTMENT_ID: ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q
         PR_BRANCH: "main"
         ENTIGO_INFRALIB_DESTROY: false
       run: |
