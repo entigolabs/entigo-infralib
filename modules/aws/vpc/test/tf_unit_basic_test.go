@@ -112,7 +112,7 @@ func testTerraformVpcBiz(t *testing.T) {
 	assert.Equal(t, "s3", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to S3")
 	flowLogBucket := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name")
 	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_s3_destination_arn is not set")
-	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), "aws:kms")
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "aws:kms")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
@@ -204,7 +204,7 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.Equal(t, "arn:aws:s3:::"+flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_arn"), "Flow logs must go to the created bucket")
 	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "No CloudWatch IAM role should be created for S3 flow logs")
 	// pri has no kms module, so the created flow log bucket uses SSE-S3
-	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), "AES256")
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "AES256")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
@@ -323,7 +323,7 @@ func testTerraformVpcSpoke(t *testing.T) {
 // Checks the bucket's default encryption and waits for a delivered flow log file encrypted with it,
 // which also proves that the bucket and key policies allow log delivery.
 // With aws:kms the bucket must use the telemetry key of the kms module.
-func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, algorithm string) {
+func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, flowLogId string, algorithm string) {
 	client := terratestAws.NewS3Client(t, os.Getenv("AWS_REGION"))
 
 	encryption, err := client.GetBucketEncryption(&s3.GetBucketEncryptionInput{Bucket: awsSDK.String(bucket)})
@@ -334,20 +334,27 @@ func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, algo
 	kmsKeyArn := awsSDK.StringValue(byDefault.KMSMasterKeyID)
 	if algorithm == "aws:kms" {
 		require.NotEmpty(t, kmsKeyArn, "Bucket %s has no default KMS key", bucket)
-		aliases, err := terratestAws.NewKmsClient(t, os.Getenv("AWS_REGION")).ListAliases(&kms.ListAliasesInput{KeyId: awsSDK.String(kmsKeyArn)})
+		kmsClient := terratestAws.NewKmsClient(t, os.Getenv("AWS_REGION"))
+		aliases, err := kmsClient.ListAliases(&kms.ListAliasesInput{KeyId: awsSDK.String(kmsKeyArn)})
 		require.NoError(t, err, "Failed to list the aliases of KMS key %s", kmsKeyArn)
 		telemetry := false
 		for _, alias := range aliases.Aliases {
+			t.Logf("Bucket %s uses KMS key %s with alias %s", bucket, kmsKeyArn, awsSDK.StringValue(alias.AliasName))
 			telemetry = telemetry || strings.HasSuffix(awsSDK.StringValue(alias.AliasName), "/telemetry")
 		}
 		assert.True(t, telemetry, "Bucket %s must use the telemetry KMS key, not %s", bucket, kmsKeyArn)
+		// Without this statement no flow log file is delivered, fail before waiting for one
+		policy, err := kmsClient.GetKeyPolicy(&kms.GetKeyPolicyInput{KeyId: awsSDK.String(kmsKeyArn), PolicyName: awsSDK.String("default")})
+		require.NoError(t, err, "Failed to get the policy of KMS key %s", kmsKeyArn)
+		require.Contains(t, awsSDK.StringValue(policy.Policy), "delivery.logs.amazonaws.com",
+			"KMS key %s does not allow delivery.logs.amazonaws.com, the kms module that created it is older than this vpc module", kmsKeyArn)
 	} else {
 		assert.Empty(t, kmsKeyArn, "Bucket %s must not have a KMS key", bucket)
 	}
 
 	// Flow logs are delivered about every 5 minutes, look at today's files only
 	prefix := fmt.Sprintf("AWSLogs/%s/vpcflowlogs/%s/%s/", accountId, os.Getenv("AWS_REGION"), time.Now().UTC().Format("2006/01/02"))
-	key := retry.DoWithRetry(t, fmt.Sprintf("Wait for a flow log file in s3://%s/%s", bucket, prefix), 30, 30*time.Second, func() (string, error) {
+	key, err := retry.DoWithRetryE(t, fmt.Sprintf("Wait for a flow log file in s3://%s/%s", bucket, prefix), 30, 30*time.Second, func() (string, error) {
 		var newest *s3.Object
 		err := client.ListObjectsV2Pages(&s3.ListObjectsV2Input{Bucket: awsSDK.String(bucket), Prefix: awsSDK.String(prefix)},
 			func(page *s3.ListObjectsV2Output, lastPage bool) bool {
@@ -366,6 +373,15 @@ func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, algo
 		}
 		return awsSDK.StringValue(newest.Key), nil
 	})
+	if err != nil {
+		// AWS reports why the delivery fails on the flow log itself
+		flowLogs, describeErr := terratestAws.NewEc2Client(t, os.Getenv("AWS_REGION")).DescribeFlowLogs(&ec2.DescribeFlowLogsInput{FlowLogIds: []*string{awsSDK.String(flowLogId)}})
+		require.NoError(t, describeErr, "Failed to describe flow log %s", flowLogId)
+		for _, flowLog := range flowLogs.FlowLogs {
+			t.Logf("Flow log %s delivery status: %s %s", flowLogId, awsSDK.StringValue(flowLog.DeliverLogsStatus), awsSDK.StringValue(flowLog.DeliverLogsErrorMessage))
+		}
+		require.NoError(t, err, "No flow log file was delivered to bucket %s", bucket)
+	}
 
 	object, err := client.HeadObject(&s3.HeadObjectInput{Bucket: awsSDK.String(bucket), Key: awsSDK.String(key)})
 	require.NoError(t, err, "Failed to read flow log file s3://%s/%s", bucket, key)
