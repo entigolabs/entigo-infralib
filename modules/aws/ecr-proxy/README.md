@@ -65,7 +65,7 @@ Then reference the parameters from the module inputs with the same keys.
           ghcr_token: "{{ .output-custom./ecr-proxy/ghcr/token }}"
 ```
 
-To rotate a token run `add-custom` again with `--overwrite=true` and run the agent, the new secret version is picked up by the cache rule. Without `--overwrite=true` an existing parameter is not replaced.
+To rotate a token run `add-custom` again with `--overwrite=true` and run the agent, the new secret version is picked up by the cache rule. Without `--overwrite=true` the command asks for confirmation before replacing an existing parameter.
 
 The parameter keys are free to choose, the keys above are the convention used in the infralib test environments. The same values can also be given as plain module inputs, which is only acceptable when the config file itself is a secret.
 
