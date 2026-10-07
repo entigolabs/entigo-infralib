@@ -1,2 +1,3 @@
 flow_log_cloudwatch_log_group_kms_key_id: "{{ .toptout.kms.telemetry_alias_arn }}"
+flow_log_s3_kms_key_arn: "{{ .toptout.kms.telemetry_key_arn }}"
 endpoint_policy_org_id: "{{ .agent.organizationId }}"

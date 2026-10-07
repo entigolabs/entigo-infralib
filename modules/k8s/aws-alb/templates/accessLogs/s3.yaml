@@ -64,7 +64,8 @@ spec:
   providerConfigRef:
     name: {{ $.Values.global.providerConfigRefName }}
 ---
-# ALB access logs only support SSE-S3 (AES256), not KMS
+# KMS encryption is not possible here: ALB access logs only support SSE-S3 (AES256),
+# with a KMS key on the bucket the ALB can not write the logs
 apiVersion: s3.aws.upbound.io/v1beta2
 kind: BucketServerSideEncryptionConfiguration
 metadata:

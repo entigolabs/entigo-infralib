@@ -120,7 +120,7 @@ gateways:
       enabled: false
 ```
 
-An existing bucket must use SSE-S3 encryption and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
+An existing bucket must use SSE-S3 encryption (ALB access logs do not support KMS) and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
 
 Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
 

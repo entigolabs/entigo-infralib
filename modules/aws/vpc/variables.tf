@@ -233,6 +233,13 @@ variable "flow_log_s3_retention_in_days" {
   }
 }
 
+# Only used for the bucket created by this module, empty encrypts it with SSE-S3
+variable "flow_log_s3_kms_key_arn" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "create_gateway_s3" {
   type     = bool
   nullable = false

@@ -141,7 +141,7 @@ DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances 
 ### VPC flow logs ###
 
 Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<prefix>/vpc-flow-log/` (7 days retention) unless `flow_log_destination_type = "s3"` is set:
-- without `flow_log_s3_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90)
+- without `flow_log_s3_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90). The bucket is encrypted with the `telemetry` KMS key when the `kms` module is used (`flow_log_s3_kms_key_arn`), otherwise with SSE-S3
 - with `flow_log_s3_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
 
 ```
