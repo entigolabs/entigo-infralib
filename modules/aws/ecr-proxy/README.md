@@ -50,6 +50,19 @@ docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS
 docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent add-custom --key=/ecr-proxy/ghcr/token --value=<github personal access token>
 ```
 
+Then reference the parameters from the module inputs with the same keys.
+
+```
+    modules:
+      - name: ecr-proxy
+        source: aws/ecr-proxy
+        inputs:
+          hub_username: "{{ .output-custom./ecr-proxy/hub/username }}"
+          hub_token: "{{ .output-custom./ecr-proxy/hub/token }}"
+          ghcr_username: "{{ .output-custom./ecr-proxy/ghcr/username }}"
+          ghcr_token: "{{ .output-custom./ecr-proxy/ghcr/token }}"
+```
+
 To rotate a token run `add-custom` again with `--overwrite=true` and run the agent, the new secret version is picked up by the cache rule. Without `--overwrite=true` an existing parameter is not replaced.
 
 The parameter keys are free to choose, the keys above are the convention used in the infralib test environments. The same values can also be given as plain module inputs, which is only acceptable when the config file itself is a secret.
