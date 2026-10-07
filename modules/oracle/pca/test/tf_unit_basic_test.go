@@ -21,7 +21,7 @@ func TestTerraformPca(t *testing.T) {
 
 func testTerraformPcaBiz(t *testing.T) {
 	t.Parallel()
-	testTerraformPca(t, "biz", "biz-net-pca-root-ca-3pbbwkcu")
+	testTerraformPca(t, "biz", "biz-net-pca-root-ca")
 }
 
 func testTerraformPcaPri(t *testing.T) {

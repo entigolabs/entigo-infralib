@@ -286,6 +286,48 @@ argocd:
               health_status.message = "Resource is up-to-date."
             end
             return health_status
+
+        "autoscaling/HorizontalPodAutoscaler":
+          health.lua: |
+            -- Mirrors gitops-engine health_hpa.go, except that a missing metric sample
+            -- (ScalingActive=False/FailedGetResourceMetric) is Progressing instead of Degraded:
+            -- it is the normal state for ~15-45s whenever the scale target rolls out and the
+            -- only pods left are too new to have a metrics-server sample.
+            local hs = {}
+            if obj.status == nil or obj.status.conditions == nil then
+              hs.status = "Progressing"
+              hs.message = "Waiting to Autoscale"
+              return hs
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if c.type == "AbleToScale" and (c.reason == "FailedGetScale" or c.reason == "FailedUpdateScale") then
+                hs.status = "Degraded"
+                hs.message = c.message
+                return hs
+              end
+              if c.type == "ScalingActive" and c.reason == "InvalidSelector" then
+                hs.status = "Degraded"
+                hs.message = c.message
+                return hs
+              end
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if c.type == "ScalingActive" and c.reason == "FailedGetResourceMetric" then
+                hs.status = "Progressing"
+                hs.message = c.message
+                return hs
+              end
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if (c.type == "AbleToScale" or c.type == "ScalingLimited") and c.status == "True" then
+                hs.status = "Healthy"
+                hs.message = c.message
+                return hs
+              end
+            end
+            hs.status = "Progressing"
+            hs.message = "Waiting to Autoscale"
+            return hs
       server.rbac.log.enforce.enable: "true"
       admin.enabled: "true"
       exec.enabled: "true"

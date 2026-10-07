@@ -26,7 +26,7 @@ jobs:
         chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
     - name: Nuke entigo-infralib oracle compartment
       env:
-        OCI_REGION: eu-frankfurt-1
+        OCI_REGION: eu-frankfurt-2
         OCI_CONFIG_FILE: /home/runner/.oci/config
         PREFIX: biz
       run: |

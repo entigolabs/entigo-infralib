@@ -138,6 +138,22 @@ If you hit this with a specific client, either disable DNS64 (`subnet_enable_dns
 **DNS64 + NAT64 (`subnet_enable_dns64`, default: `false`)**
 DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances with IPv6 addresses, or a dual-stack EKS cluster) that need to reach IPv4-only destinations. AWS NAT Gateway supports NAT64 natively — when `subnet_enable_dns64 = true` and a NAT Gateway is present, this module automatically creates a `64:ff9b::/96` route via the NAT Gateway to handle the translation. IPv4-mode EKS pods have no IPv6 source address and cannot use this path.
 
+### VPC flow logs ###
+
+Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<prefix>/vpc-flow-log/` (7 days retention) unless `flow_log_destination_type = "s3"` is set:
+- without `flow_log_s3_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90)
+- with `flow_log_s3_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
+
+```
+    modules:
+      - name: vpc
+        source: aws/vpc
+        inputs:
+          flow_log_destination_type: s3
+          flow_log_s3_destination_arn: arn:aws:s3:::my-log-archive-bucket #Optional
+```
+Changing the destination deletes the old CloudWatch log group. The created bucket must be emptied before it can be removed.
+
 ### VPC endpoint policies ###
 
 Every endpoint gets a default policy that allows only its own service's actions, instead of the AWS default `Action: *`:
