@@ -44,10 +44,12 @@ Which token to use:
 The tokens must not be written into the config file. Store them as agent custom parameters and reference them with the `output-custom` replacement tag. The agent stores custom parameters in AWS SSM Parameter Store. When the config contains a `kms` module that has already been applied once, the parameters are encrypted with that KMS key, so add the credentials after the first successful run of the `kms` module or they stay encrypted with the AWS managed key.
 
 ```
-docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent add-custom --key=/ecr-proxy/hub/username --value=<docker hub username>
-docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent add-custom --key=/ecr-proxy/hub/token --value=<docker hub access token>
-docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent add-custom --key=/ecr-proxy/ghcr/username --value=<github username>
-docker run --pull always -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN entigolabs/entigo-infralib-agent ei-agent add-custom --key=/ecr-proxy/ghcr/token --value=<github personal access token>
+#Docker Hub
+ei-agent add-custom --key=/ecr-proxy/hub/username --value=...
+ei-agent add-custom --key=/ecr-proxy/hub/token --value=...
+#Github
+ei-agent add-custom --key=/ecr-proxy/ghcr/username --value=...
+ei-agent add-custom --key=/ecr-proxy/ghcr/token --value=...
 ```
 
 Then reference the parameters from the module inputs with the same keys.
