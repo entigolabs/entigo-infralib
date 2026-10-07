@@ -2,7 +2,15 @@
 
 Creates [ECR pull through cache rules](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache.html) for the public container registries the infralib modules pull from. Images are pulled once from the upstream registry, stored in the account's private ECR and served from there on every following pull. This removes Docker Hub rate limits, keeps pulls inside the VPC through the ECR and S3 endpoints, and keeps working when the upstream registry is unreachable.
 
-The other infralib modules detect this module and use the proxied registries automatically, for example `{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}`. The `eks`, `eks-node-group` and `crossplane` modules attach the `policy` output so the nodes and Crossplane are allowed to pull through the caches and to create the cached repositories.
+The other infralib modules detect this module and use the proxied registries automatically. Module inputs name the registry with a placeholder chain that works on both AWS and Google and falls back to the upstream registry when neither proxy module is present.
+
+```
+image:
+  registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  repository: grafana/loki
+```
+
+The `eks`, `eks-node-group` and `crossplane` modules attach the `policy` output so the nodes and Crossplane are allowed to pull through the caches and to create the cached repositories.
 
 ### Available pull through caches ###
 

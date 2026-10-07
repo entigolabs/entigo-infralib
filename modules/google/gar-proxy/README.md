@@ -2,7 +2,15 @@
 
 Creates [Artifact Registry remote repositories](https://cloud.google.com/artifact-registry/docs/repositories/remote-repo) for the public container registries the infralib modules pull from. Images are pulled once from the upstream registry, stored in the project's Artifact Registry and served from there on every following pull. This removes Docker Hub rate limits, keeps pulls inside Google's network through Private Google Access, and keeps working when the upstream registry is unreachable.
 
-The other infralib modules detect this module and use the proxied registries automatically, for example `{{ .toptout.gar-proxy.hub_registry | "docker.io" }}`. GKE node service accounts and the `crossplane` module get the `roles/artifactregistry.reader` role from their own modules, no extra permission is needed to pull.
+The other infralib modules detect this module and use the proxied registries automatically. Module inputs name the registry with a placeholder chain that works on both AWS and Google and falls back to the upstream registry when neither proxy module is present.
+
+```
+image:
+  registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  repository: grafana/loki
+```
+
+GKE node service accounts and the `crossplane` module get the `roles/artifactregistry.reader` role from their own modules, no extra permission is needed to pull.
 
 ### Available proxies ###
 
