@@ -4,7 +4,7 @@ global:
   createRoute: true
   bucketName: ""
   azure:
-    subscriptionId: ""
+    subscriptionID: ""
     resourceGroupName: ""
     location: ""
     # Own storage account (templates/azure/storage.yaml), globally unique: storageAccountPrefix alphanumerics (max 16)

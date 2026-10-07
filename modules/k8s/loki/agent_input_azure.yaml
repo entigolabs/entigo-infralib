@@ -1,7 +1,7 @@
 global:
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-logs"
   azure:
-    subscriptionId: "{{ .agent.accountId }}"
+    subscriptionID: "{{ .agent.accountId }}"
     resourceGroupName: "{{ .agent.resourceGroup }}"
     location: "{{ .agent.region }}"
     storageAccountPrefix: "{{ .config.prefix }}{{ .module.name }}"

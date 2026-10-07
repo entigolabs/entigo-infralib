@@ -25,24 +25,28 @@ global:
 
 workloadIdentity:
   enabled: true
-  allowedRoles:
-    - AcrPull
-    - Key Vault Secrets User
-    - Storage Blob Data Contributor
-    - DNS Zone Contributor
-    - Private DNS Zone Contributor
-  # Also on the agent resource group itself and the AKS node resource group
-  readOnlyRoles:
-    - Monitoring Reader
-  # Key resource ids allowed for Key Vault Crypto Service Encryption User (customer managed keys), nothing else
+  # Roles a WorkloadIdentity may grant, each only on scopes matching one of its regexes (whole lower case scope).
+  # {rg}: agent resource group id, {nodeRg}: AKS node resource group id, {encryptionKeyIds}: one of encryptionKeyIds.
+  # A role without a matching pattern (e.g. {nodeRg} or {encryptionKeyIds} unset) is not allowed at all.
+  roles:
+    AcrPull:
+      - '{rg}/providers/microsoft\.containerregistry/registries/[a-z0-9]+'
+    Key Vault Secrets User:
+      - '{rg}/providers/microsoft\.keyvault/vaults/[a-z0-9-]+(/secrets/[a-z0-9-]+)?'
+    Storage Blob Data Contributor:
+      - '{rg}/providers/microsoft\.storage/storageaccounts/[a-z0-9]+/blobservices/default/containers/[a-z0-9-]+'
+    DNS Zone Contributor:
+      - '{rg}/providers/microsoft\.network/dnszones/[a-z0-9][a-z0-9.-]*'
+    Private DNS Zone Contributor:
+      - '{rg}/providers/microsoft\.network/privatednszones/[a-z0-9][a-z0-9.-]*'
+    Monitoring Reader:
+      - '{rg}(/providers/.+)?'
+      - '{nodeRg}(/providers/.+)?'
+    # Customer managed keys, only for a WorkloadIdentity without serviceAccountName
+    Key Vault Crypto Service Encryption User:
+      - '{encryptionKeyIds}'
+  # Key resource ids for {encryptionKeyIds} (kms telemetry key)
   encryptionKeyIds: []
-  # Scope per role (lower case regex after <resource group id>/providers/), roles without one: any resource in the RG
-  scopePatterns:
-    AcrPull: 'microsoft\.containerregistry/registries/[a-z0-9]+'
-    Key Vault Secrets User: 'microsoft\.keyvault/vaults/[a-z0-9-]+(/secrets/[a-z0-9-]+)?'
-    Storage Blob Data Contributor: 'microsoft\.storage/storageaccounts/[a-z0-9]+/blobservices/default/containers/[a-z0-9-]+'
-    DNS Zone Contributor: 'microsoft\.network/dnszones/[a-z0-9][a-z0-9.-]*'
-    Private DNS Zone Contributor: 'microsoft\.network/privatednszones/[a-z0-9][a-z0-9.-]*'
   functions:
     goTemplating:
       image: docker.io/entigolabs/function-go-templating
