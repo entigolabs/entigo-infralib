@@ -4,6 +4,12 @@ regions:
 accounts:
   ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q:
     filters:
+      OCICustomerSecretKey:
+      - property: Name
+        type: In
+        values:
+        - entigo-infralib-biz-state
+        - entigo-infralib-pri-state
       OCIUser:
       - property: Name
         type: In
