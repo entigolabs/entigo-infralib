@@ -1,13 +1,18 @@
 package test
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"testing"
+	"time"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	awsSDK "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/s3"
 	terratestAws "github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,11 +106,14 @@ func testTerraformVpcBiz(t *testing.T) {
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
 
-	flowLogId := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id")
-	assert.NotEmpty(t, flowLogId, "vpc_flow_log_id was not returned")
-	assert.Equal(t, "cloud-watch-logs", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to CloudWatch by default")
-	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "CloudWatch flow log IAM role was not returned")
-	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name"), "No flow log bucket should be created for CloudWatch flow logs")
+	// biz has the kms module, so the created flow log bucket uses the telemetry key
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "s3", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to S3")
+	flowLogBucket := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name")
+	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_s3_destination_arn is not set")
+	telemetryKeyArn := tf.GetStringValue(t, outputs, "kms__telemetry_key_arn")
+	require.NotEmpty(t, telemetryKeyArn, "kms__telemetry_key_arn was not returned")
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), "aws:kms", telemetryKeyArn)
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
@@ -196,6 +204,8 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_s3_destination_arn is not set")
 	assert.Equal(t, "arn:aws:s3:::"+flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_arn"), "Flow logs must go to the created bucket")
 	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "No CloudWatch IAM role should be created for S3 flow logs")
+	// pri has no kms module, so the created flow log bucket uses SSE-S3
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), "AES256", "")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
@@ -301,11 +311,54 @@ func testTerraformVpcSpoke(t *testing.T) {
 	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
 	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
 
-	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id should be empty when enable_flow_log is false")
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "cloud-watch-logs", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to CloudWatch by default")
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "CloudWatch flow log IAM role was not returned")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name"), "No flow log bucket should be created for CloudWatch flow logs")
 
 	endpoints := getEndpoints(t, outputs)
 	assert.ElementsMatch(t, []string{"sts"}, keys(endpoints), "Wrong vpc_endpoints returned, sts only must still create the endpoints module")
 	assertServicePolicy(t, getEndpointPolicy(t, endpoints["sts"]), "sts", "sts:*")
+}
+
+// Checks the bucket's default encryption and waits for a delivered flow log file encrypted with it,
+// which also proves that the bucket and key policies allow log delivery
+func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, algorithm string, kmsKeyArn string) {
+	client := terratestAws.NewS3Client(t, os.Getenv("AWS_REGION"))
+
+	encryption, err := client.GetBucketEncryption(&s3.GetBucketEncryptionInput{Bucket: awsSDK.String(bucket)})
+	require.NoError(t, err, "Failed to get the encryption of bucket %s", bucket)
+	require.NotEmpty(t, encryption.ServerSideEncryptionConfiguration.Rules, "Bucket %s has no encryption rule", bucket)
+	byDefault := encryption.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault
+	assert.Equal(t, algorithm, awsSDK.StringValue(byDefault.SSEAlgorithm), "Wrong default encryption of bucket %s", bucket)
+	assert.Equal(t, kmsKeyArn, awsSDK.StringValue(byDefault.KMSMasterKeyID), "Wrong default KMS key of bucket %s", bucket)
+
+	// Flow logs are delivered about every 5 minutes, look at today's files only
+	prefix := fmt.Sprintf("AWSLogs/%s/vpcflowlogs/%s/%s/", accountId, os.Getenv("AWS_REGION"), time.Now().UTC().Format("2006/01/02"))
+	key := retry.DoWithRetry(t, fmt.Sprintf("Wait for a flow log file in s3://%s/%s", bucket, prefix), 30, 30*time.Second, func() (string, error) {
+		var newest *s3.Object
+		err := client.ListObjectsV2Pages(&s3.ListObjectsV2Input{Bucket: awsSDK.String(bucket), Prefix: awsSDK.String(prefix)},
+			func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+				for _, object := range page.Contents {
+					if strings.HasSuffix(awsSDK.StringValue(object.Key), ".log.gz") && (newest == nil || object.LastModified.After(*newest.LastModified)) {
+						newest = object
+					}
+				}
+				return true
+			})
+		if err != nil {
+			return "", err
+		}
+		if newest == nil {
+			return "", fmt.Errorf("no flow log file in s3://%s/%s yet", bucket, prefix)
+		}
+		return awsSDK.StringValue(newest.Key), nil
+	})
+
+	object, err := client.HeadObject(&s3.HeadObjectInput{Bucket: awsSDK.String(bucket), Key: awsSDK.String(key)})
+	require.NoError(t, err, "Failed to read flow log file s3://%s/%s", bucket, key)
+	assert.Equal(t, algorithm, awsSDK.StringValue(object.ServerSideEncryption), "Wrong encryption of flow log file s3://%s/%s", bucket, key)
+	assert.Equal(t, kmsKeyArn, awsSDK.StringValue(object.SSEKMSKeyId), "Wrong KMS key of flow log file s3://%s/%s", bucket, key)
 }
 
 func getEndpoints(t *testing.T, outputs map[string]interface{}) map[string]string {

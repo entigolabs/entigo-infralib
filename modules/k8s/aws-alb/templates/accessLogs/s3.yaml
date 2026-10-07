@@ -16,8 +16,9 @@ metadata:
     argocd.argoproj.io/sync-wave: '-2'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
+    # Deleting the bucket fails while it still has logs, empty it first
+    forceDestroy: false
     tags:
       created-by: entigo-infralib
     region: {{ required "global.aws.region is required" $.Values.global.aws.region }}
@@ -33,7 +34,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
     region: {{ $.Values.global.aws.region }}
     rule:
@@ -52,7 +52,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
     region: {{ $.Values.global.aws.region }}
     blockPublicPolicy: true
@@ -75,7 +74,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
     region: {{ $.Values.global.aws.region }}
     rule:
@@ -97,7 +95,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
     region: {{ $.Values.global.aws.region }}
     policy: |
@@ -137,7 +134,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '-1'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deletionPolicy: Orphan
   forProvider:
     region: {{ $.Values.global.aws.region }}
     rule:

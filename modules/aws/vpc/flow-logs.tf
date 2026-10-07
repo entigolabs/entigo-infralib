@@ -2,6 +2,8 @@
 resource "aws_s3_bucket" "flow_log" {
   count  = var.enable_flow_log && var.flow_log_destination_type == "s3" && var.flow_log_s3_destination_arn == "" ? 1 : 0
   bucket = trim(substr(lower("${var.prefix}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-flow-logs"), 0, 63), "-")
+  #Deleting the bucket fails while it still has logs, empty it first
+  force_destroy = false
   tags = {
     created-by = "entigo-infralib"
   }

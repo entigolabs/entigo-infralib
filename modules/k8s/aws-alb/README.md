@@ -124,7 +124,7 @@ An existing bucket must use SSE-S3 encryption (ALB access logs do not support KM
 
 Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
 
-The buckets created by the module are kept, with their settings, when access logs or the module are removed.
+The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)
