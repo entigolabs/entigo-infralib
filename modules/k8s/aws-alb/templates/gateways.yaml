@@ -55,16 +55,28 @@ spec:
   wafV2:
     webACL: {{ $cfg.wafv2AclArn }}
   {{- end }}
-  {{- if $cfg.loadBalancerAttributes }}
+  {{- /* Access logs are on when accessLogs.enabled is true and the gateway does not turn them off.
+         Compared as strings, agent inputs can pass "true" and "false".
+         Off is written out as false, otherwise an ALB that already logs keeps logging */}}
+  {{- $accessLogs := and (eq (toString $.Values.accessLogs.enabled) "true") (ne (toString (dig "accessLogs" "enabled" true $cfg)) "false") }}
+  {{- /* The gateway's own bucket, or the one this module creates for it */}}
+  {{- $accessLogsBucket := dig "accessLogs" "bucket" "" $cfg | default (printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-") }}
   # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
   # values format: map of attribute -> value; converted to the CRD's key/value list,
   # values quoted since the CRD expects strings
   loadBalancerAttributes:
+    - key: access_logs.s3.enabled
+      value: {{ $accessLogs | quote }}
+    {{- if $accessLogs }}
+    - key: access_logs.s3.bucket
+      value: {{ $accessLogsBucket }}
+    - key: access_logs.s3.prefix
+      value: {{ $name }}
+    {{- end }}
     {{- range $k, $v := $cfg.loadBalancerAttributes }}
     - key: {{ $k }}
       value: {{ $v | quote }}
     {{- end }}
-  {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:
     {{- range split "," $cfg.subnets }}

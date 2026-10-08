@@ -1,4 +1,5 @@
 vpc_cidr: "10.146.0.0/16"
+flow_log_destination_type: s3
 one_nat_gateway_per_az: false
 enable_ipv6: true
 private_subnets: |

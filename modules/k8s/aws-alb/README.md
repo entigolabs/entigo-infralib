@@ -88,6 +88,44 @@ If you want all internal services to use the external gateway, set
 defined, such as `partner`). Some infralib modules are external by default;
 those are controlled by `global.externalGateway`.
 
+### Access logs
+
+The gateway ALBs can write access logs to S3. They are off by default and cover only the Gateway API gateways, not the ALBs of Ingress objects.
+
+```yaml
+accessLogs:
+  enabled: true
+```
+
+Every gateway then logs to its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with Crossplane. The logs are stored under the gateway name and deleted after 90 days.
+
+A gateway can turn its logs off, use an existing bucket or keep the logs for a different time:
+
+```yaml
+gateways:
+  external:
+    accessLogs:
+      bucket: my-log-archive-bucket   # existing bucket
+  internal:
+    accessLogs:
+      lifecycleRules:                 # keep the logs for a year, [] keeps them forever
+        - id: expire-alb-logs
+          status: Enabled
+          filter:
+            - prefix: ""
+          expiration:
+            - days: 365
+  service:
+    accessLogs:
+      enabled: false
+```
+
+An existing bucket must use SSE-S3 encryption (ALB access logs do not support KMS) and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
+
+Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
+
+The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
+
 
 # Migrating from Ingress to Gateway API (aws-alb module)
 
