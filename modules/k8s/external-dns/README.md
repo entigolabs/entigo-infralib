@@ -21,6 +21,9 @@ DNS Zone Contributor on `pub_zone_id`, Private DNS Zone Contributor on `int_zone
 `external-dns-private.enabled: false` when the int zone is not private (e.g. a single public domain): dns
 `int_private_domain` is then empty, so the public instance excludes nothing.
 
+Both instances render the upstream chart's `crds/` (`dnsendpoints`, `dnsrecords`), so ArgoCD shows a harmless
+`RepeatedResourceWarning`: the copies are identical (same pinned chart version) and applied as one resource.
+
 ### DNSEndpoint ###
 
 The `crd` source is enabled, so records that no Service, Ingress or Route can
