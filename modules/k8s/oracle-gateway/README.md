@@ -6,9 +6,10 @@ Istio (`gatewayClassName: istio`), each fronted by `modules/k8s/oci-native-ingre
 `modules/k8s/aws-alb`/`modules/k8s/google-gateway` play for their own clouds, and follows the
 same `gateways` map convention those two modules use.
 
-Requires, in this order: `istio-base` + `istio-istiod` (wave 1), then this module (wave 2,
-alongside `oci-ingress` - see `argo-apps.yaml`'s comment for the one real ordering nuance
-that wave choice carries).
+Requires, in this order: `istio-base` + `istio-istiod` (wave 1), `oci-ingress` (wave 2), then
+this module (wave 3). The NIC skips an Ingress whose `IngressClass` does not exist yet and never
+looks at it again, so the `internal`/`external` classes `oci-ingress` creates have to exist
+before this module's Ingresses do.
 
 ## Why NIC fronts this instead of a LoadBalancer Service
 
@@ -113,5 +114,3 @@ asked for it.
   existing Secret and reuses its key material across upgrades - same pattern, same reason, as
   `oci-native-ingress-controller`'s own webhook certificate. `argo-apps.yaml` still ignores
   this Secret's `/data`, since a first sync (nothing to look up yet) renders fresh anyway.
-- **Sharing a wave with `oci-ingress` is a real, accepted ordering gap, not a guarantee.**
-  See `argo-apps.yaml`'s comment on `infralib.entigo.io/sync-wave`.
