@@ -141,6 +141,7 @@ accounts:
       - "contributor"
       IAMUserPolicyAttachment:
       - "github -> AdministratorAccess"
+      - "github-example -> AdministratorAccess"
       IAMUserPolicy:
       - "maintainer -> maintainer"
       - "contributor -> contributor"
