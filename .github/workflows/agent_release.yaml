@@ -253,7 +253,7 @@ jobs:
             [ -f "${chart_dir}Chart.yaml" ] && \
               echo "entigo-infralib-release/k8s/$(basename "$chart_dir")"
           done
-          for module_type in aws aws-v2 google oracle; do
+          for module_type in aws aws-v2 google oracle azure; do
             for module_dir in modules/${module_type}/*/; do
               [ -f "${module_dir}main.tf" ] && \
                 echo "entigo-infralib-release/${module_type}/$(basename "$module_dir")"
@@ -557,11 +557,11 @@ jobs:
         # Run up to 6 modules in parallel across all module types. xargs only reports a
         # bare exit 123 when a worker fails, so finish with a list of what is missing.
         workers_rc=0
-        printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ \
+        printf '%s\n' modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ modules/azure/*/ \
           | xargs -P 6 -I{} bash -c 'publish_module "$@"' _ {} || workers_rc=$?
 
         missing=""
-        for module_path in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/; do
+        for module_path in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ modules/azure/*/; do
           module_type=$(basename "$(dirname "$module_path")")
           module_name=$(basename "$module_path")
           if [ -f "${module_path}main.tf" ] && [ ! -f "/tmp/agent-manifest/entry__${module_type}__${module_name}.json" ]; then
@@ -606,7 +606,7 @@ jobs:
         # Stage 1: expected count (filesystem) must equal recorded entries.
         expected=$(
           for d in modules/k8s/*/; do [ -f "${d}Chart.yaml" ] && echo x; done
-          for d in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/; do [ -f "${d}main.tf" ] && echo x; done
+          for d in modules/aws/*/ modules/aws-v2/*/ modules/google/*/ modules/oracle/*/ modules/azure/*/; do [ -f "${d}main.tf" ] && echo x; done
         )
         expected_count=$(echo "${expected}" | grep -c x || true)
         recorded_count=$(wc -l < /tmp/agent-manifest/entries.jsonl | tr -d ' ')
@@ -728,7 +728,7 @@ jobs:
         RELEASE_NOTES: ${{ steps.get_release_notes.outputs.notes }}
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' --exclude 'modules/oracle/nuke.sh' modules entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' --exclude 'modules/oracle/nuke.sh' --exclude 'modules/azure/nuke.sh' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release

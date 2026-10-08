@@ -43,6 +43,20 @@ RUN apk --no-cache add \
     && find /usr/lib/python3.* -type f -name examples-1.json -delete \
     && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
     && apk del py3-pip
+#Install Azure CLI (own venv) and kubelogin for AKS kubeconfigs
+ARG TARGETARCH
+ENV KUBELOGIN_VERSION=v0.2.20 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
+RUN apk --no-cache add py3-pip \
+    && python3 -m venv /opt/az \
+    && /opt/az/bin/pip install --no-cache-dir azure-cli \
+    && ln -s /opt/az/bin/az /usr/bin/az \
+    && find /opt/az -type d -name tests -prune -exec rm -rf {} + \
+    && find /opt/az -type f -name "*.pyc" -delete \
+    && apk del py3-pip \
+    && wget --no-verbose -O /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-${TARGETARCH}.zip" \
+    && unzip -p /tmp/kubelogin.zip "bin/linux_${TARGETARCH}/kubelogin" > /usr/bin/kubelogin \
+    && chmod +x /usr/bin/kubelogin \
+    && rm /tmp/kubelogin.zip
 #Install golang. Must satisfy the go directive in common/go.mod, and must
 # match what its pinned dependencies compile with: x/net v0.54.0 drops the
 # http2 server under a go1.27 build constraint, which breaks grpc v1.68.0, so
