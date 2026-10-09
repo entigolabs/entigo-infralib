@@ -1,18 +1,14 @@
 {{- if .Values.removeEnvoyHeaders }}
-# EnvoyFilter only exists as v1alpha3, it has no beta or v1 version.
-# In the root namespace without a workloadSelector it applies to every proxy in the mesh.
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: remove-envoy-headers
   annotations:
-    # After istiod is up, its validation webhook checks EnvoyFilters
     argocd.argoproj.io/sync-wave: "1"
-    # The CRD comes from istio-base, which is in the same sync wave as this module
+    # The CRD comes from istio-base, which is in the same sync wave
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   configPatches:
-    # The app's sidecar adds the headers to its response, the gateway passes them on to the client
     - applyTo: HTTP_ROUTE
       match:
         context: SIDECAR_INBOUND
@@ -23,9 +19,6 @@ spec:
             propagate: false
           response_headers_to_remove:
             - x-envoy-upstream-service-time
-    # Gateway is the edge, strip them from every response it passes on to the client.
-    # It also adds its own x-envoy-upstream-service-time.
-    # No decorator change here, gateways send it upstream, where the sidecar uses it as the trace span name
     - applyTo: HTTP_ROUTE
       match:
         context: GATEWAY

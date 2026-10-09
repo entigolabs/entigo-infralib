@@ -60,6 +60,5 @@ istiod:
         memory: 2048Mi
         ephemeral-storage: 1Gi
 
-# Keep Envoy's own headers out of responses to end users with an EnvoyFilter:
-# x-envoy-decorator-operation (shows internal service names, svc.cluster.local) and x-envoy-upstream-service-time
+# Removes x-envoy-decorator-operation and x-envoy-upstream-service-time from responses
 removeEnvoyHeaders: true
