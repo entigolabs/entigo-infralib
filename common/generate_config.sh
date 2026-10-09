@@ -474,6 +474,9 @@ test_k8s() {
       "./modules/k8s/rbac-bindings/test.sh"
       "./modules/k8s/saml-proxy/test.sh"
       "./modules/k8s/wireguard/test.sh"
+      "./modules/k8s/oci-native-ingress-controller/test.sh"
+      "./modules/k8s/crossplane-oracle/test.sh"
+      "./modules/k8s/oracle-gateway/test.sh"
   )
   PIDS=""
   FAIL=""

@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO(oracle): restore together with TestIstioIstiodOracleDev below.
-	// "github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 )
@@ -26,20 +24,13 @@ func TestIstioIstiodGooglePri(t *testing.T) {
 	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
-// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
-// There is no OKE cluster behind this test yet, so it only ever fails in
-// CheckKubectlConnection.
-/*
-func TestIstioIstiodOracleDev(t *testing.T) {
-	// Oracle's kubeconfig context isn't named after the cluster the way EKS/GKE ones are,
-	// so it goes through the shared helper instead of a hardcoded context string.
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, "oracle", "dev")
-	kubectlOptions.Namespace = "istio-system"
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 30, 10*time.Second)
-	require.NoError(t, err, "istiod deployment error: %s", err)
+func TestIstioIstiodOracleBiz(t *testing.T) {
+	testIstioIstiod(t, "biz-infra-oke")
 }
-*/
+
+func TestIstioIstiodOraclePri(t *testing.T) {
+	testIstioIstiod(t, "pri-infra-oke")
+}
 
 func testIstioIstiod(t *testing.T, contextName string) {
 	t.Parallel()

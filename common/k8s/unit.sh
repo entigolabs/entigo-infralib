@@ -23,11 +23,12 @@ if [ "$GOOGLE_CREDENTIALS" != "" ]
 then
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
-# The OKE kubeconfig authenticates by running the oci CLI, which needs this config.
+# The OKE kubeconfig authenticates by running the oci CLI, which needs this config, and
+# the Oracle module tests call OCI themselves.
 if [ "$OCI_COMPARTMENT_ID" != "" ]; then
     oracle_auth_defaults
     OCI_CONFIG_DIR="$(dirname "$OCI_CONFIG_FILE")"
-    DOCKER_OPTS="$DOCKER_OPTS -v $OCI_CONFIG_DIR:$OCI_CONFIG_DIR:ro -e OCI_CLI_CONFIG_FILE=$OCI_CONFIG_FILE -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True"
+    DOCKER_OPTS="$DOCKER_OPTS -v $OCI_CONFIG_DIR:$OCI_CONFIG_DIR:ro -e OCI_CLI_CONFIG_FILE=$OCI_CONFIG_FILE -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID"
 fi
 
 google_auth_login
