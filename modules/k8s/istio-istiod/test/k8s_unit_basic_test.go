@@ -54,4 +54,7 @@ func testIstioIstiod(t *testing.T, contextName string) {
 	if err != nil {
 		t.Fatal("istiod deployment error:", err)
 	}
+
+	_, err = terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "get", "envoyfilter", "remove-envoy-headers")
+	require.NoError(t, err, "remove-envoy-headers EnvoyFilter missing: %s", err)
 }
