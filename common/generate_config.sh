@@ -516,5 +516,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings" "oci-native-ingress-controller" "crossplane-oracle" "oracle-gateway"
 }
