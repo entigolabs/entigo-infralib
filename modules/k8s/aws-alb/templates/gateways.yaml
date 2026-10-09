@@ -29,12 +29,15 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   scheme: {{ $scheme }}
+  # alpnPolicy is written out since the CRD defaults it to None, otherwise ArgoCD shows a diff
   listenerConfigurations:
     - protocolPort: HTTP:80
+      alpnPolicy: None
       listenerAttributes:
         - key: routing.http.response.server.enabled
           value: {{ $.Values.serverHeader | quote }}
     - protocolPort: HTTPS:443
+      alpnPolicy: None
       listenerAttributes:
         - key: routing.http.response.server.enabled
           value: {{ $.Values.serverHeader | quote }}
@@ -42,7 +45,6 @@ spec:
       # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
       # via route hostnames, e.g. istio-managed domains behind the fallback route)
       # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
-      alpnPolicy: None
       {{- if $cfg.sslPolicy }}
       sslPolicy: {{ $cfg.sslPolicy }}
       {{- end }}
