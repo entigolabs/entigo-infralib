@@ -29,12 +29,19 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   scheme: {{ $scheme }}
-  {{- if or $cfg.certificates $cfg.sslPolicy }}
-  # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
-  # via route hostnames, e.g. istio-managed domains behind the fallback route)
-  # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
   listenerConfigurations:
+    - protocolPort: HTTP:80
+      listenerAttributes:
+        - key: routing.http.response.server.enabled
+          value: {{ $.Values.serverHeader | quote }}
     - protocolPort: HTTPS:443
+      listenerAttributes:
+        - key: routing.http.response.server.enabled
+          value: {{ $.Values.serverHeader | quote }}
+      {{- if or $cfg.certificates $cfg.sslPolicy }}
+      # Static certs (for hosts ACM discovery cannot find via route hostnames,
+      # e.g. istio-managed domains behind the fallback route) and/or the TLS
+      # security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
       alpnPolicy: None
       {{- if $cfg.sslPolicy }}
       sslPolicy: {{ $cfg.sslPolicy }}
@@ -49,7 +56,7 @@ spec:
         {{- end }}
       {{- end }}
       {{- end }}
-  {{- end }}
+      {{- end }}
   {{- if $cfg.wafv2AclArn }}
   # Replaces alb.ingress.kubernetes.io/wafv2-acl-arn
   wafV2:

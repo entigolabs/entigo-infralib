@@ -65,6 +65,9 @@ job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.24.6"
 
+# ALB's own "Server: awselb/2.0" response header, on every IngressClass and Gateway listener
+serverHeader: false
+
 ingressClass:
   tags: {}
   internal:
