@@ -88,6 +88,44 @@ If you want all internal services to use the external gateway, set
 defined, such as `partner`). Some infralib modules are external by default;
 those are controlled by `global.externalGateway`.
 
+### Access logs
+
+The gateway ALBs can write access logs to S3. They are off by default and cover only the Gateway API gateways, not the ALBs of Ingress objects.
+
+```yaml
+accessLogs:
+  enabled: true
+```
+
+Every gateway then logs to its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with Crossplane. The logs are stored under the gateway name and deleted after 90 days.
+
+A gateway can turn its logs off, use an existing bucket or keep the logs for a different time:
+
+```yaml
+gateways:
+  external:
+    accessLogs:
+      bucket: my-log-archive-bucket   # existing bucket
+  internal:
+    accessLogs:
+      lifecycleRules:                 # keep the logs for a year, [] keeps them forever
+        - id: expire-alb-logs
+          status: Enabled
+          filter:
+            - prefix: ""
+          expiration:
+            - days: 365
+  service:
+    accessLogs:
+      enabled: false
+```
+
+An existing bucket must use SSE-S3 encryption (ALB access logs do not support KMS) and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
+
+Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
+
+The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
+
 
 # Migrating from Ingress to Gateway API (aws-alb module)
 
@@ -238,6 +276,11 @@ kind: Ingress
 metadata:
   name: my-app
   namespace: my-app-biz
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-port: '8081'
+    alb.ingress.kubernetes.io/healthcheck-path: /status/healthz
+    alb.ingress.kubernetes.io/success-codes: '200-299'
 spec:
   ingressClassName: external
   rules:
@@ -282,6 +325,28 @@ spec:
           port: 8080           # was backend.service.port.number
 ```
 
+The `alb.ingress.kubernetes.io/*` annotations that tune the target group have
+no place on the HTTPRoute. They move to a `TargetGroupConfiguration` that
+references the backend Service and lives in the same namespace as the Service:
+
+```yaml
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: my-app
+  namespace: my-app-biz        # same namespace as the Service
+spec:
+  targetReference:
+    name: my-app               # the backendRefs Service name
+  defaultConfiguration:
+    protocol: HTTPS            # was alb.ingress.kubernetes.io/backend-protocol, HTTP is the default
+    healthCheckConfig:
+      healthCheckPort: "8081"  # was alb.ingress.kubernetes.io/healthcheck-port
+      healthCheckPath: /status/healthz  # was alb.ingress.kubernetes.io/healthcheck-path
+      matcher:
+        httpCode: "200-299"    # was alb.ingress.kubernetes.io/success-codes
+```
+
 Notes:
 
 - One Ingress `host` becomes an entry in `spec.hostnames`. An Ingress with
@@ -292,6 +357,15 @@ Notes:
   `type: Exact`.
 - SSL redirect is handled on the Gateway (`sslRedirect: true`), so
   redirect-related Ingress annotations can be dropped.
+- `healthCheckPort` and `matcher.httpCode` are strings, quote them.
+- `defaultConfiguration` applies to every route that uses the Service,
+  per-route overrides go under `spec.routeConfigurations`. Other target group
+  annotations such as `target-group-attributes` map to
+  `targetGroupAttributes`, see the `TargetGroupConfiguration` CRD in this
+  module for the full list.
+- `protocol` is what the ALB speaks to the pods. Leave it out for a plain HTTP
+  backend, set `HTTPS` when the pods terminate TLS themselves. The health check
+  has its own `healthCheckProtocol`, which defaults to the target group protocol.
 
 ### Example: multiple paths
 

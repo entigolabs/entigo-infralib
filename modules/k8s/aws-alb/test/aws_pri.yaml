@@ -8,3 +8,11 @@ global:
   createRoute: true
   createType: route
   internalGateway: external
+
+accessLogs:
+  enabled: true
+
+gateways:
+  internal:
+    accessLogs:
+      enabled: false

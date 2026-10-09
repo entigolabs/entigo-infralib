@@ -37,12 +37,12 @@ jobs:
             # Use the manually provided module path
             MODULES='["${{ inputs.module }}"]'
         else
-            # Extract unique module paths, excluding nuke files, then keep only
+            # Extract unique module paths then keep only
             # the ones that are an actual module, i.e. a directory with a test.sh.
             # This drops files that live directly under modules/oracle, such as
             # README.md, and modules deleted by this pull request.
             MODULES=$(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
-                echo "$file" | grep "modules/oracle" | grep -ve"nuke\.sh\|oci-nuke-config\.yml" | cut -d'/' -f1-3
+                echo "$file" | grep "modules/oracle" | cut -d'/' -f1-3
             done | sort -u | while read -r module; do
                 if [ -f "$module/test.sh" ]; then
                     echo "$module"

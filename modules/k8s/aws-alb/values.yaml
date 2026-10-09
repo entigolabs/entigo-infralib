@@ -9,6 +9,7 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    region: ""
 
 aws-load-balancer-controller:
   defaultTags:
@@ -76,6 +77,18 @@ ingressClass:
     enabled: true
     subnets: ""
 
+# Access logs of the gateway ALBs, stored in S3 under the gateway name.
+# Set them here, not as access_logs.* in gateways.<name>.loadBalancerAttributes
+accessLogs:
+  enabled: false
+  lifecycleRules:              # for the buckets created by this module
+    - id: expire-alb-logs
+      status: Enabled
+      filter:
+        - prefix: ""
+      expiration:
+        - days: 90
+
 gateways:
   tags: {}
   internal:
@@ -120,6 +133,10 @@ gateways:
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
+  #   accessLogs:
+  #     enabled: false         # access logs off for this gateway
+  #     bucket: ""             # existing bucket, empty creates <module>-<gateway>-<account>-<region>-alb-logs
+  #     lifecycleRules: []     # replaces accessLogs.lifecycleRules, [] keeps the logs forever
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"

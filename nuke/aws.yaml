@@ -139,8 +139,10 @@ accounts:
       - "eks-test"
       - "maintainer"
       - "contributor"
+      - "github-example"
       IAMUserPolicyAttachment:
       - "github -> AdministratorAccess"
+      - "github-example -> AdministratorAccess"
       IAMUserPolicy:
       - "maintainer -> maintainer"
       - "contributor -> contributor"
@@ -150,6 +152,7 @@ accounts:
       - "maintainer -> AKIA4YTQYUGCXECEMVON"
       - "maintainer -> AKIA4YTQYUGC7QHRLMAL"
       - "contributor -> AKIA4YTQYUGCXBN2REI6"
+      - "github-example -> AKIA4YTQYUGCS4MSLLTM"
       EC2TGW:
       - "tgw-092384f97967bfffe"
       IAMRole:

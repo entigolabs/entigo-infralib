@@ -32,6 +32,9 @@ RUN apk --no-cache add \
     && find /opt/venv -type f -name examples-1.json -delete \
     && find /opt/venv/lib/python3.*/site-packages/oci -type d -name tests -prune -exec rm -rf {} + \
     && find /opt/venv -type d -name "__pycache__" -prune -exec rm -rf {} + \
+    # botocore reads gzipped service models (.json.gz) as well as plain ones;
+    # compressed they are a fifth of the size (121 MiB -> 25 MiB).
+    && find /opt/venv/lib/python3.*/site-packages/awscli/botocore/data -type f -name "*.json" -exec gzip -9 {} + \
     && find /opt/venv -type f -name "*.pyc" -delete \
     && find /opt/venv -type f -name "*.pyo" -delete \
     && apk del py3-pip \

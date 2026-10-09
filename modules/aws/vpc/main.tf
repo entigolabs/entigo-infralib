@@ -46,7 +46,8 @@ locals {
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
 
   #In spoke mode, when no dedicated elasticache subnets are defined, reuse the database subnets for the elasticache subnet group.
-  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null
+  #Skipped when there are no database subnets (e.g. database_subnets = []), since there is nothing to reuse.
+  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null && length(local.database_subnets) > 0
 
   #IPv6 prefix indices — each subnet needs a unique /64 slot within the VPC's /56 block.
   #Only populated when enable_ipv6 is true; assigned sequentially across all subnet types.
