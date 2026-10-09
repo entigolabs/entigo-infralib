@@ -8,3 +8,9 @@ subnet_ids: |
   ["{{ .toutput.vpc.private_subnets[0] }}"]
 pod_subnet_ids: |
   ["{{ .toutput.vpc.pod_subnets[0] }}"]
+# Without the cluster's NSGs nothing allows traffic in to these nodes' pods, so pods on the
+# other pools cannot reach them.
+nsg_ids: |
+  ["{{ .toutput.oke.node_nsg_id }}"]
+pod_nsg_ids: |
+  ["{{ .toutput.oke.pod_nsg_id }}"]
