@@ -105,6 +105,9 @@ fi
   then
     default_google_conf
   fi
+  if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+      default_oracle_conf
+  fi
   full_k8s_conf
   
   MODULE_NAME=$(basename $MODULE_PATH)
@@ -197,6 +200,15 @@ fi
             fi
             cat agents/$testname/config.yaml
             docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
+            PIDS="$PIDS $!=$testname"
+        elif [[ $testname == oracle_* && "$OCI_COMPARTMENT_ID" == "" ]]; then
+            echo "Skip $testname test, OCI_COMPARTMENT_ID is not set"
+        elif [[ $testname == oracle_* ]]; then
+            cat agents/$testname/config.yaml
+            docker run --rm -v "$OCI_CONFIG_DIR":"$OCI_CONFIG_DIR":ro -v "$(pwd)":"/conf" \
+                -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID -w /conf \
+                --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml \
+                --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
         else
           echo "Unknown cloud provider type $testname"
