@@ -13,14 +13,13 @@ func TestK8sClusterAutoscalerAWSBiz(t *testing.T) {
 	testK8sClusterAutoscaler(t, "aws", "biz")
 }
 
-// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
-// There is no OKE cluster behind this test yet, so it only ever fails in
-// CheckKubectlConnection.
-/*
-func TestK8sClusterAutoscalerOracleDev(t *testing.T) {
-	testK8sClusterAutoscaler(t, "oracle", "dev")
+func TestK8sClusterAutoscalerOracleBiz(t *testing.T) {
+	testK8sClusterAutoscaler(t, "oracle", "biz")
 }
-*/
+
+func TestK8sClusterAutoscalerOraclePri(t *testing.T) {
+	testK8sClusterAutoscaler(t, "oracle", "pri")
+}
 
 func testK8sClusterAutoscaler(t *testing.T, cloudName string, envName string) {
 	t.Parallel()

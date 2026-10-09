@@ -25,20 +25,13 @@ func TestIstioBaseGooglePri(t *testing.T) {
 	testIstioBase(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
-// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
-// There is no OKE cluster behind this test yet, so it only ever fails in
-// CheckKubectlConnection.
-/*
-func TestIstioBaseOracleDev(t *testing.T) {
-	// Oracle's kubeconfig context isn't named after the cluster the way EKS/GKE ones are,
-	// so it goes through the shared helper instead of a hardcoded context string.
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, "oracle", "dev")
-	kubectlOptions.Namespace = "istio-system"
-
-	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "networking.istio.io/v1beta1", []string{"virtualservices", "gateways"}, 60, 2*time.Second)
-	require.NoError(t, err, "Istio Base CRDs missing")
+func TestIstioBaseOracleBiz(t *testing.T) {
+	testIstioBase(t, "biz-infra-oke")
 }
-*/
+
+func TestIstioBaseOraclePri(t *testing.T) {
+	testIstioBase(t, "pri-infra-oke")
+}
 
 func testIstioBase(t *testing.T, contextName string) {
 	t.Parallel()

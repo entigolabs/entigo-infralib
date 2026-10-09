@@ -49,6 +49,38 @@ google_auth_login() {
 
 }
 
+oracle_auth_defaults() {
+    if [ "$OCI_REGION" == "" ]; then
+        echo "Defaulting OCI_REGION to eu-frankfurt-2"
+        export OCI_REGION="eu-frankfurt-2"
+    fi
+    if [ "$OCI_CONFIG_FILE" == "" ]; then
+        echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
+        export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
+    fi
+}
+
+# Adds the OKE cluster $1 to ~/.kube/config under a context of the same name, which is what
+# common/k8s/kubernetes.go connects to. The kubeconfig runs `oci ce cluster generate-token` on
+# every connection, so the tests need the same OCI config mounted - see common/k8s/unit.sh.
+oracle_kubeconfig() {
+    local cluster=$1
+    local id
+    oracle_auth_defaults
+    export OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
+    id=$(oci ce cluster list --compartment-id "$OCI_COMPARTMENT_ID" --region "$OCI_REGION" \
+        --name "$cluster" --lifecycle-state ACTIVE --query "data[0].id" --raw-output)
+    if [ -z "$id" ]; then
+        echo "Failed to find Oracle cluster $cluster"
+        return 1
+    fi
+    # create-kubeconfig makes the context it adds current, under a generated name.
+    kubectl config delete-context "$cluster" >/dev/null 2>&1
+    oci ce cluster create-kubeconfig --cluster-id "$id" --region "$OCI_REGION" \
+        --kube-endpoint PUBLIC_ENDPOINT --token-version 2.0.0 --file ~/.kube/config &&
+        kubectl config rename-context "$(kubectl config current-context)" "$cluster"
+}
+
 #main means it runs in github and is applying the main branch
 get_branch_name() {
   if [ "$PR_BRANCH" != "" ]
@@ -252,22 +284,15 @@ run_agents() {
         fi
     elif [[ $agent == oracle_* ]]
     then
-        if [ "$OCI_REGION" == "" ]
-        then
-          echo "Defaulting OCI_REGION to eu-frankfurt-2"
-          export OCI_REGION="eu-frankfurt-2"
-        fi
+        oracle_auth_defaults
         if [ "$OCI_COMPARTMENT_ID" == "" ]
         then
           echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
           exit 5
         fi
-        if [ "$OCI_CONFIG_FILE" == "" ]
-        then
-          echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
-          export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
-        fi
-        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+        # The runner is outside the VCN, so the agent's kubeconfig has to use the public
+        # OKE endpoint instead of functions-oracle.sh's private default.
+        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -e OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
@@ -412,6 +437,10 @@ test_k8s() {
   gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+  if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+      oracle_kubeconfig pri-infra-oke
+      oracle_kubeconfig biz-infra-oke
+  fi
 
   TESTS=(
       "./modules/k8s/platform-apis/test.sh"
@@ -447,6 +476,9 @@ test_k8s() {
       "./modules/k8s/rbac-bindings/test.sh"
       "./modules/k8s/saml-proxy/test.sh"
       "./modules/k8s/wireguard/test.sh"
+      "./modules/k8s/oci-native-ingress-controller/test.sh"
+      "./modules/k8s/crossplane-oracle/test.sh"
+      "./modules/k8s/oracle-gateway/test.sh"
   )
   PIDS=""
   FAIL=""
@@ -489,5 +521,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings" "oci-native-ingress-controller" "crossplane-oracle" "oracle-gateway"
 }

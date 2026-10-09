@@ -1,6 +1,8 @@
-# Point the modules that ask for the internal gateway at the external one, the
-# same thing aws-alb/test/aws_*.yaml and google-gateway/test/google_*.yaml do.
-# Test environments are short lived and have to be reachable without a VPN, and
-# the unit tests ask for the internal gateway.
+---
+# OC19 has no public DNS zones, so only the internal gateway is deployed, and the
+# modules that ask for the external one are pointed at it.
 global:
-  internalGateway: "external"
+  externalGateway: internal
+gateways:
+  external:
+    enabled: false
