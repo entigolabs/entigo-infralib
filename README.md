@@ -109,7 +109,7 @@ spec:
 
 Releases are cut from `main` roughly once per day:
 
-1. **Nuke** — each evening the entigo-infralib AWS and Google Cloud accounts are torn down (Nuke action).
+1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud and Oracle test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
 2. **Stable** — in the morning the latest release is installed and its tests run (Stable action).
 3. **Upgrade** — the accounts are upgraded to the `main` branch and tests run again.
 4. **Release** — if the tests pass and `main` differs from the last release, a new release is created (Release action).

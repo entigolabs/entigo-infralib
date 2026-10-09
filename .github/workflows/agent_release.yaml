@@ -282,7 +282,7 @@ jobs:
         echo "Changed modules, providers and images:"
         CHANGED=""
         for module in $(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
-            echo "$file" | grep "^modules/" | grep -ve"nuke" | cut -d'/' -f1-3
+            echo "$file" | grep "^modules/" | cut -d'/' -f1-3
         done | sort -u )
         do
           CHANGED="$CHANGED 
@@ -727,7 +727,7 @@ jobs:
         RELEASE_NOTES: ${{ steps.get_release_notes.outputs.notes }}
       run: |
         git clone git@github.com:entigolabs/entigo-infralib-release.git entigo-infralib-release
-        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' --exclude 'modules/aws/aws-nuke-config.yml' --exclude 'modules/aws/nuke.sh' --exclude 'modules/google/nuke.sh' --exclude 'modules/oracle/nuke.sh' modules entigo-infralib-release/
+        rsync --delete -av --exclude '*/test' --exclude '*/test.sh' --exclude '*/go.mod' --exclude '*/go.sum' modules entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' providers entigo-infralib-release/
         rsync --delete -av --exclude '*/test' --exclude '*/test.sh' images entigo-infralib-release/
         cd entigo-infralib-release
