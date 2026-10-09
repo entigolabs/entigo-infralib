@@ -23,6 +23,12 @@ if [ "$GOOGLE_CREDENTIALS" != "" ]
 then
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
+# The OKE kubeconfig authenticates by running the oci CLI, which needs this config.
+if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+    oracle_auth_defaults
+    OCI_CONFIG_DIR="$(dirname "$OCI_CONFIG_FILE")"
+    DOCKER_OPTS="$DOCKER_OPTS -v $OCI_CONFIG_DIR:$OCI_CONFIG_DIR:ro -e OCI_CLI_CONFIG_FILE=$OCI_CONFIG_FILE -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True"
+fi
 
 google_auth_login
 
@@ -62,6 +68,10 @@ then
       fi
     fi
     docker pull $ENTIGO_INFRALIB_IMAGE
+    if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+        oracle_kubeconfig pri-infra-oke || exit 1
+        oracle_kubeconfig biz-infra-oke || exit 1
+    fi
   fi
   MODULE_NAME=$(basename $MODULE_PATH)
   get_branch_name
