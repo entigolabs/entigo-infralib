@@ -81,6 +81,9 @@ jobs:
       CONTRIBUTOR_AWS_ACCESS_KEY_ID: ${{ secrets.CONTRIBUTOR_AWS_ACCESS_KEY_ID }}
       CONTRIBUTOR_AWS_SECRET_ACCESS_KEY: ${{ secrets.CONTRIBUTOR_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      OCI_REGION: eu-frankfurt-2
+      OCI_CONFIG_FILE: /home/runner/.oci/config
+      OCI_COMPARTMENT_ID: ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q
       PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       ENTIGO_INFRALIB_DESTROY: true
     steps:
@@ -95,6 +98,17 @@ jobs:
         abort-after-seconds: 3600
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Write OCI credentials
+      env:
+        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.oci
+        echo "${OCI_CONFIG}" > ~/.oci/config
+        echo "${OCI_PRIVATE_KEY}" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
+    - name: Install the OCI CLI
+      run: pipx install oci-cli
     - name: Run test
       run: |
         echo "Testing module: ${{ matrix.module }}"
