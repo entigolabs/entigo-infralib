@@ -79,6 +79,11 @@ jobs:
       CONTRIBUTOR_AWS_ACCESS_KEY_ID: ${{ secrets.CONTRIBUTOR_AWS_ACCESS_KEY_ID }}
       CONTRIBUTOR_AWS_SECRET_ACCESS_KEY: ${{ secrets.CONTRIBUTOR_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
       PR_BRANCH: ${{ github.event.pull_request.head.ref }}
       ENTIGO_INFRALIB_DESTROY: true
     steps:

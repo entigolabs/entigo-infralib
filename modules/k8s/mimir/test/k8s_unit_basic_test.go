@@ -8,6 +8,7 @@ import (
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/google"
+	"github.com/entigolabs/entigo-infralib-common/azure"
 	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 )
@@ -26,6 +27,14 @@ func TestK8sMimirGoogleBiz(t *testing.T) {
 
 func TestK8sMimirGooglePri(t *testing.T) {
 	testK8sMimir(t, "google", "pri")
+}
+
+func TestK8sMimirAzureBiz(t *testing.T) {
+	testK8sMimir(t, "azure", "biz")
+}
+
+func TestK8sMimirAzurePri(t *testing.T) {
+	testK8sMimir(t, "azure", "pri")
 }
 
 func testK8sMimir(t *testing.T, cloudName string, envName string) {
@@ -82,6 +91,13 @@ func testK8sMimir(t *testing.T, cloudName string, envName string) {
 	    err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-metrics", envName, namespaceName), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
 	    if err != nil {
 		    t.Fatal("File not found in Google bucket:", err)
+	    }
+	  case "azure":
+	    account, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "get", "accounts.storage.azure.m.upbound.io", namespaceName, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
+	    require.NoError(t, err, "storage Account error")
+	    err = azure.WaitUntilBlobAvailable(t, account, fmt.Sprintf("%s-%s-metrics", envName, namespaceName), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
+	    if err != nil {
+	    	t.Fatal("File not found in Azure container:", err)
 	    }
 	}
 

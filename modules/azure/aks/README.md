@@ -11,8 +11,9 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   time only.
 * Node pools `main`, `mon` and `tools` like aws/eks and google/gke (labels `<pool>=true`, `mon=true:NoSchedule`).
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
-  AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration. The
-  system pool can't be spot and can't be removed; `main` and `mon` are left out with `aks_<pool>_max_size: 0`.
+  AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration (in
+  `values-azure.yaml`). The system pool can't be spot and can't be removed; `main` and `mon` are left out with
+  `aks_<pool>_max_size: 0`.
   More pools: azure/aks-node-pool (one module per pool, not named main, mon or tools).
 * `main` and `mon` are azure/aks-node-pool modules (`./aks-node-pool`) created after the cluster, so
   on a `kubernetes_version` change they upgrade after the control plane (AVM's own `agent_pools` upgrade in parallel

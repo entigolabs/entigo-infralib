@@ -61,6 +61,22 @@ then
         exit 1
       fi
     fi
+    if [ "$AZURE_SUBSCRIPTION_ID" != "" ]
+    then
+      azure_auth_login
+      azure_kube_context pri
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for Azure pri-infra-aks"
+        exit 1
+      fi
+      azure_kube_context biz
+      if [ $? -ne 0 ]
+      then
+        echo "Failed to get context for Azure biz-infra-aks"
+        exit 1
+      fi
+    fi
     docker pull $ENTIGO_INFRALIB_IMAGE
   fi
   MODULE_NAME=$(basename $MODULE_PATH)
@@ -94,6 +110,10 @@ fi
   if [ -d "$CLOUDSDK_CONFIG" ]
   then
     default_google_conf
+  fi
+  if [ "$AZURE_SUBSCRIPTION_ID" != "" ]
+  then
+    default_azure_conf
   fi
   full_k8s_conf
   
@@ -138,6 +158,12 @@ fi
             yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "oracle-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
             mkdir -p "agents/${testname}/config/$STEP_NAME"
             cp "$MODULE_PATH/../oracle-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/oracle-gateway-${prefix}.yaml"
+          fi
+          if [[ $testname == azure_*  && $MODULE_NAME != "azure-gateway" ]]
+          then
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "azure-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../azure-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/azure-gateway.yaml"
           fi
         fi
 
@@ -188,6 +214,16 @@ fi
             cat agents/$testname/config.yaml
             docker run --rm -v "$(pwd)":"/conf" -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_REGION -e AWS_SESSION_TOKEN -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
+        elif [[ $testname == azure_* ]]
+        then
+          if [ "$AZURE_LOCATION" == "" ]
+          then
+            echo "Defaulting AZURE_LOCATION to westeurope"
+            export AZURE_LOCATION="westeurope"
+          fi
+          cat agents/$testname/config.yaml
+          docker run --rm -v "$(pwd)":"/conf" -e AZURE_SUBSCRIPTION_ID -e AZURE_LOCATION -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
+          PIDS="$PIDS $!=$testname"
         else
           echo "Unknown cloud provider type $testname"
         fi
@@ -235,6 +271,11 @@ docker run -e GOOGLE_REGION="$GOOGLE_REGION" \
   -e MAINTAINER_AWS_SECRET_ACCESS_KEY="$MAINTAINER_AWS_SECRET_ACCESS_KEY" \
   -e CONTRIBUTOR_AWS_ACCESS_KEY_ID="$CONTRIBUTOR_AWS_ACCESS_KEY_ID" \
   -e CONTRIBUTOR_AWS_SECRET_ACCESS_KEY="$CONTRIBUTOR_AWS_SECRET_ACCESS_KEY" \
+  -e AZURE_SUBSCRIPTION_ID="$AZURE_SUBSCRIPTION_ID" \
+  -e AZURE_TENANT_ID="$AZURE_TENANT_ID" \
+  -e AZURE_CLIENT_ID="$AZURE_CLIENT_ID" \
+  -e AZURE_CLIENT_SECRET="$AZURE_CLIENT_SECRET" \
+  -e AZURE_LOCATION="$AZURE_LOCATION" \
 	-e COMMAND="test" \
 	-e APP_NAME="$APP_NAME" \
   -v $CLOUDSDK_CONFIG:/root/.config/gcloud \

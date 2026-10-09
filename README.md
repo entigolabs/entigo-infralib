@@ -1,7 +1,7 @@
 <h1 align="center">Infralib Modules</h1>
 
 <p align="center">
-  <strong>Production-tested Terraform / OpenTofu modules and Helm charts for building a complete Kubernetes platform on AWS or Google Cloud.</strong>
+  <strong>Production-tested Terraform / OpenTofu modules and Helm charts for building a complete Kubernetes platform on AWS, Google Cloud or Azure.</strong>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@ New here? Follow the [quickstart guide](https://infralib-quickstart.dev.entigo.d
 
 ## What this is
 
-This repository holds the building blocks — the opinionated Terraform / OpenTofu modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more. The modules work with either Terraform or OpenTofu.
+This repository holds the building blocks — the opinionated Terraform / OpenTofu modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE/AKS clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more. The modules work with either Terraform or OpenTofu.
 
 You can consume them in three ways:
 
@@ -51,6 +51,7 @@ Modules live under [`modules/`](modules/), grouped by target:
 |---|---|
 | [`modules/aws`](modules/aws) | VPC, EKS, Karpenter, node groups, Route 53, KMS, ECR proxy, EFS, Transit Gateway, cost alerts, and more |
 | [`modules/google`](modules/google) | VPC, GKE, node pools, Cloud DNS, KMS, GAR proxy, services |
+| [`modules/azure`](modules/azure) | VPC, AKS, node pools, Azure DNS, KMS, ACR proxy, Crossplane |
 | [`modules/k8s`](modules/k8s) | ArgoCD, Istio, external-dns, external-secrets, Prometheus, Grafana, Loki, Mimir, Alloy, Karpenter, cluster-autoscaler, Harbor, Trivy, Kyverno, SAML proxy, and more |
 
 See [`modules/k8s/README.md`](modules/k8s/README.md) for chart-specific notes.
@@ -130,7 +131,7 @@ Agent configuration examples:
 sources:
   - url: oci://public.ecr.aws/entigolabs/entigo-infralib-release
 
-# OCI repository for Google Cloud
+# OCI repository for Google Cloud and Azure
 sources:
   - url: oci://ghcr.io/entigolabs/entigo-infralib-release
 

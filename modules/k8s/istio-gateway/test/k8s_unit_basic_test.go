@@ -24,6 +24,14 @@ func TestK8sIstioGatewayGooglePri(t *testing.T) {
 	testK8sIstioGateway(t, "google", "pri")
 }
 
+func TestK8sIstioGatewayAzureBiz(t *testing.T) {
+	testK8sIstioGateway(t, "azure", "biz")
+}
+
+func TestK8sIstioGatewayAzurePri(t *testing.T) {
+	testK8sIstioGateway(t, "azure", "pri")
+}
+
 func testK8sIstioGateway(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)

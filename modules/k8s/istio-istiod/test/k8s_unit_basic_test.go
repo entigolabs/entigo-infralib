@@ -26,6 +26,14 @@ func TestIstioIstiodGooglePri(t *testing.T) {
 	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
+func TestIstioIstiodAzureBiz(t *testing.T) {
+	testIstioIstiod(t, "biz-infra-aks")
+}
+
+func TestIstioIstiodAzurePri(t *testing.T) {
+	testIstioIstiod(t, "pri-infra-aks")
+}
+
 // TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
 // There is no OKE cluster behind this test yet, so it only ever fails in
 // CheckKubectlConnection.

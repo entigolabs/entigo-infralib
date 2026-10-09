@@ -26,6 +26,14 @@ func TestK8sHarborGooglePri(t *testing.T) {
 	testK8sHarbor(t, "google", "pri")
 }
 
+func TestK8sHarborAzureBiz(t *testing.T) {
+	testK8sHarbor(t, "azure", "biz")
+}
+
+func TestK8sHarborAzurePri(t *testing.T) {
+	testK8sHarbor(t, "azure", "pri")
+}
+
 func testK8sHarbor(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)

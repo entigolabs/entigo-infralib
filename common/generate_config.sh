@@ -49,6 +49,24 @@ google_auth_login() {
 
 }
 
+azure_auth_login() {
+  if [ "$AZURE_LOCATION" == "" ]
+  then
+    echo "Defaulting AZURE_LOCATION to westeurope"
+    export AZURE_LOCATION="westeurope"
+  fi
+  if [ "$AZURE_CLIENT_ID" != "" -a "$AZURE_CLIENT_SECRET" != "" ]
+  then
+    az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID" >/dev/null
+  fi
+  az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+}
+
+azure_kube_context() {
+  az aks get-credentials --resource-group $1-infralib-$AZURE_LOCATION --name $1-infra-aks --overwrite-existing && \
+    docker run --rm -v "$(echo ~)/.kube":/root/.kube --entrypoint kubelogin $ENTIGO_INFRALIB_IMAGE convert-kubeconfig -l spn --context $1-infra-aks
+}
+
 #main means it runs in github and is applying the main branch
 get_branch_name() {
   if [ "$PR_BRANCH" != "" ]
@@ -68,6 +86,13 @@ get_branch_name() {
 get_step_name_tf_aws() {
   STEP_NAME="${BRANCH}-${MODULE_NAME}"
   if [ "$MODULE_NAME" == "config-rules" ] || [ "$MODULE_NAME" == "tgw-attach" ]; then
+    STEP_NAME="net"
+  fi
+}
+
+get_step_name_tf_azure() {
+  STEP_NAME="${BRANCH}-${MODULE_NAME}"
+  if [ "$MODULE_NAME" == "dns" ] || [ "$MODULE_NAME" == "kms" ] || [ "$MODULE_NAME" == "acr-proxy" ]; then
     STEP_NAME="net"
   fi
 }
@@ -97,10 +122,10 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "istio-istiod" ]
         then
           APP_NAME="istio-system"
-        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" ]
+        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" -o "$MODULE_NAME" == "azure-gateway" -o "$MODULE_NAME" == "crossplane-azure" ]
         then
           APP_NAME=$MODULE_NAME
-        elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" -o "$MODULE_NAME" == "crossplane-kafka" ]
+        elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" -o "$MODULE_NAME" == "crossplane-kafka" -o "$MODULE_NAME" == "cert-manager" ]
         then
           APP_NAME="${MODULE_NAME}-$prefix"
         elif [ "$BRANCH" == "main" ]
@@ -269,6 +294,18 @@ run_agents() {
         fi
         docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
+    elif [[ $agent == azure_* ]]
+    then
+        if [ "$AZURE_LOCATION" == "" ]
+        then
+          echo "Defaulting AZURE_LOCATION to westeurope"
+          export AZURE_LOCATION="westeurope"
+        fi
+        if [ $agent != "azure_spoke" -o \( $agent == "azure_spoke" -a "$AGENT_OPTS" == "" \) ]
+        then
+          docker run --rm -v "$(pwd)":"/conf" -e AZURE_SUBSCRIPTION_ID -e AZURE_LOCATION -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+          PIDS="$PIDS $!=$agent"
+        fi
     else
       echo "Unknown cloud provider type $agent"
     fi
@@ -384,6 +421,23 @@ test_tf() {
     ./modules/oracle/oke-node-pool/test.sh testonly &
     PIDS="$PIDS $!=oke-node-pool"
   fi
+  if [ "$AZURE_LOCATION" != "" ]
+  then
+    ./modules/azure/vpc/test.sh testonly &
+    PIDS="$PIDS $!=vpc"
+    ./modules/azure/dns/test.sh testonly &
+    PIDS="$PIDS $!=dns"
+    ./modules/azure/kms/test.sh testonly &
+    PIDS="$PIDS $!=kms"
+    ./modules/azure/acr-proxy/test.sh testonly &
+    PIDS="$PIDS $!=acr-proxy"
+    ./modules/azure/aks/test.sh testonly &
+    PIDS="$PIDS $!=aks"
+    ./modules/azure/aks-node-pool/test.sh testonly &
+    PIDS="$PIDS $!=aks-node-pool"
+    ./modules/azure/crossplane/test.sh testonly &
+    PIDS="$PIDS $!=crossplane"
+  fi
 
   FAIL=""
   for p in $PIDS; do
@@ -412,6 +466,9 @@ test_k8s() {
   gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+  azure_auth_login
+  azure_kube_context pri
+  azure_kube_context biz
 
   TESTS=(
       "./modules/k8s/platform-apis/test.sh"
@@ -447,6 +504,9 @@ test_k8s() {
       "./modules/k8s/rbac-bindings/test.sh"
       "./modules/k8s/saml-proxy/test.sh"
       "./modules/k8s/wireguard/test.sh"
+      "./modules/k8s/azure-gateway/test.sh"
+      "./modules/k8s/cert-manager/test.sh"
+      "./modules/k8s/crossplane-azure/test.sh"
   )
   PIDS=""
   FAIL=""
@@ -484,10 +544,15 @@ default_oracle_conf() {
   generate_config "oracle" "infra" "oracle/oke" "oracle/oke-node-pool"
 }
 
+default_azure_conf() {
+  generate_config "azure" "net" "azure/vpc" "azure/acr-proxy" "azure/dns" "azure/kms"
+  generate_config "azure" "infra" "azure/crossplane" "azure/aks" "azure/aks-node-pool"
+}
+
 full_k8s_conf() {
   generate_config_k8s "./modules/k8s" "apps"
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings" "azure-gateway" "cert-manager" "crossplane-azure"
 }

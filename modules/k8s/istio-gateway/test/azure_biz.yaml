@@ -1,0 +1,4 @@
+global:
+  internalGateway:
+    namespace: "{{ .module.name }}"
+    name: azure-gateway-internal

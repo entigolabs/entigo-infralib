@@ -7,6 +7,7 @@ import (
 
 	"github.com/entigolabs/entigo-infralib-common/aws"
 	"github.com/entigolabs/entigo-infralib-common/google"
+	"github.com/entigolabs/entigo-infralib-common/azure"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
@@ -26,6 +27,14 @@ func TestK8sLokiGoogleBiz(t *testing.T) {
 
 func TestK8sLokiGooglePri(t *testing.T) {
 	testK8sLoki(t, "google", "pri")
+}
+
+func TestK8sLokiAzureBiz(t *testing.T) {
+	testK8sLoki(t, "azure", "biz")
+}
+
+func TestK8sLokiAzurePri(t *testing.T) {
+	testK8sLoki(t, "azure", "pri")
 }
 
 func testK8sLoki(t *testing.T, cloudName string, envName string) {
@@ -64,6 +73,13 @@ func testK8sLoki(t *testing.T, cloudName string, envName string) {
 		err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
 		if err != nil {
 			t.Fatal("File not found in Google bucket:", err)
+		}
+	case "azure":
+		account, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "get", "accounts.storage.azure.m.upbound.io", namespaceName, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
+		require.NoError(t, err, "storage Account error")
+		err = azure.WaitUntilBlobAvailable(t, account, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
+		if err != nil {
+			t.Fatal("File not found in Azure container:", err)
 		}
 	}
 

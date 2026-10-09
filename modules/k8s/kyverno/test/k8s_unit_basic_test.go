@@ -23,6 +23,14 @@ func TestK8sKyvernoGooglePri(t *testing.T) {
 	testK8sKyverno(t, "google", "pri")
 }
 
+func TestK8sKyvernoAzureBiz(t *testing.T) {
+	testK8sKyverno(t, "azure", "biz")
+}
+
+func TestK8sKyvernoAzurePri(t *testing.T) {
+	testK8sKyverno(t, "azure", "pri")
+}
+
 func testK8sKyverno(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)

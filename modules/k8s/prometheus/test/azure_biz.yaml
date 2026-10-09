@@ -3,6 +3,14 @@ global:
   installBlackbox: true
 prometheus:
   server:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: azure-gateway-internal
+            namespace: "istio-gateway-{{ .config.prefix }}"
+            sectionName: https
     remoteWrite:
       - name: "{{ .config.prefix }}"
         url: http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push

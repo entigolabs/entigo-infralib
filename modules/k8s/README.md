@@ -44,11 +44,11 @@ overrides them.
 | `Chart.lock` | Resolved dependency digest, written by `helm dependency update` |
 | `charts/*.tgz` | The vendored upstream chart, committed to the repository |
 | `values.yaml` | Cloud neutral defaults for the wrapper and the upstream chart |
-| `values-aws.yaml` / `values-google.yaml` | Defaults that only apply on that cloud |
+| `values-aws.yaml` / `values-google.yaml` / `values-azure.yaml` | Defaults that only apply on that cloud |
 | `agent_input.yaml` | Agent templated values, the environment specific wiring |
-| `agent_input_aws.yaml` / `agent_input_google.yaml` | Wiring that exists on one cloud only |
+| `agent_input_aws.yaml` / `agent_input_google.yaml` / `agent_input_azure.yaml` | Wiring that exists on one cloud only |
 | `templates/` | Resources this repository owns, not the upstream chart |
-| `templates/aws/`, `templates/google/` | Cloud specific resources |
+| `templates/aws/`, `templates/google/`, `templates/azure/` | Cloud specific resources |
 | `argo-apps.yaml` | Overrides merged into the generated ArgoCD `Application` |
 | `agent.yaml` | Optional module metadata surfaced by the agent (UI URL, module type) |
 | `test/` | Test environment inputs and Go tests, see [Tests](#tests) |
@@ -496,7 +496,7 @@ belongs in `values.yaml` instead. Five modules currently need one.
 ### Test environment inputs
 
 `test/<cloud>_<env>.yaml` — `aws_pri.yaml`, `aws_biz.yaml`, `google_pri.yaml`,
-`google_biz.yaml` — are the module's `inputs:` for the test platform of that
+`google_biz.yaml`, `azure_pri.yaml`, `azure_biz.yaml` — are the module's `inputs:` for the test platform of that
 cloud and environment. CI copies each one into the generated agent config as
 that module's input file, so they are agent inputs and support the same
 replacement tags.

@@ -23,6 +23,10 @@ if [ "$OCI_REGION" != "" ]
 then
   default_oracle_conf
 fi
+if [ "$AZURE_LOCATION" != "" ]
+then
+  default_azure_conf
+fi
 
 if [ "$1" == "" ]
 then

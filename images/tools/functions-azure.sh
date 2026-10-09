@@ -7,9 +7,11 @@
 export PROVIDER="azure"
 [ -z "$AZURE_SUBSCRIPTION_ID" ] && echo "AZURE_SUBSCRIPTION_ID must be set" && exit 1
 export ARM_SUBSCRIPTION_ID="$AZURE_SUBSCRIPTION_ID"
+if [ -z "$ARM_CLIENT_ID" ] && [ -n "$AZURE_CLIENT_SECRET" ]; then
+    export ARM_CLIENT_ID="$AZURE_CLIENT_ID" ARM_CLIENT_SECRET="$AZURE_CLIENT_SECRET" ARM_TENANT_ID="$AZURE_TENANT_ID"
+fi
 AZ_CONTAINER="tfstate"
 
-# Login order: existing session (mounted ~/.azure), service principal, managed identity
 azure_login() {
     if az account show >/dev/null 2>&1; then
         :
@@ -27,13 +29,10 @@ azure_login() {
 }
 azure_login
 
-# Get working directory for this environment
 get_work_dir() {
     echo "/tmp/project"
 }
 
-# Copy project files from bucket to local directory
-# Usage: copy_from_bucket <bucket> <source_path> <dest_path>
 copy_from_bucket() {
     local bucket="$1"
     local source_path="$2"
@@ -46,14 +45,11 @@ copy_from_bucket() {
     cp -a "$tmp_dir/$source_path/." "$dest_path/"
     rm -rf "$tmp_dir"
 
-    # download-batch has no exclude option
     if [ "$TERRAFORM_CACHE" != "true" ]; then
         rm -rf "$dest_path/.terraform"
     fi
 }
 
-# Copy file to bucket
-# Usage: copy_to_bucket <local_file> <bucket> <dest_path>
 copy_to_bucket() {
     local local_file="$1"
     local bucket="$2"
@@ -63,7 +59,6 @@ copy_to_bucket() {
         -n "$dest_path" -f "$local_file" --overwrite --no-progress >/dev/null || exit 1
 }
 
-# Sync terraform cache to bucket
 sync_terraform_cache() {
     local bucket="$1"
     local prefix="$2"
@@ -75,7 +70,6 @@ sync_terraform_cache() {
         --destination-path "steps/${prefix}/.terraform" -s .terraform --overwrite --no-progress >/dev/null
 }
 
-# Fetch plan artifact for apply stage
 fetch_plan_artifact() {
     if [ "$LOCAL_MODE" == "true" ]; then
         if [ ! -d /tmp/project/steps/$TF_VAR_prefix ]; then
@@ -96,7 +90,6 @@ fetch_plan_artifact() {
     fi
 }
 
-# Upload plan artifact after plan stage
 upload_plan_artifact() {
     if [ "$LOCAL_MODE" != "true" ]; then
       cd ../..
@@ -107,8 +100,6 @@ upload_plan_artifact() {
     fi
 }
 
-# ACR login server: AZURE_ACR_NAME, otherwise the only registry in AZURE_RESOURCE_GROUP
-# Prints nothing when there is no registry, fails when there are several and no override
 get_acr_login_server() {
     if [ -n "$AZURE_ACR_NAME" ]; then
         az acr show -n "$AZURE_ACR_NAME" --query loginServer -o tsv
@@ -123,14 +114,11 @@ get_acr_login_server() {
     echo "$servers"
 }
 
-# ACR refresh token (valid ~3h), used as password with username ACR_TOKEN_USERNAME
-# Usage: get_acr_token <login server>
 ACR_TOKEN_USERNAME="00000000-0000-0000-0000-000000000000"
 get_acr_token() {
     az acr login -n "${1%%.*}" --expose-token --query accessToken -o tsv
 }
 
-# Get Kubernetes credentials for an AKS cluster, kubelogin reuses the az session
 get_k8s_credentials() {
     az aks get-credentials -g "$AZURE_RESOURCE_GROUP" -n "$KUBERNETES_CLUSTER_NAME" --overwrite-existing || exit 1
     kubelogin convert-kubeconfig -l azurecli || exit 1

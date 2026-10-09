@@ -27,6 +27,14 @@ func TestK8sExternalSecretsGooglePri(t *testing.T) {
 	testK8sExternalSecrets(t, "google", "pri")
 }
 
+func TestK8sExternalSecretsAzureBiz(t *testing.T) {
+	testK8sExternalSecrets(t, "azure", "biz")
+}
+
+func TestK8sExternalSecretsAzurePri(t *testing.T) {
+	testK8sExternalSecrets(t, "azure", "pri")
+}
+
 func testK8sExternalSecrets(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)

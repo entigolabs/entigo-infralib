@@ -25,6 +25,14 @@ func TestK8sTrivyGooglePri(t *testing.T) {
 	testK8sTrivy(t, "google", "pri")
 }
 
+func TestK8sTrivyAzureBiz(t *testing.T) {
+	testK8sTrivy(t, "azure", "biz")
+}
+
+func TestK8sTrivyAzurePri(t *testing.T) {
+	testK8sTrivy(t, "azure", "pri")
+}
+
 func testK8sTrivy(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	_ "github.com/entigolabs/entigo-infralib-common/aws"
+	_ "github.com/entigolabs/entigo-infralib-common/azure"
 	_ "github.com/entigolabs/entigo-infralib-common/google"
 	_ "github.com/entigolabs/entigo-infralib-common/k8s"
 	_ "github.com/entigolabs/entigo-infralib-common/oracle"

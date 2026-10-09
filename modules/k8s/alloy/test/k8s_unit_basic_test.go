@@ -25,6 +25,14 @@ func TestK8sAlloyGooglePri(t *testing.T) {
 	testK8sAlloy(t, "google", "pri")
 }
 
+func TestK8sAlloyAzureBiz(t *testing.T) {
+	testK8sAlloy(t, "azure", "biz")
+}
+
+func TestK8sAlloyAzurePri(t *testing.T) {
+	testK8sAlloy(t, "azure", "pri")
+}
+
 func testK8sAlloy(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)

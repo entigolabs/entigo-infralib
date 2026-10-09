@@ -1,12 +1,14 @@
 domains: |
   {
     "bizpublic" = {
-      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+      domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+      parent_zone_id = "/subscriptions/{{ .agent.accountId }}/resourceGroups/infralib-permanent-{{ .agent.region }}/providers/Microsoft.Network/dnszones/azure.infralib.entigo.io"
     },
     "bizprivate" = {
       domain_name     = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.azure.infralib.entigo.io"
       private         = true
       default_private = true
+      parent_zone_id  = "/subscriptions/{{ .agent.accountId }}/resourceGroups/infralib-permanent-{{ .agent.region }}/providers/Microsoft.Network/dnszones/azure.infralib.entigo.io"
     },
     "bizprivateextra" = {
       domain_name       = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-extra-int.azure.infralib.entigo.io"

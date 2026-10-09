@@ -26,6 +26,14 @@ func TestK8sPrometheusGooglePri(t *testing.T) {
 	testK8sPrometheus(t, "google", "pri")
 }
 
+func TestK8sPrometheusAzureBiz(t *testing.T) {
+	testK8sPrometheus(t, "azure", "biz")
+}
+
+func TestK8sPrometheusAzurePri(t *testing.T) {
+	testK8sPrometheus(t, "azure", "pri")
+}
+
 func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)

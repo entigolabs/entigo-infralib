@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	//"os"
-	//"strings"
 	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
 	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
@@ -25,6 +23,14 @@ func TestK8sArgocdGoogleBiz(t *testing.T) {
 
 func TestK8sArgocdGooglePri(t *testing.T) {
 	testK8sArgocd(t, "google", "pri")
+}
+
+func TestK8sArgocdAzureBiz(t *testing.T) {
+	testK8sArgocd(t, "azure", "biz")
+}
+
+func TestK8sArgocdAzurePri(t *testing.T) {
+	testK8sArgocd(t, "azure", "pri")
 }
 
 func testK8sArgocd(t *testing.T,  cloudName string, envName string) {

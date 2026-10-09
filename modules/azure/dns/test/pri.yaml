@@ -1,6 +1,7 @@
 domains: |
   {
     "pri" = {
-      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+      domain_name    = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}.azure.infralib.entigo.io"
+      parent_zone_id = "/subscriptions/{{ .agent.accountId }}/resourceGroups/infralib-permanent-{{ .agent.region }}/providers/Microsoft.Network/dnszones/azure.infralib.entigo.io"
     }
   }

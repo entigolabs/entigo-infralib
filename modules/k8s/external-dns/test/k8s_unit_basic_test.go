@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"github.com/entigolabs/entigo-infralib-common/aws"
+	"github.com/entigolabs/entigo-infralib-common/azure"
 	"github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 )
@@ -35,6 +36,14 @@ func TestK8sExternalDnsGooglePri(t *testing.T) {
 	testK8sExternalDns(t, "google", "pri")
 }
 
+func TestK8sExternalDnsAzureBiz(t *testing.T) {
+	testK8sExternalDns(t, "azure", "biz")
+}
+
+func TestK8sExternalDnsAzurePri(t *testing.T) {
+	testK8sExternalDns(t, "azure", "pri")
+}
+
 func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
@@ -45,11 +54,16 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 		t.Fatal("external-dns deployment error:", err)
 	}
 	
+	host := fmt.Sprintf("%s-%s", strings.ToLower(random.UniqueId()), hostName)
+	if cloudName == "azure" {
+		testK8sExternalDnsAzure(t, kubectlOptions, namespaceName, envName, host)
+		return
+	}
+
 	vs, err := k8s.ReadObjectFromFile(t, "./templates/virtualService.yaml")
 	require.NoError(t, err)
 	vs.SetName(fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId())))
 
-	host := fmt.Sprintf("%s-%s", strings.ToLower(random.UniqueId()), hostName)
 	err = unstructured.SetNestedStringSlice(vs.Object, []string{host}, "spec", "hosts")
 	require.NoError(t, err, "Setting spec.hosts error")
 	
@@ -77,4 +91,46 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 	require.NoError(t, err, "Route53Record creation error")
   
 
+}
+
+// The istio public Service is ClusterIP on Azure, records come from HTTPRoutes on the AGC gateway
+func testK8sExternalDnsAzure(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, envName string, host string) {
+	workloadIdentity := schema.GroupVersionResource{Group: "azure.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
+	_, err := k8s.WaitUntilNamespacedCrossplaneResourceAvailable(t, kubectlOptions, workloadIdentity, namespaceName, 60, 10*time.Second)
+	require.NoError(t, err, "WorkloadIdentity not Ready")
+
+	if envName == "biz" {
+		err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-external-dns-private", namespaceName), 10, 6*time.Second)
+		require.NoError(t, err, "external-dns-private deployment error")
+	}
+
+	routeName := fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId()))
+	route := &unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "gateway.networking.k8s.io/v1",
+		"kind":       "HTTPRoute",
+		"metadata":   map[string]interface{}{"name": routeName},
+		"spec": map[string]interface{}{
+			"parentRefs": []interface{}{map[string]interface{}{
+				"group":       "gateway.networking.k8s.io",
+				"kind":        "Gateway",
+				"name":        "azure-gateway-external",
+				"namespace":   "azure-gateway",
+				"sectionName": "https",
+			}},
+			"hostnames": []interface{}{host},
+			"rules": []interface{}{map[string]interface{}{
+				"backendRefs": []interface{}{map[string]interface{}{"name": namespaceName, "port": int64(7979)}},
+			}},
+		},
+	}}
+	_, err = k8s.CreateK8SHTTPRoute(t, kubectlOptions, route)
+	require.NoError(t, err, "Creating HTTPRoute error")
+	defer func() {
+		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
+	}()
+
+	zoneName := fmt.Sprintf("%s-net-dns.azure.infralib.entigo.io", envName)
+	recordName := strings.TrimSuffix(host, "."+zoneName)
+	err = azure.WaitUntilDnsRecordExists(t, azure.ResourceGroup(envName), zoneName, recordName, "CNAME", 40, 15*time.Second)
+	require.NoError(t, err, "Azure DNS record creation error")
 }
