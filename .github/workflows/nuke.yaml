@@ -23,7 +23,7 @@ jobs:
   nuke:
     uses: entigolabs/entigo-infralib-test/.github/workflows/module-nuke.yaml@main
     with:
-      clouds: ${{ inputs.cloud == 'all' && '' || inputs.cloud || '' }}
+      clouds: ${{ inputs.cloud || '' }}
       # The Oracle tenancy-scoped listers need the environment prefixes; biz
       # is the only Oracle environment (pri shares its tenancy resources).
       prefixes: biz
