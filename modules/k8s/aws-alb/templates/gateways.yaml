@@ -39,9 +39,9 @@ spec:
         - key: routing.http.response.server.enabled
           value: {{ $.Values.serverHeader | quote }}
       {{- if or $cfg.certificates $cfg.sslPolicy }}
-      # Static certs (for hosts ACM discovery cannot find via route hostnames,
-      # e.g. istio-managed domains behind the fallback route) and/or the TLS
-      # security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
+      # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
+      # via route hostnames, e.g. istio-managed domains behind the fallback route)
+      # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
       alpnPolicy: None
       {{- if $cfg.sslPolicy }}
       sslPolicy: {{ $cfg.sslPolicy }}

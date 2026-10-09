@@ -128,13 +128,11 @@ The buckets created by the module are deleted when access logs or the module are
 
 ### Server header
 
-By default the ALBs do not send their `Server: awselb/2.0` response header. This is set on the HTTP:80 and HTTPS:443 listeners of every IngressClass and Gateway. To send it again:
+By default the Gateway ALBs do not send their `Server: awselb/2.0` response header. To send it again:
 
 ```yaml
 serverHeader: true
 ```
-
-Because the IngressClasses set listener attributes, the `alb.ingress.kubernetes.io/listener-attributes.*` Ingress annotation has no effect on them.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)

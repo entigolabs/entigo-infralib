@@ -21,14 +21,6 @@ spec:
   {{- end }}
   scheme: internal
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
@@ -63,14 +55,6 @@ spec:
   {{- end }}
   scheme: internal
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
@@ -109,14 +93,6 @@ spec:
   {{- end }}
   scheme: internal
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
@@ -151,14 +127,6 @@ spec:
   {{- end }}
   scheme: internal
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
@@ -197,14 +165,6 @@ spec:
   {{- end }}
   scheme: internet-facing
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
@@ -239,14 +199,6 @@ spec:
   {{- end }}
   scheme: internet-facing
   targetType: ip
-  listeners:
-    {{- range list (list "HTTP" 80) (list "HTTPS" 443) }}
-    - protocol: {{ index . 0 }}
-      port: {{ index . 1 }}
-      listenerAttributes:
-        - key: routing.http.response.server.enabled
-          value: {{ $.Values.serverHeader | quote }}
-    {{- end }}
   {{- if .Values.ingressClass.tags }}
   tags:
     {{- toYaml .Values.ingressClass.tags | nindent 4 }}
