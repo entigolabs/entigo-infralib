@@ -290,7 +290,9 @@ run_agents() {
           echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
           exit 5
         fi
-        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+        # The runner is outside the VCN, so the agent's kubeconfig has to use the public
+        # OKE endpoint instead of functions-oracle.sh's private default.
+        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -e OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"

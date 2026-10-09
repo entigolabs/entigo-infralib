@@ -205,9 +205,10 @@ fi
         elif [[ $testname == oracle_* && "$OCI_COMPARTMENT_ID" == "" ]]; then
             echo "Skip $testname test, OCI_COMPARTMENT_ID is not set"
         elif [[ $testname == oracle_* ]]; then
+            # Public OKE endpoint for the same reason as run_agents in generate_config.sh.
             cat agents/$testname/config.yaml
             docker run --rm -v "$OCI_CONFIG_DIR":"$OCI_CONFIG_DIR":ro -v "$(pwd)":"/conf" \
-                -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID -w /conf \
+                -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID -e OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT -w /conf \
                 --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml \
                 --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
             PIDS="$PIDS $!=$testname"
