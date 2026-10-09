@@ -129,3 +129,13 @@ output "object_storage_namespace" {
 output "nlb_nsg_id" {
   value = oci_core_network_security_group.nlb.id
 }
+
+# For node pools created outside this module (modules/oracle/oke-node-pool), so their nodes and
+# pods get the same rules as the pools created here.
+output "node_nsg_id" {
+  value = oci_core_network_security_group.node.id
+}
+
+output "pod_nsg_id" {
+  value = oci_core_network_security_group.pods.id
+}
