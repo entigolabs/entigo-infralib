@@ -40,7 +40,7 @@ RUN apk --no-cache add \
        /root/.cache/pip \
        /usr/lib/python3.*/site-packages/awscli/examples \
        /usr/lib/python3.*/site-packages/*/tests \
-    && find /usr/lib/python3.*/site-packages/oci -type d -name tests -prune -exec rm -rf {} + \
+    && find /usr/local/lib/python3.*/site-packages/oci -type d -name tests -prune -exec rm -rf {} + \
     && find /usr/lib/python3.* -type f -name examples-1.json -delete \
     && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
     && apk del py3-pip
