@@ -1,0 +1,86 @@
+regions:
+  - global
+  - westeurope
+  - swedencentral
+
+blocklist:
+  - "00000000-0000-0000-0000-000000000000"
+
+resource-types:
+  excludes:
+    # Tenant scoped
+    - Application
+    - ApplicationCertificate
+    - ApplicationFederatedCredential
+    - ApplicationSecret
+    - AzureADGroup
+    - AzureADUser
+    - ServicePrincipal
+    # Deleted with their resource group
+    - ApplicationGateway
+    - AppServicePlan
+    - ComputeSnapshot
+    - ContainerRegistry
+    - Disk
+    - DNSZone
+    - IPAllocation
+    - KeyVault
+    - ManagementLock
+    - NetworkInterface
+    - NetworkSecurityGroup
+    - PrivateDNSZone
+    - PublicIPAddress
+    - RecoveryServicesBackupPolicy
+    - RecoveryServicesBackupProtectedItem
+    - RecoveryServicesBackupProtectionContainer
+    - RecoveryServicesBackupProtectionIntent
+    - RecoveryServicesVault
+    - SSHPublicKey
+    - StorageAccount
+    - VirtualMachine
+    - VirtualNetwork
+    # Defender for Cloud state
+    - SecurityAlert
+    - SecurityAssessment
+    - SecurityPricing
+    - SecurityWorkspace
+    # Would delete every subscription role assignment
+    - SubscriptionRoleAssignment
+    # Subscription settings
+    - Budget
+    - MonitorDiagnosticSetting
+    - PolicyAssignment
+    - PolicyDefinition
+
+settings:
+  ResourceGroup:
+    DeleteManaged: true
+    DeleteLocks: true
+    SoftDeleteKeyVaultKeys: true
+    SoftDeleteKeyVaultKeysTag: created-by=entigo-infralib
+
+accounts:
+  e9182de5-0d65-431d-b7c9-d9a604ca3159:
+    filters:
+      ResourceGroup:
+        - property: Name
+          type: glob
+          value: "infralib-permanent-*"
+      DNSRecordSet:
+        - property: ResourceGroup
+          type: regex
+          value: "^infralib-permanent-"
+          invert: true
+      RoleAssignment:
+        - property: PrincipalType
+          value: ServicePrincipal
+          invert: true
+        - property: ResourceGroup
+          type: regex
+          value: "^infralib-permanent-"
+          invert: true
+        - property: PrincipalId
+          type: In
+          values:
+            - 45e7b415-5e04-4dc6-ba0a-8b32b80002c3
+            - c8b79014-36a5-4676-8fad-4cb31fd07111
