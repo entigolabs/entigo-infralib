@@ -34,7 +34,7 @@ func testK8sAzureGateway(t *testing.T, cloudName string, envName string) {
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, albOptions, "alb-controller", 60, 10*time.Second)
 	require.NoError(t, err, "alb-controller deployment error")
 
-	applicationLoadBalancerGVR := schema.GroupVersionResource{Group: "alb.networking.azure.io", Version: "v1", Resource: "applicationloadbalancers"}
+	applicationLoadBalancerGVR := schema.GroupVersionResource{Group: "alb.networking.azure.io", Version: "v1", Resource: "applicationloadbalancer"}
 	_, err = waitUntilConditions(t, kubectlOptions, applicationLoadBalancerGVR, namespaceName, namespaceName, []string{"Accepted", "Deployment"}, 60, 10*time.Second)
 	require.NoError(t, err, "ApplicationLoadBalancer error")
 

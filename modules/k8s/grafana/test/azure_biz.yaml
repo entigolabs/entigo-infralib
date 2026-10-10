@@ -1,3 +1,6 @@
+global:
+  azure:
+    agcHealthCheck: true
 grafana:
   route:
     main:
