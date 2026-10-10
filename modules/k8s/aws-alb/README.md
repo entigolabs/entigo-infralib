@@ -126,6 +126,14 @@ Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.
 
 The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
 
+### Server header
+
+By default the Gateway ALBs do not send their `Server: awselb/2.0` response header. To send it again:
+
+```yaml
+serverHeader: true
+```
+
 
 # Migrating from Ingress to Gateway API (aws-alb module)
 

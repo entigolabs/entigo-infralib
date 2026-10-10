@@ -89,6 +89,9 @@ accessLogs:
       expiration:
         - days: 90
 
+# Server: awselb/2.0 response header of the gateway ALBs
+serverHeader: false
+
 gateways:
   tags: {}
   internal:
