@@ -57,6 +57,10 @@ RUN apk --no-cache add py3-pip \
     && unzip -p /tmp/kubelogin.zip "bin/linux_${TARGETARCH}/kubelogin" > /usr/bin/kubelogin \
     && chmod +x /usr/bin/kubelogin \
     && rm /tmp/kubelogin.zip
+#Trust Let's Encrypt staging roots
+RUN wget --no-verbose -O /usr/local/share/ca-certificates/letsencrypt-stg-root-x1.crt https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem \
+    && wget --no-verbose -O /usr/local/share/ca-certificates/letsencrypt-stg-root-x2.crt https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x2.pem \
+    && update-ca-certificates
 #Install golang. Must satisfy the go directive in common/go.mod, and must
 # match what its pinned dependencies compile with: x/net v0.54.0 drops the
 # http2 server under a go1.27 build constraint, which breaks grpc v1.68.0, so

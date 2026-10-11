@@ -1,3 +1,6 @@
+global:
+  azure:
+    agcHealthCheck: true
 loki:
   fullnameOverride: '{{ .module.name }}'
   nameOverride: '{{ .module.name }}'
