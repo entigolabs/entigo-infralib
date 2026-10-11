@@ -6,11 +6,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  targetRef:
-    group: ""
-    kind: Service
-    name: {{ .Values.gateway.name }}
-    namespace: {{ .Release.Namespace }}
   default:
     interval: 5s
     timeout: 5s
@@ -23,4 +18,8 @@ spec:
         statusCodes:
           - start: 200
             end: 299
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Values.gateway.name }}
 {{- end }}

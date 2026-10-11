@@ -6,11 +6,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  targetRef:
-    group: ""
-    kind: Service
-    name: {{ .Release.Name }}-portal
-    namespace: {{ .Release.Namespace }}
   default:
     interval: 5s
     timeout: 5s
@@ -22,6 +17,10 @@ spec:
         statusCodes:
           - start: 200
             end: 399
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Release.Name }}-portal
 ---
 apiVersion: alb.networking.azure.io/v1
 kind: HealthCheckPolicy
@@ -30,11 +29,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  targetRef:
-    group: ""
-    kind: Service
-    name: {{ .Release.Name }}-core
-    namespace: {{ .Release.Namespace }}
   default:
     interval: 5s
     timeout: 5s
@@ -46,4 +40,8 @@ spec:
         statusCodes:
           - start: 200
             end: 399
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Release.Name }}-core
 {{- end }}
