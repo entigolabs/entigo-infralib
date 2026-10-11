@@ -1,6 +1,10 @@
 package test
 
 import (
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/entigolabs/entigo-infralib-common/azure"
@@ -17,7 +21,9 @@ func checkAksNodePool(t *testing.T, env string) {
 	outputs := azure.GetTFOutputs(t, env)
 	infraOutputs := azure.GetTFOutputsStep(t, env, "infra")
 
-	assert.Equal(t, "aksnodepool", tf.GetStringValue(t, outputs, "aks-node-pool__node_pool_name"))
+	prefix := fmt.Sprintf("%s-%s-aks-node-pool", env, strings.ToLower(os.Getenv("STEP_NAME")))
+	poolName := regexp.MustCompile("[^a-z0-9]").ReplaceAllString(prefix, "")[:12]
+	assert.Equal(t, poolName, tf.GetStringValue(t, outputs, "aks-node-pool__node_pool_name"))
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "aks-node-pool__node_pool_id"), "node_pool_id was not returned")
 	assert.Equal(t, tf.GetStringValue(t, infraOutputs, "aks__cluster_id"), tf.GetStringValue(t, outputs, "aks-node-pool__cluster_id"), "cluster_id must be the infra aks cluster")
 }
