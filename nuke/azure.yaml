@@ -58,6 +58,8 @@ settings:
     DeleteLocks: true
     SoftDeleteKeyVaultKeys: true
     SoftDeleteKeyVaultKeysTag: created-by=entigo-infralib
+  RoleAssignment:
+    IncludeSubscriptionScope: true
 
 accounts:
   e9182de5-0d65-431d-b7c9-d9a604ca3159:
@@ -75,12 +77,14 @@ accounts:
         - property: PrincipalType
           value: ServicePrincipal
           invert: true
-        - property: ResourceGroup
+        - property: Scope
           type: regex
-          value: "^infralib-permanent-"
+          value: "(?i)^/subscriptions/[^/]+(/resourcegroups/infralib-permanent-[^/]+(/.*)?)?$"
           invert: true
         - property: PrincipalId
           type: In
           values:
+            - 0781434a-4e50-47c7-bfb7-2ebf44a8ad8b
             - 45e7b415-5e04-4dc6-ba0a-8b32b80002c3
+            - 39604665-fa38-4ce1-8f20-2590d83cf16f
             - c8b79014-36a5-4676-8fad-4cb31fd07111
