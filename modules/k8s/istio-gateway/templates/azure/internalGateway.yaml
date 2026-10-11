@@ -72,7 +72,6 @@ spec:
           - kind: Secret
             group: ""
             name: {{ $secret }}
-    # Port 80 is shared with the public istio Gateway: only the internal hostnames here
     - name: http
       protocol: HTTP
       port: 80

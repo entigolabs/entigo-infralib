@@ -11,6 +11,6 @@ spec:
     - "*"
     port:
       name: http
-      number: 80
+      number: 8080
       protocol: HTTP
 {{- end }}
