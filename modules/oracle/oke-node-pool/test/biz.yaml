@@ -1,1 +1,6 @@
 node_count: 1
+# Temporary: the released agent_input.yaml does not attach these yet.
+nsg_ids: |
+  ["{{ .toutput.oke.node_nsg_id }}"]
+pod_nsg_ids: |
+  ["{{ .toutput.oke.pod_nsg_id }}"]
