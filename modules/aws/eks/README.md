@@ -54,9 +54,9 @@ __cloudwatch_log_group_tags__ Defaults to {}, additional tags for the CloudWatch
 
 __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or orverride defaults.
 
-__node_repair_config__ Defaults to null (node auto repair disabled). EKS managed node group auto repair configuration, applied to all managed node groups (main, mon, tools and eks_managed_node_groups_extra), extra node groups can override it. To enable set to { enabled = true }, see [aws_eks_node_group node_repair_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_node_group#node_repair_config) for other options.
+__node_repair_config__ Defaults to null (node auto repair disabled). EKS managed node group auto repair configuration, applied to all managed node groups 
 
-__enable_node_monitoring_agent__ Defaults to false, installs the eks-node-monitoring-agent addon so node auto repair can detect more issues than just the kubelet Ready condition. Recommended together with node_repair_config.
+__enable_node_monitoring_agent__ Defaults to false, installs the eks-node-monitoring-agent addon
 
 __node_monitoring_agent_config__ Defaults to {}, configuration values for the eks-node-monitoring-agent addon.
 
