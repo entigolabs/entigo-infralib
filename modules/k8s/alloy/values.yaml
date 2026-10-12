@@ -465,6 +465,11 @@ cluster-metrics:
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
           }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "kubernetes_namespace"
+          }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "pod"
@@ -518,6 +523,11 @@ cluster-metrics:
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
+          }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "kubernetes_namespace"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
@@ -582,9 +592,19 @@ cluster-metrics:
             source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "namespace"
           }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "kubernetes_namespace"
+          }
           rule {
             source_labels = ["__meta_kubernetes_service_name"]
             target_label  = "service"
+          }
+          // Duplicate label for dashboards/queries written against the older Prometheus convention.
+          rule {
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label  = "kubernetes_name"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
