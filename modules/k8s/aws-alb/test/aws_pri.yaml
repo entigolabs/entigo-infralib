@@ -9,6 +9,8 @@ global:
   createType: route
   internalGateway: external
 
+serverHeader: true
+
 accessLogs:
   enabled: true
 

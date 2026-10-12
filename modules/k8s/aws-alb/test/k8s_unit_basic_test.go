@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // GatewayClass and Gateways are provisioned by the module itself,
@@ -21,15 +22,16 @@ const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
 	// access logs are off by default
-	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{"external", "service"})
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{"external", "service"}, false)
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
 	// service gateway is disabled in pri, access logs are off for the internal gateway
-	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"})
+	// pri sends the ALB Server header (serverHeader: true), biz uses the default
+	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"}, true)
 }
 
-func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string, accessLogsDisabled []string) {
+func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string, accessLogsDisabled []string, serverHeader bool) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
@@ -66,7 +68,7 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gat
 
 	// Every enabled gateway gets its own HTTPRoute with a unique hostname
 	for _, gatewayName := range gatewayNames {
-		testGatewayHTTPRoute(t, kubectlOptions, namespaceName, gatewayName, hostName, resourceName)
+		testGatewayHTTPRoute(t, kubectlOptions, namespaceName, gatewayName, hostName, resourceName, serverHeader)
 	}
 
 	err = k8s.DeleteK8SService(t, kubectlOptions, resourceName)
@@ -100,7 +102,7 @@ func testGatewayAccessLogs(t *testing.T, kubectlOptions *terrak8s.KubectlOptions
 	require.Equal(t, "True", ready, "Access logs Bucket %s is not Ready", bucket)
 }
 
-func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayName string, hostName string, backendName string) {
+func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayName string, hostName string, backendName string, serverHeader bool) {
 	// Health check of the module-provisioned Gateway, the helper waits for Programmed
 	existingGateway, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, gatewayName, 60, 5*time.Second)
 	require.NoError(t, err, "Gateway %s availability error", gatewayName)
@@ -153,10 +155,49 @@ func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions,
 	}
 	require.NoError(t, err, "HTTPRoute HTTP test error for gateway %s", gatewayName)
 
+	// The HTTP listener exists while the route is attached
+	err = testGatewayServerHeader(t, kubectlOptions, namespaceName, gatewayAddress, fmt.Sprintf("%s-noroute-%s", strings.ToLower(random.UniqueId()), hostName), serverHeader)
+	if err != nil {
+		_ = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
+	}
+	require.NoError(t, err, "Server header test error for gateway %s", gatewayName)
+
 	err = k8s.DeleteK8SHTTPRoute(t, kubectlOptions, routeName)
 	require.NoError(t, err, "Deleting HTTPRoute error for gateway %s", gatewayName)
 	err = k8s.WaitUntilK8SHTTPRouteDeleted(t, kubectlOptions, routeName, 40, 2*time.Second)
 	require.NoError(t, err, "HTTPRoute didn't get deleted for gateway %s", gatewayName)
+}
+
+// Requests a host without a route, so the ALB answers itself, and checks its Server: awselb header
+func testGatewayServerHeader(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayAddress string, hostname string, expected bool) error {
+	job, err := k8s.ReadObjectFromFile(t, "./templates/serverHeaderJob.yaml")
+	if err != nil {
+		return err
+	}
+	jobName := fmt.Sprintf("%s-server-header-%s", namespaceName, strings.ToLower(random.UniqueId()))
+	job.SetName(jobName)
+	containers, _, err := unstructured.NestedSlice(job.Object, "spec", "template", "spec", "containers")
+	if err != nil {
+		return err
+	}
+	containers[0].(map[string]interface{})["env"] = []interface{}{
+		map[string]interface{}{"name": "TARGET_DOMAIN", "value": hostname},
+		map[string]interface{}{"name": "TARGET_IP", "value": gatewayAddress},
+		map[string]interface{}{"name": "EXPECT_SERVER_HEADER", "value": fmt.Sprintf("%t", expected)},
+	}
+	if err = unstructured.SetNestedSlice(job.Object, containers, "spec", "template", "spec", "containers"); err != nil {
+		return err
+	}
+
+	jobs := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+	if _, err = k8s.CreateObject(t, kubectlOptions, job, kubectlOptions.Namespace, jobs); err != nil {
+		return err
+	}
+	err = terrak8s.WaitUntilJobSucceedE(t, kubectlOptions, jobName, 60, 6*time.Second)
+	logs, _ := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "logs", "job/"+jobName)
+	t.Logf("Server header check for %s:\n%s", gatewayAddress, logs)
+	_, _ = terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "delete", "job", jobName, "--wait=false")
+	return err
 }
 
 func TestK8sAwsAlbBiz(t *testing.T) {
