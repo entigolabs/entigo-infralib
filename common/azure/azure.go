@@ -35,7 +35,7 @@ func Location() string {
 }
 
 func ResourceGroup(prefix string) string {
-	return fmt.Sprintf("%s-infralib-%s", prefix, Location())
+	return fmt.Sprintf("%s-%s", prefix, Location())
 }
 
 func UniqueSuffix(prefix string, subscriptionID string, location string) string {

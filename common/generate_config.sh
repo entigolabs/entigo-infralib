@@ -63,7 +63,7 @@ azure_auth_login() {
 }
 
 azure_kube_context() {
-  az aks get-credentials --resource-group $1-infralib-$AZURE_LOCATION --name $1-infra-aks --overwrite-existing && \
+  az aks get-credentials --resource-group $1-$AZURE_LOCATION --name $1-infra-aks --overwrite-existing && \
     docker run --rm -v "$(echo ~)/.kube":/root/.kube --entrypoint kubelogin $ENTIGO_INFRALIB_IMAGE convert-kubeconfig -l azurecli --context $1-infra-aks
 }
 

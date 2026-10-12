@@ -3,7 +3,7 @@ global:
     subscriptionId: 00000000-0000-0000-0000-000000000000
     tenantId: 00000000-0000-0000-0000-000000000000
     clientId: 00000000-0000-0000-0000-000000000000
-    resourceGroupName: test-infralib-westeurope
+    resourceGroupName: test-westeurope
     location: westeurope
     oidcIssuerUrl: https://westeurope.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/
     identityPrefix: test-infra-aks
