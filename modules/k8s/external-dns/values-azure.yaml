@@ -3,12 +3,14 @@ global:
   azure:
     tenantId: ""
     pubZoneId: ""
-    # Private int zone, written by external-dns-private (azure-private-dns provider)
     intZoneId: ""
 
 external-dns:
   provider:
     name: azure
+  extraArgs:
+    - --metrics-address=:7979
+    - --txt-wildcard-replacement=wildcard
   serviceAccount:
     create: false
     name: external-dns
@@ -41,6 +43,7 @@ external-dns-private:
     - gateway-httproute
   extraArgs:
     metrics-address: ":7979"
+    txt-wildcard-replacement: wildcard
   serviceAccount:
     create: false
     name: external-dns
