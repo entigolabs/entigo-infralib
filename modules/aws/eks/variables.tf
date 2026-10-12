@@ -335,7 +335,7 @@ variable "node_launch_template_tags" {
 }
 
 variable "node_repair_config" {
-  description = "EKS managed node group auto repair configuration (aws_eks_node_group node_repair_config), applied to all managed node groups. Disabled when null, enable with { enabled = true }"
+  description = "Disabled when null, enable with true"
   type        = any
   default     = null
 }
@@ -386,7 +386,6 @@ variable "enable_efs_csi" {
 }
 
 variable "enable_node_monitoring_agent" {
-  description = "Install the eks-node-monitoring-agent EKS addon, lets EKS managed node group auto repair detect more node health issues than the kubelet Ready condition"
   type        = bool
   nullable    = false
   default     = false
