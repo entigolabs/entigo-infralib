@@ -15,3 +15,9 @@ cluster-metrics:
       registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
   externalLabels:
     cluster: "{{ .toutput.eks.cluster_name }}"
+receiver:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

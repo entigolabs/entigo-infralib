@@ -767,3 +767,249 @@ cluster-metrics:
                   operator: In
                   values:
                     - "true"
+
+# ---------------------------------------------------------------------------
+# receiver: single Deployment receiving push-based telemetry that has no pull/scrape alternative —
+# for example OTLP traces and/or Faro (browser RUM).
+# ---------------------------------------------------------------------------
+receiver:
+  enabled: false
+  crds:
+    create: false
+
+  otlp:
+    enabled: false
+    tempoEndpoint: ""
+
+  faro:
+    enabled: false
+    apiKey: ""
+    corsAllowedOrigins: ["*"]
+    lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
+    lokiTenantID: ""
+
+  extraConfig: ""
+
+  alloy:
+    configMap:
+      create: true
+      content: |
+        logging {
+          level  = "warn"
+          format = "json"
+        }
+        {{- if .Values.faro.enabled }}
+
+        loki.write "default" {
+          endpoint {
+            url = {{ .Values.faro.lokiEndpoint | quote }}
+            {{- if .Values.faro.lokiTenantID }}
+            tenant_id = {{ .Values.faro.lokiTenantID | quote }}
+            {{- end }}
+          }
+        }
+
+        faro.receiver "default" {
+          extra_log_labels = {
+            app             = "",
+            kind            = "",
+            app_environment = "",
+            app_name        = "",
+            event           = "",
+            event_name      = "",
+            source          = "faro-sdk",
+          }
+          server {
+            listen_address      = "0.0.0.0"
+            listen_port         = 12347
+            api_key             = {{ .Values.faro.apiKey | quote }}
+            cors_allowed_origins = {{ .Values.faro.corsAllowedOrigins | toJson }}
+          }
+
+          output {
+            logs = [loki.process.faro_labels.receiver]
+          }
+        }
+
+        loki.process "faro_labels" {
+          forward_to = [loki.relabel.faro_transform.receiver]
+          stage.logfmt {
+            mapping = {
+              "app_name"        = "",
+              "app_environment" = "",
+              "event_name"      = "",
+              "kind"            = "",
+            }
+          }
+          stage.labels {
+            values = {
+              app_name        = "",
+              app_environment = "",
+              "event_name"    = "",
+              kind            = "",
+            }
+          }
+        }
+
+        loki.relabel "faro_transform" {
+          forward_to = [loki.write.default.receiver]
+
+          rule {
+            source_labels = ["app_environment"]
+            target_label  = "environment"
+          }
+          rule {
+            source_labels = ["event_name"]
+            target_label  = "event"
+          }
+          rule {
+            source_labels = ["app_name"]
+            target_label  = "app"
+          }
+          rule {
+            action = "labeldrop"
+            regex  = "event_name|app_name|app_environment"
+          }
+        }
+        {{- end }}
+        {{- if .Values.otlp.enabled }}
+
+        otelcol.receiver.otlp "default" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+
+          output {
+            traces = [otelcol.exporter.otlphttp.tempo.input]
+          }
+        }
+
+        otelcol.exporter.otlphttp "tempo" {
+          client {
+            endpoint = {{ required "receiver.otlp.tempoEndpoint must be set when receiver.otlp.enabled is true" .Values.otlp.tempoEndpoint | quote }}
+          }
+        }
+        {{- end }}
+        {{- if .Values.extraConfig }}
+        {{ .Values.extraConfig | nindent 8 }}
+        {{- end }}
+
+      name: null
+      key: null
+
+    extraPorts:
+      # Bound only when faro.enabled renders the faro.receiver block above.
+      - name: "http-faro"
+        port: 12347
+        targetPort: 12347
+        protocol: "TCP"
+        appProtocol: "http"
+      # Bound only when otlp.enabled renders the otelcol.receiver.otlp block above.
+      - name: "grpc-otlp"
+        port: 4317
+        targetPort: 4317
+        protocol: "TCP"
+        appProtocol: "grpc"
+      - name: "http-otlp"
+        port: 4318
+        targetPort: 4318
+        protocol: "TCP"
+        appProtocol: "http"
+
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    enableHttpServerPort: false
+    enableReporting: false
+
+  # This subchart's sole purpose is being a stable Service (receiver) for push clients (OTLP exporters, browser Faro SDK).
+  service:
+    enabled: true
+    type: ClusterIP
+
+  # This receiver pod has no legitimate reason to talk to the K8s API server — and it's the one subchart reachable
+  # from outside the cluster. Keep it unprivileged: no ClusterRole, no token to steal even if asked for one.
+  rbac:
+    create: false
+
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
+
+  configReloader:
+    enabled: false
+
+  networkPolicy:
+    enabled: true
+    policyTypes:
+      - Ingress
+      - Egress
+    # Receiver endpoint: callers can be any pod in the mesh.
+    ingress:
+      - {}
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Tempo
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+
+  controller:
+    type: "deployment"
+    replicas: 2
+    priorityClassName: "alloy"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "12345"
+    podDisruptionBudget:
+      # Keeps an endpoint alive for push-based clients (OTLP exporters, Faro) during node/pod churn.
+      enabled: true
+      maxUnavailable: 1

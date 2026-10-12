@@ -52,6 +52,13 @@ node-agent:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
 
+receiver:
+  image:
+    registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.gar-proxy.quay_registry | "quay.io" }}'
+
 cluster-metrics:
   image:
     registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}'

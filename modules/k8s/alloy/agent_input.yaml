@@ -9,3 +9,8 @@ cluster-metrics:
   controller:
     priorityClassName: "{{ .module.name }}"
   mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+receiver:
+  controller:
+    priorityClassName: "{{ .module.name }}"
+  faro:
+    lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
