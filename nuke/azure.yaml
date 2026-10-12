@@ -73,6 +73,11 @@ accounts:
           type: regex
           value: "^infralib-permanent-"
           invert: true
+      PrivateDNSRecordSet:
+        - property: ResourceGroup
+          type: regex
+          value: "^infralib-permanent-"
+          invert: true
       RoleAssignment:
         - property: PrincipalType
           value: ServicePrincipal
