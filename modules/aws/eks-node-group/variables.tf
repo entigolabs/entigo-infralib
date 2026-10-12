@@ -139,6 +139,12 @@ variable "taints" {
   default     = {}
 }
 
+variable "node_repair_config" {
+  description = "EKS managed node group auto repair configuration (aws_eks_node_group node_repair_config). Disabled when null, enable with { enabled = true }"
+  type        = any
+  default     = null
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

@@ -334,6 +334,12 @@ variable "node_launch_template_tags" {
   nullable = false
 }
 
+variable "node_repair_config" {
+  description = "EKS managed node group auto repair configuration (aws_eks_node_group node_repair_config), applied to all managed node groups. Disabled when null, enable with { enabled = true }"
+  type        = any
+  default     = null
+}
+
 variable "coredns_addon_version" {
   type = string
   default = "v1.13.2-eksbuild.4"
@@ -359,6 +365,11 @@ variable "efs_csi_addon_version" {
   default = "v3.2.0-eksbuild.1"
 }
 
+variable "node_monitoring_agent_addon_version" {
+  type = string
+  default = "v1.7.2-eksbuild.1"
+}
+
 variable "enable_vpc_cni_prefix_delegation" {
   type    = string
   default = "true"
@@ -372,6 +383,13 @@ variable "enable_vpc_cni_network_policy" {
 variable "enable_efs_csi" {
   type    = bool
   default = false
+}
+
+variable "enable_node_monitoring_agent" {
+  description = "Install the eks-node-monitoring-agent EKS addon, lets EKS managed node group auto repair detect more node health issues than the kubelet Ready condition"
+  type        = bool
+  nullable    = false
+  default     = false
 }
 
 variable "coredns_config" {
@@ -399,35 +417,16 @@ variable "efs_csi_controller_config" {
   default = {}
 }
 
+variable "node_monitoring_agent_config" {
+  description = "eks-node-monitoring-agent EKS addon configuration_values"
+  type     = any
+  nullable = false
+  default  = {}
+}
+
 
 variable "tags" {
   type        = map(string)
   description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
   default     = {}
-}
-
-variable "node_repair_config" {
-  description = "Node auto repair configuration for all managed node groups, for example { enabled = true }"
-  type        = any
-  default     = null
-}
-
-variable "enable_node_monitoring_agent" {
-  description = "Install the eks-node-monitoring-agent addon, lets node auto repair detect more node health issues"
-  type        = bool
-  nullable    = false
-  default     = false
-}
-
-variable "node_monitoring_agent_addon_version" {
-  description = "Defaults to the AWS default addon version for the cluster version"
-  type        = string
-  nullable    = false
-  default     = ""
-}
-
-variable "node_monitoring_agent_config" {
-  type     = any
-  nullable = false
-  default  = {}
 }

@@ -386,8 +386,7 @@ module "eks" {
     eks-node-monitoring-agent = merge({
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
-      addon_version               = var.node_monitoring_agent_addon_version != "" ? var.node_monitoring_agent_addon_version : null
-      most_recent                 = false
+      addon_version               = var.node_monitoring_agent_addon_version
     }, length(var.node_monitoring_agent_config) > 0 ? {
       configuration_values = jsonencode(var.node_monitoring_agent_config)
     } : {})

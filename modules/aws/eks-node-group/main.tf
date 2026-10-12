@@ -69,6 +69,7 @@ module "eks-managed-node-group" {
   
   labels = var.labels
   taints = var.taints
+  node_repair_config = var.node_repair_config
   launch_template_tags = merge({
     Terraform  = "true"
     Prefix     = var.prefix
