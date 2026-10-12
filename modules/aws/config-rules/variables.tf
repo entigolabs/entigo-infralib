@@ -23,6 +23,16 @@ variable "iam_password_policy_enabled" {
   default = false
 }
 
+variable "ebs_encryption_by_default" {
+  type    = bool
+  default = true
+}
+
+variable "ebs_default_kms_key" {
+  type    = string
+  default = ""
+}
+
 variable "multi_region_cloudtrail_enabled" {
   type    = bool
   default = false

@@ -3,7 +3,7 @@
 
 module "kms_telemetry" {
   source = "terraform-aws-modules/kms/aws"
-  version = "4.2.0"
+  version = "4.2.2"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} telemetry"
@@ -145,6 +145,45 @@ module "kms_telemetry" {
           ]
         }
       ]
+    },
+    #Log delivery to S3 buckets encrypted with this key (VPC flow logs), only from this account and region
+    #https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-infrastructure-V2-S3.html#AWS-logs-SSE-KMS-S3-V2
+    {
+      principals = [
+        {
+          type        = "Service"
+          identifiers = ["delivery.logs.amazonaws.com"]
+        }
+      ]
+
+      actions = [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ]
+
+      resources = [
+        "*",
+      ]
+
+      condition = [
+        {
+          test     = "StringEquals"
+          variable = "aws:SourceAccount"
+          values = [
+            data.aws_caller_identity.current.account_id
+          ]
+        },
+        {
+          test     = "ArnLike"
+          variable = "aws:SourceArn"
+          values = [
+            "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+          ]
+        }
+      ]
     }
   ]
   
@@ -160,7 +199,7 @@ module "kms_telemetry" {
 
 module "kms_config" {
   source = "terraform-aws-modules/kms/aws"
-  version = "4.2.0"
+  version = "4.2.2"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} config"
@@ -256,7 +295,7 @@ module "kms_config" {
 
 module "kms_data" {
   source = "terraform-aws-modules/kms/aws"
-  version = "4.2.0"
+  version = "4.2.2"
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} data"

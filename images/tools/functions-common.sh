@@ -1,8 +1,9 @@
 #!/bin/bash
 # Common functions shared across all cloud providers
 
-# TF_TOOL controls which binary is used: terraform (default) or tofu
-TF_TOOL=${TF_TOOL:-terraform}
+# TF_TOOL controls which binary is used. Only tofu ships in the image; the agent
+# sets TF_TOOL=tofu explicitly, this default covers running the scripts without it.
+TF_TOOL=${TF_TOOL:-tofu}
 
 # Run Go tests
 run_tests() {
@@ -51,13 +52,19 @@ terraform_plan() {
         echo "Failed to create TF plan!"
         exit 6
     fi
-    # Generate JSON plan output in local mode only
-    if [ "$LOCAL_MODE" == "true" ]; then
-        $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > /plan-json/${TF_VAR_prefix}-plan.json
-        if [ $? -ne 0 ]; then
-            echo "Failed to create json plan from TF plan!"
-            exit 6
-        fi
+    $TF_TOOL show -json ${TF_VAR_prefix}.tf-plan > plan.json
+    if [ $? -ne 0 ]; then
+        echo "Failed to create json plan from TF plan!"
+        exit 6
+    fi
+}
+
+# Upload the JSON plan to the bucket
+upload_plan_json() {
+    local plan_json="steps/$TF_VAR_prefix/plan.json"
+    if [ -f "$plan_json" ]; then
+        echo "Copy json plan to bucket"
+        copy_to_bucket "$plan_json" "$INFRALIB_BUCKET" "$TF_VAR_prefix/plan.json"
     fi
 }
 
@@ -204,13 +211,47 @@ handle_failed_jobs() {
 # Authenticate git repos if available
 git_login() {
     for var in "${!GIT_AUTH_SOURCE_@}"; do
-      printf 'Configure git credentials for %s=%s\n' "$var" "${!var}"
-            #SOURCE="$(echo ${!var} | grep -oP '(?<=://)[^/]+')"
+        printf 'Configure credentials for %s=%s\n' "$var" "${!var}"
+        PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
+        USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
+        if [[ "${!var}" =~ ^(https?|ssh):// || "${!var}" =~ ^git@ ]]; then
+            # GIT source, rewrite the host to include credentials
             SOURCE="$(echo ${!var} | sed -n 's|.*://\([^/]*\).*|\1|p')"
-            PASSWORD="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_PASSWORD/g')"
-            USERNAME="$(echo $var | sed 's/GIT_AUTH_SOURCE/GIT_AUTH_USERNAME/g')"
             git config --global url."https://${!USERNAME}:${!PASSWORD}@${SOURCE}".insteadOf https://${SOURCE}
+        else
+            # OCI source, OpenTofu reads oci_credentials blocks from the CLI config
+            # The label supports a registry domain with an optional repository path prefix
+            SOURCE="${!var#oci://}"
+            tofurc_credentials "${SOURCE}" "  username = \"${!USERNAME}\"
+  password = \"${!PASSWORD}\""
+        fi
     done
+
+    # OCI_REGION must be checked before AWS_REGION: the OCI s3-compatible backend
+    # also sets AWS_REGION, which would otherwise match the AWS branch and try to
+    # hit AWS STS / write an ECR helper. Oracle OCIR credentials arrive via the
+    # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
+    if [ -n "$OCI_REGION" ]; then
+      :
+    elif [ -n "$AWS_REGION" ]; then
+      # Get current account number
+      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+      tofurc_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" '  docker_credentials_helper = "ecr-login"'
+    elif [ ! -z "$GOOGLE_REGION" ]; then
+      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" '  docker_credentials_helper = "gcloud"'
+    fi
+}
+
+# Appends an oci_credentials block for a registry to the OpenTofu CLI config
+# unless one is there already: in a local pipeline the plan and the apply run
+# in one container, and OpenTofu warns about every duplicate block.
+tofurc_credentials() {
+    local registry="$1" body="$2"
+    if [ -f "$HOME/.tofurc" ] && grep -q "^oci_credentials \"${registry}\" {" "$HOME/.tofurc"; then
+        return
+    fi
+    printf 'oci_credentials "%s" {\n%s\n}\n' "${registry}" "${body}" >> "$HOME/.tofurc"
 }
 
 # Setup CA certificates
@@ -239,4 +280,16 @@ terraform_init() {
         echo "Terraform init failed."
         exit 14
     fi
+}
+
+# Get ArgoCD hostname, prefer Gateway API HTTPRoute and fall back to Ingress
+get_argocd_hostname() {
+    local host
+    # HTTPRoute first; Ingress is on the deprecation path
+    host=$(kubectl get httproute -n ${ARGOCD_NAMESPACE} \
+        -o jsonpath='{.items[*].spec.hostnames[*]}' 2>/dev/null | awk '{print $1}')
+    # Fall back to Ingress (ALB controller path)
+    [ -z "${host}" ] && host=$(kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server \
+        -o jsonpath='{.items[*].spec.rules[*].host}' 2>/dev/null | awk '{print $1}')
+    echo "${host}"
 }

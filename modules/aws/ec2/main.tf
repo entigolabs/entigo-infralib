@@ -1,9 +1,9 @@
 resource "aws_eip" "ec2" {
   count = var.eip ? 1 : 0
   instance = aws_instance.ec2.id
-  tags = {
+  tags = merge({
     created-by = "entigo-infralib"
-  }
+  }, var.tags)
 }
 
 data "aws_ami" "ec2" {
@@ -71,14 +71,18 @@ resource "aws_instance" "ec2" {
     volume_type = var.volume_type
     encrypted = var.kms_key_id != "" ? true : false
     kms_key_id = var.kms_key_id != "" ? data.aws_kms_key.alias[0].arn : null
+    tags = merge({
+      "Name" = var.prefix
+      created-by = "entigo-infralib"
+    }, var.tags)
   }
 
-  tags = {
+  tags = merge({
     "Name" = var.prefix
     Terraform   = "true"
     Environment = var.prefix
     created-by = "entigo-infralib"
-  }
+  }, var.tags)
   lifecycle {
      ignore_changes = [ user_data_base64, ami ]
   }

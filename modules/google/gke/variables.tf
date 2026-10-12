@@ -7,6 +7,22 @@ variable "kubernetes_version" {
   default = "1.35."
 }
 
+variable "maintenance_exclusions" {
+  type = list(object({
+    name            = string
+    start_time      = string
+    end_time        = string
+    exclusion_scope = string
+  }))
+  default = null
+}
+
+variable "maintenance_exclusion_window_days" {
+  # Test env can set this higher, prod stays small; weekly runs refresh it
+  type    = number
+  default = 60
+}
+
 variable "preserve_kubernetes_version" {
   type        = bool
   default     = false

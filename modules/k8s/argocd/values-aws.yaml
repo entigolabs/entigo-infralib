@@ -7,7 +7,6 @@ argocd:
       server.insecure: false
   server:
     ingress:
-      enabled: true
       controller: aws
       ingressClassName: "alb"
       annotations:

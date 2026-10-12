@@ -6,22 +6,41 @@ on:
       - main
     paths:
       - 'images/test/**'
+      # The image caches the Go modules of the shared test library, so a
+      # dependency change there must rebuild it or every module test downloads.
+      - 'common/go.mod'
+      - 'common/go.sum'
+      - 'common/**/*.go'
   pull_request:
     branches:
       - main
     paths:
       - 'images/test/**'
+      # The image caches the Go modules of the shared test library, so a
+      # dependency change there must rebuild it or every module test downloads.
+      - 'common/go.mod'
+      - 'common/go.sum'
+      - 'common/**/*.go'
   workflow_dispatch:
   workflow_run:
     workflows: ["Build images/google"]
     types: [completed]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Group by the branch the cascade started from. On a workflow_run event
+  # github.ref is always the default branch, so a PR's cascade and main's
+  # cascade shared one group and cancelled each other; head_branch carries the
+  # parent run's real branch. head_ref covers direct PR runs, so a PR's direct
+  # build and its cascaded build serialise instead of racing on the same tag.
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.head_ref || github.ref_name }}
+  # Superseding an earlier run is right when a PR gets a new push, but a
+  # workflow_run run is the only build triggered by its parent, so cancelling
+  # it just loses an image. Those queue instead.
+  cancel-in-progress: ${{ github.event_name != 'workflow_run' }}
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/build-images.yaml
     with:
       path: images/test

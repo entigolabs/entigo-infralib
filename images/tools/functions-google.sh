@@ -69,18 +69,14 @@ fetch_plan_artifact() {
 upload_plan_artifact() {
     if [ "$LOCAL_MODE" != "true" ]; then
       cd ../..
-      tar -czf tf.tar.gz "steps/$prefix"
+      tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
       echo "Copy plan to Google Storage"
       gsutil -m -q cp tf.tar.gz "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz"
+      upload_plan_json
     fi
 }
 
 # Get Kubernetes credentials
 get_k8s_credentials() {
     gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
-}
-
-# Get ArgoCD hostname
-get_argocd_hostname() {
-    kubectl get httproute -n ${ARGOCD_NAMESPACE} -o jsonpath='{.items[*].spec.hostnames[*]}'
 }

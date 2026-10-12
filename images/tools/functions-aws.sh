@@ -71,15 +71,11 @@ upload_plan_artifact() {
       # Just create the tar.gz for CodeBuild to pick up
       cd ../..
       tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
+      upload_plan_json
     fi
 }
 
 # Get Kubernetes credentials
 get_k8s_credentials() {
     aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
-}
-
-# Get ArgoCD hostname
-get_argocd_hostname() {
-    kubectl get ingress -n ${ARGOCD_NAMESPACE} -l app.kubernetes.io/component=server -o jsonpath='{.items[*].spec.rules[*].host}'
 }

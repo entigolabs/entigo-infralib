@@ -1,13 +1,12 @@
+# No gateway pin here: the chain in agent_input.yaml resolves it, and
+# google-gateway/test points internalGateway at the external gateway,
+# which is the one this test probes.
 kiali-server:
   auth:
     strategy: openid
     openid:
-      client_id: "343161107562659633"
+      client_id: "390879730326400097"
       disable_rbac: true
       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
       scopes: ["openid", "profile", "email", "roles"]
       username_claim: "email"
-global:
-  google:
-    gateway:
-      name: "google-gateway-external"

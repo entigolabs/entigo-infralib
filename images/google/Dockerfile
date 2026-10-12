@@ -1,5 +1,5 @@
-ARG TOOLS_TAG=latest
-FROM entigolabs/entigo-infralib-tools:${TOOLS_TAG} AS tools
+ARG BASE_TAG=latest
+FROM entigolabs/entigo-infralib-tools:${BASE_TAG} AS tools
 FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 
@@ -20,6 +20,7 @@ RUN apk --no-cache add \
     gcloud components install -q beta && \
     gcloud components install -q gke-gcloud-auth-plugin && \
     gcloud components update && \
+    gcloud components remove -q bq && \
     git config --system credential.'https://source.developers.google.com'.helper gcloud.sh && \
     echo "cloudsdk ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/cloudsdk && \
     chown cloudsdk /usr/local/share/ca-certificates

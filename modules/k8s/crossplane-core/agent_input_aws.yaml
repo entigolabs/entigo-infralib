@@ -1,6 +1,4 @@
 crossplane:
-  image:
-    repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/crossplane/crossplane'
   serviceAccount:
     customAnnotations: 
       eks.amazonaws.com/role-arn: "{{ .toutput.crossplane.iam_role_core }}"
@@ -10,9 +8,4 @@ global:
     region: "{{ .toutput.eks.region }}"
     ecrPolicy: "{{ .toptout.ecr-proxy.policy }}"
 
-job:
-  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 
-imageConfigs:
-  hubProxy: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs'
-  ghcrProxy: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/entigolabs'

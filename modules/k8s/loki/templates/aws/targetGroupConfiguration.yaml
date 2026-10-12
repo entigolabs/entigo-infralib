@@ -1,0 +1,20 @@
+{{- if and (eq .Values.global.cloudProvider "aws") (.Values.loki.gateway.route.main.enabled) }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ .Values.loki.fullnameOverride }}-gateway
+  namespace: {{ .Release.Namespace }}
+spec:
+  # Must reference the Service in the same namespace
+  targetReference:
+    name: {{ .Values.loki.fullnameOverride }}-gateway
+  defaultConfiguration:
+    # Replaces alb.ingress.kubernetes.io/target-type: ip
+    targetType: ip
+    healthCheckConfig:
+      # Replaces healthcheck-path and success-codes annotations,
+      # nginx gateway returns 404 on unknown paths hence 200-499
+      healthCheckPath: /
+      matcher:
+        httpCode: "200-499"
+{{- end }}

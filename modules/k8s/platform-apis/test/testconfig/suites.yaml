@@ -3,8 +3,10 @@ suites:
   - kafka
   - postgresql
   - repository
+  - rabbitmq
   - s3bucket
   - valkey
+  - mariadb
   - webaccess
   - webapp
   - zone

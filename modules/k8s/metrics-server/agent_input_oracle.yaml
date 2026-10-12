@@ -1,0 +1,7 @@
+metrics-server:
+  # No Oracle registry-proxy module exists yet, so the upstream registry is hardcoded rather
+  # than routed through a .toptout.<proxy> that does not exist for this cloud. It must stay
+  # fully qualified: OKE's runtime refuses unqualified image names ("short name mode is
+  # enforcing ... returns ambiguous list").
+  image:
+    repository: registry.k8s.io/metrics-server/metrics-server

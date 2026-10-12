@@ -3,9 +3,10 @@ name: argocd-ecr-updater
 description: argocd-ecr-updater
 version: 0.1.0
 appVersion: "0.1.0"
+deprecated: true
 
 dependencies:
 - name: argocd-ecr-updater
-  version: 0.3.36
+  version: 0.3.39
   repository: https://karlderkaefer.github.io/argocd-ecr-updater
   alias: argocd-ecr-updater

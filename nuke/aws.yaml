@@ -1,0 +1,181 @@
+regions:
+- us-east-1
+- eu-north-1
+- eu-central-1
+- global
+
+blocklist:
+- 738582102279
+- 046792967279
+- 324427516708
+
+resource-types:
+  alternatives:
+  - AWS::ECR::RepositoryCreationTemplate
+  - AWS::MSK::ServerlessCluster
+  excludes:
+  - EC2KeyPair
+  - IAMSAMLProvider
+  - ElasticacheCacheParameterGroup
+  - Route53ResolverRule
+  - SESReceiptFilter
+  - FMSNotificationChannel
+  - SESReceiptRuleSet
+  - FMSPolicy
+  - AWS::Timestream::Database
+  - AWS::Timestream::ScheduledQuery
+  - AWS::Timestream::Table
+  - AWS::AppFlow::ConnectorProfile
+  - AWS::AppFlow::Flow
+  - AWS::AppRunner::Service
+  - AthenaWorkGroup
+  - AthenaDataCatalog
+  - MediaConvertQueue
+  - CloudWatchEventsTarget
+  - CloudWatchEventsRule
+  - QuickSightUser
+  - QuickSightSubscription
+  - XRaySamplingRule
+  - XRayGroup
+  - SageMakerApp
+  - SageMakerDomain
+  - SageMakerEndpointConfig
+  - SageMakerEndpoint
+  - SageMakerModel
+  - SageMakerNotebookInstanceLifecycleConfig
+  - SageMakerNotebookInstance
+  - SageMakerNotebookInstanceState
+  - SageMakerSpace
+  - SageMakerUserProfiles
+  - RoboMakerSimulationJob
+  - RoboMakerSimulationApplication
+  - RoboMakerRobotApplication
+  - LightsailStaticIP
+  - LightsailLoadBalancer
+  - LightsailKeyPair
+  - LightsailInstance
+  - LightsailDomain
+  - LightsailDisk
+  - LexSlotType
+  - LexModelBuildingServiceBotAlias
+  - LexIntent
+  - LexBot
+  - CodeStarProject
+  - CodeStarNotificationRule
+  - CodeStarConnection
+  - GameLiftFleet
+  - GameLiftBuild
+  - GameLiftQueue
+  - GameLiftMatchmakingConfiguration
+  - GameLiftMatchmakingRuleSet
+  - OSPackage
+  - ECRPublicRepository
+  - ECSCapacityProvider
+  - OpsWorksLayer
+  - OpsWorksApp
+  - OpsWorksUserProfile
+  - OpsWorksInstance
+  - OpsWorksCMBackup
+  - OpsWorksCMServerState
+  - OpsWorksCMServer
+  - CloudSearchDomain
+  - MachineLearningEvaluation
+  - MachineLearningDataSource
+  - MachineLearningBranchPrediction
+  - MachineLearningMLModel
+  - ElasticTranscoderPipeline
+  - ElasticTranscoderPreset
+  - TranscribeLanguageModel
+  - SNSSubscription
+  - AppStreamImage
+  - AppConfigDeploymentStrategy
+  - MemoryDBParameterGroup
+  - CodeDeployDeploymentConfig
+  - CodePipelineCustomActionType
+  - DAXParameterGroup
+  - MemoryDBACL
+  - BedrockCustomModel
+  - BedrockAgent
+  - BedrockPrompt
+  - BedrockEvaluationJob
+  - BedrockModelCustomizationJob
+  - Inspector2
+  - InspectorAssessmentRun
+  - InspectorAssessmentTarget
+  - InspectorAssessmentTemplate
+
+accounts:
+  "877483565445":
+    filters:
+      AWSBackupVaultAccessPolicy:
+        - "aws/efs/automatic-backup-vault"
+      AWSBackupVault:
+        - "aws/efs/automatic-backup-vault"
+        - "Default"
+      SecretsManagerSecret:
+      - "arn:aws:secretsmanager:eu-north-1:877483565445:secret:saml-proxy-biz-7uHnJt"
+      - "arn:aws:secretsmanager:eu-north-1:877483565445:secret:saml-proxy-pri-wFh1pu"
+      ECRRepository:
+      - "Repository: entigo-portal-agent"
+      Route53HostedZone:
+      - "/hostedzone/Z07983041XRLSLZUTHHDY (infralib.entigo.io.)" #infralib.entigo.io.
+      SSMParameter:
+      - "/argocd-pri/clientSecret"
+      - "/argocd-biz/clientSecret"
+      - "/entigo-portal/agent-biz/CLIENT_SECRET"
+      - "/entigo-portal/agent-pri/CLIENT_SECRET"
+      - "/entigo-portal/vulnerability-agent-pri/CLIENT_SECRET"
+      - "/entigo-portal/vulnerability-agent-biz/CLIENT_SECRET"
+      - "/ecr-proxy/hub/token"
+      - "/ecr-proxy/hub/username"
+      - "/ecr-proxy/ghcr/token"
+      - "/ecr-proxy/ghcr/username"
+      Route53ResourceRecordSet:
+      - "gcp.infralib.entigo.io." 
+      - "oci.infralib.entigo.io."
+      - "azure.infralib.entigo.io."
+      IAMUser:
+      - "github"
+      - "eks-test"
+      - "maintainer"
+      - "contributor"
+      - "github-example"
+      IAMUserPolicyAttachment:
+      - "github -> AdministratorAccess"
+      - "github-example -> AdministratorAccess"
+      IAMUserPolicy:
+      - "maintainer -> maintainer"
+      - "contributor -> contributor"
+      IAMUserAccessKey:
+      - "github -> AKIA4YTQYUGC4RTLXD6W"
+      - "github -> AKIA4YTQYUGCUQMU3R4L"
+      - "maintainer -> AKIA4YTQYUGCXECEMVON"
+      - "maintainer -> AKIA4YTQYUGC7QHRLMAL"
+      - "contributor -> AKIA4YTQYUGCXBN2REI6"
+      - "github-example -> AKIA4YTQYUGCS4MSLLTM"
+      EC2TGW:
+      - "tgw-092384f97967bfffe"
+      IAMRole:
+      - "AWSReservedSSO_AdministratorAccess_092014765180ea16"
+      - "AWSServiceRoleForElastiCache"
+      - "OrganizationAccountAccessRole"
+      - "AWSServiceRoleForTrustedAdvisor"
+      - "AWSServiceRoleForSSO"
+      - "AWSServiceRoleForSupport"
+      IAMRolePolicyAttachment:
+      - "AWSReservedSSO_AdministratorAccess_092014765180ea16 -> AdministratorAccess"
+      - "AWSServiceRoleForElastiCache -> ElastiCacheServiceRolePolicy"
+      - "AWSServiceRoleForOrganizations -> AWSOrganizationsServiceTrustPolicy"
+      - "AWSServiceRoleForSSO -> AWSSSOServiceRolePolicy"
+      - "AWSServiceRoleForSupport -> AWSSupportServiceRolePolicy"
+      - "AWSServiceRoleForTrustedAdvisor -> AWSTrustedAdvisorServiceRolePolicy"
+      - "OrganizationAccountAccessRole -> AdministratorAccess"
+      CloudTrailTrail:
+      - "entigo-org-trail"
+      # AWS-managed ElastiCache IAM defaults, created in every region alongside
+      # AWSServiceRoleForElastiCache. Not deletable: the dot in the ID fails
+      # DeleteUser/DeleteUserGroup validation. Upstream: ekristen/aws-nuke#1039
+      ElasticacheUser:
+      - "default.iam-user"
+      ElasticacheUserGroup:
+      - "default.iam-user-group"

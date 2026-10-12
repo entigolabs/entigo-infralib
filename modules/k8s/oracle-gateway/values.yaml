@@ -1,0 +1,26 @@
+global:
+  cloudProvider: ""
+  # Name of the Gateway other modules attach their HTTPRoutes to. Gateways are named after
+  # their own key under `gateways`, the way modules/k8s/aws-alb names its, so these are just
+  # the built-in entries' names - change them only when those entries are renamed.
+  internalGateway: internal
+  externalGateway: external
+
+gatewayClassName: istio
+
+# One Gateway (= one NIC IngressClass + OCI load balancer) per entry. Any map entry with
+# enabled: true becomes a Gateway, its Ingress, its backend-tls Secret and its options
+# ConfigMap - all named after the entry's key, the way modules/k8s/aws-alb names its own
+# gateways. Gateways are namespaced, so the unprefixed names cannot collide with another
+# deployment's.
+gateways:
+  external:
+    enabled: true
+    ingressClassName: external
+    certificateOcid: ""
+    domain: ""
+  internal:
+    enabled: true
+    ingressClassName: internal
+    certificateOcid: ""
+    domain: ""

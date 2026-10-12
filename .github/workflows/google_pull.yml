@@ -26,8 +26,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
     - name: Get changed files
       if: github.event_name == 'pull_request'
       id: changed-files
@@ -43,10 +41,17 @@ jobs:
           # Use the manually provided module path
           MODULES='["${{ inputs.module }}"]'
         else
-          # Extract unique module paths, excluding nuke files
+          # Extract unique module paths then keep only
+          # the ones that are an actual module, i.e. a directory with a test.sh.
+          # This drops files that live directly under modules/google, such as
+          # README.md, and modules deleted by this pull request.
           MODULES=$(for file in ${{ steps.changed-files.outputs.all_changed_files }} ${{ steps.changed-files.outputs.deleted_files }}; do
-            echo "$file" | grep "modules/google" | grep -ve"nuke\.sh\|google-nuke-config\.yaml" | cut -d'/' -f1-3
-          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "$file" | grep "modules/google" | cut -d'/' -f1-3
+          done | sort -u | while read -r module; do
+            if [ -f "$module/test.sh" ]; then
+              echo "$module"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
         fi
 
         echo "Detected modules: $MODULES"
@@ -79,7 +84,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: Wait for other workflow runs
       uses: softprops/turnstyle@v3
       with:

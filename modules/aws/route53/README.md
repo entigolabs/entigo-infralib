@@ -3,7 +3,7 @@ This module is no longer actively developed, please use aws-v2/route53 module in
 
 ## Migration from aws/route53 to aws-v2/route53-v2
 
-In this migration the route53 module has a name "dns" and it is in the "infra" step. The terraform commands will have to be changed to suite your configuration.
+In this migration the route53 module has a name "dns" and it is in the "infra" step. The tofu commands will have to be changed to suite your configuration.
 
 Example original configuration:
 ```
@@ -44,27 +44,27 @@ Move the aws_acm_certificate, aws_route53_zone and aws_route53_record resources 
 docker run -it --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_REGION=$AWS_REGION -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --entrypoint /bin/bash entigolabs/entigo-infralib-aws
 aws s3 cp s3://<CONFIG PREFIX>-<ACCOUNT NUMBER>-$AWS_REGION/steps/<CONFIG PREFIX>-<STEP NAME> ./tmp --recursive --exclude "*.terraform/*"
 cd ./tmp
-terraform init -input=false -backend-config=backend.conf
-terraform plan #The plan will show that it want to destroy many resources. 
-terraform state list | grep aws_acm_certificate
-terraform state mv 'module.dns.aws_acm_certificate.int[0]' 'module.dns.aws_acm_certificate.this["private"]'
-terraform state mv 'module.dns.aws_acm_certificate.pub[0]' 'module.dns.aws_acm_certificate.this["public"]'
-terraform state list | grep aws_acm_certificate
+tofu init -input=false -reconfigure -backend-config=backend.conf
+tofu plan #The plan will show that it want to destroy many resources. 
+tofu state list | grep aws_acm_certificate
+tofu state mv 'module.dns.aws_acm_certificate.int[0]' 'module.dns.aws_acm_certificate.this["private"]'
+tofu state mv 'module.dns.aws_acm_certificate.pub[0]' 'module.dns.aws_acm_certificate.this["public"]'
+tofu state list | grep aws_acm_certificate
 
-terraform state list | grep aws_route53_zone
-terraform state mv 'module.dns.aws_route53_zone.int[0]' 'module.dns.aws_route53_zone.this["private"]'
-terraform state mv 'module.dns.aws_route53_zone.int-cert[0]' 'module.dns.aws_route53_zone.validation["private"]'
-terraform state mv 'module.dns.aws_route53_zone.pub[0]' 'module.dns.aws_route53_zone.this["public"]'
-terraform state list | grep aws_route53_zone
+tofu state list | grep aws_route53_zone
+tofu state mv 'module.dns.aws_route53_zone.int[0]' 'module.dns.aws_route53_zone.this["private"]'
+tofu state mv 'module.dns.aws_route53_zone.int-cert[0]' 'module.dns.aws_route53_zone.validation["private"]'
+tofu state mv 'module.dns.aws_route53_zone.pub[0]' 'module.dns.aws_route53_zone.this["public"]'
+tofu state list | grep aws_route53_zone
 
-terraform state list | grep aws_route53_record
-terraform state mv 'module.dns.aws_route53_record.int-cert["*.dev-int.entigo.dev"]' 'module.dns.aws_route53_record.validation["private_*.dev-int.entigo.dev"]'
-terraform state mv 'module.dns.aws_route53_record.int-cert["dev-int.entigo.dev"]' 'module.dns.aws_route53_record.validation["private_dev-int.entigo.dev"]'
-terraform state mv 'module.dns.aws_route53_record.pub-cert["*.dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_*.dev.entigo.dev"]'
-terraform state mv 'module.dns.aws_route53_record.pub-cert["dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_dev.entigo.dev"]'
-terraform state list | grep aws_route53_record
+tofu state list | grep aws_route53_record
+tofu state mv 'module.dns.aws_route53_record.int-cert["*.dev-int.entigo.dev"]' 'module.dns.aws_route53_record.validation["private_*.dev-int.entigo.dev"]'
+tofu state mv 'module.dns.aws_route53_record.int-cert["dev-int.entigo.dev"]' 'module.dns.aws_route53_record.validation["private_dev-int.entigo.dev"]'
+tofu state mv 'module.dns.aws_route53_record.pub-cert["*.dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_*.dev.entigo.dev"]'
+tofu state mv 'module.dns.aws_route53_record.pub-cert["dev.entigo.dev"]' 'module.dns.aws_route53_record.validation["public_dev.entigo.dev"]'
+tofu state list | grep aws_route53_record
 
-terraform plan #Now the plan should only show changes to tags and nothing to destroy. If not find what resources are still mismatchin or what config changes cause a destructive plan.
+tofu plan #Now the plan should only show changes to tags and nothing to destroy. If not find what resources are still mismatchin or what config changes cause a destructive plan.
 exit
 ```
 Now run the agent again and verify the plan is not going to destroy your zones or certificates.

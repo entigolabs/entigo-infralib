@@ -1,5 +1,6 @@
 global:
   cloudProvider: aws
+  providerConfigRefName: crossplane-aws
 
 node-agent:
   networkPolicy:
@@ -60,3 +61,4 @@ cluster-metrics:
         to:
           - ipBlock:
               cidr: 172.20.0.1/32
+

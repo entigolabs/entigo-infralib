@@ -4,6 +4,16 @@ global:
 external-dns:
   registry: txt
   policy: upsert-only
+  sources:
+    - service
+    - ingress
+    - istio-gateway
+    - istio-virtualservice
+    - gateway-httproute
+    # DNSEndpoint CRs, for records that no Service/Ingress/Route can express
+    # (e.g. a CNAME to a CDN in front of the cluster). The CRD ships with the
+    # chart; this also adds the dnsendpoints RBAC to the ClusterRole.
+    - crd
   extraArgs:
     - --metrics-address=:7979
   serviceAccount:

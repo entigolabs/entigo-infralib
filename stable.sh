@@ -19,6 +19,10 @@ if [ "$GOOGLE_REGION" != "" ]
 then
   default_google_conf
 fi
+if [ "$OCI_REGION" != "" ]
+then
+  default_oracle_conf
+fi
 
 if [ "$1" == "" ]
 then

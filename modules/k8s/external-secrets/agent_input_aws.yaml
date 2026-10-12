@@ -4,15 +4,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     createECRNamespace: "{{ .tmodule.argocd }}"
+    ECRProxyPolicy: "{{ .toptout.ecr-proxy.policy }}"
     createECRAccounts: 
     - accountNumber: "{{ .toutput.eks.account }}"
       accountRegion: "{{ .toutput.eks.region }}"
-external-secrets:
-  image:
-    repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
-  webhook:
-    image:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'
-  certController:
-    image:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | "ghcr.io" }}/external-secrets/external-secrets'

@@ -1,0 +1,38 @@
+# The IAM role the registry would assume through IRSA, commented out
+# together with the S3 storage configuration itself. Harbor's registry
+# cannot authenticate to S3 with IRSA yet — see values-aws.yaml for the
+# reason, the blocking Harbor issues and what to do when it is fixed.
+# {{- if eq .Values.global.cloudProvider "aws" }}
+# 
+# apiVersion: iam.aws.upbound.io/v1beta1
+# kind: Role
+# metadata:
+#   name: {{ .Release.Name }}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: '-2'
+#     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# spec:
+#   forProvider:
+#     assumeRolePolicy: |
+#       {
+#         "Version": "2012-10-17",
+#         "Statement": [
+#           {
+#             "Effect": "Allow",
+#             "Principal": {
+#               "Federated": "arn:aws:iam::{{ .Values.global.aws.account }}:oidc-provider/{{ .Values.global.aws.clusterOIDC }}"
+#             },
+#             "Action": "sts:AssumeRoleWithWebIdentity",
+#             "Condition": {
+#               "StringEquals": {
+#                 "{{ .Values.global.aws.clusterOIDC }}:aud": "sts.amazonaws.com",
+#                 "{{ .Values.global.aws.clusterOIDC }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:harbor"
+#               }
+#             }
+#           }
+#         ]
+#       }
+#   providerConfigRef:
+#     name: {{ .Values.global.providerConfigRefName }}
+# 
+# {{- end }}

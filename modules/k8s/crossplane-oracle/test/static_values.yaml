@@ -1,0 +1,4 @@
+global:
+  oracle:
+    tenancyOcid: "ocid1.tenancy.oc1..aaaaaaaadummydummydummydummydummydummydummydummydummydummya"
+    region: "eu-frankfurt-1"

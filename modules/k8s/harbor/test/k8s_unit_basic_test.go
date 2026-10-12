@@ -31,11 +31,7 @@ func testK8sHarbor(t *testing.T, cloudName string, envName string) {
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
-	
-	if cloudName == "aws" {
-		gatewayName = fmt.Sprintf("%s-ingress", namespaceName)
-	}
-	
+
 	err := terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-database-0", namespaceName), 20, 6*time.Second)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("%s-database-0 pod error:", namespaceName), err)

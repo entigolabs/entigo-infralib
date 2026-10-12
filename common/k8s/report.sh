@@ -3,8 +3,20 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $SCRIPTPATH/../..
 
 
+# A deprecated module keeps shipping so platforms can finish migrating off it,
+# but its upstream chart and providers are no longer followed. Skipping them
+# keeps the report, and the update pull requests generated from it, clean.
+deprecated_module() {
+  local chart="$1/Chart.yaml"
+  [ -f "$chart" ] && [ "$(yq -r '.deprecated // false' "$chart")" == "true" ]
+}
+
 for chart in $(find modules/k8s/ -name Chart.yaml | sort)
 do
+  if deprecated_module "$(dirname $chart)"
+  then
+    continue
+  fi
   yq -r '.dependencies[] | "\(.name) \(.version) \(.repository)"' $chart | while read dep
   do
     if [ "$dep" != "" ]
@@ -45,6 +57,18 @@ do
 
         latest=$(echo "$all_tags" | tr ' ' '\n' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
 
+      elif [[ "$url" == file://* ]]
+      then
+        # A vendored chart - there is no registry to query, so follow the upstream
+        # repository's releases instead. Which repository that is comes from an annotation on
+        # our own Chart.yaml, since the dependency entry only records the local path.
+        upstream=$(yq -r '.annotations."infralib.entigo.io/upstream-repo" // ""' $chart)
+        if [ "$upstream" == "" ]
+        then
+          echo "$name is vendored from $url, but $chart has no infralib.entigo.io/upstream-repo annotation to check against"
+          continue
+        fi
+        latest=$(curl -s "https://api.github.com/repos/$upstream/releases/latest" | jq -r '.tag_name // ""' | sed 's/^v//')
       else
         helm repo add $name $url > /dev/null
         latest=$(helm search repo -r "\v$name/$name\v" --output json | jq -r '.[0].version')
@@ -63,6 +87,12 @@ done
 
 for providerfile in $(find modules/k8s/ -name provider.yaml | sort)
 do
+  # provider.yaml sits at varying depths under templates/, so take the module
+  # root, modules/k8s/<module>, rather than the file's own directory
+  if deprecated_module "$(echo $providerfile | cut -d/ -f1-3)"
+  then
+    continue
+  fi
   cat $providerfile | grep xpkg.upbound.io | grep -ve"\$provider" | cut -d"/" -f2- | while read provider
   do
     old_version=$(echo $provider | cut -d":" -f2)

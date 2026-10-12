@@ -49,3 +49,4 @@ gke_managed_node_groups_extra: |
       spot               = true
     }
   ]
+maintenance_exclusion_window_days: 120

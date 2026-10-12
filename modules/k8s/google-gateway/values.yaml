@@ -1,10 +1,47 @@
 global:
-  createExternal: true
-  createInternal: true
+  # Name of the Gateway other modules attach their HTTPRoutes to. Gateways are
+  # named <release name>-<key under gateways>, so these must be kept in sync
+  # when the built-in entries are renamed or the module is deployed under a
+  # different name. The agent sets both from the module name.
+  internalGateway: google-gateway-internal
+  externalGateway: google-gateway-external
 
-  google:
-    externalCertificateMap: ""
-    internalCertificateMap: ""
-    externalGatewayClassName: gke-l7-global-external-managed
-    internalGatewayClassName: gke-l7-rilb
-    internalGatewayAllowGlobalAccess: false
+# One Gateway (= one GKE load balancer) per entry. Any map entry with
+# enabled: true becomes a gateway, so additional gateways can be defined by
+# simply adding an entry. The Gateway object is named <release name>-<key>.
+#
+# Unlike aws-alb there is no per-gateway subnets setting: the google vpc module
+# only supports the "default" subnet layout, so every gateway of the same class
+# lands in the same subnet, chosen by GKE from the gateway class.
+gateways:
+  external:
+    enabled: true
+    gatewayClassName: gke-l7-global-external-managed
+    certificateMap: ""         # Certificate Manager map, networking.gke.io/certmap
+    certManagerCerts: ""       # cert-manager secrets on the https listener, comma separated
+    sslRedirect: true
+    allowGlobalAccess: false   # only meaningful for regional internal gateway classes
+    sslPolicy: ""
+    addresses: []
+    # - type: NamedAddress
+    #   value: my-reserved-address
+    annotations: {}
+    labels: {}
+  internal:
+    enabled: true
+    gatewayClassName: gke-l7-rilb
+    certificateMap: ""
+    certManagerCerts: ""
+    sslRedirect: true
+    allowGlobalAccess: false
+    sslPolicy: ""
+    addresses: []
+    annotations: {}
+    labels: {}
+  # custom user-defined gateway
+  # partner:
+  #   enabled: true
+  #   gatewayClassName: gke-l7-global-external-managed
+  #   certificateMap: "projects/my-project/locations/global/certificateMaps/partner"
+  #   sslRedirect: true
+  #   sslPolicy: "my-prefix-restricted"

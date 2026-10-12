@@ -14,6 +14,83 @@ steps:
 
 ```
 
+## The public key endpoint, and why AWS and google differ
+
+The VPN itself is the same on both clouds: a `Service` of type `LoadBalancer`
+carrying UDP 51820 to the wireguard container.
+
+Alongside it the module serves the generated server public key over HTTPS, so
+that clients can fetch it without someone reading it out of the pod logs. That
+endpoint is the one thing this module cannot build the same way twice, and the
+two clouds end up quite far apart.
+
+### AWS: one load balancer, one hostname
+
+`values-aws.yaml` adds a second port to the wireguard `Service` through the
+chart's `service.extraPorts`, so the NLB carries both:
+
+| Listener | Protocol | Target |
+|---|---|---|
+| 51820 | UDP | wireguard container, 51820 |
+| 443 | TCP, TLS terminated | nginx pubkey sidecar, 8080 |
+
+Two things make this work, and neither has a google equivalent:
+
+- The NLB **terminates TLS**. `aws-load-balancer-ssl-ports: "443"` plus the ACM
+  certificate from `agent_input_aws.yaml` mean the sidecar only ever serves
+  plain HTTP on 8080.
+- It is **one load balancer, so one IP, so one A record**. The VPN and the
+  public key live on the same hostname,
+  `<module name>.<route53 pub_domain>`, on different ports.
+
+### Google: a route on the shared gateway, on its own hostname
+
+Google gets the same nginx sidecar, but reaches it through an `HTTPRoute` on the
+external gateway published by the `google-gateway` module, with a `Service` and
+a `HealthCheckPolicy` of its own under `templates/google/`. The hostname is
+`<module name>-pubkey.<dns pub_domain>`, separate from the VPN hostname.
+
+It is worth writing down why, because the obvious question is why google does
+not simply copy AWS:
+
+1. **A passthrough load balancer terminates no TLS.** Google's external
+   passthrough Network Load Balancer forwards traffic without decrypting it and
+   holds no certificates — only the Application and proxy Network Load
+   Balancers do. There is no `ssl-cert` equivalent to hang off the wireguard
+   `Service`. The TLS for this host comes from the gateway's Certificate
+   Manager map instead.
+2. **The addresses cannot be shared.** The external gateway class
+   `gke-l7-global-external-managed` takes a **global** address; a regional
+   passthrough Network Load Balancer takes a **regional** one. They cannot be
+   the same address resource, so the gateway and the wireguard load balancer
+   always answer on different IPs — which is why the public key needs a
+   hostname of its own rather than a second port on the VPN hostname.
+
+Historically there was a third reason: a google `Service` of type
+`LoadBalancer` could not carry TCP and UDP at once. **That one has expired.**
+GKE supports mixed protocol `LoadBalancer` Services via
+`spec.loadBalancerClass: networking.gke.io/l4-regional-external`, GA from
+1.36.2-gke.1498000 and available external/IPv4-only from 1.34.1-gke.2190000.
+Do not treat it as the blocker any more — the two reasons above are what keep
+the designs apart, and neither is fixed by putting both protocols on one
+`Service`.
+
+Terminating TLS inside the nginx sidecar would collapse the difference, at the
+cost of an ACME issuer and in-pod certificate renewal. cert-manager is not a
+module in this repository today, so that is not on the table.
+
+### What this means when reading the module
+
+- `agent_input.yaml` holds everything both clouds share, including the sidecar,
+  its volume and the VPN hostname annotations.
+- `agent_input_aws.yaml` is only the ACM certificate.
+- `agent_input_google.yaml` is only the pubkey hostname and the gateway to
+  attach the route to.
+- `global.gateway` and `global.pubkeyHostname` are declared in `values.yaml`
+  but filled on google alone. On AWS they stay empty and nothing reads them,
+  because `templates/google/` is gated on `global.cloudProvider`.
+
+## Client configuration
 
 dns_policy_vpc_ids must be set in google/dns to resolve DNS names from private DNS zones
 
@@ -32,3 +109,75 @@ AllowedIPs = 10.149.0.0/16, 172.0.0.0/8 # IP-s routed through WireGuard. Add Goo
 Endpoint = 35.228.101.151:51820 # WireGuard server endpoint. (kubectl get service <wireguard-service>)
 PersistentKeepalive = 15
 ```
+
+## Oracle ##
+
+Two things differ from aws and google, both because of the same OCI limitation.
+
+**The load balancer is a different product.** WireGuard is UDP, and the OCI *classic* Load
+Balancer - the one `oci-native-ingress-controller` drives - carries only TCP and HTTP. A UDP
+Service has to become a **Network** Load Balancer, which the cloud-controller-manager selects
+from `oci.oraclecloud.com/load-balancer-type: "nlb"`. Without that annotation the Service stays
+`Pending` indefinitely and emits nothing useful.
+
+The NLB is also invisible to the VCN's security lists, and the CCM will edit those itself unless
+told not to. So `security-list-management-mode: "None"` keeps it out and
+`oci.oraclecloud.com/oci-network-security-groups` points at `modules/oracle/oke`'s
+`nlb_nsg_id`, which opens UDP 51820. Get that wrong and the load balancer reports healthy while
+dropping every handshake.
+
+`is-preserve-source: "true"` matters more here than it looks: without it every packet arrives
+with the load balancer's address and no handshake can be attributed to a peer.
+
+**The public key is served through the gateway, not the load balancer.** On aws the key rides on
+the NLB's port 443 with `aws-load-balancer-ssl-cert`. An OCI network load balancer is pure layer
+4 with no TLS termination, so there is no certificate to attach - `templates/oracle/pubkey.yaml`
+puts a Service and an HTTPRoute on the public `oracle-gateway` instead, same as google.
+
+The pubkey host is on the **public** zone deliberately: it is the one thing that must be
+reachable before the VPN is up.
+
+### Peers ###
+
+`clients` is per-deployment - set it in the deployment's own config, never here. Generate a
+keypair locally and publish only the public half:
+
+```shell
+wg genkey | tee wg-private.key | wg pubkey
+```
+
+### Reaching a private zone through it ###
+
+The point of the VPN on Oracle is the private DNS zone, which resolves only inside the VCN. A
+client therefore needs both the routes and the resolver:
+
+```ini
+[Interface]
+PrivateKey = <your wg-private.key>
+Address    = 172.31.201.2/32
+DNS        = <kube-dns ClusterIP>  # CoreDNS, which forwards to the VCN resolver
+
+[Peer]
+PublicKey  = <fetched from the pubkey host>
+Endpoint   = wireguard.<public domain>:51820
+AllowedIPs = 172.31.201.0/24, 10.156.0.0/16, 10.96.0.0/16
+```
+
+`10.156.0.0/16` is the VCN (where the internal load balancer lives) and `10.96.0.0/16` the
+services CIDR, which is what makes CoreDNS reachable - and CoreDNS is what resolves a private
+zone, since it forwards to the VCN resolver. Substitute your own CIDRs: `services_cidr` in
+`modules/oracle/oke` and the VCN's own block.
+
+**Read the DNS address, do not derive it.** OKE does not place kube-dns at `.10` of the
+services CIDR the way many clusters do - on a `10.96.0.0/16` cluster it was `10.96.5.5`. Get it
+from the cluster:
+
+```shell
+kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}'
+```
+
+**The Endpoint hostname resolves to two addresses.** An OCI network load balancer has both a
+public and a private IP, the Service reports both, and external-dns publishes both under the
+one name. WireGuard resolves the hostname once at startup and picks one - so roughly half the
+time it picks the in-VCN address and the tunnel silently never establishes. Until that is
+fixed, put the public IP in `Endpoint` rather than the hostname.

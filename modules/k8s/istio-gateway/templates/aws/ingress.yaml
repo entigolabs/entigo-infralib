@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "aws" }}
+{{- if and (eq .Values.global.cloudProvider "aws") .Values.global.aws.createIngress }}
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress

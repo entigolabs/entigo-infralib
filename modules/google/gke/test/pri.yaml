@@ -31,3 +31,4 @@ gke_mon_max_size: 6
 gke_mon_spot_nodes: true
 gke_mon_location_policy: "ANY"
 gke_mon_node_locations: "europe-north1-a"
+maintenance_exclusion_window_days: 120

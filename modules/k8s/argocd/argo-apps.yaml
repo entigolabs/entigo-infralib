@@ -10,3 +10,9 @@ spec:
         pod-security.kubernetes.io/enforce: restricted
         pod-security.kubernetes.io/warn: restricted
         tenancy.entigo.com/zone: infralib
+  ignoreDifferences:
+    - group: gateway.networking.k8s.io
+      kind: GRPCRoute
+      jqPathExpressions:
+        - '.spec.rules[]?.backendRefs[]?.group'
+        - '.spec.rules[]?.backendRefs[]?.kind'

@@ -13,8 +13,6 @@ locals {
       create_validation          = domain.create_validation
       certificate_authority_arn  = domain.certificate_authority_arn
       private                    = domain.private
-      default_public             = domain.default_public
-      default_private            = domain.default_private
       
       # Use domain-specific VPC ID if provided, otherwise use default module VPC ID
       effective_vpc_id           = domain.vpc_id != "" ? domain.vpc_id : var.vpc_id
@@ -183,6 +181,15 @@ resource "aws_acm_certificate" "this" {
   
   # Use the key algorithm from the domain configuration
   key_algorithm             = each.value.certificate_key_algorithm
+
+  # options is rejected by the ACM API for private certs;
+  # PCA-issued certs are always exportable anyway
+  dynamic "options" {
+    for_each = each.value.certificate_authority_arn == "" ? [1] : []
+    content {
+      export = each.value.certificate_export
+    }
+  }
   
   lifecycle {
     create_before_destroy = true

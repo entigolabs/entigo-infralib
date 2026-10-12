@@ -1,8 +1,15 @@
 global:
+  routingResources: "ingress" #ingress|both|httproute
+  createIngress: true
+  createRoute: false
+  createType: ingress #ingress|route
+  internalGateway: internal
+  externalGateway: external
   providerConfigRefName: crossplane-aws
   aws:
     account: ""
     clusterOIDC: ""
+    region: ""
 
 aws-load-balancer-controller:
   defaultTags:
@@ -56,7 +63,7 @@ aws-load-balancer-controller:
     kube-score/ignore: pod-networkpolicy,pod-probes
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.22.1"
+  tag: "v1.24.6"
 
 ingressClass:
   tags: {}
@@ -69,3 +76,81 @@ ingressClass:
   external:
     enabled: true
     subnets: ""
+
+# Access logs of the gateway ALBs, stored in S3 under the gateway name.
+# Set them here, not as access_logs.* in gateways.<name>.loadBalancerAttributes
+accessLogs:
+  enabled: false
+  lifecycleRules:              # for the buckets created by this module
+    - id: expire-alb-logs
+      status: Enabled
+      filter:
+        - prefix: ""
+      expiration:
+        - days: 90
+
+# Server: awselb/2.0 response header of the gateway ALBs
+serverHeader: false
+
+gateways:
+  tags: {}
+  internal:
+    enabled: true
+    scheme: internal
+    sslRedirect: true
+    subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
+  service:
+    enabled: false
+    scheme: internal
+    sslRedirect: true
+    subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
+  external:
+    enabled: true
+    scheme: internet-facing
+    sslRedirect: true
+    subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    certificates: ""
+    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+    loadBalancerAttributes: {}
+    #  idle_timeout.timeout_seconds: "300"
+    targetGroupAttributes: {}
+    #  load_balancing.algorithm.type: least_outstanding_requests
+    #  deregistration_delay.timeout_seconds: "35"
+  # custom user-defined gateway, just add an entry
+  # partner:
+  #   enabled: true
+  #   accessLogs:
+  #     enabled: false         # access logs off for this gateway
+  #     bucket: ""             # existing bucket, empty creates <module>-<gateway>-<account>-<region>-alb-logs
+  #     lifecycleRules: []     # replaces accessLogs.lifecycleRules, [] keeps the logs forever
+  #   scheme: internet-facing
+  #   sslRedirect: true
+  #   subnets: "subnet-aaa,subnet-bbb"
+  #   sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+  #   sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+  #   wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
+  #   loadBalancerAttributes: {}
+  #   #  idle_timeout.timeout_seconds: "300"
+  #   targetGroupAttributes: {}
+  #   #  load_balancing.algorithm.type: least_outstanding_requests
+  #   #  deregistration_delay.timeout_seconds: "35"

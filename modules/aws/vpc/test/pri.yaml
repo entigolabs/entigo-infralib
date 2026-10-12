@@ -1,8 +1,10 @@
 one_nat_gateway_per_az: false
 vpc_cidr: "10.24.0.0/20"
 azs: 3
-enable_flow_log: false
+enable_flow_log: true
+flow_log_destination_type: s3
 intra_subnets: |
   ["10.24.4.0/23", "10.24.6.0/23"]
 database_subnets: |
   ["10.24.14.0/24", "10.24.15.0/24"]
+endpoint_policy_org_id: ""

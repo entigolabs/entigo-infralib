@@ -1,0 +1,15 @@
+global:
+  cloudProvider: "oracle"
+  # oracle has no ingress, the gateway route is always on - same as google. The gateway the
+  # route attaches to comes from oracle-gateway through agent_input.yaml.
+  createRoute: true
+
+kiali-server:
+  deployment:
+    ingress:
+      enabled: false
+  # server.port is deliberately left at the chart's own 20001, unlike values-google.yaml's
+  # 443: on oracle the OCI load balancer terminates client TLS at the NIC Ingress in front of
+  # the istio-managed Gateway (see modules/k8s/oracle-gateway/templates/ingress.yaml), so
+  # nothing downstream of it cares what port this Service listens on. templates/httpRoute.yaml
+  # takes the backendRef port from this same value, so the two always agree.

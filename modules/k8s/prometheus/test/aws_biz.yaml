@@ -1,3 +1,18 @@
 global:
   installPrometheusOperatorCRDs: true
   installBlackbox: true
+prometheus:
+  server:
+    route:
+      main:
+        parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: service
+            namespace: "{{ .tmodule.aws-alb }}"
+            sectionName: https
+    remoteWrite:
+      - name: "{{ .config.prefix }}"
+        url: http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push
+        headers:
+          X-Scope-OrgID: "{{ .config.prefix }}"

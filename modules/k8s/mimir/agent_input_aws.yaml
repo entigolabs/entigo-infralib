@@ -4,20 +4,15 @@ global:
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
     kmsKeyId: "{{ .toptout.kms.telemetry_alias_arn }}"
+  createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
   bucketName: "{{ .config.prefix }}-{{ .module.name }}-{{ .toutput.eks.account }}-{{ .toutput.eks.region }}"
+
 mimir-distributed:
   gateway:
     ingress:
+      enabled: "{{ .tinput.aws-alb.global.createIngress }}"
       hosts:
       - host: "{{ .module.name }}.{{ .toutput.route53.int_domain }}"
         paths:
         - path: "/"
           pathType: "Prefix"
-    nginx:
-      image:
-        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
-  image:
-    repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/grafana/mimir'
-  nginx:
-    image:
-      registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'

@@ -17,10 +17,14 @@ do
   namespace=$(echo $line | cut -d"/" -f1)
   name=$(echo $line | cut -d"/" -f2 | cut -d"=" -f1)
   currentversion=$(echo $line | cut -d"=" -f2-)
-  registry=`curl -s "https://registry.terraform.io/v2/providers/$namespace/$name?include=latest-version&name=$name&namespace=$namespace"`
-  versionid=`echo $registry | jq -r '.data.relationships["latest-version"].data.id'`
-  latestversion=`echo $registry | jq -r --arg id "$versionid" '.included[] | select(.id == $id) | .attributes.version'`
-  if [[ "$currentversion" != "$latestversion" && "$currentversion" != ">="* ]]
+  # OpenTofu registry, standard registry protocol. Unlike the Terraform
+  # registry's v2 API it returns every version rather than a latest pointer, so
+  # drop prereleases and take the highest.
+  latestversion=`curl -s "https://registry.opentofu.org/v1/providers/$namespace/$name/versions" | jq -r '.versions[]?.version' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1`
+  if [ "$latestversion" == "" ]
+  then
+     echo "$namespace/$name provider not found in https://registry.opentofu.org/v1/providers/$namespace/$name/versions"
+  elif [[ "$currentversion" != "$latestversion" && "$currentversion" != ">="* ]]
   then
      echo "$namespace/$name newer version $latestversion, current $currentversion"
   fi
@@ -40,11 +44,12 @@ do
   name=$(echo $line | cut -d"=" -f1)
   name=${name%%//*}
   currentversion=$(echo $line | cut -d"=" -f2)
-  registry=`curl -s "https://registry.terraform.io/v2/modules/$name?include=latest-version"`
-  
-  versionid=`echo $registry | jq -r '.data.relationships["latest-version"].data.id'`
-  latestversion=`echo $registry | jq -r --arg id "$versionid" '.included[] | select(.id == $id) | .attributes.version'`
-  if [ "$currentversion" != "$latestversion" ]
+  # $name is already namespace/name/system, which is what the module endpoint takes
+  latestversion=`curl -s "https://registry.opentofu.org/v1/modules/$name/versions" | jq -r '.modules[0].versions[]?.version' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1`
+  if [ "$latestversion" == "" ]
+  then
+     echo "$name module not found in https://registry.opentofu.org/v1/modules/$name/versions"
+  elif [ "$currentversion" != "$latestversion" ]
   then
      echo "$name newer version $latestversion, current $currentversion"
   fi

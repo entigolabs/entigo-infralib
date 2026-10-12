@@ -140,3 +140,15 @@ resource "aws_s3_bucket_policy" "config_rules_logs" {
     ]
   })
 }
+
+# Enable EBS encryption by default for the account in this region
+resource "aws_ebs_encryption_by_default" "this" {
+  count   = var.ebs_encryption_by_default ? 1 : 0
+  enabled = true
+}
+
+# Optional: use the client CMK as the regional default instead of aws/ebs
+resource "aws_ebs_default_kms_key" "this" {
+  count   = var.ebs_default_kms_key != "" ? 1 : 0
+  key_arn = var.ebs_default_kms_key
+}

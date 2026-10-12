@@ -11,6 +11,7 @@ object fields:
     create_zone - create tehe zone when true, when false the zone will be fetched with data request. (default true, optional)
     create_certificate - will create teh ACM Certificate for the zone CN: "*.domain_name" and "domain_name". (default true, optional)
     certificate_key_algorithm  - algorithm to use for the ACM certificate (default "EC_secp384r1", optional)
+    certificate_export - whether the ACM certificate can be exported, "ENABLED" or "DISABLED". When certificate_authority_arn(PCA) is set then always ENABLED. (default "DISABLED", optional)
     certificate_authority_arn - when using PCA then specify the ARN of the CA. (default "", optional)
     private - create the domain as a private zone (default false, optional)
     vpc_id - specify the vpc_id for the private zone. When not specified the var.vpc_id will be used. (default "", optional)

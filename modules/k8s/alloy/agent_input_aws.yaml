@@ -7,6 +7,36 @@ node-agent:
   metrics:
     externalLabels:
       cluster: "{{ .toutput.eks.cluster_name }}"
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
 cluster-metrics:
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'

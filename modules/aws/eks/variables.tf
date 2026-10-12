@@ -296,6 +296,27 @@ variable "cloudwatch_log_group_kms_key_id" {
   default = ""
 }
 
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Number of days to retain EKS control plane log events in the CloudWatch log group"
+  type        = number
+  nullable    = false
+  default     = 90
+}
+
+variable "cloudwatch_log_group_class" {
+  description = "Log class of the CloudWatch log group. Possible values are STANDARD or INFREQUENT_ACCESS"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "cloudwatch_log_group_tags" {
+  description = "Additional tags to add to the CloudWatch log group"
+  type        = map(string)
+  nullable    = false
+  default     = {}
+}
+
 variable "node_encryption_kms_key_arn" {
   type = string
   default = ""
@@ -353,3 +374,34 @@ variable "enable_efs_csi" {
   default = false
 }
 
+variable "coredns_config" {
+  type    = any
+  default = {}
+}
+
+variable "kube_proxy_config" {
+  type    = any
+  default = {}
+}
+
+variable "vpc_cni_env_config" {
+  type    = any
+  default = {}
+}
+
+variable "ebs_csi_controller_config" {
+  type    = any
+  default = {}
+}
+
+variable "efs_csi_controller_config" {
+  type    = any
+  default = {}
+}
+
+
+variable "tags" {
+  type        = map(string)
+  description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
+  default     = {}
+}

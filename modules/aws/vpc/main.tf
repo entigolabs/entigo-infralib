@@ -44,18 +44,41 @@ locals {
   private_subnets     = var.private_subnets == null     ? var.subnet_split_mode == "default" ? local.default_private     : concat(local.spoke_control, local.spoke_service, local.spoke_compute) : var.private_subnets
   database_subnets    = var.database_subnets == null    ? var.subnet_split_mode == "default" ? local.default_database    : local.spoke_database : var.database_subnets
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
+
+  #In spoke mode, when no dedicated elasticache subnets are defined, reuse the database subnets for the elasticache subnet group.
+  #Skipped when there are no database subnets (e.g. database_subnets = []), since there is nothing to reuse.
+  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null && length(local.database_subnets) > 0
+
+  #IPv6 prefix indices — each subnet needs a unique /64 slot within the VPC's /56 block.
+  #Only populated when enable_ipv6 is true; assigned sequentially across all subnet types.
+  public_subnet_ipv6_prefixes      = var.enable_ipv6 ? [for i in range(length(local.public_subnets)) : i] : []
+  private_subnet_ipv6_prefixes     = var.enable_ipv6 ? [for i in range(length(local.private_subnets)) : length(local.public_subnets) + i] : []
+  database_subnet_ipv6_prefixes    = var.enable_ipv6 ? [for i in range(length(local.database_subnets)) : length(local.public_subnets) + length(local.private_subnets) + i] : []
+  elasticache_subnet_ipv6_prefixes = var.enable_ipv6 ? [for i in range(length(local.elasticache_subnets)) : length(local.public_subnets) + length(local.private_subnets) + length(local.database_subnets) + i] : []
+  intra_subnet_ipv6_prefixes       = var.enable_ipv6 ? [for i in range(length(local.intra_subnets)) : length(local.public_subnets) + length(local.private_subnets) + length(local.database_subnets) + length(local.elasticache_subnets) + i] : []
+
+}
+
+
+#Spoke mode without dedicated elasticache subnets: reuse the database subnets (a subnet can be in both an RDS and an ElastiCache subnet group).
+resource "aws_elasticache_subnet_group" "database_reuse" {
+  count      = local.reuse_db_for_elasticache ? 1 : 0
+  name       = coalesce(var.elasticache_subnet_group_name, module.vpc.database_subnet_group_name)
+  subnet_ids = module.vpc.database_subnets
 }
 
 
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.6.1"
+  version = "6.7.3"
 
   name = var.prefix
   cidr = var.vpc_cidr
 
   secondary_cidr_blocks = var.secondary_cidr_blocks
+
+  enable_ipv6                      = var.enable_ipv6
 
   azs                 = [for i in range(local.azs) : data.aws_availability_zones.available.names[i]]
   private_subnets     = local.private_subnets
@@ -79,7 +102,16 @@ module "vpc" {
   create_elasticache_subnet_route_table = length(local.elasticache_subnets) > 0 ? var.create_elasticache_subnet_route_table : false
   create_multiple_intra_route_tables = var.create_multiple_intra_route_tables
   create_multiple_public_route_tables = var.create_multiple_public_route_tables
-  
+
+  public_subnet_ipv6_prefixes      = local.public_subnet_ipv6_prefixes
+  private_subnet_ipv6_prefixes     = local.private_subnet_ipv6_prefixes
+  database_subnet_ipv6_prefixes    = local.database_subnet_ipv6_prefixes
+  elasticache_subnet_ipv6_prefixes = local.elasticache_subnet_ipv6_prefixes
+  intra_subnet_ipv6_prefixes       = local.intra_subnet_ipv6_prefixes
+  private_subnet_enable_dns64     = var.enable_ipv6 && var.subnet_enable_dns64
+  database_subnet_enable_dns64    = var.enable_ipv6 && var.subnet_enable_dns64
+  elasticache_subnet_enable_dns64 = var.enable_ipv6 && var.subnet_enable_dns64
+  intra_subnet_enable_dns64       = var.enable_ipv6 && var.subnet_enable_dns64
 
   enable_nat_gateway     = var.enable_nat_gateway
   single_nat_gateway     = var.one_nat_gateway_per_az ? false : true
@@ -93,6 +125,10 @@ module "vpc" {
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   enable_flow_log                                 = var.enable_flow_log
+  flow_log_destination_type                       = var.flow_log_destination_type
+  # Taken from the bucket policy so the flow log is created after log delivery is allowed, otherwise AWS adds its own policy to the bucket
+  flow_log_destination_arn                        = var.flow_log_s3_destination_arn != "" ? var.flow_log_s3_destination_arn : join("", formatlist("arn:aws:s3:::%s", aws_s3_bucket_policy.flow_log[*].bucket))
+  # The upstream module skips the CloudWatch log group and IAM role when flow_log_destination_type is s3
   create_flow_log_cloudwatch_log_group            = var.enable_flow_log
   create_flow_log_cloudwatch_iam_role             = var.enable_flow_log
   flow_log_cloudwatch_log_group_name_prefix       = "${var.prefix}/vpc-flow-log/"

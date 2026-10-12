@@ -1,0 +1,9 @@
+# The agent fills these from agent_input_oracle.yaml, so values.yaml ships them empty. A
+# static render has no agent, and templates/policy.yaml names its Policy
+# "<global.prefix>-<release>", which with an empty prefix is "-test-release" - rejected by
+# `helm lint --strict` as not an RFC 1123 subdomain. These stand in for the wired values.
+global:
+  prefix: "dev-apps"
+  oracle:
+    compartmentId: "ocid1.compartment.oc1..aaaaaaaadummydummydummydummydummydummydummydummydummydummya"
+    clusterId: "ocid1.cluster.oc1.eu-frankfurt-1.aaaaaaaadummydummydummydummydummydummydummydummydummydummya"

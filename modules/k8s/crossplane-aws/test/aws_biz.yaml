@@ -5,3 +5,4 @@ global:
     - networkfirewall
     - ram
     - kafka
+    - mq

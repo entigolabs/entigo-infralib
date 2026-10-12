@@ -1,16 +1,12 @@
+global:
+  gateway:
+    name: '{{ .toptin.aws-alb.global.externalGateway | required }}'
 kiali-server:
   auth:
     strategy: openid
     openid:
-      client_id: "343161107562659633"
+      client_id: "390876949318221807"
       disable_rbac: true
       issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
       scopes: ["openid", "profile", "email", "roles"]
       username_claim: "email"
-  deployment:
-    ingress:
-      override_yaml:
-        metadata:
-          annotations:
-            alb.ingress.kubernetes.io/group.name: external
-            alb.ingress.kubernetes.io/scheme: internet-facing

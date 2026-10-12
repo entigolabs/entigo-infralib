@@ -1,0 +1,22 @@
+global:
+  oracle:
+    compartmentId: "{{ .agent.accountId }}"
+    clusterId: "{{ .toutput.oke.cluster_id }}"
+
+cluster-autoscaler:
+  # OCI_RESOURCE_PRINCIPAL_REGION has no default and the SDK cannot infer it under Workload
+  # Identity - see the extraEnv comment in values-oracle.yaml. Same wiring as the ingress
+  # controller's region input.
+  extraEnv:
+    OCI_RESOURCE_PRINCIPAL_REGION: "{{ .toutput.oke.region }}"
+  image:
+    # No Oracle registry-proxy module exists yet - hardcode the upstream registry (its
+    # image includes the OCI provider; Oracle's OCIR builds are only needed for legacy
+    # k8s versions).
+    repository: registry.k8s.io/autoscaling/cluster-autoscaler
+  # Static --nodes=<min>:<max>:<nodepool-ocid> config (Oracle's documented approach; the
+  # chart's OCI auto-discovery values are dead code in 9.58.0).
+  autoscalingGroups:
+    - name: "{{ .toutput.oke.tools_node_pool_id }}"
+      minSize: "{{ .toutput.oke.tools_min_size }}"
+      maxSize: "{{ .toutput.oke.tools_max_size }}"

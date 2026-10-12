@@ -51,7 +51,6 @@ loki:
       storageClass: gp3
   gateway:
     ingress:
-      enabled: true
       ingressClassName: "alb"
       annotations:
         alb.ingress.kubernetes.io/ssl-redirect: "443"

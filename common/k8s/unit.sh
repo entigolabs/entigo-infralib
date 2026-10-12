@@ -109,10 +109,46 @@ fi
         if ! yq '.steps[].name' "agents/${testname}/config.yaml" | grep -q "$STEP_NAME"
         then
           yq -i '.steps += [{"name": "'"$STEP_NAME"'", "type": "argocd-apps", "argocd_namespace":"argocd-'"$prefix"'", "manual_approve_update": "never", "manual_approve_run": "never", "modules": [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]}]' "agents/${testname}/config.yaml"
+          if [[ $testname == aws_*  && $MODULE_NAME != "aws-alb" ]]
+          then
+            # This is a dirty hack to make the .input work. This is not a good approach but works for now.
+            # Copy the aws-alb module from the apps step into the new step
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "aws-alb") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../aws-alb/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/aws-alb-${prefix}.yaml"
+          fi
+          if [[ $testname == google_*  && $MODULE_NAME != "google-gateway" ]]
+          then
+            # Same hack for google: modules chain the gateway name and namespace
+            # off google-gateway, so it has to be in the step for .tinput and
+            # .tmodule to resolve. Note google-gateway's app name carries no
+            # -$prefix suffix, see get_app_name, so the input file is named
+            # google-gateway.yaml rather than google-gateway-${prefix}.yaml.
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "google-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../google-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/google-gateway.yaml"
+          fi
+          if [[ $testname == oracle_*  && $MODULE_NAME != "oracle-gateway" ]]
+          then
+            # Same hack for oracle: modules chain the gateway name and namespace
+            # off oracle-gateway, so it has to be in the step for .tinput and
+            # .toptin to resolve. Unlike google-gateway, oracle-gateway is not
+            # in get_app_name's no-prefix list, so its app name carries the
+            # -$prefix suffix like aws-alb.
+            yq -i '(.steps[] | select(.name == "'"$STEP_NAME"'") | .modules) += [.steps[] | select(.name == "apps") | .modules[] | select(.source == "oracle-gateway") | . + {"default_module": true}]' "agents/${testname}/config.yaml"
+            mkdir -p "agents/${testname}/config/$STEP_NAME"
+            cp "$MODULE_PATH/../oracle-gateway/test/`basename $test`" "agents/${testname}/config/$STEP_NAME/oracle-gateway-${prefix}.yaml"
+          fi
         fi
+
+        # Append module to the apps step unless an entry with this name already exists
+        # grep -qx: exact line match, otherwise grafana-biz would match runn-xxx-grafana-biz
+        #if ! yq '.steps[] | select(.name == "apps") | .modules[].name' "agents/${testname}/config.yaml" | grep -qx "$APP_NAME"
+        #then
+        #  yq -i '(.steps[] | select(.name == "apps") | .modules) += [{"name": "'"$APP_NAME"'", "source": "'"$MODULE_NAME"'"}]' "agents/${testname}/config.yaml"
+        #fi
         mkdir -p "agents/${testname}/config/$STEP_NAME"
         cp "$test" "agents/${testname}/config/$STEP_NAME/$APP_NAME.yaml"
-        
       
         if [[ $testname == google_* ]]
         then

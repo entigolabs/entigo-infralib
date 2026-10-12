@@ -1,10 +1,21 @@
 package test
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
+	"time"
 	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/entigolabs/entigo-infralib-common/aws"
+	awsSDK "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go/service/s3"
+	terratestAws "github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTerraformVpc(t *testing.T) {
@@ -77,6 +88,43 @@ func testTerraformVpcBiz(t *testing.T) {
 	
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, 0, len(intraSubnetCidrs), "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.NotEmpty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block was not returned")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(publicSubnetsIpv6CidrBlocks), "Wrong number of public_subnets_ipv6_cidr_blocks returned")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(privateSubnetsIpv6CidrBlocks), "Wrong number of private_subnets_ipv6_cidr_blocks returned")
+
+	databaseSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__database_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(databaseSubnetsIpv6CidrBlocks), "Wrong number of database_subnets_ipv6_cidr_blocks returned")
+
+	elasticacheSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 2, len(elasticacheSubnetsIpv6CidrBlocks), "Wrong number of elasticache_subnets_ipv6_cidr_blocks returned")
+
+	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
+	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+
+	// biz has the kms module, so the created flow log bucket uses the telemetry key
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "s3", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to S3")
+	flowLogBucket := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name")
+	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_s3_destination_arn is not set")
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "aws:kms")
+
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"s3", "ecr_api", "ecr_dkr", "ec2", "sts", "efs"}, keys(endpoints), "Wrong vpc_endpoints returned")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["efs"]), "CustomEfsPolicy", "Custom efs endpoint policy was not applied")
+	for key, action := range map[string]string{"s3": "s3:*", "ecr_api": "ecr:*", "ecr_dkr": "ecr:*", "ec2": "ec2:*", "sts": "sts:*"} {
+		policy := getEndpointPolicy(t, endpoints[key])
+		assertServicePolicy(t, policy, key, action)
+		assert.Contains(t, policy, "o-cipguslp2x", "%s endpoint policy must trust the organization", key)
+	}
+	assert.Contains(t, getEndpointPolicy(t, endpoints["s3"]), "starport-layer-bucket", "s3 endpoint policy must allow the ECR layer bucket")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["s3"]), "OwnBucketsRead", "s3 endpoint policy must allow anonymous reads of own buckets")
+	assert.Contains(t, getEndpointPolicy(t, endpoints["sts"]), "sts:AssumeRoleWithWebIdentity", "sts endpoint policy must allow IRSA")
 }
 
 func testTerraformVpcPri(t *testing.T) {
@@ -139,6 +187,30 @@ func testTerraformVpcPri(t *testing.T) {
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, "10.24.4.0/23", intraSubnetCidrs[0], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.24.6.0/23", intraSubnetCidrs[1], "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.Empty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block should be empty when ipv6 is disabled")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 0, len(publicSubnetsIpv6CidrBlocks), "public_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 0, len(privateSubnetsIpv6CidrBlocks), "private_subnets_ipv6_cidr_blocks should be empty when ipv6 is disabled")
+
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "s3", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to S3")
+	flowLogBucket := tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name")
+	assert.NotEmpty(t, flowLogBucket, "Flow log bucket must be created when flow_log_s3_destination_arn is not set")
+	assert.Equal(t, "arn:aws:s3:::"+flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_arn"), "Flow logs must go to the created bucket")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "No CloudWatch IAM role should be created for S3 flow logs")
+	// pri has no kms module, so the created flow log bucket uses SSE-S3
+	assertFlowLogEncryption(t, flowLogBucket, tf.GetStringValue(t, outputs, "vpc__vpc_owner_id"), tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "AES256")
+
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"s3"}, keys(endpoints), "Wrong vpc_endpoints returned")
+	s3Policy := getEndpointPolicy(t, endpoints["s3"])
+	assertServicePolicy(t, s3Policy, "s3", "s3:*")
+	assert.NotContains(t, s3Policy, "aws:PrincipalOrgID", "s3 endpoint policy must not have an organization statement without endpoint_policy_org_id")
 }
 
 func testTerraformVpcSpoke(t *testing.T) {
@@ -177,7 +249,10 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Equal(t, 3, len(databaseSubnets), "Wrong number of database_subnets returned")
 
 	elasticacheSubnets := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets")
-	assert.Equal(t, 0, len(elasticacheSubnets), "Wrong number of elasticache_subnets returned")
+	assert.Equal(t, databaseSubnets, elasticacheSubnets, "spoke elasticache_subnets must reuse database_subnets")
+
+	elasticacheSubnetGroup := tf.GetStringValue(t, outputs, "vpc__elasticache_subnet_group")
+	assert.NotEmpty(t, elasticacheSubnetGroup, "spoke should expose an elasticache subnet group (reused database subnets)")
 
 	privateSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__private_subnets_cidr_blocks")
 	assert.Equal(t, "10.30.0.64/28", privateSubnetCidrs[0], "Wrong value for private_subnets_cidr_blocks returned")
@@ -216,10 +291,132 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Equal(t, "10.30.3.128/26", databaseSubnetCidrs[2], "Wrong value for database_subnets_cidr_blocks returned")
 
 	elasticacheSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__elasticache_subnets_cidr_blocks")
-	assert.Equal(t, 0, len(elasticacheSubnetCidrs), "Wrong number of elasticache_subnet_cidr_blocks returned")
+	assert.Equal(t, databaseSubnetCidrs, elasticacheSubnetCidrs, "spoke elasticache_subnets_cidr_blocks must reuse database_subnets_cidr_blocks")
 
 	intraSubnetCidrs := tf.GetStringListValue(t, outputs, "vpc__intra_subnets_cidr_blocks")
 	assert.Equal(t, "10.30.0.0/28", intraSubnetCidrs[0], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.30.0.16/28", intraSubnetCidrs[1], "Wrong value for intra_subnets_cidr_blocks returned")
 	assert.Equal(t, "10.30.0.32/28", intraSubnetCidrs[2], "Wrong value for intra_subnets_cidr_blocks returned")
+
+	vpcIpv6CidrBlock := tf.GetStringValue(t, outputs, "vpc__vpc_ipv6_cidr_block")
+	assert.NotEmpty(t, vpcIpv6CidrBlock, "vpc_ipv6_cidr_block was not returned")
+
+	publicSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__public_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 3, len(publicSubnetsIpv6CidrBlocks), "Wrong number of public_subnets_ipv6_cidr_blocks returned")
+
+	privateSubnetsIpv6CidrBlocks := tf.GetStringListValue(t, outputs, "vpc__private_subnets_ipv6_cidr_blocks")
+	assert.Equal(t, 9, len(privateSubnetsIpv6CidrBlocks), "Wrong number of private_subnets_ipv6_cidr_blocks returned")
+
+	privateIpv6EgressRouteIds := tf.GetStringListValue(t, outputs, "vpc__private_ipv6_egress_route_ids")
+	assert.NotEmpty(t, privateIpv6EgressRouteIds, "private_ipv6_egress_route_ids was not returned")
+
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"), "vpc_flow_log_id was not returned")
+	assert.Equal(t, "cloud-watch-logs", tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_destination_type"), "Flow logs must go to CloudWatch by default")
+	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_cloudwatch_iam_role_arn"), "CloudWatch flow log IAM role was not returned")
+	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_bucket_name"), "No flow log bucket should be created for CloudWatch flow logs")
+
+	endpoints := getEndpoints(t, outputs)
+	assert.ElementsMatch(t, []string{"sts"}, keys(endpoints), "Wrong vpc_endpoints returned, sts only must still create the endpoints module")
+	assertServicePolicy(t, getEndpointPolicy(t, endpoints["sts"]), "sts", "sts:*")
+}
+
+// Checks the bucket's default encryption and waits for a delivered flow log file encrypted with it,
+// which also proves that the bucket and key policies allow log delivery.
+// With aws:kms the bucket must use the telemetry key of the kms module.
+func assertFlowLogEncryption(t *testing.T, bucket string, accountId string, flowLogId string, algorithm string) {
+	client := terratestAws.NewS3Client(t, os.Getenv("AWS_REGION"))
+
+	encryption, err := client.GetBucketEncryption(&s3.GetBucketEncryptionInput{Bucket: awsSDK.String(bucket)})
+	require.NoError(t, err, "Failed to get the encryption of bucket %s", bucket)
+	require.NotEmpty(t, encryption.ServerSideEncryptionConfiguration.Rules, "Bucket %s has no encryption rule", bucket)
+	byDefault := encryption.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault
+	require.Equal(t, algorithm, awsSDK.StringValue(byDefault.SSEAlgorithm), "Wrong default encryption of bucket %s", bucket)
+	kmsKeyArn := awsSDK.StringValue(byDefault.KMSMasterKeyID)
+	if algorithm == "aws:kms" {
+		require.NotEmpty(t, kmsKeyArn, "Bucket %s has no default KMS key", bucket)
+		kmsClient := terratestAws.NewKmsClient(t, os.Getenv("AWS_REGION"))
+		aliases, err := kmsClient.ListAliases(&kms.ListAliasesInput{KeyId: awsSDK.String(kmsKeyArn)})
+		require.NoError(t, err, "Failed to list the aliases of KMS key %s", kmsKeyArn)
+		telemetry := false
+		for _, alias := range aliases.Aliases {
+			t.Logf("Bucket %s uses KMS key %s with alias %s", bucket, kmsKeyArn, awsSDK.StringValue(alias.AliasName))
+			telemetry = telemetry || strings.HasSuffix(awsSDK.StringValue(alias.AliasName), "/telemetry")
+		}
+		assert.True(t, telemetry, "Bucket %s must use the telemetry KMS key, not %s", bucket, kmsKeyArn)
+		// Without this statement no flow log file is delivered, fail before waiting for one
+		policy, err := kmsClient.GetKeyPolicy(&kms.GetKeyPolicyInput{KeyId: awsSDK.String(kmsKeyArn), PolicyName: awsSDK.String("default")})
+		require.NoError(t, err, "Failed to get the policy of KMS key %s", kmsKeyArn)
+		require.Contains(t, awsSDK.StringValue(policy.Policy), "delivery.logs.amazonaws.com",
+			"KMS key %s does not allow delivery.logs.amazonaws.com, the kms module that created it is older than this vpc module", kmsKeyArn)
+	} else {
+		assert.Empty(t, kmsKeyArn, "Bucket %s must not have a KMS key", bucket)
+	}
+
+	// Flow logs are delivered about every 5 minutes, look at today's files only
+	prefix := fmt.Sprintf("AWSLogs/%s/vpcflowlogs/%s/%s/", accountId, os.Getenv("AWS_REGION"), time.Now().UTC().Format("2006/01/02"))
+	key, err := retry.DoWithRetryE(t, fmt.Sprintf("Wait for a flow log file in s3://%s/%s", bucket, prefix), 30, 30*time.Second, func() (string, error) {
+		var newest *s3.Object
+		err := client.ListObjectsV2Pages(&s3.ListObjectsV2Input{Bucket: awsSDK.String(bucket), Prefix: awsSDK.String(prefix)},
+			func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+				for _, object := range page.Contents {
+					if strings.HasSuffix(awsSDK.StringValue(object.Key), ".log.gz") && (newest == nil || object.LastModified.After(*newest.LastModified)) {
+						newest = object
+					}
+				}
+				return true
+			})
+		if err != nil {
+			return "", err
+		}
+		if newest == nil {
+			return "", fmt.Errorf("no flow log file in s3://%s/%s yet", bucket, prefix)
+		}
+		return awsSDK.StringValue(newest.Key), nil
+	})
+	if err != nil {
+		// AWS reports why the delivery fails on the flow log itself
+		flowLogs, describeErr := terratestAws.NewEc2Client(t, os.Getenv("AWS_REGION")).DescribeFlowLogs(&ec2.DescribeFlowLogsInput{FlowLogIds: []*string{awsSDK.String(flowLogId)}})
+		require.NoError(t, describeErr, "Failed to describe flow log %s", flowLogId)
+		for _, flowLog := range flowLogs.FlowLogs {
+			t.Logf("Flow log %s delivery status: %s %s", flowLogId, awsSDK.StringValue(flowLog.DeliverLogsStatus), awsSDK.StringValue(flowLog.DeliverLogsErrorMessage))
+		}
+		require.NoError(t, err, "No flow log file was delivered to bucket %s", bucket)
+	}
+
+	object, err := client.HeadObject(&s3.HeadObjectInput{Bucket: awsSDK.String(bucket), Key: awsSDK.String(key)})
+	require.NoError(t, err, "Failed to read flow log file s3://%s/%s", bucket, key)
+	assert.Equal(t, algorithm, awsSDK.StringValue(object.ServerSideEncryption), "Wrong encryption of flow log file s3://%s/%s", bucket, key)
+	assert.Equal(t, kmsKeyArn, awsSDK.StringValue(object.SSEKMSKeyId), "Wrong KMS key of flow log file s3://%s/%s", bucket, key)
+}
+
+func getEndpoints(t *testing.T, outputs map[string]interface{}) map[string]string {
+	value, ok := tf.GetValue(t, outputs, "vpc__vpc_endpoints").(map[string]interface{})
+	require.True(t, ok, "vpc__vpc_endpoints is not a map")
+	result := make(map[string]string, len(value))
+	for k, v := range value {
+		result[k] = v.(string)
+	}
+	return result
+}
+
+func keys(m map[string]string) []string {
+	result := make([]string, 0, len(m))
+	for k := range m {
+		result = append(result, k)
+	}
+	return result
+}
+
+func getEndpointPolicy(t *testing.T, endpointId string) string {
+	client := terratestAws.NewEc2Client(t, os.Getenv("AWS_REGION"))
+	out, err := client.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{VpcEndpointIds: []*string{awsSDK.String(endpointId)}})
+	require.NoError(t, err, "Failed to describe vpc endpoint %s", endpointId)
+	require.Equal(t, 1, len(out.VpcEndpoints), "vpc endpoint %s not found", endpointId)
+	return awsSDK.StringValue(out.VpcEndpoints[0].PolicyDocument)
+}
+
+func assertServicePolicy(t *testing.T, policy string, key string, action string) {
+	assert.Contains(t, policy, action, "Wrong actions in %s endpoint policy", key)
+	assert.Contains(t, policy, "aws:PrincipalAccount", "%s endpoint policy must only trust the current account", key)
+	assert.NotRegexp(t, `"Action"\s*:\s*(\[\s*)?"\*"`, policy, "%s endpoint policy must not allow bare * action", key)
 }

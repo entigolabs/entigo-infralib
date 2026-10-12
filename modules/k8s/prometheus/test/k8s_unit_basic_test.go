@@ -32,9 +32,6 @@ func testK8sPrometheus(t *testing.T, cloudName string, envName string) {
 
 	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
 
-	if cloudName == "aws" {
-		gatewayName = fmt.Sprintf("%s-server", namespaceName)
-	}
 
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 20, 6*time.Second)
 	if err != nil {
