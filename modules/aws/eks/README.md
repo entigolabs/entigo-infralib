@@ -46,6 +46,12 @@ __eks_tools_subnets__ Defaults to the value of 'private_subnets' variable.
 
 __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable logging set to [].
 
+__cloudwatch_log_group_retention_in_days__ Defaults to 90, number of days to retain control plane logs in the CloudWatch log group.
+
+__cloudwatch_log_group_class__ Defaults to null (STANDARD), log class of the CloudWatch log group. Set to INFREQUENT_ACCESS for cheaper storage with limited query features.
+
+__cloudwatch_log_group_tags__ Defaults to {}, additional tags for the CloudWatch log group.
+
 __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or orverride defaults.
 
 

@@ -275,6 +275,9 @@ module "eks" {
   enabled_log_types       = var.cluster_enabled_log_types
   encryption_config = null
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
+  cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention_in_days
+  cloudwatch_log_group_class             = var.cloudwatch_log_group_class
+  cloudwatch_log_group_tags              = var.cloudwatch_log_group_tags
   
   identity_providers = var.cluster_identity_providers
   
