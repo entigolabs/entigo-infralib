@@ -4,7 +4,7 @@
 Oppinionated version of this https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/modules/eks-managed-node-group
 
 
-__node_repair_config__ Defaults to null (node auto repair disabled). 
+__node_repair_config__ Defaults to null (node auto repxhealth issues, enable it in the aws/eks module with enable_node_monitoring_agent: true.
 
 ### Example code ###
 
