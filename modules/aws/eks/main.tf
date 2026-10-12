@@ -37,6 +37,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = var.node_repair_config
       labels = {
         main = "true"
       }
@@ -76,6 +77,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = var.node_repair_config
       taints = {
         mon = {
           key    = "mon"
@@ -123,6 +125,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = var.node_repair_config
       taints = {
         tools = {
           key    = "tools"
@@ -168,6 +171,7 @@ locals {
   eks_managed_node_groups_extra = {
     for k, v in var.eks_managed_node_groups_extra :
     k => merge(
+      var.node_repair_config != null ? { node_repair_config = var.node_repair_config } : {},
       v,
       {
         desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
@@ -378,6 +382,15 @@ module "eks" {
         }, var.efs_csi_controller_config)
       })
     }
+  } : {}, var.enable_node_monitoring_agent ? {
+    eks-node-monitoring-agent = merge({
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
+      addon_version               = var.node_monitoring_agent_addon_version != "" ? var.node_monitoring_agent_addon_version : null
+      most_recent                 = false
+    }, length(var.node_monitoring_agent_config) > 0 ? {
+      configuration_values = jsonencode(var.node_monitoring_agent_config)
+    } : {})
   } : {}, {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"

@@ -405,3 +405,29 @@ variable "tags" {
   description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
   default     = {}
 }
+
+variable "node_repair_config" {
+  description = "Node auto repair configuration for all managed node groups, for example { enabled = true }"
+  type        = any
+  default     = null
+}
+
+variable "enable_node_monitoring_agent" {
+  description = "Install the eks-node-monitoring-agent addon, lets node auto repair detect more node health issues"
+  type        = bool
+  nullable    = false
+  default     = false
+}
+
+variable "node_monitoring_agent_addon_version" {
+  description = "Defaults to the AWS default addon version for the cluster version"
+  type        = string
+  nullable    = false
+  default     = ""
+}
+
+variable "node_monitoring_agent_config" {
+  type     = any
+  nullable = false
+  default  = {}
+}
