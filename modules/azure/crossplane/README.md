@@ -15,7 +15,7 @@ Creates two user-assigned identities with federated credentials for the AKS OIDC
 * `<prefix>-core` for Crossplane core (ServiceAccount `crossplane-system/crossplane`): AcrPull on the acr-proxy
   registry (`acr_id`) to pull the packages.
 
-Needs azure/aks (`oidc_issuer_url`, `node_resource_group_id`) in the same step or an earlier one, and acr-proxy
+Needs azure/aks (`cluster_oidc_issuer_url`, `node_resource_group_id`) in the same step or an earlier one, and acr-proxy
 in an earlier step (its id decides what is created).
 
 The federated credentials trust fixed service accounts: `kubernetes_namespace` (`crossplane-system`) with

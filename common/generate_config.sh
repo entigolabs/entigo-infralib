@@ -466,9 +466,12 @@ test_k8s() {
   gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-  azure_auth_login
-  azure_kube_context pri
-  azure_kube_context biz
+  if [ "$AZURE_SUBSCRIPTION_ID" != "" ]
+  then
+    azure_auth_login
+    azure_kube_context pri
+    azure_kube_context biz
+  fi
 
   TESTS=(
       "./modules/k8s/platform-apis/test.sh"

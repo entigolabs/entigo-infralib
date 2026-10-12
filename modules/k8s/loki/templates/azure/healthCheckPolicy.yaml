@@ -20,5 +20,5 @@ spec:
   targetRef:
     group: ""
     kind: Service
-    name: {{ .Release.Name }}-gateway
+    name: {{ .Values.loki.fullnameOverride }}-gateway
 {{- end }}

@@ -26,7 +26,7 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
 * Pools are spread over every zone where their VM size is available in the region for the subscription (read from the
   Compute SKU list, zones restricted for the subscription are left out), `availability_zones` overrides it (`[]` = no
   zones). A VM size that isn't available in the region fails the plan.
-* Non-spot pools upgrade with `max_surge` (default 10%), disks are `aks_<pool>_volume_type` (Managed or Ephemeral),
+* Non-spot pools upgrade with `aks_<pool>_max_surge` (default 10%), disks are `aks_<pool>_volume_type` (Managed or Ephemeral),
   nodes carry `created-by=entigo-infralib`. Cluster autoscaler settings: `auto_scaler_profile` (AKS defaults when
   null); the k8s cluster-autoscaler module is not used on Azure.
 * Node resource group `<prefix>-nodes-<location>` (`node_resource_group_name`), created and managed by AKS, only

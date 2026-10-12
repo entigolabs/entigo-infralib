@@ -5,7 +5,7 @@ global:
     subscriptionId: "{{ .toutput.crossplane.subscription_id }}"
     resourceGroupName: "{{ .agent.resourceGroup }}"
     location: "{{ .toutput.aks.region }}"
-    oidcIssuerUrl: "{{ .toutput.aks.oidc_issuer_url }}"
+    oidcIssuerUrl: "{{ .toutput.aks.cluster_oidc_issuer_url }}"
     identityPrefix: "{{ .toutput.aks.cluster_name }}"
     nodeResourceGroupName: "{{ .toutput.aks.node_resource_group }}"
 workloadIdentity:

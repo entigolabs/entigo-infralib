@@ -103,13 +103,13 @@ variable "encryption" {
     identity_client_id = string
   })
   default     = null
-  description = "Customer managed key, Premium only and only at registry creation"
+  description = "Customer managed key, and only at registry creation. Premium tier required."
 }
 
 variable "private_endpoint_enabled" {
   type        = bool
   default     = false
-  description = "Premium only"
+  description = "Premium tier required."
 }
 
 variable "private_endpoint_subnet_id" {

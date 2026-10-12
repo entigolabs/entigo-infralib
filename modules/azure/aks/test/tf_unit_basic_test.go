@@ -28,7 +28,7 @@ func checkAks(t *testing.T, env string) map[string]interface{} {
 	assert.Equal(t, fmt.Sprintf("%s-nodes-%s", prefix, azure.Location()), tf.GetStringValue(t, outputs, "aks__node_resource_group"))
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "aks__node_resource_group_id"), "node_resource_group_id was not returned")
 	assert.Equal(t, tf.GetStringListValue(t, netOutputs, "vpc__private_subnets")[0], tf.GetStringValue(t, outputs, "aks__vnet_subnet_id"), "vnet_subnet_id must be the first private subnet of net")
-	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__oidc_issuer_url"), "https://"), "oidc_issuer_url must be https")
+	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__cluster_oidc_issuer_url"), "https://"), "cluster_oidc_issuer_url must be https")
 	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__cluster_endpoint"), "https://"), "cluster_endpoint must be https")
 	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__kubernetes_version"), "1.36"), "Wrong kubernetes_version")
 	assert.Equal(t, "10.244.0.0/16", tf.GetStringValue(t, outputs, "aks__pod_cidr"))

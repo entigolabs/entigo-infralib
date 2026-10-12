@@ -68,7 +68,7 @@ locals {
     availability_zones   = local.zones_for[var.aks_tools_instance_type]
     node_labels          = { "tools" = "true", created-by = "entigo-infralib" }
     node_taints          = ["CriticalAddonsOnly=true:NoSchedule"]
-    upgrade_settings     = { max_surge = var.max_surge }
+    upgrade_settings     = { max_surge = var.aks_tools_max_surge }
     orchestrator_version = var.kubernetes_version
     vnet_subnet_id       = var.vnet_subnet_id
     tags                 = local.tags
@@ -300,7 +300,7 @@ module "main" {
   volume_type        = var.aks_main_volume_type
   os_sku             = var.os_sku
   spot_nodes         = var.aks_main_spot_nodes
-  max_surge          = var.max_surge
+  max_surge          = var.aks_main_max_surge
   labels             = { "main" = "true" }
   tags               = var.tags
 
@@ -326,7 +326,7 @@ module "mon" {
   volume_type        = var.aks_mon_volume_type
   os_sku             = var.os_sku
   spot_nodes         = var.aks_mon_spot_nodes
-  max_surge          = var.max_surge
+  max_surge          = var.aks_mon_max_surge
   labels             = { "mon" = "true" }
   taints             = ["mon=true:NoSchedule"]
   tags               = var.tags

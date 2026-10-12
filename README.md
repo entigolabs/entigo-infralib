@@ -21,7 +21,7 @@
 
 > **Looking to provision a platform? You want the [agent](https://github.com/entigolabs/entigo-infralib-agent).** It's the tool you install and run. This Infralib repo is where modules are developed and tested — useful if you're contributing a module or want to see how one works.
 
-> **In production since 2023.** Released and tested every weekday against live AWS and Google Cloud accounts. Used by Estonia's Information System Authority (RIA) and the Health and Welfare Information Systems Centre (TEHIK).
+> **In production since 2023.** Released and tested every weekday against live AWS, Google Cloud and Azure accounts. Used by Estonia's Information System Authority (RIA) and the Health and Welfare Information Systems Centre (TEHIK).
 
 New here? Follow the [quickstart guide](https://infralib-quickstart.dev.entigo.dev/).
 
@@ -110,7 +110,7 @@ spec:
 
 Releases are cut from `main` roughly once per day:
 
-1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud and Oracle test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
+1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud, Oracle and Azure test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
 2. **Stable** — in the morning the latest release is installed and its tests run (Stable action).
 3. **Upgrade** — the accounts are upgraded to the `main` branch and tests run again.
 4. **Release** — if the tests pass and `main` differs from the last release, a new release is created (Release action).

@@ -77,6 +77,10 @@ variable "api_server_vnet_integration_enabled" {
 variable "api_server_subnet_id" {
   type    = string
   default = ""
+  validation {
+    condition     = !var.api_server_vnet_integration_enabled || var.api_server_subnet_id != ""
+    error_message = "api_server_vnet_integration_enabled needs api_server_subnet_id (vpc apiserver_subnets)."
+  }
 }
 
 variable "private_cluster_enabled" {
@@ -117,6 +121,10 @@ variable "disable_local_accounts" {
 variable "acr_id" {
   type    = string
   default = ""
+  validation {
+    condition     = !var.bootstrap_cache_enabled || var.acr_id != ""
+    error_message = "bootstrap_cache_enabled needs acr_id."
+  }
 }
 
 variable "bootstrap_cache_enabled" {
@@ -161,11 +169,6 @@ variable "control_plane_logs_retention_days" {
 variable "availability_zones" {
   type    = list(string)
   default = null
-}
-
-variable "max_surge" {
-  type    = string
-  default = "10%"
 }
 
 variable "node_resource_group_name" {
@@ -249,6 +252,11 @@ variable "aks_main_spot_nodes" {
   default = false
 }
 
+variable "aks_main_max_surge" {
+  type    = string
+  default = "10%"
+}
+
 variable "aks_mon_instance_type" {
   type    = string
   default = "Standard_D2s_v6"
@@ -286,6 +294,11 @@ variable "aks_mon_spot_nodes" {
   default = false
 }
 
+variable "aks_mon_max_surge" {
+  type    = string
+  default = "10%"
+}
+
 variable "aks_tools_instance_type" {
   type    = string
   default = "Standard_D2s_v6"
@@ -316,6 +329,11 @@ variable "aks_tools_volume_size" {
 variable "aks_tools_max_pods" {
   type    = number
   default = 64
+}
+
+variable "aks_tools_max_surge" {
+  type    = string
+  default = "10%"
 }
 
 variable "tags" {
