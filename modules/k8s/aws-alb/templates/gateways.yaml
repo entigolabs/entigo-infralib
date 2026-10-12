@@ -20,7 +20,7 @@ spec:
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
 # Also carries settings that used to be per-Ingress annotations but apply to
-# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn
+# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn, inbound-cidrs
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:
@@ -86,6 +86,25 @@ spec:
     - key: {{ $k }}
       value: {{ $v | quote }}
     {{- end }}
+  {{- /* Comma-separated string (agent outputs arrive comma-separated and per-element quoted) or a YAML list */}}
+  {{- $sourceRanges := list }}
+  {{- if kindIs "string" $cfg.sourceRanges }}
+  {{- range split "," $cfg.sourceRanges }}
+  {{- with . | trim | trimAll "\"" }}{{ $sourceRanges = append $sourceRanges . }}{{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $cfg.sourceRanges }}
+  {{- with . | toString | trim | trimAll "\"" }}{{ $sourceRanges = append $sourceRanges . }}{{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if $sourceRanges }}
+  # Replaces alb.ingress.kubernetes.io/inbound-cidrs: only these CIDRs may reach the ALB,
+  # empty allows everything (0.0.0.0/0)
+  sourceRanges:
+    {{- range $sourceRanges }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:
     {{- range split "," $cfg.subnets }}

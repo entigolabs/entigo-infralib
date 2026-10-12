@@ -21,17 +21,20 @@ import (
 const gatewayClassName = "alb"
 
 func TestK8sAwsAlbGatewayApiBiz(t *testing.T) {
-	// access logs are off by default
-	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{"external", "service"}, false)
+	// access logs are off by default, the service gateway sets sourceRanges as a list
+	testK8sAwsAlbGatewayApi(t, "aws", "biz", []string{"external", "service"}, []string{"external", "service"},
+		map[string][]string{"service": {"0.0.0.0/0", "10.0.0.0/8"}}, false)
 }
 
 func TestK8sAwsAlbGatewayApiPri(t *testing.T) {
-	// service gateway is disabled in pri, access logs are off for the internal gateway
+	// service gateway is disabled in pri, access logs are off for the internal gateway,
+	// the external gateway sets sourceRanges as a quoted comma-separated string
 	// pri sends the ALB Server header (serverHeader: true), biz uses the default
-	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"}, true)
+	testK8sAwsAlbGatewayApi(t, "aws", "pri", []string{"external", "internal"}, []string{"internal"},
+		map[string][]string{"external": {"0.0.0.0/0", "10.0.0.0/8"}}, true)
 }
 
-func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string, accessLogsDisabled []string, serverHeader bool) {
+func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gatewayNames []string, accessLogsDisabled []string, sourceRanges map[string][]string, serverHeader bool) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
 	_, _, hostName, _ := k8s.GetGatewayConfig(t, cloudName, envName, "default")
@@ -64,6 +67,7 @@ func testK8sAwsAlbGatewayApi(t *testing.T, cloudName string, envName string, gat
 
 	for _, gatewayName := range gatewayNames {
 		testGatewayAccessLogs(t, kubectlOptions, gatewayName, !slices.Contains(accessLogsDisabled, gatewayName))
+		testGatewaySourceRanges(t, kubectlOptions, gatewayName, sourceRanges[gatewayName])
 	}
 
 	// Every enabled gateway gets its own HTTPRoute with a unique hostname
@@ -100,6 +104,19 @@ func testGatewayAccessLogs(t *testing.T, kubectlOptions *terrak8s.KubectlOptions
 		"-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
 	require.NoError(t, err, "Getting access logs Bucket %s error", bucket)
 	require.Equal(t, "True", ready, "Access logs Bucket %s is not Ready", bucket)
+}
+
+// Gateways without sourceRanges in the test values must not set any, the ALB then allows 0.0.0.0/0
+func testGatewaySourceRanges(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, gatewayName string, expected []string) {
+	value, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions,
+		"get", "loadbalancerconfigurations.gateway.k8s.aws", gatewayName,
+		"-o", `jsonpath={.spec.sourceRanges[*]}`)
+	require.NoError(t, err, "Getting LoadBalancerConfiguration %s error", gatewayName)
+	if len(expected) == 0 {
+		require.Empty(t, value, "Gateway %s has unexpected sourceRanges", gatewayName)
+		return
+	}
+	require.Equal(t, expected, strings.Fields(value), "Gateway %s sourceRanges", gatewayName)
 }
 
 func testGatewayHTTPRoute(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, gatewayName string, hostName string, backendName string, serverHeader bool) {
