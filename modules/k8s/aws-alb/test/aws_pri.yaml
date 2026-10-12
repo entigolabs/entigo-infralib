@@ -18,3 +18,5 @@ gateways:
   internal:
     accessLogs:
       enabled: false
+  external:
+    sourceRanges: '"0.0.0.0/0", "10.0.0.0/8"'   # agent list outputs arrive comma-separated and per-element quoted

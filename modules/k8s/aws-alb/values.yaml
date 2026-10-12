@@ -99,6 +99,7 @@ gateways:
     scheme: internal
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
     sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
@@ -112,6 +113,7 @@ gateways:
     scheme: internal
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
     sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
@@ -125,6 +127,7 @@ gateways:
     scheme: internet-facing
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
     sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
@@ -143,6 +146,7 @@ gateways:
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
+  #   sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
   #   sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
   #   wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
   #   loadBalancerAttributes: {}

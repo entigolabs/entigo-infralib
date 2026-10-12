@@ -31,6 +31,7 @@ gateways:
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
+  #   sourceRanges: []
 ```
 
 Here the `partner` gateway would be created in addition to the defaults.
@@ -71,6 +72,36 @@ gateways:
   external:
     subnets: '{{ .toutput.vpc.public_subnets }}'
 ```
+
+### Source ranges
+
+By default every gateway ALB accepts traffic from anywhere (`0.0.0.0/0`).
+`sourceRanges` limits the CIDRs allowed through the ALB security group, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/inbound-cidrs` Ingress annotation:
+
+```yaml
+gateways:
+  external:
+    sourceRanges:
+      - 10.0.0.0/8
+      - 192.168.1.0/24
+  partner:
+    enabled: true
+    scheme: internet-facing
+    sourceRanges: "203.0.113.0/24,198.51.100.0/24"   # a comma-separated string also works
+```
+
+A comma-separated string makes it possible to take the list from a terraform
+output, the same way as `subnets`:
+
+```yaml
+gateways:
+  internal:
+    sourceRanges: '{{ .toutput.vpc.vpc_cidr_block }}'
+```
+
+An empty list or string allows everything.
 
 ### Selecting which gateway infralib modules use
 
@@ -289,6 +320,7 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-port: '8081'
     alb.ingress.kubernetes.io/healthcheck-path: /status/healthz
     alb.ingress.kubernetes.io/success-codes: '200-299'
+    alb.ingress.kubernetes.io/inbound-cidrs: 10.0.0.0/8,192.168.1.0/24
 spec:
   ingressClassName: external
   rules:
@@ -354,6 +386,27 @@ spec:
       matcher:
         httpCode: "200-299"    # was alb.ingress.kubernetes.io/success-codes
 ```
+
+`alb.ingress.kubernetes.io/inbound-cidrs` restricted who could reach the ALB.
+The security group belongs to the shared ALB, so the setting moves off the
+application and onto the gateway, in the infralib config of the `aws-alb`
+module:
+
+```yaml
+      - name: aws-alb
+        source: aws-alb
+        inputs:
+          gateways:
+            external:
+              sourceRanges:      # was alb.ingress.kubernetes.io/inbound-cidrs
+                - 10.0.0.0/8
+                - 192.168.1.0/24
+```
+
+The CIDRs apply to every route on that gateway. If only some applications
+need the restriction, give them a custom gateway with its own `sourceRanges`
+and attach their HTTPRoutes to it, see
+[Default gateways and custom gateways](#default-gateways-and-custom-gateways).
 
 Notes:
 
