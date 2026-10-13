@@ -1,7 +1,14 @@
 regions:
   - global
   - westeurope
+  - northeurope
+  - italynorth
+  - francecentral
+  - switzerlandnorth
+  - uksouth
+  - norwayeast
   - swedencentral
+  - germanywestcentral
 
 blocklist:
   - "00000000-0000-0000-0000-000000000000"
