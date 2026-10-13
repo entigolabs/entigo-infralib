@@ -1,0 +1,6 @@
+---
+# OC19 has no public DNS zones, so nothing uses the external class, and each class costs a
+# flexible load balancer out of the tenancy's per-region limit.
+ingressClasses:
+  external:
+    enabled: false
