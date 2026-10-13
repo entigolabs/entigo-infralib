@@ -100,7 +100,8 @@ func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	err = k8s.DeleteCrossplaneResource(t, kubectlOptions, bucketResource, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = oracle.WaitUntilOCIBucketDeleted(t, region, bucketName, 30, 4*time.Second)
+	// Crossplane deletes the bucket on its next reconcile, which can come minutes later.
+	err = oracle.WaitUntilOCIBucketDeleted(t, region, bucketName, 90, 4*time.Second)
 	require.NoError(t, err, "Bucket deletion error")
 	err = k8s.WaitUntilCrossplaneResourceDeleted(t, kubectlOptions, bucketResource, bucketName, 12, 5*time.Second)
 	require.NoError(t, err, "Bucket object didn't get deleted")
