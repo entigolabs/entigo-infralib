@@ -7,3 +7,8 @@ data "oci_core_services" "all" {
     regex  = true
   }
 }
+
+data "oci_core_vcn" "existing" {
+  count  = var.vcn_id == null ? 0 : 1
+  vcn_id = var.vcn_id
+}
