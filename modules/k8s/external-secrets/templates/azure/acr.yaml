@@ -19,7 +19,6 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   serviceAccountName: acr-token
-  # The ACR generator reads the tenant from the service account
   serviceAccountAnnotations:
     azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantId | quote }}
   roleAssignments:
@@ -46,7 +45,6 @@ spec:
       serviceAccountRef:
         name: acr-token
 ---
-# Name and url match the secret the tools image seeds (images/tools/functions-argocd.sh)
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:

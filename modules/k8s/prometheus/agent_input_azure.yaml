@@ -2,7 +2,6 @@ prometheus:
   kube-state-metrics:
     networkPolicy:
       egress:
-        # API server in the vpc apiserver subnet (aks VNet integration)
         - to:
             - ipBlock:
                 cidr: "{{ .toutput.vpc.apiserver_subnet_cidrs[0] }}"

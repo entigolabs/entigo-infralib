@@ -25,7 +25,6 @@ global:
     agcSubnetCidrs: ""
 
 loki:
-  # Created by the WorkloadIdentity (templates/azure)
   serviceAccount:
     create: false
     name: loki
@@ -37,7 +36,6 @@ loki:
       azure:
         accountName: '{{ include "entigo.azureStorageAccountName" . }}'
         useFederatedToken: true
-    # tsdb/v13 only like oracle, no history to keep
     schemaConfig:
       configs:
         - from: "2026-01-01"

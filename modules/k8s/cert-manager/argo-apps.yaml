@@ -10,7 +10,6 @@ spec:
         pod-security.kubernetes.io/enforce: restricted
         pod-security.kubernetes.io/warn: restricted
         tenancy.entigo.com/zone: infralib
-  # cainjector injects the webhook CA at runtime
   ignoreDifferences:
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration

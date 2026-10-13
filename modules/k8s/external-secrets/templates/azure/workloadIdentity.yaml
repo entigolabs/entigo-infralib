@@ -7,7 +7,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  # No tenant-id annotation: the ClusterSecretStore sets the tenant, both fail with "multiple tenantID found"
   serviceAccountName: secret-manager-operator
   roleAssignments:
     - role: Key Vault Secrets User

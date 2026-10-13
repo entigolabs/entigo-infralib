@@ -25,7 +25,6 @@ global:
     agcHealthCheck: false
 
 mimir-distributed:
-  # Created by the WorkloadIdentity (templates/azure)
   serviceAccount:
     create: false
     name: mimir
