@@ -23,6 +23,14 @@ if [ "$GOOGLE_CREDENTIALS" != "" ]
 then
     DOCKER_OPTS='-e GOOGLE_CREDENTIALS'
 fi
+# The OKE kubeconfig authenticates by running the oci CLI, which needs this config, and
+# the Oracle module tests call OCI themselves. The CLI must stay silent: its warnings land in
+# kubectl output the tests compare, such as `kubectl auth can-i` expecting exactly "yes".
+if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+    oracle_auth_defaults
+    OCI_CONFIG_DIR="$(dirname "$OCI_CONFIG_FILE")"
+    DOCKER_OPTS="$DOCKER_OPTS -v $OCI_CONFIG_DIR:$OCI_CONFIG_DIR:ro -e OCI_CLI_CONFIG_FILE=$OCI_CONFIG_FILE -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True -e SUPPRESS_LABEL_WARNING=True -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID"
+fi
 
 google_auth_login
 
@@ -78,6 +86,10 @@ then
       fi
     fi
     docker pull $ENTIGO_INFRALIB_IMAGE
+    if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+        oracle_kubeconfig pri-infra-oke || exit 1
+        oracle_kubeconfig biz-infra-oke || exit 1
+    fi
   fi
   MODULE_NAME=$(basename $MODULE_PATH)
   get_branch_name
@@ -114,6 +126,9 @@ fi
   if [ "$AZURE_SUBSCRIPTION_ID" != "" ]
   then
     default_azure_conf
+  fi
+  if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+      default_oracle_conf
   fi
   full_k8s_conf
   
@@ -224,6 +239,16 @@ fi
           cat agents/$testname/config.yaml
           docker run --rm -v "$(pwd)":"/conf" -e AZURE_SUBSCRIPTION_ID -e AZURE_LOCATION -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
           PIDS="$PIDS $!=$testname"
+        elif [[ $testname == oracle_* && "$OCI_COMPARTMENT_ID" == "" ]]; then
+            echo "Skip $testname test, OCI_COMPARTMENT_ID is not set"
+        elif [[ $testname == oracle_* ]]; then
+            # Public OKE endpoint for the same reason as run_agents in generate_config.sh.
+            cat agents/$testname/config.yaml
+            docker run --rm -v "$OCI_CONFIG_DIR":"$OCI_CONFIG_DIR":ro -v "$(pwd)":"/conf" \
+                -e OCI_CONFIG_FILE -e OCI_REGION -e OCI_COMPARTMENT_ID -e OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT -w /conf \
+                --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$testname/config.yaml \
+                --prefix $prefix --pipeline-type=local --steps "$STEP_NAME" &
+            PIDS="$PIDS $!=$testname"
         else
           echo "Unknown cloud provider type $testname"
         fi

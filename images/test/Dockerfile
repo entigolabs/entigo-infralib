@@ -29,17 +29,18 @@ ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 # loudly here and bump the version instead of fetching ~70MB on every test run.
 ENV GOTOOLCHAIN=local
 USER root
-#Install AWS SDK
+#Install the AWS and OCI CLIs
 RUN apk --no-cache add \
     py3-pip \
     docker-cli \
     docker-credential-ecr-login \
     && rm -rf /var/cache/apk/* \
-    && pip install --no-cache-dir --break-system-packages awscli \
+    && pip install --no-cache-dir --break-system-packages awscli oci-cli \
     && rm -rf \
        /root/.cache/pip \
        /usr/lib/python3.*/site-packages/awscli/examples \
        /usr/lib/python3.*/site-packages/*/tests \
+    && find /usr/local/lib/python3.*/site-packages/oci -type d -name tests -prune -exec rm -rf {} + \
     && find /usr/lib/python3.* -type f -name examples-1.json -delete \
     && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
     && apk del py3-pip
