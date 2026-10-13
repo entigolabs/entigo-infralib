@@ -93,8 +93,6 @@ output "mssql_subnet_cidrs" {
   value = local.mssql_subnets
 }
 
-# Same names as aws/vpc for shared consumers (e.g. platform-apis). AKS nodes use the private subnets,
-# Redis/Postgres/MySQL private endpoints the database subnets.
 output "name" {
   value = azurerm_virtual_network.this.name
 }

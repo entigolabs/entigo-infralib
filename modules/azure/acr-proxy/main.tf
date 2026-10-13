@@ -44,7 +44,6 @@ resource "azurerm_container_registry" "this" {
   resource_group_name      = var.resource_group_name
   sku                      = var.sku
   retention_policy_in_days = var.sku == "Premium" ? var.retention_policy_in_days : null
-  # Azure enables data endpoints with a private endpoint
   data_endpoint_enabled         = local.private_endpoint
   public_network_access_enabled = var.public_network_access_enabled
   tags                          = local.tags
@@ -101,7 +100,6 @@ resource "azurerm_role_assignment" "credential_secrets" {
   skip_service_principal_aad_check = true
 }
 
-# AKS bootstrap artifact cache: name and repos are fixed by AKS
 resource "azurerm_container_registry_cache_rule" "aks_bootstrap" {
   count                 = var.aks_bootstrap_cache_rule ? 1 : 0
   name                  = "aks-managed-mcr"
@@ -118,7 +116,6 @@ resource "azurerm_container_registry_cache_rule" "this" {
   source_repo           = "${each.value}/*"
   target_repo           = "${each.value}/*"
   credential_set_id     = contains(local.registries_with_credentials, each.key) ? azurerm_container_registry_credential_set.this[each.key].id : null
-  # Otherwise the first pulls can run before the credential set can read its secrets
   depends_on = [azurerm_role_assignment.credential_secrets]
 }
 

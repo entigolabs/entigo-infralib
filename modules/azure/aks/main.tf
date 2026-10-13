@@ -126,7 +126,7 @@ resource "azurerm_role_assignment" "aks_vnet" {
   skip_service_principal_aad_check = true
 }
 
-# Bootstrap cache: the kubelet identity needs AcrPull before the nodes bootstrap, so it can't be the AKS-created one
+# Bootstrap cache: the kubelet identity needs AcrPull before the nodes bootstrap
 resource "azurerm_user_assigned_identity" "kubelet" {
   count               = var.bootstrap_cache_enabled ? 1 : 0
   name                = "${var.prefix}-kubelet"
@@ -245,7 +245,6 @@ module "aks" {
   api_server_access_profile = {
     enable_private_cluster             = var.private_cluster_enabled
     enable_private_cluster_public_fqdn = var.private_cluster_enabled ? false : null
-    # [] not null: AVM drops nulls and AKS would keep the old ranges, which private mode rejects
     authorized_ip_ranges    = var.private_cluster_enabled ? [] : local.authorized_ip_ranges
     enable_vnet_integration = var.api_server_vnet_integration_enabled
     subnet_id               = var.api_server_vnet_integration_enabled ? var.api_server_subnet_id : null
@@ -398,7 +397,7 @@ resource "azurerm_monitor_diagnostic_setting" "control_plane" {
   }
 }
 
-# ALB controller (azure-gateway k8s module): its chart needs the client id at render time and ALB-managed AGC lives in the node resource group
+# ALB controller (k8s/azure-gateway): its chart needs the client id at render time and ALB-managed AGC lives in the node resource group
 resource "azurerm_user_assigned_identity" "alb_controller" {
   count               = length(var.agc_subnet_ids) > 0 ? 1 : 0
   name                = "${var.prefix}-alb-controller"

@@ -7,7 +7,6 @@ locals {
   domains = {
     for k, d in var.domains : k => merge(d, {
       vpc_ids = length(d.vpc_ids) > 0 ? d.vpc_ids : var.vpc_ids
-      # Defaults like aws-v2/route53
       default_public = d.default_public != null ? d.default_public : (
         length(var.domains) == 1 ? true : (!d.private && local.public_domains_count == 1 ? true : null)
       )

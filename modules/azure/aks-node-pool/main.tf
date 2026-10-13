@@ -9,7 +9,7 @@ data "azapi_resource_list" "vm_skus" {
 }
 
 locals {
-  # Zones restricted for the subscription (NotAvailableForSubscription) are left out, like azure/aks
+  # Zones restricted for the subscription (NotAvailableForSubscription) are left out
   sku = one([
     for v in try(data.azapi_resource_list.vm_skus[0].output.vms, []) : v
     if v.name == var.instance_type && length(coalesce(try(v.location_restrictions, null), [])) == 0

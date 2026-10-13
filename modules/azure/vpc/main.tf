@@ -384,7 +384,6 @@ resource "azurerm_storage_account" "flow_log" {
   allow_nested_items_to_be_public = false
   tags                            = local.tags
 
-  # Network Watcher writes as a trusted Azure service; readers come from the private subnets
   network_rules {
     default_action             = "Deny"
     bypass                     = ["AzureServices", "Logging", "Metrics"]

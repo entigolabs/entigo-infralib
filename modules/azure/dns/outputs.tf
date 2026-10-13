@@ -2,7 +2,6 @@ output "pub_zone_id" {
   description = "Zone ID of the domain marked as default public"
   value       = try(local.zone_ids[local.default_public_keys[0]], null)
 
-  # Also covers create_zone = false only and an empty map, like the aws-v2/route53 index lookup
   precondition {
     condition     = length(local.default_public_keys) == 1 && length(local.default_private_keys) == 1
     error_message = "Exactly one domain must be default_public = true and exactly one default_private = true."

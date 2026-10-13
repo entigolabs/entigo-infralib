@@ -11,8 +11,6 @@ locals {
     telemetry = var.telemetry_key_users
   }
 
-  # data: disks and other data, telemetry: monitoring data (wrap/unwrap by Azure services),
-  # config: customer app secrets (apps encrypt/decrypt with it)
   key_user_roles = {
     data      = "Key Vault Crypto Service Encryption User"
     config    = "Key Vault Crypto User"
@@ -75,7 +73,6 @@ resource "azurerm_role_assignment" "admin" {
   }
 }
 
-# Data plane role assignments take up to a minute
 resource "time_sleep" "rbac" {
   create_duration = "60s"
   depends_on      = [azurerm_role_assignment.admin]
