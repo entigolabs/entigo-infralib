@@ -336,8 +336,20 @@ variable "node_launch_template_tags" {
 
 variable "node_repair_config" {
   description = "Disabled when null, enable with true"
-  type        = any
-  default     = null
+  type = object({
+    enabled                                 = bool
+    max_parallel_nodes_repaired_count       = optional(number)
+    max_parallel_nodes_repaired_percentage  = optional(number)
+    max_unhealthy_node_threshold_count      = optional(number)
+    max_unhealthy_node_threshold_percentage = optional(number)
+    node_repair_config_overrides = optional(list(object({
+      min_repair_wait_time_mins = number
+      node_monitoring_condition = string
+      node_unhealthy_reason     = string
+      repair_action             = string
+    })))
+  })
+  default = null
 }
 
 variable "coredns_addon_version" {
