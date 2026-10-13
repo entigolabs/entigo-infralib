@@ -17,5 +17,23 @@ spec:
     role: roles/storage.objectAdmin
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
+---
+# Unlike loki and mimir, Tempo reads the bucket attributes on startup and fails
+# without storage.buckets.get, which roles/storage.objectAdmin does not include.
+apiVersion: storage.gcp.upbound.io/v1beta2
+kind: BucketIAMMember
+metadata:
+  name: {{ .Release.Name }}-storage-bucket-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+    member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.tempo.serviceAccount.name }}]
+    role: roles/storage.legacyBucketReader
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
 
 {{- end }}
