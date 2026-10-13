@@ -17,7 +17,7 @@ tempo:
   nameOverride: tempo
 
   serviceAccount:
-    create: false # we create our own SA in templates/aws/serviceAccount.yaml
+    create: false # we create our own SA in templates/aws/ and templates/google/serviceAccount.yaml
     name: tempo
 
   podSecurityContext:
@@ -79,7 +79,7 @@ tempo:
 
     storage:
       trace:
-        backend: local # overridden to "s3" in values-aws.yaml
+        backend: local # overridden to "s3" in values-aws.yaml and "gcs" in values-google.yaml
         local:
           path: /var/tempo/traces
         wal:

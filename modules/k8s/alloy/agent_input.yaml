@@ -9,3 +9,10 @@ logs:
   configReloader:
     image:
       registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}'
+  # Optional lookup (not required): a stack that never deploys tempo must
+  # still be able to render this module with traces.enabled left at its
+  # default false. Falls back to the literal "tempo" (the module's usual
+  # name) so the value is still sane if a stack turns traces.enabled on
+  # without ever having set up the tempo module reference explicitly.
+  traces:
+    tempoEndpoint: '{{ .toptmodule.tempo | "tempo" }}.{{ .toptmodule.tempo | "tempo" }}:4317'
