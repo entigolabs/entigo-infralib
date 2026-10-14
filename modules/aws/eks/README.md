@@ -56,6 +56,8 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
 
 __node_repair_config__ Defaults to null (node auto repair disabled). EKS managed node group auto repair configuration, applied to all managed node groups 
 
+__node_repair_wait_time_mins__ Defaults to 20, minutes before repairing a node for all repair triggering node conditions (10-120, multiple of 10). Ignored when node_repair_config sets node_repair_config_overrides.
+
 __enable_node_monitoring_agent__ Defaults to false, installs the eks-node-monitoring-agent addon
 
 __node_monitoring_agent_config__ Defaults to {}, configuration values for the eks-node-monitoring-agent addon.

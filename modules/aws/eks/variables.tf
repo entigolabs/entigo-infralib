@@ -352,6 +352,17 @@ variable "node_repair_config" {
   default = null
 }
 
+variable "node_repair_wait_time_mins" {
+  description = "Wait time in minutes before repairing a node, applied to all repair triggering node conditions when node_repair_config does not set node_repair_config_overrides. 10-120 in steps of 10"
+  type        = number
+  nullable    = false
+  default     = 20
+  validation {
+    condition     = var.node_repair_wait_time_mins >= 10 && var.node_repair_wait_time_mins <= 120 && var.node_repair_wait_time_mins % 10 == 0
+    error_message = "node_repair_wait_time_mins must be between 10 and 120 and a multiple of 10."
+  }
+}
+
 variable "coredns_addon_version" {
   type = string
   default = "v1.13.2-eksbuild.4"

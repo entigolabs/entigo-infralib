@@ -22,6 +22,27 @@ locals {
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
+  # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
+  node_repair_reasons = {
+    Ready                 = ["NodeStatusUnknown", "KubeletNotReady"]
+    ContainerRuntimeReady = ["PodStuckTerminating"]
+    KernelReady           = ["ForkFailedOutOfPIDs"]
+    NetworkingReady       = ["IPAMDNotReady", "IPAMDNotRunning", "InterfaceNotRunning", "InterfaceNotUp", "MissingLoopbackInterface"]
+  }
+
+  node_repair_config = var.node_repair_config == null ? null : merge(var.node_repair_config, {
+    node_repair_config_overrides = var.node_repair_config.node_repair_config_overrides != null ? var.node_repair_config.node_repair_config_overrides : !var.node_repair_config.enabled ? null : flatten([
+      for condition, reasons in local.node_repair_reasons : [
+        for reason in reasons : {
+          node_monitoring_condition = condition
+          node_unhealthy_reason     = reason
+          min_repair_wait_time_mins = var.node_repair_wait_time_mins
+          repair_action             = "Replace"
+        }
+      ]
+    ])
+  })
+
   eks_managed_node_groups_all = {
     main = {
       min_size        = var.eks_main_min_size
@@ -37,7 +58,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
-      node_repair_config = var.node_repair_config
+      node_repair_config = local.node_repair_config
       labels = {
         main = "true"
       }
@@ -77,7 +98,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
-      node_repair_config = var.node_repair_config
+      node_repair_config = local.node_repair_config
       taints = {
         mon = {
           key    = "mon"
@@ -125,7 +146,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
-      node_repair_config = var.node_repair_config
+      node_repair_config = local.node_repair_config
       taints = {
         tools = {
           key    = "tools"
@@ -171,7 +192,7 @@ locals {
   eks_managed_node_groups_extra = {
     for k, v in var.eks_managed_node_groups_extra :
     k => merge(
-      var.node_repair_config != null ? { node_repair_config = var.node_repair_config } : {},
+      local.node_repair_config != null ? { node_repair_config = local.node_repair_config } : {},
       v,
       {
         desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
