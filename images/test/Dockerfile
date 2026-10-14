@@ -61,6 +61,8 @@ COPY --from=common . /common
 COPY --from=module-tests /warm /warm
 COPY warm-go-cache.sh /usr/local/bin/warm-go-cache.sh
 
+# Each architecture builds on a runner of its own kind (build-images.yaml),
+# so BUILDPLATFORM and TARGETPLATFORM are the same and nothing is emulated.
 RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && mkdir /plugin-cache /plan-json /go
 
 RUN cd /cache && tofu init -reconfigure && ls -l / && ls -l /cache/ && rm -rf /cache/*
