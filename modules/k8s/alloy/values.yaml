@@ -415,6 +415,13 @@ cluster-metrics:
   redisExporterScrapeInterval: "30s"
   redisExporterScrapeTimeout: "10s"
 
+  # Blackbox probing, run in-process via Alloy's embedded blackbox exporter.
+  # blackboxModules holds blackbox_exporter module definitions, keyed by module name; 
+  # blackboxTargets is the list of probes to run against them, e.g. [{name: "example", address: "example.com:443", module: "tls_handshake"}].
+  blackboxTargets: []
+  blackboxModules: {}
+  blackboxScrapeInterval: "30s"
+
   extraConfig: ""
 
   alloy:
@@ -684,6 +691,29 @@ cluster-metrics:
           scrape_timeout  = {{ .Values.redisExporterScrapeTimeout | quote }}
         }
         {{- end }}
+        {{- if .Values.blackboxTargets }}
+        {{- if not .Values.blackboxModules }}
+        {{ fail "cluster-metrics.blackboxModules must be set when blackboxTargets is non-empty" }}
+        {{- end }}
+        prometheus.exporter.blackbox "probes" {
+          config = {{ dict "modules" .Values.blackboxModules | toYaml | quote }}
+
+          {{- range .Values.blackboxTargets }}
+          target {
+            name    = {{ .name | quote }}
+            address = {{ .address | quote }}
+            module  = {{ .module | quote }}
+          }
+          {{- end }}
+        }
+
+        prometheus.scrape "blackbox" {
+          targets         = prometheus.exporter.blackbox.probes.targets
+          forward_to      = [prometheus.remote_write.default.receiver]
+          job_name        = "blackbox"
+          scrape_interval = {{ .Values.blackboxScrapeInterval | quote }}
+        }
+        {{- end }}
         {{- if .Values.serviceMonitors }}
         // Scrape all ServiceMonitor CRDs cluster-wide (requires the operator CRDs)
         prometheus.operator.servicemonitors "servicemonitors" {
@@ -738,7 +768,7 @@ cluster-metrics:
     enableReporting: false
 
   service:
-    enabled: false
+      enabled: false
 
   serviceAccount:
     create: true
