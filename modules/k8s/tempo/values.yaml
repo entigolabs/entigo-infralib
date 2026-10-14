@@ -20,7 +20,7 @@ tempo:
     create: false # we create our own SA in templates/aws/ and templates/google/serviceAccount.yaml
     name: tempo
 
-  podSecurityContext:
+  securityContext:
     seccompProfile:
       type: RuntimeDefault
 
@@ -32,16 +32,6 @@ tempo:
 
   persistence:
     enabled: false # single binary keeps its working set on local disk + S3; no PVC needed to start
-
-  resources:
-    limits:
-      cpu: 1
-      memory: 1Gi
-      ephemeral-storage: 1Gi
-    requests:
-      cpu: 50m
-      memory: 256Mi
-      ephemeral-storage: 100Mi
 
   affinity:
     nodeAffinity:
@@ -70,9 +60,21 @@ tempo:
       value: "true"
       effect: "NoSchedule"
 
-  # The upstream chart's own config block — this whole map is dumped verbatim
-  # into Tempo's config file, so keys here are tempo.tempo.*, not tempo.*.
+  # The upstream chart's `tempo:` block: container settings (resources,
+  # extraEnv, probes, securityContext) plus Tempo config keys (retention,
+  # storage, server, overrides) that the chart's `config:` template reads.
+
   tempo:
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+        ephemeral-storage: 1Gi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+        ephemeral-storage: 100Mi
+
     # Chart default is 24h; 14 days is a cheap first default for a new
     # install, tune once real trace volume is known.
     retention: 336h
