@@ -19,6 +19,7 @@ logs:
   traces:
     enabled: false
     otlpHttpPort: 4318
+    otlpGrpcPort: 4317
     tempoEndpoint: ""
     # Pod label that becomes the `service.name` resource attribute, via
     # otelcol.processor.k8sattributes. "app" matches the label the logs
@@ -185,6 +186,10 @@ logs:
         {{- if .Values.traces.enabled }}
 
         otelcol.receiver.otlp "traces" {
+          grpc {
+            endpoint = "0.0.0.0:{{ .Values.traces.otlpGrpcPort }}"
+          }
+
           http {
             endpoint = "0.0.0.0:{{ .Values.traces.otlpHttpPort }}"
           }
@@ -258,6 +263,11 @@ logs:
     # same-node receiver. Harmless when traces.enabled is false (nothing binds
     # the port, since otelcol.receiver.otlp isn't created in the config then).
     extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        hostPort: 4317
+        protocol: TCP
       - name: otlp-http
         port: 4318
         targetPort: 4318
@@ -279,10 +289,13 @@ logs:
       - Ingress
       - Egress
     ingress:
-      # No `from`: any pod, any namespace, may reach the OTLP HTTP receiver.
-      # "Same node only" isn't expressible as a NetworkPolicy selector; the
-      # port itself only matters once traces.enabled turns the receiver on.
+      # No `from`: any pod, any namespace, may reach the OTLP gRPC/HTTP
+      # receivers. "Same node only" isn't expressible as a NetworkPolicy
+      # selector; the ports only matter once traces.enabled turns the
+      # receiver on.
       - ports:
+          - port: 4317
+            protocol: TCP
           - port: 4318
             protocol: TCP
     egress:
