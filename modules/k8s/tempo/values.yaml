@@ -28,7 +28,7 @@ tempo:
     enabled: false
 
   networkPolicy:
-    enabled: false # this repo owns network policy for the module instead, see templates/
+    enabled: false # this repo owns network policy for the module instead, see templates/networkpolicy.yaml
 
   persistence:
     enabled: false # single binary keeps its working set on local disk + S3; no PVC needed to start
@@ -100,3 +100,27 @@ tempo:
 
     server:
       http_listen_port: 3200
+
+    # Chart default uses /ready for both probes, which kube-score rejects
+    # (pod-probes). Liveness hits /metrics, which answers as soon as the HTTP
+    # server is up, so a slow /ready (e.g. while replaying the WAL) takes the
+    # pod out of the Service instead of restarting it. (tcpSocket isn't an
+    # option: a parent chart can't null out the subchart's httpGet default.)
+    livenessProbe:
+      httpGet:
+        path: /metrics
+        port: 3200
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 3200
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+      successThreshold: 1
