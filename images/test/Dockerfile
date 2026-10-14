@@ -47,7 +47,6 @@ RUN apk --no-cache add \
     && apk del py3-pip \
     && aws --version \
     && oci --version
-    && apk del py3-pip
 #Install Azure CLI (own venv) and kubelogin for AKS kubeconfigs
 ARG TARGETARCH
 ENV KUBELOGIN_VERSION=v0.2.20 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
