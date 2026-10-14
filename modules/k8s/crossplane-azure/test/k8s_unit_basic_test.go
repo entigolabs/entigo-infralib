@@ -45,15 +45,15 @@ func testK8sCrossplaneAzure(t *testing.T, cloudName string, envName string) {
 	// Create a WorkloadIdentity (Azure managed identity + role assignment)
 	client, err := k8s.GetDynamicKubernetesClientFromOptionsE(t, kubectlOptions)
 	require.NoError(t, err, "Kubernetes client error")
-	workloadIdentityGVR := schema.GroupVersionResource{Group: "azure.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
+	workloadIdentityGVR := schema.GroupVersionResource{Group: "identity.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
 	name := fmt.Sprintf("wi-test-%s", strings.ToLower(random.UniqueId()))
 	workloadIdentity := &unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "azure.entigo.com/v1alpha1",
+		"apiVersion": "identity.entigo.com/v1alpha1",
 		"kind":       "WorkloadIdentity",
 		"metadata":   map[string]interface{}{"name": name, "namespace": namespaceName},
 		"spec": map[string]interface{}{
 			"serviceAccountName": name,
-			"roleAssignments": []interface{}{
+			"azurePermissions": []interface{}{
 				map[string]interface{}{
 					"role":  "Monitoring Reader",
 					"scope": fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", azure.SubscriptionID(), azure.ResourceGroup(envName)),

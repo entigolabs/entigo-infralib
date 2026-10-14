@@ -9,7 +9,7 @@
     (not (empty $registries))
     (.Values.global.azure.createACRNamespace)
 }}
-apiVersion: azure.entigo.com/v1alpha1
+apiVersion: identity.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: acr-token
@@ -21,7 +21,7 @@ spec:
   serviceAccountName: acr-token
   serviceAccountAnnotations:
     azure.workload.identity/tenant-id: {{ .Values.global.azure.tenantId | quote }}
-  roleAssignments:
+  azurePermissions:
     {{- range $registries }}
     - role: AcrPull
       scope: {{ .id }}

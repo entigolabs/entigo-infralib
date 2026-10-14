@@ -11,8 +11,7 @@ global:
 workloadIdentity:
   encryptionKeyIds:
     - "{{ .toptout.kms.telemetry_key_resource_id }}"
-  functions:
-    goTemplating:
-      image: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/function-go-templating'
-    autoReady:
-      image: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/function-auto-ready'
+  function:
+    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/function-workload-identity'
+  package:
+    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/configuration-workload-identity'

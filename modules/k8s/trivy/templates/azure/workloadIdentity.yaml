@@ -1,5 +1,5 @@
 {{- if eq .Values.global.cloudProvider "azure" }}
-apiVersion: azure.entigo.com/v1alpha1
+apiVersion: identity.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: {{ .Release.Name }}
@@ -9,7 +9,7 @@ metadata:
 spec:
   serviceAccountName: {{ index .Values "trivy-operator" "serviceAccount" "name" }}
   {{- with .Values.global.azure.acrId }}
-  roleAssignments:
+  azurePermissions:
     - role: AcrPull
       scope: {{ . }}
   {{- end }}

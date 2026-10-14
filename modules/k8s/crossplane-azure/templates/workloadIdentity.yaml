@@ -19,238 +19,6 @@
 {{- end }}
 {{- if $out }}{{ $_ := set $roles $role $out }}{{ end }}
 {{- end }}
-{{- $encryptionRole := "Key Vault Crypto Service Encryption User" }}
-apiVersion: apiextensions.crossplane.io/v2
-kind: CompositeResourceDefinition
-metadata:
-  name: workloadidentities.azure.entigo.com
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  group: azure.entigo.com
-  names:
-    kind: WorkloadIdentity
-    plural: workloadidentities
-  scope: Namespaced
-  defaultCompositionRef:
-    name: workloadidentities.azure.entigo.com
-  versions:
-    - name: v1alpha1
-      served: true
-      referenceable: true
-      additionalPrinterColumns:
-        - name: CLIENT-ID
-          type: string
-          jsonPath: .status.clientId
-      schema:
-        openAPIV3Schema:
-          x-kubernetes-validations:
-            - rule: "!self.metadata.name.contains('.')"
-              message: the name can't contain dots (Azure identity names)
-          description: Azure managed identity federated with a service account in this namespace, the service account is created with the client id annotation. Without serviceAccountName only the identity and its role assignments (e.g. for a customer managed key)
-          type: object
-          properties:
-            spec:
-              type: object
-              x-kubernetes-validations:
-                - rule: has(self.serviceAccountName) == has(oldSelf.serviceAccountName)
-                  message: serviceAccountName can't be added or removed
-                - rule: {{ printf "!has(self.serviceAccountName) || !has(self.roleAssignments) || self.roleAssignments.all(r, r.role != %q)" $encryptionRole | quote }}
-                  message: {{ $encryptionRole }} only without serviceAccountName
-              properties:
-                serviceAccountName:
-                  type: string
-                  maxLength: 63
-                  pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
-                  x-kubernetes-validations:
-                    - rule: self == oldSelf
-                      message: serviceAccountName is immutable
-                serviceAccountAnnotations:
-                  type: object
-                  additionalProperties:
-                    type: string
-                  x-kubernetes-validations:
-                    - rule: "!self.exists(k, k == 'azure.workload.identity/client-id' || k.startsWith('gotemplating.fn.crossplane.io/'))"
-                      message: azure.workload.identity/client-id and gotemplating.fn.crossplane.io/ annotations are set by the composition
-                keepOnDelete:
-                  description: Keep the Azure identity, federated credential and role assignments when the WorkloadIdentity is deleted (adopted again on re-create), e.g. for a customer managed key of a kept storage account. Also applies to a role assignment removed from roleAssignments, it stays in Azure until removed by hand
-                  type: boolean
-                  default: false
-                roleAssignments:
-                  type: array
-                  maxItems: 20
-                  x-kubernetes-validations:
-                    - rule: self.all(x, self.exists_one(y, y.role == x.role && y.scope.lowerAscii() == x.scope.lowerAscii()))
-                      message: duplicate role and scope
-                  items:
-                    type: object
-                    required:
-                      - role
-                      - scope
-                    properties:
-                      role:
-                        type: string
-                        enum:
-                          {{- keys $roles | sortAlpha | toYaml | nindent 26 }}
-                      scope:
-                        type: string
-                        maxLength: 1024
-                    x-kubernetes-validations:
-                      # ARM resolves dot segments and percent-encoding, the rules below compare strings
-                      - rule: "self.scope.matches('^(/[A-Za-z0-9_()-][A-Za-z0-9._()-]*)+$')"
-                        message: scope must be a plain resource id (no empty or dot segments, no encoded characters, no trailing slash)
-                      {{- range $role, $patterns := $roles }}
-                      - rule: {{ printf "self.role != %s || self.scope.lowerAscii().matches(%s)" (toJson $role) (printf "^(?:%s)$" (join "|" $patterns) | toJson) | toJson }}
-                        message: {{ printf "%s only on scopes matching workloadIdentity.roles" $role | quote }}
-                      {{- end }}
-                      - rule: "!self.role.startsWith('Storage ') || !self.scope.lowerAscii().endsWith('/containers/tfstate')"
-                        message: storage roles not on the tfstate container
-            status:
-              type: object
-              properties:
-                id:
-                  type: string
-                clientId:
-                  type: string
-                principalId:
-                  type: string
----
-apiVersion: apiextensions.crossplane.io/v1
-kind: Composition
-metadata:
-  name: workloadidentities.azure.entigo.com
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-spec:
-  compositeTypeRef:
-    apiVersion: azure.entigo.com/v1alpha1
-    kind: WorkloadIdentity
-  mode: Pipeline
-  pipeline:
-    - step: render
-      functionRef:
-        name: {{ .Release.Name }}-go-templating
-      input:
-        apiVersion: gotemplating.fn.crossplane.io/v1beta1
-        kind: GoTemplate
-        # Helm keeps the default delimiters
-        delims:
-          left: "[["
-          right: "]]"
-        source: Inline
-        inline:
-          template: |
-            [[- $xr := .observed.composite.resource ]]
-            [[- $ns := $xr.metadata.namespace ]]
-            [[- $spec := $xr.spec | default dict ]]
-            [[- $sa := dig "serviceAccountName" "" $spec ]]
-            [[- /* <prefix>_<namespace>_<name>: Kubernetes names have no "_", so names can't collide (the XRD rejects dots) */]]
-            [[- $name := printf "%s_%s_%s" "{{ $az.identityPrefix }}" $ns $xr.metadata.name ]]
-            [[- if gt (len $name) 128 ]][[ $name = printf "%s-%s" (trunc 119 $name) (sha1sum $name | trunc 8) ]][[ end ]]
-            [[- $id := printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" "{{ $az.subscriptionId }}" "{{ $az.resourceGroupName }}" $name ]]
-            [[- $policies := ternary `["Observe", "Create", "Update", "LateInitialize"]` `["*"]` (dig "keepOnDelete" false $spec) ]]
-            [[- /* Fall back to the rendered values: a missing status must not delete resources */]]
-            [[- $observed := dig "resources" dict .observed ]]
-            [[- $identity := dig "identity" "resource" "status" "atProvider" dict $observed ]]
-            [[- $principalId := dig "principalId" "" $identity ]]
-            [[- range $k, $r := $observed ]]
-            [[- if and (not $principalId) (hasPrefix "role-" $k) ]][[ $principalId = dig "resource" "spec" "forProvider" "principalId" "" $r ]][[ end ]]
-            [[- end ]]
-            [[- $clientId := dig "clientId" "" $identity | default (dig "service-account" "resource" "metadata" "annotations" "azure.workload.identity/client-id" "" $observed) ]]
-            [[- $created := or (dig "id" "" $identity) (hasKey $observed "federated-credential") ]]
-            ---
-            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
-            kind: UserAssignedIdentity
-            metadata:
-              annotations:
-                gotemplating.fn.crossplane.io/composition-resource-name: identity
-                crossplane.io/external-name: [[ $id ]]
-            spec:
-              managementPolicies: [[ $policies ]]
-              providerConfigRef: {kind: ClusterProviderConfig, name: {{ .Release.Name }}}
-              forProvider:
-                name: [[ $name ]]
-                location: {{ $az.location }}
-                resourceGroupName: {{ $az.resourceGroupName }}
-                tags:
-                  created-by: entigo-infralib
-                  kubernetes-namespace: [[ $ns ]]
-                  kubernetes-name: [[ $xr.metadata.name ]]
-                  [[- if $sa ]]
-                  kubernetes-service-account: [[ $sa ]]
-                  [[- end ]]
-            [[- if and $sa $created ]]
-            ---
-            apiVersion: managedidentity.azure.m.upbound.io/v1beta1
-            kind: FederatedIdentityCredential
-            metadata:
-              annotations:
-                gotemplating.fn.crossplane.io/composition-resource-name: federated-credential
-                [[- /* Azure: 3-120 characters */]]
-                crossplane.io/external-name: [[ printf "%s-%s" $ns $sa | trunc 120 ]]
-            spec:
-              managementPolicies: [[ $policies ]]
-              providerConfigRef: {kind: ClusterProviderConfig, name: {{ .Release.Name }}}
-              forProvider:
-                audience:
-                  - api://AzureADTokenExchange
-                issuer: {{ $az.oidcIssuerUrl }}
-                subject: system:serviceaccount:[[ $ns ]]:[[ $sa ]]
-                parentId: [[ $id ]]
-                resourceGroupName: {{ $az.resourceGroupName }}
-            [[- end ]]
-            [[- /* RoleAssignment has no principalIdRef */]]
-            [[- range $ra := (dig "roleAssignments" list $spec) ]]
-            [[- $key := printf "role-%s" (sha1sum (printf "%s|%s" $ra.role (lower $ra.scope)) | trunc 10) ]]
-            [[- /* Deterministic name: re-created assignments are adopted, Azure rejects a second one for the same principal, role and scope */]]
-            [[- $h := sha1sum (printf "%s|%s|%s" $name $ra.role (lower $ra.scope)) ]]
-            [[- $guid := printf "%s-%s-5%s-a%s-%s" (substr 0 8 $h) (substr 8 12 $h) (substr 13 16 $h) (substr 17 20 $h) (substr 20 32 $h) ]]
-            [[- if $principalId ]]
-            ---
-            apiVersion: authorization.azure.m.upbound.io/v1beta1
-            kind: RoleAssignment
-            metadata:
-              annotations:
-                gotemplating.fn.crossplane.io/composition-resource-name: [[ $key ]]
-                crossplane.io/external-name: [[ printf "%s/providers/Microsoft.Authorization/roleAssignments/%s" $ra.scope $guid ]]
-            spec:
-              managementPolicies: [[ $policies ]]
-              providerConfigRef: {kind: ClusterProviderConfig, name: {{ .Release.Name }}}
-              forProvider:
-                name: [[ $guid ]]
-                principalId: [[ $principalId ]]
-                principalType: ServicePrincipal
-                roleDefinitionName: [[ $ra.role | quote ]]
-                scope: [[ $ra.scope | quote ]]
-                skipServicePrincipalAadCheck: true
-            [[- end ]]
-            [[- end ]]
-            [[- if and $sa $clientId ]]
-            ---
-            apiVersion: v1
-            kind: ServiceAccount
-            metadata:
-              name: [[ $sa ]]
-              annotations:
-                gotemplating.fn.crossplane.io/composition-resource-name: service-account
-                gotemplating.fn.crossplane.io/ready: "True"
-                azure.workload.identity/client-id: [[ $clientId | quote ]]
-                [[- range $k, $v := (dig "serviceAccountAnnotations" dict $spec) ]]
-                [[ $k | quote ]]: [[ $v | quote ]]
-                [[- end ]]
-            [[- end ]]
-            ---
-            apiVersion: [[ $xr.apiVersion ]]
-            kind: [[ $xr.kind ]]
-            status:
-              id: [[ dig "id" "" $identity | quote ]]
-              clientId: [[ $clientId | quote ]]
-              principalId: [[ $principalId | quote ]]
-    - step: ready
-      functionRef:
-        name: {{ .Release.Name }}-auto-ready
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -261,4 +29,116 @@ rules:
   - apiGroups: [""]
     resources: ["serviceaccounts"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: function-workload-identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        metadata:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "8080"
+            prometheus.io/path: "/metrics"
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: tools
+                        operator: In
+                        values:
+                          - 'true'
+                  weight: 90
+          containers:
+            - name: package-runtime
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 1000m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+          securityContext:
+            fsGroup: 2000
+            runAsUser: 65532
+            runAsGroup: 65532
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          tolerations:
+            - effect: NoSchedule
+              key: tools
+              operator: Equal
+              value: 'true'
+            - effect: NoSchedule
+              key: CriticalAddonsOnly
+              operator: Exists
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: function-workload-identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: {{ $wi.function.image }}:{{ $wi.function.tag }}
+  runtimeConfigRef:
+    apiVersion: pkg.crossplane.io/v1beta1
+    kind: DeploymentRuntimeConfig
+    name: function-workload-identity
+---
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: workload-identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  azure:
+    subscriptionId: {{ $az.subscriptionId | quote }}
+    resourceGroupName: {{ $az.resourceGroupName | quote }}
+    location: {{ $az.location | quote }}
+    oidcIssuerUrl: {{ $az.oidcIssuerUrl | quote }}
+    identityPrefix: {{ $az.identityPrefix | quote }}
+    providerConfigName: {{ .Release.Name }}
+    roles:
+      {{- toYaml $roles | nindent 6 }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: configuration-workload-identity
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  package: {{ .Values.workloadIdentity.package.image }}:{{ .Values.workloadIdentity.package.tag }}
+  skipDependencyResolution: true
+---
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  activate:
+  - 'userassignedidentities.managedidentity.azure.m.upbound.io'
+  - 'federatedidentitycredentials.managedidentity.azure.m.upbound.io'
+  - 'roleassignments.authorization.azure.m.upbound.io'
 {{- end }}

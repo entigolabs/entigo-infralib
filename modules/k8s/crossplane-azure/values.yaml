@@ -47,10 +47,10 @@ workloadIdentity:
       - '{encryptionKeyIds}'
   # Key resource ids for {encryptionKeyIds} (kms telemetry key)
   encryptionKeyIds: []
-  functions:
-    goTemplating:
-      image: docker.io/entigolabs/function-go-templating
-      tag: v0.12.4
-    autoReady:
-      image: docker.io/entigolabs/function-auto-ready
-      tag: v0.7.0
+  # github.com/taivox/entigo-infralib-functions: functions/workload-identity and compositions/workload-identity
+  function:
+    image: ghcr.io/taivox/function-workload-identity
+    tag: v0.2.1
+  package:
+    image: ghcr.io/taivox/configuration-workload-identity
+    tag: v0.1.0

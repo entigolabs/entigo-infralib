@@ -11,19 +11,24 @@ Namespaced managed resources only (`*.azure.m.upbound.io`) with
 
 ### WorkloadIdentity ###
 
+`identity.entigo.com/v1alpha1` (the API shared by all clouds; Azure uses `azurePermissions`) from
+[entigo-infralib-functions](https://github.com/taivox/entigo-infralib-functions): the XRD and Composition are the
+Configuration package `workloadIdentity.package`, composed by the Function `workloadIdentity.function`
+(`function-workload-identity`). The chart writes the EnvironmentConfig `workload-identity` the function reads: the
+cluster settings and the resolved `roles`.
 Creates the managed identity `<cluster name>_<namespace>_<name>` (Kubernetes names have no `_`, so names can't collide
-across namespaces), its federated credential, the role assignments (deterministic names) and the service account with
-the client id (charts set `serviceAccount.create: false`), plus
+across namespaces; at most 128 characters, a longer one is rejected), its federated credential, the role assignments
+(deterministic names) and the service account with the client id (charts set `serviceAccount.create: false`), plus
 `serviceAccountAnnotations` if set.
 
 ```
-apiVersion: azure.entigo.com/v1alpha1
+apiVersion: identity.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: external-dns
 spec:
   serviceAccountName: external-dns
-  roleAssignments:
+  azurePermissions:
     - role: DNS Zone Contributor
       scope: /subscriptions/<id>/resourceGroups/<agent rg>/providers/Microsoft.Network/dnsZones/example.com
 ```
@@ -37,7 +42,10 @@ resource group. Roles not listed, or whose patterns are all unset, are rejected.
 Azure resolves dot segments and percent-encoding, the rules compare strings. Whoever can create a WorkloadIdentity in
 a namespace can grant these roles. XR names can't contain dots (not allowed in Azure identity names).
 The same role and scope can't be listed twice (case-insensitive). `serviceAccountAnnotations` can't set
-`azure.workload.identity/client-id` or `gotemplating.fn.crossplane.io/*`, the composition sets them.
+`azure.workload.identity/client-id`, the composition sets it. The XRD rejects the static rules at apply; the role and
+scope allowlist is per cluster, so only the function checks it (and the static rules again): a failed check stops the
+XR updating (`Synced=False`), nothing is deleted. A stricter allowlist stops existing XRs that no longer match the
+same way, their role assignments stay until fixed.
 
 Without `serviceAccountName` only the identity and its role assignments are created (no federated credential, no
 service account), e.g. for a storage account customer managed key (loki/mimir `<release>-cmk`). `serviceAccountName`
@@ -47,10 +55,10 @@ can't be added, removed or changed later. Key Vault Crypto Service Encryption Us
 `keepOnDelete: true` keeps the Azure identity, federated credential and role assignments when the WorkloadIdentity is
 deleted (no `Delete` management policy); a new WorkloadIdentity with the same name adopts them again (external names
 are deterministic). loki/mimir use it for the CMK identity, so an uninstall keeps the storage account readable.
-It also applies to a role assignment removed from `roleAssignments` (or a changed scope): it stays in Azure and has to
+It also applies to a role assignment removed from `azurePermissions` (or a changed scope): it stays in Azure and has to
 be removed by hand, Crossplane can't tell a removed entry from a deleted WorkloadIdentity.
 
-The composition needs `global.azure.subscriptionId`, `resourceGroupName`, `location`, `oidcIssuerUrl` and
+The EnvironmentConfig needs `global.azure.subscriptionId`, `resourceGroupName`, `location`, `oidcIssuerUrl` and
 `identityPrefix` (agent inputs), the chart fails to render without them.
 
 ### Example code ###

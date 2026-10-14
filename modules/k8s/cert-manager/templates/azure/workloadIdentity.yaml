@@ -1,5 +1,5 @@
 {{- if eq .Values.global.cloudProvider "azure" }}
-apiVersion: azure.entigo.com/v1alpha1
+apiVersion: identity.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: {{ .Release.Name }}
@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   serviceAccountName: {{ index .Values "cert-manager" "serviceAccount" "name" }}
-  roleAssignments:
+  azurePermissions:
     - role: DNS Zone Contributor
       scope: {{ .Values.global.azure.pubZoneId }}
     {{- with .Values.global.azure.intCertZoneId }}
