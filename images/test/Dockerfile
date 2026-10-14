@@ -31,6 +31,7 @@ ENV GOTOOLCHAIN=local
 USER root
 #Install the AWS and OCI CLIs
 RUN apk --no-cache add \
+    python3 \
     py3-pip \
     docker-cli \
     docker-credential-ecr-login \
@@ -43,7 +44,9 @@ RUN apk --no-cache add \
     && find "$(pip show oci | sed -n 's/^Location: //p')/oci" -type d -name tests -prune -exec rm -rf {} + \
     && find /usr/lib/python3.* -type f -name examples-1.json -delete \
     && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
-    && apk del py3-pip
+    && apk del py3-pip \
+    && aws --version \
+    && oci --version
 #Install golang. Must satisfy the go directive in common/go.mod, and must
 # match what its pinned dependencies compile with: x/net v0.54.0 drops the
 # http2 server under a go1.27 build constraint, which breaks grpc v1.68.0, so
