@@ -20,4 +20,4 @@ git clone https://github.com/entigolabs/entigo-infralib-test ../entigo-infralib-
 AZURE_TENANT_ID=... AZURE_SUBSCRIPTION_ID=... AZURE_CLIENT_ID=... AZURE_CLIENT_SECRET=... ../entigo-infralib-test/scripts/nuke.sh azure --dry-run
 ```
 
-A resource that must survive the nuke goes into the filters of its cloud's file. The nuke keeps no module, state bucket or cluster on purpose.
+A resource that must survive the nuke goes into the filters of its cloud's file. The nuke keeps no module, state bucket or cluster on purpose. The test accounts are shared with [entigo-infralib-example-source](https://github.com/entigolabs/entigo-infralib-example-source), whose environments are nuked here too, so the pipeline identities and agent bootstrap resources of its `exbiz` and `expri` prefixes are kept the same way as the ones of biz and pri.

@@ -1,86 +1,25 @@
+# Reports the updates available to the modules' dependencies every Monday
+# morning: one job and one Slack message per kind (k8s, aws, google, oracle),
+# through the shared workflow of entigo-infralib-test, so that the long k8s
+# list no longer buries the cloud ones. report/aws.sh adds the EKS AMI release
+# versions, which the framework knows nothing about. Dispatch with `kinds` to
+# report on some kinds only.
 name: Report
 
 on:
   schedule:
     - cron: "0 8 * * 1"
   workflow_dispatch:
+    inputs:
+      kinds:
+        description: comma separated kinds (k8s, aws, google, oracle); empty for all
+        type: string
+        default: ''
 
 jobs:
-  nuke_aws:
-    name: Create reports
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        ref: main
-    - name: Create Reports
-      id: create_report
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-      run: |
-        echo "K8S"
-        K_OUT=$(./common/k8s/report.sh)
-        echo $K_OUT
-        echo "AWS"
-        A_OUT=$(./common/aws/report.sh)
-        echo $A_OUT
-        echo "Google"
-        G_OUT=$(./common/google/report.sh)
-        echo $G_OUT
-        echo "Oracle"
-        O_OUT=$(./common/oracle/report.sh)
-        echo $O_OUT
-        echo "Azure"
-        Z_OUT=$(./common/azure/report.sh)
-        echo $Z_OUT
-        {
-            echo "kresult<<EOF"
-            echo "$K_OUT"
-            echo "EOF"
-        } >> "$GITHUB_OUTPUT"
-        {
-            echo "aresult<<EOF"
-            echo "$A_OUT"
-            echo "EOF"
-        } >> "$GITHUB_OUTPUT"
-        {
-            echo "gresult<<EOF"
-            echo "$G_OUT"
-            echo "EOF"
-        } >> "$GITHUB_OUTPUT"
-        {
-            echo "oresult<<EOF"
-            echo "$O_OUT"
-            echo "EOF"
-        } >> "$GITHUB_OUTPUT"
-        {
-            echo "zresult<<EOF"
-            echo "$Z_OUT"
-            echo "EOF"
-        } >> "$GITHUB_OUTPUT"
+  report:
+    uses: entigolabs/entigo-infralib-test/.github/workflows/module-report.yaml@main
+    with:
+      kinds: ${{ inputs.kinds || '' }}
+    secrets: inherit
 
-
-    - name: Slack Success Report Message
-      if: ${{ success() }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'success'
-        SLACK_MESSAGE: | 
-          *K8S:*
-          ${{ steps.create_report.outputs.kresult }} 
-          *AWS:*
-          ${{ steps.create_report.outputs.aresult }}
-          *Google:*
-          ${{ steps.create_report.outputs.gresult }}
-          *Oracle:*
-          ${{ steps.create_report.outputs.oresult }}
-          *Azure:*
-          ${{ steps.create_report.outputs.zresult }}
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions url,commit
-        SLACK_FOOTER: ""

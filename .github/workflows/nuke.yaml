@@ -24,8 +24,9 @@ jobs:
     uses: entigolabs/entigo-infralib-test/.github/workflows/module-nuke.yaml@main
     with:
       clouds: ${{ inputs.cloud || '' }}
-      # The Oracle tenancy-scoped listers need the environment prefixes; biz
-      # is the only Oracle environment (pri shares its tenancy resources).
-      prefixes: biz
+      # The Oracle tenancy-scoped listers need the environment prefixes: biz
+      # (pri shares its tenancy resources) and exbiz, the environment of
+      # entigo-infralib-example-source in the same compartment.
+      prefixes: biz,exbiz
       dry_run: ${{ inputs.dry_run || false }}
     secrets: inherit

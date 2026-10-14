@@ -10,6 +10,10 @@ accounts:
         values:
         - entigo-infralib-biz-state
         - entigo-infralib-pri-state
+        # The exbiz environment of entigo-infralib-example-source shares this
+        # compartment; its agent's state key, bootstrap policy, vault and key
+        # survive like those of biz and pri.
+        - entigo-infralib-exbiz-state
       OCIUser:
       - property: Name
         type: In
@@ -28,6 +32,7 @@ accounts:
         values:
         - infralib-agent-bootstrap
         - infralib-github-bootstrap
+        - github-example-bootstrap
       OCIVault:
       - property: Name
         type: In
@@ -35,6 +40,7 @@ accounts:
         - biz-eu-frankfurt-2
         - at-eu-frankfurt-2
         - pri-eu-frankfurt-2
+        - exbiz-eu-frankfurt-2
       OCIKey:
       - property: Name
         type: In
@@ -42,6 +48,7 @@ accounts:
         - biz-eu-frankfurt-2-agent
         - at-eu-frankfurt-2-agent
         - pri-eu-frankfurt-2-agent
+        - exbiz-eu-frankfurt-2-agent
         - biz-net-pca-ca
         - at-net-pca-ca
         - pri-net-pca-ca
