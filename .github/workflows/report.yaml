@@ -22,4 +22,3 @@ jobs:
     with:
       kinds: ${{ inputs.kinds || '' }}
     secrets: inherit
-
