@@ -31,6 +31,7 @@ ENV GOTOOLCHAIN=local
 USER root
 #Install the AWS and OCI CLIs
 RUN apk --no-cache add \
+    python3 \
     py3-pip \
     docker-cli \
     docker-credential-ecr-login \
@@ -43,6 +44,9 @@ RUN apk --no-cache add \
     && find "$(pip show oci | sed -n 's/^Location: //p')/oci" -type d -name tests -prune -exec rm -rf {} + \
     && find /usr/lib/python3.* -type f -name examples-1.json -delete \
     && find /usr/lib/python3.* -type f -name "*.pyc" -delete \
+    && apk del py3-pip \
+    && aws --version \
+    && oci --version
     && apk del py3-pip
 #Install Azure CLI (own venv) and kubelogin for AKS kubeconfigs
 ARG TARGETARCH
@@ -79,6 +83,8 @@ COPY --from=common . /common
 COPY --from=module-tests /warm /warm
 COPY warm-go-cache.sh /usr/local/bin/warm-go-cache.sh
 
+# Each architecture builds on a runner of its own kind (build-images.yaml),
+# so BUILDPLATFORM and TARGETPLATFORM are the same and nothing is emulated.
 RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" | tee -a /build_arch_testing && mkdir /plugin-cache /plan-json /go
 
 RUN cd /cache && tofu init -reconfigure && ls -l / && ls -l /cache/ && rm -rf /cache/*

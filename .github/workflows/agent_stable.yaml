@@ -188,7 +188,11 @@ jobs:
 
   testk8s:   
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: [install_stable_aws,install_stable_google,install_stable_azure]
+=======
+    needs: [install_stable_aws,install_stable_google,install_stable_oracle]
+>>>>>>> main
     concurrency:
       group: pr-modules-test
       cancel-in-progress: false
@@ -216,6 +220,17 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ steps.get_latest_release.outputs.release_tag }}
+    - name: Write OCI credentials
+      env:
+        OCI_CONFIG: ${{ secrets.OCI_CONFIG }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.oci
+        echo "${OCI_CONFIG}" > ~/.oci/config
+        echo "${OCI_PRIVATE_KEY}" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/config ~/.oci/oci_api_key.pem
+    - name: Install the OCI CLI
+      run: pipx install oci-cli
     - name: Run k8s tests
       id: k8s_tests
       env:
@@ -226,11 +241,17 @@ jobs:
         GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
         GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
         GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+<<<<<<< HEAD
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+=======
+        OCI_REGION: eu-frankfurt-2
+        OCI_CONFIG_FILE: /home/runner/.oci/config
+        OCI_COMPARTMENT_ID: ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q
+>>>>>>> main
         PR_BRANCH: "main"
       run: |
         ./stable.sh k8s
