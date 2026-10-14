@@ -14,7 +14,7 @@ Namespaced managed resources only (`*.azure.m.upbound.io`) with
 `identity.entigo.com/v1alpha1` (the API shared by all clouds; Azure uses `azurePermissions`) from
 [entigo-infralib-functions](https://github.com/taivox/entigo-infralib-functions): the XRD and Composition are the
 Configuration package `workloadIdentity.package`, composed by the Function `workloadIdentity.function`
-(`function-workload-identity`). The chart writes the EnvironmentConfig `workload-identity` the function reads: the
+(`entigo-infralib-workload-identity-fn`). The chart writes the EnvironmentConfig `workload-identity` the function reads: the
 cluster settings and the resolved `roles`.
 Creates the managed identity `<cluster name>_<namespace>_<name>` (Kubernetes names have no `_`, so names can't collide
 across namespaces; at most 128 characters, a longer one is rejected), its federated credential, the role assignments

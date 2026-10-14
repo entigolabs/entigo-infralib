@@ -33,7 +33,7 @@ rules:
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
-  name: function-workload-identity
+  name: entigo-infralib-workload-identity-fn
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -91,7 +91,7 @@ spec:
 apiVersion: pkg.crossplane.io/v1beta1
 kind: Function
 metadata:
-  name: function-workload-identity
+  name: entigo-infralib-workload-identity-fn
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -100,7 +100,7 @@ spec:
   runtimeConfigRef:
     apiVersion: pkg.crossplane.io/v1beta1
     kind: DeploymentRuntimeConfig
-    name: function-workload-identity
+    name: entigo-infralib-workload-identity-fn
 ---
 apiVersion: apiextensions.crossplane.io/v1beta1
 kind: EnvironmentConfig
@@ -122,7 +122,7 @@ data:
 apiVersion: pkg.crossplane.io/v1
 kind: Configuration
 metadata:
-  name: configuration-workload-identity
+  name: entigo-infralib-workload-identity
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:

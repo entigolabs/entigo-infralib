@@ -49,8 +49,8 @@ workloadIdentity:
   encryptionKeyIds: []
   # github.com/taivox/entigo-infralib-functions: functions/workload-identity and compositions/workload-identity
   function:
-    image: ghcr.io/taivox/function-workload-identity
-    tag: v0.2.1
+    image: ghcr.io/taivox/entigo-infralib-workload-identity-fn
+    tag: v0.2.0
   package:
-    image: ghcr.io/taivox/configuration-workload-identity
+    image: ghcr.io/taivox/entigo-infralib-workload-identity
     tag: v0.1.0

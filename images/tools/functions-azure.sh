@@ -64,10 +64,10 @@ sync_terraform_cache() {
     local prefix="$2"
 
     echo "Syncing .terraform back to bucket"
-    az storage blob delete-batch --auth-mode login --account-name "$bucket" -s "$AZ_CONTAINER" \
-        --pattern "steps/${prefix}/.terraform/*" >/dev/null
-    az storage blob upload-batch --auth-mode login --account-name "$bucket" -d "$AZ_CONTAINER" \
-        --destination-path "steps/${prefix}/.terraform" -s .terraform --overwrite --no-progress >/dev/null
+    AZCOPY_AUTO_LOGIN_TYPE=AZCLI azcopy sync .terraform \
+        "https://${bucket}.blob.core.windows.net/${AZ_CONTAINER}/steps/${prefix}/.terraform" \
+        --recursive --delete-destination=true --compare-hash=MD5 --put-md5 \
+        --output-level=essential --log-level=ERROR || exit 1
 }
 
 fetch_plan_artifact() {

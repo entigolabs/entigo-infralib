@@ -12,6 +12,6 @@ workloadIdentity:
   encryptionKeyIds:
     - "{{ .toptout.kms.telemetry_key_resource_id }}"
   function:
-    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/function-workload-identity'
+    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/entigo-infralib-workload-identity-fn'
   package:
-    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/configuration-workload-identity'
+    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/entigo-infralib-workload-identity'

@@ -49,7 +49,7 @@ RUN apk --no-cache add \
     && oci --version
 #Install Azure CLI (own venv) and kubelogin for AKS kubeconfigs
 ARG TARGETARCH
-ENV KUBELOGIN_VERSION=v0.2.20 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
+ENV KUBELOGIN_VERSION=v0.2.20 AZCOPY_VERSION=10.32.8 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
 RUN apk --no-cache add py3-pip \
     && python3 -m venv /opt/az \
     && /opt/az/bin/pip install --no-cache-dir azure-cli \
@@ -60,6 +60,10 @@ RUN apk --no-cache add py3-pip \
     && wget --no-verbose -O /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-${TARGETARCH}.zip" \
     && unzip -p /tmp/kubelogin.zip "bin/linux_${TARGETARCH}/kubelogin" > /usr/bin/kubelogin \
     && chmod +x /usr/bin/kubelogin \
+    && apk --no-cache add gcompat \
+    && wget --no-verbose -O - "https://github.com/Azure/azure-storage-azcopy/releases/download/v${AZCOPY_VERSION}/azcopy_linux_${TARGETARCH}_${AZCOPY_VERSION}.tar.gz" \
+       | tar -xz --strip-components=1 -C /usr/bin "azcopy_linux_${TARGETARCH}_${AZCOPY_VERSION}/azcopy" \
+    && azcopy --version \
     && rm /tmp/kubelogin.zip
 #Trust Let's Encrypt staging roots
 RUN wget --no-verbose -O /usr/local/share/ca-certificates/letsencrypt-stg-root-x1.crt https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem \

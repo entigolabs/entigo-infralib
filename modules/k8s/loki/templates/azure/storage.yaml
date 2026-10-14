@@ -2,7 +2,7 @@
 {{- $az := .Values.global.azure -}}
 {{- $az.storageAccountName | default (printf "%s%s" (regexReplaceAll "[^a-z0-9]" (lower $az.storageAccountPrefix) "" | trunc 16) $az.uniqueSuffix) -}}
 {{- end }}
-{{/* Same name as function-workload-identity gives the <release>-cmk WorkloadIdentity: <identityPrefix>_<namespace>_<release>-cmk */}}
+{{/* Same name as entigo-infralib-workload-identity-fn gives the <release>-cmk WorkloadIdentity: <identityPrefix>_<namespace>_<release>-cmk */}}
 {{- define "entigo.azureCmkIdentityId" -}}
 {{- $az := .Values.global.azure -}}
 {{- $name := printf "%s_%s_%s-cmk" $az.identityPrefix .Release.Namespace .Release.Name -}}
