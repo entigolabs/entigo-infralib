@@ -65,6 +65,14 @@ tempo:
   # storage, server, overrides) that the chart's `config:` template reads.
 
   tempo:
+    # Container-level half of the "restricted" Pod Security level set on the
+    # namespace in argo-apps.yaml; the pod-level half comes from the chart.
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+
     resources:
       limits:
         cpu: 1
