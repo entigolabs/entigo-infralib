@@ -86,17 +86,21 @@ oracle_kubeconfig() {
 
 oracle_ca_certificates() {
     local agent_dir=$1
+    local config_dir
     local id
     oracle_auth_defaults
     if [ "$ORACLE_ROOT_CA_PEM" == "" ]; then
-        export OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
-        id=$(oci certs-mgmt certificate-authority list --compartment-id "$OCI_COMPARTMENT_ID" --region "$OCI_REGION" \
+        config_dir="$(dirname "$OCI_CONFIG_FILE")"
+        local oci=(docker run --rm -v "$config_dir":"$config_dir":ro -e OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
+            -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True -e SUPPRESS_LABEL_WARNING=True
+            --entrypoint oci $ENTIGO_INFRALIB_IMAGE --region "$OCI_REGION")
+        id=$("${oci[@]}" certs-mgmt certificate-authority list --compartment-id "$OCI_COMPARTMENT_ID" \
             --name "$ORACLE_ROOT_CA_NAME" --lifecycle-state ACTIVE --all --query "data.items[0].id" --raw-output)
         if [ -z "$id" ]; then
             echo "Failed to find Oracle root CA $ORACLE_ROOT_CA_NAME"
             return 1
         fi
-        ORACLE_ROOT_CA_PEM=$(oci certificates certificate-authority-bundle get --region "$OCI_REGION" \
+        ORACLE_ROOT_CA_PEM=$("${oci[@]}" certificates certificate-authority-bundle get \
             --certificate-authority-id "$id" --query 'data."certificate-pem"' --raw-output)
         if [ -z "$ORACLE_ROOT_CA_PEM" ]; then
             echo "Failed to read the certificate of Oracle root CA $ORACLE_ROOT_CA_NAME"
