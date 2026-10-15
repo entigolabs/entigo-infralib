@@ -14,12 +14,17 @@ logs:
   # Traces: off by default so this module stays a pure log shipper for any
   # consumer that doesn't need it. Set traces.enabled: true (plus, usually,
   # traces.tailSamplingPolicies) in a per-stack config/apps/alloy.yaml to turn
-  # this on. tempoEndpoint is filled in by agent_input.yaml from the stack's
-  # own tempo module reference.
+  # this on. tempoNamespace is filled in by agent_input.yaml from the stack's
+  # own tempo module reference; with traces enabled and neither it nor
+  # tempoEndpoint set, rendering fails instead of silently dropping traces.
   traces:
     enabled: false
     otlpHttpPort: 4318
     otlpGrpcPort: 4317
+    # Namespace of the tempo module. The tempo module pins its Service name to
+    # "tempo" (fullnameOverride), so the exporter targets tempo.<namespace>:4317.
+    tempoNamespace: ""
+    # Explicit override for a tempo not deployed by this stack's tempo module.
     tempoEndpoint: ""
     # Pod label that becomes the `service.name` resource attribute, via
     # otelcol.processor.k8sattributes. "app" matches the label the logs
@@ -184,6 +189,13 @@ logs:
         }
 
         {{- if .Values.traces.enabled }}
+        {{- $tempoEndpoint := .Values.traces.tempoEndpoint }}
+        {{- if and (not $tempoEndpoint) .Values.traces.tempoNamespace }}
+        {{- $tempoEndpoint = printf "tempo.%s:4317" .Values.traces.tempoNamespace }}
+        {{- end }}
+        {{- if not $tempoEndpoint }}
+        {{- fail "traces.enabled is true but no tempo to send to: deploy the tempo module in this stack or set traces.tempoEndpoint" }}
+        {{- end }}
 
         otelcol.receiver.otlp "traces" {
           grpc {
@@ -225,7 +237,7 @@ logs:
 
         otelcol.exporter.otlp "traces" {
           client {
-            endpoint = {{ .Values.traces.tempoEndpoint | quote }}
+            endpoint = {{ $tempoEndpoint | quote }}
             tls {
               insecure = true
             }
