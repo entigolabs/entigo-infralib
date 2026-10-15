@@ -42,9 +42,47 @@ func testK8sCrossplaneAzure(t *testing.T, cloudName string, envName string) {
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, schema.GroupVersionResource{Group: "azure.m.upbound.io", Version: "v1beta1", Resource: "clusterproviderconfigs"}, releaseName, 60, 6*time.Second)
 	require.NoError(t, err, "ClusterProviderConfig error")
 
-	// Create a WorkloadIdentity (Azure managed identity + role assignment)
 	client, err := k8s.GetDynamicKubernetesClientFromOptionsE(t, kubectlOptions)
 	require.NoError(t, err, "Kubernetes client error")
+
+	// Provider only: a managed identity without the composition
+	identityGVR := schema.GroupVersionResource{Group: "managedidentity.azure.m.upbound.io", Version: "v1beta1", Resource: "userassignedidentities"}
+	identityName := fmt.Sprintf("mr-test-%s", strings.ToLower(random.UniqueId()))
+	identity := &unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "managedidentity.azure.m.upbound.io/v1beta1",
+		"kind":       "UserAssignedIdentity",
+		"metadata":   map[string]interface{}{"name": identityName, "namespace": namespaceName},
+		"spec": map[string]interface{}{
+			"forProvider": map[string]interface{}{
+				"name":              fmt.Sprintf("%s-%s", envName, identityName),
+				"location":          azure.Location(),
+				"resourceGroupName": azure.ResourceGroup(envName),
+			},
+			"providerConfigRef": map[string]interface{}{"kind": "ClusterProviderConfig", "name": releaseName},
+		},
+	}}
+	_, err = client.Resource(identityGVR).Namespace(namespaceName).Create(context.Background(), identity, metaV1.CreateOptions{})
+	require.NoError(t, err, "Creating UserAssignedIdentity error")
+
+	_, err = k8s.WaitUntilNamespacedCrossplaneResourceAvailable(t, kubectlOptions, identityGVR, identityName, 60, 6*time.Second)
+	if err != nil {
+		_ = client.Resource(identityGVR).Namespace(namespaceName).Delete(context.Background(), identityName, metaV1.DeleteOptions{})
+	}
+	require.NoError(t, err, "UserAssignedIdentity syncing error")
+
+	err = client.Resource(identityGVR).Namespace(namespaceName).Delete(context.Background(), identityName, metaV1.DeleteOptions{})
+	require.NoError(t, err, "Deleting UserAssignedIdentity error")
+
+	_, err = retry.DoWithRetryE(t, fmt.Sprintf("Wait for UserAssignedIdentity %s to be deleted", identityName), 30, 6*time.Second, func() (string, error) {
+		_, err := client.Resource(identityGVR).Namespace(namespaceName).Get(context.Background(), identityName, metaV1.GetOptions{})
+		if kubernetesErrors.IsNotFound(err) {
+			return "deleted", nil
+		}
+		return "", fmt.Errorf("UserAssignedIdentity %s still exists", identityName)
+	})
+	require.NoError(t, err, "UserAssignedIdentity didn't get deleted")
+
+	// Composition: a WorkloadIdentity (managed identity, federated credential, role assignment, service account)
 	workloadIdentityGVR := schema.GroupVersionResource{Group: "iam.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
 	name := fmt.Sprintf("wi-test-%s", strings.ToLower(random.UniqueId()))
 	workloadIdentity := &unstructured.Unstructured{Object: map[string]interface{}{
