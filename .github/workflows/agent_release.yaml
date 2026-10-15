@@ -1,3 +1,9 @@
+# Applies main to every cloud, tests it, and when main is ahead of the latest
+# release makes a new one. Dispatched with one cloud it applies and tests only
+# that cloud's modules and releases nothing: the k8s tests run against every
+# cloud at once, so a partial run has none, and nothing is tagged or
+# published. A run that a partial Agent Stable run triggered does nothing at
+# all; such a stable run leaves no stable-release artifact.
 name: Agent Release
 
 on:
@@ -6,13 +12,46 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      cloud:
+        description: cloud to run; anything but all applies and tests main there without releasing
+        type: choice
+        options: [all, aws, google, oracle]
+        default: all
 
 jobs:     
-  install_main_aws:
-    name: Install main AWS
+  stable:
+    name: Triggering stable run
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    outputs:
+      run: ${{ steps.stable.outputs.run }}
+    steps:
+    - name: Was the stable run complete
+      id: stable
+      env:
+        GH_TOKEN: ${{ github.token }}
+        STABLE_RUN: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || '' }}
+      run: |
+        set -euo pipefail
+        if [ -z "${STABLE_RUN}" ]; then
+          echo "run=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${STABLE_RUN}/artifacts" --paginate --jq '.artifacts[].name' | grep -qx stable-release; then
+          echo "Stable run ${STABLE_RUN} covered every cloud"
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "::notice::stable run ${STABLE_RUN} was a partial run, nothing to release"
+          echo "run=false" >> "$GITHUB_OUTPUT"
+        fi
+
+  install_main_aws:
+    name: Install main AWS
+    runs-on: ubuntu-latest
+    needs: stable
+    if: needs.stable.outputs.run == 'true' && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'aws')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -42,8 +81,8 @@ jobs:
   install_main_google:
     name: Install main Google
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    needs: stable
+    if: needs.stable.outputs.run == 'true' && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'google')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -73,8 +112,8 @@ jobs:
   install_main_oracle:
     name: Install main Oracle
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    needs: stable
+    if: needs.stable.outputs.run == 'true' && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'oracle')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -112,6 +151,9 @@ jobs:
   release:   
     runs-on: ubuntu-latest
     needs: [install_main_aws,install_main_google,install_main_oracle]
+    # Only after every cloud: the k8s tests cover all of them at once, and a
+    # version is made only when all of main was applied and tested.
+    if: inputs.cloud == '' || inputs.cloud == 'all'
     concurrency:
       group: pr-modules-test
       cancel-in-progress: false
