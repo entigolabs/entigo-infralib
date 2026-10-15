@@ -54,9 +54,7 @@ accounts:
         - at-eu-frankfurt-2-agent
         - pri-eu-frankfurt-2-agent
         - exbiz-eu-frankfurt-2-agent
-        - biz-net-pca-ca
         - at-net-pca-ca
-        - pri-net-pca-ca
       OCICertificateAuthority:
       - property: Name
         type: In
@@ -64,5 +62,3 @@ accounts:
         - infralib-root-ca
         - biz-net-pca-ca
         - pri-net-pca-ca
-        - biz-net-pca-root-ca
-        - pri-net-pca-root-ca
