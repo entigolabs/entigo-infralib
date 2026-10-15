@@ -32,7 +32,7 @@ spec:
     bucketRef:
       name: {{ .Values.global.bucketName }}
     member: serviceAccount:{{ .Values.global.google.projectID }}.svc.id.goog[{{ .Release.Namespace }}/{{ .Values.tempo.serviceAccount.name }}]
-    role: roles/storage.legacyBucketReader
+    role: roles/storage.bucketViewer
   providerConfigRef:
     name: {{ .Values.global.providerConfigRefName }}
 
