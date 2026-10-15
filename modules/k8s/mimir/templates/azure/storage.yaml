@@ -2,10 +2,10 @@
 {{- $az := .Values.global.azure -}}
 {{- $az.storageAccountName | default (printf "%s%s" (regexReplaceAll "[^a-z0-9]" (lower $az.storageAccountPrefix) "" | trunc 16) $az.uniqueSuffix) -}}
 {{- end }}
-{{/* Same name as entigo-infralib-workload-identity-fn gives the <release>-cmk WorkloadIdentity: <identityPrefix>_<namespace>_<release>-cmk */}}
+{{/* Same name as entigo-infralib-apis-iam-fn gives the <release>-cmk WorkloadIdentity (no service account: suffix _nosa): <identityPrefix>_<namespace>_<release>-cmk_nosa */}}
 {{- define "entigo.azureCmkIdentityId" -}}
 {{- $az := .Values.global.azure -}}
-{{- $name := printf "%s_%s_%s-cmk" $az.identityPrefix .Release.Namespace .Release.Name -}}
+{{- $name := printf "%s_%s_%s-cmk_nosa" $az.identityPrefix .Release.Namespace .Release.Name -}}
 {{- if gt (len $name) 128 }}{{ fail (printf "the Azure identity name %s is %d characters, at most 128: shorten the release name" $name (len $name)) }}{{ end -}}
 {{- printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s" $az.subscriptionId $az.resourceGroupName $name -}}
 {{- end }}

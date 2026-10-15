@@ -1,5 +1,5 @@
 {{- if eq .Values.global.cloudProvider "azure" }}
-apiVersion: identity.entigo.com/v1alpha1
+apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: {{ .Release.Name }}
@@ -14,7 +14,7 @@ spec:
 {{- if and .Values.global.azure.telemetryKeyId .Values.global.azure.telemetryKeyResourceId }}
 ---
 # Customer managed key of the storage account (templates/azure/storage.yaml), no service account, kept with the account
-apiVersion: identity.entigo.com/v1alpha1
+apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: {{ .Release.Name }}-cmk

@@ -11,18 +11,20 @@ Namespaced managed resources only (`*.azure.m.upbound.io`) with
 
 ### WorkloadIdentity ###
 
-`identity.entigo.com/v1alpha1` (the API shared by all clouds; Azure uses `azurePermissions`) from
-[entigo-infralib-functions](https://github.com/taivox/entigo-infralib-functions): the XRD and Composition are the
-Configuration package `workloadIdentity.package`, composed by the Function `workloadIdentity.function`
-(`entigo-infralib-workload-identity-fn`). The chart writes the EnvironmentConfig `workload-identity` the function reads: the
-cluster settings and the resolved `roles`.
-Creates the managed identity `<cluster name>_<namespace>_<name>` (Kubernetes names have no `_`, so names can't collide
-across namespaces; at most 128 characters, a longer one is rejected), its federated credential, the role assignments
-(deterministic names) and the service account with the client id (charts set `serviceAccount.create: false`), plus
-`serviceAccountAnnotations` if set.
+`iam.entigo.com/v1alpha1` WorkloadIdentity (the API shared by all clouds; Azure uses `azurePermissions`) comes from the
+chart dependency [entigo-infralib-apis](https://github.com/entigolabs/entigo-infralib-apis) (values under
+`entigo-infralib-apis`): the Function `entigo-infralib-apis-iam-fn`, the Configuration
+`entigo-infralib-apis-workloadidentity` (XRD + Composition) and the EnvironmentConfig `entigo-infralib-apis-iam` with
+the cluster settings (`global.azure`) and the resolved role allowlist. API, naming and validation:
+[compositions/workloadidentity](https://github.com/entigolabs/entigo-infralib-apis/tree/main/compositions/workloadidentity).
+
+Creates the managed identity `<cluster name>_<namespace>_<name>` (`..._nosa` without a service account, at most 128
+characters), its federated credential,
+the role assignments (deterministic names) and the service account with the client id (charts set
+`serviceAccount.create: false`).
 
 ```
-apiVersion: identity.entigo.com/v1alpha1
+apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: external-dns
@@ -33,33 +35,22 @@ spec:
       scope: /subscriptions/<id>/resourceGroups/<agent rg>/providers/Microsoft.Network/dnsZones/example.com
 ```
 
-Roles: `workloadIdentity.roles` maps each role that a WorkloadIdentity may grant to the scopes it may grant it on
-(regexes over the whole lower case scope, `{rg}` = agent resource group, `{nodeRg}` = AKS node resource group,
-`{encryptionKeyIds}` = one of `workloadIdentity.encryptionKeyIds`). By default: storage roles only on a blob
-container (not `tfstate`), DNS roles only on a zone, AcrPull only on a registry, Key Vault Secrets User only on a vault
-or secret, all in the agent resource group, Monitoring Reader also on the resource groups themselves and the AKS node
-resource group. Roles not listed, or whose patterns are all unset, are rejected. Scopes must be plain resource ids:
-Azure resolves dot segments and percent-encoding, the rules compare strings. Whoever can create a WorkloadIdentity in
-a namespace can grant these roles. XR names can't contain dots (not allowed in Azure identity names).
-The same role and scope can't be listed twice (case-insensitive). `serviceAccountAnnotations` can't set
-`azure.workload.identity/client-id`, the composition sets it. The XRD rejects the static rules at apply; the role and
-scope allowlist is per cluster, so only the function checks it (and the static rules again): a failed check stops the
-XR updating (`Synced=False`), nothing is deleted. A stricter allowlist stops existing XRs that no longer match the
-same way, their role assignments stay until fixed.
+Roles: `entigo-infralib-apis.iam.environmentConfig.azure.roles` maps each role a WorkloadIdentity may grant to the
+scopes it may grant it on (regexes over the whole lower case scope, `{rg}` = agent resource group, `{nodeRg}` = AKS
+node resource group, `{encryptionKeyIds}` = one of `encryptionKeyIds`, here the kms telemetry key). By default: storage
+roles only on a blob container (not `tfstate`), DNS roles only on a zone, AcrPull only on a registry, Key Vault
+Secrets User only on a vault or secret, all in the agent resource group, Monitoring Reader also on the resource groups
+themselves and the AKS node resource group, Key Vault Crypto Service Encryption User only without
+`serviceAccountName` on the telemetry key (loki/mimir `<release>-cmk`). Whoever can create a WorkloadIdentity in a
+namespace can grant these roles, so creating WorkloadIdentities is a platform (administrator) permission: platform
+charts create them, don't grant the kind to tenants (see the
+[security section](https://github.com/entigolabs/entigo-infralib-apis/tree/main/compositions/workloadidentity#security-who-may-create-workloadidentities)).
+`keepOnDelete: true` (only without a service account) keeps the Azure identity `<cluster name>_<namespace>_<name>_nosa`
+and its role assignments when the WorkloadIdentity is deleted (loki/mimir CMK identities, so an uninstall keeps the
+storage account readable).
 
-Without `serviceAccountName` only the identity and its role assignments are created (no federated credential, no
-service account), e.g. for a storage account customer managed key (loki/mimir `<release>-cmk`). `serviceAccountName`
-can't be added, removed or changed later. Key Vault Crypto Service Encryption User is only allowed without
-`serviceAccountName` and only on the keys in `workloadIdentity.encryptionKeyIds` (kms telemetry key).
-
-`keepOnDelete: true` keeps the Azure identity, federated credential and role assignments when the WorkloadIdentity is
-deleted (no `Delete` management policy); a new WorkloadIdentity with the same name adopts them again (external names
-are deterministic). loki/mimir use it for the CMK identity, so an uninstall keeps the storage account readable.
-It also applies to a role assignment removed from `azurePermissions` (or a changed scope): it stays in Azure and has to
-be removed by hand, Crossplane can't tell a removed entry from a deleted WorkloadIdentity.
-
-The EnvironmentConfig needs `global.azure.subscriptionId`, `resourceGroupName`, `location`, `oidcIssuerUrl` and
-`identityPrefix` (agent inputs), the chart fails to render without them.
+The Function and Configuration have `helm.sh/resource-policy: keep` and ArgoCD `Delete=false`: removing the chart
+doesn't delete the XRD and with it every WorkloadIdentity.
 
 ### Example code ###
 

@@ -23,34 +23,6 @@ global:
   createObservers: false
   createNamespacedObservers: false
 
-workloadIdentity:
-  enabled: true
-  # Roles a WorkloadIdentity may grant, each only on scopes matching one of its regexes (whole lower case scope).
-  # {rg}: agent resource group id, {nodeRg}: AKS node resource group id, {encryptionKeyIds}: one of encryptionKeyIds.
-  # A role without a matching pattern (e.g. {nodeRg} or {encryptionKeyIds} unset) is not allowed at all.
-  roles:
-    AcrPull:
-      - '{rg}/providers/microsoft\.containerregistry/registries/[a-z0-9]+'
-    Key Vault Secrets User:
-      - '{rg}/providers/microsoft\.keyvault/vaults/[a-z0-9-]+(/secrets/[a-z0-9-]+)?'
-    Storage Blob Data Contributor:
-      - '{rg}/providers/microsoft\.storage/storageaccounts/[a-z0-9]+/blobservices/default/containers/[a-z0-9-]+'
-    DNS Zone Contributor:
-      - '{rg}/providers/microsoft\.network/dnszones/[a-z0-9][a-z0-9.-]*'
-    Private DNS Zone Contributor:
-      - '{rg}/providers/microsoft\.network/privatednszones/[a-z0-9][a-z0-9.-]*'
-    Monitoring Reader:
-      - '{rg}(/providers/.+)?'
-      - '{nodeRg}(/providers/.+)?'
-    # Customer managed keys, only for a WorkloadIdentity without serviceAccountName
-    Key Vault Crypto Service Encryption User:
-      - '{encryptionKeyIds}'
-  # Key resource ids for {encryptionKeyIds} (kms telemetry key)
-  encryptionKeyIds: []
-  # github.com/taivox/entigo-infralib-functions: functions/workload-identity and compositions/workload-identity
-  function:
-    image: ghcr.io/taivox/entigo-infralib-workload-identity-fn
-    tag: v0.2.0
-  package:
-    image: ghcr.io/taivox/entigo-infralib-workload-identity
-    tag: v0.1.0
+# WorkloadIdentity (iam.entigo.com): chart dependency github.com/entigolabs/entigo-infralib-apis, values under
+# entigo-infralib-apis (roles allowlist: iam.environmentConfig.azure.roles)
+entigo-infralib-apis: {}

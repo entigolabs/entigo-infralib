@@ -8,10 +8,9 @@ global:
     oidcIssuerUrl: "{{ .toutput.aks.cluster_oidc_issuer_url }}"
     identityPrefix: "{{ .toutput.aks.cluster_name }}"
     nodeResourceGroupName: "{{ .toutput.aks.node_resource_group }}"
-workloadIdentity:
-  encryptionKeyIds:
-    - "{{ .toptout.kms.telemetry_key_resource_id }}"
-  function:
-    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/entigo-infralib-workload-identity-fn'
-  package:
-    image: '{{ .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/taivox/entigo-infralib-workload-identity'
+entigo-infralib-apis:
+  iam:
+    environmentConfig:
+      azure:
+        encryptionKeyIds:
+          - "{{ .toptout.kms.telemetry_key_resource_id }}"

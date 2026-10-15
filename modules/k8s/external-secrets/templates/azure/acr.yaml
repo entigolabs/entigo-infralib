@@ -9,7 +9,7 @@
     (not (empty $registries))
     (.Values.global.azure.createACRNamespace)
 }}
-apiVersion: identity.entigo.com/v1alpha1
+apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: acr-token

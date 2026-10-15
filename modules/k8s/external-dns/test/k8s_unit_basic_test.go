@@ -95,7 +95,7 @@ func testK8sExternalDns(t *testing.T, cloudName string, envName string) {
 
 // The istio public Service is ClusterIP on Azure, records come from HTTPRoutes on the AGC gateway
 func testK8sExternalDnsAzure(t *testing.T, kubectlOptions *terrak8s.KubectlOptions, namespaceName string, envName string, host string) {
-	workloadIdentity := schema.GroupVersionResource{Group: "identity.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
+	workloadIdentity := schema.GroupVersionResource{Group: "iam.entigo.com", Version: "v1alpha1", Resource: "workloadidentities"}
 	_, err := k8s.WaitUntilNamespacedCrossplaneResourceAvailable(t, kubectlOptions, workloadIdentity, namespaceName, 60, 10*time.Second)
 	require.NoError(t, err, "WorkloadIdentity not Ready")
 

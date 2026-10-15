@@ -1,5 +1,5 @@
 {{- if eq .Values.global.cloudProvider "azure" }}
-apiVersion: identity.entigo.com/v1alpha1
+apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
   name: {{ .Release.Name }}
