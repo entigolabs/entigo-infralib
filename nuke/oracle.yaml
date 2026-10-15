@@ -48,6 +48,8 @@ accounts:
         type: In
         values:
         - infralib-root-ca-key
+        - biz-net-pca-ca-key
+        - pri-net-pca-ca-key
         - biz-eu-frankfurt-2-agent
         - at-eu-frankfurt-2-agent
         - pri-eu-frankfurt-2-agent
@@ -60,5 +62,7 @@ accounts:
         type: In
         values:
         - infralib-root-ca
+        - biz-net-pca-ca
+        - pri-net-pca-ca
         - biz-net-pca-root-ca
         - pri-net-pca-root-ca
