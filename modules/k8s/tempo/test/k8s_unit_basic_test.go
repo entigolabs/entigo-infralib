@@ -34,6 +34,10 @@ func TestK8sTempoGoogleBiz(t *testing.T) {
 	testK8sTempo(t, "google", "biz")
 }
 
+func TestK8sTempoGooglePri(t *testing.T) {
+	testK8sTempo(t, "google", "pri")
+}
+
 func testK8sTempo(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
