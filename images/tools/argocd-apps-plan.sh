@@ -114,20 +114,22 @@ then
   done
 
 else
-  if [ $APP_EXISTED == "no" ]
-  then
-    retry_count=0
-    while [ $retry_count -lt 50 ]; do
-      APPSTATUS=$(kubectl get applications.argoproj.io -n $app_namespace $app_name -o json | jq -r '.status.sync.status // "null"')
-      # Check if the result is not "null"
-      if [ "$APPSTATUS" != "null" ] && [ "$APPSTATUS" != "Unknown" ] && [ -n "$APPSTATUS" ]; then
-        break
-      fi    
-      echo "Waiting for ArgoCD to process $app_name application. Status is Null or Unknown."
-      sleep 6
-      retry_count=$((retry_count + 1))
-    done
-  fi
+  # The counterpart of the CLI path's refresh. Hard, because an application that already existed
+  # can otherwise keep showing a cached render - "Manifest generation error (cached)" - and stay
+  # Unknown. ArgoCD removes the annotation once it has reconciled the application.
+  kubectl annotate applications.argoproj.io -n $app_namespace $app_name argocd.argoproj.io/refresh=hard --overwrite > /dev/null
+  retry_count=0
+  while [ $retry_count -lt 50 ]; do
+    APP_JSON=$(kubectl get applications.argoproj.io -n $app_namespace $app_name -o json)
+    REFRESH=$(echo "$APP_JSON" | jq -r '.metadata.annotations["argocd.argoproj.io/refresh"] // ""')
+    APPSTATUS=$(echo "$APP_JSON" | jq -r '.status.sync.status // "null"')
+    if [ -z "$REFRESH" ] && [ "$APPSTATUS" != "null" ] && [ "$APPSTATUS" != "Unknown" ] && [ -n "$APPSTATUS" ]; then
+      break
+    fi
+    echo "Waiting for ArgoCD to refresh $app_name application. Status is $APPSTATUS."
+    sleep 6
+    retry_count=$((retry_count + 1))
+  done
 
   # Build API resources lookup map once: "kind.group" -> "resourcename.group"
   declare -A api_map

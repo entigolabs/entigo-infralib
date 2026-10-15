@@ -17,14 +17,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
-// There is no OKE cluster behind this test yet, so it only ever fails in
-// CheckKubectlConnection.
-/*
-func TestK8sCrossplaneOracleDev(t *testing.T) {
-	testK8sCrossplaneOracle(t, "oracle", "dev")
+func TestK8sCrossplaneOracleBiz(t *testing.T) {
+	testK8sCrossplaneOracle(t, "oracle", "biz")
 }
-*/
+
+func TestK8sCrossplaneOraclePri(t *testing.T) {
+	testK8sCrossplaneOracle(t, "oracle", "pri")
+}
 
 func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
@@ -86,7 +85,7 @@ func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	assert.NotNil(t, bucket, "Bucket is nil")
 
 	// Ready and Synced, so the bucket exists in OCI rather than just having been accepted.
-	_, err = k8s.WaitUntilCrossplaneResourceAvailable(t, kubectlOptions, bucketResource, bucketName, 30, 4*time.Second)
+	_, err = k8s.WaitUntilCrossplaneResourceAvailable(t, kubectlOptions, bucketResource, bucketName, 90, 4*time.Second)
 	if err != nil {
 		_ = k8s.DeleteCrossplaneResource(t, kubectlOptions, bucketResource, bucketName)
 	}
@@ -101,8 +100,8 @@ func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	err = k8s.DeleteCrossplaneResource(t, kubectlOptions, bucketResource, bucketName)
 	require.NoError(t, err, "Deleting bucket error")
 
-	err = oracle.WaitUntilOCIBucketDeleted(t, region, bucketName, 30, 4*time.Second)
+	err = oracle.WaitUntilOCIBucketDeleted(t, region, bucketName, 90, 4*time.Second)
 	require.NoError(t, err, "Bucket deletion error")
-	err = k8s.WaitUntilCrossplaneResourceDeleted(t, kubectlOptions, bucketResource, bucketName, 12, 5*time.Second)
+	err = k8s.WaitUntilCrossplaneResourceDeleted(t, kubectlOptions, bucketResource, bucketName, 36, 5*time.Second)
 	require.NoError(t, err, "Bucket object didn't get deleted")
 }
