@@ -764,11 +764,20 @@ cluster-metrics:
       periodSeconds: 10
       timeoutSeconds: 5
       failureThreshold: 3
-    enableHttpServerPort: false
+    enableHttpServerPort: true
     enableReporting: false
 
   service:
+    enabled: true
+
+  # Alloy's own UI (component graph/health), not exposed by the upstream chart's `ingress.*`
+  # (that's wired to the Faro port only) — see templates/uiIngress.yaml.
+  ui:
+    ingress:
       enabled: false
+      ingressClassName: ""
+      annotations: {}
+      host: ""
 
   serviceAccount:
     create: true
@@ -819,8 +828,13 @@ cluster-metrics:
                     - "true"
 
 # ---------------------------------------------------------------------------
-# receiver: single Deployment receiving push-based telemetry that has no pull/scrape alternative —
-# for example OTLP traces and/or Faro (browser RUM).
+# receiver: single Deployment for telemetry producers that are NOT a pod scheduled in this
+# cluster — a browser (faro) or any other external/unauthenticated source — since those have
+# no node to reach a local collector on, and so need a stable, cluster-wide-routable Service.
+#
+# otlp here is a FALLBACK, not the preferred path for an in-cluster OTLP producer.
+# The node-agent Daemonset has node-local OTLP receiver (hostPort, reachable via status.hostIP in cluster)
+# — once that lands, any in-cluster workload that can should adopt it.
 # ---------------------------------------------------------------------------
 receiver:
   enabled: false
@@ -835,7 +849,9 @@ receiver:
     enabled: false
     apiKey: ""
     corsAllowedOrigins: ["*"]
-    lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
+    # No default on purpose: this receives whatever is sent by anyone who can reach the public faro /collect route.
+    # Point this at a dedicated instance, or at least to a distinct tenant.
+    lokiEndpoint: ""
     lokiTenantID: ""
 
   extraConfig: ""
@@ -852,7 +868,7 @@ receiver:
 
         loki.write "default" {
           endpoint {
-            url = {{ .Values.faro.lokiEndpoint | quote }}
+            url = {{ required "receiver.faro.lokiEndpoint must be set when receiver.faro.enabled is true" .Values.faro.lokiEndpoint | quote }}
             {{- if .Values.faro.lokiTenantID }}
             tenant_id = {{ .Values.faro.lokiTenantID | quote }}
             {{- end }}

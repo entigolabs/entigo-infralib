@@ -62,3 +62,15 @@ cluster-metrics:
           - ipBlock:
               cidr: 172.20.0.1/32
 
+  ui:
+    ingress:
+      ingressClassName: "alb"
+      annotations:
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
+        alb.ingress.kubernetes.io/group.name: internal
+        alb.ingress.kubernetes.io/healthcheck-path: /-/ready
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+        alb.ingress.kubernetes.io/scheme: internal
+        alb.ingress.kubernetes.io/success-codes: 200-499
+        alb.ingress.kubernetes.io/target-type: ip
+

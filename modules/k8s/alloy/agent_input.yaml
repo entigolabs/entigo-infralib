@@ -19,5 +19,3 @@ cluster-metrics:
 receiver:
   controller:
     priorityClassName: "{{ .module.name }}"
-  faro:
-    lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
