@@ -1,7 +1,10 @@
 global:
   cloudProvider: ""
+  pubZoneId: ""
+  # Public twin zone of the private int domain, "" = no int solver
+  intCertZoneId: ""
 
-# ACME ClusterIssuer with DNS-01 in the cloud DNS (templates/<cloud>/clusterIssuer.yaml)
+# ACME ClusterIssuer with DNS-01 in the cloud DNS
 clusterIssuer:
   name: letsencrypt
 

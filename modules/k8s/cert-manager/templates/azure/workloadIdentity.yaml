@@ -10,8 +10,8 @@ spec:
   serviceAccountName: {{ index .Values "cert-manager" "serviceAccount" "name" }}
   azurePermissions:
     - role: DNS Zone Contributor
-      scope: {{ .Values.global.azure.pubZoneId }}
-    {{- with .Values.global.azure.intCertZoneId }}
+      scope: {{ .Values.global.pubZoneId }}
+    {{- with .Values.global.intCertZoneId }}
     - role: DNS Zone Contributor
       scope: {{ . }}
     {{- end }}

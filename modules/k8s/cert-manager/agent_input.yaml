@@ -1,2 +1,5 @@
+global:
+  pubZoneId: '{{ .toptout.route53.pub_zone_id | .toptout.dns.pub_zone_id | required }}'
+  intCertZoneId: "{{ .toptout.dns.int_cert_zone_id }}"
 cert-manager:
   imageRegistry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'

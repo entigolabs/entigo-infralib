@@ -23,7 +23,8 @@ spec:
     {{- end }}
     {{- end }}
     solvers:
-      {{- range $zoneId := compact (list .Values.global.azure.pubZoneId .Values.global.azure.intCertZoneId) }}
+      {{- if eq .Values.global.cloudProvider "azure" }}
+      {{- range $zoneId := compact (list .Values.global.pubZoneId .Values.global.intCertZoneId) }}
       {{- $id := splitList "/" $zoneId }}
       - selector:
           dnsZones:
@@ -35,5 +36,6 @@ spec:
             hostedZoneName: {{ index $id 8 }}
             environment: AzurePublicCloud
             managedIdentity: {}
+      {{- end }}
       {{- end }}
 {{- end }}

@@ -1,9 +1,5 @@
 global:
   cloudProvider: azure
-  azure:
-    pubZoneId: ""
-    # Public twin zone of the private int domain, "" = no int solver
-    intCertZoneId: ""
 
 cert-manager:
   # Split horizon: the private int zone has no public NS, challenge records are in its public twin

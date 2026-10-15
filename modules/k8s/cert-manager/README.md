@@ -7,8 +7,8 @@ Secrets (aws and google gateways use ACM / Certificate Manager). The controller 
 (crossplane-azure) with DNS Zone Contributor on the dns `pub_zone_id` and `int_cert_zone_id` zones. Depends on:
 modules/azure/dns, modules/k8s/crossplane-azure.
 
-Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`) and `templates/<cloud>/` with its ClusterIssuer
-(the azure one with its DNS-01 solver) and DNS identity.
+Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), its DNS-01 solvers in
+`templates/clusterIssuer.yaml` and its DNS identity in `templates/<cloud>/`.
 
 Test environments should use `acme.server: https://acme-staging-v02.api.letsencrypt.org/directory`: production
 allows 5 certificates per identical name set per 7 days.
