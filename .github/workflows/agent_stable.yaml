@@ -1,8 +1,8 @@
 # Provisions every cloud from the latest release and tests it; Agent Release
-# follows a complete, green run. Dispatched with one cloud it provisions and
-# tests only that cloud's modules: a partial run, which uploads no
-# stable-release artifact, so the Agent Release run it triggers does nothing.
-# The k8s tests run against every cloud at once, so a partial run has none.
+# follows a green scheduled run. Dispatched by hand it never triggers a
+# release (dispatch Agent Release for that), and dispatched with one cloud it
+# provisions and tests only that cloud's modules. The k8s tests run against
+# every cloud at once, so such a partial run has none.
 name: Agent Stable
 
 on:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       cloud:
-        description: cloud to run; anything but all is a partial run that triggers no release
+        description: cloud to run; a dispatched run never triggers a release
         type: choice
         options: [all, aws, google, oracle]
         default: all
@@ -225,22 +225,3 @@ jobs:
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
 
-  stable:
-    name: Stable
-    runs-on: ubuntu-latest
-    needs: [install_stable_aws,install_stable_google,install_stable_oracle,testk8s]
-    if: inputs.cloud == '' || inputs.cloud == 'all'
-    steps:
-    - name: Stable release marker
-      # Agent Release looks for this artifact in the run that triggered it; a
-      # partial run never gets here and leaves none.
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        tag=$(gh release view --repo "${GITHUB_REPOSITORY}" --json tagName --jq .tagName)
-        echo "Release ${tag} is stable on every cloud"
-        echo "${tag}" > stable-release.txt
-    - uses: actions/upload-artifact@v7
-      with:
-        name: stable-release
-        path: stable-release.txt
