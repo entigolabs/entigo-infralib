@@ -30,6 +30,7 @@ accounts:
       - property: Name
         type: In
         values:
+        - infralib-root-ca
         - infralib-agent-bootstrap
         - infralib-github-bootstrap
         - github-example-bootstrap
@@ -37,6 +38,7 @@ accounts:
       - property: Name
         type: In
         values:
+        - infralib-root-ca
         - biz-eu-frankfurt-2
         - at-eu-frankfurt-2
         - pri-eu-frankfurt-2
@@ -45,6 +47,9 @@ accounts:
       - property: Name
         type: In
         values:
+        - infralib-root-ca-key
+        - biz-net-pca-ca-key
+        - pri-net-pca-ca-key
         - biz-eu-frankfurt-2-agent
         - at-eu-frankfurt-2-agent
         - pri-eu-frankfurt-2-agent
@@ -56,5 +61,8 @@ accounts:
       - property: Name
         type: In
         values:
+        - infralib-root-ca
+        - biz-net-pca-ca
+        - pri-net-pca-ca
         - biz-net-pca-root-ca
         - pri-net-pca-root-ca

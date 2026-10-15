@@ -4,4 +4,4 @@
 create_ca: false
 # The step is named literally rather than taken from {{ .step.name }}: a per-module test run
 # renames the step after its branch, and the CA to adopt keeps the name the net step gave it.
-ca_name: "{{ .config.prefix }}-net-{{ .module.name }}-root-ca"
+ca_name: "{{ .config.prefix }}-net-{{ .module.name }}-ca"

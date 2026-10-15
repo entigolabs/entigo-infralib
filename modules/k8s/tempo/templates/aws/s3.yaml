@@ -1,0 +1,166 @@
+{{- if eq .Values.global.cloudProvider "aws" }}
+# Main S3 Bucket
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: Bucket
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    tags:
+      created-by: "entigo-infralib"
+    region: {{ .Values.global.aws.region }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# ACL Configuration
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketACL
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }},private
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    acl: private
+    region: {{ .Values.global.aws.region }}
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# Object Ownership Configuration
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketOwnershipControls
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      objectOwnership: BucketOwnerPreferred
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# Public Access Block Configuration
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    blockPublicPolicy: true
+    blockPublicAcls: true
+    ignorePublicAcls: true
+    restrictPublicBuckets: true
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- $supportedRegions := list "ap-northeast-1" "ap-northeast-2" "ap-south-1" "ap-southeast-1" "ap-southeast-2" "ca-central-1" "eu-central-1" "eu-west-1" "eu-west-2" "eu-west-3" "sa-east-1" "us-east-1" "us-east-2" "us-west-1" "us-west-2" }}
+{{- if has .Values.global.aws.region $supportedRegions }}
+---
+# Transfer Acceleration Configuration
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketAccelerateConfiguration
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    status: Enabled
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}
+---
+# Versioning Configuration
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketVersioning
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    versioningConfiguration:
+      status: Suspended
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+---
+# Server Side Encryption Configuration
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketServerSideEncryptionConfiguration
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      - applyServerSideEncryptionByDefault:
+          {{- if .Values.global.aws.kmsKeyId }}
+            kmsMasterKeyId: {{ .Values.global.aws.kmsKeyId }}
+            sseAlgorithm: aws:kms
+          {{- else }}
+            sseAlgorithm: AES256
+          {{- end }}
+        bucketKeyEnabled: true
+        blockedEncryptionTypes:
+          - SSE-C
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- if .Values.global.aws.bucketLifecycleRules }}
+---
+# Lifecycle Configuration
+apiVersion: s3.aws.upbound.io/v1beta2
+kind: BucketLifecycleConfiguration
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    region: {{ .Values.global.aws.region }}
+    rule:
+      {{- toYaml .Values.global.aws.bucketLifecycleRules | nindent 6 }}
+    bucketRef:
+      name: {{ .Values.global.bucketName }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}
+{{- end }}

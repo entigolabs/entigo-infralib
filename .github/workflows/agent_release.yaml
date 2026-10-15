@@ -1,3 +1,9 @@
+# Applies main to every cloud, tests it, and when main is ahead of the latest
+# release makes a new one. Follows a green scheduled Agent Stable run only: a
+# Stable somebody dispatched, for one cloud or all, triggers nothing.
+# Dispatched with one cloud it applies and tests only that cloud's modules
+# and releases nothing: the k8s tests run against every cloud at once, so a
+# partial run has none, and nothing is tagged or published.
 name: Agent Release
 
 on:
@@ -6,13 +12,20 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      cloud:
+        description: cloud to run; anything but all applies and tests main there without releasing
+        type: choice
+        options: [all, aws, google, azure, oracle]
+        default: all
 
 jobs:     
   install_main_aws:
     name: Install main AWS
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule'))
+      && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'aws')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -43,7 +56,8 @@ jobs:
     name: Install main Google
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule'))
+      && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'google')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -74,7 +88,8 @@ jobs:
     name: Install main Azure
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule'))
+      && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'azure')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -106,7 +121,8 @@ jobs:
     name: Install main Oracle
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule'))
+      && (inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'oracle')
     steps:
     - name: Checkout code (tfmain)
       uses: actions/checkout@v4
@@ -144,7 +160,9 @@ jobs:
   release:   
     runs-on: ubuntu-latest
     needs: [install_main_aws,install_main_google,install_main_oracle,install_main_azure]
-
+    # Only after every cloud: the k8s tests cover all of them at once, and a
+    # version is made only when all of main was applied and tested.
+    if: inputs.cloud == '' || inputs.cloud == 'all'
     concurrency:
       group: pr-modules-test
       cancel-in-progress: false

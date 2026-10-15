@@ -1,14 +1,26 @@
+# Provisions every cloud from the latest release and tests it; Agent Release
+# follows a green scheduled run. Dispatched by hand it never triggers a
+# release (dispatch Agent Release for that), and dispatched with one cloud it
+# provisions and tests only that cloud's modules. The k8s tests run against
+# every cloud at once, so such a partial run has none.
 name: Agent Stable
 
 on:
   schedule:
     - cron: "31 3 * * 1-5"
   workflow_dispatch:
+    inputs:
+      cloud:
+        description: cloud to run; a dispatched run never triggers a release
+        type: choice
+        options: [all, aws, google, azure, oracle]
+        default: all
 
 jobs:
   install_stable_aws:
     name: Install stable AWS
     runs-on: ubuntu-latest
+    if: inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'aws'
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -51,6 +63,7 @@ jobs:
   install_stable_google:
     name: Install stable Google
     runs-on: ubuntu-latest
+    if: inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'google'
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -94,6 +107,7 @@ jobs:
   install_stable_azure:
     name: Install stable Azure
     runs-on: ubuntu-latest
+    if: inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'azure'
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -138,6 +152,7 @@ jobs:
   install_stable_oracle:
     name: Install stable Oracle
     runs-on: ubuntu-latest
+    if: inputs.cloud == '' || inputs.cloud == 'all' || inputs.cloud == 'oracle'
     steps:
     - name: Get latest release
       id: get_latest_release
@@ -188,11 +203,8 @@ jobs:
 
   testk8s:   
     runs-on: ubuntu-latest
-<<<<<<< HEAD
-    needs: [install_stable_aws,install_stable_google,install_stable_azure]
-=======
-    needs: [install_stable_aws,install_stable_google,install_stable_oracle]
->>>>>>> main
+    needs: [install_stable_aws,install_stable_google,install_stable_azure,install_stable_oracle]
+    if: inputs.cloud == '' || inputs.cloud == 'all'
     concurrency:
       group: pr-modules-test
       cancel-in-progress: false
@@ -241,17 +253,14 @@ jobs:
         GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
         GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
         GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-<<<<<<< HEAD
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-=======
         OCI_REGION: eu-frankfurt-2
         OCI_CONFIG_FILE: /home/runner/.oci/config
         OCI_COMPARTMENT_ID: ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q
->>>>>>> main
         PR_BRANCH: "main"
       run: |
         ./stable.sh k8s
@@ -265,3 +274,4 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
         SLACK_FOOTER: ""
+
