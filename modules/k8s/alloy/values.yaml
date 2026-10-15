@@ -416,10 +416,6 @@ node-agent:
     resources:
       requests:
         cpu: "20m"
-        # Bumped from the log-only default (45Mi): otelcol.processor.tail_sampling
-        # buffers every span of every in-flight trace for the duration of
-        # traces.decisionWait before deciding to keep or drop it. Harmless when
-        # traces.enabled is false. Revisit once real trace volume is known.
         memory: "128Mi"
         ephemeral-storage: "100Mi"
       limits:
