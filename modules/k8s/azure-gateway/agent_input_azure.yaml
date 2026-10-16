@@ -1,0 +1,14 @@
+global:
+  externalGateway: "{{ .module.name }}-external"
+  internalGateway: "{{ .module.name }}-internal"
+  internalGatewayNamespace: "{{ .toptmodule.istio-gateway }}"
+  azure:
+    agcSubnetId: "{{ .toutput.vpc.agc_subnets[0] }}"
+certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'
+gateways:
+  external:
+    domain: "{{ .toutput.dns.pub_domain }}"
+alb-controller:
+  albController:
+    podIdentity:
+      clientID: "{{ .toutput.aks.alb_controller_client_id }}"

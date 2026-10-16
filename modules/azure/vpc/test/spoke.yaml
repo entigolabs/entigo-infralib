@@ -1,0 +1,8 @@
+vpc_cidr: "10.30.0.0/20"
+enable_flow_log: false
+enable_nat_gateway: false
+egress_next_hop_ip: "10.30.12.4"
+pipeline_subnets: |
+  []
+private_subnet_names: |
+  ["spoke-nodes"]

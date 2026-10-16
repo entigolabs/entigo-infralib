@@ -1,0 +1,56 @@
+global:
+  externalGateway: azure-gateway-external
+  # Created by istio-gateway until AGC has a private frontend
+  # https://github.com/Azure/AKS/issues/5739
+  internalGateway: azure-gateway-internal
+  internalGatewayNamespace: ""
+  azure:
+    # Subnet delegated to Microsoft.ServiceNetworking/trafficControllers, one AGC per /24
+    agcSubnetId: ""
+
+# create: false = attach the gateways to the ApplicationLoadBalancer (AGC) of another azure-gateway module
+applicationLoadBalancer:
+  create: true
+  name: ""
+  namespace: ""
+
+# cert-manager ClusterIssuer, the agent sets the cert-manager module clusterIssuer.name
+certificateIssuer: letsencrypt
+certificatePrivateKey:
+  algorithm: ECDSA
+  size: 384
+  rotationPolicy: Always
+
+# One Gateway (= one AGC frontend) per entry with enabled: true, named <release name>-<key>
+gateways:
+  external:
+    enabled: true
+    gatewayClassName: azure-alb-external
+    domain: ""
+    sslRedirect: true
+    # AGC predefined TLS policy (FrontendTLSPolicy on the https listener), "" = AGC default (currently 2023-06):
+    #   2023-06   - TLS 1.2 and 1.3, ECDHE AES-GCM ciphers, P-256/P-384
+    #   2023-06-S - stricter variant of 2023-06, currently the same ciphers
+    # AGC has no TLS 1.0/1.1 policy.
+    sslPolicy: "2023-06"
+    annotations: {}
+    labels: {}
+
+# One ALB controller per cluster: false in a second azure-gateway module
+installAlbController: true
+
+alb-controller:
+  albController:
+    namespace: azure-alb-system
+    # Images stay on mcr.microsoft.com: the chart adds /public to any other registry path, which the acr-proxy
+    # MCR cache can't serve. With aks bootstrap_cache_enabled, nodes mirror all MCR pulls through acr-proxy anyway.
+    podIdentity:
+      clientID: ""
+    controller:
+      tolerations:
+        - key: "tools"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"

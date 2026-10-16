@@ -1,8 +1,11 @@
 ## Opinionated helm package for crossplane ##
 
-This module depends on: modules/aws/crossplane or modules/google/crossplane
+This module depends on: modules/aws/crossplane, modules/google/crossplane or modules/azure/crossplane
 
 This will initialize [crossplane](https://github.com/crossplane/crossplane).
+
+On Azure Crossplane pulls packages from acr-proxy with the workload identity of modules/azure/crossplane
+(`core_client_id`), federated with `crossplane-system/crossplane`: keep the module name `crossplane-system`.
 
 
 ### Example code ###

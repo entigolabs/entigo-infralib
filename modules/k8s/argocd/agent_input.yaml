@@ -4,8 +4,8 @@ argocd:
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | required }}'
-          namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | required }}'
+          name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
+          namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptin.azure-gateway.global.internalGatewayNamespace | required }}'
           sectionName: https
       hostnames:
         - "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
@@ -15,14 +15,14 @@ argocd:
     domain: |
       {{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}
     image:
-      repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | "quay.io" }}/argoproj/argocd'
+      repository: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}/argoproj/argocd'
   dex:
     image:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/dexidp/dex'
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/dexidp/dex'
   redis:
     image:
-      repository: '{{ .toptout.ecr-proxy.ecr_registry | .toptout.gar-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
+      repository: '{{ .toptout.ecr-proxy.ecr_registry | .toptout.gar-proxy.ecr_registry | .toptout.acr-proxy.ecr_registry | "public.ecr.aws" }}/docker/library/redis'
 job:
-  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
+  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
 mcp:
-  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/entigolabs/mcp-for-argocd'
+  image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/mcp-for-argocd'

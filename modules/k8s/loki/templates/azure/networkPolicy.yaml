@@ -1,0 +1,31 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+{{- with .Values.loki.gateway.route.main.parentRefs }}
+# Gateway ingress from the route's gateway: istio-gateway pods (internal gateway) or the AGC subnet
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $.Release.Name }}-gateway-route
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ (first .).namespace }}
+        {{- if $.Values.global.azure.agcHealthCheck }}
+        {{- range (splitList "," ($.Values.global.azure.agcSubnetCidrs | default "")) }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . | trimAll "\"" }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}
+{{- end }}

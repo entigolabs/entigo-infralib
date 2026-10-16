@@ -1,0 +1,28 @@
+installProviderConfig: true
+
+global:
+  azure:
+    subscriptionId: ""
+    tenantId: ""
+    clientId: ""
+    resourceGroupName: ""
+    location: ""
+    oidcIssuerUrl: ""
+    identityPrefix: ""
+    nodeResourceGroupName: ""
+
+  providerVersion: v2.8.0
+
+  deploymentRuntimeConfig:
+    args:
+      - --enable-management-policies
+
+  extraProviders: []
+  observerProviders: []
+  requiredProviders: ["managedidentity", "authorization", "storage"]
+  createObservers: false
+  createNamespacedObservers: false
+
+# WorkloadIdentity (iam.entigo.com): chart dependency github.com/entigolabs/entigo-infralib-apis, values under
+# entigo-infralib-apis (roles allowlist: iam.environmentConfig.azure.roles)
+entigo-infralib-apis: {}

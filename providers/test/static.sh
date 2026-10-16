@@ -52,6 +52,9 @@ do
   if [ "$providername" == "oci" ]
   then
     sourceorg="oracle"
+  elif [ "$providername" == "azapi" ]
+  then
+    sourceorg="Azure"
   else
     sourceorg="hashicorp"
   fi

@@ -51,3 +51,6 @@ external-dns:
 
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
+
+external-dns-private:
+  enabled: false

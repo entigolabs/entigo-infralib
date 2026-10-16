@@ -1,0 +1,32 @@
+global:
+  cloudProvider: "azure"
+  azure:
+    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
+    agcHealthCheck: true
+
+wireguard:
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  keygenJob:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"

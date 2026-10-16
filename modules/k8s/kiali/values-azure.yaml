@@ -1,0 +1,23 @@
+global:
+  cloudProvider: "azure"
+  createRoute: true
+  azure:
+    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
+    agcHealthCheck: false
+
+kiali-server:
+  deployment:
+    ingress:
+      enabled: false
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
