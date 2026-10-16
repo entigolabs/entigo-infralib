@@ -1,4 +1,7 @@
 global:
+  azure:
+    # AGC HealthCheckPolicy only with an azure-gateway module
+    agcHealthCheck: '{{ .toptmodule.azure-gateway }}'
   # Own hostname: the Azure load balancer is L4 and terminates no TLS. See README.md.
   pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
   gateway:

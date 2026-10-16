@@ -1,4 +1,5 @@
 global:
-  internalGateway:
-    namespace: "{{ .module.name }}"
-    name: azure-gateway-internal
+  azure:
+    loadBalancer:
+      namespace: "{{ .module.name }}"
+      name: azure-gateway-internal

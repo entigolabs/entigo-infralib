@@ -1,8 +1,14 @@
 global:
+  createRoute: '{{ .toptmodule.azure-gateway }}'
+  gateway:
+    name: '{{ .toptin.azure-gateway.global.externalGateway }}'
+    namespace: '{{ .toptmodule.azure-gateway }}'
   hostnames:
     - "*.{{ .toutput.dns.pub_domain }}"
-  internalGateway:
-    namespace: '{{ .toptin.azure-gateway.global.internalGatewayNamespace }}'
-    name: '{{ .toptin.azure-gateway.global.internalGateway | "internal" }}'
-    domain: "{{ .toutput.dns.int_domain }}"
-    certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'
+  azure:
+    loadBalancer:
+      namespace: '{{ .toptin.azure-gateway.global.internalGatewayNamespace }}'
+      name: '{{ .toptin.azure-gateway.global.internalGateway | "gateway" }}'
+      intDomain: "{{ .toutput.dns.int_domain }}"
+      pubDomain: "{{ .toutput.dns.pub_domain }}"
+      certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'

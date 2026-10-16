@@ -1,16 +1,25 @@
-{{- if and (eq .Values.global.cloudProvider "azure") (eq .Release.Namespace .Values.global.internalGateway.namespace) }}
-{{- $cfg := .Values.global.internalGateway }}
-{{- $domain := required "global.internalGateway.domain" $cfg.domain }}
-{{- $secret := printf "%s-internal-tls" .Release.Name }}
-{{- $service := printf "%s-internal" .Values.gateway.name }}
+{{- if eq .Values.global.cloudProvider "azure" }}
+{{- $cfg := .Values.global.azure.loadBalancer }}
+{{- if or $cfg.enabled (and $cfg.namespace (eq .Release.Namespace $cfg.namespace)) }}
+{{- $scheme := ternary "internal" "external" $cfg.internal }}
+{{- $domain := ternary $cfg.intDomain $cfg.pubDomain $cfg.internal | required (printf "global.azure.loadBalancer.%s" (ternary "intDomain" "pubDomain" $cfg.internal)) }}
+{{- $secret := printf "%s-%s-tls" .Release.Name $scheme }}
+{{- $service := printf "%s-%s" .Values.gateway.name $scheme }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ $service }}
+  {{- if $cfg.internal }}
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+  {{- end }}
 spec:
   type: LoadBalancer
+  externalTrafficPolicy: Local
+  {{- with $cfg.sourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     app: {{ .Values.gateway.name }}
     istio: {{ .Values.gateway.name | trimPrefix "istio-" }}
@@ -105,5 +114,6 @@ spec:
         - path:
             type: PathPrefix
             value: /
+{{- end }}
 {{- end }}
 {{- end }}
