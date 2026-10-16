@@ -242,6 +242,7 @@ fi
         elif [[ $testname == oracle_* && "$OCI_COMPARTMENT_ID" == "" ]]; then
             echo "Skip $testname test, OCI_COMPARTMENT_ID is not set"
         elif [[ $testname == oracle_* ]]; then
+            oracle_ca_certificates agents/$testname || exit 1
             # Public OKE endpoint for the same reason as run_agents in generate_config.sh.
             cat agents/$testname/config.yaml
             docker run --rm -v "$OCI_CONFIG_DIR":"$OCI_CONFIG_DIR":ro -v "$(pwd)":"/conf" \

@@ -76,6 +76,9 @@ oracle_auth_defaults() {
         echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
         export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
     fi
+    if [ "$ORACLE_ROOT_CA_NAME" == "" ]; then
+        export ORACLE_ROOT_CA_NAME="infralib-root-ca"
+    fi
 }
 
 # Adds the OKE cluster $1 to ~/.kube/config under a context of the same name, which is what
@@ -97,6 +100,33 @@ oracle_kubeconfig() {
     oci ce cluster create-kubeconfig --cluster-id "$id" --region "$OCI_REGION" \
         --kube-endpoint PUBLIC_ENDPOINT --token-version 2.0.0 --file ~/.kube/config &&
         kubectl config rename-context "$(kubectl config current-context)" "$cluster"
+}
+
+oracle_ca_certificates() {
+    local agent_dir=$1
+    local config_dir
+    local id
+    oracle_auth_defaults
+    if [ "$ORACLE_ROOT_CA_PEM" == "" ]; then
+        config_dir="$(dirname "$OCI_CONFIG_FILE")"
+        local oci=(docker run --rm -v "$config_dir":"$config_dir":ro -e OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
+            -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True -e SUPPRESS_LABEL_WARNING=True
+            --entrypoint oci $ENTIGO_INFRALIB_IMAGE --region "$OCI_REGION")
+        id=$("${oci[@]}" certs-mgmt certificate-authority list --compartment-id "$OCI_COMPARTMENT_ID" \
+            --name "$ORACLE_ROOT_CA_NAME" --lifecycle-state ACTIVE --all --query "data.items[0].id" --raw-output)
+        if [ -z "$id" ]; then
+            echo "Failed to find Oracle root CA $ORACLE_ROOT_CA_NAME"
+            return 1
+        fi
+        ORACLE_ROOT_CA_PEM=$("${oci[@]}" certificates certificate-authority-bundle get \
+            --certificate-authority-id "$id" --query 'data."certificate-pem"' --raw-output)
+        if [ -z "$ORACLE_ROOT_CA_PEM" ]; then
+            echo "Failed to read the certificate of Oracle root CA $ORACLE_ROOT_CA_NAME"
+            return 1
+        fi
+    fi
+    mkdir -p "$agent_dir/ca-certificates"
+    echo "$ORACLE_ROOT_CA_PEM" > "$agent_dir/ca-certificates/$ORACLE_ROOT_CA_NAME.crt"
 }
 
 #main means it runs in github and is applying the main branch
@@ -313,6 +343,10 @@ run_agents() {
         if [ "$OCI_COMPARTMENT_ID" == "" ]
         then
           echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
+          exit 5
+        fi
+        if ! oracle_ca_certificates agents/$agent
+        then
           exit 5
         fi
         # The runner is outside the VCN, so the agent's kubeconfig has to use the public
