@@ -5,8 +5,9 @@ global:
   internalGateway: azure-gateway-internal
   internalGatewayNamespace: ""
   azure:
-    # Subnet delegated to Microsoft.ServiceNetworking/trafficControllers, one AGC per /24
-    agcSubnetId: ""
+    # Subnets delegated to Microsoft.ServiceNetworking/trafficControllers (ApplicationLoadBalancer associations), one AGC
+    # per /24; Azure allows one association per AGC today, the list is for when that limit goes
+    agcSubnetIds: []
 
 # create: false = attach the gateways to the ApplicationLoadBalancer (AGC) of another azure-gateway module
 applicationLoadBalancer:

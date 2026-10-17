@@ -13,8 +13,10 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
   `global.internalGateway` (`<release name>-internal`) in `internalGatewayNamespace`. Consumer charts chain
   `.toptin.azure-gateway.global.internalGateway` and `.toptin.azure-gateway.global.internalGatewayNamespace`.
 * One ALB controller per cluster. A second azure-gateway module sets `installAlbController: false` and either its own
-  `ApplicationLoadBalancer` in another /24 of vpc `agc_subnets` or `applicationLoadBalancer.create: false` with
-  `name`/`namespace` of the first module's one (one AGC per /24).
+  `ApplicationLoadBalancer` in another /24 of vpc `agc_subnets` (`global.azure.agcSubnetIds` in the config inputs, the
+  agent default is the first subnet) or `applicationLoadBalancer.create: false` with `name`/`namespace` of the first
+  module's one (one AGC per /24). `agcSubnetIds` is a list because the `associations` field is one; Azure accepts a
+  single association per AGC today.
 
 ## SSL policies
 

@@ -7,6 +7,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  {{- if not .Values.global.azure.agcSubnetIds }}
+  {{- fail "global.azure.agcSubnetIds must list the AGC subnet" }}
+  {{- end }}
   associations:
-    - {{ required "global.azure.agcSubnetId" .Values.global.azure.agcSubnetId }}
+    {{- toYaml .Values.global.azure.agcSubnetIds | nindent 4 }}
 {{- end }}
