@@ -14,7 +14,9 @@ A separate VirtualService object has to be created to expose the application.
   with a cert-manager wildcard for `intDomain` / `pubDomain`, TLS in istio.
   * Internal (`internal: true`), until AGC has a private frontend (Azure/AKS#5739): created in the module whose
     namespace is azure-gateway `internalGatewayNamespace`, named `<azure-gateway module>-internal`, records from the
-    external-dns private instance. With several istio-gateway modules, set azure-gateway
+    external-dns private instance. Its frontend is placed in `global.azure.loadBalancer.internalSubnet` (vpc
+    `control_subnet_name`: the control subnet in spoke mode, empty otherwise, which leaves the frontend in the node
+    subnet; setting or changing it recreates the frontend). With several istio-gateway modules, set azure-gateway
     `global.internalGatewayNamespace` (or `default_module`).
   * Public (`internal: false`, `enabled: true`): istio without azure-gateway, records from the public external-dns
     instance. No AGC route (`createRoute` is on only with an azure-gateway module), no WAF.

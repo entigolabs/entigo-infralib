@@ -11,6 +11,8 @@ global:
       enabled: false
       namespace: ""
       internal: true
+      # Subnet of the internal load balancer frontend (vpc control subnet in spoke mode), empty = no annotation, the node subnet
+      internalSubnet: ""
       name: gateway
       # int_domain for internal, pub_domain for public
       intDomain: ""

@@ -1,0 +1,17 @@
+vpc_cidr: "10.34.0.0/22"
+enable_flow_log: false
+container_apps_subnets: |
+  []
+database_subnet_delegation: "Microsoft.DBforPostgreSQL/flexibleServers"
+database_subnets: |
+  ["10.34.0.192/26"]
+custom_subnets: |
+  {
+    mssql = {
+      cidr               = "10.34.0.144/28"
+      delegation         = "Microsoft.Sql/managedInstances"
+      delegation_actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]
+      network_security_group = true
+      route_table            = true
+    }
+  }

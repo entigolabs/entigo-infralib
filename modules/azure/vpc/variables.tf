@@ -31,6 +31,17 @@ variable "vpc_cidr" {
   }
 }
 
+variable "subnet_split_mode" {
+  type        = string
+  nullable    = false
+  default     = "default"
+  description = "default: one private subnet for nodes and load balancers. spoke: separate control (platform internal load balancers) and service (other internal load balancers) subnets, the node subnet named compute, no intra subnet, always a database subnet; outputs control_subnets and service_subnets point to the new subnets"
+  validation {
+    condition     = contains(["default", "spoke"], var.subnet_split_mode)
+    error_message = "subnet_split_mode must be default or spoke."
+  }
+}
+
 variable "private_subnets" {
   type    = list(string)
   default = null
@@ -56,6 +67,26 @@ variable "agc_subnets" {
   type        = list(string)
   default     = null
   description = "Application Gateway for Containers subnet, exactly a /24 with CNI Overlay"
+}
+
+variable "control_subnets" {
+  type    = list(string)
+  default = null
+}
+
+variable "service_subnets" {
+  type    = list(string)
+  default = null
+}
+
+variable "control_subnet_names" {
+  type    = list(string)
+  default = []
+}
+
+variable "service_subnet_names" {
+  type    = list(string)
+  default = []
 }
 
 variable "private_subnet_names" {

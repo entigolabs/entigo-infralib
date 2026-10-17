@@ -54,6 +54,9 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   per cluster, service account `azure-alb-system/alb-controller-sa`): Reader + AppGw for Containers Configuration
   Manager on the node resource group, Network Contributor on every AGC subnet (one Application Gateway for Containers
   per /24). Output `alb_controller_client_id`.
+* `lb_subnet_ids` (vpc `lb_subnets`: the control and service subnets of `subnet_split_mode: spoke`, empty in default
+  mode): Network Contributor for the cluster identity on every listed subnet other than the node subnet, so load
+  balancer frontends can be placed there.
 * Encryption: when the kms module exists, its data key (`disk_encryption_key_id`) encrypts the OS disks of all pools
   (incl. azure/aks-node-pool) and by default the PVC disks through a disk encryption set, **only at cluster creation**
   (adding kms later fails the apply, the cluster isn't replaced). No etcd encryption with the kms config key yet:

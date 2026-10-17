@@ -1,0 +1,15 @@
+vpc_cidr: "10.33.0.0/21"
+subnet_split_mode: "spoke"
+enable_flow_log: false
+nat_gateway_sku: "Standard"
+nat_static_ip_count: 2
+agc_subnets: |
+  []
+container_apps_subnets: |
+  []
+control_subnet_names: |
+  ["spoke3-ilb-platform"]
+service_subnet_names: |
+  ["spoke3-ilb-apps"]
+intra_subnets: |
+  ["10.33.3.0/26"]

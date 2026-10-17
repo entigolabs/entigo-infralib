@@ -360,7 +360,7 @@ run_agents() {
           echo "Defaulting AZURE_LOCATION to westeurope"
           export AZURE_LOCATION="westeurope"
         fi
-        if [ $agent != "azure_spoke" -o \( $agent == "azure_spoke" -a "$AGENT_OPTS" == "" \) ]
+        if [ $agent == "azure_biz" -o $agent == "azure_pri" -o "$AGENT_OPTS" == "" ]
         then
           docker run --rm -v "$(pwd)":"/conf" -e AZURE_SUBSCRIPTION_ID -e AZURE_LOCATION -e AZURE_TENANT_ID -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
           PIDS="$PIDS $!=$agent"

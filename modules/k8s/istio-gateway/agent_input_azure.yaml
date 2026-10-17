@@ -9,6 +9,7 @@ global:
     loadBalancer:
       namespace: '{{ .toptin.azure-gateway.global.internalGatewayNamespace }}'
       name: '{{ .toptin.azure-gateway.global.internalGateway | "gateway" }}'
+      internalSubnet: "{{ .toutput.vpc.control_subnet_name }}"
       intDomain: "{{ .toutput.dns.int_domain }}"
       pubDomain: "{{ .toutput.dns.pub_domain }}"
       certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'

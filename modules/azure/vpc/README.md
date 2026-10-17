@@ -28,30 +28,75 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   resource group is `<subnet name>-<location>` instead of an `ME_...` name, job logs go to the `<prefix>-container-apps` Log
   Analytics workspace.
 
-A database subnet is only created for /19 and larger; for /20 and smaller private endpoints go to the private or a
-custom subnet (set `database_subnets` for one anyway). A /21 or /22 is split in halves: the first half holds public
+In default mode a database subnet is only created for /19 and larger; for /20 and smaller private endpoints go to the
+private or a custom subnet (set `database_subnets` for one anyway). Spoke mode always has one. A /21 or /22 is split in halves: the first half holds public
 /26, intra /26, the API server /28 (one AKS cluster), the Container Apps /27 (18 usable IPs), the AGC /24 and the rest as
 spare; the second half is private.
 
 The minimum VNet size for the automatic split is /22: a /23 has no room for the AGC /24 next to the other tiers, and
-`vpc_cidr` must be /24 or larger. For /23 and /24 set every subnet list explicitly (`[]` for tiers not needed): the
-automatic tiers would fill the VNet and overlap. A /24 only works without AGC (`agc_subnets: []`), the AGC subnet alone
+`vpc_cidr` must be /24 or larger. For /23 and /24 set every subnet list explicitly (`[]` for tiers not needed), in spoke
+mode also `control_subnets`, `service_subnets` and `database_subnets`: the automatic tiers would fill the VNet and overlap. A /24 only works without AGC (`agc_subnets: []`), the AGC subnet alone
 is a /24; the fixed costs are AGC /24, API server /28 and Container Apps /27, about 300 addresses before any node.
 
-| vpc_cidr | public, intra | private | database | agc | apiserver | container apps | spare |
-|---|---|---|---|---|---|---|---|
-| /16 | /19 each | /18 | /19 | /24 | /26 | /26 | /18 |
-| /17 | /20 each | /19 | /20 | /24 | /26 | /26 | /19 |
-| /18 | /21 each | /20 | /21 | /24 | /26 | /26 | /20 |
-| /19 | /22 each | /21 | /22 | /24 | /26 | /26 | /21 |
-| /20 | /23 each | /22 | none | /24 | /26 | /26 | /23 + /22 |
-| /21 | /26 each | /22 | none | /24 | /28 | /27 | /28 + /26 + /23 |
-| /22 | /26 each | /23 | none | /24 | /28 | /27 | /28 + /26 |
+| vpc_cidr | public | intra | private | database | agc | apiserver | container apps | spare |
+|---|---|---|---|---|---|---|---|---|
+| /16 | /19 | /19 | /18 | /19 | /24 | /26 | /26 | /18 |
+| /17 | /20 | /20 | /19 | /20 | /24 | /26 | /26 | /19 |
+| /18 | /21 | /21 | /20 | /21 | /24 | /26 | /26 | /20 |
+| /19 | /22 | /22 | /21 | /22 | /24 | /26 | /26 | /21 |
+| /20 | /23 | /23 | /22 | none | /24 | /26 | /26 | /23 + /22 |
+| /21 | /26 | /26 | /22 | none | /24 | /28 | /27 | /28 + /26 + /23 |
+| /22 | /26 | /26 | /23 | none | /24 | /28 | /27 | /28 + /26 |
+
+Spoke mode (`subnet_split_mode: spoke`, see below): no intra, the node subnet named compute, always a database subnet,
+a control and a service subnet:
+
+| vpc_cidr | public | compute | database | agc | apiserver | container apps | control | service | spare |
+|---|---|---|---|---|---|---|---|---|---|
+| /16 | /19 | /18 | /19 | /24 | /26 | /26 | /26 | /26 | /19 + /18 |
+| /17 | /20 | /19 | /20 | /24 | /26 | /26 | /26 | /26 | /20 + /19 |
+| /18 | /21 | /20 | /21 | /24 | /26 | /26 | /26 | /26 | /21 + /20 |
+| /19 | /22 | /21 | /22 | /24 | /26 | /26 | /26 | /26 | /22 + /21 |
+| /20 | /23 | /22 | /23 | /24 | /26 | /26 | /26 | /26 | /23 + /22 |
+| /21 | /26 | /22 | /24 | /24 | /28 | /27 | /26 | /26 | /28 + /24 |
+| /22 | /26 | /24 | /25 | /24 | /28 | /27 | /26 | /26 | /28 + /25 |
 
 Any subnet list can be set explicitly. The split does not shift for explicit lists, so overlapping subnets are
 rejected at plan time. Extra AGC subnets (a second azure-gateway with its own AGC) and extra Container Apps subnets
 (a separate Container Apps environment for a step) are extra entries in `agc_subnets` and `container_apps_subnets`,
 usually taken from the spare quarter.
+
+### subnet_split_mode ###
+`default` (the layout above): nodes and all load balancer frontends share the private subnet, and the aws-style outputs
+`control_subnets`, `service_subnets` and `compute_subnets` all point to it. `spoke` is for a VNet peered to a hub that
+owns the firewall, gateways and DNS: the hub's rules are written per role range. It adds two load balancer subnets after
+the Container Apps subnet in the delegated block, names the node subnet `<prefix>-compute-<n>`, creates no intra subnet
+(a hub spoke has no attachment subnet, the peering attaches the VNet) and always creates a database subnet. The CIDRs
+of public, the delegated subnets and (for /19 and larger) database are the same as in default mode. Switching an
+existing VNet to spoke adds control and service, drops the empty intra subnet and renames the node subnet, which Azure
+does by recreating it (new `private_subnets` id, so aks replaces the cluster): pin the old name with
+`private_subnet_names` on a VNet with a running cluster. A /20 or /21 also gets the database subnet in a former spare
+range; a /22 halves the compute subnet in place, which Azure allows only while nothing uses 10.156.3.0/24, and puts
+database there.
+
+| Subnet | Use | Output | /16 (10.156.0.0) | /20 (10.30.0.0) |
+|---|---|---|---|---|
+| control-0 (/26) | internal load balancers of the platform (istio internal gateway) | `control_subnets`, `control_subnet_names` | 10.156.161.128/26 | 10.30.11.128/26 |
+| service-0 (/26) | other internal load balancers (`service.beta.kubernetes.io/azure-load-balancer-internal-subnet`) | `service_subnets`, `service_subnet_names` | 10.156.161.192/26 | 10.30.11.192/26 |
+| compute-0 | nodes (the private subnet, named compute in spoke mode) | `compute_subnets`, `private_subnets` | unchanged | unchanged |
+| intra | none in spoke mode (`intra_subnets` for one anyway) | `intra_subnets` = `[]` | | |
+
+The aks module gives the cluster identity Network Contributor on them (output `lb_subnets`, empty in default mode),
+istio-gateway places its internal gateway in `control_subnet_name` (empty in default mode: no annotation, the frontend
+stays in the node subnet). They have no NAT gateway or egress route (frontends only) and no delegation. A /26 holds 59 frontends, one per internal
+LoadBalancer Service (a Private Link Service reserves up to 8 of them), enough for a platform gateway and the usual
+handful of user load balancers; a bigger tier is an explicit `service_subnets` / `control_subnets` list, from the free
+tail of the delegated block for /19 and larger (e.g. 10.156.162.0/24 in a /16) or from the spare quarter. In a /21 or /22 control takes the
+intra slot 10.156.0.64/26 and service the free 10.156.0.192/26 of the small layout; the database subnet comes from the
+spare /23 in a /21 and from the second half of compute in a /22 (compute /24, about 250 nodes), so spoke mode always
+has one. Spoke mode needs at least one control and one service subnet; both lists can also be set explicitly
+in either mode (`*_subnet_names` as for the other tiers) and the outputs then point to them. Not done: Private Link Service on
+these subnets needs `private_link_service_network_policies_enabled = false`.
 
 ### Custom subnets ###
 `custom_subnets` adds subnets for anything else, keyed by a short name (lowercase letters and digits, the agent reads
@@ -100,14 +145,15 @@ Container Apps subnets have service endpoints for Storage and Key Vault (`*_subn
 see the subnet's private IP instead of the NAT IP, so IP firewall rules need VNet rules instead. Container Apps environments
 are zone redundant by default (`container_apps_zone_redundancy_enabled`, create time only).
 
-Plan time checks: `vpc_cidr` an IPv4 CIDR of /24 or larger, overlapping subnets, subnets outside the VNet, AGC exactly
+Plan time checks: `vpc_cidr` an IPv4 CIDR of /24 or larger, `subnet_split_mode` default or spoke, overlapping subnets, subnets outside the VNet, AGC exactly
 /24, unique subnet names across all tiers and custom subnets, `custom_subnets` keys and `nat_gateway` / `route_table`
 exclusion. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
 subnet names that are valid Container Apps environment names (lowercase).
 
 Outputs use both the google style (`*_subnet_cidrs`, `nat_static_ips`) and the aws/vpc names (`name`, `vpc_cidr_block`,
 `*_subnets_cidr_blocks`, `*_subnet_names`, `nat_public_ips`, and `control/service/compute_subnets(_cidr_blocks)` =
-private, `elasticache_subnets_cidr_blocks` = database) for modules shared between clouds, e.g. platform-apis. Outputs
+private in default mode, the control and service subnets in spoke mode or with explicit lists,
+`elasticache_subnets_cidr_blocks` = database) for modules shared between clouds, e.g. platform-apis. Outputs
 of disabled resources (`nat_gateway_id`, `egress_route_table_id`, `vpc_flow_log_*`) are empty strings, not null, so
 agent inputs referencing them always render.
 
@@ -137,7 +183,7 @@ Known issue: azurerm 5.7.0 ends a Container Apps environment delete with "pollin
 was not implemented" although the environment is gone; run the destroy again
 ([hashicorp/terraform-provider-azurerm#33433](https://github.com/hashicorp/terraform-provider-azurerm/issues/33433)).
 
-Not supported yet (roadmap): IPv6 / dual stack (aws `enable_ipv6`) and a spoke split mode (aws `subnet_split_mode`).
+Not supported yet (roadmap): IPv6 / dual stack (aws `enable_ipv6`).
 
 ### Examples ###
 ```
@@ -176,6 +222,37 @@ A /21 and a /22 use the small layout, here `10.156.0.0/21` and `10.156.0.0/22`:
 
 A second AKS cluster in a /21 or /22 takes the spare /28 next to the first as a second `apiserver_subnets` entry, a SQL
 Managed Instance a /27 or larger custom subnet from the rest of the spare range.
+
+Spoke mode (`subnet_split_mode: spoke`), `10.156.0.0/16` down to `/20`: public, database and the delegated subnets keep
+their default-mode addresses, the node subnet is named compute-0, the intra slot is unused and becomes spare:
+
+| Subnet | /16 | /17 | /18 | /19 | /20 |
+|---|---|---|---|---|---|
+| public-0 | 10.156.0.0/19 | 10.156.0.0/20 | 10.156.0.0/21 | 10.156.0.0/22 | 10.156.0.0/23 |
+| control-0 | 10.156.161.128/26 | 10.156.81.128/26 | 10.156.41.128/26 | 10.156.21.128/26 | 10.156.11.128/26 |
+| apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
+| container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
+| service-0 | 10.156.161.192/26 | 10.156.81.192/26 | 10.156.41.192/26 | 10.156.21.192/26 | 10.156.11.192/26 |
+| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
+| database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | 10.156.8.0/23 |
+| free in the delegated block | 10.156.162.0/23 to 10.156.191.255 | 10.156.82.0/23 to 10.156.95.255 | 10.156.42.0/23 to 10.156.47.255 | 10.156.22.0/23 | none |
+| spare | 10.156.32.0/19, 10.156.192.0/18 | 10.156.16.0/20, 10.156.96.0/19 | 10.156.8.0/21, 10.156.48.0/20 | 10.156.4.0/22, 10.156.24.0/21 | 10.156.2.0/23, 10.156.12.0/22 |
+
+Spoke mode in a /21 and /22: control takes the intra slot, service the free /26 of the small layout, database the
+spare /23 (/21) or the second half of compute (/22):
+
+| Subnet | /21 | /22 |
+|---|---|---|
+| public-0 | 10.156.0.0/26 | 10.156.0.0/26 |
+| control-0 | 10.156.0.64/26 | 10.156.0.64/26 |
+| apiserver-0 | 10.156.0.128/28 | 10.156.0.128/28 |
+| container-apps-0 | 10.156.0.160/27 | 10.156.0.160/27 |
+| service-0 | 10.156.0.192/26 | 10.156.0.192/26 |
+| agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
+| compute-0 | 10.156.4.0/22 | 10.156.2.0/24 |
+| database-0 | 10.156.2.0/24 | 10.156.3.0/25 |
+| spare | 10.156.0.144/28, 10.156.3.0/24 | 10.156.0.144/28, 10.156.3.128/25 |
 
 A /23 or /24 needs every list explicit, e.g. `10.156.0.0/23` without Container Apps:
 ```

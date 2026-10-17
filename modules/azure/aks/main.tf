@@ -109,6 +109,14 @@ resource "azurerm_role_assignment" "aks_apiserver_network" {
   skip_service_principal_aad_check = true
 }
 
+resource "azurerm_role_assignment" "aks_lb_network" {
+  for_each                         = { for id in distinct(var.lb_subnet_ids) : element(split("/", id), -1) => id if id != var.vnet_subnet_id }
+  scope                            = each.value
+  role_definition_name             = "Network Contributor"
+  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  skip_service_principal_aad_check = true
+}
+
 # Central private DNS zone: AKS writes the API server record and links the zone to the cluster VNet
 resource "azurerm_role_assignment" "aks_private_dns_zone" {
   count                            = var.private_dns_zone_id != "" ? 1 : 0
@@ -245,10 +253,10 @@ module "aks" {
   api_server_access_profile = {
     enable_private_cluster             = var.private_cluster_enabled
     enable_private_cluster_public_fqdn = var.private_cluster_enabled ? false : null
-    authorized_ip_ranges    = var.private_cluster_enabled ? [] : local.authorized_ip_ranges
-    enable_vnet_integration = var.api_server_vnet_integration_enabled
-    subnet_id               = var.api_server_vnet_integration_enabled ? var.api_server_subnet_id : null
-    private_dns_zone        = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
+    authorized_ip_ranges               = var.private_cluster_enabled ? [] : local.authorized_ip_ranges
+    enable_vnet_integration            = var.api_server_vnet_integration_enabled
+    subnet_id                          = var.api_server_vnet_integration_enabled ? var.api_server_subnet_id : null
+    private_dns_zone                   = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
   }
 
   # https://learn.microsoft.com/azure/aks/concepts-network-cni-overview

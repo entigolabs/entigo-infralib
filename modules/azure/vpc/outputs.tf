@@ -150,12 +150,13 @@ output "elasticache_subnets_cidr_blocks" {
   value = local.database_subnets
 }
 
+# Spoke mode (or explicit lists): the control and service subnets, otherwise the private subnets like aws/vpc default
 output "control_subnets" {
-  value = azurerm_subnet.private[*].id
+  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[*].id : azurerm_subnet.private[*].id
 }
 
 output "service_subnets" {
-  value = azurerm_subnet.private[*].id
+  value = length(local.service_subnets) > 0 ? azurerm_subnet.service[*].id : azurerm_subnet.private[*].id
 }
 
 output "compute_subnets" {
@@ -163,11 +164,28 @@ output "compute_subnets" {
 }
 
 output "control_subnets_cidr_blocks" {
-  value = local.private_subnets
+  value = length(local.control_subnets) > 0 ? local.control_subnets : local.private_subnets
 }
 
 output "service_subnets_cidr_blocks" {
-  value = local.private_subnets
+  value = length(local.service_subnets) > 0 ? local.service_subnets : local.private_subnets
+}
+
+output "control_subnet_names" {
+  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[*].name : azurerm_subnet.private[*].name
+}
+
+output "service_subnet_names" {
+  value = length(local.service_subnets) > 0 ? azurerm_subnet.service[*].name : azurerm_subnet.private[*].name
+}
+
+# Load balancer subnets outside the node subnet (aks lb_subnet_ids) and the platform internal gateway's subnet (istio-gateway), empty without them
+output "lb_subnets" {
+  value = concat(azurerm_subnet.control[*].id, azurerm_subnet.service[*].id)
+}
+
+output "control_subnet_name" {
+  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[0].name : ""
 }
 
 output "compute_subnets_cidr_blocks" {

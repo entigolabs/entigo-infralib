@@ -12,6 +12,9 @@ metadata:
   {{- if $cfg.internal }}
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    {{- with $cfg.internalSubnet }}
+    service.beta.kubernetes.io/azure-load-balancer-internal-subnet: {{ . | quote }}
+    {{- end }}
   {{- end }}
 spec:
   type: LoadBalancer
