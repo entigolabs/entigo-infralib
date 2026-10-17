@@ -7,4 +7,13 @@ database_subnets: |
   ["10.146.16.0/22", "10.146.20.0/22"]
 intra_subnets: |
   []
-enable_mssql_subnets: true
+custom_subnets: |
+  {
+    mssql = {
+      cidr               = "10.146.192.0/24"
+      delegation         = "Microsoft.Sql/managedInstances"
+      delegation_actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]
+      network_security_group = true
+      route_table            = true
+    }
+  }

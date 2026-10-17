@@ -1,36 +1,42 @@
 locals {
-  # First half private, second half split into 4 parts
-  private_subnets  = var.private_subnets == null ? [cidrsubnet(var.vpc_cidr, 1, 0)] : var.private_subnets
-  public_subnets   = var.public_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 0)] : var.public_subnets
-  intra_subnets    = var.intra_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 1)] : var.intra_subnets
-  database_subnets = var.database_subnets == null ? [cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 2)] : var.database_subnets
-  # Fourth part, delegated subnets
-  delegated_block = cidrsubnet(cidrsubnet(var.vpc_cidr, 1, 1), 2, 3)
-  delegated_bits  = tonumber(split("/", local.delegated_block)[1])
-  apiserver_bits  = max(24, local.delegated_bits + 5)
-  # AGC /24, API server and pipeline next to each other: /24 each for a /16, /28 and /27 for a /20
-  # Smaller than /20: no room, the delegated subnet lists must be explicit
-  delegated_subnets = local.delegated_bits <= 23 ? cidrsubnets(local.delegated_block, 24 - local.delegated_bits, local.apiserver_bits - local.delegated_bits, min(27, local.apiserver_bits) - local.delegated_bits) : []
-  agc_subnets       = var.agc_subnets == null ? try([local.delegated_subnets[0]], []) : var.agc_subnets
-  apiserver_subnets = var.apiserver_subnets == null ? try([local.delegated_subnets[1]], []) : var.apiserver_subnets
-  pipeline_subnets  = var.pipeline_subnets == null ? try([local.delegated_subnets[2]], []) : var.pipeline_subnets
-  # Keyed by name: explicit pipeline_subnet_names keep environments when the list changes
-  pipeline_names = [for i, cidr in local.pipeline_subnets : try(var.pipeline_subnet_names[i], "${var.prefix}-pipeline-${i}")]
-  pipeline       = zipmap(local.pipeline_names, local.pipeline_subnets)
-  # Last quarter of the delegated block for MSSQL Managed Instances
-  mssql_subnets = var.enable_mssql_subnets ? (var.mssql_subnets == null ? [cidrsubnet(local.delegated_block, 2, 3)] : var.mssql_subnets) : []
+  vpc_bits = tonumber(split("/", var.vpc_cidr)[1])
+  # Quarters: public and intra; private; database and the delegated block (AGC /24, API server /26, Container Apps /26); the last quarter is spare for custom_subnets
+  # /21 and /22: halves, public /26, intra /26, API server /28, Container Apps /27, AGC /24 and the rest spare in the first half, private the second half
+  # No database subnet for /20 and smaller, smaller than /22: no room for the AGC /24, the delegated subnet lists must be explicit
+  small           = local.vpc_bits > 20
+  delegated_block = cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 1)
+  delegated_bits  = local.vpc_bits + 3
+
+  public_subnets         = var.public_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 0) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 0)] : var.public_subnets
+  intra_subnets          = var.intra_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 1)] : var.intra_subnets
+  private_subnets        = var.private_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 1, 1) : cidrsubnet(var.vpc_cidr, 2, 1)] : var.private_subnets
+  database_subnets       = var.database_subnets == null ? (local.vpc_bits > 19 ? [] : [cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)]) : var.database_subnets
+  agc_subnets            = var.agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.agc_subnets
+  apiserver_subnets      = var.apiserver_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, 8) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 4)], []) : var.apiserver_subnets
+  container_apps_subnets = var.container_apps_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 5) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 5)], []) : var.container_apps_subnets
+
+  private_names        = [for i, cidr in local.private_subnets : try(var.private_subnet_names[i], "${var.prefix}-private-${i}")]
+  public_names         = [for i, cidr in local.public_subnets : try(var.public_subnet_names[i], "${var.prefix}-public-${i}")]
+  intra_names          = [for i, cidr in local.intra_subnets : try(var.intra_subnet_names[i], "${var.prefix}-intra-${i}")]
+  database_names       = [for i, cidr in local.database_subnets : try(var.database_subnet_names[i], "${var.prefix}-database-${i}")]
+  agc_names            = [for i, cidr in local.agc_subnets : try(var.agc_subnet_names[i], "${var.prefix}-agc-${i}")]
+  apiserver_names      = [for i, cidr in local.apiserver_subnets : try(var.apiserver_subnet_names[i], "${var.prefix}-apiserver-${i}")]
+  container_apps_names = [for i, cidr in local.container_apps_subnets : try(var.container_apps_subnet_names[i], "${var.prefix}-container-apps-${i}")]
+  custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
+  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.agc_names, local.apiserver_names, local.container_apps_names, values(local.custom_names))
+
+  flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
 
   # Plan time validations
-  all_subnets = flatten([for type, cidrs in {
-    private   = local.private_subnets
-    public    = local.public_subnets
-    intra     = local.intra_subnets
-    database  = local.database_subnets
-    agc       = local.agc_subnets
-    apiserver = local.apiserver_subnets
-    pipeline  = local.pipeline_subnets
-    mssql     = local.mssql_subnets
-  } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]])
+  all_subnets = concat(flatten([for type, cidrs in {
+    private        = local.private_subnets
+    public         = local.public_subnets
+    intra          = local.intra_subnets
+    database       = local.database_subnets
+    agc            = local.agc_subnets
+    apiserver      = local.apiserver_subnets
+    container_apps = local.container_apps_subnets
+  } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]]), [for key, subnet in var.custom_subnets : { name = "custom-${key}", cidr = subnet.cidr }])
   subnet_ranges = [for s in concat([{ name = "vpc", cidr = var.vpc_cidr }], local.all_subnets) : merge(s, {
     start = sum([for i, octet in split(".", cidrhost(s.cidr, 0)) : tonumber(octet) * pow(256, 3 - i)])
     size  = pow(2, 32 - tonumber(split("/", s.cidr)[1]))
@@ -63,20 +69,20 @@ resource "azurerm_virtual_network" "this" {
       error_message = "Subnets outside vpc_cidr ${var.vpc_cidr}: ${join(", ", local.subnets_outside_vpc)}."
     }
     precondition {
-      condition     = local.delegated_bits <= 23 || (var.agc_subnets != null && var.apiserver_subnets != null && var.pipeline_subnets != null)
-      error_message = "vpc_cidr is smaller than /20: set agc_subnets, apiserver_subnets and pipeline_subnets explicitly (or [])."
+      condition     = local.vpc_bits <= 22 || (var.agc_subnets != null && var.apiserver_subnets != null && var.container_apps_subnets != null)
+      error_message = "vpc_cidr is smaller than /22: set agc_subnets, apiserver_subnets and container_apps_subnets explicitly (or [])."
     }
     precondition {
       condition     = alltrue([for cidr in local.agc_subnets : tonumber(split("/", cidr)[1]) == 24])
       error_message = "Application Gateway for Containers subnets must be exactly /24: ${join(", ", local.agc_subnets)}."
     }
     precondition {
-      condition     = length(distinct(local.pipeline_names)) == length(local.pipeline_names)
-      error_message = "Pipeline subnet names must be unique: ${join(", ", local.pipeline_names)}."
+      condition     = length(distinct(local.subnet_names)) == length(local.subnet_names)
+      error_message = "Subnet names must be unique: ${join(", ", [for n in distinct(local.subnet_names) : n if length([for m in local.subnet_names : m if m == n]) > 1])}."
     }
     precondition {
-      condition     = var.mssql_subnets == null || var.enable_mssql_subnets
-      error_message = "mssql_subnets is set but enable_mssql_subnets is false."
+      condition     = alltrue([for key, subnet in var.custom_subnets : !(subnet.nat_gateway && subnet.route_table)])
+      error_message = "custom_subnets nat_gateway and route_table exclude each other: the egress route table and an own route table can't both be associated."
     }
     precondition {
       condition     = length(local.subnet_overlaps) == 0
@@ -87,7 +93,7 @@ resource "azurerm_virtual_network" "this" {
 
 resource "azurerm_subnet" "private" {
   count                = length(local.private_subnets)
-  name                 = try(var.private_subnet_names[count.index], "${var.prefix}-private-${count.index}")
+  name                 = local.private_names[count.index]
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [local.private_subnets[count.index]]
@@ -104,7 +110,7 @@ resource "azurerm_subnet" "private" {
 
 resource "azurerm_subnet" "public" {
   count                           = length(local.public_subnets)
-  name                            = try(var.public_subnet_names[count.index], "${var.prefix}-public-${count.index}")
+  name                            = local.public_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.public_subnets[count.index]]
@@ -113,7 +119,7 @@ resource "azurerm_subnet" "public" {
 
 resource "azurerm_subnet" "intra" {
   count                           = length(local.intra_subnets)
-  name                            = try(var.intra_subnet_names[count.index], "${var.prefix}-intra-${count.index}")
+  name                            = local.intra_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.intra_subnets[count.index]]
@@ -122,7 +128,7 @@ resource "azurerm_subnet" "intra" {
 
 resource "azurerm_subnet" "database" {
   count                           = length(local.database_subnets)
-  name                            = try(var.database_subnet_names[count.index], "${var.prefix}-database-${count.index}")
+  name                            = local.database_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.database_subnets[count.index]]
@@ -143,7 +149,7 @@ resource "azurerm_subnet" "database" {
 
 resource "azurerm_subnet" "agc" {
   count                           = length(local.agc_subnets)
-  name                            = try(var.agc_subnet_names[count.index], "${var.prefix}-agc-${count.index}")
+  name                            = local.agc_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.agc_subnets[count.index]]
@@ -161,7 +167,7 @@ resource "azurerm_subnet" "agc" {
 
 resource "azurerm_subnet" "apiserver" {
   count                           = length(local.apiserver_subnets)
-  name                            = try(var.apiserver_subnet_names[count.index], "${var.prefix}-apiserver-${count.index}")
+  name                            = local.apiserver_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.apiserver_subnets[count.index]]
@@ -177,23 +183,23 @@ resource "azurerm_subnet" "apiserver" {
   }
 }
 
-resource "azurerm_subnet" "pipeline" {
-  for_each                        = local.pipeline
-  name                            = each.key
+resource "azurerm_subnet" "container_apps" {
+  count                           = length(local.container_apps_subnets)
+  name                            = local.container_apps_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [each.value]
+  address_prefixes                = [local.container_apps_subnets[count.index]]
   default_outbound_access_enabled = false
 
   dynamic "service_endpoint" {
-    for_each = var.pipeline_subnet_service_endpoints
+    for_each = var.container_apps_subnet_service_endpoints
     content {
       service = service_endpoint.value
     }
   }
 
   delegation {
-    name = "pipeline-delegation"
+    name = "container-apps-delegation"
 
     service_delegation {
       name    = "Microsoft.App/environments"
@@ -202,9 +208,9 @@ resource "azurerm_subnet" "pipeline" {
   }
 }
 
-resource "azurerm_log_analytics_workspace" "pipeline" {
-  count               = length(local.pipeline_subnets) > 0 ? 1 : 0
-  name                = "${var.prefix}-pipeline"
+resource "azurerm_log_analytics_workspace" "container_apps" {
+  count               = length(local.container_apps_subnets) > 0 ? 1 : 0
+  name                = "${var.prefix}-container-apps"
   location            = var.location
   resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
@@ -212,17 +218,17 @@ resource "azurerm_log_analytics_workspace" "pipeline" {
   tags                = local.tags
 }
 
-resource "azurerm_container_app_environment" "pipeline" {
-  for_each                           = local.pipeline
-  name                               = each.key
+resource "azurerm_container_app_environment" "container_apps" {
+  count                              = length(local.container_apps_subnets)
+  name                               = azurerm_subnet.container_apps[count.index].name
   location                           = var.location
   resource_group_name                = var.resource_group_name
-  infrastructure_subnet_id           = azurerm_subnet.pipeline[each.key].id
-  infrastructure_resource_group_name = "${each.key}-${var.location}"
+  infrastructure_subnet_id           = azurerm_subnet.container_apps[count.index].id
+  infrastructure_resource_group_name = "${azurerm_subnet.container_apps[count.index].name}-${var.location}"
   internal_load_balancer_enabled     = true
-  zone_redundancy_enabled            = var.pipeline_zone_redundancy_enabled
+  zone_redundancy_enabled            = var.container_apps_zone_redundancy_enabled
   logs_destination                   = "log-analytics"
-  log_analytics_workspace_id         = azurerm_log_analytics_workspace.pipeline[0].id
+  log_analytics_workspace_id         = azurerm_log_analytics_workspace.container_apps[0].id
   tags                               = local.tags
 
   workload_profile {
@@ -237,37 +243,37 @@ resource "azurerm_container_app_environment" "pipeline" {
   }
 
   depends_on = [
-    azurerm_subnet_nat_gateway_association.pipeline,
+    azurerm_subnet_nat_gateway_association.container_apps,
     azurerm_nat_gateway_public_ip_association.this,
-    azurerm_subnet_route_table_association.egress_pipeline,
+    azurerm_subnet_route_table_association.egress_container_apps,
   ]
 }
 
-resource "azurerm_subnet" "mssql" {
-  count                           = length(local.mssql_subnets)
-  name                            = try(var.mssql_subnet_names[count.index], "${var.prefix}-mssql-${count.index}")
+resource "azurerm_subnet" "custom" {
+  for_each                        = var.custom_subnets
+  name                            = local.custom_names[each.key]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.mssql_subnets[count.index]]
+  address_prefixes                = [each.value.cidr]
   default_outbound_access_enabled = false
 
-  delegation {
-    name = "mssql-delegation"
+  dynamic "delegation" {
+    for_each = each.value.delegation == null ? [] : [each.value.delegation]
+    content {
+      name = "${each.key}-delegation"
 
-    service_delegation {
-      name = "Microsoft.Sql/managedInstances"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
-        "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action",
-      ]
+      service_delegation {
+        name    = delegation.value
+        actions = each.value.delegation_actions
+      }
     }
   }
 }
 
-resource "azurerm_network_security_group" "mssql" {
-  count               = length(local.mssql_subnets)
-  name                = azurerm_subnet.mssql[count.index].name
+# Empty NSG and route table that the delegated service manages, e.g. SQL Managed Instance requires both
+resource "azurerm_network_security_group" "custom" {
+  for_each            = { for key, subnet in var.custom_subnets : key => subnet if subnet.network_security_group }
+  name                = azurerm_subnet.custom[each.key].name
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = local.tags
@@ -277,15 +283,15 @@ resource "azurerm_network_security_group" "mssql" {
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "mssql" {
-  count                     = length(local.mssql_subnets)
-  subnet_id                 = azurerm_subnet.mssql[count.index].id
-  network_security_group_id = azurerm_network_security_group.mssql[count.index].id
+resource "azurerm_subnet_network_security_group_association" "custom" {
+  for_each                  = azurerm_network_security_group.custom
+  subnet_id                 = azurerm_subnet.custom[each.key].id
+  network_security_group_id = each.value.id
 }
 
-resource "azurerm_route_table" "mssql" {
-  count               = length(local.mssql_subnets)
-  name                = azurerm_subnet.mssql[count.index].name
+resource "azurerm_route_table" "custom" {
+  for_each            = { for key, subnet in var.custom_subnets : key => subnet if subnet.route_table }
+  name                = azurerm_subnet.custom[each.key].name
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = local.tags
@@ -295,10 +301,23 @@ resource "azurerm_route_table" "mssql" {
   }
 }
 
-resource "azurerm_subnet_route_table_association" "mssql" {
-  count          = length(local.mssql_subnets)
-  subnet_id      = azurerm_subnet.mssql[count.index].id
-  route_table_id = azurerm_route_table.mssql[count.index].id
+resource "azurerm_subnet_route_table_association" "custom" {
+  for_each       = azurerm_route_table.custom
+  subnet_id      = azurerm_subnet.custom[each.key].id
+  route_table_id = each.value.id
+}
+
+# Egress like the private subnets: the NAT gateway, or the egress route with egress_next_hop_ip
+resource "azurerm_subnet_nat_gateway_association" "custom" {
+  for_each       = { for key, subnet in var.custom_subnets : key => subnet if subnet.nat_gateway && var.enable_nat_gateway }
+  subnet_id      = azurerm_subnet.custom[each.key].id
+  nat_gateway_id = azurerm_nat_gateway.this[0].id
+}
+
+resource "azurerm_subnet_route_table_association" "egress_custom" {
+  for_each       = { for key, subnet in var.custom_subnets : key => subnet if subnet.nat_gateway && var.egress_next_hop_ip != null }
+  subnet_id      = azurerm_subnet.custom[each.key].id
+  route_table_id = azurerm_route_table.egress[0].id
 }
 
 resource "azurerm_public_ip" "nat" {
@@ -333,9 +352,9 @@ resource "azurerm_subnet_nat_gateway_association" "private" {
   nat_gateway_id = azurerm_nat_gateway.this[0].id
 }
 
-resource "azurerm_subnet_nat_gateway_association" "pipeline" {
-  for_each       = var.enable_nat_gateway ? local.pipeline : {}
-  subnet_id      = azurerm_subnet.pipeline[each.key].id
+resource "azurerm_subnet_nat_gateway_association" "container_apps" {
+  count          = var.enable_nat_gateway ? length(local.container_apps_subnets) : 0
+  subnet_id      = azurerm_subnet.container_apps[count.index].id
   nat_gateway_id = azurerm_nat_gateway.this[0].id
 }
 
@@ -361,9 +380,9 @@ resource "azurerm_subnet_route_table_association" "egress_private" {
   route_table_id = azurerm_route_table.egress[0].id
 }
 
-resource "azurerm_subnet_route_table_association" "egress_pipeline" {
-  for_each       = var.egress_next_hop_ip != null ? local.pipeline : {}
-  subnet_id      = azurerm_subnet.pipeline[each.key].id
+resource "azurerm_subnet_route_table_association" "egress_container_apps" {
+  count          = var.egress_next_hop_ip != null ? length(local.container_apps_subnets) : 0
+  subnet_id      = azurerm_subnet.container_apps[count.index].id
   route_table_id = azurerm_route_table.egress[0].id
 }
 
@@ -371,7 +390,7 @@ resource "azurerm_subnet_route_table_association" "egress_pipeline" {
 # storage account stops the flow logs until they are disabled and enabled again:
 # https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#storage-account
 resource "azurerm_storage_account" "flow_log" {
-  count                           = var.enable_flow_log ? 1 : 0
+  count                           = var.enable_flow_log && var.flow_log_storage_account_id == null ? 1 : 0
   name                            = "${substr(replace(lower(var.prefix), "/[^a-z0-9]/", ""), 0, 14)}fl${var.unique_suffix}"
   resource_group_name             = var.resource_group_name
   location                        = var.location
@@ -408,7 +427,7 @@ resource "azurerm_network_watcher_flow_log" "this" {
   resource_group_name  = var.network_watcher_resource_group_name
   location             = var.location
   target_resource_id   = azurerm_virtual_network.this.id
-  storage_account_id   = azurerm_storage_account.flow_log[0].id
+  storage_account_id   = local.flow_log_storage_account_id
   enabled              = true
   version              = 2
   tags                 = local.tags

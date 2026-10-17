@@ -10,6 +10,10 @@ output "vpc_cidr" {
   value = var.vpc_cidr
 }
 
+output "vpc_cidr_block" {
+  value = var.vpc_cidr
+}
+
 # Waits for the NAT gateway (association and its public IPs) or the egress route, AKS needs egress at cluster creation
 output "private_subnets" {
   value = azurerm_subnet.private[*].id
@@ -57,7 +61,11 @@ output "agc_subnet_cidrs" {
 }
 
 output "nat_gateway_id" {
-  value = var.enable_nat_gateway ? azurerm_nat_gateway.this[0].id : null
+  value = var.enable_nat_gateway ? azurerm_nat_gateway.this[0].id : ""
+}
+
+output "egress_route_table_id" {
+  value = var.egress_next_hop_ip != null ? azurerm_route_table.egress[0].id : ""
 }
 
 output "nat_static_ips" {
@@ -73,24 +81,29 @@ output "apiserver_subnet_cidrs" {
 }
 
 # Agent default subnet for vpc attached steps
+output "container_apps_subnets" {
+  value = azurerm_subnet.container_apps[*].id
+}
+
+# Temporary alias for agent images whose default still reads pipeline_subnets, remove once the new default is in use
 output "pipeline_subnets" {
-  value = [for n in local.pipeline_names : azurerm_subnet.pipeline[n].id]
+  value = azurerm_subnet.container_apps[*].id
 }
 
-output "pipeline_subnet_cidrs" {
-  value = local.pipeline_subnets
+output "container_apps_subnet_cidrs" {
+  value = local.container_apps_subnets
 }
 
-output "pipeline_environment_ids" {
-  value = [for n in local.pipeline_names : azurerm_container_app_environment.pipeline[n].id]
+output "container_apps_environment_ids" {
+  value = azurerm_container_app_environment.container_apps[*].id
 }
 
-output "mssql_subnets" {
-  value = azurerm_subnet.mssql[*].id
+output "custom_subnets" {
+  value = { for key, subnet in azurerm_subnet.custom : key => subnet.id }
 }
 
-output "mssql_subnet_cidrs" {
-  value = local.mssql_subnets
+output "custom_subnet_cidrs" {
+  value = { for key, subnet in var.custom_subnets : key => subnet.cidr }
 }
 
 output "name" {
@@ -162,9 +175,13 @@ output "compute_subnets_cidr_blocks" {
 }
 
 output "vpc_flow_log_id" {
-  value = var.enable_flow_log ? azurerm_network_watcher_flow_log.this[0].id : null
+  value = var.enable_flow_log ? azurerm_network_watcher_flow_log.this[0].id : ""
 }
 
 output "vpc_flow_log_destination_id" {
-  value = var.enable_flow_log ? azurerm_storage_account.flow_log[0].id : null
+  value = var.enable_flow_log ? local.flow_log_storage_account_id : ""
+}
+
+output "vpc_flow_log_storage_account_name" {
+  value = var.enable_flow_log ? coalesce(one(azurerm_storage_account.flow_log[*].name), element(split("/", local.flow_log_storage_account_id), -1)) : ""
 }

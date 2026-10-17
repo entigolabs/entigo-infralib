@@ -25,6 +25,10 @@ variable "vpc_cidr" {
   type     = string
   nullable = false
   default  = "10.156.0.0/16"
+  validation {
+    condition     = can(cidrnetmask(var.vpc_cidr)) && try(tonumber(split("/", var.vpc_cidr)[1]) <= 24, false)
+    error_message = "vpc_cidr must be an IPv4 CIDR of /24 or larger."
+  }
 }
 
 variable "private_subnets" {
@@ -107,6 +111,12 @@ variable "enable_flow_log" {
   default  = true
 }
 
+variable "flow_log_storage_account_id" {
+  type        = string
+  default     = null
+  description = "Existing storage account for the flow logs (same region, e.g. a central log archive) instead of the module's own"
+}
+
 variable "flow_log_retention_days" {
   type    = number
   default = 7
@@ -144,7 +154,7 @@ variable "nat_idle_timeout_minutes" {
 variable "egress_next_hop_ip" {
   type        = string
   default     = null
-  description = "Private IP of a firewall/NVA (e.g. in a peered hub): 0.0.0.0/0 of the private and pipeline subnets goes through it. Needs enable_nat_gateway = false and aks outbound_type = userDefinedRouting"
+  description = "Private IP of a firewall/NVA (e.g. in a peered hub): 0.0.0.0/0 of the private and Container Apps subnets goes through it. Needs enable_nat_gateway = false and aks outbound_type = userDefinedRouting"
 }
 
 variable "nat_static_ip_count" {
@@ -166,37 +176,42 @@ variable "apiserver_subnets" {
 }
 
 # https://learn.microsoft.com/azure/container-apps/custom-virtual-networks?tabs=workload-profiles-env#subnet
-variable "pipeline_subnets" {
+variable "container_apps_subnets" {
   type    = list(string)
   default = null
 }
 
-variable "pipeline_subnet_names" {
+variable "container_apps_subnet_names" {
   type    = list(string)
   default = []
 }
 
-variable "pipeline_subnet_service_endpoints" {
+variable "container_apps_subnet_service_endpoints" {
   type    = list(string)
   default = ["Microsoft.Storage", "Microsoft.KeyVault"]
 }
 
-variable "pipeline_zone_redundancy_enabled" {
+variable "container_apps_zone_redundancy_enabled" {
   type    = bool
   default = true
 }
 
-variable "enable_mssql_subnets" {
-  type    = bool
-  default = false
-}
-
-variable "mssql_subnets" {
-  type    = list(string)
-  default = null
-}
-
-variable "mssql_subnet_names" {
-  type    = list(string)
-  default = []
+# https://learn.microsoft.com/azure/azure-sql/managed-instance/connectivity-architecture-overview#virtual-network-requirements
+variable "custom_subnets" {
+  type = map(object({
+    cidr                   = string
+    name                   = optional(string)
+    delegation             = optional(string)
+    delegation_actions     = optional(list(string), ["Microsoft.Network/virtualNetworks/subnets/join/action"])
+    network_security_group = optional(bool, false)
+    route_table            = optional(bool, false)
+    nat_gateway            = optional(bool, false)
+  }))
+  nullable    = false
+  default     = {}
+  description = "Extra subnets in the spare last quarter of vpc_cidr, e.g. SQL Managed Instance (delegation, NSG and route table) or AzureBastionSubnet. Name defaults to <prefix>-<key>, nat_gateway gives the subnet the egress of the private subnets"
+  validation {
+    condition     = alltrue([for key, subnet in var.custom_subnets : can(regex("^[a-z0-9]{1,40}$", key))])
+    error_message = "custom_subnets keys must be 1-40 lowercase letters or digits, the agent reads the outputs as custom_subnets[key]."
+  }
 }
