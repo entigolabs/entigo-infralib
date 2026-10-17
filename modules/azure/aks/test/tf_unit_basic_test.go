@@ -31,7 +31,15 @@ func checkAks(t *testing.T, env string) map[string]interface{} {
 	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__cluster_oidc_issuer_url"), "https://"), "cluster_oidc_issuer_url must be https")
 	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__cluster_endpoint"), "https://"), "cluster_endpoint must be https")
 	assert.True(t, strings.HasPrefix(tf.GetStringValue(t, outputs, "aks__kubernetes_version"), "1.36"), "Wrong kubernetes_version")
-	assert.Equal(t, "10.244.0.0/16", tf.GetStringValue(t, outputs, "aks__pod_cidr"))
+	if tf.GetStringValue(t, outputs, "aks__network_mode") == "pod_subnet" {
+		assert.Empty(t, tf.GetStringValue(t, outputs, "aks__pod_cidr"), "pod_cidr must be empty with Pod Subnet")
+		assert.Equal(t, tf.GetStringValue(t, netOutputs, "vpc__pod_subnet_id"), tf.GetStringValue(t, outputs, "aks__pod_subnet_id"), "pod_subnet_id must be the vpc default pod subnet")
+		assert.Equal(t, "DynamicIndividual", tf.GetStringValue(t, outputs, "aks__pod_ip_allocation_mode"))
+	} else {
+		assert.Equal(t, "overlay", tf.GetStringValue(t, outputs, "aks__network_mode"))
+		assert.Equal(t, "10.244.0.0/16", tf.GetStringValue(t, outputs, "aks__pod_cidr"))
+		assert.Empty(t, tf.GetStringValue(t, outputs, "aks__pod_subnet_id"))
+	}
 	assert.Equal(t, "10.96.0.0/16", tf.GetStringValue(t, outputs, "aks__service_cidr"))
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "aks__kubelet_identity_client_id"), "kubelet_identity_client_id was not returned")
 	assert.Regexp(t, `^[0-9a-f-]{36}$`, tf.GetStringValue(t, outputs, "aks__alb_controller_client_id"))
@@ -41,11 +49,13 @@ func checkAks(t *testing.T, env string) map[string]interface{} {
 func testTerraformAksBiz(t *testing.T) {
 	t.Parallel()
 	outputs := checkAks(t, "biz")
+	assert.Equal(t, "overlay", tf.GetStringValue(t, outputs, "aks__network_mode"), "biz is an Overlay cluster")
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "aks__disk_encryption_set_id"), "biz has kms, disk_encryption_set_id was not returned")
 }
 
 func testTerraformAksPri(t *testing.T) {
 	t.Parallel()
 	outputs := checkAks(t, "pri")
+	assert.Equal(t, "pod_subnet", tf.GetStringValue(t, outputs, "aks__network_mode"), "pri is a Pod Subnet cluster (vpc pri enable_pod_subnets)")
 	assert.Equal(t, "", tf.GetStringValue(t, outputs, "aks__disk_encryption_set_id"), "pri has no kms")
 }

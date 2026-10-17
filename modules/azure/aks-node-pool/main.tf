@@ -32,6 +32,28 @@ locals {
 
 # Changes to zones, VM size, max pods, disks or subnet rotate the pool through a temporary pool (AVM's agentpool only
 # replaces it on a VM size change), priority (spot) changes replace it
+# Own pod subnet: the cluster identity needs Network Contributor on it (the cluster's pod subnet has it from aks)
+resource "azurerm_role_assignment" "pod_network" {
+  count                            = var.pod_subnet_id != "" && var.pod_subnet_id != var.cluster_pod_subnet_id ? 1 : 0
+  scope                            = var.pod_subnet_id
+  role_definition_name             = "Network Contributor"
+  principal_id                     = var.cluster_identity_principal_id
+  skip_service_principal_aad_check = true
+
+  lifecycle {
+    precondition {
+      condition     = var.cluster_identity_principal_id != ""
+      error_message = "A pool with an own pod_subnet_id needs cluster_identity_principal_id (aks identity_principal_id)."
+    }
+  }
+}
+
+resource "time_sleep" "pod_network" {
+  count           = length(azurerm_role_assignment.pod_network)
+  create_duration = "60s"
+  depends_on      = [azurerm_role_assignment.pod_network]
+}
+
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
   name                        = local.node_pool_name
   temporary_name_for_rotation = "${substr(local.node_pool_name, 0, 9)}tmp"
@@ -48,6 +70,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   os_sku                      = var.os_sku
   zones                       = local.availability_zones
   vnet_subnet_id              = var.vnet_subnet_id
+  pod_subnet_id               = var.pod_subnet_id != "" ? var.pod_subnet_id : null
+  depends_on                  = [time_sleep.pod_network]
   node_labels                 = merge(var.labels, var.spot_nodes ? { "kubernetes.azure.com/scalesetpriority" = "spot" } : {}, { created-by = "entigo-infralib" })
   node_taints                 = concat(var.taints, var.spot_nodes ? [local.spot_taint] : [])
   priority                    = var.spot_nodes ? "Spot" : "Regular"

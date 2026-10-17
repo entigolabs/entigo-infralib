@@ -98,9 +98,46 @@ has one. Spoke mode needs at least one control and one service subnet; both list
 in either mode (`*_subnet_names` as for the other tiers) and the outputs then point to them. Not done: Private Link Service on
 these subnets needs `private_link_service_network_policies_enabled = false`.
 
+### Azure CNI Pod Subnet ###
+The aks module uses Azure CNI Overlay by default: pods get addresses from the cluster's `pod_cidr`, only nodes take VNet
+addresses. With [Azure CNI Pod Subnet](https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet)
+pods get routable VNet addresses from pod subnets (firewall rules per node pool, an own egress IP per node pool, NSGs
+between pools, flow logs with pod addresses). The layout above does not change; the pod range comes from one of:
+
+* `enable_pod_subnets: true`: the first half of the spare quarter (10.156.192.0/19 in a /16, 10.30.12.0/23 in a /20),
+  the other half stays for `custom_subnets`; /20 or larger. A /19 holds 8192 pod addresses: about 70 nodes with 110
+  pods each, or 500 nodes with few pods (each node holds 16 addresses at a time).
+* `pod_subnets_cidr: "10.1.0.0/16"`: a second address space beside `vpc_cidr: "10.0.0.0/16"` for large clusters; it must
+  not overlap the VNet, peered networks or on-prem ranges.
+* explicit `cidr` entries in `pod_subnets`, anywhere in the VNet.
+
+Without `pod_subnets` one subnet `<prefix>-pods-default` takes the whole range, which the aks module picks up through
+output `pod_subnet_id` (`""` without pod subnets = Overlay). `pod_subnets` names more of them and must keep a `default`
+entry (the aks default): the entries without `cidr` share the range equally (the split does not avoid explicit entries,
+give those a range outside it), explicit `cidr` entries go where they say, for node pools that need their own range
+(aks-node-pool `pod_subnet_id`). The split is for creation: adding or removing an automatic entry re-splits the range and
+moves the existing pod subnets, which Azure refuses while pods use them, so add pod subnets to a running VNet with an
+explicit `cidr` outside the range in use:
+
+```
+          pod_subnets_cidr: "10.1.0.0/16"
+          pod_subnets:
+            default: {}
+            batch:
+              dedicated_nat_gateway: true
+```
+
+Pod subnets are delegated to `Microsoft.ContainerService/managedClusters`, have the private subnets' service endpoints
+and egress like the nodes: the shared NAT gateway, the egress route with `egress_next_hop_ip`, or with
+`dedicated_nat_gateway` an own NAT gateway and public IP (output `pod_subnet_nat_public_ips`, for partner allowlists per
+node pool; not with `egress_next_hop_ip`, the route to the appliance would bypass it). Dynamic IP allocation hands each node 16 addresses at a time, so a pod subnet needs roughly 16 addresses per
+node plus the pods above that; at most /16 per pod subnet. Overlay or Pod Subnet is chosen when the cluster is created.
+Outputs: `pod_subnets` (ids by key), `pod_subnet_cidrs`, `pod_subnet_id`, `pod_subnet_nat_public_ips`.
+
 ### Custom subnets ###
 `custom_subnets` adds subnets for anything else, keyed by a short name (lowercase letters and digits, the agent reads
-the outputs as `custom_subnets[key]`): `cidr`, optional `delegation` with `delegation_actions` (default the join
+the outputs as `custom_subnets[key]`): `cidr` (usually from the spare quarter, its second half when `enable_pod_subnets`
+takes the first), optional `delegation` with `delegation_actions` (default the join
 action), `name` (default `<prefix>-<key>`, for fixed names like `AzureBastionSubnet`), `network_security_group`
 / `route_table` for an empty NSG and route table associated with the subnet whose rules and routes the delegated
 service manages, and `nat_gateway` for internet egress like the private subnets (the NAT gateway, or the egress route
@@ -113,7 +150,7 @@ Managed Instance); Postgres, MySQL, Azure SQL Database and Redis use private end
 ```
           custom_subnets:
             mssql:
-              cidr: "10.156.192.0/24"
+              cidr: "10.156.224.0/27"
               delegation: Microsoft.Sql/managedInstances
               delegation_actions:
                 - Microsoft.Network/virtualNetworks/subnets/join/action
@@ -123,7 +160,7 @@ Managed Instance); Postgres, MySQL, Azure SQL Database and Redis use private end
               route_table: true
             bastion:
               name: AzureBastionSubnet
-              cidr: "10.156.193.0/26"
+              cidr: "10.156.224.64/26"
 ```
 
 Outputs `custom_subnets` (ids) and `custom_subnet_cidrs` are maps by key, e.g. `{{ .toutput.vpc.custom_subnets[mssql] }}`.
@@ -147,7 +184,9 @@ are zone redundant by default (`container_apps_zone_redundancy_enabled`, create 
 
 Plan time checks: `vpc_cidr` an IPv4 CIDR of /24 or larger, `subnet_split_mode` default or spoke, overlapping subnets, subnets outside the VNet, AGC exactly
 /24, unique subnet names across all tiers and custom subnets, `custom_subnets` keys and `nat_gateway` / `route_table`
-exclusion. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
+exclusion, pod subnets: a range or explicit cidrs, a `default` entry, `enable_pod_subnets` /20 or larger and not with
+`pod_subnets_cidr`, `pod_subnets_cidr` not overlapping `vpc_cidr`, at most /16 each, `dedicated_nat_gateway` not with
+`egress_next_hop_ip`. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
 subnet names that are valid Container Apps environment names (lowercase).
 
 Outputs use both the google style (`*_subnet_cidrs`, `nat_static_ips`) and the aws/vpc names (`name`, `vpc_cidr_block`,

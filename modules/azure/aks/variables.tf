@@ -54,6 +54,27 @@ variable "pod_cidr" {
   description = "CNI Overlay pod range, must not overlap the VNet"
 }
 
+# https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet
+variable "pod_subnet_id" {
+  type        = string
+  default     = ""
+  description = "Azure CNI Pod Subnet: the vpc pod subnet of the node pools (routable pod IPs), \"\" = Azure CNI Overlay with pod_cidr. Create time only"
+}
+
+variable "pod_ip_allocation_mode" {
+  type        = string
+  default     = null
+  description = "Pod Subnet IP allocation, null = DynamicIndividual (16 VNet addresses per node at a time)"
+  validation {
+    condition     = var.pod_ip_allocation_mode == null || var.pod_ip_allocation_mode == "DynamicIndividual"
+    error_message = "pod_ip_allocation_mode must be null or DynamicIndividual."
+  }
+  validation {
+    condition     = var.pod_ip_allocation_mode == null || var.pod_subnet_id != ""
+    error_message = "pod_ip_allocation_mode needs pod_subnet_id (Azure CNI Pod Subnet)."
+  }
+}
+
 variable "service_cidr" {
   type    = string
   default = "10.96.0.0/16"

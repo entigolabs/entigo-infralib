@@ -20,6 +20,24 @@ variable "vnet_subnet_id" {
   type = string
 }
 
+variable "pod_subnet_id" {
+  type        = string
+  default     = ""
+  description = "Azure CNI Pod Subnet: vpc pod subnet of this pool (default the cluster's), \"\" on an Overlay cluster. Changing it rotates the pool"
+}
+
+variable "cluster_pod_subnet_id" {
+  type        = string
+  default     = ""
+  description = "The cluster's pod subnet (aks pod_subnet_id): a pool on another pod subnet gives the cluster identity Network Contributor on it"
+}
+
+variable "cluster_identity_principal_id" {
+  type        = string
+  default     = ""
+  description = "Principal of the cluster identity (aks identity_principal_id), for the pod subnet role"
+}
+
 variable "mode" {
   type    = string
   default = "User"

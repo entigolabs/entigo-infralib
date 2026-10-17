@@ -29,9 +29,18 @@ locals {
   control_names        = [for i, cidr in local.control_subnets : try(var.control_subnet_names[i], "${var.prefix}-control-${i}")]
   service_names        = [for i, cidr in local.service_subnets : try(var.service_subnet_names[i], "${var.prefix}-service-${i}")]
   custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
-  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.agc_names, local.apiserver_names, local.container_apps_names, local.control_names, local.service_names, values(local.custom_names))
+  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.agc_names, local.apiserver_names, local.container_apps_names, local.control_names, local.service_names, values(local.custom_names), values(local.pod_names))
 
   flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
+
+  # Azure CNI Pod Subnet: pod subnets in their own address space (pod_subnets_cidr) or in the first half of the spare quarter (enable_pod_subnets),
+  # one "default" subnet unless named, equal split among the entries without cidr, explicit cidrs anywhere in the VNet
+  pod_range        = var.pod_subnets_cidr != null ? var.pod_subnets_cidr : (var.enable_pod_subnets && !local.small ? cidrsubnet(var.vpc_cidr, 3, 6) : null)
+  pod_subnet_specs = length(var.pod_subnets) > 0 ? var.pod_subnets : (local.pod_range == null ? {} : { default = { cidr = null, dedicated_nat_gateway = false } })
+  pod_subnet_split = sort([for key, subnet in local.pod_subnet_specs : key if subnet.cidr == null])
+  pod_subnets      = { for key, subnet in local.pod_subnet_specs : key => subnet.cidr != null ? subnet.cidr : cidrsubnet(local.pod_range, ceil(log(length(local.pod_subnet_split), 2)), index(local.pod_subnet_split, key)) if subnet.cidr != null || local.pod_range != null }
+  pod_names        = { for key in keys(local.pod_subnets) : key => "${var.prefix}-pods-${key}" }
+  address_space    = compact([var.vpc_cidr, var.pod_subnets_cidr])
 
   # Plan time validations
   all_subnets = concat(flatten([for type, cidrs in {
@@ -44,16 +53,18 @@ locals {
     container_apps = local.container_apps_subnets
     control        = local.control_subnets
     service        = local.service_subnets
-  } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]]), [for key, subnet in var.custom_subnets : { name = "custom-${key}", cidr = subnet.cidr }])
-  subnet_ranges = [for s in concat([{ name = "vpc", cidr = var.vpc_cidr }], local.all_subnets) : merge(s, {
+  } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]]), [for key, subnet in var.custom_subnets : { name = "custom-${key}", cidr = subnet.cidr }], [for key, cidr in local.pod_subnets : { name = "pods-${key}", cidr = cidr }])
+  subnet_ranges = [for s in concat([for cidr in local.address_space : { name = "vpc", cidr = cidr }], local.all_subnets) : merge(s, {
     start = sum([for i, octet in split(".", cidrhost(s.cidr, 0)) : tonumber(octet) * pow(256, 3 - i)])
     size  = pow(2, 32 - tonumber(split("/", s.cidr)[1]))
   })]
-  vpc_range = local.subnet_ranges[0]
-  subnets_outside_vpc = [for s in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : "${s.name} ${s.cidr}"
-  if s.start < local.vpc_range.start || s.start + s.size > local.vpc_range.start + local.vpc_range.size]
-  subnet_overlaps = flatten([for i, a in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : [
-    for j, b in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : "${a.name} ${a.cidr} / ${b.name} ${b.cidr}"
+  space_ranges       = slice(local.subnet_ranges, 0, length(local.address_space))
+  subnet_ranges_only = slice(local.subnet_ranges, length(local.address_space), length(local.subnet_ranges))
+  subnets_outside_vpc = [for s in local.subnet_ranges_only : "${s.name} ${s.cidr}"
+  if !anytrue([for r in local.space_ranges : s.start >= r.start && s.start + s.size <= r.start + r.size])]
+  pod_space_overlaps_vpc = length(local.space_ranges) > 1 && local.space_ranges[0].start < local.space_ranges[1].start + local.space_ranges[1].size && local.space_ranges[1].start < local.space_ranges[0].start + local.space_ranges[0].size
+  subnet_overlaps = flatten([for i, a in local.subnet_ranges_only : [
+    for j, b in local.subnet_ranges_only : "${a.name} ${a.cidr} / ${b.name} ${b.cidr}"
     if j > i && a.start < b.start + b.size && b.start < a.start + a.size
   ]])
 
@@ -68,13 +79,41 @@ resource "azurerm_virtual_network" "this" {
   name                = var.prefix
   location            = var.location
   resource_group_name = var.resource_group_name
-  address_space       = [var.vpc_cidr]
+  address_space       = local.address_space
   tags                = local.tags
 
   lifecycle {
     precondition {
       condition     = length(local.subnets_outside_vpc) == 0
-      error_message = "Subnets outside vpc_cidr ${var.vpc_cidr}: ${join(", ", local.subnets_outside_vpc)}."
+      error_message = "Subnets outside the VNet address space ${join(", ", local.address_space)}: ${join(", ", local.subnets_outside_vpc)}."
+    }
+    precondition {
+      condition     = local.pod_range != null || alltrue([for subnet in values(var.pod_subnets) : subnet.cidr != null])
+      error_message = "pod_subnets without a cidr need pod_subnets_cidr or enable_pod_subnets (/20 or larger) to split."
+    }
+    precondition {
+      condition     = length(var.pod_subnets) == 0 || contains(keys(var.pod_subnets), "default")
+      error_message = "pod_subnets needs a \"default\" entry: output pod_subnet_id (the aks default) is that subnet."
+    }
+    precondition {
+      condition     = var.egress_next_hop_ip == null || !anytrue([for subnet in values(var.pod_subnets) : subnet.dedicated_nat_gateway])
+      error_message = "dedicated_nat_gateway and egress_next_hop_ip exclude each other: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
+    }
+    precondition {
+      condition     = !(var.enable_pod_subnets && var.pod_subnets_cidr != null)
+      error_message = "enable_pod_subnets and pod_subnets_cidr exclude each other: pod subnets come from the spare quarter or from the second address space."
+    }
+    precondition {
+      condition     = !var.enable_pod_subnets || !local.small
+      error_message = "enable_pod_subnets needs a /20 or larger vpc_cidr: set pod_subnets_cidr or pod_subnets with explicit cidrs."
+    }
+    precondition {
+      condition     = !local.pod_space_overlaps_vpc
+      error_message = "pod_subnets_cidr ${join(", ", slice(local.address_space, 1, length(local.address_space)))} overlaps vpc_cidr ${var.vpc_cidr}."
+    }
+    precondition {
+      condition     = alltrue([for cidr in values(local.pod_subnets) : tonumber(split("/", cidr)[1]) >= 16])
+      error_message = "Pod subnets can be at most /16 (dynamic IP allocation): ${join(", ", values(local.pod_subnets))}."
     }
     precondition {
       condition     = local.vpc_bits <= 22 || (var.agc_subnets != null && var.apiserver_subnets != null && var.container_apps_subnets != null)
@@ -336,6 +375,71 @@ resource "azurerm_subnet_route_table_association" "custom" {
   for_each       = azurerm_route_table.custom
   subnet_id      = azurerm_subnet.custom[each.key].id
   route_table_id = each.value.id
+}
+
+# Azure CNI Pod Subnet: AKS delegates the pod subnets to itself, egress like the nodes through the shared NAT gateway, an
+# own NAT gateway (dedicated_nat_gateway: own egress IP) or the egress route
+resource "azurerm_subnet" "pods" {
+  for_each                        = local.pod_subnets
+  name                            = local.pod_names[each.key]
+  resource_group_name             = var.resource_group_name
+  virtual_network_name            = azurerm_virtual_network.this.name
+  address_prefixes                = [each.value]
+  default_outbound_access_enabled = false
+
+  dynamic "service_endpoint" {
+    for_each = var.private_subnet_service_endpoints
+    content {
+      service = service_endpoint.value
+    }
+  }
+
+  delegation {
+    name = "aks-pods-delegation"
+
+    service_delegation {
+      name    = "Microsoft.ContainerService/managedClusters"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
+}
+
+resource "azurerm_public_ip" "pods_nat" {
+  for_each            = { for key, subnet in local.pod_subnet_specs : key => subnet if subnet.dedicated_nat_gateway }
+  name                = "${var.prefix}-pods-${each.key}-nat"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Static"
+  sku                 = var.nat_gateway_sku
+  tags                = local.tags
+}
+
+resource "azurerm_nat_gateway" "pods" {
+  for_each                = azurerm_public_ip.pods_nat
+  name                    = "${var.prefix}-pods-${each.key}"
+  location                = var.location
+  resource_group_name     = var.resource_group_name
+  sku_name                = var.nat_gateway_sku
+  idle_timeout_in_minutes = var.nat_idle_timeout_minutes
+  tags                    = local.tags
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "pods" {
+  for_each             = azurerm_nat_gateway.pods
+  nat_gateway_id       = each.value.id
+  public_ip_address_id = azurerm_public_ip.pods_nat[each.key].id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "pods" {
+  for_each       = { for key, subnet in local.pod_subnet_specs : key => subnet if subnet.dedicated_nat_gateway || var.enable_nat_gateway }
+  subnet_id      = azurerm_subnet.pods[each.key].id
+  nat_gateway_id = each.value.dedicated_nat_gateway ? azurerm_nat_gateway.pods[each.key].id : azurerm_nat_gateway.this[0].id
+}
+
+resource "azurerm_subnet_route_table_association" "egress_pods" {
+  for_each       = var.egress_next_hop_ip != null ? local.pod_subnets : {}
+  subnet_id      = azurerm_subnet.pods[each.key].id
+  route_table_id = azurerm_route_table.egress[0].id
 }
 
 # Egress like the private subnets: the NAT gateway, or the egress route with egress_next_hop_ip

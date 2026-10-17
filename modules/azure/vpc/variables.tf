@@ -227,6 +227,41 @@ variable "container_apps_zone_redundancy_enabled" {
   default = true
 }
 
+# https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet
+variable "pod_subnets_cidr" {
+  type        = string
+  default     = null
+  description = "Azure CNI Pod Subnet: extra VNet address space for the pod subnets (routable pod IPs), e.g. 10.1.0.0/16 next to vpc_cidr 10.0.0.0/16; must not overlap vpc_cidr or peered networks. Null = no pod subnets (aks uses Overlay)"
+  validation {
+    condition     = var.pod_subnets_cidr == null || can(cidrnetmask(var.pod_subnets_cidr))
+    error_message = "pod_subnets_cidr must be an IPv4 CIDR."
+  }
+}
+
+variable "enable_pod_subnets" {
+  type        = bool
+  default     = false
+  description = "Azure CNI Pod Subnet without a second address space: the pod subnets come from the first half of the spare quarter of vpc_cidr (/19 in a /16), /20 or larger. The other half stays for custom_subnets"
+}
+
+variable "pod_subnets" {
+  type = map(object({
+    cidr                  = optional(string)
+    dedicated_nat_gateway = optional(bool, false)
+  }))
+  nullable    = false
+  default     = {}
+  description = "Pod subnets in pod_subnets_cidr by key, subnet <prefix>-pods-<key>; empty = one subnet \"default\" with the whole range (the aks default), without cidr an equal split; dedicated_nat_gateway gives the node pools of the subnet their own egress IP"
+  validation {
+    condition     = alltrue([for key, subnet in var.pod_subnets : can(regex("^[a-z0-9]{1,40}$", key))])
+    error_message = "pod_subnets keys must be 1-40 lowercase letters or digits, the agent reads the outputs as pod_subnets[key]."
+  }
+  validation {
+    condition     = alltrue([for subnet in values(var.pod_subnets) : subnet.cidr == null || can(cidrnetmask(subnet.cidr))])
+    error_message = "pod_subnets cidr must be an IPv4 CIDR."
+  }
+}
+
 # https://learn.microsoft.com/azure/azure-sql/managed-instance/connectivity-architecture-overview#virtual-network-requirements
 variable "custom_subnets" {
   type = map(object({
