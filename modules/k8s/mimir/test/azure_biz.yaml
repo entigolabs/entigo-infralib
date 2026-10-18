@@ -1,3 +1,8 @@
+global:
+  gateway:
+    name: "{{ .tinput.istio-gateway.global.azure.loadBalancer.name }}"
+    namespace: "{{ .tmodule.istio-gateway }}"
+
 mimir-distributed:
   ingester:
     persistentVolume:

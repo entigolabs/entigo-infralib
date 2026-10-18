@@ -8,8 +8,8 @@ prometheus:
         parentRefs:
           - group: gateway.networking.k8s.io
             kind: Gateway
-            name: azure-gateway-internal
-            namespace: "istio-gateway-{{ .config.prefix }}"
+            name: "{{ .tinput.istio-gateway.global.azure.loadBalancer.name }}"
+            namespace: "{{ .tmodule.istio-gateway }}"
             sectionName: https
     remoteWrite:
       - name: "{{ .config.prefix }}"
