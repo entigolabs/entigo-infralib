@@ -104,7 +104,7 @@ func testTerraformVpcSpoke4(t *testing.T) {
 	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__nat_public_ips"))
 }
 
-// /16 spoke with NAT, no Container Apps environment, custom subnets: App Service with egress, DNS resolver, Bastion
+// /16 spoke with NAT, no Container Apps environment, custom subnets: SQL managed instance with egress, DNS resolver, Bastion
 func testTerraformVpcSpoke1(t *testing.T) {
 	t.Parallel()
 	outputs := azure.GetTFOutputs(t, "spoke1")
@@ -125,10 +125,10 @@ func testTerraformVpcSpoke1(t *testing.T) {
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__nat_gateway_id"), "nat_gateway_id was not returned")
 
 	custom := tf.GetValue(t, outputs, "vpc__custom_subnets").(map[string]interface{})
-	assert.NotEmpty(t, custom["webapps"], "custom subnet webapps was not returned")
+	assert.NotEmpty(t, custom["mssql"], "custom subnet mssql was not returned")
 	assert.NotEmpty(t, custom["resolver"], "custom subnet resolver was not returned")
 	assert.NotEmpty(t, custom["bastion"], "custom subnet bastion was not returned")
-	assert.Equal(t, map[string]interface{}{"webapps": "10.31.192.0/26", "resolver": "10.31.192.64/28", "bastion": "10.31.192.128/26"}, tf.GetValue(t, outputs, "vpc__custom_subnet_cidrs"))
+	assert.Equal(t, map[string]interface{}{"mssql": "10.31.192.0/26", "resolver": "10.31.192.64/28", "bastion": "10.31.192.128/26"}, tf.GetValue(t, outputs, "vpc__custom_subnet_cidrs"))
 	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"))
 }
 

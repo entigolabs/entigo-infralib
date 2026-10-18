@@ -5,10 +5,11 @@ container_apps_subnets: |
   []
 custom_subnets: |
   {
-    webapps = {
-      cidr        = "10.31.192.0/26"
-      delegation  = "Microsoft.Web/serverFarms"
-      nat_gateway = true
+    mssql = {
+      cidr               = "10.31.192.0/26"
+      delegation         = "Microsoft.Sql/managedInstances"
+      delegation_actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]
+      nat_gateway        = true
     }
     resolver = {
       cidr       = "10.31.192.64/28"
