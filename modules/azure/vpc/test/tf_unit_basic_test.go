@@ -63,9 +63,9 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.Equal(t, []string{"10.24.160.0/24"}, tf.GetStringListValue(t, outputs, "vpc__agc_subnet_cidrs"))
 	assert.Equal(t, []string{"10.24.161.0/26"}, tf.GetStringListValue(t, outputs, "vpc__apiserver_subnet_cidrs"))
 	assert.Equal(t, []string{"10.24.161.64/26"}, tf.GetStringListValue(t, outputs, "vpc__container_apps_subnet_cidrs"))
-	assert.Equal(t, map[string]interface{}{"default": "10.24.192.0/19"}, tf.GetValue(t, outputs, "vpc__pod_subnet_cidrs"), "enable_pod_subnets takes the first half of the spare quarter")
+	assert.Equal(t, []string{"10.24.192.0/19"}, tf.GetStringListValue(t, outputs, "vpc__pod_subnet_cidrs"), "enable_pod_subnets takes the first half of the spare quarter")
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__pod_subnet_id"), "pod_subnet_id was not returned")
-	assert.Equal(t, tf.GetValue(t, outputs, "vpc__pod_subnets").(map[string]interface{})["default"], tf.GetStringValue(t, outputs, "vpc__pod_subnet_id"))
+	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__pod_subnets")[0], tf.GetStringValue(t, outputs, "vpc__pod_subnet_id"))
 	assert.Empty(t, tf.GetValue(t, outputs, "vpc__custom_subnets"))
 
 	assert.Equal(t, 1, len(tf.GetStringListValue(t, outputs, "vpc__container_apps_environment_ids")), "Wrong number of container_apps_environment_ids returned")

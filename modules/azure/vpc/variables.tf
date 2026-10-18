@@ -245,19 +245,15 @@ variable "enable_pod_subnets" {
 }
 
 variable "pod_subnets" {
-  type = map(object({
+  type = list(object({
     cidr                  = optional(string)
     dedicated_nat_gateway = optional(bool, false)
   }))
   nullable    = false
-  default     = {}
-  description = "Pod subnets in pod_subnets_cidr by key, subnet <prefix>-pods-<key>; empty = one subnet \"default\" with the whole range (the aks default), without cidr an equal split; dedicated_nat_gateway gives the node pools of the subnet their own egress IP"
+  default     = []
+  description = "Pod subnets <prefix>-pods-<n>, the first is the aks default (output pod_subnet_id); empty = one subnet with the whole range, without cidr an equal split of the range; dedicated_nat_gateway gives the node pools of the subnet their own egress IP"
   validation {
-    condition     = alltrue([for key, subnet in var.pod_subnets : can(regex("^[a-z0-9]{1,40}$", key))])
-    error_message = "pod_subnets keys must be 1-40 lowercase letters or digits, the agent reads the outputs as pod_subnets[key]."
-  }
-  validation {
-    condition     = alltrue([for subnet in values(var.pod_subnets) : subnet.cidr == null || can(cidrnetmask(subnet.cidr))])
+    condition     = alltrue([for subnet in var.pod_subnets : subnet.cidr == null || can(cidrnetmask(subnet.cidr))])
     error_message = "pod_subnets cidr must be an IPv4 CIDR."
   }
 }

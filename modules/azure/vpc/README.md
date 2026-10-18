@@ -132,28 +132,30 @@ between pools, flow logs with pod addresses). The layout above does not change; 
   not overlap the VNet, peered networks or on-prem ranges.
 * explicit `cidr` entries in `pod_subnets`, anywhere in the VNet.
 
-Without `pod_subnets` one subnet `<prefix>-pods-default` takes the whole range, which the aks module picks up through
-output `pod_subnet_id` (`""` without pod subnets = Overlay). `pod_subnets` names more of them and must keep a `default`
-entry (the aks default): the entries without `cidr` share the range equally (the split does not avoid explicit entries,
-give those a range outside it), explicit `cidr` entries go where they say, for node pools that need their own range
-(aks-node-pool `pod_subnet_id`). The split is for creation: adding or removing an automatic entry re-splits the range and
-moves the existing pod subnets, which Azure refuses while pods use them, so add pod subnets to a running VNet with an
-explicit `cidr` outside the range in use:
+Without `pod_subnets` one subnet `<prefix>-pods-0` takes the whole range, which the aks module picks up through
+output `pod_subnet_id` (`""` without pod subnets = Overlay). `pod_subnets` lists more of them, numbered like the other
+tiers (`<prefix>-pods-<n>`, the first is the aks default): the entries without `cidr` share the range equally in list
+order (the split does not avoid explicit entries, give those a range outside it), explicit `cidr` entries go where they
+say, for node pools that need their own range (aks-node-pool `pod_subnet_id: "{{ .toutput.vpc.pod_subnets[1] }}"`). The
+split is for creation: adding or removing an automatic entry re-splits the range and moves the existing pod subnets,
+which Azure refuses while pods use them, so add pod subnets to a running VNet at the end of the list with an explicit
+`cidr` outside the range in use:
 
 ```
           pod_subnets_cidr: "10.1.0.0/16"
-          pod_subnets:
-            default: {}
-            batch:
-              dedicated_nat_gateway: true
+          pod_subnets: |
+            [
+              {},
+              { dedicated_nat_gateway = true }
+            ]
 ```
 
 Pod subnets are delegated to `Microsoft.ContainerService/managedClusters`, have the private subnets' service endpoints
 and egress like the nodes: the shared NAT gateway, the egress route with `egress_next_hop_ip`, or with
-`dedicated_nat_gateway` an own NAT gateway and public IP (output `pod_subnet_nat_public_ips`, for partner allowlists per
+`dedicated_nat_gateway` an own NAT gateway and public IP (output `pod_subnet_nat_public_ips`, `""` for the others, for partner allowlists per
 node pool; not with `egress_next_hop_ip`, the route to the appliance would bypass it). Dynamic IP allocation hands each node 16 addresses at a time, so a pod subnet needs roughly 16 addresses per
 node plus the pods above that; at most /16 per pod subnet. Overlay or Pod Subnet is chosen when the cluster is created.
-Outputs: `pod_subnets` (ids by key), `pod_subnet_cidrs`, `pod_subnet_id`, `pod_subnet_nat_public_ips`.
+Outputs: `pod_subnets` (ids in order), `pod_subnet_cidrs`, `pod_subnet_id`, `pod_subnet_nat_public_ips`.
 
 ### Custom subnets ###
 `custom_subnets` adds subnets for anything else, keyed by a short name (lowercase letters and digits, the agent reads
@@ -314,7 +316,7 @@ spare /23 (/21) or the second half of compute (/22):
 | database-0 | 10.156.2.0/24 | 10.156.3.0/25 |
 | spare | 10.156.0.144/28, 10.156.3.0/24 | 10.156.0.144/28, 10.156.3.128/25 |
 
-Pod Subnet mode, default split with `enable_pod_subnets: true`, `10.156.0.0/16` down to `/20`: pods-default takes the
+Pod Subnet mode, default split with `enable_pod_subnets: true`, `10.156.0.0/16` down to `/20`: pods-0 takes the
 first half of the spare quarter, everything else as in default mode:
 
 | Subnet | /16 | /17 | /18 | /19 | /20 |
@@ -326,7 +328,7 @@ first half of the spare quarter, everything else as in default mode:
 | agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
-| pods-default | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
+| pods-0 | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
 | free in the delegated block | 10.156.161.128/25 to 10.156.191.255 | 10.156.81.128/25 to 10.156.95.255 | 10.156.41.128/25 to 10.156.47.255 | 10.156.21.128/25 to 10.156.23.255 | 10.156.11.128/25 |
 | spare | 10.156.224.0/19 | 10.156.112.0/20 | 10.156.56.0/21 | 10.156.28.0/22 | 10.156.8.0/23, 10.156.14.0/23 |
 
@@ -342,12 +344,12 @@ Pod Subnet mode in spoke mode (`subnet_split_mode: spoke` and `enable_pod_subnet
 | agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | 10.156.8.0/23 |
-| pods-default | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
+| pods-0 | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
 | free in the delegated block | 10.156.162.0/23 to 10.156.191.255 | 10.156.82.0/23 to 10.156.95.255 | 10.156.42.0/23 to 10.156.47.255 | 10.156.22.0/23 | none |
 | spare | 10.156.32.0/19, 10.156.224.0/19 | 10.156.16.0/20, 10.156.112.0/20 | 10.156.8.0/21, 10.156.56.0/21 | 10.156.4.0/22, 10.156.28.0/22 | 10.156.2.0/23, 10.156.14.0/23 |
 
-With `pod_subnets_cidr: "10.1.0.0/16"` instead, `pods-default` is the whole 10.1.0.0/16 and the spare quarter stays as
-in the tables above; named `pod_subnets` split it in key order, e.g. `batch` and `default` get 10.1.0.0/17 and 10.1.128.0/17.
+With `pod_subnets_cidr: "10.1.0.0/16"` instead, `pods-0` is the whole 10.1.0.0/16 and the spare quarter stays as in
+the tables above; a `pod_subnets` list splits it in order, e.g. two entries get 10.1.0.0/17 and 10.1.128.0/17.
 
 A /23 or /24 needs every list explicit, e.g. `10.156.0.0/23` without Container Apps:
 ```
