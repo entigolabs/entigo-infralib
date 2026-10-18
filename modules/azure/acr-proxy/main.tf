@@ -39,11 +39,11 @@ locals {
 }
 
 resource "azurerm_container_registry" "this" {
-  name                     = local.name
-  location                 = var.location
-  resource_group_name      = var.resource_group_name
-  sku                      = var.sku
-  retention_policy_in_days = var.sku == "Premium" ? var.retention_policy_in_days : null
+  name                          = local.name
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  sku                           = var.sku
+  retention_policy_in_days      = var.sku == "Premium" ? var.retention_policy_in_days : null
   data_endpoint_enabled         = local.private_endpoint
   public_network_access_enabled = var.public_network_access_enabled
   tags                          = local.tags
@@ -116,7 +116,7 @@ resource "azurerm_container_registry_cache_rule" "this" {
   source_repo           = "${each.value}/*"
   target_repo           = "${each.value}/*"
   credential_set_id     = contains(local.registries_with_credentials, each.key) ? azurerm_container_registry_credential_set.this[each.key].id : null
-  depends_on = [azurerm_role_assignment.credential_secrets]
+  depends_on            = [azurerm_role_assignment.credential_secrets]
 }
 
 resource "azurerm_private_dns_zone" "acr" {
