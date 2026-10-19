@@ -6,3 +6,6 @@ container_apps_subnets: |
   []
 apiserver_subnets: |
   ["10.35.0.128/28", "10.35.0.144/28"]
+database_subnet_delegation: "Microsoft.DBforPostgreSQL/flexibleServers"
+database_subnets: |
+  ["10.35.0.192/26"]

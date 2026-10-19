@@ -1,0 +1,37 @@
+vpc_cidr: "10.33.0.0/21"
+subnet_split_mode: "spoke"
+enable_flow_log: false
+nat_gateway_sku: "Standard"
+nat_static_ip_count: 2
+agc_subnets: |
+  []
+container_apps_subnets: |
+  []
+control_subnet_names: |
+  ["spoke-ilb-platform"]
+service_subnet_names: |
+  ["spoke-ilb-apps"]
+intra_subnets: |
+  ["10.33.3.0/26"]
+custom_subnets: |
+  {
+    mssql = {
+      cidr                   = "10.33.1.0/27"
+      delegation             = "Microsoft.Sql/managedInstances"
+      delegation_actions     = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]
+      network_security_group = true
+      route_table            = true
+    }
+    resolver = {
+      cidr       = "10.33.1.32/28"
+      delegation = "Microsoft.Network/dnsResolvers"
+    }
+    bastion = {
+      name = "AzureBastionSubnet"
+      cidr = "10.33.1.64/26"
+    }
+    vms = {
+      cidr        = "10.33.1.128/26"
+      nat_gateway = true
+    }
+  }

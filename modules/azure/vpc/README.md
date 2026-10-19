@@ -207,7 +207,7 @@ are zone redundant by default (`container_apps_zone_redundancy_enabled`, create 
 
 Plan time checks: `vpc_cidr` an IPv4 CIDR of /24 or larger, `subnet_split_mode` default or spoke, overlapping subnets, subnets outside the VNet, AGC exactly
 /24, unique subnet names across all tiers and custom subnets, `custom_subnets` keys and `nat_gateway` / `route_table`
-exclusion, pod subnets: a range or explicit cidrs, a `default` entry, `enable_pod_subnets` /20 or larger and not with
+exclusion, pod subnets: a range or explicit cidrs, `enable_pod_subnets` /20 or larger and not with
 `pod_subnets_cidr`, `pod_subnets_cidr` not overlapping `vpc_cidr`, at most /16 each, `dedicated_nat_gateway` not with
 `egress_next_hop_ip`. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
 subnet names that are valid Container Apps environment names (lowercase).

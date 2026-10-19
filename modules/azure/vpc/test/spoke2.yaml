@@ -1,5 +1,0 @@
-vpc_cidr: "10.32.0.0/22"
-subnet_split_mode: "spoke"
-enable_flow_log: false
-container_apps_subnets: |
-  []
