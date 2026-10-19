@@ -88,7 +88,7 @@ rejected at plan time. Extra AGC subnets (a second azure-gateway with its own AG
 usually taken from the spare quarter.
 
 ### subnet_split_mode ###
-`default` (the layout above): nodes and all load balancer frontends share the private subnet, and the aws-style outputs
+`default` (the layout above): nodes and all load balancer frontends share the private subnet, and the outputs
 `control_subnets`, `service_subnets` and `compute_subnets` all point to it. `spoke` is for a VNet peered to a hub that
 owns the firewall, gateways and DNS: the hub's rules are written per role range. It adds two load balancer subnets after
 the Container Apps subnet in the delegated block, names the node subnet `<prefix>-compute-<n>`, creates no intra subnet
@@ -212,16 +212,16 @@ exclusion, pod subnets: a range or explicit cidrs, `enable_pod_subnets` /20 or l
 `egress_next_hop_ip`. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
 subnet names that are valid Container Apps environment names (lowercase).
 
-Outputs use both the google style (`*_subnet_cidrs`, `nat_static_ips`) and the aws/vpc names (`name`, `vpc_cidr_block`,
+Outputs include `*_subnet_cidrs`, `nat_static_ips` and the names modules shared between clouds use (`name`, `vpc_cidr_block`,
 `*_subnets_cidr_blocks`, `*_subnet_names`, `nat_public_ips`, and `control/service/compute_subnets(_cidr_blocks)` =
 private in default mode, the control and service subnets in spoke mode or with explicit lists,
-`elasticache_subnets_cidr_blocks` = database) for modules shared between clouds, e.g. platform-apis. Outputs
+`elasticache_subnets_cidr_blocks` = database), e.g. for platform-apis. Outputs
 of disabled resources (`nat_gateway_id`, `egress_route_table_id`, `vpc_flow_log_*`) are empty strings, not null, so
 agent inputs referencing them always render.
 
-VNet flow logs (`enable_flow_log`, default true like aws/vpc): all IP flows of the VNet go to a dedicated storage account
+VNet flow logs (`enable_flow_log`, default true): all IP flows of the VNet go to a dedicated storage account
 `<prefix alnum>fl<agent uniqueSuffix>` (Entra ID only, Microsoft-managed keys, network access only for trusted Azure services and the
-private subnets) with `flow_log_retention_days` retention (7, like aws), or to an existing storage account in the same
+private subnets) with `flow_log_retention_days` retention (7), or to an existing storage account in the same
 region given as `flow_log_storage_account_id` (e.g. a central log archive; the module then creates none and the account's
 own network rules and retention apply). The flow log resource itself lives in the
 region's Network Watcher resource group (`NetworkWatcherRG`/`NetworkWatcher_<location>`, one per region and subscription,
@@ -245,7 +245,7 @@ Known issue: azurerm 5.7.0 ends a Container Apps environment delete with "pollin
 was not implemented" although the environment is gone; run the destroy again
 ([hashicorp/terraform-provider-azurerm#33433](https://github.com/hashicorp/terraform-provider-azurerm/issues/33433)).
 
-Not supported yet (roadmap): IPv6 / dual stack (aws `enable_ipv6`).
+Not supported yet (roadmap): IPv6 / dual stack.
 
 ### Examples ###
 ```

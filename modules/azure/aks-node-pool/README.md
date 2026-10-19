@@ -1,6 +1,6 @@
 ## Opinionated module for an extra AKS node pool ##
 
-Adds a node pool to an azure/aks cluster, like aws/eks-node-group and google/gke-node-pool. Cluster, version, node
+Adds a node pool to an azure/aks cluster. Cluster, version, node
 subnet and (Azure CNI Pod Subnet) pod subnet come from azure/aks; `pod_subnet_id` overrides the pod subnet for a pool
 that needs its own range (vpc `pod_subnets`, e.g. with a dedicated NAT gateway); the module then gives the cluster
 identity Network Contributor on that subnet (`cluster_identity_principal_id`, `cluster_pod_subnet_id` from aks).

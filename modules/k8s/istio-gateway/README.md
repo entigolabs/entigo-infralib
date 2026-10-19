@@ -7,39 +7,49 @@ A separate VirtualService object has to be created to expose the application.
 
 ### Azure ###
 
-* Public, like google: istio `Gateway` (port 80) for VirtualServices, an HTTPRoute for `*.<pub_domain>` on the
-  azure-gateway external gateway (AGC) and an AGC HealthCheckPolicy (15021 `/healthz/ready`).
+* Public: istio `Gateway` (pod port 8080, Service port 80) for VirtualServices, an HTTPRoute for
+  `*.<pub_domain>` on the azure-gateway external gateway (AGC) and an AGC HealthCheckPolicy (15021 `/healthz/ready`).
+  VirtualService hosts get no own record: they resolve through the `*.<pub_domain>` wildcard to AGC.
 * Own load balancer gateway (`global.azure.loadBalancer`): Service `<gateway name>-internal` or `-external` (Azure
   load balancer, `externalTrafficPolicy: Local`, `sourceRanges`) and Gateway API gateway `name` (sectionName `https`)
-  with a cert-manager wildcard for `intDomain` / `pubDomain`, TLS in istio.
+  with a cert-manager wildcard for `intDomain` / `pubDomain`, TLS in istio. It serves Gateway API routes;
+  VirtualServices only with the module's own route on it (below).
   * Internal (`internal: true`), until AGC has a private frontend (Azure/AKS#5739): created in the module whose
     namespace is azure-gateway `internalGatewayNamespace`, named `<azure-gateway module>-internal`, records from the
     external-dns private instance. Its frontend is placed in `global.azure.loadBalancer.internalSubnet` (vpc
     `control_subnet_name`: the control subnet in spoke mode, empty otherwise, which leaves the frontend in the node
     subnet; setting or changing it recreates the frontend). With several istio-gateway modules, set azure-gateway
     `global.internalGatewayNamespace` (or `default_module`).
-  * Public (`internal: false`, `enabled: true`): istio without azure-gateway, records from the public external-dns
-    instance. No AGC route (`createRoute` is on only with an azure-gateway module), no WAF.
-* Without azure-gateway, the charts that route through a gateway (argocd, grafana, harbor, kiali, loki, mimir,
-  prometheus, wireguard) need their gateway in the config inputs (their agent inputs require azure-gateway); harbor
-  and wireguard create their AGC HealthCheckPolicy only with an azure-gateway module. Give each istio-gateway module
-  its own `gateway.name`: the istio `Gateway` selects pods by label in every namespace.
+  * Public (`internal: false`, `enabled: true`) in another istio-gateway module, records from the public external-dns
+    instance, no WAF.
+* Every istio-gateway module gets the route (`createRoute` follows the azure-gateway module), by default on AGC for
+  `*.<pub_domain>`. With two modules, point the internal one's route at its own internal gateway (`global.gateway`,
+  `global.hostnames`, example below): its VirtualServices are then served on the internal load balancer and stay off
+  AGC. This needs a private int domain separate from the public one, otherwise the two wildcard records clash;
+  `global.createRoute: false` drops the route instead. Give each istio-gateway module its own `gateway.name`: the
+  istio `Gateway` selects pods by label in every namespace.
 
-Depends on: cert-manager, istio-istiod; azure-gateway for the AGC route and the internal gateway default.
+Depends on: cert-manager, istio-istiod, azure-gateway (Gateway API CRDs, AGC route, internal gateway name).
 
-Internal and public istio without azure-gateway:
+Internal and public istio gateways:
 ```
     modules:
+      - name: azure-gateway
+        source: azure-gateway
+        inputs:
+          global:
+            internalGatewayNamespace: istio-gateway-int
       - name: istio-gateway-int
         source: istio-gateway
         inputs:
           gateway:
             name: istio-gateway-int
           global:
-            azure:
-              loadBalancer:
-                enabled: true
-                name: internal
+            gateway:
+              name: azure-gateway-internal
+              namespace: istio-gateway-int
+            hostnames:
+              - "*.{{ .toutput.dns.int_domain }}"
       - name: istio-gateway-ext
         source: istio-gateway
         inputs:

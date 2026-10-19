@@ -3,7 +3,7 @@
 cert-manager with an ACME `ClusterIssuer` (DNS-01 in the cloud DNS), default `letsencrypt`. One per cluster.
 
 Azure only for now (AzurePublicCloud): Application Gateway for Containers reads certificates only from Kubernetes
-Secrets (aws and google gateways use ACM / Certificate Manager). The controller identity is a WorkloadIdentity
+Secrets. The controller identity is a WorkloadIdentity
 (crossplane-azure) with DNS Zone Contributor on the dns `pub_zone_id` and `int_cert_zone_id` zones. Depends on:
 modules/azure/dns, modules/k8s/crossplane-azure.
 

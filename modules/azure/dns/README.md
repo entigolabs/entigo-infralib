@@ -1,6 +1,6 @@
 ## Azure DNS zones ##
 
-Creates Azure DNS zones like aws-v2/route53: public zones and private zones (linked to `vpc_ids`, default the vpc
+Creates Azure DNS zones: public zones and private zones (linked to `vpc_ids`, default the vpc
 module's VNet). Private zones get a public twin with the same name for ACME DNS-01 challenges (`create_validation`);
 certificates are issued by the cert-manager k8s module, not here.
 
@@ -13,9 +13,6 @@ domains - map of objects:
                         manual_delegations output (default "": by hand from nameservers / validation_nameservers)
     create_zone       - false uses an existing zone in the resource group (default true)
     create_validation - public validation zone (twin) for a private domain, used by cert-manager DNS-01 (default true).
-                        Not the aws-v2/route53 meaning: there it switches off the zone/lookup and the ACM validation
-                        records (certificate-only domain in another account). This module issues no certificates;
-                        the aws twin switch is create_certificate, which doesn't exist here.
     private           - private DNS zone (default false)
     vpc_ids           - VNets linked to the private zone, defaults to var.vpc_ids
     default_public    - the default public domain for other modules (pub_zone_id, pub_domain)

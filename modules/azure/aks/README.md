@@ -18,7 +18,7 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   (hashicorp/terraform-provider-azurerm#30827). Outputs `network_mode`
   (`overlay`/`pod_subnet`), `pod_subnet_id`, `pod_ip_allocation_mode`; `pod_cidr` is empty with Pod Subnet. Overlay or
   Pod Subnet is decided at cluster creation.
-* Node pools `main`, `mon` and `tools` like aws/eks and google/gke (labels `<pool>=true`, `mon=true:NoSchedule`).
+* Node pools `main`, `mon` and `tools` (labels `<pool>=true`, `mon=true:NoSchedule`).
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
   AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration (in
   `values-azure.yaml`). The system pool can't be spot and can't be removed; `main` and `mon` are left out with
@@ -42,10 +42,10 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   settable at cluster creation.
 * Version: `kubernetes_version` is a minor (N-1 of the latest GA, like the stable channel), AKS picks the latest
   patch at creation. No automatic upgrades by default: nodes get a new node image with every Kubernetes version
-  upgrade or `az aks nodepool upgrade --node-image-only` (AKS can't pin a node image version like aws AMI releases).
+  upgrade or `az aks nodepool upgrade --node-image-only` (AKS can't pin a node image version).
   Automatic: `upgrade_channel: patch` and/or `node_os_upgrade_channel: NodeImage` (or `SecurityPatch`), both in the
   weekly `maintenance_window` (default Sunday 00:00 UTC, 4 hours).
-* API server: private by default (`private_cluster_enabled`, like aws/eks and google/gke): the FQDN only resolves
+* API server: private by default (`private_cluster_enabled`): the FQDN only resolves
   inside the VNet, so agent steps that use the cluster run in the vpc pipeline subnet (argocd steps attach by
   default) and people use the VPN. With
   `private_cluster_enabled: false` the public endpoint is limited to `api_server_authorized_ip_ranges` (`[]` = open)

@@ -185,7 +185,7 @@ fixed, put the public IP in `Endpoint` rather than the hostname.
 ## Azure ##
 
 The Service is a public Azure Standard Load Balancer (UDP 51820, AKS opens the NSG). It is L4 and terminates no TLS,
-so like google the public key gets its own hostname and an HTTPRoute on the azure-gateway external gateway (AGC) with
+so the public key gets its own hostname and an HTTPRoute on the azure-gateway external gateway (AGC) with
 an AGC HealthCheckPolicy (`templates/azure/`). The load balancer IP is not static; external-dns updates the record.
 
 Client: the private int zone resolves through CoreDNS, which forwards to the VNet resolver.

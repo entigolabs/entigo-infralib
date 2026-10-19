@@ -1,6 +1,6 @@
 ## Opinionated helm package for Application Gateway for Containers ##
 
-Gateway API gateways on Application Gateway for Containers (AGC), the Azure counterpart of google-gateway and aws-alb.
+Gateway API gateways on Application Gateway for Containers (AGC).
 The vendored alb-controller creates the AGC in the AKS node resource group from the `ApplicationLoadBalancer`.
 
 Depends on: modules/azure/aks (`alb_controller_client_id`, the chart needs the client id at render time),
@@ -20,7 +20,7 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
 
 ## SSL policies
 
-`sslPolicy` per gateway takes the AGC predefined policy name, like the aws-alb `sslPolicy` takes the ELB one. Default
+`sslPolicy` per gateway takes the AGC predefined policy name. Default
 `2023-06` (TLS 1.2 + 1.3), `2023-06-S` is the stricter variant, see values.yaml. AGC has no TLS 1.0/1.1 policy.
 
 ### Example code ###

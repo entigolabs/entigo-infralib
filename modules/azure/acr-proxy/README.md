@@ -5,10 +5,10 @@ Google (gcr.io), AWS public ECR, Quay, Microsoft and Kubernetes registries. Imag
 `<acr>.azurecr.io/<source registry>/<repository>`, see the `*_registry` outputs. AWS public ECR and Microsoft
 (both only allow unauthenticated pulls in ACR) and Kubernetes registries are always anonymous.
 
-A daily ACR task (`purge_*`, like the aws/ecr-proxy lifecycle policy) deletes untagged images after 7 days and all
+A daily ACR task (`purge_*`) deletes untagged images after 7 days and all
 tags after 90 days; they are pulled again from upstream on the next use. `acr purge` is a preview feature.
 
-Like aws/ecr-proxy, all registries are anonymous by default. For credentials, store them as agent custom parameters
+All registries are anonymous by default. For credentials, store them as agent custom parameters
 (`/acr-proxy/hub/username` becomes the Key Vault secret `acr-proxy-hub-username` in the agent's vault, `key_vault_id`)
 and set the `*_secret` inputs to the secret names; each ACR credential set gets Key Vault Secrets User on its two
 secrets. Docker Hub requires credentials: without them there is no hub cache and `hub_registry` is null. A secret name
