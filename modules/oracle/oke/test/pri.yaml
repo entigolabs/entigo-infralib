@@ -1,6 +1,7 @@
-# The API endpoint has to be public: the agent runs outside the VCN, and vpc.attach has no
-# OCI implementation to put it inside one.
 is_public_ip_enabled: true
+# The k8s module tests reach the API from GitHub runners, whose addresses are not fixed.
+oke_api_access_cidrs: |
+  ["0.0.0.0/0"]
 
 # A non-default service range. Kubernetes ClusterIPs are allocated from it and it is virtual,
 # so unlike the pod addresses it takes no VCN space and comes from no subnet.

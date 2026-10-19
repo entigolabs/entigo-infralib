@@ -21,12 +21,12 @@ func TestTerraformPca(t *testing.T) {
 
 func testTerraformPcaBiz(t *testing.T) {
 	t.Parallel()
-	testTerraformPca(t, "biz", "biz-net-pca-root-ca")
+	testTerraformPca(t, "biz", "biz-net-pca-ca")
 }
 
 func testTerraformPcaPri(t *testing.T) {
 	t.Parallel()
-	testTerraformPca(t, "pri", "pri-net-pca-root-ca")
+	testTerraformPca(t, "pri", "pri-net-pca-ca")
 }
 
 // Both test configurations adopt an existing CA by ca_name instead of creating one.

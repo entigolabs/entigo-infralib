@@ -1,0 +1,31 @@
+{{- if .Values.removeEnvoyHeaders }}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: remove-envoy-headers
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    # The CRD comes from istio-base, which is in the same sync wave
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  configPatches:
+    - applyTo: HTTP_ROUTE
+      match:
+        context: SIDECAR_INBOUND
+      patch:
+        operation: MERGE
+        value:
+          decorator:
+            propagate: false
+          response_headers_to_remove:
+            - x-envoy-upstream-service-time
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+      patch:
+        operation: MERGE
+        value:
+          response_headers_to_remove:
+            - x-envoy-decorator-operation
+            - x-envoy-upstream-service-time
+{{- end }}

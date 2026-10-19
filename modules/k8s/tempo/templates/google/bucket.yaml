@@ -1,0 +1,29 @@
+{{- if eq .Values.global.cloudProvider "google" }}
+
+apiVersion: storage.gcp.upbound.io/v1beta2
+kind: Bucket
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    crossplane.io/external-name: {{ .Values.global.bucketName }}
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    labels:
+      created-by: entigo-infralib
+    location: {{ .Values.global.google.bucket.location }}
+    uniformBucketLevelAccess: true
+    {{- if .Values.global.google.bucket.kmsKeyId }}
+    encryption:
+      defaultKmsKeyName: {{ .Values.global.google.bucket.kmsKeyId }}
+    {{- end }}
+    {{- with .Values.global.google.bucket.lifecycleRule }}
+    lifecycleRule:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}
