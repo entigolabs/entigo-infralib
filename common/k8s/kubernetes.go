@@ -48,10 +48,7 @@ func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string
 	case "google":
 		contextName = fmt.Sprintf("gke_entigo-infralib2_europe-north1_%s-infra-gke", envName)
 	case "oracle":
-		// Best-effort guess following the aws/google naming convention above - unlike
-		// EKS/GKE, `oci ce cluster create-kubeconfig` doesn't deterministically name the
-		// context after the cluster's display name by default, so this needs confirming
-		// once a real shared Oracle test cluster/kubeconfig exists in CI.
+		// oracle_kubeconfig in common/generate_config.sh renames the context to this.
 		contextName = fmt.Sprintf("%s-infra-oke", envName)
 	}
 
