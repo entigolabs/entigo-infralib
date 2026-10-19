@@ -4,7 +4,7 @@ then
   #Use dev tag when we are in a PR and Github.
   export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:dev"
 else
-  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.24.2"
+  export ENTIGO_INFRALIB_IMAGE="entigolabs/entigo-infralib-test:v1.24.14"
 fi
 
 export TFLINT_IMAGE="ghcr.io/terraform-linters/tflint:v0.64.0"
@@ -47,6 +47,68 @@ google_auth_login() {
     gcloud config set account $gaccount
   fi
 
+}
+
+oracle_auth_defaults() {
+    if [ "$OCI_REGION" == "" ]; then
+        echo "Defaulting OCI_REGION to eu-frankfurt-2"
+        export OCI_REGION="eu-frankfurt-2"
+    fi
+    if [ "$OCI_CONFIG_FILE" == "" ]; then
+        echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
+        export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
+    fi
+    if [ "$ORACLE_ROOT_CA_NAME" == "" ]; then
+        export ORACLE_ROOT_CA_NAME="infralib-root-ca"
+    fi
+}
+
+# Adds the OKE cluster $1 to ~/.kube/config under a context of the same name, which is what
+# common/k8s/kubernetes.go connects to. The kubeconfig runs `oci ce cluster generate-token` on
+# every connection, so the tests need the same OCI config mounted - see common/k8s/unit.sh.
+oracle_kubeconfig() {
+    local cluster=$1
+    local id
+    oracle_auth_defaults
+    export OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
+    id=$(oci ce cluster list --compartment-id "$OCI_COMPARTMENT_ID" --region "$OCI_REGION" \
+        --name "$cluster" --lifecycle-state ACTIVE --query "data[0].id" --raw-output)
+    if [ -z "$id" ]; then
+        echo "Failed to find Oracle cluster $cluster"
+        return 1
+    fi
+    # create-kubeconfig makes the context it adds current, under a generated name.
+    kubectl config delete-context "$cluster" >/dev/null 2>&1
+    oci ce cluster create-kubeconfig --cluster-id "$id" --region "$OCI_REGION" \
+        --kube-endpoint PUBLIC_ENDPOINT --token-version 2.0.0 --file ~/.kube/config &&
+        kubectl config rename-context "$(kubectl config current-context)" "$cluster"
+}
+
+oracle_ca_certificates() {
+    local agent_dir=$1
+    local config_dir
+    local id
+    oracle_auth_defaults
+    if [ "$ORACLE_ROOT_CA_PEM" == "" ]; then
+        config_dir="$(dirname "$OCI_CONFIG_FILE")"
+        local oci=(docker run --rm -v "$config_dir":"$config_dir":ro -e OCI_CLI_CONFIG_FILE="$OCI_CONFIG_FILE"
+            -e OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True -e SUPPRESS_LABEL_WARNING=True
+            --entrypoint oci $ENTIGO_INFRALIB_IMAGE --region "$OCI_REGION")
+        id=$("${oci[@]}" certs-mgmt certificate-authority list --compartment-id "$OCI_COMPARTMENT_ID" \
+            --name "$ORACLE_ROOT_CA_NAME" --lifecycle-state ACTIVE --all --query "data.items[0].id" --raw-output)
+        if [ -z "$id" ]; then
+            echo "Failed to find Oracle root CA $ORACLE_ROOT_CA_NAME"
+            return 1
+        fi
+        ORACLE_ROOT_CA_PEM=$("${oci[@]}" certificates certificate-authority-bundle get \
+            --certificate-authority-id "$id" --query 'data."certificate-pem"' --raw-output)
+        if [ -z "$ORACLE_ROOT_CA_PEM" ]; then
+            echo "Failed to read the certificate of Oracle root CA $ORACLE_ROOT_CA_NAME"
+            return 1
+        fi
+    fi
+    mkdir -p "$agent_dir/ca-certificates"
+    echo "$ORACLE_ROOT_CA_PEM" > "$agent_dir/ca-certificates/$ORACLE_ROOT_CA_NAME.crt"
 }
 
 #main means it runs in github and is applying the main branch
@@ -97,10 +159,10 @@ get_app_name() {
         elif [ "$MODULE_NAME" == "istio-istiod" ]
         then
           APP_NAME="istio-system"
-        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" ]
+        elif [ "$MODULE_NAME" == "crossplane-aws" -o "$MODULE_NAME" == "crossplane-google" -o "$MODULE_NAME" == "google-gateway" -o "$MODULE_NAME" == "platform-apis" -o "$MODULE_NAME" == "crossplane-sql" -o "$MODULE_NAME" == "crossplane-oracle" ]
         then
           APP_NAME=$MODULE_NAME
-        elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" -o "$MODULE_NAME" == "crossplane-kafka" ]
+        elif [ "$MODULE_NAME" == "argocd" -o "$MODULE_NAME" == "aws-alb" -o "$MODULE_NAME" == "external-secrets" -o "$MODULE_NAME" == "external-dns" -o "$MODULE_NAME" == "istio-base" -o "$MODULE_NAME" == "istio-gateway" -o "$MODULE_NAME" == "prometheus" -o "$MODULE_NAME" == "aws-storageclass" -o "$MODULE_NAME" == "entigo-portal-agent" -o "$MODULE_NAME" == "entigo-vulnerability-agent" -o "$MODULE_NAME" == "karpenter" -o "$MODULE_NAME" == "saml-proxy" -o "$MODULE_NAME" == "trivy" -o "$MODULE_NAME" == "kyverno" -o "$MODULE_NAME" == "crossplane-kafka" -o "$MODULE_NAME" == "oci-native-ingress-controller" -o "$MODULE_NAME" == "oracle-gateway" ]
         then
           APP_NAME="${MODULE_NAME}-$prefix"
         elif [ "$BRANCH" == "main" ]
@@ -252,22 +314,19 @@ run_agents() {
         fi
     elif [[ $agent == oracle_* ]]
     then
-        if [ "$OCI_REGION" == "" ]
-        then
-          echo "Defaulting OCI_REGION to eu-frankfurt-2"
-          export OCI_REGION="eu-frankfurt-2"
-        fi
+        oracle_auth_defaults
         if [ "$OCI_COMPARTMENT_ID" == "" ]
         then
           echo "ERROR: OCI_COMPARTMENT_ID should be set to the compartment used for testing."
           exit 5
         fi
-        if [ "$OCI_CONFIG_FILE" == "" ]
+        if ! oracle_ca_certificates agents/$agent
         then
-          echo "Defaulting OCI_CONFIG_FILE to $(echo ~)/.oci/config"
-          export OCI_CONFIG_FILE="$(echo ~)/.oci/config"
+          exit 5
         fi
-        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
+        # The runner is outside the VCN, so the agent's kubeconfig has to use the public
+        # OKE endpoint instead of functions-oracle.sh's private default.
+        docker run --rm -v "$(dirname "$OCI_CONFIG_FILE")":"$(dirname "$OCI_CONFIG_FILE")":ro -v "$(pwd)":"/conf" -e OCI_CONFIG_FILE="$OCI_CONFIG_FILE" -e OCI_REGION="$OCI_REGION" -e OCI_COMPARTMENT_ID="$OCI_COMPARTMENT_ID" -e OCI_KUBE_ENDPOINT=PUBLIC_ENDPOINT -w /conf --entrypoint ei-agent $ENTIGO_INFRALIB_IMAGE run -c /conf/agents/$agent/config.yaml --prefix $(echo $agent | cut -d"_" -f2) --allow-parallel=false --pipeline-type=local $AGENT_OPTS &
         PIDS="$PIDS $!=$agent"
     else
       echo "Unknown cloud provider type $agent"
@@ -412,6 +471,10 @@ test_k8s() {
   gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
   aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
   aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
+  if [ "$OCI_COMPARTMENT_ID" != "" ]; then
+      oracle_kubeconfig pri-infra-oke
+      oracle_kubeconfig biz-infra-oke
+  fi
 
   TESTS=(
       "./modules/k8s/platform-apis/test.sh"
@@ -437,6 +500,7 @@ test_k8s() {
       "./modules/k8s/karpenter/test.sh"
       "./modules/k8s/kiali/test.sh"
       "./modules/k8s/loki/test.sh"
+      "./modules/k8s/tempo/test.sh"
       "./modules/k8s/mimir/test.sh"
       "./modules/k8s/prometheus/test.sh"
       "./modules/k8s/alloy/test.sh"
@@ -447,6 +511,9 @@ test_k8s() {
       "./modules/k8s/rbac-bindings/test.sh"
       "./modules/k8s/saml-proxy/test.sh"
       "./modules/k8s/wireguard/test.sh"
+      "./modules/k8s/oci-native-ingress-controller/test.sh"
+      "./modules/k8s/crossplane-oracle/test.sh"
+      "./modules/k8s/oracle-gateway/test.sh"
   )
   PIDS=""
   FAIL=""
@@ -489,5 +556,5 @@ full_k8s_conf() {
 }
 
 main_k8s_conf() {
-  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings"
+  generate_config_k8s "./modules/k8s" "apps" "argocd" "aws-alb" "aws-storageclass" "cluster-autoscaler" "crossplane-aws" "crossplane-core" "crossplane-google" "crossplane-sql" "crossplane-kafka" "external-dns" "external-secrets" "google-gateway" "istio-base" "istio-istiod" "loki" "metrics-server" "rbac-bindings" "oci-native-ingress-controller" "crossplane-oracle" "oracle-gateway"
 }

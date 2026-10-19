@@ -222,10 +222,8 @@ git_login() {
             # OCI source, OpenTofu reads oci_credentials blocks from the CLI config
             # The label supports a registry domain with an optional repository path prefix
             SOURCE="${!var#oci://}"
-            echo "oci_credentials \"${SOURCE}\" {
-  username = \"${!USERNAME}\"
-  password = \"${!PASSWORD}\"
-}" >> $HOME/.tofurc
+            tofurc_credentials "${SOURCE}" "  username = \"${!USERNAME}\"
+  password = \"${!PASSWORD}\""
         fi
     done
 
@@ -239,18 +237,21 @@ git_login() {
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-      cat >> "$HOME/.tofurc" <<EOF
-oci_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" {
-  docker_credentials_helper = "ecr-login"
-}
-EOF
+      tofurc_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" '  docker_credentials_helper = "ecr-login"'
     elif [ ! -z "$GOOGLE_REGION" ]; then
-      cat >> "$HOME/.tofurc" <<EOF
-oci_credentials "${GOOGLE_REGION}-docker.pkg.dev" {
-  docker_credentials_helper = "gcloud"
-}
-EOF
+      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" '  docker_credentials_helper = "gcloud"'
     fi
+}
+
+# Appends an oci_credentials block for a registry to the OpenTofu CLI config
+# unless one is there already: in a local pipeline the plan and the apply run
+# in one container, and OpenTofu warns about every duplicate block.
+tofurc_credentials() {
+    local registry="$1" body="$2"
+    if [ -f "$HOME/.tofurc" ] && grep -q "^oci_credentials \"${registry}\" {" "$HOME/.tofurc"; then
+        return
+    fi
+    printf 'oci_credentials "%s" {\n%s\n}\n' "${registry}" "${body}" >> "$HOME/.tofurc"
 }
 
 # Setup CA certificates
