@@ -1,13 +1,13 @@
 output "vpc_id" {
-  value = oci_core_vcn.this.id
+  value = local.vcn_id
 }
 
 output "vpc_name" {
-  value = oci_core_vcn.this.display_name
+  value = local.create_vcn ? oci_core_vcn.this[0].display_name : data.oci_core_vcn.existing[0].display_name
 }
 
 output "vpc_cidr" {
-  value = var.vpc_cidr
+  value = local.vpc_cidr
 }
 
 output "public_subnets" {
