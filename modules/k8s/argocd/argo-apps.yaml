@@ -1,6 +1,6 @@
 metadata:
   annotations:
-    infralib.entigo.io/sync-wave: "3"
+    infralib.entigo.io/sync-wave: "10"
 spec:
   syncPolicy:
     syncOptions:

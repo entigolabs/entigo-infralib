@@ -1,4 +1,13 @@
 # .github/workflows/build-images.yaml
+#
+# Every image is multi-arch (amd64 and arm64). Each architecture builds on a
+# GitHub-hosted runner of its own kind, never under QEMU: the test image
+# warms its Go caches by compiling inside the image, which took the better
+# part of an hour emulated. The build jobs push single-platform images by
+# digest only, to both registries, and the publish job joins the two digests
+# into one index under the real tag per registry. A tag therefore never
+# points at a half-built image, and the release and the downstream cascade
+# (image-tag artifact, workflow_run) happen only once both halves exist.
 name: Reusable Image Builder
 
 on:
@@ -18,12 +27,14 @@ on:
         default: false
 
 jobs:
-  build:
-    name: Build image ${{ inputs.name }}
+  tag:
+    name: Resolve image tag
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      contents: write
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+      is_dev: ${{ steps.tag.outputs.is_dev }}
     steps:
     # inputs.is_dev is only meaningful for push/pull_request/workflow_dispatch.
     # On workflow_run the caller cannot tell whether the cascade started from a
@@ -61,11 +72,112 @@ jobs:
         echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
         echo "is_dev=$([ "${TAG}" = dev ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
+  build:
+    name: Build image ${{ inputs.name }} ${{ matrix.arch }}
+    needs: tag
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        # GitHub-hosted runners of each architecture; both are 4 vCPU for a
+        # public repository.
+        include:
+        - arch: amd64
+          runner: ubuntu-latest
+        - arch: arm64
+          runner: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Log in to the registries
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        set -euo pipefail
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
+
+    # push-by-digest: the image is pushed untagged to both registries and
+    # only its digest comes out; the publish job below tags it.
+    #
+    # The images/test Dockerfile warms its Go caches from the repo's shared
+    # test library in common/ and the module tests under modules/, both
+    # outside the image's build context. Hand them over as named contexts;
+    # images that do not declare stages of these names simply ignore them.
+    - name: Build and push by digest
+      id: build
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.path }}
+        platforms: linux/${{ matrix.arch }}
+        build-args: |
+          BASE_TAG=${{ needs.tag.outputs.image_tag }}
+        build-contexts: |
+          common=${{ github.workspace }}/common
+          modules=${{ github.workspace }}/modules
+        outputs: type=image,"name=public.ecr.aws/entigolabs/${{ inputs.name }},docker.io/entigolabs/${{ inputs.name }}",push-by-digest=true,name-canonical=true,push=true
+        provenance: mode=max
+        sbom: true
+
+    - name: Export the digest
+      env:
+        DIGEST: ${{ steps.build.outputs.digest }}
+      run: |
+        set -euo pipefail
+        mkdir -p "${RUNNER_TEMP}/digests"
+        touch "${RUNNER_TEMP}/digests/${DIGEST#sha256:}"
+        echo "${{ inputs.name }} ${{ matrix.arch }}: ${DIGEST}"
+
+    - name: Upload the digest
+      uses: actions/upload-artifact@v4
+      with:
+        name: digest-${{ inputs.name }}-${{ matrix.arch }}
+        path: ${{ runner.temp }}/digests/*
+        if-no-files-found: error
+        retention-days: 1
+
+    - name: Slack Failed Message
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: 'failure'
+        SLACK_MESSAGE: 'Failed to build ${{ inputs.name }} ${{ matrix.arch }} (run #${{ github.run_number }})'
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
+
+  publish:
+    name: Publish image ${{ inputs.name }}
+    needs: [tag, build]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download the digests
+      uses: actions/download-artifact@v4
+      with:
+        pattern: digest-${{ inputs.name }}-*
+        path: ${{ runner.temp }}/digests
+        merge-multiple: true
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -92,31 +204,35 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Build and push image
+    - name: Log in to the registries
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
       run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        set -euo pipefail
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
-        cd ${{ inputs.path }}
-        # The images/test Dockerfile warms its Go caches from the repo's shared
-        # test library in common/ and the module tests under modules/, both
-        # outside the image's build context. Hand them over as named contexts;
-        # images that do not declare stages of these names simply ignore them.
-        docker buildx build --push --platform linux/arm64/v8,linux/amd64 \
-          --build-arg BASE_TAG=${IMAGE_TAG} \
-          --build-context common="${GITHUB_WORKSPACE}/common" \
-          --build-context modules="${GITHUB_WORKSPACE}/modules" \
-          --sbom=true \
-          --provenance=mode=max \
-          -t public.ecr.aws/entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
-          -t entigolabs/${{ inputs.name }}:${IMAGE_TAG} \
-          .
+
+    - name: Create the multi-arch manifests
+      working-directory: ${{ runner.temp }}/digests
+      env:
+        IMAGE_TAG: ${{ needs.tag.outputs.image_tag }}
+      run: |
+        set -euo pipefail
+        # One digest per architecture of the build matrix, or the image is
+        # incomplete and gets no tag. The digests are the same in both
+        # registries: the build pushed the same content to each.
+        digests=(*)
+        [ "${#digests[@]}" -eq 2 ] || { echo "::error::${{ inputs.name }}: expected 2 digests (amd64, arm64), found ${#digests[@]}: ${digests[*]}" >&2; exit 1; }
+        for image in "public.ecr.aws/entigolabs/${{ inputs.name }}" "entigolabs/${{ inputs.name }}"; do
+          sources=()
+          for digest in "${digests[@]}"; do sources+=("${image}@sha256:${digest}"); done
+          docker buildx imagetools create -t "${image}:${IMAGE_TAG}" "${sources[@]}"
+          docker buildx imagetools inspect "${image}:${IMAGE_TAG}"
+        done
 
     - name: Record image tag for downstream builds
-      run: echo "${{ steps.tag.outputs.image_tag }}" > "${RUNNER_TEMP}/image-tag.txt"
+      run: echo "${{ needs.tag.outputs.image_tag }}" > "${RUNNER_TEMP}/image-tag.txt"
 
     - name: Upload image tag
       uses: actions/upload-artifact@v4
@@ -126,7 +242,7 @@ jobs:
         retention-days: 1
 
     - name: Create Release
-      if: ${{ steps.tag.outputs.is_dev != 'true' }}
+      if: ${{ needs.tag.outputs.is_dev != 'true' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_TAG: ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
@@ -144,7 +260,7 @@ jobs:
         echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
 
     - name: Slack Success Release Message
-      if: ${{ success() && steps.tag.outputs.is_dev != 'true' }}
+      if: ${{ success() && needs.tag.outputs.is_dev != 'true' }}
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: 'success'

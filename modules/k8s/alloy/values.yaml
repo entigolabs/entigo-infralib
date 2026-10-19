@@ -11,6 +11,64 @@ logs:
   #     max_lines     = 5000
   #   }
 
+  # Traces: off by default so this module stays a pure log shipper for any
+  # consumer that doesn't need it. Set traces.enabled: true (plus, usually,
+  # traces.tailSamplingPolicies) in a per-stack config/apps/alloy.yaml to turn
+  # this on. tempoNamespace is filled in by agent_input.yaml from the stack's
+  # own tempo module reference; with traces enabled and neither it nor
+  # tempoEndpoint set, rendering fails instead of silently dropping traces.
+  traces:
+    enabled: false
+    otlpHttpPort: 4318
+    otlpGrpcPort: 4317
+    # Namespace of the tempo module. The tempo module pins its Service name to
+    # "tempo" (fullnameOverride), so the exporter targets tempo.<namespace>:4317.
+    tempoNamespace: ""
+    # Explicit override for a tempo not deployed by this stack's tempo module.
+    tempoEndpoint: ""
+    # Pod label that becomes the `service.name` resource attribute, via
+    # otelcol.processor.k8sattributes. "app" matches the label the logs
+    # pipeline above already relabels onto every log line (see
+    # discovery.relabel "kubernetes_pods" -> target_label "app"), and the
+    # label Loki's own default_discover_service_name promotes to its
+    # service_name — keeping traces and logs joined on one label with
+    # nothing to configure per deployment.
+    serviceNameLabel: "app"
+    # How long otelcol.processor.tail_sampling waits, from the first span of
+    # a trace, before deciding to keep or drop it. Generous default for SDKs
+    # that stream spans over a request's lifetime; a consumer whose SDK sends
+    # a whole trace in one batch at the end of the request (no late-arriving
+    # spans to wait for) can safely set this much lower.
+    decisionWait: "30s"
+    # Raw otelcol.processor.tail_sampling `policy { ... }` blocks, inserted
+    # verbatim into the processor body below. Generic default: always keep
+    # errors, always keep slow traces, otherwise keep a flat baseline sample.
+    # Override wholesale per stack (e.g. to carve out known high-volume,
+    # low-value paths like pollers at their own lower rate) via a per-stack
+    # config/apps/alloy.yaml.
+    tailSamplingPolicies: |
+      policy {
+        name = "errors"
+        type = "status_code"
+        status_code {
+          status_codes = ["ERROR"]
+        }
+      }
+      policy {
+        name = "slow"
+        type = "latency"
+        latency {
+          threshold_ms = 5000
+        }
+      }
+      policy {
+        name = "baseline"
+        type = "probabilistic"
+        probabilistic {
+          sampling_percentage = 10
+        }
+      }
+
   alloy:
     configMap:
       create: true
@@ -130,16 +188,77 @@ logs:
           }
         }
 
+        {{- if .Values.traces.enabled }}
+        {{- $tempoEndpoint := .Values.traces.tempoEndpoint }}
+        {{- if and (not $tempoEndpoint) .Values.traces.tempoNamespace }}
+        {{- $tempoEndpoint = printf "tempo.%s:4317" .Values.traces.tempoNamespace }}
+        {{- end }}
+        {{- if not $tempoEndpoint }}
+        {{- fail "traces.enabled is true but no tempo to send to: deploy the tempo module in this stack or set traces.tempoEndpoint" }}
+        {{- end }}
+
+        otelcol.receiver.otlp "traces" {
+          grpc {
+            endpoint = "0.0.0.0:{{ .Values.traces.otlpGrpcPort }}"
+          }
+
+          http {
+            endpoint = "0.0.0.0:{{ .Values.traces.otlpHttpPort }}"
+          }
+
+          output {
+            traces = [otelcol.processor.k8sattributes.traces.input]
+          }
+        }
+
+        otelcol.processor.k8sattributes "traces" {
+          extract {
+            label {
+              from     = "pod"
+              key      = {{ .Values.traces.serviceNameLabel | quote }}
+              tag_name = "service.name"
+            }
+          }
+
+          output {
+            traces = [otelcol.processor.tail_sampling.traces.input]
+          }
+        }
+
+        otelcol.processor.tail_sampling "traces" {
+          decision_wait = {{ .Values.traces.decisionWait | quote }}
+
+          {{- .Values.traces.tailSamplingPolicies | nindent 2 }}
+
+          output {
+            traces = [otelcol.exporter.otlp.traces.input]
+          }
+        }
+
+        otelcol.exporter.otlp "traces" {
+          client {
+            endpoint = {{ $tempoEndpoint | quote }}
+            tls {
+              insecure = true
+            }
+          }
+        }
+        {{- end }}
+
     mounts:
       varlog: true
     resources:
       requests:
         cpu: "10m"
-        memory: "45Mi"
+        # Bumped from the log-only default (45Mi): otelcol.processor.tail_sampling
+        # buffers every span of every in-flight trace for the duration of
+        # traces.decisionWait before deciding to keep or drop it. Harmless when
+        # traces.enabled is false. Revisit once real trace volume is known.
+        memory: "128Mi"
         ephemeral-storage: "100Mi"
       limits:
         cpu: "500m"
-        memory: "500Mi"
+        memory: "768Mi"
         ephemeral-storage: "50Gi"
     livenessProbe:
       httpGet:
@@ -151,6 +270,21 @@ logs:
       failureThreshold: 3
     enableHttpServerPort: false
     enableReporting: false
+    # hostPort so a pod can reach this node's collector via status.hostIP; a
+    # Service would load-balance across nodes and defeat the point of a local,
+    # same-node receiver. Harmless when traces.enabled is false (nothing binds
+    # the port, since otelcol.receiver.otlp isn't created in the config then).
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        hostPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        hostPort: 4318
+        protocol: TCP
 
   service:
     enabled: false
@@ -166,7 +300,16 @@ logs:
     policyTypes:
       - Ingress
       - Egress
-    ingress: []
+    ingress:
+      # No `from`: any pod, any namespace, may reach the OTLP gRPC/HTTP
+      # receivers. "Same node only" isn't expressible as a NetworkPolicy
+      # selector; the ports only matter once traces.enabled turns the
+      # receiver on.
+      - ports:
+          - port: 4317
+            protocol: TCP
+          - port: 4318
+            protocol: TCP
     egress:
       - ports:
           - port: 53
@@ -188,6 +331,15 @@ logs:
               matchLabels:
                 app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
+      # Harmless when traces.enabled is false: nothing tries this connection
+      # if otelcol.exporter.otlp "traces" was never created in the config.
+      - ports:
+          - port: 4317
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: tempo
 
   controller:
     type: "daemonset"

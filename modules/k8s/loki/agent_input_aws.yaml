@@ -49,4 +49,3 @@ loki:
               values:
               - 'loki'
               - '{{ .module.name }}'
-
