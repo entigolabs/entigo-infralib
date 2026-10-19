@@ -541,6 +541,7 @@ resource "azurerm_storage_account" "flow_log" {
     bypass                     = ["AzureServices", "Logging", "Metrics"]
     virtual_network_subnet_ids = azurerm_subnet.private[*].id
   }
+  depends_on = [azurerm_subnet_nat_gateway_association.private, azurerm_subnet_route_table_association.egress_private]
 }
 
 resource "azurerm_log_analytics_workspace" "flow_log" {
