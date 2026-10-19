@@ -4,7 +4,7 @@
 Oppinionated version of this https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/modules/eks-managed-node-group
 
 
-__node_repair_config__ Defaults to null (node auto repxhealth issues, enable it in the aws/eks module with enable_node_monitoring_agent: true.
+__node_repair_config__ Defaults to null (node auto repxhealth issues, it is installed by the aws/eks module when its node_repair_config is enabled or enable_node_monitoring_agent is true.
 
 __node_repair_wait_time_mins__ Defaults to 20, minutes before repairing a node for all repair triggering node conditions (10-120, multiple of 10). Ignored when node_repair_config sets node_repair_config_overrides.
 

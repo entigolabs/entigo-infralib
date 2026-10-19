@@ -53,6 +53,9 @@ locals {
     node_repair_config_overrides = local.node_repair_enabled ? local.node_repair_overrides : var.node_repair_config.node_repair_config_overrides
   })
 
+  # Node repair always needs the agent, the agent can also be installed alone
+  enable_node_monitoring_agent = local.node_repair_enabled || var.enable_node_monitoring_agent
+
   eks_managed_node_groups_all = {
     main = {
       min_size        = var.eks_main_min_size
@@ -413,7 +416,7 @@ module "eks" {
         }, var.efs_csi_controller_config)
       })
     }
-  } : {}, var.enable_node_monitoring_agent ? {
+  } : {}, local.enable_node_monitoring_agent ? {
     eks-node-monitoring-agent = merge({
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"

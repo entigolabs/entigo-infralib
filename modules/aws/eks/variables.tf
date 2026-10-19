@@ -409,6 +409,7 @@ variable "enable_efs_csi" {
 }
 
 variable "enable_node_monitoring_agent" {
+  description = "Install the eks-node-monitoring-agent addon without node repair. The addon is always installed when node_repair_config is enabled"
   type        = bool
   nullable    = false
   default     = false
