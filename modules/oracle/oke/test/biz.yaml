@@ -1,1 +1,4 @@
 is_public_ip_enabled: true
+# The k8s module tests reach the API from GitHub runners, whose addresses are not fixed.
+oke_api_access_cidrs: |
+  ["0.0.0.0/0"]

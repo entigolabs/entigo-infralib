@@ -82,6 +82,23 @@ A deployment that needs a third gateway (a partner-facing one, say) adds another
 with its own `ingressClassName`/`certificateOcid`/`domain` - no new module, no new Helm
 release.
 
+## Without a public DNS zone, turn the external gateway off
+
+`modules/oracle/dns` falls `pub_domain`/`pub_cert_ocid` back to the private zone when there is
+no public one, as in the EU Sovereign Cloud (OC19). The `external` gateway then gets the same
+domain and certificate as `internal`, and their listeners and external-dns records collide.
+Such a deployment turns it off and points the modules that ask for it at `internal`:
+
+```yaml
+global:
+  externalGateway: internal
+gateways:
+  external:
+    enabled: false
+```
+
+`test/oracle_biz.yaml` and `test/oracle_pri.yaml` do the same.
+
 ## How apps attach
 
 Apps use a Gateway API `HTTPRoute` naming the specific gateway they need via `parentRefs`:
