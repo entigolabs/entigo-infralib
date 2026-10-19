@@ -1,0 +1,2 @@
+# Deploys tempo with defaults into the aws/biz test environment. Empty means
+# "deploy with defaults" per modules/k8s/README.md's Test environment inputs section.

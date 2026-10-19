@@ -1,0 +1,7 @@
+---
+# One repo-server: a PR test copies the branch into a single repo-server pod, and requests
+# reaching any other replica fail with "repository not found".
+argocd:
+  repoServer:
+    autoscaling:
+      maxReplicas: 1
