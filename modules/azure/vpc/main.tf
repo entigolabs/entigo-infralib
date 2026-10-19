@@ -98,6 +98,10 @@ resource "azurerm_virtual_network" "this" {
       error_message = "dedicated_nat_gateway and egress_next_hop_ip exclude each other: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
     }
     precondition {
+      condition     = var.egress_next_hop_ip == null || !var.enable_nat_gateway
+      error_message = "egress_next_hop_ip needs enable_nat_gateway = false: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
+    }
+    precondition {
       condition     = !(var.enable_pod_subnets && var.pod_subnets_cidr != null)
       error_message = "enable_pod_subnets and pod_subnets_cidr exclude each other: pod subnets come from the spare quarter or from the second address space."
     }

@@ -40,7 +40,12 @@ external-dns-private:
   registry: txt
   policy: upsert-only
   sources:
+    - service
+    - ingress
+    - istio-gateway
+    - istio-virtualservice
     - gateway-httproute
+    - crd
   extraArgs:
     metrics-address: ":7979"
     txt-wildcard-replacement: wildcard
