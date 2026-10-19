@@ -85,11 +85,6 @@ output "container_apps_subnets" {
   value = azurerm_subnet.container_apps[*].id
 }
 
-# Temporary alias for agent images whose default still reads pipeline_subnets, remove once the new default is in use
-output "pipeline_subnets" {
-  value = azurerm_subnet.container_apps[*].id
-}
-
 output "container_apps_subnet_cidrs" {
   value = local.container_apps_subnets
 }
