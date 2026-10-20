@@ -31,6 +31,8 @@ node-agent:
     scrapeInterval: "60s"
     selfMonitor: true
 
+  logLevel: "warn"
+
   extraConfig: ""
 
   # Traces: off by default so this module stays a pure log shipper for any
@@ -96,7 +98,7 @@ node-agent:
       create: true
       content: |
         logging {
-          level  = "warn"
+          level  = {{ .Values.logLevel | quote }}
           format = "json"
         }
         {{- if .Values.metrics.enabled }}
@@ -551,6 +553,7 @@ cluster-metrics:
   externalLabels: {}
   scrapeInterval: "60s"
   selfMonitor: true
+  logLevel: "warn"
 
   # Scrape Prometheus Operator ServiceMonitor / PodMonitor CRDs. Requires the CRDs to exist (set global.installPrometheusOperatorCRDs to true)
   serviceMonitors: false
@@ -563,9 +566,9 @@ cluster-metrics:
   redisExporterScrapeInterval: "30s"
   redisExporterScrapeTimeout: "10s"
 
-  # Blackbox probing, run in-process via Alloy's embedded blackbox exporter.
+  # Blackbox probing, ran via Alloy's embedded blackbox exporter.
   # blackboxModules holds blackbox_exporter module definitions, keyed by module name; 
-  # blackboxTargets is the list of probes to run against them, e.g. [{name: "example", address: "example.com:443", module: "tls_handshake"}].
+  # blackboxTargets is the list of probes to run against specified modules, e.g. [{name: "example", address: "example.com:443", module: "tls_handshake"}].
   blackboxTargets: []
   blackboxModules: {}
   blackboxScrapeInterval: "30s"
@@ -577,7 +580,7 @@ cluster-metrics:
       create: true
       content: |
         logging {
-          level  = "warn"
+          level  = {{ .Values.logLevel | quote }}
           format = "json"
         }
 
@@ -918,8 +921,7 @@ cluster-metrics:
   service:
     enabled: true
 
-  # Alloy's own UI (component graph/health), not exposed by the upstream chart's `ingress.*`
-  # (that's wired to the Faro port only) — see templates/uiIngress.yaml.
+  # Alloy's own UI (component graph/health).
   ui:
     ingress:
       enabled: false
@@ -1002,6 +1004,8 @@ receiver:
     lokiEndpoint: ""
     lokiTenantID: ""
 
+  logLevel: "warn"
+
   extraConfig: ""
 
   alloy:
@@ -1009,7 +1013,7 @@ receiver:
       create: true
       content: |
         logging {
-          level  = "warn"
+          level  = {{ .Values.logLevel | quote }}
           format = "json"
         }
         {{- if .Values.faro.enabled }}
