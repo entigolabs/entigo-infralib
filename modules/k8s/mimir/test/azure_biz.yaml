@@ -1,6 +1,6 @@
 global:
   gateway:
-    name: azure-gateway-internal
+    name: internal
     namespace: istio-gateway-biz
 
 mimir-distributed:

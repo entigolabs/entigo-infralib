@@ -8,9 +8,9 @@ modules/azure/vpc (`public_agc_subnets`), modules/k8s/cert-manager (AGC reads ce
 The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkFunction` resource providers.
 
 * One `Gateway` (one AGC frontend with its own `*.fzXX.alb.azure.com` FQDN, no static IP) per enabled `gateways` entry,
-  named `<release name>-<key>`: HTTPS with a cert-manager wildcard for `<domain>`, HTTP only redirects (`sslRedirect`).
+  named after its key (`external`): HTTPS with a cert-manager wildcard for `<domain>`, HTTP only redirects (`sslRedirect`).
 * Internal: AGC has no private frontend yet (Azure/AKS#5739). istio-gateway creates the Gateway
-  `global.internalGateway` (`<release name>-internal`) in `internalGatewayNamespace`. Consumer charts chain
+  `global.internalGateway` (`internal`) in `internalGatewayNamespace`. Consumer charts chain
   `.toptin.azure-gateway.global.internalGateway` and `.toptin.azure-gateway.global.internalGatewayNamespace`.
 * One ALB controller per cluster. A second azure-gateway module sets `installAlbController: false` and either its own
   `ApplicationLoadBalancer` in another /24 of vpc `public_agc_subnets` (`global.azure.agcSubnetIds` in the config inputs, the

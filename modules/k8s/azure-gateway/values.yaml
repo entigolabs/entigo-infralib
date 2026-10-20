@@ -1,8 +1,8 @@
 global:
-  externalGateway: azure-gateway-external
+  externalGateway: external
   # Created by istio-gateway until AGC has a private frontend
   # https://github.com/Azure/AKS/issues/5739
-  internalGateway: azure-gateway-internal
+  internalGateway: internal
   internalGatewayNamespace: ""
   azure:
     # Subnets delegated to Microsoft.ServiceNetworking/trafficControllers (ApplicationLoadBalancer associations), one AGC
@@ -22,7 +22,7 @@ certificatePrivateKey:
   size: 384
   rotationPolicy: Always
 
-# One Gateway (= one AGC frontend) per entry with enabled: true, named <release name>-<key>
+# One Gateway (= one AGC frontend) per entry with enabled: true, named after its key
 gateways:
   external:
     enabled: true

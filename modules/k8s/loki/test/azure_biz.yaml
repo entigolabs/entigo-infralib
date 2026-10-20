@@ -5,7 +5,7 @@ loki:
         parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: azure-gateway-internal
+          name: internal
           namespace: istio-gateway-biz
           sectionName: https
   fullnameOverride: '{{ .module.name }}'

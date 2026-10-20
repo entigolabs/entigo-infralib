@@ -113,7 +113,7 @@ func testK8sExternalDnsAzure(t *testing.T, kubectlOptions *terrak8s.KubectlOptio
 			"parentRefs": []interface{}{map[string]interface{}{
 				"group":       "gateway.networking.k8s.io",
 				"kind":        "Gateway",
-				"name":        "azure-gateway-external",
+				"name":        "external",
 				"namespace":   "azure-gateway",
 				"sectionName": "https",
 			}},

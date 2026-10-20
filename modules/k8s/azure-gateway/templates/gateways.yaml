@@ -2,7 +2,7 @@
 {{- $albNamespace := .Values.applicationLoadBalancer.namespace | default .Release.Namespace }}
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
-{{- $gateway := printf "%s-%s" $.Release.Name $name }}
+{{- $gateway := $name }}
 {{- $secret := printf "%s-tls" $gateway }}
 {{- $domain := required (printf "gateways.%s.domain" $name) $cfg.domain }}
 ---

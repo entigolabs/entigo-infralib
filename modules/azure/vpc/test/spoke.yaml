@@ -12,7 +12,7 @@ control_subnet_names: |
 service_subnet_names: |
   ["spoke-ilb-apps"]
 intra_subnets: |
-  ["10.33.3.0/26"]
+  ["10.33.0.192/26"]
 custom_subnets: |
   {
     mssql = {

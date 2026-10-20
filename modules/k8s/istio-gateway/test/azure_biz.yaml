@@ -2,4 +2,4 @@ global:
   azure:
     loadBalancer:
       namespace: "{{ .module.name }}"
-      name: azure-gateway-internal
+      name: internal

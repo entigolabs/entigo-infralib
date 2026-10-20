@@ -1,6 +1,4 @@
 global:
-  externalGateway: "{{ .module.name }}-external"
-  internalGateway: "{{ .module.name }}-internal"
   internalGatewayNamespace: "{{ .toptmodule.istio-gateway }}"
   azure:
     agcSubnetIds:

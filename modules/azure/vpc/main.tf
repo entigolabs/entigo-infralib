@@ -1,23 +1,24 @@
 locals {
   vpc_bits = tonumber(split("/", var.vpc_cidr)[1])
-  # Quarters: public and intra; private; database and the delegated block (AGC /24, API server /26, Container Apps /26); the last quarter is spare for custom_subnets
-  # /21 and /22: halves, public /26, intra /26, API server /28, Container Apps /27, AGC /24 and the rest spare in the first half, private the second half
+  # Quarters: public and intra; private; database and the delegated block (AGC /24, aks /26, Container Apps /26); the last quarter is spare for custom_subnets
+  # Public /25, aks and Container Apps /26 for /19 and larger, public /26, aks and Container Apps /27 for /20 to /22
+  # /21 and /22: halves, public /26, intra /26, aks /27, Container Apps /27, AGC /24 and the rest spare in the first half, private the second half
   # No database subnet for /20 and smaller, smaller than /22: no room for the AGC /24, the delegated subnet lists must be explicit
-  # Spoke split mode: the node subnet is named compute, no intra subnet, database also for /20, a control /26 (internal load balancers of the platform) and a service /26 (other internal load balancers) after the Container Apps subnet; /21 and /22: control in the intra slot, service in the free /26, database from the spare /23 (/21) or the second half of compute (/22)
+  # Spoke split mode: the node subnet is named compute, no intra subnet, database also for /20 and /21, a control /24 (internal load balancers of the platform) and a service /24 (other internal load balancers) at the start of the intra slot; /21: control and service after the AGC /24, database /26 in the intra slot; smaller than /21: the lists must be explicit
   small           = local.vpc_bits > 20
   spoke           = var.subnet_split_mode == "spoke"
   delegated_block = cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 1)
   delegated_bits  = local.vpc_bits + 3
 
-  public_subnets         = var.public_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 0) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 0)] : var.public_subnets
+  public_subnets         = var.public_subnets == null ? [cidrsubnet(var.vpc_cidr, (local.vpc_bits > 19 ? 26 : 25) - local.vpc_bits, 0)] : var.public_subnets
   intra_subnets          = var.intra_subnets == null ? (local.spoke ? [] : [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 0), 1, 1)]) : var.intra_subnets
-  private_subnets        = var.private_subnets == null ? [local.small ? (local.spoke && local.vpc_bits == 22 ? cidrsubnet(var.vpc_cidr, 2, 2) : cidrsubnet(var.vpc_cidr, 1, 1)) : cidrsubnet(var.vpc_cidr, 2, 1)] : var.private_subnets
-  database_subnets       = var.database_subnets == null ? (local.spoke ? [local.small ? cidrsubnet(var.vpc_cidr, 3, local.vpc_bits == 21 ? 2 : 6) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)] : (local.vpc_bits > 19 ? [] : [cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)])) : var.database_subnets
+  private_subnets        = var.private_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 1, 1) : cidrsubnet(var.vpc_cidr, 2, 1)] : var.private_subnets
+  database_subnets       = var.database_subnets == null ? (local.spoke ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)] : (local.vpc_bits > 19 ? [] : [cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)])) : var.database_subnets
   public_agc_subnets     = var.public_agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.public_agc_subnets
-  aks_subnets            = var.aks_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, 8) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 4)], []) : var.aks_subnets
-  container_apps_subnets = var.container_apps_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 5) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 5)], []) : var.container_apps_subnets
-  control_subnets        = var.control_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 6)], []) : []) : var.control_subnets
-  service_subnets        = var.service_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 3) : cidrsubnet(local.delegated_block, 26 - local.delegated_bits, 7)], []) : []) : var.service_subnets
+  aks_subnets            = var.aks_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 4) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 0)], []) : var.aks_subnets
+  container_apps_subnets = var.container_apps_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 5) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 1)], []) : var.container_apps_subnets
+  control_subnets        = var.control_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 0)], []) : []) : var.control_subnets
+  service_subnets        = var.service_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 3) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 1)], []) : []) : var.service_subnets
 
   private_names        = [for i, cidr in local.private_subnets : try(var.private_subnet_names[i], "${var.prefix}-${local.spoke ? "compute" : "private"}-${i}")]
   public_names         = [for i, cidr in local.public_subnets : try(var.public_subnet_names[i], "${var.prefix}-public-${i}")]
@@ -120,6 +121,10 @@ resource "azurerm_virtual_network" "this" {
     precondition {
       condition     = local.vpc_bits <= 22 || (var.public_agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
       error_message = "vpc_cidr is smaller than /22: set public_agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
+    }
+    precondition {
+      condition     = !local.spoke || local.vpc_bits <= 21 || (var.control_subnets != null && var.service_subnets != null && var.private_subnets != null && var.database_subnets != null)
+      error_message = "subnet_split_mode spoke smaller than /21: set control_subnets, service_subnets, private_subnets and database_subnets explicitly (no room for the control and service /24s)."
     }
     precondition {
       condition     = !local.spoke || (length(local.control_subnets) > 0 && length(local.service_subnets) > 0)

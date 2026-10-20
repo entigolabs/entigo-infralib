@@ -28,7 +28,7 @@ func TestK8sAzureGatewayPri(t *testing.T) {
 func testK8sAzureGateway(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	gatewayName := fmt.Sprintf("%s-external", namespaceName)
+	gatewayName := "external"
 
 	albOptions := terrak8s.NewKubectlOptions(kubectlOptions.ContextName, "", "azure-alb-system")
 	err := terrak8s.WaitUntilDeploymentAvailableE(t, albOptions, "alb-controller", 60, 10*time.Second)
