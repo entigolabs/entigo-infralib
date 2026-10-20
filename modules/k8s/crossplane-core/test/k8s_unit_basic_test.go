@@ -32,6 +32,14 @@ func TestK8sCrossplaneAzurePri(t *testing.T) {
 	testK8sCrossplane(t, "azure", "pri")
 }
 
+func TestK8sCrossplaneOracleBiz(t *testing.T) {
+	testK8sCrossplane(t, "oracle", "biz")
+}
+
+func TestK8sCrossplaneOraclePri(t *testing.T) {
+	testK8sCrossplane(t, "oracle", "pri")
+}
+
 func testK8sCrossplane(t *testing.T,  cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)

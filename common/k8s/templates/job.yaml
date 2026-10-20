@@ -15,7 +15,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: health-check
-          image: curlimages/curl:latest
+          image: docker.io/curlimages/curl:latest
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -38,7 +38,7 @@ spec:
                   sleep $sleep_time;
                 fi
               done
-              echo "curl --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL"
+              echo "curl $CURL_OPTS --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL"
               echo "Failed after $max_retries attempts";
               exit 1;
       restartPolicy: Never

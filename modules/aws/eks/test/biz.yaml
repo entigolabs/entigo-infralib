@@ -39,6 +39,10 @@ eks_tools_max_size: 3
 eks_tools_capacity_type: "SPOT"
 eks_tools_volume_size: 30
 enable_efs_csi: true
+node_repair_config: |
+  {
+    enabled = true
+  }
 eks_tools_subnets: |
   ["{{ .toutput.vpc.private_subnets[0] }}"]
 

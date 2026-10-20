@@ -1,0 +1,13 @@
+---
+cilium:
+  operator:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"

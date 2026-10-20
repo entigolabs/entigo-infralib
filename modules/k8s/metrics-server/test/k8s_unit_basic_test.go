@@ -16,6 +16,14 @@ func TestK8sMetricsServerAWSPri(t *testing.T) {
 	testK8sMetricsServer(t, "aws", "pri")
 }
 
+func TestK8sMetricsServerOracleBiz(t *testing.T) {
+	testK8sMetricsServer(t, "oracle", "biz")
+}
+
+func TestK8sMetricsServerOraclePri(t *testing.T) {
+	testK8sMetricsServer(t, "oracle", "pri")
+}
+
 func testK8sMetricsServer(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
