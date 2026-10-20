@@ -100,7 +100,7 @@ variable "api_server_subnet_id" {
   default = ""
   validation {
     condition     = !var.api_server_vnet_integration_enabled || var.api_server_subnet_id != ""
-    error_message = "api_server_vnet_integration_enabled needs api_server_subnet_id (vpc apiserver_subnets)."
+    error_message = "api_server_vnet_integration_enabled needs api_server_subnet_id (vpc aks_subnets)."
   }
 }
 

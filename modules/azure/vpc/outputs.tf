@@ -36,8 +36,8 @@ output "database_subnets" {
   value = azurerm_subnet.database[*].id
 }
 
-output "agc_subnets" {
-  value = azurerm_subnet.agc[*].id
+output "public_agc_subnets" {
+  value = azurerm_subnet.public_agc[*].id
 }
 
 output "private_subnet_cidrs" {
@@ -56,8 +56,8 @@ output "database_subnet_cidrs" {
   value = local.database_subnets
 }
 
-output "agc_subnet_cidrs" {
-  value = local.agc_subnets
+output "public_agc_subnet_cidrs" {
+  value = local.public_agc_subnets
 }
 
 output "nat_gateway_id" {
@@ -72,12 +72,12 @@ output "nat_static_ips" {
   value = azurerm_public_ip.nat[*].ip_address
 }
 
-output "apiserver_subnets" {
-  value = azurerm_subnet.apiserver[*].id
+output "aks_subnets" {
+  value = azurerm_subnet.aks[*].id
 }
 
-output "apiserver_subnet_cidrs" {
-  value = local.apiserver_subnets
+output "aks_subnet_cidrs" {
+  value = local.aks_subnets
 }
 
 # Agent default subnet for vpc attached steps

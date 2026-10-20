@@ -63,7 +63,7 @@ variable "database_subnets" {
 }
 
 # https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking#limitations
-variable "agc_subnets" {
+variable "public_agc_subnets" {
   type        = list(string)
   default     = null
   description = "Application Gateway for Containers subnet, exactly a /24 with CNI Overlay"
@@ -109,20 +109,14 @@ variable "database_subnet_names" {
   default = []
 }
 
-variable "agc_subnet_names" {
+variable "public_agc_subnet_names" {
   type    = list(string)
   default = []
 }
 
-variable "apiserver_subnet_names" {
+variable "aks_subnet_names" {
   type    = list(string)
   default = []
-}
-
-variable "database_subnet_delegation" {
-  type        = string
-  default     = null
-  description = "Service the database subnets are delegated to, e.g. Microsoft.DBforPostgreSQL/flexibleServers"
 }
 
 variable "private_subnet_service_endpoints" {
@@ -200,7 +194,7 @@ variable "tags" {
 }
 
 # https://learn.microsoft.com/azure/aks/api-server-vnet-integration
-variable "apiserver_subnets" {
+variable "aks_subnets" {
   type        = list(string)
   default     = null
   description = "AKS API Server VNet Integration subnet, min /28"

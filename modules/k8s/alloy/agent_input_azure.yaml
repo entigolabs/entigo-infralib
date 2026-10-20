@@ -28,4 +28,4 @@ logs:
             protocol: TCP
         to:
           - ipBlock:
-              cidr: "{{ .toutput.vpc.apiserver_subnet_cidrs[0] }}"
+              cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"

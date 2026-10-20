@@ -4,7 +4,7 @@ global:
   internalGatewayNamespace: "{{ .toptmodule.istio-gateway }}"
   azure:
     agcSubnetIds:
-      - "{{ .toutput.vpc.agc_subnets[0] }}"
+      - "{{ .toutput.vpc.public_agc_subnets[0] }}"
 certificateIssuer: '{{ .toptin.cert-manager.clusterIssuer.name | "letsencrypt" }}'
 gateways:
   external:

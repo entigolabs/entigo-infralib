@@ -5,8 +5,8 @@ loki:
         parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
-          name: "{{ .tinput.istio-gateway.global.azure.loadBalancer.name }}"
-          namespace: "{{ .tmodule.istio-gateway }}"
+          name: azure-gateway-internal
+          namespace: istio-gateway-biz
           sectionName: https
   fullnameOverride: '{{ .module.name }}'
   nameOverride: '{{ .module.name }}'

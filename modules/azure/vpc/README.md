@@ -1,7 +1,7 @@
 ## Opinionated module for Azure VNet creation ##
 
-Creates a VNet with private, public, intra and database subnets, a delegated subnet for Application Gateway for
-Containers (AGC), a delegated subnet for AKS API Server VNet Integration, a delegated Container Apps subnet (the agent
+Creates a VNet with private, public, intra and database subnets, a delegated public-agc subnet for Application Gateway
+for Containers (AGC), a delegated aks subnet for AKS API Server VNet Integration, a delegated Container Apps subnet (the agent
 pipeline jobs), optional custom subnets (e.g. Azure SQL Managed Instance) and a NAT gateway for the private and
 Container Apps subnets.
 
@@ -14,11 +14,11 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   with free room after them
 * fourth quarter: spare, never used by the automatic split, for `custom_subnets` and explicit extra AGC or Container Apps
   subnets
-* agc: the first /24 of the delegated block (AGC with Azure CNI Overlay needs exactly a /24, one AGC per subnet, up to
+* public-agc: the first /24 of the delegated block (AGC with Azure CNI Overlay needs exactly a /24, one AGC per subnet, up to
   5 frontends per AGC)
-* apiserver: the /26 after the AGC /24 (59 usable IPs; a cluster reserves at least 9, so room for blue/green cluster
-  replacement; more clusters: set `apiserver_subnets`)
-* container-apps: the /26 after the API server subnet, for a Container Apps workload profiles environment: the agent
+* aks: the /26 after the AGC /24 (59 usable IPs; a cluster reserves at least 9, so room for blue/green cluster
+  replacement; more clusters: set `aks_subnets`)
+* container-apps: the /26 after the aks subnet, for a Container Apps workload profiles environment: the agent
   pipeline jobs of steps with `vpc: attach` (`container_apps_subnets` is the agent's default subnet) and other Container Apps in the same
   environment. One environment per subnet, delegated to `Microsoft.App/environments`, minimum /27, 14 IPs reserved,
   about one IP per 10 Consumption replicas (a /26 is about 250 replicas), the size can't change once an environment
@@ -29,16 +29,17 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   Analytics workspace.
 
 In default mode a database subnet is only created for /19 and larger; for /20 and smaller private endpoints go to the
-private or a custom subnet (set `database_subnets` for one anyway). Spoke mode always has one. A /21 or /22 is split in halves: the first half holds public
-/26, intra /26, the API server /28 (one AKS cluster), the Container Apps /27 (18 usable IPs), the AGC /24 and the rest as
+private or a custom subnet (set `database_subnets` for one anyway). Spoke mode always has one. Database subnets are
+never delegated (private endpoints only). A /21 or /22 is split in halves: the first half holds public
+/26, intra /26, the aks /28 (one AKS cluster), the Container Apps /27 (18 usable IPs), the AGC /24 and the rest as
 spare; the second half is private.
 
 The minimum VNet size for the automatic split is /22: a /23 has no room for the AGC /24 next to the other tiers, and
 `vpc_cidr` must be /24 or larger. For /23 and /24 set every subnet list explicitly (`[]` for tiers not needed), in spoke
-mode also `control_subnets`, `service_subnets` and `database_subnets`: the automatic tiers would fill the VNet and overlap. A /24 only works without AGC (`agc_subnets: []`), the AGC subnet alone
-is a /24; the fixed costs are AGC /24, API server /28 and Container Apps /27, about 300 addresses before any node.
+mode also `control_subnets`, `service_subnets` and `database_subnets`: the automatic tiers would fill the VNet and overlap. A /24 only works without AGC (`public_agc_subnets: []`), the AGC subnet alone
+is a /24; the fixed costs are AGC /24, aks /28 and Container Apps /27, about 300 addresses before any node.
 
-| vpc_cidr | public | intra | private | database | agc | apiserver | container apps | spare |
+| vpc_cidr | public | intra | private | database | public-agc | aks | container apps | spare |
 |---|---|---|---|---|---|---|---|---|
 | /16 | /19 | /19 | /18 | /19 | /24 | /26 | /26 | /18 |
 | /17 | /20 | /20 | /19 | /20 | /24 | /26 | /26 | /19 |
@@ -51,7 +52,7 @@ is a /24; the fixed costs are AGC /24, API server /28 and Container Apps /27, ab
 Spoke mode (`subnet_split_mode: spoke`, see below): no intra, the node subnet named compute, always a database subnet,
 a control and a service subnet:
 
-| vpc_cidr | public | compute | database | agc | apiserver | container apps | control | service | spare |
+| vpc_cidr | public | compute | database | public-agc | aks | container apps | control | service | spare |
 |---|---|---|---|---|---|---|---|---|---|
 | /16 | /19 | /18 | /19 | /24 | /26 | /26 | /26 | /26 | /19 + /18 |
 | /17 | /20 | /19 | /20 | /24 | /26 | /26 | /26 | /26 | /20 + /19 |
@@ -64,7 +65,7 @@ a control and a service subnet:
 Pod Subnet mode (`enable_pod_subnets: true`, see below, /20 or larger): the pod subnet takes the first half of the
 spare quarter, the other tiers do not change. Default split:
 
-| vpc_cidr | public | intra | private | database | agc | apiserver | container apps | pods | spare |
+| vpc_cidr | public | intra | private | database | public-agc | aks | container apps | pods | spare |
 |---|---|---|---|---|---|---|---|---|---|
 | /16 | /19 | /19 | /18 | /19 | /24 | /26 | /26 | /19 | /19 |
 | /17 | /20 | /20 | /19 | /20 | /24 | /26 | /26 | /20 | /20 |
@@ -74,7 +75,7 @@ spare quarter, the other tiers do not change. Default split:
 
 Spoke mode with pod subnets:
 
-| vpc_cidr | public | compute | database | agc | apiserver | container apps | control | service | pods | spare |
+| vpc_cidr | public | compute | database | public-agc | aks | container apps | control | service | pods | spare |
 |---|---|---|---|---|---|---|---|---|---|---|
 | /16 | /19 | /18 | /19 | /24 | /26 | /26 | /26 | /26 | /19 | /19 + /19 |
 | /17 | /20 | /19 | /20 | /24 | /26 | /26 | /26 | /26 | /20 | /20 + /20 |
@@ -84,7 +85,7 @@ Spoke mode with pod subnets:
 
 Any subnet list can be set explicitly. The split does not shift for explicit lists, so overlapping subnets are
 rejected at plan time. Extra AGC subnets (a second azure-gateway with its own AGC) and extra Container Apps subnets
-(a separate Container Apps environment for a step) are extra entries in `agc_subnets` and `container_apps_subnets`,
+(a separate Container Apps environment for a step) are extra entries in `public_agc_subnets` and `container_apps_subnets`,
 usually taken from the spare quarter.
 
 ### subnet_split_mode ###
@@ -169,6 +170,8 @@ custom subnet has no internet egress, which is what SQL Managed Instance, Bastio
 Container Apps environment or VMs in a custom subnet need it. Azure SQL Managed Instance needs the delegation with the network policies actions, the NSG and the
 route table, minimum /27 (a /24 fits about 20 Business Critical instances), and no NAT gateway (not supported by
 Managed Instance); Postgres, MySQL, Azure SQL Database and Redis use private endpoints in the database subnets instead.
+A service that needs a delegated subnet (SQL Managed Instance, a VNet-integrated Postgres or MySQL flexible server) takes
+a custom subnet, never a database subnet.
 
 ```
           custom_subnets:
@@ -209,7 +212,7 @@ Plan time checks: `vpc_cidr` an IPv4 CIDR of /24 or larger, `subnet_split_mode` 
 /24, unique subnet names across all tiers and custom subnets, `custom_subnets` keys and `nat_gateway` / `route_table`
 exclusion, pod subnets: a range or explicit cidrs, `enable_pod_subnets` /20 or larger and not with
 `pod_subnets_cidr`, `pod_subnets_cidr` not overlapping `vpc_cidr`, at most /16 each, `dedicated_nat_gateway` not with
-`egress_next_hop_ip`. Azure itself requires the API server subnet /28 or larger, Container Apps /27 or larger and Container Apps
+`egress_next_hop_ip`. Azure itself requires the aks subnet /28 or larger, Container Apps /27 or larger and Container Apps
 subnet names that are valid Container Apps environment names (lowercase).
 
 Outputs include `*_subnet_cidrs`, `nat_static_ips` and the names modules shared between clouds use (`name`, `vpc_cidr_block`,
@@ -264,8 +267,8 @@ Automatic subnets of `10.156.0.0/16` down to `10.156.0.0/20` (container-apps-0 a
 | intra-0 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 | 10.156.2.0/23 |
 | private-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | none |
-| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
-| apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
+| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
 | free in the delegated block | 10.156.161.128/25 to 10.156.191.255 | 10.156.81.128/25 to 10.156.95.255 | 10.156.41.128/25 to 10.156.47.255 | 10.156.21.128/25 to 10.156.23.255 | 10.156.11.128/25 |
 | spare | 10.156.192.0/18 | 10.156.96.0/19 | 10.156.48.0/20 | 10.156.24.0/21 | 10.156.8.0/23, 10.156.12.0/22 |
@@ -276,13 +279,13 @@ A /21 and a /22 use the small layout, here `10.156.0.0/21` and `10.156.0.0/22`:
 |---|---|---|
 | public-0 | 10.156.0.0/26 | 10.156.0.0/26 |
 | intra-0 | 10.156.0.64/26 | 10.156.0.64/26 |
-| apiserver-0 | 10.156.0.128/28 | 10.156.0.128/28 |
+| aks-0 | 10.156.0.128/28 | 10.156.0.128/28 |
 | container-apps-0 | 10.156.0.160/27 | 10.156.0.160/27 |
-| agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
+| public-agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
 | private-0 | 10.156.4.0/22 | 10.156.2.0/23 |
 | spare | 10.156.0.144/28, 10.156.0.192/26, 10.156.2.0/23 | 10.156.0.144/28, 10.156.0.192/26 |
 
-A second AKS cluster in a /21 or /22 takes the spare /28 next to the first as a second `apiserver_subnets` entry, a SQL
+A second AKS cluster in a /21 or /22 takes the spare /28 next to the first as a second `aks_subnets` entry, a SQL
 Managed Instance a /27 or larger custom subnet from the rest of the spare range.
 
 Spoke mode (`subnet_split_mode: spoke`), `10.156.0.0/16` down to `/20`: public, database and the delegated subnets keep
@@ -292,10 +295,10 @@ their default-mode addresses, the node subnet is named compute-0, the intra slot
 |---|---|---|---|---|---|
 | public-0 | 10.156.0.0/19 | 10.156.0.0/20 | 10.156.0.0/21 | 10.156.0.0/22 | 10.156.0.0/23 |
 | control-0 | 10.156.161.128/26 | 10.156.81.128/26 | 10.156.41.128/26 | 10.156.21.128/26 | 10.156.11.128/26 |
-| apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
+| aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
 | service-0 | 10.156.161.192/26 | 10.156.81.192/26 | 10.156.41.192/26 | 10.156.21.192/26 | 10.156.11.192/26 |
-| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | 10.156.8.0/23 |
 | free in the delegated block | 10.156.162.0/23 to 10.156.191.255 | 10.156.82.0/23 to 10.156.95.255 | 10.156.42.0/23 to 10.156.47.255 | 10.156.22.0/23 | none |
@@ -308,10 +311,10 @@ spare /23 (/21) or the second half of compute (/22):
 |---|---|---|
 | public-0 | 10.156.0.0/26 | 10.156.0.0/26 |
 | control-0 | 10.156.0.64/26 | 10.156.0.64/26 |
-| apiserver-0 | 10.156.0.128/28 | 10.156.0.128/28 |
+| aks-0 | 10.156.0.128/28 | 10.156.0.128/28 |
 | container-apps-0 | 10.156.0.160/27 | 10.156.0.160/27 |
 | service-0 | 10.156.0.192/26 | 10.156.0.192/26 |
-| agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
+| public-agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
 | compute-0 | 10.156.4.0/22 | 10.156.2.0/24 |
 | database-0 | 10.156.2.0/24 | 10.156.3.0/25 |
 | spare | 10.156.0.144/28, 10.156.3.0/24 | 10.156.0.144/28, 10.156.3.128/25 |
@@ -325,8 +328,8 @@ first half of the spare quarter, everything else as in default mode:
 | intra-0 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 | 10.156.2.0/23 |
 | private-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | none |
-| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
-| apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
+| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
 | pods-0 | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
 | free in the delegated block | 10.156.161.128/25 to 10.156.191.255 | 10.156.81.128/25 to 10.156.95.255 | 10.156.41.128/25 to 10.156.47.255 | 10.156.21.128/25 to 10.156.23.255 | 10.156.11.128/25 |
@@ -338,10 +341,10 @@ Pod Subnet mode in spoke mode (`subnet_split_mode: spoke` and `enable_pod_subnet
 |---|---|---|---|---|---|
 | public-0 | 10.156.0.0/19 | 10.156.0.0/20 | 10.156.0.0/21 | 10.156.0.0/22 | 10.156.0.0/23 |
 | control-0 | 10.156.161.128/26 | 10.156.81.128/26 | 10.156.41.128/26 | 10.156.21.128/26 | 10.156.11.128/26 |
-| apiserver-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
+| aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/26 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.64/26 |
 | service-0 | 10.156.161.192/26 | 10.156.81.192/26 | 10.156.41.192/26 | 10.156.21.192/26 | 10.156.11.192/26 |
-| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | 10.156.8.0/23 |
 | pods-0 | 10.156.192.0/19 | 10.156.96.0/20 | 10.156.48.0/21 | 10.156.24.0/22 | 10.156.12.0/23 |
@@ -360,9 +363,9 @@ A /23 or /24 needs every list explicit, e.g. `10.156.0.0/23` without Container A
           vpc_cidr: "10.156.0.0/23"
           public_subnets: '["10.156.0.0/27"]'
           intra_subnets: '["10.156.0.32/27"]'
-          apiserver_subnets: '["10.156.0.64/28"]'
+          aks_subnets: '["10.156.0.64/28"]'
           container_apps_subnets: '[]'
           private_subnets: '["10.156.0.128/25"]'
           database_subnets: '[]'
-          agc_subnets: '["10.156.1.0/24"]'
+          public_agc_subnets: '["10.156.1.0/24"]'
 ```

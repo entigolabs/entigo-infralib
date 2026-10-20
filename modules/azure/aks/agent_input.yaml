@@ -1,12 +1,12 @@
 resource_group_name: "{{ .agent.resourceGroup }}"
 location: "{{ .agent.region }}"
 vnet_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
-api_server_subnet_id: "{{ .toutput.vpc.apiserver_subnets[0] }}"
+api_server_subnet_id: "{{ .toutput.vpc.aks_subnets[0] }}"
 pod_subnet_id: "{{ .toptout.vpc.pod_subnet_id }}"
 nat_public_ips: |
   [{{ .toutput.vpc.nat_public_ips }}]
 agc_subnet_ids: |
-  [{{ .toutput.vpc.agc_subnets }}]
+  [{{ .toutput.vpc.public_agc_subnets }}]
 lb_subnet_ids: |
   [{{ .toutput.vpc.lb_subnets }}]
 acr_id: "{{ .toptout.acr-proxy.acr_id }}"
