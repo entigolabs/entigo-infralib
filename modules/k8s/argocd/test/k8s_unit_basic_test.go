@@ -27,6 +27,14 @@ func TestK8sArgocdGooglePri(t *testing.T) {
 	testK8sArgocd(t, "google", "pri")
 }
 
+func TestK8sArgocdOracleBiz(t *testing.T) {
+	testK8sArgocd(t, "oracle", "biz")
+}
+
+func TestK8sArgocdOraclePri(t *testing.T) {
+	testK8sArgocd(t, "oracle", "pri")
+}
+
 func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
@@ -62,13 +70,16 @@ func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
 		}
 	}
 
-	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
+	// Oracle's gateway load balancer listens on HTTPS only, so there is no HTTP redirect to check.
+	if cloudName != "oracle" {
+		successResponseCode := "301"
+		targetURL := fmt.Sprintf("http://%s", hostName)
+		err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
+		require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
+	}
 
-	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s", hostName)
+	successResponseCode := "200"
+	targetURL := fmt.Sprintf("https://%s", hostName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
 	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
 	

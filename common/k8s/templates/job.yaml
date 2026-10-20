@@ -15,7 +15,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: health-check
-          image: curlimages/curl:latest
+          image: docker.io/curlimages/curl:latest
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -27,7 +27,7 @@ spec:
               max_retries=300
               sleep_time=6
               for i in $(seq 1 $max_retries); do
-                if curl -s -o /dev/null -w "%{http_code}" --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL | grep $SUCCESS_CODE; then
+                if curl $CURL_OPTS -s -o /dev/null -w "%{http_code}" --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL | grep $SUCCESS_CODE; then
                   echo "Success: Response code $SUCCESS_CODE";
                   exit 0;
                 else
@@ -38,7 +38,7 @@ spec:
                   sleep $sleep_time;
                 fi
               done
-              echo "curl --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL"
+              echo "curl $CURL_OPTS --connect-to $TARGET_DOMAIN:$TARGET_PORT:$TARGET_IP:$TARGET_PORT -H \"Host: $TARGET_DOMAIN\" $TARGET_URL"
               echo "Failed after $max_retries attempts";
               exit 1;
       restartPolicy: Never

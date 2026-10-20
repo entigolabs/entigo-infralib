@@ -96,6 +96,12 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 			hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "google-gateway-external"
 		}
+	case "oracle":
+		// OC19 has no public DNS zones, so the test environments deploy only oracle-gateway's
+		// internal gateway, and the external mode gets it too.
+		gatewayNamespace = fmt.Sprintf("oracle-gateway-%s", envName)
+		gatewayName = "internal"
+		hostName = fmt.Sprintf("%s.%s-net-dns-int.oci.infralib.entigo.io", namespaceName, envName)
 	}
 	return gatewayName, gatewayNamespace, hostName, retries
 }
@@ -604,6 +610,10 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 }
 
 func WaitUntilHostnameAvailableWithAddress(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, targetAddress, namespaceName, targetURL, successCode string) error {
+	return waitUntilHostnameAvailableWithAddress(t, options, retries, sleepBetweenRetries, targetAddress, namespaceName, targetURL, successCode, "")
+}
+
+func waitUntilHostnameAvailableWithAddress(t testing.TestingT, options *k8s.KubectlOptions, retries int, sleepBetweenRetries time.Duration, targetAddress, namespaceName, targetURL, successCode, curlOpts string) error {
 	templateFile := "./../../common/k8s/templates/job.yaml"
 
 	randomString, err := generateRandomString(4)
@@ -650,6 +660,10 @@ func WaitUntilHostnameAvailableWithAddress(t testing.TestingT, options *k8s.Kube
 		map[string]interface{}{
 			"name":  "SUCCESS_CODE",
 			"value": successCode,
+		},
+		map[string]interface{}{
+			"name":  "CURL_OPTS",
+			"value": curlOpts,
 		},
 	}
 
@@ -707,7 +721,13 @@ func WaitUntilHostnameAvailable(t testing.TestingT, options *k8s.KubectlOptions,
 		return fmt.Errorf("target IP not available")
 	}
 
-	return WaitUntilHostnameAvailableWithAddress(t, options, retries, sleepBetweenRetries, targetIP, namespaceName, targetURL, successCode)
+	// Oracle's load balancers serve certificates from a private CA that the check's curl image
+	// does not trust.
+	curlOpts := ""
+	if cloudProvider == "oracle" {
+		curlOpts = "--insecure"
+	}
+	return waitUntilHostnameAvailableWithAddress(t, options, retries, sleepBetweenRetries, targetIP, namespaceName, targetURL, successCode, curlOpts)
 }
 
 func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider, gatewayName, gatewayNamespace string) (string, error) {
@@ -733,6 +753,14 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 			return "", err
 		}
 		return strings.Trim(gatewayIP, "'"), nil
+	case "oracle":
+		// oracle-gateway fronts each gateway with an Ingress of the same name, whose load balancer
+		// terminates client TLS.
+		ingressIP, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "ingress", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.loadBalancer.ingress[0].ip}'")
+		if err != nil {
+			return "", err
+		}
+		return strings.Trim(ingressIP, "'"), nil
 	}
 	return "", errors.New("error getting target IP")
 }
