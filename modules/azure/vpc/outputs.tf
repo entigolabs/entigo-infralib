@@ -93,37 +93,6 @@ output "container_apps_environment_ids" {
   value = azurerm_container_app_environment.container_apps[*].id
 }
 
-# Azure CNI Pod Subnet: ids and cidrs in order, pod_subnet_id = the first subnet (the aks default, "" without pod subnets)
-# Waits for the pod subnets' egress like private_subnets
-output "pod_subnets" {
-  value = azurerm_subnet.pods[*].id
-  depends_on = [
-    azurerm_subnet_nat_gateway_association.pods,
-    azurerm_nat_gateway_public_ip_association.pods,
-    azurerm_nat_gateway_public_ip_association.this,
-    azurerm_subnet_route_table_association.egress_pods,
-  ]
-}
-
-output "pod_subnet_cidrs" {
-  value = local.pod_subnets
-}
-
-output "pod_subnet_id" {
-  value = try(azurerm_subnet.pods[0].id, "")
-  depends_on = [
-    azurerm_subnet_nat_gateway_association.pods,
-    azurerm_nat_gateway_public_ip_association.pods,
-    azurerm_nat_gateway_public_ip_association.this,
-    azurerm_subnet_route_table_association.egress_pods,
-  ]
-}
-
-# Per pod subnet, "" for the subnets on the shared NAT gateway or the egress route
-output "pod_subnet_nat_public_ips" {
-  value = [for i in range(length(local.pod_subnets)) : contains(local.pod_nat_subnets, i) ? azurerm_public_ip.pods_nat[index(local.pod_nat_subnets, i)].ip_address : ""]
-}
-
 output "custom_subnets" {
   value = { for key, subnet in azurerm_subnet.custom : key => subnet.id }
 }

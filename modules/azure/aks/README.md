@@ -9,15 +9,6 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   (`10.96.0.0/16`, kube-dns `10.96.0.10`), the Kubernetes conventions. Both are outside the VNet (pod traffic leaves
   with the node IP) and must not overlap the VNet, peered VNets or networks reachable over VPN/ExpressRoute. Create
   time only.
-* [Azure CNI Pod Subnet](https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet) instead of Overlay
-  with `pod_subnet_id`: pods get routable VNet addresses from that subnet (vpc `pod_subnets_cidr`; the agent default is
-  the vpc `default` pod subnet, so a VNet with pod subnets gives a Pod Subnet cluster). All pools use it; a pool with its
-  own pod subnet (own NSG, own egress IP) is an azure/aks-node-pool with `pod_subnet_id`. The cluster identity gets Network
-  Contributor on the pod subnet. `pod_ip_allocation_mode` defaults to `DynamicIndividual` (16 addresses per node at a
-  time, max /16 per pod subnet); `StaticBlock` and a per-pool mode follow once azurerm supports the mode on node pools
-  (hashicorp/terraform-provider-azurerm#30827). Outputs `network_mode`
-  (`overlay`/`pod_subnet`), `pod_subnet_id`, `pod_ip_allocation_mode`; `pod_cidr` is empty with Pod Subnet. Overlay or
-  Pod Subnet is decided at cluster creation.
 * Node pools `main`, `mon` and `tools` (labels `<pool>=true`, `mon=true:NoSchedule`).
   **`tools` is the AKS system pool** with the taint `CriticalAddonsOnly=true:NoSchedule` instead of `tools=true`:
   AKS system pods only tolerate that taint, so the tools charts tolerate it next to their `tools` toleration (in

@@ -54,26 +54,24 @@ locals {
   # tools is the AKS system pool (AVM default pool): CriticalAddonsOnly taint instead of tools=true, AKS system pods
   # only tolerate that
   default_agent_pool = {
-    name                   = "tools"
-    mode                   = "System"
-    type                   = "VirtualMachineScaleSets"
-    vm_size                = var.aks_tools_instance_type
-    enable_auto_scaling    = true
-    min_count              = var.aks_tools_min_size
-    max_count              = var.aks_tools_max_size
-    max_pods               = var.aks_tools_max_pods
-    os_disk_size_gb        = var.aks_tools_volume_size
-    os_disk_type           = var.aks_tools_volume_type
-    os_sku                 = var.os_sku
-    availability_zones     = local.zones_for[var.aks_tools_instance_type]
-    node_labels            = { "tools" = "true", created-by = "entigo-infralib" }
-    node_taints            = ["CriticalAddonsOnly=true:NoSchedule"]
-    upgrade_settings       = { max_surge = var.aks_tools_max_surge }
-    orchestrator_version   = var.kubernetes_version
-    vnet_subnet_id         = var.vnet_subnet_id
-    pod_subnet_id          = var.pod_subnet_id != "" ? var.pod_subnet_id : null
-    pod_ip_allocation_mode = var.pod_subnet_id != "" ? coalesce(var.pod_ip_allocation_mode, "DynamicIndividual") : null
-    tags                   = local.tags
+    name                 = "tools"
+    mode                 = "System"
+    type                 = "VirtualMachineScaleSets"
+    vm_size              = var.aks_tools_instance_type
+    enable_auto_scaling  = true
+    min_count            = var.aks_tools_min_size
+    max_count            = var.aks_tools_max_size
+    max_pods             = var.aks_tools_max_pods
+    os_disk_size_gb      = var.aks_tools_volume_size
+    os_disk_type         = var.aks_tools_volume_type
+    os_sku               = var.os_sku
+    availability_zones   = local.zones_for[var.aks_tools_instance_type]
+    node_labels          = { "tools" = "true", created-by = "entigo-infralib" }
+    node_taints          = ["CriticalAddonsOnly=true:NoSchedule"]
+    upgrade_settings     = { max_surge = var.aks_tools_max_surge }
+    orchestrator_version = var.kubernetes_version
+    vnet_subnet_id       = var.vnet_subnet_id
+    tags                 = local.tags
   }
 
   # Agent jobs reach a public API server from the NAT gateway IPs
@@ -114,15 +112,6 @@ resource "azurerm_role_assignment" "aks_apiserver_network" {
 resource "azurerm_role_assignment" "aks_lb_network" {
   for_each                         = { for id in distinct(var.lb_subnet_ids) : element(split("/", id), -1) => id if id != var.vnet_subnet_id }
   scope                            = each.value
-  role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
-  skip_service_principal_aad_check = true
-}
-
-# Pod Subnet: the cluster identity needs Network Contributor on the pod subnet too
-resource "azurerm_role_assignment" "aks_pod_network" {
-  count                            = var.pod_subnet_id != "" ? 1 : 0
-  scope                            = var.pod_subnet_id
   role_definition_name             = "Network Contributor"
   principal_id                     = azurerm_user_assigned_identity.aks.principal_id
   skip_service_principal_aad_check = true
@@ -206,7 +195,6 @@ resource "time_sleep" "roles" {
   depends_on = [
     azurerm_role_assignment.aks_network,
     azurerm_role_assignment.aks_apiserver_network,
-    azurerm_role_assignment.aks_pod_network,
     azurerm_role_assignment.aks_private_dns_zone,
     azurerm_role_assignment.aks_vnet,
     azurerm_role_assignment.kubelet_identity_operator,
@@ -271,15 +259,15 @@ module "aks" {
     private_dns_zone                   = var.private_dns_zone_id != "" ? var.private_dns_zone_id : null
   }
 
-  # https://learn.microsoft.com/azure/aks/concepts-network-cni-overview: Overlay, or Pod Subnet with pod_subnet_id
+  # https://learn.microsoft.com/azure/aks/concepts-network-cni-overview
   network_profile = {
     network_plugin      = "azure"
-    network_plugin_mode = var.pod_subnet_id == "" ? "overlay" : null
+    network_plugin_mode = "overlay"
     network_dataplane   = "cilium"
     network_policy      = "cilium"
     outbound_type       = var.outbound_type
     load_balancer_sku   = "standard"
-    pod_cidr            = var.pod_subnet_id == "" ? var.pod_cidr : null
+    pod_cidr            = var.pod_cidr
     service_cidr        = var.service_cidr
     dns_service_ip      = var.dns_service_ip
   }
@@ -304,26 +292,24 @@ module "main" {
   count  = var.aks_main_max_size > 0 ? 1 : 0
   source = "./aks-node-pool"
 
-  prefix                = var.prefix
-  name                  = "main"
-  cluster_id            = module.aks.resource_id
-  kubernetes_version    = var.kubernetes_version
-  vnet_subnet_id        = var.vnet_subnet_id
-  pod_subnet_id         = var.pod_subnet_id
-  cluster_pod_subnet_id = var.pod_subnet_id
-  location              = var.location
-  availability_zones    = local.zones_for[var.aks_main_instance_type]
-  instance_type         = var.aks_main_instance_type
-  min_size              = var.aks_main_min_size
-  max_size              = var.aks_main_max_size
-  max_pods              = var.aks_main_max_pods
-  volume_size           = var.aks_main_volume_size
-  volume_type           = var.aks_main_volume_type
-  os_sku                = var.os_sku
-  spot_nodes            = var.aks_main_spot_nodes
-  max_surge             = var.aks_main_max_surge
-  labels                = { "main" = "true" }
-  tags                  = var.tags
+  prefix             = var.prefix
+  name               = "main"
+  cluster_id         = module.aks.resource_id
+  kubernetes_version = var.kubernetes_version
+  vnet_subnet_id     = var.vnet_subnet_id
+  location           = var.location
+  availability_zones = local.zones_for[var.aks_main_instance_type]
+  instance_type      = var.aks_main_instance_type
+  min_size           = var.aks_main_min_size
+  max_size           = var.aks_main_max_size
+  max_pods           = var.aks_main_max_pods
+  volume_size        = var.aks_main_volume_size
+  volume_type        = var.aks_main_volume_type
+  os_sku             = var.os_sku
+  spot_nodes         = var.aks_main_spot_nodes
+  max_surge          = var.aks_main_max_surge
+  labels             = { "main" = "true" }
+  tags               = var.tags
 
   depends_on = [module.aks]
 }
@@ -332,27 +318,25 @@ module "mon" {
   count  = var.aks_mon_max_size > 0 ? 1 : 0
   source = "./aks-node-pool"
 
-  prefix                = var.prefix
-  name                  = "mon"
-  cluster_id            = module.aks.resource_id
-  kubernetes_version    = var.kubernetes_version
-  vnet_subnet_id        = var.vnet_subnet_id
-  pod_subnet_id         = var.pod_subnet_id
-  cluster_pod_subnet_id = var.pod_subnet_id
-  location              = var.location
-  availability_zones    = local.zones_for[var.aks_mon_instance_type]
-  instance_type         = var.aks_mon_instance_type
-  min_size              = var.aks_mon_min_size
-  max_size              = var.aks_mon_max_size
-  max_pods              = var.aks_mon_max_pods
-  volume_size           = var.aks_mon_volume_size
-  volume_type           = var.aks_mon_volume_type
-  os_sku                = var.os_sku
-  spot_nodes            = var.aks_mon_spot_nodes
-  max_surge             = var.aks_mon_max_surge
-  labels                = { "mon" = "true" }
-  taints                = ["mon=true:NoSchedule"]
-  tags                  = var.tags
+  prefix             = var.prefix
+  name               = "mon"
+  cluster_id         = module.aks.resource_id
+  kubernetes_version = var.kubernetes_version
+  vnet_subnet_id     = var.vnet_subnet_id
+  location           = var.location
+  availability_zones = local.zones_for[var.aks_mon_instance_type]
+  instance_type      = var.aks_mon_instance_type
+  min_size           = var.aks_mon_min_size
+  max_size           = var.aks_mon_max_size
+  max_pods           = var.aks_mon_max_pods
+  volume_size        = var.aks_mon_volume_size
+  volume_type        = var.aks_mon_volume_type
+  os_sku             = var.os_sku
+  spot_nodes         = var.aks_mon_spot_nodes
+  max_surge          = var.aks_mon_max_surge
+  labels             = { "mon" = "true" }
+  taints             = ["mon=true:NoSchedule"]
+  tags               = var.tags
 
   depends_on = [module.aks]
 }
@@ -379,19 +363,6 @@ resource "terraform_data" "installer" {
 
   lifecycle {
     ignore_changes = [input]
-  }
-}
-
-# Overlay or Pod Subnet is decided at cluster creation, AKS has no migration between them
-resource "terraform_data" "network_mode" {
-  input = var.pod_subnet_id == "" ? "overlay" : "pod_subnet"
-
-  lifecycle {
-    ignore_changes = [input]
-    postcondition {
-      condition     = self.output == (var.pod_subnet_id == "" ? "overlay" : "pod_subnet")
-      error_message = "The cluster was created in ${self.output} mode, switching to ${var.pod_subnet_id == "" ? "overlay" : "pod_subnet"} needs a new cluster."
-    }
   }
 }
 

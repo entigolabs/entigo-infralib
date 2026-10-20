@@ -63,21 +63,8 @@ output "os_sku" {
   value = var.os_sku
 }
 
-# overlay or pod_subnet, decided at cluster creation
-output "network_mode" {
-  value = var.pod_subnet_id == "" ? "overlay" : "pod_subnet"
-}
-
-output "pod_subnet_id" {
-  value = var.pod_subnet_id
-}
-
-output "pod_ip_allocation_mode" {
-  value = var.pod_subnet_id != "" ? coalesce(var.pod_ip_allocation_mode, "DynamicIndividual") : ""
-}
-
 output "pod_cidr" {
-  value = var.pod_subnet_id == "" ? var.pod_cidr : ""
+  value = var.pod_cidr
 }
 
 output "service_cidr" {
