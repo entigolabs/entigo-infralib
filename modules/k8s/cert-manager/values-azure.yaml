@@ -2,7 +2,10 @@ global:
   cloudProvider: azure
 
 cert-manager:
-  # Split horizon: the private int zone has no public NS, challenge records are in its public twin
+  # Split horizon: the DNS-01 self check runs through public resolvers. In the VNet the Azure resolver answers for the
+  # int domain from its private zone, which has no public NS and not the challenge records (those are in its public
+  # twin), so the check would never pass. Needs outbound port 53 to them; other DNS servers can be set instead if they
+  # resolve the int domain from public DNS, not from the private zone
   dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
   dns01RecursiveNameserversOnly: true
   serviceAccount:

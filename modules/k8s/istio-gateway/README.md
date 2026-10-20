@@ -11,7 +11,7 @@ A separate VirtualService object has to be created to expose the application.
   `*.<pub_domain>` on the azure-gateway external gateway (AGC) and an AGC HealthCheckPolicy (15021 `/healthz/ready`).
   VirtualService hosts get no own record: they resolve through the `*.<pub_domain>` wildcard to AGC.
 * Own load balancer gateway (`global.azure.loadBalancer`): Service `<gateway name>-internal` or `-external` (Azure
-  load balancer, `externalTrafficPolicy: Local`, `sourceRanges`) and Gateway API gateway `name` (sectionName `https`)
+  load balancer, `externalTrafficPolicy: Local`, `sourceRanges`, extra Service `annotations`) and Gateway API gateway `name` (sectionName `https`)
   with a cert-manager wildcard for `intDomain` / `pubDomain`, TLS in istio. It serves Gateway API routes;
   VirtualServices only with the module's own route on it (below).
   * Internal (`internal: true`), until AGC has a private frontend (Azure/AKS#5739): created in the module whose

@@ -22,14 +22,6 @@ custom_subnets: |
       network_security_group = true
       route_table            = true
     }
-    resolver = {
-      cidr       = "10.33.1.32/28"
-      delegation = "Microsoft.Network/dnsResolvers"
-    }
-    bastion = {
-      name = "AzureBastionSubnet"
-      cidr = "10.33.1.64/26"
-    }
     vms = {
       cidr        = "10.33.1.128/26"
       nat_gateway = true

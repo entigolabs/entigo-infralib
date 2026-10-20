@@ -19,6 +19,8 @@ global:
       pubDomain: ""
       # Client CIDRs allowed through the load balancer, empty allows everything
       sourceRanges: []
+      # Extra annotations of the load balancer Service, e.g. service.beta.kubernetes.io/azure-pip-name
+      annotations: {}
       certificateIssuer: letsencrypt
       certificatePrivateKey:
         algorithm: ECDSA

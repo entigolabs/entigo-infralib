@@ -4,7 +4,4 @@ enable_nat_gateway: false
 egress_next_hop_ip: "10.35.2.4"
 container_apps_subnets: |
   []
-aks_subnets: |
-  ["10.35.0.128/28", "10.35.0.144/28"]
-database_subnets: |
-  ["10.35.0.192/26"]
+

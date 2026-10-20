@@ -1,7 +1,6 @@
 global:
   cloudProvider: "azure"
   azure:
-    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
     agcHealthCheck: true
 
 wireguard:

@@ -9,11 +9,16 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ $service }}
-  {{- if $cfg.internal }}
+  {{- if or $cfg.internal $cfg.annotations }}
   annotations:
+    {{- if $cfg.internal }}
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
     {{- with $cfg.internalSubnet }}
     service.beta.kubernetes.io/azure-load-balancer-internal-subnet: {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- range $k, $v := $cfg.annotations }}
+    {{ $k }}: {{ $v | quote }}
     {{- end }}
   {{- end }}
 spec:

@@ -58,6 +58,9 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.Equal(t, []string{"10.24.160.0/24"}, tf.GetStringListValue(t, outputs, "vpc__public_agc_subnet_cidrs"))
 	assert.Equal(t, []string{"10.24.161.0/26"}, tf.GetStringListValue(t, outputs, "vpc__aks_subnet_cidrs"))
 	assert.Equal(t, []string{"10.24.161.64/26"}, tf.GetStringListValue(t, outputs, "vpc__container_apps_subnet_cidrs"))
+	prefix := fmt.Sprintf("pri-%s-vpc", strings.ToLower(os.Getenv("STEP_NAME")))
+	assert.True(t, strings.HasSuffix(tf.GetStringListValue(t, outputs, "vpc__aks_subnets")[0], "/subnets/"+prefix+"-aks-0"), "aks subnet must be named <prefix>-aks-0")
+	assert.True(t, strings.HasSuffix(tf.GetStringListValue(t, outputs, "vpc__public_agc_subnets")[0], "/subnets/"+prefix+"-public-agc-0"), "AGC subnet must be named <prefix>-public-agc-0")
 	assert.Empty(t, tf.GetValue(t, outputs, "vpc__custom_subnets"))
 
 	assert.Equal(t, 1, len(tf.GetStringListValue(t, outputs, "vpc__container_apps_environment_ids")), "Wrong number of container_apps_environment_ids returned")
@@ -69,7 +72,7 @@ func testTerraformVpcPri(t *testing.T) {
 }
 
 // /21 spoke without AGC (edge in the hub), explicit intra and load balancer subnet names, Standard NAT with two IPs, custom
-// subnets in the free AGC /24: SQL managed instance, DNS resolver, Bastion, VMs with NAT egress
+// subnets in the free AGC /24: SQL managed instance, VMs with NAT egress
 func testTerraformVpcSpoke(t *testing.T) {
 	t.Parallel()
 	outputs := azure.GetTFOutputs(t, "spoke")
@@ -97,24 +100,20 @@ func testTerraformVpcSpoke(t *testing.T) {
 
 	custom := tf.GetValue(t, outputs, "vpc__custom_subnets").(map[string]interface{})
 	assert.NotEmpty(t, custom["mssql"], "custom subnet mssql was not returned")
-	assert.NotEmpty(t, custom["resolver"], "custom subnet resolver was not returned")
-	assert.NotEmpty(t, custom["bastion"], "custom subnet bastion was not returned")
 	assert.NotEmpty(t, custom["vms"], "custom subnet vms was not returned")
-	assert.Equal(t, map[string]interface{}{"mssql": "10.33.1.0/27", "resolver": "10.33.1.32/28", "bastion": "10.33.1.64/26", "vms": "10.33.1.128/26"}, tf.GetValue(t, outputs, "vpc__custom_subnet_cidrs"))
+	assert.Equal(t, map[string]interface{}{"mssql": "10.33.1.0/27", "vms": "10.33.1.128/26"}, tf.GetValue(t, outputs, "vpc__custom_subnet_cidrs"))
 	assert.Empty(t, tf.GetStringValue(t, outputs, "vpc__vpc_flow_log_id"))
 }
 
-// /21 default mode: the small layout with firewall egress instead of NAT, a second aks subnet and an explicit
-// database subnet from the spare
+// /21 default mode: the automatic small layout with firewall egress instead of NAT
 func testTerraformVpcSmall(t *testing.T) {
 	t.Parallel()
 	outputs := azure.GetTFOutputs(t, "small")
 
 	assert.Equal(t, []string{"10.35.0.0/26"}, tf.GetStringListValue(t, outputs, "vpc__public_subnet_cidrs"))
 	assert.Equal(t, []string{"10.35.0.64/26"}, tf.GetStringListValue(t, outputs, "vpc__intra_subnet_cidrs"))
-	assert.Equal(t, []string{"10.35.0.128/28", "10.35.0.144/28"}, tf.GetStringListValue(t, outputs, "vpc__aks_subnet_cidrs"))
-	assert.Equal(t, 2, len(tf.GetStringListValue(t, outputs, "vpc__aks_subnets")), "Wrong number of aks_subnets returned")
-	assert.Equal(t, []string{"10.35.0.192/26"}, tf.GetStringListValue(t, outputs, "vpc__database_subnet_cidrs"))
+	assert.Equal(t, []string{"10.35.0.128/27"}, tf.GetStringListValue(t, outputs, "vpc__aks_subnet_cidrs"))
+	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__database_subnet_cidrs"), "no database subnet in a default /21")
 	assert.Equal(t, []string{"10.35.1.0/24"}, tf.GetStringListValue(t, outputs, "vpc__public_agc_subnet_cidrs"))
 	assert.Equal(t, []string{"10.35.4.0/22"}, tf.GetStringListValue(t, outputs, "vpc__private_subnet_cidrs"))
 	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__container_apps_subnet_cidrs"))
