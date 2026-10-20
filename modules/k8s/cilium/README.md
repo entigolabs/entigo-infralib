@@ -9,7 +9,8 @@ allocation and routing, and Cilium enforces policy on each pod. The settings fol
 
 Cilium attaches to a pod when the pod starts. Pods already running when Cilium is installed keep
 working but are not policed until they restart. The module syncs at wave 0, ahead of every other
-application, so on a new cluster only system pods predate it.
+application, so on a new cluster only system pods and Argo CD, which the agent installs before any
+application syncs, predate it.
 
 ## Allow the API server by its endpoint, not its Service IP
 
