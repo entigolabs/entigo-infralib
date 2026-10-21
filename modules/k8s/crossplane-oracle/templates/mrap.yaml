@@ -8,3 +8,10 @@ metadata:
 spec:
   activate:
   - 'policies.identity.oci.upbound.io'
+{{- if .Values.global.createObservers }}
+  - 'vcns.networking.oci.upbound.io'
+  - 'subnets.networking.oci.upbound.io'
+  - 'networksecuritygroups.networking.oci.upbound.io'
+  - 'clusters.containerengine.oci.upbound.io'
+  - 'keys.kms.oci.upbound.io'
+{{- end }}

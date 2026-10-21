@@ -5,6 +5,8 @@ global:
   # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, external-secrets, ...);
   # objectstorage: buckets for loki/mimir and friends.
   requiredProviders: ["identity", "objectstorage"]
+  observerProviders: ["networking", "containerengine", "kms"]
+  createObservers: false
 
   cloudProvider: ""
   oracle:
@@ -13,6 +15,22 @@ global:
     # authentication comes from the node's instance identity.
     tenancyOcid: ""
     region: ""
+    vcnId: ""
+    subnets:
+      public: ""
+      private: ""
+      pod: ""
+      intra: ""
+      database: ""
+    nsgs:
+      node: ""
+      pod: ""
+      lb: ""
+      lbInternal: ""
+    clusterId: ""
+    kms:
+      managementEndpoint: ""
+      dataKeyId: ""
   deploymentRuntimeConfig:
     args:
       - --enable-management-policies
