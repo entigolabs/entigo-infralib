@@ -73,6 +73,10 @@ oci-native-ingress-controller:
 # subnetId and nsgIds are wired per-environment in agent_input_oracle.yaml; compartmentId
 # falls back to global.oracle.compartmentId, which is already wired there.
 #
+# agent_input_oracle.yaml also wires each built-in entry's domain, from modules/oracle/dns,
+# and an entry whose domain is empty gets no class. It has no default here on purpose: values
+# that predate the wiring then keep the class instead of deleting its load balancer.
+#
 # A deployment may add further entries (a second internal class for a different subnet, say).
 # Each one is a billed load balancer.
 ingressClasses:
@@ -86,10 +90,6 @@ ingressClasses:
     nsgIds: ""
     minBandwidthMbps: 10
     maxBandwidthMbps: 100
-    # The class exists only while this is non-empty. Wired from modules/oracle/dns's
-    # public_domain, so a deployment without a public zone gets no public load balancer.
-    # An entry without the key is not gated.
-    domain: ""
 
   # An internal load balancer, in a private subnet and reachable only from inside the VCN.
   # modules/k8s/oracle-gateway's internal gateway fronts the platform tools through it.
@@ -102,6 +102,3 @@ ingressClasses:
     nsgIds: ""
     minBandwidthMbps: 10
     maxBandwidthMbps: 100
-    # Wired from modules/oracle/dns's private_domain, so a deployment without a private zone
-    # gets no private load balancer.
-    domain: ""
