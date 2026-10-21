@@ -22,6 +22,9 @@ spec:
 # Always include requiredProviders and extraProviders
 {{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
 {{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+{{- if .Values.global.createObservers }}
+{{- $allProviders = concat $allProviders .Values.global.observerProviders }}
+{{- end }}
 
 # Deduplicate the list
 {{- $uniqueProviders := list }}

@@ -1,0 +1,93 @@
+{{- if .Values.global.createObservers }}
+{{- $oracle := .Values.global.oracle }}
+{{- if $oracle.vcnId }}
+---
+apiVersion: networking.oci.upbound.io/v1alpha1
+kind: Vcn
+metadata:
+  name: vcn
+  annotations:
+    crossplane.io/external-name: {{ $oracle.vcnId }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: {}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- range $type, $ids := $oracle.subnets }}
+{{- range $i, $id := splitList "," (trim $ids) }}
+{{- $id = trimAll "\"[] " $id }}
+{{- if $id }}
+---
+apiVersion: networking.oci.upbound.io/v1alpha1
+kind: Subnet
+metadata:
+  name: {{ $type }}-{{ $i }}
+  labels:
+    subnet-type: {{ $type }}
+  annotations:
+    crossplane.io/external-name: {{ $id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: {}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- range $name, $id := $oracle.nsgs }}
+{{- if $id }}
+---
+apiVersion: networking.oci.upbound.io/v1alpha1
+kind: NetworkSecurityGroup
+metadata:
+  name: {{ kebabcase $name }}
+  annotations:
+    crossplane.io/external-name: {{ $id }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: {}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+{{- if $oracle.clusterId }}
+---
+apiVersion: containerengine.oci.upbound.io/v1alpha1
+kind: Cluster
+metadata:
+  name: oke
+  annotations:
+    crossplane.io/external-name: {{ $oracle.clusterId }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: {}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- if and $oracle.kms.dataKeyId $oracle.kms.managementEndpoint }}
+---
+apiVersion: kms.oci.upbound.io/v1alpha1
+kind: Key
+metadata:
+  name: data
+  annotations:
+    crossplane.io/external-name: {{ $oracle.kms.dataKeyId }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    managementEndpoint: {{ $oracle.kms.managementEndpoint }}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+{{- end }}

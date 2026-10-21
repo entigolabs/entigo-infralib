@@ -57,6 +57,21 @@ func testK8sCrossplaneOracle(t *testing.T, cloudName string, envName string) {
 	_, err = k8s.WaitUntilProviderConfigAvailable(t, kubectlOptions, resource, releaseName, 60, 2*time.Second)
 	require.NoError(t, err, "Provider config error")
 
+	observers := []struct {
+		resource schema.GroupVersionResource
+		name     string
+	}{
+		{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "vcns"}, "vcn"},
+		{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "subnets"}, "private-0"},
+		{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "networksecuritygroups"}, "node"},
+		{schema.GroupVersionResource{Group: "containerengine.oci.upbound.io", Version: "v1alpha1", Resource: "clusters"}, "oke"},
+		{schema.GroupVersionResource{Group: "kms.oci.upbound.io", Version: "v1alpha1", Resource: "keys"}, "data"},
+	}
+	for _, o := range observers {
+		_, err = k8s.WaitUntilCrossplaneResourceAvailable(t, kubectlOptions, o.resource, o.name, 90, 4*time.Second)
+		require.NoError(t, err, fmt.Sprintf("Observer %s %s error", o.resource.Resource, o.name))
+	}
+
 	// Everything above proves the provider installed. Provision a real bucket to prove it
 	// can actually reach OCI - a provider can be Healthy and still fail on credentials or IAM.
 	region := os.Getenv("OCI_REGION")
