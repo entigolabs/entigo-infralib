@@ -51,8 +51,7 @@ output "int_cert_ocid" {
 }
 
 # pub_domain/int_domain without the fallback between kinds, empty when there is no zone of that
-# kind. modules/k8s/oracle-gateway deploys a gateway only for a kind that exists, so a load
-# balancer is never published into a zone of the other kind.
+# kind.
 output "public_domain" {
   description = "Domain name of the default public zone, empty when there is no public zone"
   value       = local.default_public_key != "" ? (local.domains[local.default_public_key].private ? "" : local.domain_names[local.default_public_key]) : ""

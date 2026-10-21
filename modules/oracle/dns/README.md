@@ -36,8 +36,7 @@ Outputs are the `pub_*`/`int_*` scalars (`_zone_id`, `_domain`, `_cert_ocid`), t
 `certificate_authority_id`.
 
 `public_domain` and `private_domain` are `pub_domain` and `int_domain` without the fallback:
-each is empty when there is no zone of its kind. `modules/k8s/oracle-gateway` reads them to
-deploy a gateway only for a kind of zone that exists.
+each is empty when there is no zone of its kind.
 
 ### Private zones are views, not attachments ###
 
