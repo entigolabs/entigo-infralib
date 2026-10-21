@@ -15,3 +15,6 @@ cluster-metrics:
   enabled: true
   externalLabels:
     cluster: "{{ .toutput.gke.cluster_name }}-alloy"
+
+receiver:
+  enabled: true

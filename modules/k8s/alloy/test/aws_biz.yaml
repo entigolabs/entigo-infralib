@@ -15,3 +15,6 @@ cluster-metrics:
   enabled: true
   externalLabels:
     cluster: "{{ .toutput.eks.cluster_name }}-alloy"
+
+receiver:
+  enabled: true
