@@ -5,7 +5,7 @@ api_server_subnet_id: "{{ .toutput.vpc.aks_subnets[0] }}"
 nat_public_ips: |
   [{{ .toutput.vpc.nat_public_ips }}]
 agc_subnet_ids: |
-  [{{ .toutput.vpc.public_agc_subnets }}]
+  [{{ .toutput.vpc.agc_subnets }}]
 lb_subnet_ids: |
   [{{ .toutput.vpc.lb_subnets }}]
 acr_id: "{{ .toptout.acr-proxy.acr_id }}"

@@ -1,7 +1,7 @@
 global:
   azure:
     agcSubnetIds:
-      - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/virtualNetworks/test/subnets/test-public-agc-0
+      - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/virtualNetworks/test/subnets/test-agc-0
 gateways:
   external:
     domain: test.example.com

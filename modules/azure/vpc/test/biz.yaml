@@ -7,7 +7,7 @@ database_subnets: |
   ["10.146.16.0/22", "10.146.20.0/22"]
 intra_subnets: |
   []
-public_agc_subnets: |
+agc_subnets: |
   ["10.146.160.0/24", "10.146.193.0/24"]
 custom_subnets: |
   {

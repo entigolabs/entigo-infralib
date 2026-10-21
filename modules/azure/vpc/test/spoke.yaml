@@ -3,7 +3,7 @@ subnet_split_mode: "spoke"
 enable_flow_log: false
 nat_gateway_sku: "Standard"
 nat_static_ip_count: 2
-public_agc_subnets: |
+agc_subnets: |
   []
 container_apps_subnets: |
   []

@@ -63,7 +63,7 @@ variable "database_subnets" {
 }
 
 # https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking#limitations
-variable "public_agc_subnets" {
+variable "agc_subnets" {
   type        = list(string)
   default     = null
   description = "Application Gateway for Containers subnet, exactly a /24 with CNI Overlay"
@@ -109,7 +109,7 @@ variable "database_subnet_names" {
   default = []
 }
 
-variable "public_agc_subnet_names" {
+variable "agc_subnet_names" {
   type    = list(string)
   default = []
 }

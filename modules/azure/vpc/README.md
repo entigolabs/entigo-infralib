@@ -1,6 +1,6 @@
 ## Opinionated module for Azure VNet creation ##
 
-Creates a VNet with private, public, intra and database subnets, a delegated public-agc subnet for Application Gateway
+Creates a VNet with private, public, intra and database subnets, a delegated agc subnet for Application Gateway
 for Containers (AGC), a delegated aks subnet for AKS API Server VNet Integration, a delegated Container Apps subnet (the Entigo Infralib Agent
 pipeline jobs), optional custom subnets (e.g. Azure SQL Managed Instance) and a NAT gateway for the private and
 Container Apps subnets.
@@ -15,7 +15,7 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   with free room after them
 * fourth quarter: spare, never used by the automatic split, for `custom_subnets` and explicit extra AGC or Container Apps
   subnets
-* public-agc: the first /24 of the delegated block (AGC with Azure CNI Overlay needs exactly a /24, one AGC per subnet, up to
+* agc: the first /24 of the delegated block (AGC with Azure CNI Overlay needs exactly a /24, one AGC per subnet, up to
   5 frontends per AGC)
 * aks: the /26 after the AGC /24, a /27 for /20 (59 or 27 usable IPs; a cluster reserves at least 9, so several
   clusters can share it, e.g. for blue/green cluster replacement; more: set `aks_subnets`)
@@ -55,11 +55,11 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   - Absolute minimum: vpc_cidr must be /24 or larger.
   - /23 and /24: set every subnet list explicitly, and use [] for tiers you don't need. Otherwise the automatic tiers fill the VNet and overlap.
     - In spoke mode this also means control_subnets, service_subnets and database_subnets.
-  - /24: only works without AGC (public_agc_subnets: []), because the AGC subnet alone takes a whole /24.
+  - /24: only works without AGC (agc_subnets: []), because the AGC subnet alone takes a whole /24.
   - Fixed costs (about 320 addresses before any node): AGC /24, AKS /27 and Container Apps /27.
 
 
-| vpc_cidr | public | intra | private | database | public-agc | aks | container apps | spare |
+| vpc_cidr | public | intra | private | database | agc | aks | container apps | spare |
 |---|---|---|---|---|---|---|---|---|
 | /16 | /25 | /25 | /18 | /19 | /24 | /26 | /26 | /18 + /19 + /20 + /21 + /22 + /23 + /24 |
 | /17 | /25 | /25 | /19 | /20 | /24 | /26 | /26 | /19 + /20 + /21 + /22 + /23 + /24 |
@@ -76,7 +76,7 @@ Spoke mode (`subnet_split_mode: spoke`, see below, /21 or larger): no intra, the
 database subnet, a control and a service /24 (the first two /24s of the second eighth). Spare: the fourth quarter and the
 rest of the first quarter after public, control and service:
 
-| vpc_cidr | public | compute | database | public-agc | aks | container apps | control | service | spare |
+| vpc_cidr | public | compute | database | agc | aks | container apps | control | service | spare |
 |---|---|---|---|---|---|---|---|---|---|
 | /16 | /25 | /18 | /19 | /24 | /26 | /26 | /24 | /24 | /18 + /20 + /20 + /21 + /21 + /22 + /22 + /23 + /23 + /24 + /25 |
 | /17 | /25 | /19 | /20 | /24 | /26 | /26 | /24 | /24 | /19 + /21 + /21 + /22 + /22 + /23 + /23 + /24 + /25 |
@@ -87,7 +87,7 @@ rest of the first quarter after public, control and service:
 
 Any subnet list can be set explicitly. The split does not shift for explicit lists, so overlapping subnets are
 rejected at plan time. Extra AGC subnets (a second azure-gateway with its own AGC) and extra Container Apps subnets
-(a separate Container Apps environment for a step) are extra entries in `public_agc_subnets` and `container_apps_subnets`,
+(a separate Container Apps environment for a step) are extra entries in `agc_subnets` and `container_apps_subnets`,
 usually taken from the spare quarter.
 
 ### subnet_split_mode ###
@@ -229,7 +229,7 @@ Automatic subnets of `10.156.0.0/16` down to `10.156.0.0/20` (container-apps-0 a
 | free after intra-0 | 10.156.1.0/24, 10.156.2.0/23, 10.156.4.0/22, 10.156.8.0/21, 10.156.16.0/20, 10.156.32.0/19 (10.156.1.0 to 10.156.63.255) | 10.156.1.0/24, 10.156.2.0/23, 10.156.4.0/22, 10.156.8.0/21, 10.156.16.0/20 (10.156.1.0 to 10.156.31.255) | 10.156.1.0/24, 10.156.2.0/23, 10.156.4.0/22, 10.156.8.0/21 (10.156.1.0 to 10.156.15.255) | 10.156.1.0/24, 10.156.2.0/23, 10.156.4.0/22 (10.156.1.0 to 10.156.7.255) | 10.156.0.128/25, 10.156.1.0/24, 10.156.2.0/23 (10.156.0.128 to 10.156.3.255) |
 | private-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | none |
-| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/27 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.32/27 |
 | free in the delegated block | 10.156.161.128/25, 10.156.162.0/23, 10.156.164.0/22, 10.156.168.0/21, 10.156.176.0/20 (10.156.161.128 to 10.156.191.255) | 10.156.81.128/25, 10.156.82.0/23, 10.156.84.0/22, 10.156.88.0/21 (10.156.81.128 to 10.156.95.255) | 10.156.41.128/25, 10.156.42.0/23, 10.156.44.0/22 (10.156.41.128 to 10.156.47.255) | 10.156.21.128/25, 10.156.22.0/23 (10.156.21.128 to 10.156.23.255) | 10.156.11.64/26, 10.156.11.128/25 (10.156.11.64 to 10.156.11.255) |
@@ -243,7 +243,7 @@ A /21 and a /22 use the small layout, here `10.156.0.0/21` and `10.156.0.0/22`:
 | intra-0 | 10.156.0.64/26 | 10.156.0.64/26 |
 | aks-0 | 10.156.0.128/27 | 10.156.0.128/27 |
 | container-apps-0 | 10.156.0.160/27 | 10.156.0.160/27 |
-| public-agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
+| agc-0 | 10.156.1.0/24 | 10.156.1.0/24 |
 | private-0 | 10.156.4.0/22 | 10.156.2.0/23 |
 | spare | 10.156.0.192/26, 10.156.2.0/23 | 10.156.0.192/26 |
 
@@ -262,7 +262,7 @@ second eighth and the rest of it stays spare:
 | aks-0 | 10.156.161.0/26 | 10.156.81.0/26 | 10.156.41.0/26 | 10.156.21.0/26 | 10.156.11.0/27 |
 | container-apps-0 | 10.156.161.64/26 | 10.156.81.64/26 | 10.156.41.64/26 | 10.156.21.64/26 | 10.156.11.32/27 |
 | service-0 | 10.156.33.0/24 | 10.156.17.0/24 | 10.156.9.0/24 | 10.156.5.0/24 | 10.156.3.0/24 |
-| public-agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
+| agc-0 | 10.156.160.0/24 | 10.156.80.0/24 | 10.156.40.0/24 | 10.156.20.0/24 | 10.156.10.0/24 |
 | compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 |
 | database-0 | 10.156.128.0/19 | 10.156.64.0/20 | 10.156.32.0/21 | 10.156.16.0/22 | 10.156.8.0/23 |
 | free in the delegated block | 10.156.161.128/25, 10.156.162.0/23, 10.156.164.0/22, 10.156.168.0/21, 10.156.176.0/20 (10.156.161.128 to 10.156.191.255) | 10.156.81.128/25, 10.156.82.0/23, 10.156.84.0/22, 10.156.88.0/21 (10.156.81.128 to 10.156.95.255) | 10.156.41.128/25, 10.156.42.0/23, 10.156.44.0/22 (10.156.41.128 to 10.156.47.255) | 10.156.21.128/25, 10.156.22.0/23 (10.156.21.128 to 10.156.23.255) | 10.156.11.64/26, 10.156.11.128/25 (10.156.11.64 to 10.156.11.255) |
@@ -277,7 +277,7 @@ mode (a /22 spoke needs explicit lists):
 | database-0 | 10.156.0.64/26 |
 | aks-0 | 10.156.0.128/27 |
 | container-apps-0 | 10.156.0.160/27 |
-| public-agc-0 | 10.156.1.0/24 |
+| agc-0 | 10.156.1.0/24 |
 | control-0 | 10.156.2.0/24 |
 | service-0 | 10.156.3.0/24 |
 | compute-0 | 10.156.4.0/22 |
@@ -296,5 +296,5 @@ A /23 or /24 needs every list explicit, e.g. `10.156.0.0/23` without Container A
           container_apps_subnets: '[]'
           private_subnets: '["10.156.0.128/25"]'
           database_subnets: '[]'
-          public_agc_subnets: '["10.156.1.0/24"]'
+          agc_subnets: '["10.156.1.0/24"]'
 ```

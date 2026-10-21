@@ -14,7 +14,7 @@ locals {
   intra_subnets          = var.intra_subnets == null ? (local.spoke ? [] : [cidrsubnet(var.vpc_cidr, (local.vpc_bits > 19 ? 26 : 25) - local.vpc_bits, 1)]) : var.intra_subnets
   private_subnets        = var.private_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 1, 1) : cidrsubnet(var.vpc_cidr, 2, 1)] : var.private_subnets
   database_subnets       = var.database_subnets == null ? (local.spoke ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)] : (local.vpc_bits > 19 ? [] : [cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)])) : var.database_subnets
-  public_agc_subnets     = var.public_agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.public_agc_subnets
+  agc_subnets            = var.agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.agc_subnets
   aks_subnets            = var.aks_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 4) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 0)], []) : var.aks_subnets
   container_apps_subnets = var.container_apps_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 5) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 1)], []) : var.container_apps_subnets
   control_subnets        = var.control_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 0)], []) : []) : var.control_subnets
@@ -24,13 +24,13 @@ locals {
   public_names         = [for i, cidr in local.public_subnets : try(var.public_subnet_names[i], "${var.prefix}-public-${i}")]
   intra_names          = [for i, cidr in local.intra_subnets : try(var.intra_subnet_names[i], "${var.prefix}-intra-${i}")]
   database_names       = [for i, cidr in local.database_subnets : try(var.database_subnet_names[i], "${var.prefix}-database-${i}")]
-  public_agc_names     = [for i, cidr in local.public_agc_subnets : try(var.public_agc_subnet_names[i], "${var.prefix}-public-agc-${i}")]
+  agc_names            = [for i, cidr in local.agc_subnets : try(var.agc_subnet_names[i], "${var.prefix}-agc-${i}")]
   aks_names            = [for i, cidr in local.aks_subnets : try(var.aks_subnet_names[i], "${var.prefix}-aks-${i}")]
   container_apps_names = [for i, cidr in local.container_apps_subnets : try(var.container_apps_subnet_names[i], "${var.prefix}-container-apps-${i}")]
   control_names        = [for i, cidr in local.control_subnets : try(var.control_subnet_names[i], "${var.prefix}-control-${i}")]
   service_names        = [for i, cidr in local.service_subnets : try(var.service_subnet_names[i], "${var.prefix}-service-${i}")]
   custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
-  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.public_agc_names, local.aks_names, local.container_apps_names, local.control_names, local.service_names, values(local.custom_names))
+  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.agc_names, local.aks_names, local.container_apps_names, local.control_names, local.service_names, values(local.custom_names))
 
   flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
 
@@ -40,7 +40,7 @@ locals {
     public         = local.public_subnets
     intra          = local.intra_subnets
     database       = local.database_subnets
-    public_agc     = local.public_agc_subnets
+    agc            = local.agc_subnets
     aks            = local.aks_subnets
     container_apps = local.container_apps_subnets
     control        = local.control_subnets
@@ -82,8 +82,8 @@ resource "azurerm_virtual_network" "this" {
       error_message = "egress_next_hop_ip needs enable_nat_gateway = false: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
     }
     precondition {
-      condition     = local.vpc_bits <= 22 || (var.public_agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
-      error_message = "vpc_cidr is smaller than /22: set public_agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
+      condition     = local.vpc_bits <= 22 || (var.agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
+      error_message = "vpc_cidr is smaller than /22: set agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
     }
     precondition {
       condition     = !local.spoke || local.vpc_bits <= 21 || (var.control_subnets != null && var.service_subnets != null && var.private_subnets != null && var.database_subnets != null)
@@ -94,8 +94,8 @@ resource "azurerm_virtual_network" "this" {
       error_message = "subnet_split_mode spoke needs at least one control and one service subnet."
     }
     precondition {
-      condition     = alltrue([for cidr in local.public_agc_subnets : tonumber(split("/", cidr)[1]) == 24])
-      error_message = "Application Gateway for Containers subnets must be exactly /24: ${join(", ", local.public_agc_subnets)}."
+      condition     = alltrue([for cidr in local.agc_subnets : tonumber(split("/", cidr)[1]) == 24])
+      error_message = "Application Gateway for Containers subnets must be exactly /24: ${join(", ", local.agc_subnets)}."
     }
     precondition {
       condition     = length(distinct(local.subnet_names)) == length(local.subnet_names)
@@ -156,12 +156,12 @@ resource "azurerm_subnet" "database" {
   default_outbound_access_enabled = false
 }
 
-resource "azurerm_subnet" "public_agc" {
-  count                           = length(local.public_agc_subnets)
-  name                            = local.public_agc_names[count.index]
+resource "azurerm_subnet" "agc" {
+  count                           = length(local.agc_subnets)
+  name                            = local.agc_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.public_agc_subnets[count.index]]
+  address_prefixes                = [local.agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
   delegation {

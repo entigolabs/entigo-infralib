@@ -9,7 +9,7 @@ global:
     telemetryKeyId: "{{ .toptout.kms.telemetry_key_id }}"
     telemetryKeyResourceId: "{{ .toptout.kms.telemetry_key_resource_id }}"
     identityPrefix: "{{ .toutput.aks.cluster_name }}"
-    agcSubnetCidrs: "{{ .toutput.vpc.public_agc_subnet_cidrs }}"
+    agcSubnetCidrs: "{{ .toutput.vpc.agc_subnet_cidrs }}"
 loki:
   loki:
     storage:

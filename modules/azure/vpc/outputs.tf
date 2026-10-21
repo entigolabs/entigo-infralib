@@ -36,8 +36,8 @@ output "database_subnets" {
   value = azurerm_subnet.database[*].id
 }
 
-output "public_agc_subnets" {
-  value = azurerm_subnet.public_agc[*].id
+output "agc_subnets" {
+  value = azurerm_subnet.agc[*].id
 }
 
 output "private_subnet_cidrs" {
@@ -56,8 +56,8 @@ output "database_subnet_cidrs" {
   value = local.database_subnets
 }
 
-output "public_agc_subnet_cidrs" {
-  value = local.public_agc_subnets
+output "agc_subnet_cidrs" {
+  value = local.agc_subnets
 }
 
 output "nat_gateway_id" {
