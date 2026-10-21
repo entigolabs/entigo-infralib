@@ -35,7 +35,7 @@ variable "subnet_split_mode" {
   type        = string
   nullable    = false
   default     = "default"
-  description = "default: one private subnet for nodes and load balancers. spoke: separate control (platform internal load balancers) and service (other internal load balancers) subnets, the node subnet named compute, no intra subnet, always a database subnet; outputs control_subnets and service_subnets point to the new subnets"
+  description = "default: one private subnet for nodes and load balancers. spoke: separate control (AGC of the internal gateway) and service (AGC of the service gateway) /24s delegated to Application Gateway for Containers, the node subnet named compute, no intra subnet, always a database subnet; outputs control_subnets and service_subnets point to the new subnets"
   validation {
     condition     = contains(["default", "spoke"], var.subnet_split_mode)
     error_message = "subnet_split_mode must be default or spoke."

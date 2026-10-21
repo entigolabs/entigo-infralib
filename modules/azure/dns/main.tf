@@ -84,6 +84,23 @@ resource "azurerm_private_dns_zone_virtual_network_link" "this" {
   tags                 = local.tags
 }
 
+# Private endpoints of the azure/agc private frontends, one zone per name and resource group for all of them
+resource "azurerm_private_dns_zone" "agc" {
+  count               = var.agc_private_dns_zone_id == "" ? 1 : 0
+  name                = "privatelink.alb.azure.com"
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "agc" {
+  count                = var.agc_private_dns_zone_id == "" ? length(var.vpc_ids) : 0
+  name                 = "${var.prefix}-agc-${count.index}"
+  private_dns_zone_id  = azurerm_private_dns_zone.agc[0].id
+  virtual_network_id   = var.vpc_ids[count.index]
+  registration_enabled = false
+  tags                 = local.tags
+}
+
 resource "azurerm_dns_zone" "validation" {
   for_each            = { for k, v in local.domains : k => v if v.needs_validation_zone }
   name                = each.value.domain_name

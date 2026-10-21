@@ -78,3 +78,7 @@ output "disk_encryption_set_id" {
 output "alb_controller_client_id" {
   value = length(var.agc_subnet_ids) > 0 ? azurerm_user_assigned_identity.alb_controller[0].client_id : ""
 }
+
+output "alb_controller_principal_id" {
+  value = length(var.agc_subnet_ids) > 0 ? azurerm_user_assigned_identity.alb_controller[0].principal_id : ""
+}

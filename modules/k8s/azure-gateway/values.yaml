@@ -1,6 +1,6 @@
 global:
   externalGateway: external
-  # Created by istio-gateway until AGC has a private frontend
+  # On a bring-your-own AGC with a private frontend (azure/agc) until the managed AGC has one
   # https://github.com/Azure/AKS/issues/5739
   internalGateway: internal
   internalGatewayNamespace: ""
@@ -8,12 +8,6 @@ global:
     # Subnets delegated to Microsoft.ServiceNetworking/trafficControllers (ApplicationLoadBalancer associations), one AGC
     # per /24; Azure allows one association per AGC today, the list is for when that limit goes
     agcSubnetIds: []
-
-# create: false = attach the gateways to the ApplicationLoadBalancer (AGC) of another azure-gateway module
-applicationLoadBalancer:
-  create: true
-  name: ""
-  namespace: ""
 
 # cert-manager ClusterIssuer, the agent sets the cert-manager module clusterIssuer.name
 certificateIssuer: letsencrypt
@@ -34,19 +28,29 @@ gateways:
     #   2023-06-S - stricter variant of 2023-06, currently the same ciphers
     # AGC has no TLS 1.0/1.1 policy.
     sslPolicy: "2023-06"
+    addresses: []
+    annotations: {}
+    labels: {}
+  # Private frontend of a bring-your-own AGC: the agent sets annotation alb.networking.azure.io/alb-id and address
+  # alb.networking.azure.io/alb-frontend from azure/agc; more private gateways are more entries with their own azure/agc
+  internal:
+    enabled: true
+    gatewayClassName: azure-alb-internal
+    domain: ""
+    sslRedirect: true
+    sslPolicy: "2023-06"
+    addresses: []
     annotations: {}
     labels: {}
 
-# One ALB controller per cluster: false in a second azure-gateway module
-installAlbController: true
-
 alb-controller:
   albController:
-    namespace: azure-alb-system
     # Images stay on mcr.microsoft.com: the chart adds /public to any other registry path, which the acr-proxy
     # MCR cache can't serve. With aks bootstrap_cache_enabled, nodes mirror all MCR pulls through acr-proxy anyway.
     podIdentity:
       clientID: ""
+    # azure-alb-internal GatewayClass: private frontends on bring-your-own AGCs
+    privateFrontend: true
     controller:
       tolerations:
         - key: "tools"

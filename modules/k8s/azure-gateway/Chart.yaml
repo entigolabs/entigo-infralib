@@ -9,4 +9,3 @@ dependencies:
   - name: alb-controller
     version: 1.12.2
     repository: oci://mcr.microsoft.com/application-lb/charts
-    condition: installAlbController

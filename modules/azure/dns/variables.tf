@@ -27,6 +27,13 @@ variable "domains" {
   default = {}
 }
 
+# https://learn.microsoft.com/azure/private-link/private-endpoint-dns#networking
+variable "agc_private_dns_zone_id" {
+  type        = string
+  default     = ""
+  description = "Existing privatelink.alb.azure.com zone (e.g. central in the hub, linked there) for the azure/agc private endpoints, \"\" = the module creates it and links it to vpc_ids"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

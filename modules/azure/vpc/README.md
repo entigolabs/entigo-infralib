@@ -93,7 +93,7 @@ usually taken from the spare quarter.
 ### subnet_split_mode ###
 `default` (the layout above): nodes and all load balancer frontends share the private subnet, and the outputs
 `control_subnets`, `service_subnets` and `compute_subnets` all point to it. `spoke` is for a VNet peered to a hub that
-owns the firewall, gateways and DNS: the hub's rules are written per role range. It adds two load balancer /24s in
+owns the firewall, gateways and DNS: the hub's rules are written per role range. It adds two AGC /24s in
 the second eighth (after the AGC /24 in a /21), names the node subnet `<prefix>-compute-<n>`, creates no intra subnet (a hub spoke has no attachment
 subnet, the peering attaches the VNet) and always creates a database subnet. The CIDRs of public, the delegated subnets
 and (for /19 and larger) database are the same as in default mode. Switching an existing VNet to spoke drops the
@@ -104,23 +104,24 @@ former spare range.
 
 | Subnet | Use | Output | /16 (10.156.0.0) | /20 (10.30.0.0) |
 |---|---|---|---|---|
-| control-0 (/24) | internal load balancers of the platform (istio internal gateway) | `control_subnets`, `control_subnet_names` | 10.156.32.0/24 | 10.30.2.0/24 |
-| service-0 (/24) | other internal load balancers (`service.beta.kubernetes.io/azure-load-balancer-internal-subnet`) | `service_subnets`, `service_subnet_names` | 10.156.33.0/24 | 10.30.3.0/24 |
+| control-0 (/24) | AGC of the internal gateway (azure/agc, the platform's internal gateway) | `control_subnets`, `control_subnet_names` | 10.156.32.0/24 | 10.30.2.0/24 |
+| service-0 (/24) | AGC of the service gateway (azure/agc, other internal applications) | `service_subnets`, `service_subnet_names` | 10.156.33.0/24 | 10.30.3.0/24 |
 | compute-0 | nodes (the private subnet, named compute in spoke mode) | `compute_subnets`, `private_subnets` | unchanged | unchanged |
 | intra | none in spoke mode (`intra_subnets` for one anyway) | `intra_subnets` = `[]` | | |
 
-The aks module gives the cluster identity Network Contributor on them (output `lb_subnets`, empty in default mode),
-istio-gateway places its internal gateway in `control_subnet_name` (empty in default mode: no annotation, the frontend
-stays in the node subnet). They have no NAT gateway or egress route (frontends only) and no delegation. A /24 holds 251 frontends, one per internal
-LoadBalancer Service (a Private Link Service reserves up to 8 of them), and has the size an AGC subnet needs, so a
-tier can later be replaced by an AGC; more is an explicit `service_subnets` / `control_subnets` list, from the free
-tail of the delegated block for /19 and larger (e.g. 10.156.162.0/24 in a /16) or from the spare quarter. In a /21
+Both are delegated to `Microsoft.ServiceNetworking/trafficControllers` and hold nothing else: each is the association
+subnet of one bring-your-own Application Gateway for Containers with a private frontend (azure/agc module, one AGC per
+/24 with CNI Overlay), so the internal and the service gateway are separate load balancers in separate subnets like the
+aws spoke ALBs. Internal Azure load balancers (`type: LoadBalancer` Services) stay in the compute subnet. They have no
+NAT gateway or egress route. More AGCs take more /24s in `custom_subnets` (delegation
+`Microsoft.ServiceNetworking/trafficControllers`), from the free tail of the delegated block for /19 and larger (e.g.
+10.156.162.0/24 in a /16) or from the spare quarter. In a /21
 control and service take 10.156.2.0/24 and 10.156.3.0/24 after the AGC /24, database a /26 in the intra slot
 10.156.0.64/26 (59 private endpoints) and compute stays /22. A /22 or smaller has no room for the two /24s: spoke mode
 there needs explicit `control_subnets`, `service_subnets`, `private_subnets` and `database_subnets`, checked at plan
 time. Spoke mode needs at least one control and one service subnet; both lists can also be set explicitly
-in either mode (`*_subnet_names` as for the other tiers) and the outputs then point to them. Not done: Private Link Service on
-these subnets needs `private_link_service_network_policies_enabled = false`.
+in either mode (`*_subnet_names` as for the other tiers) and the outputs then point to them. In default mode the internal
+gateway's AGC /24 is a custom subnet (see below).
 
 ### Custom subnets ###
 `custom_subnets` adds subnets for anything else, keyed by a short name (lowercase letters and digits, the agent reads
@@ -134,7 +135,9 @@ Container Apps environment or VMs in a custom subnet need it. Azure SQL Managed 
 route table, minimum /27 (a /24 fits 24 Business Critical instances in one VM group, 20 zone redundant), and no NAT gateway (not supported by
 Managed Instance); Postgres, MySQL, Azure SQL Database and Redis use private endpoints in the database subnets instead.
 A service that needs a delegated subnet (SQL Managed Instance, a VNet-integrated Postgres or MySQL flexible server) takes
-a custom subnet, never a database subnet.
+a custom subnet, never a database subnet. An Application Gateway for Containers of an azure/agc module (the internal
+gateway in default mode, further AGCs in both modes) takes a custom /24 delegated to
+`Microsoft.ServiceNetworking/trafficControllers`, checked to be exactly /24 like the agc, control and service subnets.
 
 ```
           custom_subnets:
@@ -150,6 +153,9 @@ a custom subnet, never a database subnet.
             bastion:
               name: AzureBastionSubnet
               cidr: "10.156.224.64/26"
+            agcinternal:
+              cidr: "10.156.162.0/24"
+              delegation: Microsoft.ServiceNetworking/trafficControllers
 ```
 
 Outputs `custom_subnets` (ids) and `custom_subnet_cidrs` are maps by key, e.g. `{{ .toutput.vpc.custom_subnets[mssql] }}`.

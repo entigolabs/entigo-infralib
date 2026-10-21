@@ -496,6 +496,8 @@ test_tf() {
     PIDS="$PIDS $!=aks-node-pool"
     ./modules/azure/crossplane/test.sh testonly &
     PIDS="$PIDS $!=crossplane"
+    ./modules/azure/agc/test.sh testonly &
+    PIDS="$PIDS $!=agc"
   fi
 
   FAIL=""
@@ -617,7 +619,7 @@ default_oracle_conf() {
 
 default_azure_conf() {
   generate_config "azure" "net" "azure/vpc" "azure/acr-proxy" "azure/dns" "azure/kms"
-  generate_config "azure" "infra" "azure/crossplane" "azure/aks" "azure/aks-node-pool"
+  generate_config "azure" "infra" "azure/crossplane" "azure/aks" "azure/aks-node-pool" "azure/agc"
 }
 
 full_k8s_conf() {

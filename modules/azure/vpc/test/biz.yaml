@@ -8,10 +8,14 @@ database_subnets: |
 intra_subnets: |
   []
 agc_subnets: |
-  ["10.146.160.0/24", "10.146.193.0/24"]
+  ["10.146.160.0/24"]
 custom_subnets: |
   {
-    mssql = {
+    customagc = {
+      cidr       = "10.146.194.0/24"
+      delegation = "Microsoft.ServiceNetworking/trafficControllers"
+    }
+    custommssql = {
       cidr               = "10.146.192.0/24"
       delegation         = "Microsoft.Sql/managedInstances"
       delegation_actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]

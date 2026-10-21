@@ -21,6 +21,12 @@ domains - map of objects:
 With a single domain, or a single domain of a kind, the defaults are set automatically. Exactly one domain must be
 the default public and one the default private one; a single public domain is both.
 
+`privatelink.alb.azure.com`: the private DNS zone of the azure/agc private endpoints (Application Gateway for
+Containers private frontends), linked to `vpc_ids`, output `agc_private_dns_zone_id`. Azure allows one zone of a name
+per resource group, so all azure/agc modules share it. With a hub that resolves for the spokes, give the hub's zone as
+`agc_private_dns_zone_id`: the module then creates no zone, the zone groups of the private endpoints write their
+records there (needs Private DNS Zone Contributor on it) and the hub links it.
+
 ### Example code ###
 ```
     modules:

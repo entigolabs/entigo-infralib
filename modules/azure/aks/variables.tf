@@ -140,7 +140,7 @@ variable "agc_subnet_ids" {
 variable "lb_subnet_ids" {
   type        = list(string)
   default     = []
-  description = "Subnets for load balancer frontends outside the node subnet (vpc lb_subnets: control and service in spoke mode): Network Contributor for the cluster identity"
+  description = "Subnets for internal load balancer frontends outside the node subnet (e.g. a custom subnet): Network Contributor for the cluster identity"
 }
 
 variable "disk_encryption_key_id" {

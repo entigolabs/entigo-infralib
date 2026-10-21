@@ -105,7 +105,7 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 		case "biz":
 			hostName = fmt.Sprintf("%s.%s-net-dns-int.azure.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "internal"
-			gatewayNamespace = fmt.Sprintf("istio-gateway-%s", envName)
+			gatewayNamespace = "azure-gateway"
 		case "pri":
 			hostName = fmt.Sprintf("%s.%s-net-dns.azure.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "external"

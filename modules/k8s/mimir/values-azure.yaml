@@ -21,8 +21,6 @@ global:
     telemetryKeyResourceId: ""
     # crossplane-azure identityPrefix (AKS cluster name), for the id of the <release>-cmk identity
     identityPrefix: ""
-    # AGC HealthCheckPolicy, only for a route on an azure-gateway (AGC) gateway
-    agcHealthCheck: false
 
 mimir-distributed:
   serviceAccount:

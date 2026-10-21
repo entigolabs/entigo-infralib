@@ -4,7 +4,7 @@ locals {
   # Public and intra /25, aks and Container Apps /26 for /19 and larger, public and intra /26, aks and Container Apps /27 for /20 to /22
   # /21 and /22: halves, public /26, intra /26, aks /27, Container Apps /27, AGC /24 and the rest spare in the first half, private the second half
   # No database subnet for /20 and smaller, smaller than /22: no room for the AGC /24, the delegated subnet lists must be explicit
-  # Spoke split mode: the node subnet is named compute, no intra subnet, database also for /20 and /21, a control /24 (internal load balancers of the platform) and a service /24 (other internal load balancers) at the start of the second eighth; /21: control and service after the AGC /24, database /26 in the intra slot; smaller than /21: the lists must be explicit
+  # Spoke split mode: the node subnet is named compute, no intra subnet, database also for /20 and /21, a control /24 (AGC of the internal gateway) and a service /24 (AGC of the service gateway) at the start of the second eighth; /21: control and service after the AGC /24, database /26 in the intra slot; smaller than /21: the lists must be explicit
   small           = local.vpc_bits > 20
   spoke           = var.subnet_split_mode == "spoke"
   delegated_block = cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 1)
@@ -51,6 +51,7 @@ locals {
     size  = pow(2, 32 - tonumber(split("/", s.cidr)[1]))
   })]
   vpc_range = local.subnet_ranges[0]
+  agc_cidrs = concat(local.agc_subnets, local.control_subnets, local.service_subnets, [for key, subnet in var.custom_subnets : subnet.cidr if subnet.delegation == "Microsoft.ServiceNetworking/trafficControllers"])
   subnets_outside_vpc = [for s in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : "${s.name} ${s.cidr}"
   if s.start < local.vpc_range.start || s.start + s.size > local.vpc_range.start + local.vpc_range.size]
   subnet_overlaps = flatten([for i, a in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : [
@@ -94,8 +95,8 @@ resource "azurerm_virtual_network" "this" {
       error_message = "subnet_split_mode spoke needs at least one control and one service subnet."
     }
     precondition {
-      condition     = alltrue([for cidr in local.agc_subnets : tonumber(split("/", cidr)[1]) == 24])
-      error_message = "Application Gateway for Containers subnets must be exactly /24: ${join(", ", local.agc_subnets)}."
+      condition     = alltrue([for cidr in local.agc_cidrs : tonumber(split("/", cidr)[1]) == 24])
+      error_message = "Application Gateway for Containers subnets (agc, control, service and custom subnets delegated to Microsoft.ServiceNetworking/trafficControllers) must be exactly /24: ${join(", ", local.agc_cidrs)}."
     }
     precondition {
       condition     = length(distinct(local.subnet_names)) == length(local.subnet_names)
@@ -258,7 +259,7 @@ resource "azurerm_container_app_environment" "container_apps" {
   ]
 }
 
-# Load balancer frontends only: no NAT gateway or egress route, the backends answer from the node subnet
+# Application Gateway for Containers associations of the azure/agc private gateways: no NAT gateway or egress route, the backends answer from the node subnet
 resource "azurerm_subnet" "control" {
   count                           = length(local.control_subnets)
   name                            = local.control_names[count.index]
@@ -266,6 +267,15 @@ resource "azurerm_subnet" "control" {
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.control_subnets[count.index]]
   default_outbound_access_enabled = false
+
+  delegation {
+    name = "agc-delegation"
+
+    service_delegation {
+      name    = "Microsoft.ServiceNetworking/trafficControllers"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 resource "azurerm_subnet" "service" {
@@ -275,6 +285,15 @@ resource "azurerm_subnet" "service" {
   virtual_network_name            = azurerm_virtual_network.this.name
   address_prefixes                = [local.service_subnets[count.index]]
   default_outbound_access_enabled = false
+
+  delegation {
+    name = "agc-delegation"
+
+    service_delegation {
+      name    = "Microsoft.ServiceNetworking/trafficControllers"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 resource "azurerm_subnet" "custom" {

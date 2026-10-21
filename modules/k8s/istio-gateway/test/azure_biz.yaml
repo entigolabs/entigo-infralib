@@ -1,5 +1,0 @@
-global:
-  azure:
-    loadBalancer:
-      namespace: "{{ .module.name }}"
-      name: internal

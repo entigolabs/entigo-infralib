@@ -76,3 +76,8 @@ output "manual_delegations" {
     } if v.parent_zone_id != "" && !v.delegate && ((!v.private && v.create_zone) || v.needs_validation_zone)
   }
 }
+
+output "agc_private_dns_zone_id" {
+  description = "privatelink.alb.azure.com zone of the azure/agc private endpoints"
+  value       = var.agc_private_dns_zone_id != "" ? var.agc_private_dns_zone_id : azurerm_private_dns_zone.agc[0].id
+}

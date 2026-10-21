@@ -1,4 +1,0 @@
-global:
-  azure:
-    # AGC HealthCheckPolicy only with an azure-gateway module
-    agcHealthCheck: '{{ .toptmodule.azure-gateway }}'

@@ -1,7 +1,7 @@
 global:
   gateway:
     name: internal
-    namespace: istio-gateway-biz
+    namespace: "{{ .tmodule.azure-gateway }}"
 
 mimir-distributed:
   ingester:

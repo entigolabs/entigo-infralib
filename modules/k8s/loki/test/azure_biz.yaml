@@ -6,7 +6,7 @@ loki:
         - group: gateway.networking.k8s.io
           kind: Gateway
           name: internal
-          namespace: istio-gateway-biz
+          namespace: "{{ .tmodule.azure-gateway }}"
           sectionName: https
   fullnameOverride: '{{ .module.name }}'
   nameOverride: '{{ .module.name }}'

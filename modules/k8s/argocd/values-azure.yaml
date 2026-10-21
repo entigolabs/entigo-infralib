@@ -1,7 +1,5 @@
 global:
   cloudProvider: azure
-  azure:
-    agcHealthCheck: false
 
 argocd:
   configs:

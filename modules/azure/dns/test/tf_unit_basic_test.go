@@ -39,6 +39,7 @@ func testTerraformDnsBiz(t *testing.T) {
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "dns__int_cert_zone_id"), "int_cert_zone_id was not returned")
 	assert.Equal(t, 3, len(tf.GetValue(t, outputs, "dns__zone_ids").(map[string]interface{})), "Wrong number of zone_ids")
 	assert.Equal(t, 1, len(tf.GetValue(t, outputs, "dns__validation_zone_ids").(map[string]interface{})), "Wrong number of validation_zone_ids")
+	assert.True(t, strings.HasSuffix(strings.ToLower(tf.GetStringValue(t, outputs, "dns__agc_private_dns_zone_id")), "/privatednszones/privatelink.alb.azure.com"), "agc_private_dns_zone_id must be the privatelink.alb.azure.com zone")
 
 	parentRg := "infralib-permanent-westeurope"
 	require.NoError(t, azure.WaitUntilDnsRecordExists(t, parentRg, parentZone, fmt.Sprintf("biz-%s-dns", stepName), "NS", 10, 6*time.Second))
@@ -56,6 +57,7 @@ func testTerraformDnsPri(t *testing.T) {
 	assert.Equal(t, "", tf.GetStringValue(t, outputs, "dns__int_private_domain"))
 	assert.Equal(t, "", tf.GetStringValue(t, outputs, "dns__int_cert_zone_id"))
 	assert.Equal(t, tf.GetStringValue(t, outputs, "dns__pub_zone_id"), tf.GetStringValue(t, outputs, "dns__int_zone_id"), "int_zone_id and pub_zone_id must be equal")
+	assert.True(t, strings.HasSuffix(strings.ToLower(tf.GetStringValue(t, outputs, "dns__agc_private_dns_zone_id")), "/privatednszones/privatelink.alb.azure.com"), "agc_private_dns_zone_id must be the privatelink.alb.azure.com zone")
 
 	parentRg := "infralib-permanent-westeurope"
 	require.NoError(t, azure.WaitUntilDnsRecordExists(t, parentRg, parentZone, fmt.Sprintf("pri-%s-dns", stepName), "NS", 10, 6*time.Second))

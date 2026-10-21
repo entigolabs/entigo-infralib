@@ -20,8 +20,7 @@ global:
     telemetryKeyResourceId: ""
     # crossplane-azure identityPrefix (AKS cluster name), for the id of the <release>-cmk identity
     identityPrefix: ""
-    # AGC HealthCheckPolicy and gateway ingress from the AGC subnet, only for a route on an azure-gateway (AGC) gateway
-    agcHealthCheck: false
+    # AGC subnets, gateway ingress for the route's AGC
     agcSubnetCidrs: ""
 
 loki:

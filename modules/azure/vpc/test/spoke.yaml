@@ -8,21 +8,21 @@ agc_subnets: |
 container_apps_subnets: |
   []
 control_subnet_names: |
-  ["spoke-ilb-platform"]
+  ["spoke-agc-control"]
 service_subnet_names: |
-  ["spoke-ilb-apps"]
+  ["spoke-agc-service"]
 intra_subnets: |
   ["10.33.0.192/26"]
 custom_subnets: |
   {
-    mssql = {
+    custommssql = {
       cidr                   = "10.33.1.0/27"
       delegation             = "Microsoft.Sql/managedInstances"
       delegation_actions     = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action", "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"]
       network_security_group = true
       route_table            = true
     }
-    vms = {
+    customvms = {
       cidr        = "10.33.1.128/26"
       nat_gateway = true
     }

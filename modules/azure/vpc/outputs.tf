@@ -174,15 +174,6 @@ output "service_subnet_names" {
   value = length(local.service_subnets) > 0 ? azurerm_subnet.service[*].name : azurerm_subnet.private[*].name
 }
 
-# Load balancer subnets outside the node subnet (aks lb_subnet_ids) and the platform internal gateway's subnet (istio-gateway), empty without them
-output "lb_subnets" {
-  value = concat(azurerm_subnet.control[*].id, azurerm_subnet.service[*].id)
-}
-
-output "control_subnet_name" {
-  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[0].name : ""
-}
-
 output "compute_subnets_cidr_blocks" {
   value = local.private_subnets
 }

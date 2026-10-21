@@ -56,6 +56,13 @@ func testK8sAzureGateway(t *testing.T, cloudName string, envName string) {
 	targetURL := fmt.Sprintf("http://%s.%s-net-dns.azure.infralib.entigo.io", strings.ToLower(random.UniqueId()), envName)
 	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, 60, 10*time.Second, gatewayName, namespaceName, namespaceName, targetURL, "301", cloudName)
 	require.NoError(t, err, "%s redirect error", targetURL)
+
+	// Private frontend on the azure/agc bring-your-own AGC, only reachable inside the VNet
+	_, err = waitUntilConditions(t, kubectlOptions, certificateGVR, namespaceName, "internal-tls", []string{"Ready"}, 90, 10*time.Second)
+	require.NoError(t, err, "internal Certificate error")
+	internalGateway, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, "internal", 120, 10*time.Second)
+	require.NoError(t, err, "Gateway internal error")
+	require.True(t, strings.HasSuffix(k8s.GetK8SGatewayAddress(internalGateway), ".privatelink.alb.azure.com"), "Gateway internal must have a private frontend address")
 }
 
 func waitUntilConditions(t *testing.T, options *terrak8s.KubectlOptions, resource schema.GroupVersionResource, namespace string, name string, conditions []string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {

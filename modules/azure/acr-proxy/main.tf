@@ -136,12 +136,13 @@ resource "azurerm_private_dns_zone_virtual_network_link" "acr" {
 }
 
 resource "azurerm_private_endpoint" "acr" {
-  count               = local.private_endpoint ? 1 : 0
-  name                = "${var.prefix}-acr"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  subnet_id           = var.private_endpoint_subnet_id
-  tags                = local.tags
+  count                         = local.private_endpoint ? 1 : 0
+  name                          = "${var.prefix}-acr"
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  subnet_id                     = var.private_endpoint_subnet_id
+  custom_network_interface_name = "${var.prefix}-acr-nic"
+  tags                          = local.tags
 
   private_service_connection {
     name                           = "${var.prefix}-acr"

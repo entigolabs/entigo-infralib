@@ -1,3 +1,10 @@
 vpc_cidr: "10.24.0.0/16"
 enable_flow_log: false
 container_apps_zone_redundancy_enabled: false
+custom_subnets: |
+  {
+    customagc = {
+      cidr       = "10.24.162.0/24"
+      delegation = "Microsoft.ServiceNetworking/trafficControllers"
+    }
+  }

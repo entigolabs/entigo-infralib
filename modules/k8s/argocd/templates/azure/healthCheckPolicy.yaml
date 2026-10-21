@@ -1,4 +1,4 @@
-{{- if and (eq .Values.global.cloudProvider "azure") .Values.global.azure.agcHealthCheck }}
+{{- if eq .Values.global.cloudProvider "azure" }}
 
 apiVersion: alb.networking.azure.io/v1
 kind: HealthCheckPolicy
