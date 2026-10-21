@@ -1,7 +1,7 @@
 ## Opinionated module for Azure VNet creation ##
 
 Creates a VNet with private, public, intra and database subnets, a delegated public-agc subnet for Application Gateway
-for Containers (AGC), a delegated aks subnet for AKS API Server VNet Integration, a delegated Container Apps subnet (the agent
+for Containers (AGC), a delegated aks subnet for AKS API Server VNet Integration, a delegated Container Apps subnet (the Entigo Infralib Agent
 pipeline jobs), optional custom subnets (e.g. Azure SQL Managed Instance) and a NAT gateway for the private and
 Container Apps subnets.
 
@@ -29,16 +29,35 @@ If only `vpc_cidr` is given, the subnets are calculated from it in quarters:
   resource group is `<subnet name>-<location>` instead of an `ME_...` name, job logs go to the `<prefix>-container-apps` Log
   Analytics workspace.
 
-In default mode a database subnet is only created for /19 and larger; for /20 and smaller private endpoints go to the
-private or a custom subnet (set `database_subnets` for one anyway). Spoke mode always has one. Database subnets are
-never delegated (private endpoints only). A /21 or /22 is split in halves: the first half holds public
-/26, intra /26, the aks /27, the Container Apps /27 (18 usable IPs), the AGC /24 and the rest as spare; the second
-half is private.
+#### Database subnets
 
-The minimum VNet size for the automatic split is /22: a /23 has no room for the AGC /24 next to the other tiers, and
-`vpc_cidr` must be /24 or larger. For /23 and /24 set every subnet list explicitly (`[]` for tiers not needed), in spoke
-mode also `control_subnets`, `service_subnets` and `database_subnets`: the automatic tiers would fill the VNet and overlap. A /24 only works without AGC (`public_agc_subnets: []`), the AGC subnet alone
-is a /24; the fixed costs are AGC /24, aks /27 and Container Apps /27, about 320 addresses before any node.
+  - Default mode: a database subnet is only created for /19 and larger VNets.
+    - For /20 and smaller, private endpoints go to the private subnet or a custom subnet. Set database_subnets if you want a database subnet anyway.
+  - Spoke mode: always has a database subnet.
+  - Database subnets are never delegated. They hold private endpoints only.
+
+#### How a /21 or /22 is split
+
+  The VNet is split into two halves:
+
+  - First half:
+    - public /26
+    - intra /26
+    - AKS /27
+    - Container Apps /27 (18 usable IPs)
+    - AGC /24
+    - the rest is spare
+  - Second half: private
+
+#### Minimum VNet size
+
+  - Automatic split: needs /22 or larger. A /23 has no room for the AGC /24 alongside the other tiers.
+  - Absolute minimum: vpc_cidr must be /24 or larger.
+  - /23 and /24: set every subnet list explicitly, and use [] for tiers you don't need. Otherwise the automatic tiers fill the VNet and overlap.
+    - In spoke mode this also means control_subnets, service_subnets and database_subnets.
+  - /24: only works without AGC (public_agc_subnets: []), because the AGC subnet alone takes a whole /24.
+  - Fixed costs (about 320 addresses before any node): AGC /24, AKS /27 and Container Apps /27.
+
 
 | vpc_cidr | public | intra | private | database | public-agc | aks | container apps | spare |
 |---|---|---|---|---|---|---|---|---|
