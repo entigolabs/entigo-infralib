@@ -11,3 +11,11 @@ cilium:
               operator: In
               values:
               - "true"
+  hubble:
+    tls:
+      auto:
+        method: cronJob
+  certgen:
+    annotations:
+      cronJob:
+        kube-score/ignore: cronjob-has-deadline
