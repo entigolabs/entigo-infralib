@@ -48,6 +48,8 @@ func testTerraformDns(t *testing.T, prefix string, withExtra bool) {
 	assert.Equal(t, domains, tf.GetValue(t, outputs, "dns__domain_names"), "Wrong domain_names returned")
 	assert.Equal(t, domains["private"], tf.GetStringValue(t, outputs, "dns__pub_domain"), "Wrong pub_domain returned")
 	assert.Equal(t, domains["private"], tf.GetStringValue(t, outputs, "dns__int_domain"), "Wrong int_domain returned")
+	assert.Equal(t, "", tf.GetStringValue(t, outputs, "dns__public_domain"), "public_domain is set without a public zone")
+	assert.Equal(t, domains["private"], tf.GetStringValue(t, outputs, "dns__private_domain"), "Wrong private_domain returned")
 
 	zoneIds := getMap(t, outputs, "dns__zone_ids")
 	assert.ElementsMatch(t, keys(domains), keys(zoneIds), "zone_ids does not carry every domain")

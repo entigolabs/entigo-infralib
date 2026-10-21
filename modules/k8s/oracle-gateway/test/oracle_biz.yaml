@@ -3,6 +3,3 @@
 # modules that ask for the external one are pointed at it.
 global:
   externalGateway: internal
-gateways:
-  external:
-    enabled: false
