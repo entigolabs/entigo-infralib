@@ -20,7 +20,7 @@ variable "subnet_id" {
 
 variable "private_endpoint_subnet_id" {
   type        = string
-  description = "Subnet of the private endpoint, the clients' IP of the private frontend"
+  description = "Subnet of the private endpoint, the clients' IP of the private frontend (vpc control_pe_subnets / service_pe_subnets in spoke mode)"
 }
 
 variable "private_dns_zone_id" {

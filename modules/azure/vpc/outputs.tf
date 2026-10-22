@@ -36,8 +36,8 @@ output "database_subnets" {
   value = azurerm_subnet.database[*].id
 }
 
-output "agc_subnets" {
-  value = azurerm_subnet.agc[*].id
+output "public_agc_subnets" {
+  value = azurerm_subnet.public_agc[*].id
 }
 
 output "private_subnet_cidrs" {
@@ -56,8 +56,8 @@ output "database_subnet_cidrs" {
   value = local.database_subnets
 }
 
-output "agc_subnet_cidrs" {
-  value = local.agc_subnets
+output "public_agc_subnet_cidrs" {
+  value = local.public_agc_subnets
 }
 
 output "nat_gateway_id" {
@@ -147,11 +147,11 @@ output "elasticache_subnets_cidr_blocks" {
 
 # Spoke mode (or explicit lists): the control and service subnets, otherwise the private subnets like aws/vpc default
 output "control_subnets" {
-  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[*].id : azurerm_subnet.private[*].id
+  value = length(local.control_agc_subnets) > 0 ? azurerm_subnet.control_agc[*].id : azurerm_subnet.private[*].id
 }
 
 output "service_subnets" {
-  value = length(local.service_subnets) > 0 ? azurerm_subnet.service[*].id : azurerm_subnet.private[*].id
+  value = length(local.service_agc_subnets) > 0 ? azurerm_subnet.service_agc[*].id : azurerm_subnet.private[*].id
 }
 
 output "compute_subnets" {
@@ -159,19 +159,19 @@ output "compute_subnets" {
 }
 
 output "control_subnets_cidr_blocks" {
-  value = length(local.control_subnets) > 0 ? local.control_subnets : local.private_subnets
+  value = length(local.control_agc_subnets) > 0 ? local.control_agc_subnets : local.private_subnets
 }
 
 output "service_subnets_cidr_blocks" {
-  value = length(local.service_subnets) > 0 ? local.service_subnets : local.private_subnets
+  value = length(local.service_agc_subnets) > 0 ? local.service_agc_subnets : local.private_subnets
 }
 
-output "control_subnet_names" {
-  value = length(local.control_subnets) > 0 ? azurerm_subnet.control[*].name : azurerm_subnet.private[*].name
+output "control_agc_subnet_names" {
+  value = azurerm_subnet.control_agc[*].name
 }
 
-output "service_subnet_names" {
-  value = length(local.service_subnets) > 0 ? azurerm_subnet.service[*].name : azurerm_subnet.private[*].name
+output "service_agc_subnet_names" {
+  value = azurerm_subnet.service_agc[*].name
 }
 
 output "compute_subnets_cidr_blocks" {
@@ -188,4 +188,20 @@ output "vpc_flow_log_destination_id" {
 
 output "vpc_flow_log_storage_account_name" {
   value = var.enable_flow_log ? coalesce(one(azurerm_storage_account.flow_log[*].name), element(split("/", local.flow_log_storage_account_id), -1)) : ""
+}
+
+output "control_pe_subnets" {
+  value = length(local.control_pe_subnets) > 0 ? azurerm_subnet.control_pe[*].id : azurerm_subnet.private[*].id
+}
+
+output "service_pe_subnets" {
+  value = length(local.service_pe_subnets) > 0 ? azurerm_subnet.service_pe[*].id : azurerm_subnet.private[*].id
+}
+
+output "control_pe_subnets_cidr_blocks" {
+  value = length(local.control_pe_subnets) > 0 ? local.control_pe_subnets : local.private_subnets
+}
+
+output "service_pe_subnets_cidr_blocks" {
+  value = length(local.service_pe_subnets) > 0 ? local.service_pe_subnets : local.private_subnets
 }

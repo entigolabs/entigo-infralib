@@ -4,7 +4,7 @@ Gateway API gateways on Application Gateway for Containers (AGC).
 The vendored alb-controller creates the AGC in the AKS node resource group from the `ApplicationLoadBalancer`.
 
 Depends on: modules/azure/aks (`alb_controller_client_id`, the chart needs the client id at render time),
-modules/azure/vpc (`agc_subnets`), modules/azure/agc (the internal gateway's AGC), modules/k8s/cert-manager (AGC reads
+modules/azure/vpc (`public_agc_subnets`), modules/azure/agc (the internal gateway's AGC), modules/k8s/cert-manager (AGC reads
 certificates only from Kubernetes Secrets).
 The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkFunction` resource providers.
 

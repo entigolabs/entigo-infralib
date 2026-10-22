@@ -35,7 +35,7 @@ variable "subnet_split_mode" {
   type        = string
   nullable    = false
   default     = "default"
-  description = "default: one private subnet for nodes and load balancers. spoke: separate control (AGC of the internal gateway) and service (AGC of the service gateway) /24s delegated to Application Gateway for Containers, the node subnet named compute, no intra subnet, always a database subnet; outputs control_subnets and service_subnets point to the new subnets"
+  description = "default: one private subnet for nodes and load balancers. spoke: separate control (AGC of the internal gateway) and service (AGC of the service gateway) /24s delegated to Application Gateway for Containers, the node subnet named compute, no intra subnet, always a database subnet; outputs control_subnets and service_subnets point to the new subnets (variables control_agc_subnets and service_agc_subnets)"
   validation {
     condition     = contains(["default", "spoke"], var.subnet_split_mode)
     error_message = "subnet_split_mode must be default or spoke."
@@ -63,28 +63,50 @@ variable "database_subnets" {
 }
 
 # https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking#limitations
-variable "agc_subnets" {
+variable "public_agc_subnets" {
   type        = list(string)
   default     = null
   description = "Application Gateway for Containers subnet, exactly a /24 with CNI Overlay"
 }
 
-variable "control_subnets" {
+variable "control_agc_subnets" {
   type    = list(string)
   default = null
 }
 
-variable "service_subnets" {
+variable "service_agc_subnets" {
   type    = list(string)
   default = null
 }
 
-variable "control_subnet_names" {
+variable "control_pe_subnets" {
+  type        = list(string)
+  default     = null
+  description = "Private endpoint subnet of the control gateway (agc-control), spoke mode: a /28 in the free intra slot"
+}
+
+variable "service_pe_subnets" {
+  type        = list(string)
+  default     = null
+  description = "Private endpoint subnet of the service gateway (agc-service), spoke mode: a /28 next to control-pe"
+}
+
+variable "control_pe_subnet_names" {
   type    = list(string)
   default = []
 }
 
-variable "service_subnet_names" {
+variable "service_pe_subnet_names" {
+  type    = list(string)
+  default = []
+}
+
+variable "control_agc_subnet_names" {
+  type    = list(string)
+  default = []
+}
+
+variable "service_agc_subnet_names" {
   type    = list(string)
   default = []
 }
@@ -109,7 +131,7 @@ variable "database_subnet_names" {
   default = []
 }
 
-variable "agc_subnet_names" {
+variable "public_agc_subnet_names" {
   type    = list(string)
   default = []
 }

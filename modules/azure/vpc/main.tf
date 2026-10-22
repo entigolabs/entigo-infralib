@@ -14,23 +14,28 @@ locals {
   intra_subnets          = var.intra_subnets == null ? (local.spoke ? [] : [cidrsubnet(var.vpc_cidr, (local.vpc_bits > 19 ? 26 : 25) - local.vpc_bits, 1)]) : var.intra_subnets
   private_subnets        = var.private_subnets == null ? [local.small ? cidrsubnet(var.vpc_cidr, 1, 1) : cidrsubnet(var.vpc_cidr, 2, 1)] : var.private_subnets
   database_subnets       = var.database_subnets == null ? (local.spoke ? [local.small ? cidrsubnet(var.vpc_cidr, 26 - local.vpc_bits, 1) : cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)] : (local.vpc_bits > 19 ? [] : [cidrsubnet(cidrsubnet(var.vpc_cidr, 2, 2), 1, 0)])) : var.database_subnets
-  agc_subnets            = var.agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.agc_subnets
+  public_agc_subnets     = var.public_agc_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 1) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 0)], []) : var.public_agc_subnets
   aks_subnets            = var.aks_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 4) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 0)], []) : var.aks_subnets
   container_apps_subnets = var.container_apps_subnets == null ? try([local.small ? cidrsubnet(var.vpc_cidr, 27 - local.vpc_bits, 5) : cidrsubnet(cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1), local.vpc_bits > 19 ? 3 : 2, 1)], []) : var.container_apps_subnets
-  control_subnets        = var.control_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 0)], []) : []) : var.control_subnets
-  service_subnets        = var.service_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 3) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 1)], []) : []) : var.service_subnets
+  control_agc_subnets    = var.control_agc_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 0)], []) : []) : var.control_agc_subnets
+  service_agc_subnets    = var.service_agc_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 3) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 1)], []) : []) : var.service_agc_subnets
+  # The free intra slot after public (/16-/20), in a /21 the spare /26 after aks and Container Apps
+  control_pe_subnets = var.control_pe_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 12 : (local.vpc_bits > 19 ? 4 : 8))], []) : []) : var.control_pe_subnets
+  service_pe_subnets = var.service_pe_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 13 : (local.vpc_bits > 19 ? 5 : 9))], []) : []) : var.service_pe_subnets
 
   private_names        = [for i, cidr in local.private_subnets : try(var.private_subnet_names[i], "${var.prefix}-${local.spoke ? "compute" : "private"}-${i}")]
   public_names         = [for i, cidr in local.public_subnets : try(var.public_subnet_names[i], "${var.prefix}-public-${i}")]
   intra_names          = [for i, cidr in local.intra_subnets : try(var.intra_subnet_names[i], "${var.prefix}-intra-${i}")]
   database_names       = [for i, cidr in local.database_subnets : try(var.database_subnet_names[i], "${var.prefix}-database-${i}")]
-  agc_names            = [for i, cidr in local.agc_subnets : try(var.agc_subnet_names[i], "${var.prefix}-agc-${i}")]
+  public_agc_names     = [for i, cidr in local.public_agc_subnets : try(var.public_agc_subnet_names[i], "${var.prefix}-public-agc-${i}")]
   aks_names            = [for i, cidr in local.aks_subnets : try(var.aks_subnet_names[i], "${var.prefix}-aks-${i}")]
   container_apps_names = [for i, cidr in local.container_apps_subnets : try(var.container_apps_subnet_names[i], "${var.prefix}-container-apps-${i}")]
-  control_names        = [for i, cidr in local.control_subnets : try(var.control_subnet_names[i], "${var.prefix}-control-${i}")]
-  service_names        = [for i, cidr in local.service_subnets : try(var.service_subnet_names[i], "${var.prefix}-service-${i}")]
+  control_agc_names    = [for i, cidr in local.control_agc_subnets : try(var.control_agc_subnet_names[i], "${var.prefix}-control-agc-${i}")]
+  service_agc_names    = [for i, cidr in local.service_agc_subnets : try(var.service_agc_subnet_names[i], "${var.prefix}-service-agc-${i}")]
+  control_pe_names     = [for i, cidr in local.control_pe_subnets : try(var.control_pe_subnet_names[i], "${var.prefix}-control-pe-${i}")]
+  service_pe_names     = [for i, cidr in local.service_pe_subnets : try(var.service_pe_subnet_names[i], "${var.prefix}-service-pe-${i}")]
   custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
-  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.agc_names, local.aks_names, local.container_apps_names, local.control_names, local.service_names, values(local.custom_names))
+  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.public_agc_names, local.aks_names, local.container_apps_names, local.control_agc_names, local.service_agc_names, local.control_pe_names, local.service_pe_names, values(local.custom_names))
 
   flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
 
@@ -40,18 +45,20 @@ locals {
     public         = local.public_subnets
     intra          = local.intra_subnets
     database       = local.database_subnets
-    agc            = local.agc_subnets
+    public_agc     = local.public_agc_subnets
     aks            = local.aks_subnets
     container_apps = local.container_apps_subnets
-    control        = local.control_subnets
-    service        = local.service_subnets
+    control_agc    = local.control_agc_subnets
+    service_agc    = local.service_agc_subnets
+    control_pe     = local.control_pe_subnets
+    service_pe     = local.service_pe_subnets
   } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]]), [for key, subnet in var.custom_subnets : { name = "custom-${key}", cidr = subnet.cidr }])
   subnet_ranges = [for s in concat([{ name = "vpc", cidr = var.vpc_cidr }], local.all_subnets) : merge(s, {
     start = sum([for i, octet in split(".", cidrhost(s.cidr, 0)) : tonumber(octet) * pow(256, 3 - i)])
     size  = pow(2, 32 - tonumber(split("/", s.cidr)[1]))
   })]
   vpc_range = local.subnet_ranges[0]
-  agc_cidrs = concat(local.agc_subnets, local.control_subnets, local.service_subnets, [for key, subnet in var.custom_subnets : subnet.cidr if subnet.delegation == "Microsoft.ServiceNetworking/trafficControllers"])
+  agc_cidrs = concat(local.public_agc_subnets, local.control_agc_subnets, local.service_agc_subnets, [for key, subnet in var.custom_subnets : subnet.cidr if subnet.delegation == "Microsoft.ServiceNetworking/trafficControllers"])
   subnets_outside_vpc = [for s in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : "${s.name} ${s.cidr}"
   if s.start < local.vpc_range.start || s.start + s.size > local.vpc_range.start + local.vpc_range.size]
   subnet_overlaps = flatten([for i, a in slice(local.subnet_ranges, 1, length(local.subnet_ranges)) : [
@@ -83,15 +90,15 @@ resource "azurerm_virtual_network" "this" {
       error_message = "egress_next_hop_ip needs enable_nat_gateway = false: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
     }
     precondition {
-      condition     = local.vpc_bits <= 22 || (var.agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
-      error_message = "vpc_cidr is smaller than /22: set agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
+      condition     = local.vpc_bits <= 22 || (var.public_agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
+      error_message = "vpc_cidr is smaller than /22: set public_agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
     }
     precondition {
-      condition     = !local.spoke || local.vpc_bits <= 21 || (var.control_subnets != null && var.service_subnets != null && var.private_subnets != null && var.database_subnets != null)
-      error_message = "subnet_split_mode spoke smaller than /21: set control_subnets, service_subnets, private_subnets and database_subnets explicitly (no room for the control and service /24s)."
+      condition     = !local.spoke || local.vpc_bits <= 21 || (var.control_agc_subnets != null && var.service_agc_subnets != null && var.private_subnets != null && var.database_subnets != null)
+      error_message = "subnet_split_mode spoke smaller than /21: set control_agc_subnets, service_agc_subnets, private_subnets and database_subnets explicitly (no room for the control and service /24s)."
     }
     precondition {
-      condition     = !local.spoke || (length(local.control_subnets) > 0 && length(local.service_subnets) > 0)
+      condition     = !local.spoke || (length(local.control_agc_subnets) > 0 && length(local.service_agc_subnets) > 0)
       error_message = "subnet_split_mode spoke needs at least one control and one service subnet."
     }
     precondition {
@@ -157,12 +164,12 @@ resource "azurerm_subnet" "database" {
   default_outbound_access_enabled = false
 }
 
-resource "azurerm_subnet" "agc" {
-  count                           = length(local.agc_subnets)
-  name                            = local.agc_names[count.index]
+resource "azurerm_subnet" "public_agc" {
+  count                           = length(local.public_agc_subnets)
+  name                            = local.public_agc_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.agc_subnets[count.index]]
+  address_prefixes                = [local.public_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
   delegation {
@@ -260,12 +267,12 @@ resource "azurerm_container_app_environment" "container_apps" {
 }
 
 # Application Gateway for Containers associations of the azure/agc private gateways: no NAT gateway or egress route, the backends answer from the node subnet
-resource "azurerm_subnet" "control" {
-  count                           = length(local.control_subnets)
-  name                            = local.control_names[count.index]
+resource "azurerm_subnet" "control_agc" {
+  count                           = length(local.control_agc_subnets)
+  name                            = local.control_agc_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.control_subnets[count.index]]
+  address_prefixes                = [local.control_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
   delegation {
@@ -278,12 +285,12 @@ resource "azurerm_subnet" "control" {
   }
 }
 
-resource "azurerm_subnet" "service" {
-  count                           = length(local.service_subnets)
-  name                            = local.service_names[count.index]
+resource "azurerm_subnet" "service_agc" {
+  count                           = length(local.service_agc_subnets)
+  name                            = local.service_agc_names[count.index]
   resource_group_name             = var.resource_group_name
   virtual_network_name            = azurerm_virtual_network.this.name
-  address_prefixes                = [local.service_subnets[count.index]]
+  address_prefixes                = [local.service_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
   delegation {
@@ -294,6 +301,28 @@ resource "azurerm_subnet" "service" {
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
   }
+}
+
+# Private endpoints of the azure/agc private frontends, the clients' IPs of the control and service gateways; network
+# policies on, so NSGs and route tables apply to the private endpoints
+resource "azurerm_subnet" "control_pe" {
+  count                             = length(local.control_pe_subnets)
+  name                              = local.control_pe_names[count.index]
+  resource_group_name               = var.resource_group_name
+  virtual_network_name              = azurerm_virtual_network.this.name
+  address_prefixes                  = [local.control_pe_subnets[count.index]]
+  default_outbound_access_enabled   = false
+  private_endpoint_network_policies = "Enabled"
+}
+
+resource "azurerm_subnet" "service_pe" {
+  count                             = length(local.service_pe_subnets)
+  name                              = local.service_pe_names[count.index]
+  resource_group_name               = var.resource_group_name
+  virtual_network_name              = azurerm_virtual_network.this.name
+  address_prefixes                  = [local.service_pe_subnets[count.index]]
+  default_outbound_access_enabled   = false
+  private_endpoint_network_policies = "Enabled"
 }
 
 resource "azurerm_subnet" "custom" {

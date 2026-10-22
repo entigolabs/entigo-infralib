@@ -3,16 +3,20 @@ subnet_split_mode: "spoke"
 enable_flow_log: false
 nat_gateway_sku: "Standard"
 nat_static_ip_count: 2
-agc_subnets: |
+public_agc_subnets: |
   []
 container_apps_subnets: |
   []
-control_subnet_names: |
+control_agc_subnet_names: |
   ["spoke-agc-control"]
-service_subnet_names: |
+service_agc_subnet_names: |
   ["spoke-agc-service"]
 intra_subnets: |
   ["10.33.0.192/26"]
+control_pe_subnets: |
+  ["10.33.1.64/28"]
+service_pe_subnets: |
+  ["10.33.1.80/28"]
 custom_subnets: |
   {
     custommssql = {

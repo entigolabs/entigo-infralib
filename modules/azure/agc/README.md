@@ -14,7 +14,8 @@ gateway of k8s/azure-gateway. The public gateway stays on the AGC that the ALB c
   `<id>.privatelink.alb.azure.com`. azurerm has no private frontend, so it is an azapi resource on the GA API
   2026-03-01.
 * The private frontend is a Private Link resource: clients reach it through the private endpoint `<prefix>` in
-  `private_endpoint_subnet_id` (default the vpc node subnet, where the istio internal load balancer used to be). Its
+  `private_endpoint_subnet_id` (default vpc `control_pe_subnets[0]`: the control-pe /28 in spoke mode, the node subnet
+  otherwise; the service gateway's module sets `service_pe_subnets[0]`). Its
   zone group writes the FQDN's A record into `private_dns_zone_id` (default the dns module's `privatelink.alb.azure.com`,
   a hub zone with dns `agc_private_dns_zone_id`).
 * The ALB controller identity (aks `alb_controller_principal_id`, the aks module needs `agc_subnet_ids`) gets AppGw for
@@ -58,4 +59,5 @@ Spoke mode, an internal and a service gateway:
         source: azure/agc
         inputs:
           subnet_id: "{{ .toutput.vpc.service_subnets[0] }}"
+          private_endpoint_subnet_id: "{{ .toutput.vpc.service_pe_subnets[0] }}"
 ```
