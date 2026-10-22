@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "azure" }}
+{{- if and (eq .Values.global.cloudProvider "azure") .Values.argocd.server.httproute.enabled }}
 
 apiVersion: alb.networking.azure.io/v1
 kind: HealthCheckPolicy
