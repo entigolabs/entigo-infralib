@@ -3,7 +3,7 @@ FROM entigolabs/entigo-infralib-tools:${BASE_TAG} AS tools
 FROM mcr.microsoft.com/azure-cli:azurelinux3.0
 ARG TARGETARCH
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-ENV KUBELOGIN_VERSION=v0.2.20 YQ_VERSION=v4.53.6 AZCOPY_VERSION=10.32.8 \
+ENV KUBELOGIN_VERSION=v0.2.21 YQ_VERSION=v4.53.6 AZCOPY_VERSION=10.32.8 \
     AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
 
 RUN tdnf install -y \

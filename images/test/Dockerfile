@@ -49,7 +49,7 @@ RUN apk --no-cache add \
     && oci --version
 #Install Azure CLI (own venv) and kubelogin for AKS kubeconfigs
 ARG TARGETARCH
-ENV KUBELOGIN_VERSION=v0.2.20 AZCOPY_VERSION=10.32.8 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
+ENV KUBELOGIN_VERSION=v0.2.21 AZCOPY_VERSION=10.32.8 AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
 RUN apk --no-cache add py3-pip \
     && python3 -m venv /opt/az \
     && /opt/az/bin/pip install --no-cache-dir azure-cli \

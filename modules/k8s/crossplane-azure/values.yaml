@@ -11,7 +11,7 @@ global:
     identityPrefix: ""
     nodeResourceGroupName: ""
 
-  providerVersion: v2.8.0
+  providerVersion: v2.8.3
 
   deploymentRuntimeConfig:
     args:
