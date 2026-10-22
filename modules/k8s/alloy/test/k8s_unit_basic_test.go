@@ -4,44 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sAlloyAWSBiz(t *testing.T) {
-	testK8sAlloy(t, "aws", "biz")
-}
+func TestAlloy(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sAlloyAWSPri(t *testing.T) {
-	testK8sAlloy(t, "aws", "pri")
-}
+		logsDaemonSetName := fmt.Sprintf("%s-logs", c.Namespace)
 
-func TestK8sAlloyGoogleBiz(t *testing.T) {
-	testK8sAlloy(t, "google", "biz")
-}
-
-func TestK8sAlloyGooglePri(t *testing.T) {
-	testK8sAlloy(t, "google", "pri")
-}
-
-func TestK8sAlloyAzureBiz(t *testing.T) {
-	testK8sAlloy(t, "azure", "biz")
-}
-
-func TestK8sAlloyAzurePri(t *testing.T) {
-	testK8sAlloy(t, "azure", "pri")
-}
-
-func testK8sAlloy(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	logsDaemonSetName := fmt.Sprintf("%s-logs", namespaceName)
-
-	daemonSetName, err := terrak8s.GetDaemonSetE(t, kubectlOptions, logsDaemonSetName)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", namespaceName), err)
-	}
-	assert.NotEmpty(t, daemonSetName, "Daemonset was not returned")
+		daemonSet, err := k8s.GetDaemonSetE(t, c, logsDaemonSetName)
+		require.NoError(t, err, "Daemonset %s error", logsDaemonSetName)
+		assert.NotEmpty(t, daemonSet, "Daemonset was not returned")
+	})
 }

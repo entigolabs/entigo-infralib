@@ -2,45 +2,33 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/google"
-	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	_ "github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-func TestTerraformCrossplane(t *testing.T) {
-	t.Run("Biz", testTerraformCrossplaneBiz)
-	t.Run("Pri", testTerraformCrossplanePri)
-}
+func TestCrossplane(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
 
-func testTerraformCrossplaneBiz(t *testing.T) {
-	t.Parallel()
-	testTerraformCrossplane(t, "biz")
-}
+		serviceAccountEmail := outputs.String(t, "crossplane__service_account_email")
+		projectId := outputs.String(t, "crossplane__project_id")
 
-func testTerraformCrossplanePri(t *testing.T) {
-	t.Parallel()
-	testTerraformCrossplane(t, "pri")
-}
+		assert.NotEmpty(t, projectId, "project_id was not returned")
 
-func testTerraformCrossplane(t *testing.T, envName string) {
-	outputs := google.GetTFOutputs(t, envName)
+		// The service account is named after the module prefix <prefix>-<step>-crossplane,
+		// cut to Google's 28 character account id limit without a trailing hyphen.
+		stepName := env.ModulePlacement(t, e).Step.Name
+		googleServiceAccountId := strings.TrimRight(truncateString(fmt.Sprintf("%s-%s-crossplane", e.Prefix, stepName), 28), "-")
+		googleServiceAccountEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, projectId)
 
-	serviceAccountEmail := tf.GetStringValue(t, outputs, "crossplane__service_account_email")
-	projectId := tf.GetStringValue(t, outputs, "crossplane__project_id")
-
-	assert.NotEmpty(t, projectId, "project_id was not returned")
-
-	googleServiceAccountId := strings.TrimRight(truncateString(fmt.Sprintf("%s-crossplane", envName), 28), "-")
-	if os.Getenv("STEP_NAME") != "runn-main" {
-		googleServiceAccountId = strings.TrimRight(truncateString(fmt.Sprintf("%s-%s-crossplane", envName, os.Getenv("STEP_NAME")), 28), "-")
-	}
-	googleServiceAccountEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", googleServiceAccountId, projectId)
-
-	assert.Equal(t, googleServiceAccountEmail, serviceAccountEmail, "Wrong service_account_email returned")
+		assert.Equal(t, googleServiceAccountEmail, serviceAccountEmail, "Wrong service_account_email returned")
+	})
 }
 
 func truncateString(input string, maxLength int) string {
