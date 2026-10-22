@@ -21,8 +21,10 @@ private in the second half. private-agc takes the third /24 in a /20 and a /21; 
 Delegated subnets:
 
 * public-agc: a /24 (AGC with Azure CNI Overlay needs exactly a /24, one AGC per subnet, up to 5 frontends per AGC).
-* private-agc: a /24 like public-agc, the AGC of the internal gateway (azure/agc `subnet_id` defaults to it). Automatic
-  in default mode only.
+* private-agc: a /24 like public-agc, the AGC of the internal gateway (azure/agc `subnet_id` defaults to it). Created
+  in default mode.
+* control-agc and service-agc: /24s like public-agc, the AGCs of the internal and the service gateway (azure/agc
+  modules). Created in spoke mode.
 * aks: a /26 (a /27 for /20 and smaller), 59 or 27 usable IPs. A cluster reserves at least 9, so clusters can share
   it, e.g. for a blue/green replacement. For a larger or extra subnet, set `aks_subnets`.
 * container-apps: a /26 (a /27 for /20 and smaller), delegated to `Microsoft.App/environments`. The module creates an
@@ -77,13 +79,13 @@ two AGC /24s.
 | public-agc-0 (/24) | AGC of the public gateway (managed by the ALB controller) | `public_agc_subnets` |
 | control-agc-0 (/24) | AGC of the internal gateway (azure/agc) | `control_agc_subnets`, `control_agc_subnet_names` |
 | service-agc-0 (/24) | AGC of the service gateway (azure/agc) | `service_agc_subnets`, `service_agc_subnet_names` |
-| control-pe-0 (/28) | private endpoint of the internal gateway (the clients' entry IP) | `control_pe_subnets` |
+| control-pe-0 (/28) | private endpoint of the internal gateway | `control_pe_subnets` |
 | service-pe-0 (/28) | private endpoint of the service gateway | `service_pe_subnets` |
 | aks-0 | AKS API Server VNet Integration | `aks_subnets` |
 | container-apps-0 | Container Apps environment (agent pipeline jobs) | `container_apps_subnets` |
 
 * control-agc and service-agc are delegated to `Microsoft.ServiceNetworking/trafficControllers` and hold only their
-  AGC (a separate load balancer each, like the aws spoke ALBs). They take the first two /24s of the VNet's second
+  AGC. They take the first two /24s of the VNet's second
   eighth (in a /21 after public-agc).
 * control-pe and service-pe have private endpoint network policies on, so NSGs and route tables apply. They take the
   first two /28s after public (in a /21 after container-apps).
