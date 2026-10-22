@@ -5,18 +5,6 @@
 # sets TF_TOOL=tofu explicitly, this default covers running the scripts without it.
 TF_TOOL=${TF_TOOL:-tofu}
 
-# Run Go tests
-run_tests() {
-    if [ ! -f go.mod ]; then
-        cd /common && go mod download -x && cd /app
-        go mod init github.com/entigolabs/entigo-infralib
-        go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
-        go mod tidy
-    fi
-    cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
-    exit $?
-}
-
 # Prepare working directory and copy files for plan stage
 prepare_plan_stage() {
     echo "Need to copy project files from bucket $INFRALIB_BUCKET"

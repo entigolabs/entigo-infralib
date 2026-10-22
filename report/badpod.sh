@@ -2,7 +2,7 @@
 echo "#################################"
 echo "Containers without requests or limits."
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-cd $SCRIPTPATH/../..
+cd "$SCRIPTPATH/.."
 
 kubectl get pods -A -o json | jq -r '.items[] | . as $pod | .spec.containers[] | select((.resources.requests == null or .resources.limits == null) and (.name | IN("default-http-backend","prometheus-to-sd-exporter","dnsmasq","sidecar","event-exporter","autoscaler" ,"netd", "aws-node", "aws-eks-nodeagent", "kube-proxy", "calico-node", "ip-masq-agent", "calico-typha", "cilium-agent", "efs-plugin", "csi-driver-registrar", "liveness-probe") | not)) | "\($pod.metadata.namespace)/\($pod.metadata.name)/\(.name)"'
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-cd $SCRIPTPATH/../..
+cd "$SCRIPTPATH/.."
 kubectl get vulnerabilityreports -A -o json | jq -r '
   # Group by namespace and image
   [.items[] | {
