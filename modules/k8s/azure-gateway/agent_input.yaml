@@ -14,6 +14,14 @@ gateways:
     addresses:
       - type: alb.networking.azure.io/alb-frontend
         value: "{{ .toutput.agc.frontend_name }}"
+  service:
+    enabled: '{{ .toutput.vpc.service_agc_subnet_names }}'
+    domain: "{{ .toutput.dns.int_domain }}"
+    annotations:
+      alb.networking.azure.io/alb-id: "{{ .optout.infra.agc-service.agc_id }}"
+    addresses:
+      - type: alb.networking.azure.io/alb-frontend
+        value: "{{ .optout.infra.agc-service.frontend_name }}"
 alb-controller:
   albController:
     podIdentity:

@@ -1,5 +1,5 @@
 resource_group_name: "{{ .agent.resourceGroup }}"
 location: "{{ .agent.region }}"
-private_endpoint_subnet_id: "{{ .toutput.vpc.control_pe_subnets[0] }}"
+private_endpoint_subnet_id: "{{ .toutput.vpc.private_subnets[0] }}"
 private_dns_zone_id: "{{ .toutput.dns.agc_private_dns_zone_id }}"
 alb_controller_principal_id: "{{ .toutput.aks.alb_controller_principal_id }}"

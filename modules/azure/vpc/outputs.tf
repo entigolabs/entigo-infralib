@@ -191,17 +191,17 @@ output "vpc_flow_log_storage_account_name" {
 }
 
 output "control_pe_subnets" {
-  value = length(local.control_pe_subnets) > 0 ? azurerm_subnet.control_pe[*].id : azurerm_subnet.private[*].id
+  value = azurerm_subnet.control_pe[*].id
 }
 
 output "service_pe_subnets" {
-  value = length(local.service_pe_subnets) > 0 ? azurerm_subnet.service_pe[*].id : azurerm_subnet.private[*].id
+  value = azurerm_subnet.service_pe[*].id
 }
 
 output "control_pe_subnets_cidr_blocks" {
-  value = length(local.control_pe_subnets) > 0 ? local.control_pe_subnets : local.private_subnets
+  value = local.control_pe_subnets
 }
 
 output "service_pe_subnets_cidr_blocks" {
-  value = length(local.service_pe_subnets) > 0 ? local.service_pe_subnets : local.private_subnets
+  value = local.service_pe_subnets
 }

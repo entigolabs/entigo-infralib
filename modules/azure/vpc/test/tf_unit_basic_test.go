@@ -67,7 +67,7 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__nat_gateway_id"), "nat_gateway_id was not returned")
 	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__control_subnets"), "control_subnets must be the private subnets in default mode")
 	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__service_subnets"), "service_subnets must be the private subnets in default mode")
-	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__control_pe_subnets"), "control_pe_subnets must be the private subnets in default mode")
+	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__control_pe_subnets"), "no control_pe_subnets in default mode")
 }
 
 // /21 spoke without the managed AGC subnet (edge in the hub), explicit intra and control/service AGC subnet names, Standard NAT with two IPs, custom

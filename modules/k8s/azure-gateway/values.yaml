@@ -31,10 +31,19 @@ gateways:
     addresses: []
     annotations: {}
     labels: {}
-  # Private frontend of a bring-your-own AGC: the agent sets annotation alb.networking.azure.io/alb-id and address
-  # alb.networking.azure.io/alb-frontend from azure/agc; more private gateways are more entries with their own azure/agc
+  # VPC default and spoke mode (spoke: on the control-agc subnet's AGC)
   internal:
     enabled: true
+    gatewayClassName: azure-alb-internal
+    domain: ""
+    sslRedirect: true
+    sslPolicy: "2023-06"
+    addresses: []
+    annotations: {}
+    labels: {}
+  # VPC Spoke mode
+  service:
+    enabled: false
     gatewayClassName: azure-alb-internal
     domain: ""
     sslRedirect: true

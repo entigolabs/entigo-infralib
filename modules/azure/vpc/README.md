@@ -127,8 +127,7 @@ aws spoke ALBs. Their clients connect to the private endpoints in control-pe and
 `private_endpoint_subnet_id`), so each gateway has its own entry range and its own load balancer range, apart from each
 other and from compute; private endpoint network policies are on there, so NSGs and route tables apply to the private
 endpoints. Internal Azure load balancers (`type: LoadBalancer` Services) stay in the compute subnet. None of them has a
-NAT gateway or egress route. In default mode the outputs `control_pe_subnets` and `service_pe_subnets` are the private
-subnets. More AGCs take more /24s in `custom_subnets` (delegation
+NAT gateway or egress route. In default mode the outputs `control_pe_subnets` and `service_pe_subnets` are empty. More AGCs take more /24s in `custom_subnets` (delegation
 `Microsoft.ServiceNetworking/trafficControllers`), from the free tail of the delegated block for /19 and larger (e.g.
 10.156.162.0/24 in a /16) or from the spare quarter. In a /21
 control-agc and service-agc take 10.156.2.0/24 and 10.156.3.0/24 after the public-agc /24, control-pe and service-pe
@@ -202,7 +201,7 @@ control-agc and one service-agc subnet, `unique_suffix` 8 lowercase letters or d
 subnet names that are valid Container Apps environment names (lowercase).
 
 Outputs include `*_subnet_cidrs` (private, public, intra, database, public-agc, aks, Container Apps), `public_agc_subnets`, `control_pe_subnets` / `service_pe_subnets` (+ `_cidr_blocks`,
-the private subnets in default mode, so azure/agc's default private endpoint subnet works in both modes), `nat_static_ips`
+empty in default mode), `nat_static_ips`
 and the names modules shared between clouds use (`name`, `vpc_cidr_block`,
 `*_subnets_cidr_blocks`, `*_subnet_names`, `nat_public_ips`, `compute_subnets(_cidr_blocks)` = the private subnets,
 and `control/service_subnets(_cidr_blocks)` = the control-agc and service-agc subnets when they exist (spoke mode or

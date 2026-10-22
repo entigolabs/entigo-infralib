@@ -14,14 +14,18 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
   (`global.internalGateway`, in this module's namespace) is on the bring-your-own AGC of the azure/agc module:
   GatewayClass `azure-alb-internal` (alb-controller `privateFrontend: true`), annotation
   `alb.networking.azure.io/alb-id: <agc_id>`, address `alb.networking.azure.io/alb-frontend: <frontend_name>`, HTTPS with
-  a cert-manager wildcard for the int domain. The agent sets both (`annotations`, `addresses`) from `.toutput.agc` (the
-  only agc module, or the one with `default_module: true`); gateways without `addresses` are on the managed AGC. Clients resolve the route hostnames through external-dns CNAMEs to
+  a cert-manager wildcard for the int domain. The agent sets both (`annotations`, `addresses`) from `.toutput.agc`;
+  gateways without `addresses` are on the managed AGC. Clients resolve the route hostnames through external-dns CNAMEs to
   the frontend's `*.privatelink.alb.azure.com` FQDN, which only resolves where the dns module's `privatelink.alb.azure.com`
   zone (or the hub's) is linked. Consumer charts chain `.toptin.azure-gateway.global.internalGateway` and
   `.toptin.azure-gateway.global.internalGatewayNamespace`; their backends get an AGC `HealthCheckPolicy` (every route
   on Azure is on AGC).
-* More private gateways, e.g. the spoke service gateway: one azure/agc module each and one `gateways` entry like
-  `internal` (example below).
+* Gateways like aws-alb: default mode `external` + `internal`, spoke mode `external` + `internal` (on the
+  `agc-control` module, `.toutput.agc`, in the control-agc subnet) + `service` (internal applications outside the
+  platform, on the azure/agc module `agc-service` in step `infra`, `.optout.infra.agc-service.*`: keep those names). The
+  agent turns `service` on when the vpc has a service-agc subnet (spoke mode).
+* More private gateways: a further azure/agc module and one `gateways` entry like `service` with
+  `{{ .output.<step>.<module>.agc_id }}` and `frontend_name` (example below).
 * One azure-gateway module per cluster (it installs the ALB controller): more gateways are more `gateways` entries.
 
 ## SSL policies
@@ -36,21 +40,21 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
       - name: azure-gateway
         source: azure-gateway
 ```
-Spoke mode with a service gateway (azure/agc modules `agc-control` with `default_module: true` and `agc-service` in
-step `infra`):
+A further private gateway (azure/agc module `agc-partner` in step `infra`, the main agc module marked
+`default_module: true`):
 ```
       - name: azure-gateway
         source: azure-gateway
         inputs:
           gateways:
-            service:
+            partner:
               enabled: true
               gatewayClassName: azure-alb-internal
-              domain: "service.{{ .toutput.dns.int_domain }}"
+              domain: "partner.{{ .toutput.dns.int_domain }}"
               sslRedirect: true
               annotations:
-                alb.networking.azure.io/alb-id: "{{ .output.infra.agc-service.agc_id }}"
+                alb.networking.azure.io/alb-id: "{{ .output.infra.agc-partner.agc_id }}"
               addresses:
                 - type: alb.networking.azure.io/alb-frontend
-                  value: "{{ .output.infra.agc-service.frontend_name }}"
+                  value: "{{ .output.infra.agc-partner.frontend_name }}"
 ```
