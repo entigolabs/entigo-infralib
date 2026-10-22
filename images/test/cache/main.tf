@@ -13,6 +13,14 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "7.46.0"
     }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "5.9.0"
+    }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "2.13.0"
+    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "3.0.1"

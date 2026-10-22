@@ -25,6 +25,14 @@ func TestIstioBaseGooglePri(t *testing.T) {
 	testIstioBase(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
+func TestIstioBaseAzureBiz(t *testing.T) {
+	testIstioBase(t, "biz-infra-aks")
+}
+
+func TestIstioBaseAzurePri(t *testing.T) {
+	testIstioBase(t, "pri-infra-aks")
+}
+
 func TestIstioBaseOracleBiz(t *testing.T) {
 	testIstioBase(t, "biz-infra-oke")
 }

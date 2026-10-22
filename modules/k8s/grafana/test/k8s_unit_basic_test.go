@@ -26,6 +26,14 @@ func TestK8sGrafanaGooglePri(t *testing.T) {
 	testK8sGrafana(t, "google", "pri")
 }
 
+func TestK8sGrafanaAzureBiz(t *testing.T) {
+	testK8sGrafana(t, "azure", "biz")
+}
+
+func TestK8sGrafanaAzurePri(t *testing.T) {
+	testK8sGrafana(t, "azure", "pri")
+}
+
 func testK8sGrafana(t *testing.T, cloudName string, envName string) {
   	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
