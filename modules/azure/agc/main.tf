@@ -39,7 +39,7 @@ resource "azapi_resource" "frontend" {
   schema_validation_enabled = false
   body = {
     properties = {
-      publicNetworkAccess = "Disabled"
+      publicNetworkAccess = "disabled"
       association = {
         id = azurerm_application_load_balancer_subnet_association.this.id
       }
