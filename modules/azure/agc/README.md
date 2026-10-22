@@ -8,8 +8,8 @@ mode, `agc-control` and `agc-service` in spoke mode (examples below). The public
 
 * AGC `<prefix>` in the agent resource group, associated with `subnet_id`: a /24 delegated to
   `Microsoft.ServiceNetworking/trafficControllers` that no other AGC uses (CNI Overlay: exactly a /24, one AGC per
-  subnet). In vpc spoke mode the control subnet (internal gateway) and the service subnet (service gateway), otherwise
-  a vpc custom subnet.
+  subnet). Default the vpc private-agc subnet (`private_agc_subnets[0]`); in spoke mode the control-agc subnet (internal
+  gateway) and the service-agc subnet (service gateway), further AGCs a vpc custom subnet.
 * Private frontend `private` (`publicNetworkAccess: Disabled`) with an FQDN
   `<id>.privatelink.alb.azure.com`. azurerm has no private frontend, so it is an azapi resource on the GA API
   2026-03-01.
@@ -32,23 +32,10 @@ inputs. Cost: about 134 USD a month
 per AGC (AGC, association and frontend hours, list price) plus capacity units and the private endpoint.
 
 ### Example code ###
-Default mode, the AGC /24 as a vpc custom subnet:
+Default mode, on the vpc private-agc subnet:
 ```
-      - name: vpc
-        source: azure/vpc
-        inputs:
-          custom_subnets: |
-            {
-              agcinternal = {
-                cidr       = "10.156.162.0/24"
-                delegation = "Microsoft.ServiceNetworking/trafficControllers"
-              }
-            }
-...
       - name: agc-internal
         source: azure/agc
-        inputs:
-          subnet_id: "{{ .toutput.vpc.custom_subnets[agcinternal] }}"
 ```
 Spoke mode, a control and a service gateway (k8s/azure-gateway spoke example for the gateways):
 ```
@@ -56,11 +43,11 @@ Spoke mode, a control and a service gateway (k8s/azure-gateway spoke example for
         source: azure/agc
         default_module: true
         inputs:
-          subnet_id: "{{ .toutput.vpc.control_subnets[0] }}"
+          subnet_id: "{{ .toutput.vpc.control_agc_subnets[0] }}"
           private_endpoint_subnet_id: "{{ .toutput.vpc.control_pe_subnets[0] }}"
       - name: agc-service
         source: azure/agc
         inputs:
-          subnet_id: "{{ .toutput.vpc.service_subnets[0] }}"
+          subnet_id: "{{ .toutput.vpc.service_agc_subnets[0] }}"
           private_endpoint_subnet_id: "{{ .toutput.vpc.service_pe_subnets[0] }}"
 ```

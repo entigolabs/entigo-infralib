@@ -69,6 +69,12 @@ variable "public_agc_subnets" {
   description = "Application Gateway for Containers subnet, exactly a /24 with CNI Overlay"
 }
 
+variable "private_agc_subnets" {
+  type        = list(string)
+  default     = null
+  description = "Application Gateway for Containers subnet of the internal gateway (azure/agc), default split mode"
+}
+
 variable "control_agc_subnets" {
   type    = list(string)
   default = null
@@ -132,6 +138,11 @@ variable "database_subnet_names" {
 }
 
 variable "public_agc_subnet_names" {
+  type    = list(string)
+  default = []
+}
+
+variable "private_agc_subnet_names" {
   type    = list(string)
   default = []
 }

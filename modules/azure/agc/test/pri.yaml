@@ -1,1 +1,0 @@
-subnet_id: "{{ .toutput.vpc.custom_subnets[customagc] }}"

@@ -26,7 +26,7 @@ func checkAgc(t *testing.T, env string) {
 	assert.Equal(t, "private", tf.GetStringValue(t, outputs, "agc__frontend_name"))
 	assert.True(t, strings.HasSuffix(tf.GetStringValue(t, outputs, "agc__frontend_fqdn"), ".privatelink.alb.azure.com"), "frontend_fqdn must be a private frontend")
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "agc__private_endpoint_ip"), "private_endpoint_ip was not returned")
-	assert.Equal(t, tf.GetValue(t, netOutputs, "vpc__custom_subnet_cidrs").(map[string]interface{})["customagc"], tf.GetStringValue(t, outputs, "agc__subnet_cidr"), "subnet_cidr must be the vpc custom agc subnet")
+	assert.Equal(t, tf.GetStringListValue(t, netOutputs, "vpc__private_agc_subnet_cidrs")[0], tf.GetStringValue(t, outputs, "agc__subnet_cidr"), "subnet_cidr must be the vpc private-agc subnet")
 }
 
 func testTerraformAgcBiz(t *testing.T) {

@@ -15,7 +15,7 @@ variable "location" {
 # https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking#limitations
 variable "subnet_id" {
   type        = string
-  description = "Association subnet, a /24 delegated to Microsoft.ServiceNetworking/trafficControllers used by no other AGC: vpc control_subnets or service_subnets in spoke mode, a custom subnet otherwise"
+  description = "Association subnet, a /24 delegated to Microsoft.ServiceNetworking/trafficControllers used by no other AGC: default vpc private_agc_subnets[0], vpc control_agc_subnets or service_agc_subnets in spoke mode"
 }
 
 variable "private_endpoint_subnet_id" {

@@ -40,6 +40,10 @@ output "public_agc_subnets" {
   value = azurerm_subnet.public_agc[*].id
 }
 
+output "private_agc_subnets" {
+  value = azurerm_subnet.private_agc[*].id
+}
+
 output "private_subnet_cidrs" {
   value = local.private_subnets
 }
@@ -58,6 +62,10 @@ output "database_subnet_cidrs" {
 
 output "public_agc_subnet_cidrs" {
   value = local.public_agc_subnets
+}
+
+output "private_agc_subnet_cidrs" {
+  value = local.private_agc_subnets
 }
 
 output "nat_gateway_id" {
@@ -145,25 +153,25 @@ output "elasticache_subnets_cidr_blocks" {
   value = local.database_subnets
 }
 
-# Spoke mode (or explicit lists): the control and service subnets, otherwise the private subnets like aws/vpc default
-output "control_subnets" {
-  value = length(local.control_agc_subnets) > 0 ? azurerm_subnet.control_agc[*].id : azurerm_subnet.private[*].id
+# Spoke mode (or explicit lists): the control-agc and service-agc subnets, empty otherwise
+output "control_agc_subnets" {
+  value = azurerm_subnet.control_agc[*].id
 }
 
-output "service_subnets" {
-  value = length(local.service_agc_subnets) > 0 ? azurerm_subnet.service_agc[*].id : azurerm_subnet.private[*].id
+output "service_agc_subnets" {
+  value = azurerm_subnet.service_agc[*].id
 }
 
 output "compute_subnets" {
   value = azurerm_subnet.private[*].id
 }
 
-output "control_subnets_cidr_blocks" {
-  value = length(local.control_agc_subnets) > 0 ? local.control_agc_subnets : local.private_subnets
+output "control_agc_subnets_cidr_blocks" {
+  value = local.control_agc_subnets
 }
 
-output "service_subnets_cidr_blocks" {
-  value = length(local.service_agc_subnets) > 0 ? local.service_agc_subnets : local.private_subnets
+output "service_agc_subnets_cidr_blocks" {
+  value = local.service_agc_subnets
 }
 
 output "control_agc_subnet_names" {
