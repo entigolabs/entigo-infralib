@@ -1,4 +1,18 @@
-logs:
+global:
+  # Consumed by templates/aws/networkPolicy.yaml to scope the cluster-metrics UI ALB ingress.
+  aws:
+    publicSubnetCidrs: "{{ .toutput.vpc.public_subnets_cidr_blocks }}"
+    privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
+    serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
+node-agent:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -29,3 +43,17 @@ logs:
         to:
           - ipBlock:
               cidr: 172.20.0.1/32
+cluster-metrics:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'
+  externalLabels:
+    cluster: "{{ .toutput.eks.cluster_name }}"
+receiver:
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

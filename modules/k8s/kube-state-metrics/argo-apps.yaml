@@ -1,0 +1,5 @@
+spec:
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        tenancy.entigo.com/zone: infralib
