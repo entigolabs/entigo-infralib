@@ -85,24 +85,24 @@ variable "service_agc_subnets" {
   default = null
 }
 
-variable "control_pe_subnets" {
+variable "control_subnets" {
   type        = list(string)
   default     = null
   description = "Private endpoint subnet of the control gateway (agc-control), spoke mode: a /28 in the free intra slot"
 }
 
-variable "service_pe_subnets" {
+variable "service_subnets" {
   type        = list(string)
   default     = null
-  description = "Private endpoint subnet of the service gateway (agc-service), spoke mode: a /28 next to control-pe"
+  description = "Private endpoint subnet of the service gateway (agc-service), spoke mode: a /28 next to the control subnet"
 }
 
-variable "control_pe_subnet_names" {
+variable "control_subnet_names" {
   type    = list(string)
   default = []
 }
 
-variable "service_pe_subnet_names" {
+variable "service_subnet_names" {
   type    = list(string)
   default = []
 }

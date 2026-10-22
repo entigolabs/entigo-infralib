@@ -69,7 +69,7 @@ func testTerraformVpcPri(t *testing.T) {
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__nat_gateway_id"), "nat_gateway_id was not returned")
 	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__control_agc_subnets"), "no control_agc_subnets in default mode")
 	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__service_agc_subnets"), "no service_agc_subnets in default mode")
-	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__control_pe_subnets"), "no control_pe_subnets in default mode")
+	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__control_subnets"), "no control_subnets in default mode")
 }
 
 // /21 spoke without the managed AGC subnet (edge in the hub), explicit intra and control/service AGC subnet names, Standard NAT with two IPs, custom
@@ -94,9 +94,9 @@ func testTerraformVpcSpoke(t *testing.T) {
 	assert.Empty(t, tf.GetStringListValue(t, outputs, "vpc__container_apps_environment_ids"))
 	assert.Equal(t, []string{"spoke-agc-control"}, tf.GetStringListValue(t, outputs, "vpc__control_agc_subnet_names"))
 	assert.Equal(t, []string{"spoke-agc-service"}, tf.GetStringListValue(t, outputs, "vpc__service_agc_subnet_names"))
-	assert.Equal(t, []string{"10.33.1.64/28"}, tf.GetStringListValue(t, outputs, "vpc__control_pe_subnets_cidr_blocks"))
-	assert.Equal(t, []string{"10.33.1.80/28"}, tf.GetStringListValue(t, outputs, "vpc__service_pe_subnets_cidr_blocks"))
-	assert.NotEqual(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__control_pe_subnets"), "control_pe subnet must not be the node subnet in spoke mode")
+	assert.Equal(t, []string{"10.33.1.64/28"}, tf.GetStringListValue(t, outputs, "vpc__control_subnets_cidr_blocks"))
+	assert.Equal(t, []string{"10.33.1.80/28"}, tf.GetStringListValue(t, outputs, "vpc__service_subnets_cidr_blocks"))
+	assert.NotEqual(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__control_subnets"), "control subnet must not be the node subnet in spoke mode")
 	assert.NotEqual(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets"), tf.GetStringListValue(t, outputs, "vpc__control_agc_subnets"), "control-agc subnet must not be the node subnet in spoke mode")
 	assert.Equal(t, 2, len(tf.GetStringListValue(t, outputs, "vpc__nat_public_ips")), "Wrong number of NAT public IPs")
 	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "vpc__nat_gateway_id"), "nat_gateway_id was not returned")

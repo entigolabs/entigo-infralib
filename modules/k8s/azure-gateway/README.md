@@ -18,7 +18,7 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
   gateways without `addresses` are on the managed AGC. Clients resolve the route hostnames through external-dns CNAMEs to
   the frontend's `*.privatelink.alb.azure.com` FQDN, which only resolves where the dns module's `privatelink.alb.azure.com`
   zone (or the hub's) is linked. Consumer charts chain `.toptin.azure-gateway.global.internalGateway` and
-  `.toptin.azure-gateway.global.internalGatewayNamespace`; their backends get an AGC `HealthCheckPolicy` (every route
+  `.toptmodule.azure-gateway` (the namespace); their backends get an AGC `HealthCheckPolicy` (every route
   on Azure is on AGC).
 * Gateways like aws-alb: default mode `external` + `internal`, spoke mode `external` + `internal` (on the
   `agc-control` module, `.toutput.agc`, in the control-agc subnet) + `service` (internal applications outside the

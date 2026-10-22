@@ -1,5 +1,4 @@
 global:
-  internalGatewayNamespace: "{{ .toptmodule.azure-gateway }}"
   azure:
     agcSubnetIds:
       - "{{ .toutput.vpc.public_agc_subnets[0] }}"

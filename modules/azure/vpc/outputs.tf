@@ -198,18 +198,18 @@ output "vpc_flow_log_storage_account_name" {
   value = var.enable_flow_log ? coalesce(one(azurerm_storage_account.flow_log[*].name), element(split("/", local.flow_log_storage_account_id), -1)) : ""
 }
 
-output "control_pe_subnets" {
-  value = azurerm_subnet.control_pe[*].id
+output "control_subnets" {
+  value = azurerm_subnet.control[*].id
 }
 
-output "service_pe_subnets" {
-  value = azurerm_subnet.service_pe[*].id
+output "service_subnets" {
+  value = azurerm_subnet.service[*].id
 }
 
-output "control_pe_subnets_cidr_blocks" {
-  value = local.control_pe_subnets
+output "control_subnets_cidr_blocks" {
+  value = local.control_subnets
 }
 
-output "service_pe_subnets_cidr_blocks" {
-  value = local.service_pe_subnets
+output "service_subnets_cidr_blocks" {
+  value = local.service_subnets
 }

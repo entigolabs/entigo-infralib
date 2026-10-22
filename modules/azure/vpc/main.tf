@@ -21,8 +21,8 @@ locals {
   private_agc_subnets    = var.private_agc_subnets == null ? (local.spoke || local.vpc_bits > 21 ? [] : [local.vpc_bits > 19 ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(local.delegated_block, 24 - local.delegated_bits, 1)]) : var.private_agc_subnets
   control_agc_subnets    = var.control_agc_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 2) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 0)], []) : []) : var.control_agc_subnets
   service_agc_subnets    = var.service_agc_subnets == null ? (local.spoke ? try([local.small ? cidrsubnet(var.vpc_cidr, 24 - local.vpc_bits, 3) : cidrsubnet(cidrsubnet(var.vpc_cidr, 3, 1), 21 - local.vpc_bits, 1)], []) : []) : var.service_agc_subnets
-  control_pe_subnets     = var.control_pe_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 12 : (local.vpc_bits > 19 ? 4 : 8))], []) : []) : var.control_pe_subnets
-  service_pe_subnets     = var.service_pe_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 13 : (local.vpc_bits > 19 ? 5 : 9))], []) : []) : var.service_pe_subnets
+  control_subnets        = var.control_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 12 : (local.vpc_bits > 19 ? 4 : 8))], []) : []) : var.control_subnets
+  service_subnets        = var.service_subnets == null ? (local.spoke ? try([cidrsubnet(var.vpc_cidr, 28 - local.vpc_bits, local.small ? 13 : (local.vpc_bits > 19 ? 5 : 9))], []) : []) : var.service_subnets
 
   private_names        = [for i, cidr in local.private_subnets : try(var.private_subnet_names[i], "${var.prefix}-${local.spoke ? "compute" : "private"}-${i}")]
   public_names         = [for i, cidr in local.public_subnets : try(var.public_subnet_names[i], "${var.prefix}-public-${i}")]
@@ -34,10 +34,10 @@ locals {
   private_agc_names    = [for i, cidr in local.private_agc_subnets : try(var.private_agc_subnet_names[i], "${var.prefix}-private-agc-${i}")]
   control_agc_names    = [for i, cidr in local.control_agc_subnets : try(var.control_agc_subnet_names[i], "${var.prefix}-control-agc-${i}")]
   service_agc_names    = [for i, cidr in local.service_agc_subnets : try(var.service_agc_subnet_names[i], "${var.prefix}-service-agc-${i}")]
-  control_pe_names     = [for i, cidr in local.control_pe_subnets : try(var.control_pe_subnet_names[i], "${var.prefix}-control-pe-${i}")]
-  service_pe_names     = [for i, cidr in local.service_pe_subnets : try(var.service_pe_subnet_names[i], "${var.prefix}-service-pe-${i}")]
+  control_names        = [for i, cidr in local.control_subnets : try(var.control_subnet_names[i], "${var.prefix}-control-${i}")]
+  service_names        = [for i, cidr in local.service_subnets : try(var.service_subnet_names[i], "${var.prefix}-service-${i}")]
   custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
-  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.public_agc_names, local.aks_names, local.container_apps_names, local.private_agc_names, local.control_agc_names, local.service_agc_names, local.control_pe_names, local.service_pe_names, values(local.custom_names))
+  subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.public_agc_names, local.aks_names, local.container_apps_names, local.private_agc_names, local.control_agc_names, local.service_agc_names, local.control_names, local.service_names, values(local.custom_names))
 
   flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
 
@@ -53,8 +53,8 @@ locals {
     private_agc    = local.private_agc_subnets
     control_agc    = local.control_agc_subnets
     service_agc    = local.service_agc_subnets
-    control_pe     = local.control_pe_subnets
-    service_pe     = local.service_pe_subnets
+    control        = local.control_subnets
+    service        = local.service_subnets
   } : [for i, cidr in cidrs : { name = "${type}-${i}", cidr = cidr }]]), [for key, subnet in var.custom_subnets : { name = "custom-${key}", cidr = subnet.cidr }])
   subnet_ranges = [for s in concat([{ name = "vpc", cidr = var.vpc_cidr }], local.all_subnets) : merge(s, {
     start = sum([for i, octet in split(".", cidrhost(s.cidr, 0)) : tonumber(octet) * pow(256, 3 - i)])
@@ -326,22 +326,22 @@ resource "azurerm_subnet" "service_agc" {
 
 # Private endpoints of the azure/agc private frontends, the clients' IPs of the control and service gateways; network
 # policies on, so NSGs and route tables apply to the private endpoints
-resource "azurerm_subnet" "control_pe" {
-  count                             = length(local.control_pe_subnets)
-  name                              = local.control_pe_names[count.index]
+resource "azurerm_subnet" "control" {
+  count                             = length(local.control_subnets)
+  name                              = local.control_names[count.index]
   resource_group_name               = var.resource_group_name
   virtual_network_name              = azurerm_virtual_network.this.name
-  address_prefixes                  = [local.control_pe_subnets[count.index]]
+  address_prefixes                  = [local.control_subnets[count.index]]
   default_outbound_access_enabled   = false
   private_endpoint_network_policies = "Enabled"
 }
 
-resource "azurerm_subnet" "service_pe" {
-  count                             = length(local.service_pe_subnets)
-  name                              = local.service_pe_names[count.index]
+resource "azurerm_subnet" "service" {
+  count                             = length(local.service_subnets)
+  name                              = local.service_names[count.index]
   resource_group_name               = var.resource_group_name
   virtual_network_name              = azurerm_virtual_network.this.name
-  address_prefixes                  = [local.service_pe_subnets[count.index]]
+  address_prefixes                  = [local.service_subnets[count.index]]
   default_outbound_access_enabled   = false
   private_endpoint_network_policies = "Enabled"
 }

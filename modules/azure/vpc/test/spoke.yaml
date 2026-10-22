@@ -13,9 +13,9 @@ service_agc_subnet_names: |
   ["spoke-agc-service"]
 intra_subnets: |
   ["10.33.0.192/26"]
-control_pe_subnets: |
+control_subnets: |
   ["10.33.1.64/28"]
-service_pe_subnets: |
+service_subnets: |
   ["10.33.1.80/28"]
 custom_subnets: |
   {

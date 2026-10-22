@@ -3,7 +3,6 @@ global:
   # On a bring-your-own AGC with a private frontend (azure/agc) until the managed AGC has one
   # https://github.com/Azure/AKS/issues/5739
   internalGateway: internal
-  internalGatewayNamespace: ""
   azure:
     # Subnets delegated to Microsoft.ServiceNetworking/trafficControllers (ApplicationLoadBalancer associations), one AGC
     # per /24; Azure allows one association per AGC today, the list is for when that limit goes

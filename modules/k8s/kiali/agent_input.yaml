@@ -1,7 +1,7 @@
 global:
   gateway:
     name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
-    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptin.azure-gateway.global.internalGatewayNamespace | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptmodule.azure-gateway | required }}'
 
 kiali-server:
   server:

@@ -4,7 +4,7 @@ Creates a VNet with public, private, intra and database subnets, a delegated pub
 Application Gateway for Containers (AGC), a delegated private-agc subnet for the internal gateway's AGC, a delegated
 aks subnet (API Server VNet Integration), a delegated Container Apps subnet with its environment (the agent pipeline
 jobs), optional custom subnets and a NAT gateway. Spoke mode replaces private-agc with control-agc and service-agc
-subnets for private AGCs and control-pe and service-pe subnets for their private endpoints.
+subnets for private AGCs and control and service subnets for their private endpoints.
 
 ### Automatic subnet calculations ###
 If only `vpc_cidr` is given, it is split in quarters:
@@ -79,26 +79,26 @@ two AGC /24s.
 | public-agc-0 (/24) | AGC of the public gateway (managed by the ALB controller) | `public_agc_subnets` |
 | control-agc-0 (/24) | AGC of the internal gateway (azure/agc) | `control_agc_subnets`, `control_agc_subnet_names` |
 | service-agc-0 (/24) | AGC of the service gateway (azure/agc) | `service_agc_subnets`, `service_agc_subnet_names` |
-| control-pe-0 (/28) | private endpoint of the internal gateway | `control_pe_subnets` |
-| service-pe-0 (/28) | private endpoint of the service gateway | `service_pe_subnets` |
+| control-0 (/28) | private endpoint of the internal gateway | `control_subnets` |
+| service-0 (/28) | private endpoint of the service gateway | `service_subnets` |
 | aks-0 | AKS API Server VNet Integration | `aks_subnets` |
 | container-apps-0 | Container Apps environment (agent pipeline jobs) | `container_apps_subnets` |
 
 * control-agc and service-agc are delegated to `Microsoft.ServiceNetworking/trafficControllers` and hold only their
   AGC. They take the first two /24s of the VNet's second
   eighth (in a /21 after public-agc).
-* control-pe and service-pe have private endpoint network policies on, so NSGs and route tables apply. They take the
-  first two /28s after public (in a /21 after container-apps).
+* The control and service subnets have private endpoint network policies on, so NSGs and route tables apply. They
+  take the first two /28s after public (in a /21 after container-apps).
 * No AGC or private endpoint subnet has a NAT gateway or egress route.
 * No intra subnet (the peering attaches the VNet) and always a database subnet (a /23 for /20, a /26 in the intra slot
   for /21).
 * No private-agc (control-agc takes its role); public, database (/19 and larger), public-agc, aks and container-apps
   keep their default-mode addresses.
-* The four lists (`control_agc_subnets`, `service_agc_subnets`, `control_pe_subnets`, `service_pe_subnets`, names via
+* The four lists (`control_agc_subnets`, `service_agc_subnets`, `control_subnets`, `service_subnets`, names via
   `*_subnet_names`) can be set explicitly in either mode; spoke mode needs at least one control-agc and one
   service-agc subnet. Their outputs are empty in default mode unless set.
 
-| vpc_cidr | public | compute | database | public-agc | aks | container apps | control-agc | service-agc | control-pe | service-pe | spare |
+| vpc_cidr | public | compute | database | public-agc | aks | container apps | control-agc | service-agc | control | service | spare |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | /16 | /25 | /18 | /19 | /24 | /26 | /26 | /24 | /24 | /28 | /28 | /18 + /20 + /20 + /20 + /21 + /21 + /21 + /22 + /22 + /22 + /23 + /23 + /24 + /24 + /24 + /25 + /26 + /27 |
 | /17 | /25 | /19 | /20 | /24 | /26 | /26 | /24 | /24 | /28 | /28 | /19 + /21 + /21 + /21 + /22 + /22 + /22 + /23 + /23 + /24 + /24 + /24 + /25 + /26 + /27 |
@@ -184,8 +184,8 @@ Azure itself requires aks /28 or larger and Container Apps /27 or larger.
 
 ### Outputs ###
 * Per tier `*_subnets` (ids) and `*_subnet_cidrs`: private, public, intra, database, public_agc, private_agc, aks,
-  container_apps; `container_apps_environment_ids`; `control_agc_subnets`, `service_agc_subnets`, `control_pe_subnets`,
-  `service_pe_subnets` (+ `_cidr_blocks`); `custom_subnets`, `custom_subnet_cidrs`; `vpc_id`, `vpc_name`, `vpc_cidr`.
+  container_apps; `container_apps_environment_ids`; `control_agc_subnets`, `service_agc_subnets`, `control_subnets`,
+  `service_subnets` (+ `_cidr_blocks`); `custom_subnets`, `custom_subnet_cidrs`; `vpc_id`, `vpc_name`, `vpc_cidr`.
 * Names: `private/public/intra/database_subnet_names`, `control_agc_subnet_names`, `service_agc_subnet_names`.
 * Cross-cloud names: `name`, `vpc_cidr_block`, `*_subnets_cidr_blocks`, `nat_public_ips`, `compute_subnets` (the private
   subnets), `elasticache_subnets_cidr_blocks` (database).
@@ -222,8 +222,8 @@ Spoke mode (`subnet_split_mode: spoke`), `10.156.0.0/16` down to `/21`:
 | Subnet | /16 | /17 | /18 | /19 | /20 | /21 |
 |---|---|---|---|---|---|---|
 | public-0 | 10.156.0.0/25 | 10.156.0.0/25 | 10.156.0.0/25 | 10.156.0.0/25 | 10.156.0.0/26 | 10.156.0.0/26 |
-| control-pe-0 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.64/28 | 10.156.0.192/28 |
-| service-pe-0 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.80/28 | 10.156.0.208/28 |
+| control-0 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.128/28 | 10.156.0.64/28 | 10.156.0.192/28 |
+| service-0 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.144/28 | 10.156.0.80/28 | 10.156.0.208/28 |
 | control-agc-0 | 10.156.32.0/24 | 10.156.16.0/24 | 10.156.8.0/24 | 10.156.4.0/24 | 10.156.2.0/24 | 10.156.2.0/24 |
 | service-agc-0 | 10.156.33.0/24 | 10.156.17.0/24 | 10.156.9.0/24 | 10.156.5.0/24 | 10.156.3.0/24 | 10.156.3.0/24 |
 | compute-0 | 10.156.64.0/18 | 10.156.32.0/19 | 10.156.16.0/20 | 10.156.8.0/21 | 10.156.4.0/22 | 10.156.4.0/22 |

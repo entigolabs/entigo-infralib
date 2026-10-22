@@ -15,7 +15,7 @@ mode, `agc-control` and `agc-service` in spoke mode (examples below). The public
   2026-03-01.
 * The private frontend is a Private Link resource: clients reach it through the private endpoint `<prefix>` in
   `private_endpoint_subnet_id` (default the vpc node subnet `private_subnets[0]`; in spoke mode the modules set
-  `control_pe_subnets[0]` and `service_pe_subnets[0]`). Its
+  `control_subnets[0]` and `service_subnets[0]`). Its
   zone group writes the FQDN's A record into `private_dns_zone_id` (default the dns module's `privatelink.alb.azure.com`,
   a hub zone with dns `agc_private_dns_zone_id`).
 * The ALB controller identity (aks `alb_controller_principal_id`, the aks module needs `agc_subnet_ids`) gets AppGw for
@@ -44,10 +44,10 @@ Spoke mode, a control and a service gateway (k8s/azure-gateway spoke example for
         default_module: true
         inputs:
           subnet_id: "{{ .toutput.vpc.control_agc_subnets[0] }}"
-          private_endpoint_subnet_id: "{{ .toutput.vpc.control_pe_subnets[0] }}"
+          private_endpoint_subnet_id: "{{ .toutput.vpc.control_subnets[0] }}"
       - name: agc-service
         source: azure/agc
         inputs:
           subnet_id: "{{ .toutput.vpc.service_agc_subnets[0] }}"
-          private_endpoint_subnet_id: "{{ .toutput.vpc.service_pe_subnets[0] }}"
+          private_endpoint_subnet_id: "{{ .toutput.vpc.service_subnets[0] }}"
 ```
