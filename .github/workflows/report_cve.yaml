@@ -16,6 +16,9 @@ jobs:
     - uses: google-github-actions/setup-gcloud@v3
       with:
         install_components: 'gke-gcloud-auth-plugin'
+    - uses: azure/use-kubelogin@v1
+      with:
+        kubelogin-version: 'v0.2.21'
     - name: Create CVE report
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -25,6 +28,11 @@ jobs:
         GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
         GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
         GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
+        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
       id: create_report
       run: |
         echo "Assemble configuration"
@@ -50,13 +58,24 @@ jobs:
         AWS_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-ecr-proxy/pri-net-ecr-proxy/g' | sort | uniq`
         ./common/k8s/report_cve.sh
         ./common/k8s/report_badpod.sh
+        azure_auth_login
+        azure_kube_context pri
+        echo "### AZURE PRI ####"
+        AZURE_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed -E 's/^prinetacrproxy[a-z0-9]+/prinetacrproxy/' | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
+        azure_kube_context biz
+        echo "### AZURE BIZ ####"
+        AZURE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed -E 's/^biznetacrproxy[a-z0-9]+/prinetacrproxy/' | sort | uniq`
+        ./common/k8s/report_cve.sh
+        ./common/k8s/report_badpod.sh
         echo "Finding images without registry proxy:"
         total=0
         registry=0
-        for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+        for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS $AZURE_PRI_CONTAINERS $AZURE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
         do
           ((total++)) || true
-          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-) ]]
+          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-|^prinetacrproxy\.azurecr\.io|^mcr\.microsoft\.com) ]]
           then
             echo "$image does not use Internal Registry"
             ((registry++)) || true

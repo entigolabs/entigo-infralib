@@ -7,7 +7,7 @@ metadata:
     helm.sh/resource-policy: keep
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  package: xpkg.upbound.io/upbound/provider-family-azure:{{ .Values.global.providerVersion }}
+  package: xpkg.upbound.io/upbound/provider-family-azure:v2.8.3
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
@@ -39,7 +39,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   skipDependencyResolution: true
-  package: xpkg.upbound.io/upbound/provider-azure-{{ $provider }}:{{ $.Values.global.providerVersion }}
+  package: xpkg.upbound.io/upbound/provider-azure-{{ $provider }}:v2.8.3
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
