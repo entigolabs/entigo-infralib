@@ -2,38 +2,26 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/azure"
-	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
+
+	_ "github.com/entigolabs/entigo-infralib-test/azure"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-func TestTerraformAksNodePool(t *testing.T) {
-	t.Run("Biz", testTerraformAksNodePoolBiz)
-	t.Run("Pri", testTerraformAksNodePoolPri)
-}
+func TestAksNodePool(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
+		infraOutputs := tf.GetStep(t, e, "infra")
 
-func checkAksNodePool(t *testing.T, env string) {
-	outputs := azure.GetTFOutputs(t, env)
-	infraOutputs := azure.GetTFOutputsStep(t, env, "infra")
-
-	prefix := fmt.Sprintf("%s-%s-aks-node-pool", env, strings.ToLower(os.Getenv("STEP_NAME")))
-	poolName := regexp.MustCompile("[^a-z0-9]").ReplaceAllString(prefix, "")[:12]
-	assert.Equal(t, poolName, tf.GetStringValue(t, outputs, "aks-node-pool__node_pool_name"))
-	assert.NotEmpty(t, tf.GetStringValue(t, outputs, "aks-node-pool__node_pool_id"), "node_pool_id was not returned")
-	assert.Equal(t, tf.GetStringValue(t, infraOutputs, "aks__cluster_id"), tf.GetStringValue(t, outputs, "aks-node-pool__cluster_id"), "cluster_id must be the infra aks cluster")
-}
-
-func testTerraformAksNodePoolBiz(t *testing.T) {
-	t.Parallel()
-	checkAksNodePool(t, "biz")
-}
-
-func testTerraformAksNodePoolPri(t *testing.T) {
-	t.Parallel()
-	checkAksNodePool(t, "pri")
+		prefix := fmt.Sprintf("%s-%s-aks-node-pool", e.Prefix, strings.ToLower(env.ModulePlacement(t, e).Step.Name))
+		poolName := regexp.MustCompile("[^a-z0-9]").ReplaceAllString(prefix, "")[:12]
+		assert.Equal(t, poolName, outputs.String(t, "aks-node-pool__node_pool_name"))
+		assert.NotEmpty(t, outputs.String(t, "aks-node-pool__node_pool_id"), "node_pool_id was not returned")
+		assert.Equal(t, infraOutputs.String(t, "aks__cluster_id"), outputs.String(t, "aks-node-pool__cluster_id"), "cluster_id must be the infra aks cluster")
+	})
 }

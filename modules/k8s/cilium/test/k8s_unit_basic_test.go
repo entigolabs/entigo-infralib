@@ -4,28 +4,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sCiliumOracleBiz(t *testing.T) {
-	testK8sCilium(t, "oracle", "biz")
-}
+func TestCilium(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sCiliumOraclePri(t *testing.T) {
-	testK8sCilium(t, "oracle", "pri")
-}
-
-func testK8sCilium(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "cilium-operator", 30, 10*time.Second)
-	if err != nil {
-		t.Fatal("cilium-operator deployment error:", err)
-	}
-	_, err = terrak8s.GetDaemonSetE(t, kubectlOptions, "cilium")
-	if err != nil {
-		t.Fatalf("cilium daemonset in %s error: %s", namespaceName, err)
-	}
+		err := k8s.WaitUntilDeploymentAvailableE(t, c, "cilium-operator", 30, 10*time.Second)
+		require.NoError(t, err, "cilium-operator deployment error")
+		_, err = k8s.GetDaemonSetE(t, c, "cilium")
+		require.NoError(t, err, "cilium daemonset in %s error", c.Namespace)
+	})
 }

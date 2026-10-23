@@ -5,31 +5,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sGoogleGatewayBiz(t *testing.T) {
-	testK8sGoogleGateway(t, "google", "biz")
-}
+func TestGoogleGateway(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sGoogleGatewayPri(t *testing.T) {
-	testK8sGoogleGateway(t, "google", "pri")
-}
-
-func testK8sGoogleGateway(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	//appName := strings.TrimSpace(strings.ToLower(os.Getenv("APP_NAME")))
-
-	_, err := k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-external", namespaceName), 50, 6*time.Second)
-	require.NoError(t, err, "google-gateway not available error")
-	
-	switch envName {
-	case "biz":
-		_, err = k8s.WaitUntilK8SGatewayAvailable(t, kubectlOptions, fmt.Sprintf("%s-internal", namespaceName), 50, 6*time.Second)
+		_, err := k8s.WaitUntilK8SGatewayAvailable(t, c, fmt.Sprintf("%s-external", c.Namespace), 50, 6*time.Second)
 		require.NoError(t, err, "google-gateway not available error")
-	}
+
+		// Only biz creates the internal gateway as well.
+		if e.Prefix == "biz" {
+			_, err = k8s.WaitUntilK8SGatewayAvailable(t, c, fmt.Sprintf("%s-internal", c.Namespace), 50, 6*time.Second)
+			require.NoError(t, err, "google-gateway not available error")
+		}
+	})
 }

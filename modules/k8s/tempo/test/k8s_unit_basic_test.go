@@ -11,84 +11,69 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/google"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/retry"
 )
 
 // fullnameOverride in values.yaml pins every chart resource name to "tempo".
 const tempoName = "tempo"
 
-func TestK8sTempoAWSBiz(t *testing.T) {
-	testK8sTempo(t, "aws", "biz")
-}
+func TestTempo(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sTempoAWSPri(t *testing.T) {
-	testK8sTempo(t, "aws", "pri")
-}
+		// The upstream chart runs tempo as a single-replica StatefulSet, not a Deployment.
+		err := k8s.WaitUntilPodAvailableE(t, c, fmt.Sprintf("%s-0", tempoName), 20, 6*time.Second)
+		require.NoError(t, err, "%s pod error", c.Namespace)
 
-func TestK8sTempoGoogleBiz(t *testing.T) {
-	testK8sTempo(t, "google", "biz")
-}
+		// Tempo's usage reporter (chart default reportingEnabled: true) writes a cluster
+		// seed file to the trace backend on startup, which proves the pod can write to
+		// the bucket with its cloud identity.
+		switch e.Cloud {
+		case env.CloudAWS:
+			bucket := fmt.Sprintf("%s-%s-%s-%s", e.Prefix, c.Namespace, aws.AccountID(t, e), e.MustRegion(t))
+			err = aws.WaitUntilBucketFileAvailable(t, e.MustRegion(t), bucket, "tempo_cluster_seed.json", 20, 6*time.Second)
+			require.NoError(t, err, "tempo_cluster_seed.json not found in AWS bucket")
+		case env.CloudGoogle:
+			err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-traces-%s", e.Prefix, c.Namespace, e.MustProject(t)), "tempo_cluster_seed.json", 20, 6*time.Second)
+			require.NoError(t, err, "tempo_cluster_seed.json not found in Google bucket")
+		}
 
-func TestK8sTempoGooglePri(t *testing.T) {
-	testK8sTempo(t, "google", "pri")
-}
+		otlpAddr, stopOtlp := k8s.PortForwardService(t, c, tempoName, 4318)
+		defer stopOtlp()
 
-func testK8sTempo(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+		apiAddr, stopAPI := k8s.PortForwardService(t, c, tempoName, 3200)
+		defer stopAPI()
 
-	// The upstream chart runs tempo as a single-replica StatefulSet, not a Deployment.
-	err := terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-0", tempoName), 20, 6*time.Second)
-	require.NoError(t, err, fmt.Sprintf("%s pod error", namespaceName))
+		apiURL := fmt.Sprintf("http://%s", apiAddr)
+		otlpURL := fmt.Sprintf("http://%s/v1/traces", otlpAddr)
 
-	// Tempo's usage reporter (chart default reportingEnabled: true) writes a cluster
-	// seed file to the trace backend on startup, which proves the pod can write to
-	// the bucket with its cloud identity.
-	switch cloudName {
-	case "aws":
-		err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "tempo_cluster_seed.json", 20, 6*time.Second)
-		require.NoError(t, err, "tempo_cluster_seed.json not found in AWS bucket")
-	case "google":
-		err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-traces-entigo-infralib2", envName, namespaceName), "tempo_cluster_seed.json", 20, 6*time.Second)
-		require.NoError(t, err, "tempo_cluster_seed.json not found in Google bucket")
-	}
+		_, err = retry.DoWithRetryE(t, "Wait for tempo /ready", 20, 6*time.Second, func() (string, error) {
+			return httpDo(http.MethodGet, apiURL+"/ready", nil)
+		})
+		require.NoError(t, err, "tempo never became ready")
 
-	otlpTunnel := terrak8s.NewTunnel(kubectlOptions, terrak8s.ResourceTypeService, tempoName, 0, 4318)
-	defer otlpTunnel.Close()
-	otlpTunnel.ForwardPort(t)
+		traceID := randomHex(t, 16)
+		serviceName := fmt.Sprintf("infralib-test-%s-%s", e.Cloud, e.Prefix)
+		payload := otlpTracePayload(traceID, randomHex(t, 8), serviceName)
 
-	apiTunnel := terrak8s.NewTunnel(kubectlOptions, terrak8s.ResourceTypeService, tempoName, 0, 3200)
-	defer apiTunnel.Close()
-	apiTunnel.ForwardPort(t)
+		// The ingester ring can take a moment to accept writes after /ready.
+		_, err = retry.DoWithRetryE(t, "Push test span over OTLP/HTTP", 10, 6*time.Second, func() (string, error) {
+			return httpDo(http.MethodPost, otlpURL, payload)
+		})
+		require.NoError(t, err, "failed to push test span to tempo")
 
-	apiURL := fmt.Sprintf("http://%s", apiTunnel.Endpoint())
-	otlpURL := fmt.Sprintf("http://%s/v1/traces", otlpTunnel.Endpoint())
-
-	_, err = retry.DoWithRetryE(t, "Wait for tempo /ready", 20, 6*time.Second, func() (string, error) {
-		return httpDo(http.MethodGet, apiURL+"/ready", nil)
+		body, err := retry.DoWithRetryE(t, fmt.Sprintf("Query trace %s", traceID), 20, 6*time.Second, func() (string, error) {
+			return httpDo(http.MethodGet, fmt.Sprintf("%s/api/traces/%s", apiURL, traceID), nil)
+		})
+		require.NoError(t, err, "pushed trace was never queryable from tempo")
+		require.Contains(t, body, serviceName, "queried trace does not contain the pushed span")
 	})
-	require.NoError(t, err, "tempo never became ready")
-
-	traceID := randomHex(t, 16)
-	serviceName := fmt.Sprintf("infralib-test-%s-%s", cloudName, envName)
-	payload := otlpTracePayload(traceID, randomHex(t, 8), serviceName)
-
-	// The ingester ring can take a moment to accept writes after /ready.
-	_, err = retry.DoWithRetryE(t, "Push test span over OTLP/HTTP", 10, 6*time.Second, func() (string, error) {
-		return httpDo(http.MethodPost, otlpURL, payload)
-	})
-	require.NoError(t, err, "failed to push test span to tempo")
-
-	body, err := retry.DoWithRetryE(t, fmt.Sprintf("Query trace %s", traceID), 20, 6*time.Second, func() (string, error) {
-		return httpDo(http.MethodGet, fmt.Sprintf("%s/api/traces/%s", apiURL, traceID), nil)
-	})
-	require.NoError(t, err, "pushed trace was never queryable from tempo")
-	require.Contains(t, body, serviceName, "queried trace does not contain the pushed span")
 }
 
 func httpDo(method string, url string, body []byte) (string, error) {

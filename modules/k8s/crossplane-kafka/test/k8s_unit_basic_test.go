@@ -4,39 +4,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sCrossplaneKafkaBiz(t *testing.T) {
-	testK8sCrossplaneKafka(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks", "biz")
-}
+// Crossplane runs provider deployments in its own install namespace (the
+// crossplane-core application), not in this app's namespace.
+const crossplaneNamespace = "crossplane-system"
 
-func TestK8sCrossplaneKafkaPri(t *testing.T) {
-	testK8sCrossplaneKafka(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks", "pri")
-}
+func TestCrossplaneKafka(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
+		releaseName := "contrib-provider-kafka"
 
-func testK8sCrossplaneKafka(t *testing.T, contextName string, envName string) {
-	t.Parallel()
+		_, err := k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, c, releaseName, 60, 1*time.Second)
+		require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
 
-	namespaceName := "crossplane-system"
-	releaseName := "contrib-provider-kafka"
-
-	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
-	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
-	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
-	require.Equal(t, output, "yes")
-
-	_, err = k8s.WaitUntilDeploymentRuntimeConfigAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
-	require.NoError(t, err, "DeploymentRuntimeConfigAvailable error")
-
-	// Install AWS provider
-	provider, err := k8s.WaitUntilProviderAvailable(t, kubectlOptions, releaseName, 60, 1*time.Second)
-	require.NoError(t, err, "Provider aws error")
-	assert.NotNil(t, provider, "Provider aws is nil")
-	providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
-	assert.NotEmpty(t, providerDeployment, "Provider aws currentRevision is empty")
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, providerDeployment, 60, 1*time.Second)
+		// Install AWS provider
+		provider, err := k8s.WaitUntilProviderAvailable(t, c, releaseName, 60, 1*time.Second)
+		require.NoError(t, err, "Provider aws error")
+		assert.NotNil(t, provider, "Provider aws is nil")
+		providerDeployment := k8s.GetStringValue(provider.Object, "status", "currentRevision")
+		assert.NotEmpty(t, providerDeployment, "Provider aws currentRevision is empty")
+		k8s.WaitUntilDeploymentAvailable(t, c.WithNamespace(crossplaneNamespace), providerDeployment, 60, 1*time.Second)
+	})
 }

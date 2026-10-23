@@ -1,3 +1,11 @@
+# Weekly CVE and hygiene report of the test clusters: the trivy-operator
+# vulnerability reports per namespace and image, containers without
+# requests or limits, namespaces without restricted pod security, and
+# images that bypass the registry proxies. The clusters are the ones the
+# environments under environments/ describe; the framework's kubeconfig
+# action builds the contexts, and the report scripts run in each cloud's
+# test image (test.sh shell ENV -- command), which has the credential
+# plugin the context execs: oci for OKE, kubelogin for AKS.
 name: Report CVE
 
 on:
@@ -9,74 +17,60 @@ jobs:
   report:
     name: Create CVE reports
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+      GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+      GOOGLE_ZONE: ${{ secrets.GOOGLE_ZONE }}
+      OCI_REGION: ${{ secrets.OCI_REGION }}
+      OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+    - uses: entigolabs/entigo-infralib-test/.github/actions/credentials@main
       with:
-        fetch-depth: 0
+        google_credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+        oci_config: ${{ secrets.OCI_CONFIG }}
+        oci_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
     - uses: google-github-actions/setup-gcloud@v3
       with:
-        install_components: 'gke-gcloud-auth-plugin'
-    - uses: azure/use-kubelogin@v1
-      with:
-        kubelogin-version: 'v0.2.21'
+        install_components: gke-gcloud-auth-plugin
+    - uses: entigolabs/entigo-infralib-test/.github/actions/kubeconfig@main
     - name: Create CVE report
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION:  ${{ secrets.AWS_REGION }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
-        GOOGLE_ZONE:  ${{ secrets.GOOGLE_ZONE }}
-        GOOGLE_CREDENTIALS:  ${{ secrets.GOOGLE_CREDENTIALS }}
-        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-      id: create_report
       run: |
-        echo "Assemble configuration"
-        source common/generate_config.sh
-        google_auth_login
-        gcloud container clusters get-credentials pri-infra-gke --region $GOOGLE_REGION
-        echo "### GOOGLE PRI ####"
-        GOOGLE_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
-        gcloud container clusters get-credentials biz-infra-gke --region $GOOGLE_REGION
-        echo "### GOOGLE BIZ ####"
-        GOOGLE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-gar-proxy/pri-net-gar-proxy/g' | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
-        aws eks update-kubeconfig --region $AWS_REGION --name pri-infra-eks
-        echo "### AWS PRI ####"
-        AWS_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
-        aws eks update-kubeconfig --region $AWS_REGION --name biz-infra-eks
-        echo "### AWS BIZ ####"
-        AWS_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed 's/biz-net-ecr-proxy/pri-net-ecr-proxy/g' | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
-        azure_auth_login
-        azure_kube_context pri
-        echo "### AZURE PRI ####"
-        AZURE_PRI_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed -E 's/^prinetacrproxy[a-z0-9]+/prinetacrproxy/' | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
-        azure_kube_context biz
-        echo "### AZURE BIZ ####"
-        AZURE_BIZ_CONTAINERS=`kubectl get pods -A -o json | jq -r .items[].spec.containers[].image | sed -E 's/^biznetacrproxy[a-z0-9]+/prinetacrproxy/' | sort | uniq`
-        ./common/k8s/report_cve.sh
-        ./common/k8s/report_badpod.sh
+        set -uo pipefail
+        all_images=""
+        # One pass per environment with a cluster whose context exists: the
+        # context is named after the cluster (OKE, AKS) or ends with it (EKS,
+        # GKE). Selecting it on the host selects it in the mounted kubeconfig
+        # too. awk turns the tabs into a separator read does not collapse, so
+        # the empty columns before the cluster name do not shift it away.
+        while IFS='|' read -r name cloud cluster; do
+          [ -n "$cluster" ] || continue
+          context=$(kubectl config get-contexts -o name | grep -E "(^|/|_)${cluster}\$" | head -1 || true)
+          if [ -z "$context" ]; then
+            echo "::warning::no kubeconfig context for ${name} (cluster ${cluster}), skipped"
+            continue
+          fi
+          echo "### ${name}: ${context} ####"
+          kubectl config use-context "${context}" >/dev/null
+          images=$(./test.sh shell "${name}" -- kubectl get pods -A -o json | jq -r '.items[].spec.containers[].image' | sort -u)
+          all_images="${all_images}"$'\n'"${images}"
+          ./test.sh shell "${name}" -- report/cve.sh
+          ./test.sh shell "${name}" -- report/badpod.sh
+        done < <(./test.sh envs --tsv | awk -F'\t' -v OFS='|' '{print $1, $2, $8}')
         echo "Finding images without registry proxy:"
-        total=0
-        registry=0
-        for image in $(echo "$AWS_BIZ_CONTAINERS $AWS_PRI_CONTAINERS $GOOGLE_PRI_CONTAINERS $GOOGLE_BIZ_CONTAINERS $AZURE_PRI_CONTAINERS $AZURE_BIZ_CONTAINERS" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
-        do
+        account=$(aws sts get-caller-identity --query Account --output text)
+        total=0; registry=0
+        for image in $(echo "${all_images}" | sort -u); do
           ((total++)) || true
-          if [[ ! $image =~ (^877483565445\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^602401143452\.dkr\.ecr\.$AWS_REGION\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^europe-north1-docker\.pkg\.dev/entigo-infralib2/pri-net-gar-proxy-|^prinetacrproxy\.azurecr\.io|^mcr\.microsoft\.com) ]]
-          then
+          if [[ ! $image =~ (^${account}\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^602401143452\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^${GOOGLE_REGION}-docker\.pkg\.dev/${GOOGLE_PROJECT}/[a-z]+-net-gar-proxy-|\.azurecr\.io/|^mcr\.microsoft\.com) ]]; then
             echo "$image does not use Internal Registry"
             ((registry++)) || true
           fi
