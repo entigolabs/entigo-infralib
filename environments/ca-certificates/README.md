@@ -10,8 +10,8 @@ alone needs goes to `environments/<env>/ca-certificates/` instead.
   The Azure environments issue their gateway certificates from the staging
   server (`modules/k8s/cert-manager/test/azure_*.yaml`), so the agent's `argocd`
   CLI would not trust ArgoCD there otherwise.
-- `infralib-root-ca.crt`: the root of the OCI certificate authorities the
-  Oracle environments adopt through `modules/oracle/pca`; the dns module
-  issues the gateway certificates from them. Exported with
+- `oracle-root-ca.crt`: `infralib-root-ca`, the root of the OCI certificate
+  authorities the Oracle environments adopt through `modules/oracle/pca`; the
+  dns module issues the gateway certificates from them. Exported with
   `oci certificates certificate-authority-bundle get`, see
   `modules/oracle/pca`'s `certificate_authority_bundle_command` output.
