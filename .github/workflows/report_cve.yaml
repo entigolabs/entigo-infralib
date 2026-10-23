@@ -3,7 +3,9 @@
 # requests or limits, namespaces without restricted pod security, and
 # images that bypass the registry proxies. The clusters are the ones the
 # environments under environments/ describe; the framework's kubeconfig
-# action builds the contexts.
+# action builds the contexts, and the report scripts run in each cloud's
+# test image (test.sh shell ENV -- command), which has the credential
+# plugin the context execs: oci for OKE, kubelogin for AKS.
 name: Report CVE
 
 on:
@@ -44,14 +46,22 @@ jobs:
       run: |
         set -uo pipefail
         all_images=""
-        for context in $(kubectl config get-contexts -o name); do
-          echo "### ${context} ####"
-          images=$(kubectl --context "${context}" get pods -A -o json | jq -r '.items[].spec.containers[].image' | sort -u)
-          all_images="${all_images}"$'\n'"${images}"
+        # One pass per environment whose cluster got a context: the context
+        # is named after the cluster (OKE, AKS) or ends with it (EKS, GKE).
+        # Selecting it on the host selects it in the mounted kubeconfig too.
+        while IFS=$'\t' read -r name cloud _prefix _region _zone _project _compartment cluster; do
+          context=$(kubectl config get-contexts -o name | grep -E "(^|/|_)${cluster}\$" | head -1)
+          if [ -z "$context" ]; then
+            echo "::warning::no kubeconfig context for ${name} (cluster ${cluster}), skipped"
+            continue
+          fi
+          echo "### ${name}: ${context} ####"
           kubectl config use-context "${context}" >/dev/null
-          report/cve.sh
-          report/badpod.sh
-        done
+          images=$(./test.sh shell "${name}" -- kubectl get pods -A -o json | jq -r '.items[].spec.containers[].image' | sort -u)
+          all_images="${all_images}"$'\n'"${images}"
+          ./test.sh shell "${name}" -- report/cve.sh
+          ./test.sh shell "${name}" -- report/badpod.sh
+        done < <(./test.sh envs --tsv)
         echo "Finding images without registry proxy:"
         account=$(aws sts get-caller-identity --query Account --output text)
         total=0; registry=0
