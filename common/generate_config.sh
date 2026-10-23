@@ -63,8 +63,14 @@ azure_auth_login() {
 }
 
 azure_kube_context() {
+  if [ "$AZURE_CLIENT_ID" != "" -a "$AZURE_CLIENT_SECRET" != "" ]
+  then
+    KUBELOGIN_OPTS="-l spn --client-id $AZURE_CLIENT_ID --tenant-id $AZURE_TENANT_ID"
+  else
+    KUBELOGIN_OPTS="-l azurecli"
+  fi
   az aks get-credentials --resource-group $1-$AZURE_LOCATION --name $1-infra-aks --overwrite-existing && \
-    docker run --rm -v "$(echo ~)/.kube":/root/.kube --entrypoint kubelogin $ENTIGO_INFRALIB_IMAGE convert-kubeconfig -l azurecli --context $1-infra-aks
+    docker run --rm -v "$(echo ~)/.kube":/root/.kube --entrypoint kubelogin $ENTIGO_INFRALIB_IMAGE convert-kubeconfig $KUBELOGIN_OPTS --context $1-infra-aks
 }
 
 oracle_auth_defaults() {
