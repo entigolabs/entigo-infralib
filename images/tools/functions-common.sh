@@ -234,7 +234,12 @@ git_login() {
     if [ -n "$OCI_REGION" ]; then
       :
     elif [ -n "$AZURE_LOCATION" ]; then
-      :
+      for REGISTRY in $(grep -ohE 'oci://[a-z0-9]+\.azurecr\.io' *.tf 2>/dev/null | sort -u); do
+        REGISTRY="${REGISTRY#oci://}"
+        ACR_TOKEN=$(get_acr_token "${REGISTRY}") || { echo "ACR login failed for ${REGISTRY}"; exit 25; }
+        tofurc_credentials "${REGISTRY}" "  username = \"${ACR_TOKEN_USERNAME}\"
+  password = \"${ACR_TOKEN}\""
+      done
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
