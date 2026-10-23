@@ -160,7 +160,11 @@ lists it; its inputs for that environment are `test/<environment>.yaml` in
 the module, which hold only what the scenario changes from the module's
 defaults. `test/module.yaml` marks the modules that exist once per
 environment (`pin_step`) and lists kube-score checks to skip for charts whose
-upstream parts fail them.
+upstream parts fail them. An optional `environments/<environment>.env`
+overrides variables for one environment (`aws_us.env` puts the cost-alert
+environment in us-east-1), and `environments/ca-certificates/` holds the CA
+certificates the agents and the route probes trust on top of the public ones
+(the Let's Encrypt staging roots for Azure, the Oracle root CA).
 
 ```
 ./test.sh                                 provision every environment you have credentials for, then test every module

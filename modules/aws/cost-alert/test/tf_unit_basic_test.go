@@ -10,8 +10,8 @@ import (
 	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-// The billing alarm needs us-east-1, which no environment provides yet, so
-// this test skips until the module is part of one.
+// The billing alarm reads the AWS/Billing metric, which exists in us-east-1
+// only; the aws_us environment lives there (environments/aws_us.env).
 func TestCostAlert(t *testing.T) {
 	env.Run(t, func(t *testing.T, e *env.Environment) {
 		outputs := tf.Get(t, e)
