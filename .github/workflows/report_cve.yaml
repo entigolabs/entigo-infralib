@@ -46,11 +46,14 @@ jobs:
       run: |
         set -uo pipefail
         all_images=""
-        # One pass per environment whose cluster got a context: the context
-        # is named after the cluster (OKE, AKS) or ends with it (EKS, GKE).
-        # Selecting it on the host selects it in the mounted kubeconfig too.
-        while IFS=$'\t' read -r name cloud _prefix _region _zone _project _compartment cluster; do
-          context=$(kubectl config get-contexts -o name | grep -E "(^|/|_)${cluster}\$" | head -1)
+        # One pass per environment with a cluster whose context exists: the
+        # context is named after the cluster (OKE, AKS) or ends with it (EKS,
+        # GKE). Selecting it on the host selects it in the mounted kubeconfig
+        # too. awk turns the tabs into a separator read does not collapse, so
+        # the empty columns before the cluster name do not shift it away.
+        while IFS='|' read -r name cloud cluster; do
+          [ -n "$cluster" ] || continue
+          context=$(kubectl config get-contexts -o name | grep -E "(^|/|_)${cluster}\$" | head -1 || true)
           if [ -z "$context" ]; then
             echo "::warning::no kubeconfig context for ${name} (cluster ${cluster}), skipped"
             continue
@@ -61,7 +64,7 @@ jobs:
           all_images="${all_images}"$'\n'"${images}"
           ./test.sh shell "${name}" -- report/cve.sh
           ./test.sh shell "${name}" -- report/badpod.sh
-        done < <(./test.sh envs --tsv)
+        done < <(./test.sh envs --tsv | awk -F'\t' -v OFS='|' '{print $1, $2, $8}')
         echo "Finding images without registry proxy:"
         account=$(aws sts get-caller-identity --query Account --output text)
         total=0; registry=0
