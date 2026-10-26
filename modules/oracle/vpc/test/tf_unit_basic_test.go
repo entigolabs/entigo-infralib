@@ -3,16 +3,15 @@ package test
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/oracle"
-	"github.com/entigolabs/entigo-infralib-common/tf"
-	ocicommon "github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/oracle"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
 // The egress each subnet tier's route table gives it.
@@ -29,15 +28,16 @@ type tier struct {
 	routes []string
 }
 
-func TestTerraformVpc(t *testing.T) {
-	t.Run("Biz", testTerraformVpcBiz)
-	t.Run("Pri", testTerraformVpcPri)
+func TestVpc(t *testing.T) {
+	env.RunEach(t, map[string]env.TestFunc{
+		"oracle_biz": testVpcBiz,
+		"oracle_pri": testVpcPri,
+	})
 }
 
-// biz.yaml lists every tier but intra and pod, which take the module's defaults.
-func testTerraformVpcBiz(t *testing.T) {
-	t.Parallel()
-	testTerraformVpc(t, "biz", "10.201.0.0/16", []tier{
+// oracle_biz.yaml lists every tier but intra and pod, which take the module's defaults.
+func testVpcBiz(t *testing.T, e *env.Environment) {
+	testVpc(t, e, "10.201.0.0/16", []tier{
 		{name: "public", cidrs: []string{"10.201.0.0/20"}, public: true, routes: []string{internet}},
 		{name: "private", cidrs: []string{"10.201.16.0/20", "10.201.32.0/20"}, routes: []string{nat, services}},
 		{name: "pod", cidrs: []string{"10.201.64.0/18"}, routes: []string{nat, services}},
@@ -46,10 +46,9 @@ func testTerraformVpcBiz(t *testing.T) {
 	})
 }
 
-// pri.yaml gives only the CIDR, so every tier is the module's default sizing of a /18.
-func testTerraformVpcPri(t *testing.T) {
-	t.Parallel()
-	testTerraformVpc(t, "pri", "10.202.0.0/18", []tier{
+// oracle_pri.yaml gives only the CIDR, so every tier is the module's default sizing of a /18.
+func testVpcPri(t *testing.T, e *env.Environment) {
+	testVpc(t, e, "10.202.0.0/18", []tier{
 		{name: "public", cidrs: []string{"10.202.32.0/21"}, public: true, routes: []string{internet}},
 		{name: "private", cidrs: []string{"10.202.0.0/21"}, routes: []string{nat, services}},
 		{name: "pod", cidrs: []string{"10.202.16.0/20"}, routes: []string{nat, services}},
@@ -58,39 +57,37 @@ func testTerraformVpcPri(t *testing.T) {
 	})
 }
 
-func testTerraformVpc(t *testing.T, prefix string, vpcCidr string, tiers []tier) {
-	outputs := oracle.GetTFOutputs(t, prefix)
-	modulePrefix := fmt.Sprintf("%s-%s-vpc", prefix, strings.ToLower(os.Getenv("STEP_NAME")))
+func testVpc(t *testing.T, e *env.Environment, vpcCidr string, tiers []tier) {
+	outputs := tf.Get(t, e)
+	modulePrefix := fmt.Sprintf("%s-%s-vpc", e.Prefix, env.ModulePlacement(t, e).Step.Name)
 
-	vpcId := tf.GetStringValue(t, outputs, "vpc__vpc_id")
+	vpcId := outputs.String(t, "vpc__vpc_id")
 	require.NotEmpty(t, vpcId, "vpc_id was not returned")
-	assert.Equal(t, modulePrefix, tf.GetStringValue(t, outputs, "vpc__vpc_name"), "Wrong vpc_name returned")
-	assert.Equal(t, vpcCidr, tf.GetStringValue(t, outputs, "vpc__vpc_cidr"), "Wrong vpc_cidr returned")
+	assert.Equal(t, modulePrefix, outputs.String(t, "vpc__vpc_name"), "Wrong vpc_name returned")
+	assert.Equal(t, vpcCidr, outputs.String(t, "vpc__vpc_cidr"), "Wrong vpc_cidr returned")
 
 	// All three gateways are on by default.
 	gateways := map[string]string{
-		internet: tf.GetStringValue(t, outputs, "vpc__internet_gateway_id"),
-		nat:      tf.GetStringValue(t, outputs, "vpc__nat_gateway_id"),
-		services: tf.GetStringValue(t, outputs, "vpc__service_gateway_id"),
+		internet: outputs.String(t, "vpc__internet_gateway_id"),
+		nat:      outputs.String(t, "vpc__nat_gateway_id"),
+		services: outputs.String(t, "vpc__service_gateway_id"),
 	}
 	for name, id := range gateways {
 		require.NotEmpty(t, id, "No %s returned", name)
 	}
 
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider())
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(oracle.ConfigProvider())
 	require.NoError(t, err, "Failed to create the Virtual Network client")
-	if region := os.Getenv("OCI_REGION"); region != "" {
-		client.SetRegion(region)
-	}
+	client.SetRegion(e.MustRegion(t))
 
 	vcnResponse, err := client.GetVcn(context.Background(), core.GetVcnRequest{VcnId: &vpcId})
 	require.NoError(t, err, "Failed to get VCN %s", vpcId)
 	assert.Equal(t, []string{vpcCidr}, vcnResponse.Vcn.CidrBlocks, "Wrong VCN CIDR blocks")
 
 	for _, tier := range tiers {
-		subnetIds := tf.GetStringListValue(t, outputs, "vpc__"+tier.name+"_subnets")
+		subnetIds := outputs.StringList(t, "vpc__"+tier.name+"_subnets")
 		require.Len(t, subnetIds, len(tier.cidrs), "Wrong number of %s subnets", tier.name)
-		assert.Equal(t, tier.cidrs, tf.GetStringListValue(t, outputs, "vpc__"+tier.name+"_subnet_cidrs"), "Wrong %s_subnet_cidrs returned", tier.name)
+		assert.Equal(t, tier.cidrs, outputs.StringList(t, "vpc__"+tier.name+"_subnet_cidrs"), "Wrong %s_subnet_cidrs returned", tier.name)
 
 		for i, subnetId := range subnetIds {
 			response, err := client.GetSubnet(context.Background(), core.GetSubnetRequest{SubnetId: &subnetId})
@@ -109,8 +106,8 @@ func testTerraformVpc(t *testing.T, prefix string, vpcCidr string, tiers []tier)
 	}
 
 	// The singular aliases name the first subnet of their tier.
-	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__public_subnets")[0], tf.GetStringValue(t, outputs, "vpc__public_subnet_id"), "public_subnet_id is not the first public subnet")
-	assert.Equal(t, tf.GetStringListValue(t, outputs, "vpc__private_subnets")[0], tf.GetStringValue(t, outputs, "vpc__private_subnet_id"), "private_subnet_id is not the first private subnet")
+	assert.Equal(t, outputs.StringList(t, "vpc__public_subnets")[0], outputs.String(t, "vpc__public_subnet_id"), "public_subnet_id is not the first public subnet")
+	assert.Equal(t, outputs.StringList(t, "vpc__private_subnets")[0], outputs.String(t, "vpc__private_subnet_id"), "private_subnet_id is not the first private subnet")
 }
 
 // The gateways a route table sends traffic to, by name. OCI does not keep the rule order.
@@ -128,11 +125,4 @@ func routeTargets(t *testing.T, client core.VirtualNetworkClient, routeTableId s
 		targets = append(targets, target)
 	}
 	return targets
-}
-
-func configProvider() ocicommon.ConfigurationProvider {
-	if configFile := os.Getenv("OCI_CONFIG_FILE"); configFile != "" {
-		return ocicommon.CustomProfileConfigProvider(configFile, "DEFAULT")
-	}
-	return ocicommon.DefaultConfigProvider()
 }

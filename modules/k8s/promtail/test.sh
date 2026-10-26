@@ -1,5 +1,4 @@
-#!/bin/bash
-exit 0 # Disable k8s/promtail tests to avoid conflict with k8s/alloy
-#SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-#cd $SCRIPTPATH
-#exec $SCRIPTPATH/../../../common/test.sh "$@"
+#!/usr/bin/env bash
+# Test this module: hands over to the repository's test.sh with this module selected (./test.sh --help).
+MODULE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+exec "$MODULE/../../../test.sh" "$@" "modules/$(basename "$(dirname "$MODULE")")/$(basename "$MODULE")"
