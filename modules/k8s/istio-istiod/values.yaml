@@ -59,3 +59,6 @@ istiod:
         cpu: 2000m
         memory: 2048Mi
         ephemeral-storage: 1Gi
+
+# Removes x-envoy-decorator-operation and x-envoy-upstream-service-time from responses
+removeEnvoyHeaders: true

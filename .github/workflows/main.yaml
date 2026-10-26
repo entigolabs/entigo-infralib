@@ -1,0 +1,29 @@
+# After a merge to main: one job per environment applies the modules the push
+# changed under their regular names, from this repository's main branch over
+# git, and runs their tests. A push that changed no module (an environment
+# file, a provider) applies every step and tests every module. Nothing is
+# tagged here; Release does that after a green scheduled Stable run.
+name: Main
+
+on:
+  push:
+    branches: [main]
+    paths: ['modules/**', 'environments/**', 'providers/**']
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: 'JSON list of module directories to apply and test; empty for every step and module'
+        type: string
+        default: ''
+      environments:
+        description: comma separated environments to run; empty for every environment with credentials
+        type: string
+        default: ''
+
+jobs:
+  main:
+    uses: entigolabs/entigo-infralib-test/.github/workflows/module-main.yaml@main
+    with:
+      modules: ${{ inputs.modules || '' }}
+      environments: ${{ inputs.environments || '' }}
+    secrets: inherit

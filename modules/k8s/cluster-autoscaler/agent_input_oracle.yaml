@@ -14,9 +14,11 @@ cluster-autoscaler:
     # image includes the OCI provider; Oracle's OCIR builds are only needed for legacy
     # k8s versions).
     repository: registry.k8s.io/autoscaling/cluster-autoscaler
-  # Static --nodes=<min>:<max>:<nodepool-ocid> config (Oracle's documented approach; the
-  # chart's OCI auto-discovery values are dead code in 9.58.0).
-  autoscalingGroups:
-    - name: "{{ .toutput.oke.tools_node_pool_id }}"
-      minSize: "{{ .toutput.oke.tools_min_size }}"
-      maxSize: "{{ .toutput.oke.tools_max_size }}"
+  # The chart renders no Deployment unless autoDiscovery.clusterName or autoscalingGroups is set,
+  # and its OCI branch passes neither to the autoscaler.
+  autoDiscovery:
+    clusterName: "{{ .toutput.oke.cluster_name }}"
+  # Node pools tagged cluster-autoscaler=enabled, by modules/oracle/oke or anything else creating
+  # pools in the cluster. Each pool's own minSize and maxSize tags override min and max here.
+  extraArgs:
+    node-group-auto-discovery: "clusterId:{{ .toutput.oke.cluster_id }},compartmentId:{{ .agent.accountId }},nodepoolTags:cluster-autoscaler=enabled,min:0,max:0"

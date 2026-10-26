@@ -2,64 +2,38 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-func TestTerraformEcrProxy(t *testing.T) {
-	t.Run("Biz", testTerraformEcrProxyBiz)
-	t.Run("Pri", testTerraformEcrProxyPri)
-}
+func TestEcrProxy(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
+		registryName := fmt.Sprintf("%s-%s-ecr-proxy", e.Prefix, strings.ToLower(env.ModulePlacement(t, e).Step.Name))
+		if len(registryName) > 24 {
+			registryName = registryName[:24]
+		}
+		registryHost := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", aws.AccountID(t, e), e.MustRegion(t))
 
-func testTerraformEcrProxyBiz(t *testing.T) {
-	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz")
-	registry_name := fmt.Sprintf("biz-%s-ecr-proxy", strings.ToLower(os.Getenv("STEP_NAME")))
-	if len(registry_name) > 24 {
-		registry_name = registry_name[:24]
-	}
+		ecrRegistry := outputs.String(t, "ecr-proxy__ecr_registry")
+		assert.Equal(t, ecrRegistry, fmt.Sprintf("%s/%s-ecr", registryHost, registryName), "No correct value for ecr_registry")
 
-	ecr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ecr_registry")
-	assert.Equal(t, ecr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ecr", registry_name), "No correct value for ecr_registry")
+		ghcrRegistry := outputs.String(t, "ecr-proxy__ghcr_registry")
+		assert.Equal(t, ghcrRegistry, fmt.Sprintf("%s/%s-ghcr", registryHost, registryName), "No correct value for ghcr_registry")
 
-	ghcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ghcr_registry")
-	assert.Equal(t, ghcr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ghcr", registry_name), "No correct value for ghcr_registry")
+		hubRegistry := outputs.String(t, "ecr-proxy__hub_registry")
+		assert.Equal(t, hubRegistry, fmt.Sprintf("%s/%s-hub", registryHost, registryName), "No correct value for hub_registry")
 
-	hub_registry := tf.GetStringValue(t, outputs, "ecr-proxy__hub_registry")
-	assert.Equal(t, hub_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-hub", registry_name), "No correct value for hub_registry")
+		k8sRegistry := outputs.String(t, "ecr-proxy__k8s_registry")
+		assert.Equal(t, k8sRegistry, fmt.Sprintf("%s/%s-k8s", registryHost, registryName), "No correct value for k8s_registry")
 
-	k8s_registry := tf.GetStringValue(t, outputs, "ecr-proxy__k8s_registry")
-	assert.Equal(t, k8s_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-k8s", registry_name), "No correct value for k8s_registry")
-
-	quay_registry := tf.GetStringValue(t, outputs, "ecr-proxy__quay_registry")
-	assert.Equal(t, quay_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-quay", registry_name), "No correct value for quay_registry")
-}
-
-func testTerraformEcrProxyPri(t *testing.T) {
-	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri")
-	registry_name := fmt.Sprintf("pri-%s-ecr-proxy", strings.ToLower(os.Getenv("STEP_NAME")))
-	if len(registry_name) > 24 {
-		registry_name = registry_name[:24]
-	}
-
-	ecr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ecr_registry")
-	assert.Equal(t, ecr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ecr", registry_name), "No correct value for ecr_registry")
-
-	ghcr_registry := tf.GetStringValue(t, outputs, "ecr-proxy__ghcr_registry")
-	assert.Equal(t, ghcr_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-ghcr", registry_name), "No correct value for ghcr_registry")
-
-	hub_registry := tf.GetStringValue(t, outputs, "ecr-proxy__hub_registry")
-	assert.Equal(t, hub_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-hub", registry_name), "No correct value for hub_registry")
-
-	k8s_registry := tf.GetStringValue(t, outputs, "ecr-proxy__k8s_registry")
-	assert.Equal(t, k8s_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-k8s", registry_name), "No correct value for k8s_registry")
-
-	quay_registry := tf.GetStringValue(t, outputs, "ecr-proxy__quay_registry")
-	assert.Equal(t, quay_registry, fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-quay", registry_name), "No correct value for quay_registry")
+		quayRegistry := outputs.String(t, "ecr-proxy__quay_registry")
+		assert.Equal(t, quayRegistry, fmt.Sprintf("%s/%s-quay", registryHost, registryName), "No correct value for quay_registry")
+	})
 }
