@@ -17,6 +17,10 @@ func TestK8sWireguardGooglePri(t *testing.T) {
 	testK8sWireguard(t, "google", "pri")
 }
 
+func TestK8sWireguardAzurePri(t *testing.T) {
+	testK8sWireguard(t, "azure", "pri")
+}
+
 func testK8sWireguard(t *testing.T, cloudName string, envName string) {
 	t.Parallel()
 	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)

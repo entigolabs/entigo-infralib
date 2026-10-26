@@ -1,7 +1,7 @@
 <h1 align="center">Infralib Modules</h1>
 
 <p align="center">
-  <strong>Production-tested Terraform / OpenTofu modules and Helm charts for building a complete Kubernetes platform on AWS or Google Cloud.</strong>
+  <strong>Production-tested Terraform / OpenTofu modules and Helm charts for building a complete Kubernetes platform on AWS, Google Cloud or Azure.</strong>
 </p>
 
 <p align="center">
@@ -21,13 +21,13 @@
 
 > **Looking to provision a platform? You want the [agent](https://github.com/entigolabs/entigo-infralib-agent).** It's the tool you install and run. This Infralib repo is where modules are developed and tested — useful if you're contributing a module or want to see how one works.
 
-> **In production since 2023.** Released and tested every weekday against live AWS and Google Cloud accounts. Used by Estonia's Information System Authority (RIA) and the Health and Welfare Information Systems Centre (TEHIK).
+> **In production since 2023.** Released and tested every weekday against live AWS, Google Cloud and Azure accounts. Used by Estonia's Information System Authority (RIA) and the Health and Welfare Information Systems Centre (TEHIK).
 
 New here? Follow the [quickstart guide](https://infralib-quickstart.dev.entigo.dev/).
 
 ## What this is
 
-This repository holds the building blocks — the opinionated Terraform / OpenTofu modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more. The modules work with either Terraform or OpenTofu.
+This repository holds the building blocks — the opinionated Terraform / OpenTofu modules and Kubernetes Helm charts we repeatedly use to run real platforms: networking, EKS/GKE/AKS clusters, autoscaling, ArgoCD, ingress, observability, DNS and TLS, secrets, and more. The modules work with either Terraform or OpenTofu.
 
 You can consume them in three ways:
 
@@ -51,6 +51,7 @@ Modules live under [`modules/`](modules/), grouped by target:
 |---|---|
 | [`modules/aws`](modules/aws) | VPC, EKS, Karpenter, node groups, Route 53, KMS, ECR proxy, EFS, Transit Gateway, cost alerts, and more |
 | [`modules/google`](modules/google) | VPC, GKE, node pools, Cloud DNS, KMS, GAR proxy, services |
+| [`modules/azure`](modules/azure) | VPC, AKS, node pools, Azure DNS, KMS, ACR proxy, Crossplane |
 | [`modules/k8s`](modules/k8s) | ArgoCD, Istio, external-dns, external-secrets, Prometheus, Grafana, Loki, Mimir, Alloy, Karpenter, cluster-autoscaler, Harbor, Trivy, Kyverno, SAML proxy, and more |
 
 See [`modules/k8s/README.md`](modules/k8s/README.md) for chart-specific notes.
@@ -109,7 +110,7 @@ spec:
 
 Releases are cut from `main` roughly once per day:
 
-1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud and Oracle test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
+1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud, Oracle and Azure test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
 2. **Stable** — in the morning the latest release is installed and its tests run (Stable action).
 3. **Upgrade** — the accounts are upgraded to the `main` branch and tests run again.
 4. **Release** — if the tests pass and `main` differs from the last release, a new release is created (Release action).
@@ -130,7 +131,7 @@ Agent configuration examples:
 sources:
   - url: oci://public.ecr.aws/entigolabs/entigo-infralib-release
 
-# OCI repository for Google Cloud
+# OCI repository for Google Cloud and Azure
 sources:
   - url: oci://ghcr.io/entigolabs/entigo-infralib-release
 

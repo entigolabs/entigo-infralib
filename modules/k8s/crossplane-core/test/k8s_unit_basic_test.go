@@ -24,6 +24,14 @@ func TestK8sCrossplaneGooglePri(t *testing.T) {
 	testK8sCrossplane(t, "google", "pri")
 }
 
+func TestK8sCrossplaneAzureBiz(t *testing.T) {
+	testK8sCrossplane(t, "azure", "biz")
+}
+
+func TestK8sCrossplaneAzurePri(t *testing.T) {
+	testK8sCrossplane(t, "azure", "pri")
+}
+
 func TestK8sCrossplaneOracleBiz(t *testing.T) {
 	testK8sCrossplane(t, "oracle", "biz")
 }

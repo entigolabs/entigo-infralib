@@ -27,6 +27,7 @@ type ProviderType string
 const (
 	AWS    ProviderType = "aws"
 	GCloud ProviderType = "gcloud"
+	Azure  ProviderType = "azure"
 )
 
 func GetNamespaceName(t testing.TestingT, envName string) string {
@@ -50,6 +51,8 @@ func CheckKubectlConnection(t testing.TestingT, cloudName string, envName string
 	case "oracle":
 		// oracle_kubeconfig in common/generate_config.sh renames the context to this.
 		contextName = fmt.Sprintf("%s-infra-oke", envName)
+	case "azure":
+		contextName = fmt.Sprintf("%s-infra-aks", envName)
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions(contextName, "", namespaceName)
@@ -95,6 +98,23 @@ func GetGatewayConfig(t testing.TestingT, cloudName string, envName string, mode
 		if mode == "external" {
 			hostName = fmt.Sprintf("%s.%s-net-dns.gcp.infralib.entigo.io", namespaceName, envName)
 			gatewayName = "google-gateway-external"
+		}
+	case "azure":
+		retries = 400
+		switch envName {
+		case "biz":
+			hostName = fmt.Sprintf("%s.%s-net-dns-int.azure.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "internal"
+			gatewayNamespace = "azure-gateway"
+		case "pri":
+			hostName = fmt.Sprintf("%s.%s-net-dns.azure.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "external"
+			gatewayNamespace = "azure-gateway"
+		}
+		if mode == "external" {
+			hostName = fmt.Sprintf("%s.%s-net-dns.azure.infralib.entigo.io", namespaceName, envName)
+			gatewayName = "external"
+			gatewayNamespace = "azure-gateway"
 		}
 	case "oracle":
 		// OC19 has no public DNS zones, so the test environments deploy only oracle-gateway's
@@ -156,6 +176,14 @@ func WaitUntilK8SBucketDeleted(t testing.TestingT, options *k8s.KubectlOptions, 
 // resource really exists, not just that the object was accepted.
 func WaitUntilCrossplaneResourceAvailable(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
 	availability := defaultObjectAvailability(name, resource)
+	availability.isAvailable = isCrossplaneObjectAvailable
+	availability.objectError = NewCrossplaneObjectNotAvailable
+	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
+}
+
+func WaitUntilNamespacedCrossplaneResourceAvailable(t testing.TestingT, options *k8s.KubectlOptions, resource schema.GroupVersionResource, name string, retries int, sleepBetweenRetries time.Duration) (*unstructured.Unstructured, error) {
+	availability := defaultObjectAvailability(name, resource)
+	availability.namespacedObject.namespace = options.Namespace
 	availability.isAvailable = isCrossplaneObjectAvailable
 	availability.objectError = NewCrossplaneObjectNotAvailable
 	return waitUntilObjectAvailable(t, options, availability, retries, sleepBetweenRetries)
@@ -606,6 +634,9 @@ func getProviderType(options *k8s.KubectlOptions) ProviderType {
 	if strings.HasPrefix(options.ContextName, "gke_") {
 		return GCloud
 	}
+	if strings.HasSuffix(options.ContextName, "-infra-aks") {
+		return Azure
+	}
 	return AWS
 }
 
@@ -665,6 +696,13 @@ func waitUntilHostnameAvailableWithAddress(t testing.TestingT, options *k8s.Kube
 			"name":  "CURL_OPTS",
 			"value": curlOpts,
 		},
+	}
+	// Azure test environments use publicly untrusted Let's Encrypt staging certificates
+	if getProviderType(options) == Azure {
+		envVars = append(envVars, map[string]interface{}{
+			"name":  "CURL_OPTS",
+			"value": "--insecure",
+		})
 	}
 
 	containers, _, err := unstructured.NestedSlice(jobObject.Object, "spec", "template", "spec", "containers")
@@ -753,6 +791,15 @@ func getTargetIP(t testing.TestingT, options *k8s.KubectlOptions, cloudProvider,
 			return "", err
 		}
 		return strings.Trim(gatewayIP, "'"), nil
+	case "azure":
+		gatewayHosts, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "gateway", gatewayName, "-n", gatewayNamespace, "-o", "jsonpath='{.status.addresses[*].value}'")
+		if err != nil {
+			return "", err
+		}
+		if hosts := strings.Fields(strings.Trim(gatewayHosts, "'")); len(hosts) > 0 {
+			return hosts[0], nil
+		}
+		return "", nil
 	case "oracle":
 		// oracle-gateway fronts each gateway with an Ingress of the same name, whose load balancer
 		// terminates client TLS.

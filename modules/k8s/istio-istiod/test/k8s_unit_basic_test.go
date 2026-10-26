@@ -24,6 +24,14 @@ func TestIstioIstiodGooglePri(t *testing.T) {
 	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
 }
 
+func TestIstioIstiodAzureBiz(t *testing.T) {
+	testIstioIstiod(t, "biz-infra-aks")
+}
+
+func TestIstioIstiodAzurePri(t *testing.T) {
+	testIstioIstiod(t, "pri-infra-aks")
+}
+
 func TestIstioIstiodOracleBiz(t *testing.T) {
 	testIstioIstiod(t, "biz-infra-oke")
 }

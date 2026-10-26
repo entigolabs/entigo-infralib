@@ -1,0 +1,15 @@
+global:
+  gateway:
+    name: internal
+    namespace: "{{ .tmodule.azure-gateway }}"
+
+mimir-distributed:
+  ingester:
+    persistentVolume:
+      size: 5Gi
+  store_gateway:
+    persistentVolume:
+      size: 5Gi
+  compactor:
+    persistentVolume:
+      size: 5Gi
