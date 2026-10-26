@@ -1,7 +1,7 @@
 gateways:
   external:
     certificateOcid: "{{ .toutput.dns.pub_cert_ocid }}"
-    domain: "{{ .toutput.dns.pub_domain }}"
+    domain: "{{ .toutput.dns.public_domain }}"
   internal:
     certificateOcid: "{{ .toutput.dns.int_cert_ocid }}"
-    domain: "{{ .toutput.dns.int_domain }}"
+    domain: "{{ .toutput.dns.private_domain }}"

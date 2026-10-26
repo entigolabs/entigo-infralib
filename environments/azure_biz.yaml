@@ -1,0 +1,50 @@
+# Agent configuration of the azure_biz environment: cloud azure, prefix biz
+# (location and subscription from AZURE_LOCATION and AZURE_SUBSCRIPTION_ID,
+# as for the agent). The platform of this repository on Azure: AKS, the
+# Application Gateway for Containers behind azure-gateway with Let's Encrypt
+# staging certificates from cert-manager, Crossplane with the Azure
+# providers. Inputs live in modules/<type>/<name>/test/azure_biz.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: azure/vpc
+      - source: azure/acr-proxy
+      - source: azure/dns
+      - source: azure/kms
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: azure/crossplane
+      - source: azure/aks
+      - source: azure/aks-node-pool
+      - source: azure/agc
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-biz
+    modules:
+      - source: alloy
+      - source: argocd
+      - name: azure-gateway
+        source: azure-gateway
+      - source: cert-manager
+      - name: crossplane-azure
+        source: crossplane-azure
+      - name: crossplane-system
+        source: crossplane-core
+      - source: external-dns
+      - source: external-secrets
+      - source: grafana
+      - source: harbor
+      - source: istio-base
+      - source: istio-gateway
+      - name: istio-system
+        source: istio-istiod
+      - source: kiali
+      - source: kyverno
+      - source: loki
+      - source: mimir
+      - source: prometheus
+      - source: trivy

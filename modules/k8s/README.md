@@ -44,11 +44,11 @@ overrides them.
 | `Chart.lock` | Resolved dependency digest, written by `helm dependency update` |
 | `charts/*.tgz` | The vendored upstream chart, committed to the repository |
 | `values.yaml` | Cloud neutral defaults for the wrapper and the upstream chart |
-| `values-aws.yaml` / `values-google.yaml` | Defaults that only apply on that cloud |
+| `values-aws.yaml` / `values-google.yaml` / `values-azure.yaml` | Defaults that only apply on that cloud |
 | `agent_input.yaml` | Agent templated values, the environment specific wiring |
-| `agent_input_aws.yaml` / `agent_input_google.yaml` | Wiring that exists on one cloud only |
+| `agent_input_aws.yaml` / `agent_input_google.yaml` / `agent_input_azure.yaml` | Wiring that exists on one cloud only |
 | `templates/` | Resources this repository owns, not the upstream chart |
-| `templates/aws/`, `templates/google/` | Cloud specific resources |
+| `templates/aws/`, `templates/google/`, `templates/azure/` | Cloud specific resources |
 | `argo-apps.yaml` | Overrides merged into the generated ArgoCD `Application` |
 | `agent.yaml` | Optional module metadata surfaced by the agent (UI URL, module type) |
 | `test/` | Test environment inputs and Go tests, see [Tests](#tests) |
@@ -496,7 +496,7 @@ belongs in `values.yaml` instead. Five modules currently need one.
 ### Test environment inputs
 
 `test/<cloud>_<env>.yaml` — `aws_pri.yaml`, `aws_biz.yaml`, `google_pri.yaml`,
-`google_biz.yaml` — are the module's `inputs:` for the test platform of that
+`google_biz.yaml`, `azure_pri.yaml`, `azure_biz.yaml` — are the module's `inputs:` for the test platform of that
 cloud and environment. CI copies each one into the generated agent config as
 that module's input file, so they are agent inputs and support the same
 replacement tags.
@@ -539,13 +539,20 @@ environment. This is where cloud specific templates actually get verified.
    `global.cloudProvider`.
 5. `argo-apps.yaml` if the module needs sync options, ignored differences or
    namespace labels.
-6. `test.sh` copied from an existing module — it is the same three lines
-   everywhere.
+6. `test.sh` copied from an existing module — it is the same four lines
+   everywhere (the framework's `templates/module-test.sh`).
 7. `test/<cloud>_<env>.yaml` for each environment the module should be deployed
-   into, and `test/k8s_unit_basic_test.go` to assert it came up.
-8. `test/static_values.yaml` only if the chart cannot render without it.
-9. Add the module to `test_k8s()` in `common/generate_config.sh`.
-10. Run `./test.sh` before opening the pull request.
+   into, and `test/k8s_unit_basic_test.go` to assert it came up (see the
+   framework's README for the test API).
+8. `test/static_values.yaml` only if the chart cannot render without it, and
+   `test/module.yaml` with `pin_step: true` if the module can only be installed
+   once per cluster, or `kube_score_ignore` for checks an upstream part of the
+   chart fails by design.
+9. Add the module to the `apps` step of each `environments/<cloud>_<env>.yaml`
+   it has an input file for, with a `name:` only when the application must not
+   be called `<module>-<prefix>`.
+10. Run `./test.sh static modules/k8s/<module>` and `modules/k8s/<module>/test.sh`
+    before opening the pull request.
 
 ## Deprecating a module
 
@@ -556,7 +563,7 @@ unchanged, until everyone has moved off it.
 1. Set `deprecated: true` in the module's `Chart.yaml`. This is Helm's own
    field, so `helm template` prints `this chart is deprecated` on stderr and
    `helm show chart` reports it, and it is what the tooling keys off — the
-   reports in `common/*/report.sh` skip deprecated modules so an upstream
+   framework's update report skips deprecated modules so an upstream
    release does not turn into an update pull request for a module nobody is
    supposed to adopt.
 2. Write the module's `README.md`, starting with a `## Deprecated` section that
@@ -564,23 +571,10 @@ unchanged, until everyone has moved off it.
    configuration before and after, how to verify the replacement is working,
    and how to remove the old app and namespace. `promtail` and
    `argocd-ecr-updater` are the examples to copy.
-3. Delete `test/<cloud>_<env>.yaml`. Those files are what put the module into
-   the test platforms, through `full_k8s_conf`, so removing them takes it out
-   of the test clusters. Remove the module from `test_k8s()` in
-   `common/generate_config.sh` if it is listed there.
-4. Short circuit `test.sh` so nothing tries to test a module that is no longer
-   deployed anywhere:
-
-   ```bash
-   #!/bin/bash
-   exit 0 # Disable k8s/<module> tests, deprecated in favour of k8s/<replacement>
-   #SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-   #cd $SCRIPTPATH
-   #exec $SCRIPTPATH/../../../common/test.sh "$@"
-   ```
-
-   Keep `test/k8s_unit_basic_test.go` in case the module is ever picked back
-   up. With `test.sh` returning 0 the file costs nothing.
+3. Remove the module from every `environments/<cloud>_<env>.yaml` and delete
+   its `test/<cloud>_<env>.yaml` files. A module no step lists is in no test
+   platform, and its test skips itself: keep `test/k8s_unit_basic_test.go` and
+   `test.sh` in case the module is ever picked back up, they cost nothing.
 5. Leave `Chart.yaml`'s dependency, `values*.yaml`, the agent inputs and
    `templates/` exactly as they are. Existing installations keep rendering the
    same manifests.

@@ -12,6 +12,37 @@ locals {
      "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
      "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
   }
+
+  # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
+  node_repair_reasons = {
+    Ready                 = ["NodeStatusUnknown", "KubeletNotReady"]
+    ContainerRuntimeReady = ["PodStuckTerminating"]
+    KernelReady           = ["ForkFailedOutOfPIDs"]
+    NetworkingReady       = ["IPAMDNotReady", "IPAMDNotRunning", "InterfaceNotRunning", "InterfaceNotUp", "MissingLoopbackInterface"]
+  }
+
+  # Every reason above gets the same wait time
+  node_repair_default_overrides = tolist(flatten([
+    for condition, reasons in local.node_repair_reasons : [
+      for reason in reasons : {
+        node_monitoring_condition = condition
+        node_unhealthy_reason     = reason
+        min_repair_wait_time_mins = var.node_repair_wait_time_mins
+        repair_action             = "Replace"
+      }
+    ]
+  ]))
+
+  node_repair_enabled          = try(var.node_repair_config.enabled, false)
+  node_repair_custom_overrides = try(var.node_repair_config.node_repair_config_overrides, null)
+
+  # Custom overrides win, otherwise use the defaults
+  node_repair_overrides = local.node_repair_custom_overrides != null ? local.node_repair_custom_overrides : local.node_repair_default_overrides
+
+  # No node_repair_config means repair stays off. When repair is enabled add the overrides
+  node_repair_config = var.node_repair_config == null ? null : merge(var.node_repair_config, {
+    node_repair_config_overrides = local.node_repair_enabled ? local.node_repair_overrides : var.node_repair_config.node_repair_config_overrides
+  })
 }
 
 
@@ -69,6 +100,7 @@ module "eks-managed-node-group" {
   
   labels = var.labels
   taints = var.taints
+  node_repair_config = local.node_repair_config
   launch_template_tags = merge({
     Terraform  = "true"
     Prefix     = var.prefix
