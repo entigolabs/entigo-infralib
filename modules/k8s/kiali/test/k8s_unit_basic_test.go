@@ -1,45 +1,30 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sKialiAWSBiz(t *testing.T) {
-	testK8sKiali(t, "aws", "biz")
+func TestKiali(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
+
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace, 30, 10*time.Second), "kiali %s deployment error", c.Namespace)
+
+		// The kiali HTTPRoute is the only one in the namespace.
+		k8s.WaitUntilRouteAnswers(t, c, "", "/kiali/console", "200", routeRetries(e), 6*time.Second)
+	})
 }
 
-func TestK8sKialiAWSPri(t *testing.T) {
-	testK8sKiali(t, "aws", "pri")
-}
-
-func TestK8sKialiGoogleBiz(t *testing.T) {
-	testK8sKiali(t, "google", "biz")
-}
-
-func TestK8sKialiGooglePri(t *testing.T) {
-	testK8sKiali(t, "google", "pri")
-}
-
-func testK8sKiali(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
-	
-	
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 30, 10*time.Second)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("kiali %s deployment error:", namespaceName), err)
+// Google and Azure gateways take long to program a new route.
+func routeRetries(e *env.Environment) int {
+	if e.Cloud == env.CloudGoogle || e.Cloud == env.CloudAzure {
+		return 400
 	}
-
-	successResponseCode := "200"
-	targetURL := fmt.Sprintf("https://%s/kiali/console", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, "kiali ingress/gateway test error")
+	return 100
 }

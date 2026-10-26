@@ -1,0 +1,7 @@
+global:
+  createRoute: '{{ .toptmodule.azure-gateway }}'
+  gateway:
+    name: '{{ .toptin.azure-gateway.global.externalGateway }}'
+    namespace: '{{ .toptmodule.azure-gateway }}'
+  hostnames:
+    - "*.{{ .toutput.dns.pub_domain }}"
