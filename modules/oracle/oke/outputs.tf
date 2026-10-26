@@ -18,6 +18,12 @@ output "private_endpoint" {
   value = oci_containerengine_cluster.this.endpoints[0].private_endpoint
 }
 
+# The address behind the kubernetes Service. NetworkPolicies enforced after Service translation
+# (modules/k8s/cilium) have to allow the API server here, on port 6443.
+output "private_endpoint_ip" {
+  value = split(":", oci_containerengine_cluster.this.endpoints[0].private_endpoint)[0]
+}
+
 output "kubernetes_endpoint" {
   value = yamldecode(data.oci_containerengine_cluster_kube_config.this.content)["clusters"][0]["cluster"]["server"]
 }

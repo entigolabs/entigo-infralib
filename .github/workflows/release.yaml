@@ -1,0 +1,71 @@
+# Applies main to every environment, tests it, and when main differs from the
+# latest release tags a new version, publishes the modules to
+# entigo-infralib-release over git and as OCI packages to ghcr.io and the AWS
+# Public ECR, then retags the images with the version. Follows a green
+# scheduled Stable run; a Stable run somebody dispatched triggers nothing.
+# Dispatched by hand with one cloud it applies and tests main there and
+# releases nothing, so a cloud can be re-run without making a version.
+name: Release
+
+on:
+  workflow_run:
+    workflows: [Stable]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      cloud:
+        description: cloud to run; anything but all applies and tests main there without releasing
+        type: choice
+        options: [all, aws, google, oracle, azure]
+        default: all
+
+jobs:
+  release:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    uses: entigolabs/entigo-infralib-test/.github/workflows/module-release.yaml@main
+    with:
+      clouds: ${{ inputs.cloud || '' }}
+      release_repo: https://github.com/entigolabs/entigo-infralib-release
+      oci_registries: ghcr.io/entigolabs/entigo-infralib-release,public.ecr.aws/entigolabs/entigo-infralib-release
+    secrets: inherit
+
+  images:
+    name: Tag the images with the release
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.release.outputs.version }}
+      HAS_SLACK: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+    steps:
+    - name: Retag latest as ${{ needs.release.outputs.version }}
+      # The agent's base images are built from main by the Build images
+      # workflows and tagged latest; a release gives the images that latest
+      # points at the release's version, on both registries, without a
+      # rebuild. The test images of entigo-infralib-test are versioned by
+      # that repository's own releases.
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        set -euo pipefail
+        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
+        for image in kubectl aws google oracle azure; do
+          docker buildx imagetools create \
+            -t "public.ecr.aws/entigolabs/entigo-infralib-${image}:${VERSION}" \
+            -t "entigolabs/entigo-infralib-${image}:${VERSION}" \
+            "public.ecr.aws/entigolabs/entigo-infralib-${image}:latest"
+        done
+    - name: Slack message about the failure
+      if: failure() && env.HAS_SLACK == 'true'
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_COLOR: failure
+        SLACK_MESSAGE: "Release ${{ env.VERSION }} is published but tagging the images with it failed"
+        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
+        SLACK_FOOTER: ""
