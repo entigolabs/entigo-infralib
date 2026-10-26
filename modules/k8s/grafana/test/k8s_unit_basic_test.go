@@ -1,53 +1,30 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
 	"github.com/stretchr/testify/require"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sGrafanaAWSBiz(t *testing.T) {
-	testK8sGrafana(t, "aws", "biz")
+func TestGrafana(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
+
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "grafana", 20, 6*time.Second), "grafana deployment error")
+
+		// The grafana HTTPRoute is the only one in the namespace.
+		k8s.WaitUntilRouteAnswers(t, c, "", "/login", "200", routeRetries(e), 6*time.Second)
+	})
 }
 
-func TestK8sGrafanaAWSPri(t *testing.T) {
-	testK8sGrafana(t, "aws", "pri")
-}
-
-func TestK8sGrafanaGoogleBiz(t *testing.T) {
-	testK8sGrafana(t, "google", "biz")
-}
-
-func TestK8sGrafanaGooglePri(t *testing.T) {
-	testK8sGrafana(t, "google", "pri")
-}
-
-func TestK8sGrafanaAzureBiz(t *testing.T) {
-	testK8sGrafana(t, "azure", "biz")
-}
-
-func TestK8sGrafanaAzurePri(t *testing.T) {
-	testK8sGrafana(t, "azure", "pri")
-}
-
-func testK8sGrafana(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "grafana", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("grafana deployment error:", err)
+// Google and Azure gateways take long to program a new route.
+func routeRetries(e *env.Environment) int {
+	if e.Cloud == env.CloudGoogle || e.Cloud == env.CloudAzure {
+		return 400
 	}
-
-	successResponseCode := "200"
-	targetURL := fmt.Sprintf("https://%s/login", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
+	return 100
 }
-

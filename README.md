@@ -108,12 +108,14 @@ spec:
 
 ## Release process
 
-Releases are cut from `main` roughly once per day:
+Releases are cut from `main` roughly once per day. Testing and releasing run
+through [entigo-infralib-test](https://github.com/entigolabs/entigo-infralib-test),
+the framework this repository's modules are tested with; the workflows under
+`.github/workflows/` call its reusable ones.
 
 1. **Nuke** — each evening the entigo-infralib AWS, Google Cloud, Oracle and Azure test accounts are torn down (Nuke action, one job per cloud, configured under [nuke/](nuke/README.md)).
-2. **Stable** — in the morning the latest release is installed and its tests run (Stable action).
-3. **Upgrade** — the accounts are upgraded to the `main` branch and tests run again.
-4. **Release** — if the tests pass and `main` differs from the last release, a new release is created (Release action).
+2. **Stable** — in the morning the latest release is installed on every environment from [entigo-infralib-release](https://github.com/entigolabs/entigo-infralib-release) and its tests run (Stable action).
+3. **Release** — after a green scheduled Stable run, `main` is applied to every environment and tested again; if the tests pass and `main` differs from the last release, a new release is created, published and the images are tagged with it (Release action).
 
 Once a release is created, it is published to
 [entigo-infralib-release](https://github.com/entigolabs/entigo-infralib-release),
@@ -143,8 +145,46 @@ sources:
 sources:
   - url: https://github.com/entigolabs/entigo-infralib
     force_version: true
-    version: custom-branch
+    version: main
 ```
+
+## Testing
+
+Every module carries its tests next to it, as Go tests under
+`modules/<type>/<name>/test/`, written against the packages of
+[entigo-infralib-test](https://github.com/entigolabs/entigo-infralib-test).
+The test environments are agent configurations under `environments/`: one
+file per cloud and prefix (`aws_biz.yaml`, `google_pri.yaml`, ...), listing
+the modules of each step. A module is part of an environment when a step
+lists it; its inputs for that environment are `test/<environment>.yaml` in
+the module, which hold only what the scenario changes from the module's
+defaults. `test/module.yaml` marks the modules that exist once per
+environment (`pin_step`) and lists kube-score checks to skip for charts whose
+upstream parts fail them. An optional `environments/<environment>.env`
+overrides variables for one environment (`aws_us.env` puts the cost-alert
+environment in us-east-1), and `environments/ca-certificates/` holds the CA
+certificates the agents and the route probes trust on top of the public ones
+(the Let's Encrypt staging roots for Azure, the Oracle root CA).
+
+```
+./test.sh                                 provision every environment you have credentials for, then test every module
+./test.sh modules/k8s/argocd              test one module in a step of its own on the shared environments
+modules/k8s/argocd/test.sh                the same, from the module's directory
+./test.sh --env aws_biz test              only the tests, environments already provisioned
+./test.sh static modules/aws/vpc          static checks only: tflint, or helm lint + template + kube-score
+./test.sh envs                            the environments and their modules
+./test.sh --help
+```
+
+`test.sh` needs bash and docker; it fetches the framework's orchestrator of
+the version it pins and runs the agent and the tests from the framework's
+per-cloud images with your credentials and kubeconfig. Credentials and regions
+come from the variables the agent reads: `AWS_REGION` and AWS credentials,
+`GOOGLE_PROJECT`, `GOOGLE_REGION`, `GOOGLE_ZONE` and a gcloud login or key,
+`OCI_REGION`, `OCI_COMPARTMENT_ID` and `~/.oci/config`, `AZURE_LOCATION`,
+`AZURE_SUBSCRIPTION_ID` and a service principal. `go.mod` requires the same
+framework version `test.sh` pins; after bumping the pin, run the tests once
+and commit the `go.mod` and `go.sum` that produces.
 
 ## License
 

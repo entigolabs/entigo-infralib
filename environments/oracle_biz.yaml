@@ -1,0 +1,39 @@
+# Agent configuration of the oracle_biz environment: cloud oracle, prefix biz
+# (region and compartment from OCI_REGION and OCI_COMPARTMENT_ID, as for the
+# agent). The platform of this repository on OCI: the EU Sovereign Cloud realm
+# has no public DNS zones, so only the internal gateway is deployed and the
+# modules that ask for the external one are pointed at it. Inputs live in
+# modules/<type>/<name>/test/oracle_biz.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: oracle/vpc
+      - source: oracle/kms
+      - source: oracle/pca
+      - source: oracle/dns
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: oracle/oke
+      - source: oracle/oke-node-pool
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-biz
+    modules:
+      - source: argocd
+      - source: cilium
+      - source: cluster-autoscaler
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-oracle
+        source: crossplane-oracle
+      - source: external-dns
+      - source: istio-base
+      - name: istio-system
+        source: istio-istiod
+      - source: metrics-server
+      - source: oci-native-ingress-controller
+      - source: oracle-gateway

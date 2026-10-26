@@ -1,7 +1,4 @@
-#!/bin/bash
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-cd $SCRIPTPATH
-# The agent loads eBPF programs into the node's kernel, so it runs privileged. No resource limits:
-# an agent killed for memory takes the node's pod networking down with it.
-export KUBESCORE_EXTRA_OPTS="--ignore-test container-security-context-privileged --ignore-test container-resources --ignore-test container-ephemeral-storage-request-and-limit --ignore-test pod-probes --ignore-test pod-networkpolicy"
-exec $SCRIPTPATH/../../../common/test.sh "$@"
+#!/usr/bin/env bash
+# Test this module: hands over to the repository's test.sh with this module selected (./test.sh --help).
+MODULE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+exec "$MODULE/../../../test.sh" "$@" "modules/$(basename "$(dirname "$MODULE")")/$(basename "$MODULE")"
