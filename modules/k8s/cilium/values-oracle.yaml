@@ -1,0 +1,17 @@
+---
+# Policy enforcement only: the OCI VCN-native CNI keeps pod IP allocation and routing, and Cilium
+# joins its CNI chain to attach NetworkPolicy enforcement to each pod.
+cilium:
+  cni:
+    chainingTarget: oci
+    # Leaves the OCI CNI's own conflist in place.
+    exclusive: false
+  routingMode: native
+  enableIPv4Masquerade: false
+  kubeProxyReplacement: false
+  ipam:
+    mode: cluster-pool
+    operator:
+      # Cilium's own internal addresses only; pods keep their VCN addresses.
+      clusterPoolIPv4PodCIDRList:
+      - 100.64.0.0/16

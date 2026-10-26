@@ -22,6 +22,8 @@ ingressClasses:
   external:
     subnetId: "{{ .toutput.vpc.public_subnet_id }}"
     nsgIds: "{{ .toutput.oke.lb_nsg_id }}"
+    domain: "{{ .toutput.dns.public_domain }}"
   internal:
     subnetId: "{{ .toutput.vpc.private_subnet_id }}"
     nsgIds: "{{ .toutput.oke.lb_int_nsg_id }}"
+    domain: "{{ .toutput.dns.private_domain }}"

@@ -2,18 +2,13 @@ package test
 
 import (
 	"testing"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sPlatformApisAWSBiz(t *testing.T) {
-	testK8sPlatformApis(t, "aws", "biz")
-}
-
-func TestK8sPlatformApisAWSPri(t *testing.T) {
-	testK8sPlatformApis(t, "aws", "pri")
-}
-
-func testK8sPlatformApis(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	_, _ = k8s.CheckKubectlConnection(t, cloudName, envName)
+func TestPlatformApis(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		_ = k8s.Connect(t, e)
+	})
 }

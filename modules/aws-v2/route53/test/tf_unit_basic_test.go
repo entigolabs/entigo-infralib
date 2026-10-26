@@ -1,99 +1,96 @@
 package test
 
 import (
-	"testing"
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/tf"
-	"github.com/stretchr/testify/assert"
-	"strings"
 	"fmt"
-	"os"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	_ "github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-
-func TestTerraform	(t *testing.T) {
-	t.Run("Biz", testTerraformRoute53v2Biz)
-	t.Run("Pri", testTerraformRoute53v2Pri)
-	t.Run("Min", testTerraformRoute53v2Min)
-	t.Run("Ext", testTerraformRoute53v2Ext)
+func TestRoute53(t *testing.T) {
+	env.RunEach(t, map[string]env.TestFunc{
+		"aws_biz": testRoute53Biz,
+		"aws_pri": testRoute53Pri,
+		"aws_min": testRoute53Min,
+		"aws_ext": testRoute53Ext,
+	})
 }
 
-func testTerraformRoute53v2Biz(t *testing.T) {
-        t.Parallel()
-        outputs := aws.GetTFOutputs(t, "biz")
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
-	
-	pub_zone_id := tf.GetStringValue(t, outputs, "route53__pub_zone_id")
-	pub_domain  := tf.GetStringValue(t, outputs, "route53__pub_domain")
-	pub_cert_arn := tf.GetStringValue(t, outputs, "route53__pub_cert_arn")
-	int_zone_id := tf.GetStringValue(t, outputs, "route53__int_zone_id")
-	int_domain := tf.GetStringValue(t, outputs, "route53__int_domain")
-	int_cert_arn := tf.GetStringValue(t, outputs, "route53__int_cert_arn")
-	assert.NotEqual(t, int_zone_id, pub_zone_id, "int_zone_id and pub_zone_id must not be equal")
-	assert.Equal(t, fmt.Sprintf("biz-%s-route53-int.infralib.entigo.io", stepName), int_domain, "int_domain value is wrong")
-	assert.Equal(t, fmt.Sprintf("biz-%s-route53.infralib.entigo.io", stepName), pub_domain, "pub_domain value is wrong")
-	//assert.Equal(t, "biz-route53-int.infralib.entigo.io", int_domain, "int_domain value is wrong")
-	//assert.Equal(t, "biz-route53.infralib.entigo.io", pub_domain, "pub_domain value is wrong")
-	assert.NotEmpty(t, int_zone_id, "pub_domain was not returned")
-	assert.NotEmpty(t, pub_cert_arn, "pub_cert_arn was not returned")
-	assert.NotEmpty(t, int_zone_id, "int_domain was not returned")
-	assert.NotEmpty(t, int_cert_arn, "int_cert_arn was not returned")
+func moduleStepName(t *testing.T, e *env.Environment) string {
+	return strings.TrimSpace(strings.ToLower(env.ModulePlacement(t, e).Step.Name))
 }
 
-func testTerraformRoute53v2Pri(t *testing.T) {
-        t.Parallel()
-        outputs := aws.GetTFOutputs(t, "pri")
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
-	
-	pub_zone_id := tf.GetStringValue(t, outputs, "route53__pub_zone_id")
-	pub_domain  := tf.GetStringValue(t, outputs, "route53__pub_domain")
-	pub_cert_arn := tf.GetStringValue(t, outputs, "route53__pub_cert_arn")
-	int_zone_id := tf.GetStringValue(t, outputs, "route53__int_zone_id")
-	int_domain := tf.GetStringValue(t, outputs, "route53__int_domain")
-	assert.Equal(t, int_zone_id, pub_zone_id, "int_zone_id and pub_zone_id must be equal")
-	assert.Equal(t, fmt.Sprintf("pri-%s-route53.infralib.entigo.io", stepName), int_domain, "int_domain value is wrong")
-	assert.Equal(t, fmt.Sprintf("pri-%s-route53.infralib.entigo.io", stepName), pub_domain, "pub_domain value is wrong")
-	//assert.Equal(t, "pri-route53.infralib.entigo.io", int_domain, "int_domain value is wrong")
-	//assert.Equal(t, "pri-route53.infralib.entigo.io", pub_domain, "pub_domain value is wrong")
-	assert.NotEmpty(t, int_zone_id, "int_zone_id was not returned")
-	assert.NotEmpty(t, pub_zone_id, "pub_zone_id was not returned")
-	assert.NotEmpty(t, pub_cert_arn, "pub_cert_arn was not returned")
-	
+// biz creates a separate private zone with its own certificate.
+func testRoute53Biz(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+	stepName := moduleStepName(t, e)
+
+	pubZoneId := outputs.String(t, "route53__pub_zone_id")
+	pubDomain := outputs.String(t, "route53__pub_domain")
+	pubCertArn := outputs.String(t, "route53__pub_cert_arn")
+	intZoneId := outputs.String(t, "route53__int_zone_id")
+	intDomain := outputs.String(t, "route53__int_domain")
+	intCertArn := outputs.String(t, "route53__int_cert_arn")
+	assert.NotEqual(t, intZoneId, pubZoneId, "int_zone_id and pub_zone_id must not be equal")
+	assert.Equal(t, fmt.Sprintf("biz-%s-route53-int.infralib.entigo.io", stepName), intDomain, "int_domain value is wrong")
+	assert.Equal(t, fmt.Sprintf("biz-%s-route53.infralib.entigo.io", stepName), pubDomain, "pub_domain value is wrong")
+	assert.NotEmpty(t, intZoneId, "pub_domain was not returned")
+	assert.NotEmpty(t, pubCertArn, "pub_cert_arn was not returned")
+	assert.NotEmpty(t, intZoneId, "int_domain was not returned")
+	assert.NotEmpty(t, intCertArn, "int_cert_arn was not returned")
 }
 
-func testTerraformRoute53v2Min(t *testing.T) {
-        //t.Parallel()
-        outputs := aws.GetTFOutputs(t, "min")
-	pub_zone_id := tf.GetStringValue(t, outputs, "route53__pub_zone_id")
-	pub_domain  := tf.GetStringValue(t, outputs, "route53__pub_domain")
-	int_zone_id := tf.GetStringValue(t, outputs, "route53__int_zone_id")
-	int_domain := tf.GetStringValue(t, outputs, "route53__int_domain")
-	assert.NotEmpty(t, int_zone_id, "int_zone_id must be empty")
-	assert.NotEmpty(t, pub_zone_id, "pub_zone_id must be empty")
-	assert.Equal(t, int_zone_id, pub_zone_id, "int_zone_id and pub_zone_id must be equal")
-	assert.Equal(t, pub_domain, int_domain, "pub_domain and int_domain must be equal")
-	assert.Equal(t, "infralib.entigo.io", int_domain, "int_domain must be infralib.entigo.io")
-	assert.Equal(t, "infralib.entigo.io", pub_domain, "pub_domain must be infralib.entigo.io")
+// pri uses the public zone for internal names as well.
+func testRoute53Pri(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+	stepName := moduleStepName(t, e)
 
+	pubZoneId := outputs.String(t, "route53__pub_zone_id")
+	pubDomain := outputs.String(t, "route53__pub_domain")
+	pubCertArn := outputs.String(t, "route53__pub_cert_arn")
+	intZoneId := outputs.String(t, "route53__int_zone_id")
+	intDomain := outputs.String(t, "route53__int_domain")
+	assert.Equal(t, intZoneId, pubZoneId, "int_zone_id and pub_zone_id must be equal")
+	assert.Equal(t, fmt.Sprintf("pri-%s-route53.infralib.entigo.io", stepName), intDomain, "int_domain value is wrong")
+	assert.Equal(t, fmt.Sprintf("pri-%s-route53.infralib.entigo.io", stepName), pubDomain, "pub_domain value is wrong")
+	assert.NotEmpty(t, intZoneId, "int_zone_id was not returned")
+	assert.NotEmpty(t, pubZoneId, "pub_zone_id was not returned")
+	assert.NotEmpty(t, pubCertArn, "pub_cert_arn was not returned")
 }
 
-func testTerraformRoute53v2Ext(t *testing.T) {
-        //t.Parallel()
-        outputs := aws.GetTFOutputs(t, "ext")
-	stepName := strings.TrimSpace(strings.ToLower(os.Getenv("STEP_NAME")))
-	pub_zone_id := tf.GetStringValue(t, outputs, "route53__pub_zone_id")
-	pub_domain  := tf.GetStringValue(t, outputs, "route53__pub_domain")
-	pub_cert_arn := tf.GetStringValue(t, outputs, "route53__pub_cert_arn")
-	int_zone_id := tf.GetStringValue(t, outputs, "route53__int_zone_id")
-	int_domain := tf.GetStringValue(t, outputs, "route53__int_domain")
-	assert.NotEqual(t, int_zone_id, pub_zone_id, "int_zone_id and pub_zone_id must not be equal")
-	assert.Equal(t, fmt.Sprintf("ext-%s-route53-private.infralib.entigo.io", stepName), int_domain, "int_domain value is wrong")
-	assert.Equal(t, fmt.Sprintf("ext-%s-route53.infralib.entigo.io", stepName), pub_domain, "pub_domain value is wrong")
-	//assert.Equal(t, "ext-route53-private.infralib.entigo.io", int_domain, "int_domain must be ext-route53-private.infralib.entigo.io")
-	//assert.Equal(t, "ext-route53.infralib.entigo.io", pub_domain, "pub_domain must be ext-route53.infralib.entigo.io")
-	assert.NotEmpty(t, pub_cert_arn, "pub_cert_arn was not returned")
-	assert.NotEmpty(t, int_zone_id, "int_zone_id was not returned")
-	assert.NotEmpty(t, pub_zone_id, "pub_zone_id was not returned")
-
+// min reuses the existing parent zone for both domains.
+func testRoute53Min(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+	pubZoneId := outputs.String(t, "route53__pub_zone_id")
+	pubDomain := outputs.String(t, "route53__pub_domain")
+	intZoneId := outputs.String(t, "route53__int_zone_id")
+	intDomain := outputs.String(t, "route53__int_domain")
+	assert.NotEmpty(t, intZoneId, "int_zone_id must be empty")
+	assert.NotEmpty(t, pubZoneId, "pub_zone_id must be empty")
+	assert.Equal(t, intZoneId, pubZoneId, "int_zone_id and pub_zone_id must be equal")
+	assert.Equal(t, pubDomain, intDomain, "pub_domain and int_domain must be equal")
+	assert.Equal(t, "infralib.entigo.io", intDomain, "int_domain must be infralib.entigo.io")
+	assert.Equal(t, "infralib.entigo.io", pubDomain, "pub_domain must be infralib.entigo.io")
 }
 
+// ext creates the public zone and a private zone with a custom name.
+func testRoute53Ext(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+	stepName := moduleStepName(t, e)
+	pubZoneId := outputs.String(t, "route53__pub_zone_id")
+	pubDomain := outputs.String(t, "route53__pub_domain")
+	pubCertArn := outputs.String(t, "route53__pub_cert_arn")
+	intZoneId := outputs.String(t, "route53__int_zone_id")
+	intDomain := outputs.String(t, "route53__int_domain")
+	assert.NotEqual(t, intZoneId, pubZoneId, "int_zone_id and pub_zone_id must not be equal")
+	assert.Equal(t, fmt.Sprintf("ext-%s-route53-private.infralib.entigo.io", stepName), intDomain, "int_domain value is wrong")
+	assert.Equal(t, fmt.Sprintf("ext-%s-route53.infralib.entigo.io", stepName), pubDomain, "pub_domain value is wrong")
+	assert.NotEmpty(t, pubCertArn, "pub_cert_arn was not returned")
+	assert.NotEmpty(t, intZoneId, "int_zone_id was not returned")
+	assert.NotEmpty(t, pubZoneId, "pub_zone_id was not returned")
+}

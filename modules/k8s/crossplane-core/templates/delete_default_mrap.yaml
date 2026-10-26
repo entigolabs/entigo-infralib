@@ -60,6 +60,11 @@ spec:
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
+        {{- if eq .Values.global.cloudProvider "azure" }}
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"
+        {{- end }}
       containers:
       - name: kubectl
         image: {{ .Values.job.image }}:{{ .Values.job.tag }}
