@@ -13,5 +13,6 @@ spec:
   - 'subnets.networking.oci.upbound.io'
   - 'networksecuritygroups.networking.oci.upbound.io'
   - 'clusters.containerengine.oci.upbound.io'
+  - 'nodepools.containerengine.oci.upbound.io'
   - 'keys.kms.oci.upbound.io'
 {{- end }}

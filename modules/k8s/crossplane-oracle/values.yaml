@@ -46,6 +46,10 @@ global:
       lb: ""
       lbInternal: ""
     clusterId: ""
+    nodePools:
+      tools: ""
+      main: ""
+      mon: ""
     kms:
       managementEndpoint: ""
       dataKeyId: ""
