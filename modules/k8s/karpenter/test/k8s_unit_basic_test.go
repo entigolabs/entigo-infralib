@@ -4,20 +4,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sKarpenterAWSPri(t *testing.T) {
-	testK8sKarpenter(t, "aws", "pri")
-}
+func TestKarpenter(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func testK8sKarpenter(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, namespaceName, 30, 10*time.Second)
-	if err != nil {
-		t.Fatal("Karpenter deployment error", err)
-	}
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace, 30, 10*time.Second), "Karpenter deployment error")
+	})
 }

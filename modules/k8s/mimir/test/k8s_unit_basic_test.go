@@ -5,88 +5,50 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/google"
 	"github.com/stretchr/testify/require"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/azure"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sMimirAWSBiz(t *testing.T) {
-	testK8sMimir(t, "aws", "biz")
+func TestMimir(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
+
+		// fullnameOverride in values.yaml pins every chart resource name to "mimir".
+		for _, component := range []string{"gateway", "distributor", "query-scheduler", "querier", "query-frontend", "ruler"} {
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "mimir-"+component, 20, 6*time.Second), "mimir-%s deployment error", component)
+		}
+		for _, pod := range []string{"mimir-compactor-0", "mimir-ingester-0", "mimir-store-gateway-0"} {
+			require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, pod, 20, 6*time.Second), "%s pod error", pod)
+		}
+
+		// Mimir writes a cluster seed file to its blocks store on startup, which proves
+		// the pods can write to the bucket with their cloud identity.
+		switch e.Cloud {
+		case env.CloudAWS:
+			bucket := fmt.Sprintf("%s-%s-%s-%s", e.Prefix, c.Namespace, aws.AccountID(t, e), e.MustRegion(t))
+			require.NoError(t, aws.WaitUntilBucketFileAvailable(t, e.MustRegion(t), bucket, "__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in AWS bucket")
+		case env.CloudGoogle:
+			require.NoError(t, google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-metrics", e.Prefix, c.Namespace), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in Google bucket")
+		case env.CloudAzure:
+			account, err := k8s.RunKubectlAndGetOutputE(t, c, "get", "accounts.storage.azure.m.upbound.io", c.Namespace, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
+			require.NoError(t, err, "storage Account error")
+			azure.WaitUntilBlobExists(t, azure.AccountNamed(account), fmt.Sprintf("%s-%s-metrics", e.Prefix, c.Namespace), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
+		}
+
+		// The chart's HTTPRoute is the only one in the namespace.
+		k8s.WaitUntilRouteReachable(t, c, "", routeRetries(e), 6*time.Second)
+	})
 }
 
-func TestK8sMimirAWSPri(t *testing.T) {
-	testK8sMimir(t, "aws", "pri")
-}
-
-func TestK8sMimirGoogleBiz(t *testing.T) {
-	testK8sMimir(t, "google", "biz")
-}
-
-func TestK8sMimirGooglePri(t *testing.T) {
-	testK8sMimir(t, "google", "pri")
-}
-
-func testK8sMimir(t *testing.T, cloudName string, envName string) {
-  	t.Parallel()
-	
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-gateway", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-gateway deployment error:", err)
+// Google and Azure gateways take long to program a new route.
+func routeRetries(e *env.Environment) int {
+	if e.Cloud == env.CloudGoogle || e.Cloud == env.CloudAzure {
+		return 400
 	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-distributor", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-distributor deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-query-scheduler", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-query-scheduler deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-querier", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-querier deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-query-frontend", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-query-frontend deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "mimir-ruler", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-ruler deployment error:", err)
-	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "mimir-compactor-0", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-compactor-0 pod error:", err)
-	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "mimir-ingester-0", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-ingester-0 pod error:", err)
-	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, "mimir-store-gateway-0", 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("mimir-store-gateway-0 pod error:", err)
-	}
-	
-	switch cloudName {
-	  case "aws":
-	    err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
-	    if err != nil {
-		    t.Fatal("File not found in AWS bucket:", err)
-	    }
-	  case "google":
-	    err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-metrics", envName, namespaceName), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
-	    if err != nil {
-		    t.Fatal("File not found in Google bucket:", err)
-	    }
-	}
-
-	successResponseCode := "200"
-	targetURL := fmt.Sprintf("https://%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
+	return 100
 }

@@ -1,0 +1,9 @@
+# Agent configuration of the aws_ext environment: aws-v2/route53 alone, with
+# domains delegated from a parent zone and an extra zone that is not created
+# (modules/aws-v2/route53/test/aws_ext.yaml). Shares the account with aws_biz
+# and aws_pri; nothing else is deployed under this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws-v2/route53

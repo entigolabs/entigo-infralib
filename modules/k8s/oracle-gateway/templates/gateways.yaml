@@ -1,7 +1,7 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
 {{- $namespace := .Release.Namespace }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled $cfg.domain }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway

@@ -1,0 +1,10 @@
+global:
+  # Own hostname: the Azure load balancer is L4 and terminates no TLS. See README.md.
+  pubkeyHostname: "{{ .module.name }}-pubkey.{{ .toutput.dns.pub_domain }}"
+  gateway:
+    name: "{{ .tinput.azure-gateway.global.externalGateway }}"
+    namespace: "{{ .tmodule.azure-gateway }}"
+wireguard:
+  initContainer:
+    image:
+      repository: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/library/busybox'

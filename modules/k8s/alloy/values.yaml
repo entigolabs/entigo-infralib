@@ -159,14 +159,8 @@ logs:
           path_targets = discovery.relabel.kubernetes_pods.output
         }
 
-        local.file_match "all_container_logs" {
-          path_targets = [{
-            __path__ = "/var/log/containers/*.log",
-          }]
-        }
-
         loki.source.file "kubernetes_pods" {
-          targets       = array.concat(local.file_match.kubernetes_pods.targets, local.file_match.all_container_logs.targets)
+          targets       = local.file_match.kubernetes_pods.targets
           forward_to    = [loki.process.kubernetes_pods.receiver]
           tail_from_end = true
         }

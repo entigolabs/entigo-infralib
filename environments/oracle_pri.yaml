@@ -1,0 +1,35 @@
+# Agent configuration of the oracle_pri environment: cloud oracle, prefix pri,
+# next to oracle_biz in the same compartment. Inputs live in
+# modules/<type>/<name>/test/oracle_pri.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: oracle/vpc
+      - source: oracle/pca
+      - source: oracle/dns
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: oracle/oke
+      - source: oracle/oke-node-pool
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-pri
+    modules:
+      - source: argocd
+      - source: cilium
+      - source: cluster-autoscaler
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-oracle
+        source: crossplane-oracle
+      - source: external-dns
+      - source: istio-base
+      - name: istio-system
+        source: istio-istiod
+      - source: metrics-server
+      - source: oci-native-ingress-controller
+      - source: oracle-gateway
