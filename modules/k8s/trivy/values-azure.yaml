@@ -1,0 +1,47 @@
+global:
+  cloudProvider: azure
+  azure:
+    acrId: ""
+
+trivy-operator:
+  serviceAccount:
+    create: false
+  trivyOperator:
+    scanJobPodTemplateLabels: "azure.workload.identity/use=true"
+    scanJobTolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  tolerations:
+    - key: "mon"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+  nodeCollector:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

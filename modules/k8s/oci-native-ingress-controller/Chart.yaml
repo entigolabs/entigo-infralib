@@ -6,7 +6,7 @@ version: 0.1.0
 appVersion: "1.4.5"
 
 # Where charts/oci-native-ingress-controller/ was copied from. There is no chart repository
-# to point dependencies at, so common/k8s/report.sh follows this repository's releases to
+# to point dependencies at, so the update report (entigo-infralib-test's scripts/report.sh) follows this repository's releases to
 # notice when the vendored copy falls behind.
 annotations:
   infralib.entigo.io/upstream-repo: oracle/oci-native-ingress-controller

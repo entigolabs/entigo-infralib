@@ -13,6 +13,17 @@ In addition to installing external-dns with Helm it also created the needed IRSA
 
 ```
 
+### Azure ###
+
+Azure private zones need their own provider, so on Azure a second instance `<module name>-external-dns-private`
+(`azure-private-dns`, HTTPRoutes only) writes the private int zone. Both share one WorkloadIdentity (crossplane-azure):
+DNS Zone Contributor on `pub_zone_id`, Private DNS Zone Contributor on `int_zone_id`. Set
+`external-dns-private.enabled: false` when the int zone is not private (e.g. a single public domain): dns
+`int_private_domain` is then empty, so the public instance excludes nothing.
+
+Both instances render the upstream chart's `crds/` (`dnsendpoints`, `dnsrecords`), so ArgoCD shows a harmless
+`RepeatedResourceWarning`: the copies are identical (same pinned chart version) and applied as one resource.
+
 ### DNSEndpoint ###
 
 The `crd` source is enabled, so records that no Service, Ingress or Route can

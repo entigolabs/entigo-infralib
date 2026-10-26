@@ -1,0 +1,8 @@
+is_public_ip_enabled: true
+# The k8s module tests reach the API from GitHub runners, whose addresses are not fixed.
+oke_api_access_cidrs: |
+  ["0.0.0.0/0"]
+
+# A non-default service range. Kubernetes ClusterIPs are allocated from it and it is virtual,
+# so unlike the pod addresses it takes no VCN space and comes from no subnet.
+services_cidr: "10.97.0.0/16"

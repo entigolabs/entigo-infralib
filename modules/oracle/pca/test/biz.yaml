@@ -1,7 +1,0 @@
-# The CA outlives a teardown: OCI holds a CA's name for 7 days after deletion is scheduled, so
-# one created per run would collide with the previous one. oci-nuke-config.yml keeps an existing
-# CA standing and this adopts it.
-create_ca: false
-# The step is named literally rather than taken from {{ .step.name }}: a per-module test run
-# renames the step after its branch, and the CA to adopt keeps the name the net step gave it.
-ca_name: "{{ .config.prefix }}-net-{{ .module.name }}-root-ca"

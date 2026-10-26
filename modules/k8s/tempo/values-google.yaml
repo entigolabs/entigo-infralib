@@ -1,0 +1,20 @@
+# Only what differs on Google. global.cloudProvider set here and nowhere else, per
+# modules/k8s/README.md.
+
+global:
+  cloudProvider: google
+  providerConfigRefName: crossplane-google
+  google:
+    projectID: ""
+    bucket:
+      location: ""
+      kmsKeyId: ""
+      lifecycleRule: []
+
+tempo:
+  tempo:
+    storage:
+      trace:
+        backend: gcs
+        gcs:
+          bucket_name: "" # agent_input_google.yaml sets it to global.bucketName

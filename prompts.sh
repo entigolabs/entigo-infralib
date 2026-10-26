@@ -29,6 +29,7 @@ shift $((OPTIND - 1))
 WORK_DIR="${ENTIGO_INFRALIB_DIR:-$HOME/claude}"
 IMAGE_NAME="claude-code"
 REPO_URL="git@github.com:entigolabs/entigo-infralib.git"
+FRAMEWORK_URL="git@github.com:entigolabs/entigo-infralib-test.git"
 CLAUDE_CONFIG_VOL="claude-code-config"
 CLAUDE_DATA_VOL="claude-code-data"
 DOCKER="sudo docker"
@@ -155,30 +156,33 @@ if [ "$PROMPT_NAME" = "update" ]; then
   git checkout main
   git pull origin main
 
+  # The report scripts live in entigo-infralib-test (scripts/report.sh); the
+  # EKS AMI check is this repository's report/aws.sh, which that script runs.
+  if [ ! -d "$WORK_DIR/entigo-infralib-test" ]; then
+    echo "Cloning entigo-infralib-test..."
+    git clone "$FRAMEWORK_URL" "$WORK_DIR/entigo-infralib-test"
+  fi
+  git -C "$WORK_DIR/entigo-infralib-test" pull -q origin main
+  REPORT_SH="$WORK_DIR/entigo-infralib-test/scripts/report.sh"
+
   # Run report scripts on the host
   LF=$'\n'
   REPORT=""
 
-  if [ -x ./common/k8s/report.sh ]; then
-    helm repo update
-    K8S=$(./common/k8s/report.sh 2>&1) || true
-    if [ -n "$K8S" ]; then
-      REPORT+="=== K8S HELM UPDATES ===${LF}${K8S}${LF}${LF}"
-    fi
+  helm repo update > /dev/null 2>&1 || true
+  K8S=$("$REPORT_SH" k8s 2>&1) || true
+  if [ -n "$K8S" ]; then
+    REPORT+="=== K8S HELM UPDATES ===${LF}${K8S}${LF}${LF}"
   fi
 
-  if [ -x ./common/aws/report.sh ]; then
-    AWS=$(./common/aws/report.sh 2>&1) || true
-    if [ -n "$AWS" ]; then
-      REPORT+="=== AWS TERRAFORM UPDATES ===${LF}${AWS}${LF}${LF}"
-    fi
+  AWS=$("$REPORT_SH" aws 2>&1) || true
+  if [ -n "$AWS" ]; then
+    REPORT+="=== AWS TERRAFORM UPDATES ===${LF}${AWS}${LF}${LF}"
   fi
 
-  if [ -x ./common/google/report.sh ]; then
-    GCP=$(./common/google/report.sh 2>&1) || true
-    if [ -n "$GCP" ]; then
-      REPORT+="=== GOOGLE TERRAFORM UPDATES ===${LF}${GCP}${LF}${LF}"
-    fi
+  GCP=$("$REPORT_SH" google 2>&1) || true
+  if [ -n "$GCP" ]; then
+    REPORT+="=== GOOGLE TERRAFORM UPDATES ===${LF}${GCP}${LF}${LF}"
   fi
 
   cd - > /dev/null
