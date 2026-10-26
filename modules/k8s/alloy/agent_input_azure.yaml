@@ -1,0 +1,42 @@
+logs:
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"
+      # This list replaces values.yaml's egress list entirely, so the traces
+      # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
+      # repeated here — without it spans queue in Alloy and never reach Tempo.
+      # Harmless when traces.enabled is false: nothing opens the connection.
+      - ports:
+          - port: 4317
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'

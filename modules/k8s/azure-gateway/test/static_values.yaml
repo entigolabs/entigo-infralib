@@ -1,0 +1,21 @@
+global:
+  azure:
+    agcSubnetIds:
+      - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/virtualNetworks/test/subnets/test-agc-0
+gateways:
+  external:
+    domain: test.example.com
+  internal:
+    domain: test-int.example.com
+    annotations:
+      alb.networking.azure.io/alb-id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.ServiceNetworking/trafficControllers/test-agc
+    addresses:
+      - type: alb.networking.azure.io/alb-frontend
+        value: private
+  service:
+    domain: test-int.example.com
+    annotations:
+      alb.networking.azure.io/alb-id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.ServiceNetworking/trafficControllers/test-agc-service
+    addresses:
+      - type: alb.networking.azure.io/alb-frontend
+        value: private

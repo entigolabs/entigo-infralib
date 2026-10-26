@@ -1,4 +1,4 @@
 kyverno:
   global:
     image:
-      registry: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}'
+      registry: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}'
