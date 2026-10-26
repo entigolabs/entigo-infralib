@@ -1,5 +1,31 @@
 installProviderConfig: true
 
+providerResources:
+  family:
+    requests:
+      cpu: 3m
+      memory: 275Mi
+    limits:
+      cpu: 2000m
+      memory: 1024Mi
+  default:
+    requests:
+      cpu: 10m
+      memory: 250Mi
+    limits:
+      cpu: 2000m
+      memory: 1024Mi
+  providers:
+    identity:
+      limits:
+        memory: 2048Mi
+    networking:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 4096Mi
+
 global:
   extraProviders: []
   # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, external-secrets, ...);
@@ -9,6 +35,7 @@ global:
   createObservers: false
 
   cloudProvider: ""
+  crossplaneNamespace: crossplane-system
   oracle:
     # Tenancy OCID and region for the provider's Instance Principal credentials secret.
     # Not secret material - OCIDs and region identifiers are not credentials; the actual
