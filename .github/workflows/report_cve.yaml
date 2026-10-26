@@ -68,9 +68,13 @@ jobs:
         echo "Finding images without registry proxy:"
         account=$(aws sts get-caller-identity --query Account --output text)
         total=0; registry=0
+        # Allowed next to the proxies: the registries the clouds' own cluster
+        # add-ons come from (EKS add-on account, Google, mcr.microsoft.com) and
+        # OKE's system repositories okecustprod and oke-native-steward in the
+        # tenancy's region, whatever the realm's domain (oraclecloud.com, .eu).
         for image in $(echo "${all_images}" | sort -u); do
           ((total++)) || true
-          if [[ ! $image =~ (^${account}\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^602401143452\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^${GOOGLE_REGION}-docker\.pkg\.dev/${GOOGLE_PROJECT}/[a-z]+-net-gar-proxy-|\.azurecr\.io/|^mcr\.microsoft\.com) ]]; then
+          if [[ ! $image =~ (^${account}\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^602401143452\.dkr\.ecr\.${AWS_REGION}\.amazonaws\.com|^europe-north1-artifactregistry\.gcr\.io|^${GOOGLE_REGION}-docker\.pkg\.dev/${GOOGLE_PROJECT}/[a-z]+-net-gar-proxy-|\.azurecr\.io/|^mcr\.microsoft\.com|^ocir\.${OCI_REGION}\.oci\.oraclecloud\.[a-z]+/(okecustprod|oke-native-steward)/) ]]; then
             echo "$image does not use Internal Registry"
             ((registry++)) || true
           fi
