@@ -12,11 +12,6 @@ node-agent:
   configReloader:
     image:
       registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'
-  # Optional lookup (not required): a stack that never deploys tempo must
-  # still be able to render this module with traces.enabled left at its
-  # default false. No fallback on purpose: if traces.enabled is turned on
-  # without a tempo module, values.yaml fails the render instead of pointing
-  # the exporter at a tempo that isn't there.
   traces:
     tempoNamespace: '{{ .toptmodule.tempo }}'
 cluster-metrics:
