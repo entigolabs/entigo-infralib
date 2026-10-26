@@ -1,0 +1,9 @@
+# Agent configuration of the aws_min environment: aws-v2/route53 alone, with a
+# single existing zone and a certificate only
+# (modules/aws-v2/route53/test/aws_min.yaml). Shares the account with aws_biz
+# and aws_pri; nothing else is deployed under this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws-v2/route53

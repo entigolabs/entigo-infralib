@@ -12,7 +12,7 @@ on:
       cloud:
         description: cloud to nuke
         type: choice
-        options: [all, aws, google, oracle]
+        options: [all, aws, google, oracle, azure]
         default: all
       dry_run:
         description: only list what would be deleted
