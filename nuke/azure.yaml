@@ -1,0 +1,102 @@
+regions:
+  - global
+  - westeurope
+  - northeurope
+  - italynorth
+  - francecentral
+  - switzerlandnorth
+  - uksouth
+  - norwayeast
+  - swedencentral
+  - germanywestcentral
+
+blocklist:
+  - "00000000-0000-0000-0000-000000000000"
+
+resource-types:
+  excludes:
+    # Tenant scoped
+    - Application
+    - ApplicationCertificate
+    - ApplicationFederatedCredential
+    - ApplicationSecret
+    - AzureADGroup
+    - AzureADUser
+    - ServicePrincipal
+    # Deleted with their resource group
+    - ApplicationGateway
+    - AppServicePlan
+    - ComputeSnapshot
+    - ContainerRegistry
+    - Disk
+    - DNSZone
+    - IPAllocation
+    - KeyVault
+    - ManagementLock
+    - NetworkInterface
+    - NetworkSecurityGroup
+    - PrivateDNSZone
+    - PublicIPAddress
+    - RecoveryServicesBackupPolicy
+    - RecoveryServicesBackupProtectedItem
+    - RecoveryServicesBackupProtectionContainer
+    - RecoveryServicesBackupProtectionIntent
+    - RecoveryServicesVault
+    - SSHPublicKey
+    - StorageAccount
+    - VirtualMachine
+    - VirtualNetwork
+    # Defender for Cloud state
+    - SecurityAlert
+    - SecurityAssessment
+    - SecurityPricing
+    - SecurityWorkspace
+    # Would delete every subscription role assignment
+    - SubscriptionRoleAssignment
+    # Subscription settings
+    - Budget
+    - MonitorDiagnosticSetting
+    - PolicyAssignment
+    - PolicyDefinition
+
+settings:
+  ResourceGroup:
+    DeleteManaged: true
+    DeleteLocks: true
+    SoftDeleteKeyVaultKeys: true
+    SoftDeleteKeyVaultKeysTag: created-by=entigo-infralib
+  RoleAssignment:
+    IncludeSubscriptionScope: true
+
+accounts:
+  e9182de5-0d65-431d-b7c9-d9a604ca3159:
+    filters:
+      ResourceGroup:
+        - property: Name
+          type: glob
+          value: "infralib-permanent-*"
+      DNSRecordSet:
+        - property: ResourceGroup
+          type: regex
+          value: "^infralib-permanent-"
+          invert: true
+      PrivateDNSRecordSet:
+        - property: ResourceGroup
+          type: regex
+          value: "^infralib-permanent-"
+          invert: true
+      RoleAssignment:
+        - property: PrincipalType
+          value: ServicePrincipal
+          invert: true
+        - property: Scope
+          type: regex
+          value: "(?i)^/subscriptions/[^/]+(/resourcegroups/infralib-permanent-[^/]+(/.*)?)?$"
+          invert: true
+        - property: PrincipalId
+          type: In
+          values:
+            - 0781434a-4e50-47c7-bfb7-2ebf44a8ad8b
+            - 45e7b415-5e04-4dc6-ba0a-8b32b80002c3
+            - 39604665-fa38-4ce1-8f20-2590d83cf16f
+            - c8b79014-36a5-4676-8fad-4cb31fd07111

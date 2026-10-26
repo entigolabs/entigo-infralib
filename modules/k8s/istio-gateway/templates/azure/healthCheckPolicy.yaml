@@ -1,0 +1,25 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+apiVersion: alb.networking.azure.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ .Values.gateway.name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  default:
+    interval: 5s
+    timeout: 5s
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    port: 15021
+    http:
+      path: /healthz/ready
+      match:
+        statusCodes:
+          - start: 200
+            end: 299
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ .Values.gateway.name }}
+{{- end }}

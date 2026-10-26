@@ -1,34 +1,21 @@
 package test
 
 import (
-	"testing"
 	"fmt"
-	"os"
 	"strings"
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/tf"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
+
+	_ "github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-
-
-func TestTerraformHelloWorld(t *testing.T) {
-	t.Run("Biz", testTerraformHelloWorldBiz)
-	t.Run("Pri", testTerraformHelloWorldPri)
+func TestHelloWorld(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
+		helloWorld := outputs.String(t, "hello-world__hello_world")
+		assert.Equal(t, helloWorld, fmt.Sprintf("Hello, %s-%s-hello-world!", e.Prefix, strings.ToLower(env.ModulePlacement(t, e).Step.Name)))
+	})
 }
-
-func testTerraformHelloWorldBiz(t *testing.T) {
-        t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz")
-	hello_world := tf.GetStringValue(t, outputs, "hello-world__hello_world")
-	assert.Equal(t, hello_world, fmt.Sprintf("Hello, biz-%s-hello-world!", strings.ToLower(os.Getenv("STEP_NAME"))))
-  
-}
-
-func testTerraformHelloWorldPri(t *testing.T) {
-        t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri")
-	hello_world := tf.GetStringValue(t, outputs, "hello-world__hello_world")
-	assert.Equal(t, hello_world, fmt.Sprintf("Hello, pri-%s-hello-world!", strings.ToLower(os.Getenv("STEP_NAME"))))
-}
-

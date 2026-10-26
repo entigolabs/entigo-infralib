@@ -1,0 +1,10 @@
+apiVersion: v2
+name: crossplane-azure
+description: Crossplane azure operator chart
+type: application
+version: 0.1.0
+appVersion: "1.0"
+dependencies:
+  - name: entigo-infralib-apis
+    version: v0.1.2
+    repository: oci://ghcr.io/entigolabs
