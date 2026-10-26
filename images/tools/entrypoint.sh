@@ -1,9 +1,6 @@
 #!/bin/bash
 #set -x
-if [ "$COMMAND" == "test" ]
-then
-    exec entrypoint-core.sh "$@"
-elif [ -n "$AWS_REGION" ] || [ -n "$GOOGLE_REGION" ] || [ -n "$OCI_REGION" ] || [ -n "$AZURE_LOCATION" ]; then
+if [ -n "$AWS_REGION" ] || [ -n "$GOOGLE_REGION" ] || [ -n "$OCI_REGION" ] || [ -n "$AZURE_LOCATION" ]; then
     exec /usr/bin/ei-agent provision "$@"
 else
     echo "AWS_REGION, GOOGLE_REGION, OCI_REGION or AZURE_LOCATION must be set"
