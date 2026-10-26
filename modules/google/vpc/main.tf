@@ -69,7 +69,7 @@ resource "google_compute_address" "cloud_nat" {
 module "cloud_nat" {
   count                               = var.enable_nat_gateway ? 1 : 0
   source                              = "terraform-google-modules/cloud-nat/google"
-  version                             = "7.0.0"
+  version                             = "7.1.0"
   project_id                          = data.google_client_config.this.project
   region                              = data.google_client_config.this.region
   router                              = google_compute_router.router.name
