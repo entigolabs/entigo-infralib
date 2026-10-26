@@ -74,7 +74,12 @@ kind: DeploymentRuntimeConfig
 metadata:
   name: {{ $name }}
   annotations:
+    {{- if eq $name $.Release.Name }}
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    {{- else }}
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+    {{- end }}
     argocd.argoproj.io/sync-wave: '1'
     helm.sh/resource-policy: keep
 spec:
