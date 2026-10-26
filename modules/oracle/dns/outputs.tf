@@ -50,6 +50,18 @@ output "int_cert_ocid" {
   value       = local.default_private_key != "" ? local.certificate_ocids[local.default_private_key] : ""
 }
 
+# pub_domain/int_domain without the fallback between kinds, empty when there is no zone of that
+# kind.
+output "public_domain" {
+  description = "Domain name of the default public zone, empty when there is no public zone"
+  value       = local.default_public_key != "" ? (local.domains[local.default_public_key].private ? "" : local.domain_names[local.default_public_key]) : ""
+}
+
+output "private_domain" {
+  description = "Domain name of the default private zone, empty when there is no private zone"
+  value       = local.default_private_key != "" ? (local.domains[local.default_private_key].private ? local.domain_names[local.default_private_key] : "") : ""
+}
+
 output "zone_ids" {
   description = "Map of domain keys to their zone OCIDs"
   value       = local.zone_ids

@@ -29,3 +29,14 @@ logs:
         to:
           - ipBlock:
               cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"
+      # This list replaces values.yaml's egress list entirely, so the traces
+      # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
+      # repeated here — without it spans queue in Alloy and never reach Tempo.
+      # Harmless when traces.enabled is false: nothing opens the connection.
+      - ports:
+          - port: 4317
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'

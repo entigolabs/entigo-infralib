@@ -3,20 +3,12 @@ package test
 import (
 	"testing"
 
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-const bucketName = "infralib-modules-aws-kms-tf"
-
-func TestK8sAwsRbacBindingsBiz(t *testing.T) {
-	testK8sAwsRbacBindings(t, "aws", "biz")
+func TestRbacBindings(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		_ = k8s.Connect(t, e)
+	})
 }
-
-func TestK8sAwsRbacBindingsPri(t *testing.T) {
-	testK8sAwsRbacBindings(t, "aws", "pri")
-}
-
-func testK8sAwsRbacBindings(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	
-}
-
