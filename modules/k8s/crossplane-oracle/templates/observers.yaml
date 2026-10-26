@@ -80,7 +80,7 @@ kind: Key
 metadata:
   name: data
   annotations:
-    crossplane.io/external-name: managementEndpoint/{{ $oracle.kms.managementEndpoint }}/keys/{{ $oracle.kms.dataKeyId }}
+    crossplane.io/external-name: {{ $oracle.kms.dataKeyId }}
     argocd.argoproj.io/sync-wave: "20"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:

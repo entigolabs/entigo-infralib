@@ -15,16 +15,7 @@ providerResources:
     limits:
       cpu: 2000m
       memory: 1024Mi
-  providers:
-    identity:
-      limits:
-        memory: 2048Mi
-    networking:
-      requests:
-        cpu: 100m
-        memory: 512Mi
-      limits:
-        memory: 4096Mi
+  providers: {}
 
 global:
   extraProviders: []
