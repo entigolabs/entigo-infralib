@@ -2,48 +2,36 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/entigolabs/entigo-infralib-common/google"
-	"github.com/entigolabs/entigo-infralib-common/tf"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	_ "github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-func TestTerraformGkeNodePool(t *testing.T) {
-	t.Run("Pri", testTerraformGkeNodePoolPri)
-	t.Run("Biz", testTerraformGkeNodePoolBiz)
-}
+func TestGkeNodePool(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
 
-func testTerraformGkeNodePoolPri(t *testing.T) {
-	t.Parallel()
-	testTerraformGkeNodePool(t, "pri")
-}
+		projectID := e.MustProject(t)
 
-func testTerraformGkeNodePoolBiz(t *testing.T) {
-	t.Parallel()
-	testTerraformGkeNodePool(t, "biz")
-}
+		prefix := outputs.String(t, "gke-node-pool__prefix")
+		assert.NotEmpty(t, prefix)
 
-func testTerraformGkeNodePool(t *testing.T, envName string) {
-	outputs := google.GetTFOutputs(t, envName)
+		nodePoolName := outputs.String(t, "gke-node-pool__node_pool_name")
+		assert.NotEmpty(t, nodePoolName)
+		assert.Contains(t, prefix, nodePoolName)
 
-	projectID := os.Getenv("GOOGLE_PROJECT")
+		clusterName := outputs.String(t, "gke-node-pool__cluster_name")
+		assert.NotEmpty(t, clusterName)
 
-	prefix := tf.GetStringValue(t, outputs, "gke-node-pool__prefix")
-	assert.NotEmpty(t, prefix)
+		clusterRegion := outputs.String(t, "gke-node-pool__cluster_region")
+		assert.NotEmpty(t, clusterRegion)
 
-	nodePoolName := tf.GetStringValue(t, outputs, "gke-node-pool__node_pool_name")
-	assert.NotEmpty(t, nodePoolName)
-	assert.Contains(t, prefix, nodePoolName)
-
-	clusterName := tf.GetStringValue(t, outputs, "gke-node-pool__cluster_name")
-	assert.NotEmpty(t, clusterName)
-
-	clusterRegion := tf.GetStringValue(t, outputs, "gke-node-pool__cluster_region")
-	assert.NotEmpty(t, clusterRegion)
-
-	nodePoolID := tf.GetStringValue(t, outputs, "gke-node-pool__node_pool_id")
-	assert.NotEmpty(t, nodePoolID)
-	assert.Contains(t, nodePoolID, fmt.Sprintf("projects/%s/locations/%s/clusters/%s/nodePools/%s", projectID, clusterRegion, clusterName, nodePoolName))
+		nodePoolID := outputs.String(t, "gke-node-pool__node_pool_id")
+		assert.NotEmpty(t, nodePoolID)
+		assert.Contains(t, nodePoolID, fmt.Sprintf("projects/%s/locations/%s/clusters/%s/nodePools/%s", projectID, clusterRegion, clusterName, nodePoolName))
+	})
 }

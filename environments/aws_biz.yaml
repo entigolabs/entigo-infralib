@@ -1,0 +1,69 @@
+# Agent configuration of the aws_biz environment: cloud aws, prefix biz, both
+# from the file name (region from AWS_REGION, as for the agent). The full
+# platform of this repository on AWS, the "business" flavour: a /16 VPC with
+# explicit subnets and every endpoint, public cluster endpoint, external and
+# service gateways, ArgoCD with Dex. Every module is one of this repository,
+# so the inputs live in modules/<type>/<name>/test/aws_biz.yaml; the framework
+# fills them in and makes this repository the agent's source.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws/kms
+      - source: aws/hello-world
+      - source: aws/vpc
+      - source: aws/tgw-attach
+      - source: aws-v2/route53
+      - source: aws/route53-resolver-associate
+      - source: aws/ecr-proxy
+      - source: aws/config-rules
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: aws/efs
+      - source: aws/eks
+      - source: aws/eks-node-group
+      - source: aws/crossplane
+      - source: aws/ec2
+      - source: aws/karpenter-node-role
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-biz
+    modules:
+      - source: alloy
+      - source: argocd
+      - source: aws-alb
+      - source: aws-storageclass
+      - source: cluster-autoscaler
+      - name: crossplane-aws
+        source: crossplane-aws
+      - name: crossplane-system
+        source: crossplane-core
+      - source: crossplane-kafka
+      - name: crossplane-sql
+        source: crossplane-sql
+      - source: entigo-portal-agent
+      - source: entigo-vulnerability-agent
+      - source: external-dns
+      - source: external-secrets
+      - source: grafana
+      - source: harbor
+      - source: hello-world
+      - source: istio-base
+      - source: istio-gateway
+      - name: istio-system
+        source: istio-istiod
+      - source: kiali
+      - source: kyverno
+      - source: loki
+      - source: metrics-server
+      - source: mimir
+      - name: platform-apis
+        source: platform-apis
+      - source: prometheus
+      - source: rbac-bindings
+      - source: saml-proxy
+      - source: tempo
+      - source: trivy
