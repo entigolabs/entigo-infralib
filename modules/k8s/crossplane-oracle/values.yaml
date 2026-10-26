@@ -1,18 +1,54 @@
 installProviderConfig: true
 
+providerResources:
+  family:
+    requests:
+      cpu: 3m
+      memory: 275Mi
+    limits:
+      cpu: 2000m
+      memory: 1024Mi
+  default:
+    requests:
+      cpu: 10m
+      memory: 250Mi
+    limits:
+      cpu: 2000m
+      memory: 1024Mi
+  providers: {}
+
 global:
   extraProviders: []
   # identity: per-app OCI IAM policies (external-dns, cluster-autoscaler, external-secrets, ...);
   # objectstorage: buckets for loki/mimir and friends.
   requiredProviders: ["identity", "objectstorage"]
+  observerProviders: ["networking", "containerengine", "kms"]
+  createObservers: false
 
   cloudProvider: ""
+  crossplaneNamespace: crossplane-system
   oracle:
     # Tenancy OCID and region for the provider's Instance Principal credentials secret.
     # Not secret material - OCIDs and region identifiers are not credentials; the actual
     # authentication comes from the node's instance identity.
     tenancyOcid: ""
     region: ""
+    vcnId: ""
+    subnets:
+      public: ""
+      private: ""
+      pod: ""
+      intra: ""
+      database: ""
+    nsgs:
+      node: ""
+      pod: ""
+      lb: ""
+      lbInternal: ""
+    clusterId: ""
+    kms:
+      managementEndpoint: ""
+      dataKeyId: ""
   deploymentRuntimeConfig:
     args:
       - --enable-management-policies

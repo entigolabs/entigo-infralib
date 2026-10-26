@@ -2,3 +2,24 @@ global:
   oracle:
     tenancyOcid: "{{ .toutput.oke.tenancy_id }}"
     region: "{{ .toutput.oke.region }}"
+    vcnId: "{{ .toptout.vpc.vpc_id }}"
+    subnets:
+      public: |
+        {{ .toptout.vpc.public_subnets }}
+      private: |
+        {{ .toptout.vpc.private_subnets }}
+      pod: |
+        {{ .toptout.vpc.pod_subnets }}
+      intra: |
+        {{ .toptout.vpc.intra_subnets }}
+      database: |
+        {{ .toptout.vpc.database_subnets }}
+    nsgs:
+      node: "{{ .toptout.oke.node_nsg_id }}"
+      pod: "{{ .toptout.oke.pod_nsg_id }}"
+      lb: "{{ .toptout.oke.lb_nsg_id }}"
+      lbInternal: "{{ .toptout.oke.lb_int_nsg_id }}"
+    clusterId: "{{ .toutput.oke.cluster_id }}"
+    kms:
+      managementEndpoint: "{{ .toptout.kms.vault_management_endpoint }}"
+      dataKeyId: "{{ .toptout.kms.data_key_id }}"

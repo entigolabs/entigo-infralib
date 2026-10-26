@@ -49,6 +49,30 @@ func TestCrossplaneOracle(t *testing.T) {
 		_, err = k8s.WaitUntilProviderConfigAvailable(t, c, resource, releaseName, 60, 2*time.Second)
 		require.NoError(t, err, "Provider config error")
 
+		observers := []struct {
+			resource schema.GroupVersionResource
+			name     string
+		}{
+			{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "vcns"}, "vcn"},
+			{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "subnets"}, "private-0"},
+			{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "networksecuritygroups"}, "node"},
+			{schema.GroupVersionResource{Group: "containerengine.oci.upbound.io", Version: "v1alpha1", Resource: "clusters"}, "oke"},
+		}
+		for _, step := range e.Steps {
+			for _, m := range step.Modules {
+				if m.Source == "oracle/kms" {
+					observers = append(observers, struct {
+						resource schema.GroupVersionResource
+						name     string
+					}{schema.GroupVersionResource{Group: "kms.oci.upbound.io", Version: "v1alpha1", Resource: "keys"}, "data"})
+				}
+			}
+		}
+		for _, o := range observers {
+			_, err = k8s.WaitUntilCrossplaneResourceAvailable(t, c, o.resource, o.name, 90, 4*time.Second)
+			require.NoError(t, err, fmt.Sprintf("Observer %s %s error", o.resource.Resource, o.name))
+		}
+
 		// Everything above proves the provider installed. Provision a real bucket to prove it
 		// can actually reach OCI - a provider can be Healthy and still fail on credentials or IAM.
 		region := e.MustRegion(t)

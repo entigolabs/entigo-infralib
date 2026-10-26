@@ -1,4 +1,15 @@
 global:
+  createObservers: true
   oracle:
     tenancyOcid: "ocid1.tenancy.oc1..aaaaaaaadummydummydummydummydummydummydummydummydummydummya"
     region: "eu-frankfurt-1"
+    vcnId: "ocid1.vcn.oc1.eu-frankfurt-1.dummy"
+    subnets:
+      private: |
+        "ocid1.subnet.oc1.eu-frankfurt-1.dummy0","ocid1.subnet.oc1.eu-frankfurt-1.dummy1"
+    nsgs:
+      node: "ocid1.networksecuritygroup.oc1.eu-frankfurt-1.dummy"
+    clusterId: "ocid1.cluster.oc1.eu-frankfurt-1.dummy"
+    kms:
+      managementEndpoint: "https://dummy-management.kms.eu-frankfurt-1.oraclecloud.com"
+      dataKeyId: "ocid1.key.oc1.eu-frankfurt-1.dummy"
