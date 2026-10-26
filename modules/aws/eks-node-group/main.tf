@@ -1,16 +1,16 @@
 locals {
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
-     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
-     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
-     "BOTTLEROCKET_ARM_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
+     "AL2023_ARM_64_NVIDIA"       = "1.35.9-20261023"
+     "AL2023_ARM_64_STANDARD"     = "1.35.9-20261023"
+     "AL2023_x86_64_NEURON"       = "1.35.9-20261023"
+     "AL2023_x86_64_NVIDIA"       = "1.35.9-20261023"
+     "AL2023_x86_64_STANDARD"     = "1.35.9-20261023"
+     "BOTTLEROCKET_ARM_64"        = "1.67.0-8db07cb8"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.67.0-8db07cb8"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.67.0-8db07cb8"
+     "BOTTLEROCKET_x86_64"        = "1.67.0-8db07cb8"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.67.0-8db07cb8"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.67.0-8db07cb8"
   }
 
   # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
