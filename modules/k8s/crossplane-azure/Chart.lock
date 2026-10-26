@@ -1,0 +1,6 @@
+dependencies:
+- name: entigo-infralib-apis
+  repository: oci://ghcr.io/entigolabs
+  version: v0.1.2
+digest: sha256:dba4d9aa4ff871235255f3efc4bc1f1a060a3f085e1ea2d2c048f9fb8cabdd0e
+generated: "2026-10-15T10:58:39.415334072Z"

@@ -1,0 +1,7 @@
+---
+external-dns:
+  extraArgs:
+  - --metrics-address=:7979
+  - --oci-config-file=/etc/kubernetes/oci.yaml
+  - --oci-zone-scope=
+  - --zone-id-filter={{ .toutput.dns.int_zone_id }}
