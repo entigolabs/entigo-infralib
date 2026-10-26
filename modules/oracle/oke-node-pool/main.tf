@@ -21,6 +21,7 @@ resource "oci_containerengine_node_pool" "this" {
   name               = replace(substr(var.prefix, 0, 32), "/-+$/", "")
   kubernetes_version = var.kubernetes_version
   node_shape         = var.node_shape
+  freeform_tags      = var.freeform_tags
 
   # cluster-autoscaler resizes pools through the OCI API, so after any scale event every
   # terraform plan would show a size diff and every apply would snap the pool back to

@@ -1,0 +1,9 @@
+# Agent configuration of the aws_us environment: aws/cost-alert alone, in
+# us-east-1 (environments/aws_us.env), the only region with the AWS/Billing
+# metric its alarm reads. Shares the account with aws_biz and aws_pri; nothing
+# else is deployed under this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws/cost-alert

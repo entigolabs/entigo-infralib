@@ -96,3 +96,8 @@ variable "kms_key_id" {
   type        = string
   default     = ""
 }
+
+variable "freeform_tags" {
+  type    = map(string)
+  default = {}
+}

@@ -6,69 +6,63 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/random"
 )
 
 const controllerNamespace = "native-ingress-controller-system"
 
-func TestK8sOciNativeIngressControllerOracleBiz(t *testing.T) {
-	testK8sOciNativeIngressController(t, "oracle", "biz")
-}
+func TestOciNativeIngressController(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sOciNativeIngressControllerOraclePri(t *testing.T) {
-	testK8sOciNativeIngressController(t, "oracle", "pri")
-}
+		// The controller runs in a fixed namespace (native-ingress-controller-system, set by
+		// values.yaml's fullnameOverride/deploymentNamespace), independent of wherever ArgoCD
+		// places this Application - not the module's own app namespace.
+		controller := c.WithNamespace(controllerNamespace)
+		k8s.WaitUntilDeploymentAvailable(t, controller, "oci-native-ingress-controller", 20, 6*time.Second)
 
-func testK8sOciNativeIngressController(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
+		deployment, err := k8s.ReadObjectFromFile(t, "./templates/deployment.yaml")
+		require.NoError(t, err)
+		_, err = k8s.CreateK8SDeployment(t, c, deployment)
+		require.NoError(t, err, "Creating Deployment error")
 
-	// The controller runs in a fixed namespace (native-ingress-controller-system, set by
-	// values.yaml's fullnameOverride/deploymentNamespace), independent of wherever ArgoCD
-	// places this Application - not the module's own app namespace.
-	controllerOptions := terrak8s.NewKubectlOptions(kubectlOptions.ContextName, kubectlOptions.ConfigPath, controllerNamespace)
-	terrak8s.WaitUntilDeploymentAvailable(t, controllerOptions, "oci-native-ingress-controller", 20, 6*time.Second)
+		service, err := k8s.ReadObjectFromFile(t, "./templates/service.yaml")
+		require.NoError(t, err)
+		_, err = k8s.CreateK8SService(t, c, service)
+		require.NoError(t, err, "Creating Service error")
 
-	deployment, err := k8s.ReadObjectFromFile(t, "./templates/deployment.yaml")
-	require.NoError(t, err)
-	_, err = k8s.CreateK8SDeployment(t, kubectlOptions, deployment)
-	require.NoError(t, err, "Creating Deployment error")
+		k8s.WaitUntilDeploymentAvailable(t, c, deployment.GetName(), 20, 6*time.Second)
 
-	service, err := k8s.ReadObjectFromFile(t, "./templates/service.yaml")
-	require.NoError(t, err)
-	_, err = k8s.CreateK8SService(t, kubectlOptions, service)
-	require.NoError(t, err, "Creating Service error")
+		ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
+		require.NoError(t, err)
+		ingressName := fmt.Sprintf("%s-%s", c.Namespace, strings.ToLower(random.UniqueId()))
+		ingress.SetName(ingressName)
+		err = k8s.SetNestedSliceString(ingress.Object, 0, "host", fmt.Sprintf("%s.test", ingressName), "spec", "rules")
+		require.NoError(t, err, "Setting host error")
 
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, deployment.GetName(), 20, 6*time.Second)
+		createdIngress, err := k8s.CreateK8SIngress(t, c, ingress)
+		require.NoError(t, err, "Creating Ingress error")
+		assert.NotNil(t, createdIngress, "Ingress is nil")
 
-	ingress, err := k8s.ReadObjectFromFile(t, "./templates/ingress.yaml")
-	require.NoError(t, err)
-	ingressName := fmt.Sprintf("%s-%s", namespaceName, strings.ToLower(random.UniqueId()))
-	ingress.SetName(ingressName)
-	err = k8s.SetNestedSliceString(ingress.Object, 0, "host", fmt.Sprintf("%s.test", ingressName), "spec", "rules")
-	require.NoError(t, err, "Setting host error")
+		_, err = k8s.WaitUntilK8SIngressAvailable(t, c, ingressName, 60, 5*time.Second)
+		if err != nil {
+			_ = k8s.DeleteK8SIngress(t, c, ingressName)
+		}
+		require.NoError(t, err, "Ingress availability error - expected an OCI Load Balancer IP in status.loadBalancer.ingress[0].ip")
 
-	createdIngress, err := k8s.CreateK8SIngress(t, kubectlOptions, ingress)
-	require.NoError(t, err, "Creating Ingress error")
-	assert.NotNil(t, createdIngress, "Ingress is nil")
+		err = k8s.DeleteK8SIngress(t, c, ingressName)
+		require.NoError(t, err, "Deleting Ingress error")
+		err = k8s.WaitUntilK8SIngressDeleted(t, c, ingressName, 40, 2*time.Second)
+		require.NoError(t, err, "Ingress didn't get deleted")
 
-	_, err = k8s.WaitUntilK8SIngressAvailable(t, kubectlOptions, ingressName, 60, 5*time.Second)
-	if err != nil {
-		_ = k8s.DeleteK8SIngress(t, kubectlOptions, ingressName)
-	}
-	require.NoError(t, err, "Ingress availability error - expected an OCI Load Balancer IP in status.loadBalancer.ingress[0].ip")
-
-	err = k8s.DeleteK8SIngress(t, kubectlOptions, ingressName)
-	require.NoError(t, err, "Deleting Ingress error")
-	err = k8s.WaitUntilK8SIngressDeleted(t, kubectlOptions, ingressName, 40, 2*time.Second)
-	require.NoError(t, err, "Ingress didn't get deleted")
-
-	err = k8s.DeleteK8SService(t, kubectlOptions, service.GetName())
-	require.NoError(t, err, "Deleting Service error")
-	err = k8s.DeleteK8SDeployment(t, kubectlOptions, deployment.GetName())
-	require.NoError(t, err, "Deleting Deployment error")
+		err = k8s.DeleteK8SService(t, c, service.GetName())
+		require.NoError(t, err, "Deleting Service error")
+		err = k8s.DeleteK8SDeployment(t, c, deployment.GetName())
+		require.NoError(t, err, "Deleting Deployment error")
+	})
 }
