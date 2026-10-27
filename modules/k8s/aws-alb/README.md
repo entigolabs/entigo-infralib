@@ -165,6 +165,31 @@ By default the Gateway ALBs do not send their `Server: awselb/2.0` response head
 serverHeader: true
 ```
 
+### TLS security policy
+
+`sslPolicy` sets the [ELB security policy](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html)
+of the HTTPS listener, which decides the TLS versions and ciphers the ALB accepts from clients.
+Every gateway without `sslPolicy`, custom gateways included, gets `ELBSecurityPolicy-TLS13-1-3-2021-06`,
+which accepts TLS 1.3 only. Clients that can not do TLS 1.3 fail the handshake.
+
+To allow TLS 1.2 again for a gateway that has to serve older clients:
+
+```yaml
+gateways:
+  external:
+    sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+```
+
+| Policy                                     | TLS versions |
+| ------------------------------------------ | ------------ |
+| `ELBSecurityPolicy-TLS13-1-3-2021-06`      | 1.3 only     |
+| `ELBSecurityPolicy-TLS13-1-2-2021-06`      | 1.2 and 1.3  |
+| `ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06` | 1.2 and 1.3, more 1.2 ciphers for older clients |
+
+`sslPolicy: ""` sets no policy, the ALB then uses the controller default `ELBSecurityPolicy-2016-08`,
+which allows TLS 1.0 to 1.2 and no TLS 1.3. The Ingress classes are not affected, their ALBs keep
+the controller default.
+
 
 # Migrating from Ingress to Gateway API (aws-alb module)
 

@@ -101,7 +101,7 @@ gateways:
     subnets: ""
     sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    # sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # default when unset: TLS 1.3 only; "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -115,7 +115,7 @@ gateways:
     subnets: ""
     sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    # sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # default when unset: TLS 1.3 only; "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -129,7 +129,7 @@ gateways:
     subnets: ""
     sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    # sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # default when unset: TLS 1.3 only; "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -147,7 +147,7 @@ gateways:
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
   #   sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
-  #   sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+  #   sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # default when unset: TLS 1.3 only
   #   wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
   #   loadBalancerAttributes: {}
   #   #  idle_timeout.timeout_seconds: "300"
