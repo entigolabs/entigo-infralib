@@ -104,8 +104,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/emicklei/go-restful/v3 v3.13.0 h1:C4Bl2xDndpU6nJ4bc1jXd+uTmYPVUwkD6bFY/oTyCes=
 github.com/emicklei/go-restful/v3 v3.13.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
-github.com/entigolabs/entigo-infralib-test v0.8.6 h1:8fxhHM43uYMen0a5JVyN1eaq7udN210T4iGjJbIciBw=
-github.com/entigolabs/entigo-infralib-test v0.8.6/go.mod h1:XSOPZjp070dgAGoHsD4tjQl6NYo01gIVfyRVFOEZiRg=
+github.com/entigolabs/entigo-infralib-test v0.8.7 h1:bQDz76uL+ONBUp2GFp/kMuXjLve3+GaJQzkORbe30sI=
+github.com/entigolabs/entigo-infralib-test v0.8.7/go.mod h1:XSOPZjp070dgAGoHsD4tjQl6NYo01gIVfyRVFOEZiRg=
 github.com/envoyproxy/go-control-plane v0.14.0 h1:hbG2kr4RuFj222B6+7T83thSPqLjwBIfQawTkC++2HA=
 github.com/envoyproxy/go-control-plane v0.14.0/go.mod h1:NcS5X47pLl/hfqxU70yPwL9ZMkUlwlKxtAohpi2wBEU=
 github.com/envoyproxy/go-control-plane/envoy v1.37.0 h1:u3riX6BoYRfF4Dr7dwSOroNfdSbEPe9Yyl09/B6wBrQ=
