@@ -49,7 +49,6 @@ global:
     nodePools:
       tools: ""
       main: ""
-      mon: ""
     kms:
       managementEndpoint: ""
       dataKeyId: ""
