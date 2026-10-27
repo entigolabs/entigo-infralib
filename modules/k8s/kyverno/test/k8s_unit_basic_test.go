@@ -3,55 +3,20 @@ package test
 import (
 	"testing"
 	"time"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sKyvernoAWSBiz(t *testing.T) {
-	testK8sKyverno(t, "aws", "biz")
-}
+func TestKyverno(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sKyvernoAWSPri(t *testing.T) {
-	testK8sKyverno(t, "aws", "pri")
-}
-
-func TestK8sKyvernoGoogleBiz(t *testing.T) {
-	testK8sKyverno(t, "google", "biz")
-}
-
-func TestK8sKyvernoGooglePri(t *testing.T) {
-	testK8sKyverno(t, "google", "pri")
-}
-
-func TestK8sKyvernoAzureBiz(t *testing.T) {
-	testK8sKyverno(t, "azure", "biz")
-}
-
-func TestK8sKyvernoAzurePri(t *testing.T) {
-	testK8sKyverno(t, "azure", "pri")
-}
-
-func testK8sKyverno(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kyverno-admission-controller", 10, 6*time.Second)
-	if err != nil {
-		t.Fatal("kyverno-admission-controller deployment error:", err)
-	}
-	// err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kyverno-background-controller", 10, 6*time.Second)
-	// if err != nil {
-	// 	t.Fatal("kyverno-background-controller deployment error:", err)
-	// }
-	// err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kyverno-cleanup-controller", 10, 6*time.Second)
-	// if err != nil {
-	// 	t.Fatal("kyverno-cleanup-controller deployment error:", err)
-	// }
-	// err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "kyverno-reports-controller", 10, 6*time.Second)
-	// if err != nil {
-	// 	t.Fatal("kyverno-reports-controller deployment error:", err)
-	// }
-
-  
-
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "kyverno-admission-controller", 10, 6*time.Second), "kyverno-admission-controller deployment error")
+		// require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "kyverno-background-controller", 10, 6*time.Second), "kyverno-background-controller deployment error")
+		// require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "kyverno-cleanup-controller", 10, 6*time.Second), "kyverno-cleanup-controller deployment error")
+		// require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "kyverno-reports-controller", 10, 6*time.Second), "kyverno-reports-controller deployment error")
+	})
 }

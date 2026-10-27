@@ -39,9 +39,6 @@ export TF_IN_AUTOMATION=1
 
 # Execute command
 case "$COMMAND" in
-    test)
-        run_tests
-        ;;
     plan)
         prepare_plan_stage
         prepare_terraform

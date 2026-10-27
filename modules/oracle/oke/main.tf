@@ -332,6 +332,9 @@ resource "oci_identity_policy" "controllers" {
     # Each k8s module's own scoped IAM Policy is itself a Crossplane Policy CR, created
     # through this same workload identity - needs the grant too.
     "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+
+    "Allow any-user to read virtual-network-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+    "Allow any-user to read cluster-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
   ]
 }
 

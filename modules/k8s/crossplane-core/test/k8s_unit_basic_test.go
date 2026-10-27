@@ -3,54 +3,24 @@ package test
 import (
 	"testing"
 	"time"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
+
 	"github.com/stretchr/testify/require"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sCrossplaneAWSBiz(t *testing.T) {
-	testK8sCrossplane(t, "aws", "biz")
-}
+func TestCrossplaneCore(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sCrossplaneAWSPri(t *testing.T) {
-	testK8sCrossplane(t, "aws", "pri")
-}
+		k8s.WaitUntilDeploymentAvailable(t, c, "crossplane", 10, 6*time.Second)
+		k8s.WaitUntilDeploymentAvailable(t, c, "crossplane-rbac-manager", 10, 6*time.Second)
 
-func TestK8sCrossplaneGoogleBiz(t *testing.T) {
-	testK8sCrossplane(t, "google", "biz")
-}
+		err := k8s.WaitUntilResourcesAvailable(t, c, "pkg.crossplane.io/v1", []string{"providers"}, 60, 6*time.Second)
+		require.NoError(t, err, "Providers crd error")
 
-func TestK8sCrossplaneGooglePri(t *testing.T) {
-	testK8sCrossplane(t, "google", "pri")
-}
-
-func TestK8sCrossplaneAzureBiz(t *testing.T) {
-	testK8sCrossplane(t, "azure", "biz")
-}
-
-func TestK8sCrossplaneAzurePri(t *testing.T) {
-	testK8sCrossplane(t, "azure", "pri")
-}
-
-func TestK8sCrossplaneOracleBiz(t *testing.T) {
-	testK8sCrossplane(t, "oracle", "biz")
-}
-
-func TestK8sCrossplaneOraclePri(t *testing.T) {
-	testK8sCrossplane(t, "oracle", "pri")
-}
-
-func testK8sCrossplane(t *testing.T,  cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane", 10, 6*time.Second)
-	terrak8s.WaitUntilDeploymentAvailable(t, kubectlOptions, "crossplane-rbac-manager", 10, 6*time.Second)
-
-	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1", []string{"providers"}, 60, 6*time.Second)
-	require.NoError(t, err, "Providers crd error")
-
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 6*time.Second)
-	require.NoError(t, err, "DeploymentRuntimeConfig crd error")
+		err = k8s.WaitUntilResourcesAvailable(t, c, "pkg.crossplane.io/v1beta1", []string{"deploymentruntimeconfigs"}, 60, 6*time.Second)
+		require.NoError(t, err, "DeploymentRuntimeConfig crd error")
+	})
 }

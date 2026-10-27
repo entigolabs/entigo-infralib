@@ -1,44 +1,20 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sTrivyAWSBiz(t *testing.T) {
-	testK8sTrivy(t, "aws", "biz")
-}
+func TestTrivy(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sTrivyAWSPri(t *testing.T) {
-	testK8sTrivy(t, "aws", "pri")
-}
-
-func TestK8sTrivyGoogleBiz(t *testing.T) {
-	testK8sTrivy(t, "google", "biz")
-}
-
-func TestK8sTrivyGooglePri(t *testing.T) {
-	testK8sTrivy(t, "google", "pri")
-}
-
-func TestK8sTrivyAzureBiz(t *testing.T) {
-	testK8sTrivy(t, "azure", "biz")
-}
-
-func TestK8sTrivyAzurePri(t *testing.T) {
-	testK8sTrivy(t, "azure", "pri")
-}
-
-func testK8sTrivy(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("trivy-%s-trivy-operator", envName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("trivy-operator deployment error:", err)
-	}
+		// The trivy-operator subchart names its deployment <release>-trivy-operator.
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-trivy-operator", 20, 6*time.Second), "trivy-operator deployment error")
+	})
 }

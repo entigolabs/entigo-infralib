@@ -1,4 +1,4 @@
-logs:
+node-agent:
   networkPolicy:
     egress:
       - ports:
@@ -29,3 +29,26 @@ logs:
         to:
           - ipBlock:
               cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"
+      # This list replaces values.yaml's egress list entirely, so the traces
+      # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
+      # repeated here — without it spans queue in Alloy and never reach Tempo.
+      # Harmless when traces.enabled is false: nothing opens the connection.
+      - ports:
+          - port: 4317
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+cluster-metrics:
+  image:
+    registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.acr-proxy.quay_registry | "quay.io" }}'
+receiver:
+  image:
+    registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.acr-proxy.quay_registry | "quay.io" }}'

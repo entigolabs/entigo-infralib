@@ -3,63 +3,31 @@ package test
 import (
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sAlloyAWSBiz(t *testing.T) {
-	testK8sAlloy(t, "aws", "biz")
-}
+func TestAlloy(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sAlloyAWSPri(t *testing.T) {
-	testK8sAlloy(t, "aws", "pri")
-}
+		nodeAgentDaemonSetName := fmt.Sprintf("%s-node-agent", c.Namespace)
 
-func TestK8sAlloyGoogleBiz(t *testing.T) {
-	testK8sAlloy(t, "google", "biz")
-}
+		daemonSet, err := k8s.GetDaemonSetE(t, c, nodeAgentDaemonSetName)
+		require.NoError(t, err, "Daemonset %s error", nodeAgentDaemonSetName)
+		assert.NotEmpty(t, daemonSet, "Node-agent daemonset was not returned")
 
-func TestK8sAlloyGooglePri(t *testing.T) {
-	testK8sAlloy(t, "google", "pri")
-}
-
-func TestK8sAlloyAzureBiz(t *testing.T) {
-	testK8sAlloy(t, "azure", "biz")
-}
-
-func TestK8sAlloyAzurePri(t *testing.T) {
-	testK8sAlloy(t, "azure", "pri")
-}
-
-func testK8sAlloy(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	nodeAgentDaemonSetName := fmt.Sprintf("%s-node-agent", namespaceName)
-
-	nodeAgentDaemonSet, err := terrak8s.GetDaemonSetE(t, kubectlOptions, nodeAgentDaemonSetName)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("Daemonset %s error:", nodeAgentDaemonSetName), err)
-	}
-	assert.NotEmpty(t, nodeAgentDaemonSet, "Node-agent daemonset was not returned")
-
-	if envName == "biz" {
-		clusterMetricsName := fmt.Sprintf("%s-cluster-metrics", namespaceName)
-
-		clusterMetrics, err := terrak8s.GetDeploymentE(t, kubectlOptions, clusterMetricsName)
-		if err != nil {
-			t.Fatal(fmt.Sprintf("Deployment %s error:", clusterMetricsName), err)
+		// cluster-metrics/receiver are opt-in (they need a Mimir / otlp-or-faro destination), off
+		// by default. The biz envs enable them (see test/*_biz.yaml); pri runs logs-only, so
+		// neither is present there.
+		if e.Prefix == "biz" {
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-cluster-metrics", 20, 6*time.Second), "cluster-metrics deployment error")
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-receiver", 20, 6*time.Second), "receiver deployment error")
 		}
-		assert.NotEmpty(t, clusterMetrics, "Cluster-metrics deployment was not returned")
-
-		receiverName := fmt.Sprintf("%s-receiver", namespaceName)
-
-		receiver, err := terrak8s.GetDeploymentE(t, kubectlOptions, receiverName)
-		if err != nil {
-			t.Fatal(fmt.Sprintf("Deployment %s error:", receiverName), err)
-		}
-		assert.NotEmpty(t, receiver, "Receiver deployment was not returned")
-	}
+	})
 }

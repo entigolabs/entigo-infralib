@@ -1,32 +1,19 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sWireguardAWSPri(t *testing.T) {
-	testK8sWireguard(t, "aws", "pri")
-}
+func TestWireguard(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sWireguardGooglePri(t *testing.T) {
-	testK8sWireguard(t, "google", "pri")
-}
-
-func TestK8sWireguardAzurePri(t *testing.T) {
-	testK8sWireguard(t, "azure", "pri")
-}
-
-func testK8sWireguard(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-wireguard", namespaceName), 30, 10*time.Second)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("wireguard %s deployment error:", namespaceName), err)
-	}
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-wireguard", 30, 10*time.Second), "wireguard %s deployment error", c.Namespace)
+	})
 }

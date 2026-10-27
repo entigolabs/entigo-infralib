@@ -5,18 +5,6 @@
 # sets TF_TOOL=tofu explicitly, this default covers running the scripts without it.
 TF_TOOL=${TF_TOOL:-tofu}
 
-# Run Go tests
-run_tests() {
-    if [ ! -f go.mod ]; then
-        cd /common && go mod download -x && cd /app
-        go mod init github.com/entigolabs/entigo-infralib
-        go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
-        go mod tidy
-    fi
-    cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
-    exit $?
-}
-
 # Prepare working directory and copy files for plan stage
 prepare_plan_stage() {
     echo "Need to copy project files from bucket $INFRALIB_BUCKET"
@@ -234,7 +222,12 @@ git_login() {
     if [ -n "$OCI_REGION" ]; then
       :
     elif [ -n "$AZURE_LOCATION" ]; then
-      :
+      for REGISTRY in $(grep -ohE 'oci://[a-z0-9]+\.azurecr\.io' *.tf 2>/dev/null | sort -u); do
+        REGISTRY="${REGISTRY#oci://}"
+        ACR_TOKEN=$(get_acr_token "${REGISTRY}") || { echo "ACR login failed for ${REGISTRY}"; exit 25; }
+        tofurc_credentials "${REGISTRY}" "  username = \"${ACR_TOKEN_USERNAME}\"
+  password = \"${ACR_TOKEN}\""
+      done
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
