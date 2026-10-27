@@ -16,8 +16,8 @@ data "oci_kms_vault" "this" {
 
 # Same adopt-instead-of-create pattern as the vault above, one lookup per key: create_keys =
 # false reuses whatever already carries these names in the vault rather than creating a fresh
-# (randomly suffixed) set on every apply and orphaning the last one. ENABLED is a key's "in
-# use" state, the equivalent of a vault's ACTIVE.
+# set on every apply and orphaning the last one. ENABLED is a key's "in use" state, the
+# equivalent of a vault's ACTIVE.
 data "oci_kms_keys" "data" {
   count               = var.create_keys ? 0 : 1
   compartment_id      = var.compartment_id
@@ -25,7 +25,7 @@ data "oci_kms_keys" "data" {
 
   filter {
     name   = "display_name"
-    values = [var.data_key_name]
+    values = [local.data_key_name]
   }
 
   filter {
@@ -41,7 +41,7 @@ data "oci_kms_keys" "config" {
 
   filter {
     name   = "display_name"
-    values = [var.config_key_name]
+    values = [local.config_key_name]
   }
 
   filter {
@@ -57,7 +57,7 @@ data "oci_kms_keys" "telemetry" {
 
   filter {
     name   = "display_name"
-    values = [var.telemetry_key_name]
+    values = [local.telemetry_key_name]
   }
 
   filter {
@@ -75,7 +75,7 @@ data "oci_kms_keys" "ca" {
 
   filter {
     name   = "display_name"
-    values = [var.ca_key_name]
+    values = [local.ca_key_name]
   }
 
   filter {
