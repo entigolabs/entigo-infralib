@@ -22,6 +22,12 @@ argocd:
       rollingUpdate:
         maxSurge: 0
         maxUnavailable: 1
+    # Client-side apply for this Deployment: server-side apply cannot replace
+    # the chart's "tmp" emptyDir with the claim (the live emptyDir: {} has no
+    # field it owns and stays next to the claim, "may not specify more than 1
+    # volume type"); the strategic merge patch's retainKeys does it.
+    deploymentAnnotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=false
     existingVolumes:
       tmp:
         persistentVolumeClaim:
