@@ -1,9 +1,5 @@
-logs:
+node-agent:
   networkPolicy:
-    # The whole egress list, not just the oracle-specific rule: Helm replaces lists rather
-    # than merging them, so the DNS and loki rules have to be repeated to survive. Nothing
-    # enforces any of it today - OKE ships no policy controller with either CNI - but it
-    # documents intent and is ready for the day one is added.
     egress:
       - ports:
           - port: 53
@@ -33,10 +29,6 @@ logs:
         to:
           - ipBlock:
               cidr: "{{ .toutput.oke.kubernetes_service_ip }}/32"
-      # This list replaces values.yaml's egress list entirely, so the traces
-      # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
-      # repeated here — without it spans queue in Alloy and never reach Tempo.
-      # Harmless when traces.enabled is false: nothing opens the connection.
       - ports:
           - port: 4317
             protocol: TCP
