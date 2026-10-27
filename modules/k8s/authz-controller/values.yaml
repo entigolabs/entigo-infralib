@@ -1,0 +1,3 @@
+authz-controller:
+  mode: cluster
+  imagePullSecrets: []
