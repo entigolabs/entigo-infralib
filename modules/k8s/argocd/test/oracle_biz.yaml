@@ -7,10 +7,17 @@ argocd:
     # this pod (/tmp/conf, the file:// source of the Applications it creates),
     # and a rolled pod took the copy with it, failing argocd's own upgrade and
     # every other pull request running on the cluster. The copy lives on a
-    # volume now; Recreate, since a rolling update's second pod could not
-    # attach it. fsGroup (global below) makes the volume writable for argocd.
+    # volume now. A roll stops the old pod before the new one starts (no
+    # surge), since a second pod could not attach the volume; the strategy
+    # type stays RollingUpdate because server-side apply cannot switch a live
+    # Deployment to Recreate (its defaulted rollingUpdate block stays and the
+    # API server rejects the pair). fsGroup (global below) makes the volume
+    # writable for argocd.
     deploymentStrategy:
-      type: Recreate
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
     volumes:
       - name: local-sources
         persistentVolumeClaim:
