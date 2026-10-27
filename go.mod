@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.338.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.61.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.0
-	github.com/entigolabs/entigo-infralib-test v0.8.8
+	github.com/entigolabs/entigo-infralib-test v0.8.9
 	github.com/oracle/oci-go-sdk/v65 v65.126.1
 	github.com/stretchr/testify v1.11.1
 	k8s.io/api v0.37.1
