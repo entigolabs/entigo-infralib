@@ -18,3 +18,46 @@ argocd:
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
       policy.default: role:readonly
+    cm:
+      dex.config: |
+        connectors:
+          - type: oidc
+            id: zitadel
+            name: Zitadel
+            config:
+              issuer: https://entigo-dev-if3upz.zitadel.cloud
+              clientID: "396964857255037673"
+              clientSecret: "{{ .output-custom.argocd-biz-client-secret }}"
+              insecureEnableGroups: true
+              scopes:
+                - openid
+                - profile
+                - email
+                - groups
+
+argocd-apps:
+    applications:
+        extra:
+            destination:
+                namespace: "extra"
+                server: https://kubernetes.default.svc
+            namespace: "{{ .module.name }}"
+            project: default
+            source:
+                helm:
+                    valueFiles:
+                        - values.yaml
+                    values: |
+                      image:
+                        registry: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged'
+                path: modules/k8s/hello-world
+                repoURL: https://github.com/entigolabs/entigo-infralib-release.git
+                targetRevision: main
+            syncPolicy:
+                automated: {}
+                syncOptions:
+                    - CreateNamespace=true
+                managedNamespaceMetadata:
+                  labels:
+                    pod-security.kubernetes.io/enforce: restricted
+                    pod-security.kubernetes.io/warn: restricted
