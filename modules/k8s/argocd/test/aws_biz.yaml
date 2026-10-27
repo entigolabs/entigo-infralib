@@ -1,5 +1,20 @@
 argocd:
   repoServer:
+    # Test environments only. The agent copies a pull request's checkout into
+    # this pod (/tmp/conf, the file:// source of the Applications it creates),
+    # and a rolled pod took the copy with it, failing argocd's own upgrade and
+    # every other pull request running on the cluster. The copy lives on a
+    # volume now; Recreate, since a rolling update's second pod could not
+    # attach it. fsGroup (global below) makes the volume writable for argocd.
+    deploymentStrategy:
+      type: Recreate
+    volumes:
+      - name: local-sources
+        persistentVolumeClaim:
+          claimName: "{{ .module.name }}-repo-server-local-sources"
+    volumeMounts:
+      - name: local-sources
+        mountPath: /tmp/conf
     autoscaling:
       maxReplicas: 1
   server:
@@ -10,7 +25,19 @@ argocd:
     httproute:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+  extraObjects:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ .module.name }}-repo-server-local-sources"
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 1Gi
   global:
+    securityContext:
+      fsGroup: 999
     domain: |
       {{ .module.name }}.{{ .toutput.route53.pub_domain }}
   configs:
