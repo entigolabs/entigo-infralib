@@ -27,7 +27,7 @@ argocd:
         name: Zitadel
         issuer: https://entigo-dev-if3upz.zitadel.cloud
         clientID: "396964871700220069"
-        clientSecret: "{{ .output-custom.argocd-biz-client-secret }}"
+        clientSecret: "{{ .output-custom.argocd-pri-client-secret }}"
         requestedScopes:
           - openid
           - profile
