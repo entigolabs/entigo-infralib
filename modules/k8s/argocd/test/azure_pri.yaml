@@ -22,3 +22,15 @@ argocd:
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
       policy.default: role:readonly
+    cm:
+      oidc.config: |
+        name: Zitadel
+        issuer: https://entigo-dev-if3upz.zitadel.cloud
+        clientID: "396964871700220069"
+        clientSecret: "{{ .output-custom.argocd-pri-client-secret }}"
+        requestedScopes:
+          - openid
+          - profile
+          - email
+          - groups
+        logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
