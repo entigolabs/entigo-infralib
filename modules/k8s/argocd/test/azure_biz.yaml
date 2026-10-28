@@ -52,8 +52,8 @@ argocd:
   configs:
     rbac:
       policy.csv: |
-        g, web-admin-258953744228679165, role:admin
         g, web-admin-390876846557773807, role:admin
+        g, web-read-only-390876846557773807, role:readonly
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
