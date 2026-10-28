@@ -17,7 +17,8 @@ data "oci_kms_vault" "this" {
 # Same adopt-instead-of-create pattern as the vault above, one lookup per key: create_keys =
 # false reuses whatever already carries these names in the vault rather than creating a fresh
 # set on every apply and orphaning the last one. ENABLED is a key's "in use" state, the
-# equivalent of a vault's ACTIVE.
+# equivalent of a vault's ACTIVE. KMS key names are not unique, so a name matching more than one
+# ENABLED key fails the plan rather than adopting an arbitrary one.
 data "oci_kms_keys" "data" {
   count               = var.create_keys ? 0 : 1
   compartment_id      = var.compartment_id
@@ -31,6 +32,13 @@ data "oci_kms_keys" "data" {
   filter {
     name   = "state"
     values = ["ENABLED"]
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.keys) == 1
+      error_message = "${length(self.keys)} ENABLED keys are named ${local.data_key_name} in the vault; adopting needs exactly one."
+    }
   }
 }
 
@@ -48,6 +56,13 @@ data "oci_kms_keys" "config" {
     name   = "state"
     values = ["ENABLED"]
   }
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.keys) == 1
+      error_message = "${length(self.keys)} ENABLED keys are named ${local.config_key_name} in the vault; adopting needs exactly one."
+    }
+  }
 }
 
 data "oci_kms_keys" "telemetry" {
@@ -63,6 +78,13 @@ data "oci_kms_keys" "telemetry" {
   filter {
     name   = "state"
     values = ["ENABLED"]
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.keys) == 1
+      error_message = "${length(self.keys)} ENABLED keys are named ${local.telemetry_key_name} in the vault; adopting needs exactly one."
+    }
   }
 }
 
@@ -81,5 +103,12 @@ data "oci_kms_keys" "ca" {
   filter {
     name   = "state"
     values = ["ENABLED"]
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.keys) == 1
+      error_message = "${length(self.keys)} ENABLED keys are named ${local.ca_key_name} in the vault; adopting needs exactly one."
+    }
   }
 }
