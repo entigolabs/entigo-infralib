@@ -1,0 +1,37 @@
+{{- $ingress := index .Values "cluster-metrics" "ui" "ingress" }}
+{{- if and (eq .Values.global.cloudProvider "aws") $ingress.enabled }}
+{{- $scheme := index $ingress.annotations "alb.ingress.kubernetes.io/scheme" }}
+{{- $cidrs := "" }}
+{{- if eq $scheme "internet-facing" }}
+{{- $cidrs = .Values.global.aws.publicSubnetCidrs | default "" }}
+{{- else }}
+{{- $cidrs = printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-cluster-metrics-ui-alb
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cluster-metrics
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        {{- range (splitList "," $cidrs) }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . }}
+        {{- end }}
+        {{- end }}
+        {{- range .Values.global.aws.extraAlbCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 12345
+{{- end }}

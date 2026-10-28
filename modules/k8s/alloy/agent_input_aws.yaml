@@ -1,4 +1,13 @@
-logs:
+global:
+  # Consumed by templates/aws/networkPolicy.yaml to scope the cluster-metrics UI ALB ingress.
+  aws:
+    publicSubnetCidrs: "{{ .toutput.vpc.public_subnets_cidr_blocks }}"
+    privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
+    serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
+node-agent:
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -40,3 +49,6 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.eks.cluster_name }}"
