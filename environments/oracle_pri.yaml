@@ -34,5 +34,4 @@ steps:
       - source: metrics-server
       - source: oci-native-ingress-controller
       - source: oracle-gateway
-      - name: platform-apis
-        source: platform-apis
+      - source: platform-apis
