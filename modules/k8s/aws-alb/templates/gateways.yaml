@@ -17,9 +17,6 @@ spec:
 {{- range $name, $cfg := .Values.gateways }}
 {{- if and (kindIs "map" $cfg) $cfg.enabled }}
 {{- $scheme := required (printf "gateways.%s.scheme is required (internal | internet-facing)" $name) $cfg.scheme }}
-{{- /* Gateways without an sslPolicy key, custom ones included, accept TLS 1.3 only.
-       sslPolicy: "" sets no policy, the controller default ELBSecurityPolicy-2016-08 then applies */}}
-{{- $sslPolicy := ternary $cfg.sslPolicy "ELBSecurityPolicy-TLS13-1-3-2021-06" (hasKey $cfg "sslPolicy") }}
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
 # Also carries settings that used to be per-Ingress annotations but apply to
@@ -44,12 +41,12 @@ spec:
       listenerAttributes:
         - key: routing.http.response.server.enabled
           value: {{ $.Values.serverHeader | quote }}
-      {{- if or $cfg.certificates $sslPolicy }}
+      {{- if or $cfg.certificates $cfg.sslPolicy }}
       # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
       # via route hostnames, e.g. istio-managed domains behind the fallback route)
       # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
-      {{- if $sslPolicy }}
-      sslPolicy: {{ $sslPolicy }}
+      {{- if $cfg.sslPolicy }}
+      sslPolicy: {{ $cfg.sslPolicy }}
       {{- end }}
       {{- if $cfg.certificates }}
       {{- $certs := splitList "," $cfg.certificates }}
