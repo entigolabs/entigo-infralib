@@ -1,6 +1,6 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
-{{- $compartment := .Values.oracle.compartmentId }}
-{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = '%s'" .Values.oracle.clusterId .Values.oracle.crossplaneNamespace .Values.oracle.crossplaneServiceAccount }}
+{{- $compartment := .Values.oci.compartmentId }}
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = '%s'" .Values.oci.clusterId .Values.oci.crossplaneNamespace .Values.oci.crossplaneServiceAccount }}
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
 metadata:
@@ -24,5 +24,5 @@ spec:
       - "Allow any-user to read virtual-network-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to inspect compartments in compartment id {{ $compartment }} where all { {{ $wl }} }"
   providerConfigRef:
-    name: {{ .Values.oracle.providerConfigRefName }}
+    name: {{ .Values.oci.providerConfigRefName }}
 {{- end }}

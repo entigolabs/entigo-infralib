@@ -2,7 +2,7 @@ global:
   kms:
     oracleDataKeyId: "{{ .toptout.kms.data_key_id }}"
 
-oracle:
+oci:
   providerConfigRefName: "{{ .tmodule.crossplane-oracle }}"
   compartmentId: "{{ .agent.accountId }}"
   clusterId: "{{ .toutput.oke.cluster_id }}"
