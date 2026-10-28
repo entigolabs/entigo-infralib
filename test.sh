@@ -5,7 +5,7 @@
 # git-ignored .infralib-test/ and runs it. The only line to edit is the version.
 set -euo pipefail
 
-INFRALIB_TEST_VERSION="${INFRALIB_TEST_VERSION:-v0.8.13}"
+INFRALIB_TEST_VERSION="${INFRALIB_TEST_VERSION:-v0.8.14}"
 
 IMAGE="${INFRALIB_TEST_IMAGE_PREFIX:-entigolabs/entigo-infralib-test-}cli:${INFRALIB_TEST_VERSION}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
