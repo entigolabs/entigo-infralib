@@ -7,9 +7,49 @@ argocd:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
   repoServer:
+    # Test environments only. The agent copies a pull request's checkout into
+    # this pod (/tmp/conf, the file:// source of the Applications it creates),
+    # and a rolled pod took the copy with it, failing argocd's own upgrade and
+    # every other pull request running on the cluster. The pod's /tmp is a
+    # volume now, in place of the chart's emptyDir: the whole of it, so the
+    # agent still creates /tmp/conf itself and owns it (git refuses a
+    # repository in a directory owned by someone else, and a mount point
+    # belongs to root). A roll stops the old pod before the new one starts
+    # (no surge), since a second pod could not attach the volume; the
+    # strategy type stays RollingUpdate because server-side apply cannot
+    # switch a live Deployment to Recreate (its defaulted rollingUpdate block
+    # stays and the API server rejects the pair). fsGroup (global below)
+    # makes the volume writable for argocd.
+    deploymentStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+    # Client-side apply for this Deployment: server-side apply cannot replace
+    # the chart's "tmp" emptyDir with the claim (the live emptyDir: {} has no
+    # field it owns and stays next to the claim, "may not specify more than 1
+    # volume type"); the strategic merge patch's retainKeys does it.
+    deploymentAnnotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=false
+    existingVolumes:
+      tmp:
+        persistentVolumeClaim:
+          claimName: "{{ .module.name }}-repo-server-tmp"
     autoscaling:
       maxReplicas: 1
+  extraObjects:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: "{{ .module.name }}-repo-server-tmp"
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 5Gi
   global:
+    securityContext:
+      fsGroup: 999
     domain: |
       {{ .module.name }}.{{ .toutput.dns.pub_domain }}
   configs:
