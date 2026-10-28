@@ -6,7 +6,7 @@ oci:
   providerConfigRefName: "{{ .tmodule.crossplane-oracle }}"
   compartmentId: "{{ .agent.accountId }}"
   clusterId: "{{ .toutput.oke.cluster_id }}"
-  crossplaneNamespace: "{{ .toptin.crossplane-oracle.global.crossplaneNamespace | required }}"
+  crossplaneNamespace: "{{ .tmodule.crossplane-core }}"
   crossplaneServiceAccount: "{{ .tmodule.crossplane-oracle }}"
 
 platform-apis:
