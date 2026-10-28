@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Name }}
+  namespace: {{ .Namespace }}
+spec:
+  destination:
+    namespace: {{ .DestNamespace }}
+    server: https://kubernetes.default.svc
+  project: {{ .Project }}
+  source:
+    chart: platform-apis-test-placeholder
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 0.0.1
+{{- if or .NamespaceLabels .NamespaceAnnotations }}
+  syncPolicy:
+    managedNamespaceMetadata:
+      {{- if .NamespaceLabels }}
+      labels:
+        {{- range $key, $value := .NamespaceLabels }}
+        {{ printf "%q" $key }}: {{ printf "%q" $value }}
+        {{- end }}
+      {{- end }}
+      {{- if .NamespaceAnnotations }}
+      annotations:
+        {{- range $key, $value := .NamespaceAnnotations }}
+        {{ printf "%q" $key }}: {{ printf "%q" $value }}
+        {{- end }}
+      {{- end }}
+{{- end }}
