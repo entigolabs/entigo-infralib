@@ -1,0 +1,25 @@
+global:
+  kms:
+    oracleDataKeyId: "{{ .toptout.kms.data_key_id }}"
+
+oci:
+  providerConfigRefName: "{{ .tmodule.crossplane-oracle }}"
+  compartmentId: "{{ .agent.accountId }}"
+  clusterId: "{{ .toutput.oke.cluster_id }}"
+  crossplaneNamespace: "{{ .tmodule.crossplane-core }}"
+  crossplaneServiceAccount: "{{ .tmodule.crossplane-oracle }}"
+
+platform-apis:
+  zone:
+    istioServiceEntries:
+      region: ""
+      data:
+        cidrs: "{{ .toptout.vpc.database_subnet_cidrs }}"
+      podCidrs: "{{ .toptout.vpc.pod_subnet_cidrs }}"
+      service:
+        cidrs: ""
+    environmentConfig:
+      oracleProvider: "{{ .tmodule.crossplane-oracle }}"
+  database:
+    environmentConfig:
+      esClusterSecretStore: not-used-on-oracle
