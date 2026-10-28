@@ -1,0 +1,24 @@
+global:
+  cloudProvider: oracle
+
+oracle:
+  providerConfigRefName: ""
+  compartmentId: ""
+  clusterId: ""
+  crossplaneNamespace: ""
+  crossplaneServiceAccount: ""
+
+platform-apis:
+  zone:
+    environmentConfig:
+      cluster: oke
+      securityGroup: node
+      computeSubnetType: private
+  postgresql:
+    install: false
+  valkey:
+    install: false
+  repository:
+    install: false
+  s3bucket:
+    install: false

@@ -34,6 +34,9 @@ steps:
       - source: istio-base
       - name: istio-system
         source: istio-istiod
+      - source: kyverno
       - source: metrics-server
       - source: oci-native-ingress-controller
       - source: oracle-gateway
+      - name: platform-apis
+        source: platform-apis
