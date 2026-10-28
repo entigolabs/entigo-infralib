@@ -56,13 +56,13 @@ steps:
       - name: istio-system
         source: istio-istiod
       - source: kiali
+      - source: kube-state-metrics
       - source: kyverno
       - source: loki
       - source: metrics-server
       - source: mimir
       - name: platform-apis
         source: platform-apis
-      - source: prometheus
       - source: rbac-bindings
       - source: saml-proxy
       - source: tempo

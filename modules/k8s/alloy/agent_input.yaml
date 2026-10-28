@@ -7,6 +7,7 @@ node-agent:
     lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
   metrics:
     mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+    mimirTenantID: "{{ .config.prefix }}"
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
   configReloader:
@@ -18,6 +19,7 @@ cluster-metrics:
   controller:
     priorityClassName: "{{ .module.name }}"
   mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+  mimirTenantID: "{{ .config.prefix }}"
 receiver:
   controller:
     priorityClassName: "{{ .module.name }}"

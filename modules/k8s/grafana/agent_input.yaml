@@ -2,8 +2,12 @@ global:
   datasources:
     loki:
       hostname: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
+    mimir:
+      hostname: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/prometheus"
+      tenantHeader: "{{ .config.prefix }}"
     prometheus:
-      hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+      module: '{{ .toptmodule.prometheus }}'
+      hostname: "http://{{ .toptmodule.prometheus }}-server.{{ .toptmodule.prometheus }}"
 grafana:
   grafana.ini:
     server:

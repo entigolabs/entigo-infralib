@@ -5,7 +5,11 @@ global:
   datasources:
     loki:
       hostname: ""
+    mimir:
+      hostname: ""
+      tenantHeader: ""
     prometheus:
+      module: ""
       hostname: ""
 
 grafana:
@@ -79,10 +83,6 @@ grafana:
       apiserver:
         gnetId: 15761
         revision: 21
-        datasource: Prometheus
-      prometheus:
-        gnetId: 19105
-        revision: 9
         datasource: Prometheus
       limitsrequests:
         gnetId: 22849
