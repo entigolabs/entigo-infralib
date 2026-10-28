@@ -40,15 +40,3 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
-cluster-metrics:
-  image:
-    registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}'
-  configReloader:
-    image:
-      registry: '{{ .toptout.acr-proxy.quay_registry | "quay.io" }}'
-receiver:
-  image:
-    registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}'
-  configReloader:
-    image:
-      registry: '{{ .toptout.acr-proxy.quay_registry | "quay.io" }}'

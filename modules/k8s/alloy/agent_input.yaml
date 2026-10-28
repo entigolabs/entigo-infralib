@@ -20,6 +20,16 @@ cluster-metrics:
     priorityClassName: "{{ .module.name }}"
   mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
   mimirTenantID: "{{ .config.prefix }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'
 receiver:
   controller:
     priorityClassName: "{{ .module.name }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'
