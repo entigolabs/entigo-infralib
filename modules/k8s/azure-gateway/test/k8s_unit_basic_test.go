@@ -23,7 +23,7 @@ func TestAzureGateway(t *testing.T) {
 		c := k8s.Connect(t, e)
 		gatewayName := "external"
 
-		err := k8s.WaitUntilDeploymentAvailableE(t, c.WithNamespace("azure-alb-system"), "alb-controller", 60, 10*time.Second)
+		err := k8s.WaitUntilDeploymentAvailableE(t, c, "alb-controller", 60, 10*time.Second)
 		require.NoError(t, err, "alb-controller deployment error")
 
 		applicationLoadBalancerGVR := schema.GroupVersionResource{Group: "alb.networking.azure.io", Version: "v1", Resource: "applicationloadbalancer"}
