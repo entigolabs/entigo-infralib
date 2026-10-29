@@ -18,13 +18,6 @@ variable "subnets" {
   type = list(string)
 }
 
-variable "cluster_primary_security_group_id" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Deprecated and ignored. The cluster primary security group is no longer attached to the nodes; the variable is kept so existing configurations that set it keep working."
-}
-
 variable "cluster_service_cidr" {
   type        = string
   default     = ""
