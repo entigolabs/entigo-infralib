@@ -420,7 +420,7 @@ resource "azurerm_federated_identity_credential" "alb_controller" {
   user_assigned_identity_id = azurerm_user_assigned_identity.alb_controller[0].id
   audience                  = ["api://AzureADTokenExchange"]
   issuer                    = module.aks.oidc_issuer_profile_issuer_url
-  subject                   = "system:serviceaccount:azure-alb-system:alb-controller-sa"
+  subject                   = "system:serviceaccount:${var.alb_controller_namespace}:alb-controller-sa"
 }
 
 resource "azurerm_role_assignment" "alb_controller" {
