@@ -1,5 +1,8 @@
+{{- $certs := dict }}
 {{- range $name, $_ := .Values.gateways }}
 {{- if .enabled }}
+{{- if not (hasKey $certs .domain) }}
+{{- $certs = set $certs .domain $name }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -19,6 +22,7 @@ spec:
     - "*.{{ .domain }}"
   privateKey:
     {{- toYaml $.Values.certificatePrivateKey | nindent 4 }}
+{{- end }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
@@ -59,7 +63,7 @@ spec:
         certificateRefs:
           - kind: Secret
             group: ""
-            name: {{ $name }}-tls
+            name: {{ index $certs .domain }}-tls
     - name: http
       protocol: HTTP
       port: 80

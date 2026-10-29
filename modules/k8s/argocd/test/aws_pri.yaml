@@ -45,6 +45,7 @@ argocd:
       metadata:
         name: "{{ .module.name }}-repo-server-tmp"
       spec:
+        storageClassName: gp2
         accessModes: [ReadWriteOnce]
         resources:
           requests:

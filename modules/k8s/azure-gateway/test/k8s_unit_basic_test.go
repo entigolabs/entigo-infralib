@@ -53,8 +53,13 @@ func TestAzureGateway(t *testing.T) {
 		err = k8s.WaitUntilHostnameAvailableWithAddress(t, c, address, targetURL, "301", 60, 10*time.Second)
 		require.NoError(t, err, "%s redirect error", targetURL)
 
-		// Private frontend on the azure/agc bring-your-own AGC, only reachable inside the VNet
-		_, err = waitUntilConditions(t, c, certificateGVR, c.Namespace, "internal-tls", []string{"Ready"}, 90, 10*time.Second)
+		// Private frontend on the azure/agc bring-your-own AGC, only reachable inside the VNet.
+		// It shares the external certificate when the environment has no private domain.
+		internalCertificate := "internal-tls"
+		if tf.GetStep(t, e, "net").String(t, "dns__int_domain") == domain {
+			internalCertificate = "external-tls"
+		}
+		_, err = waitUntilConditions(t, c, certificateGVR, c.Namespace, internalCertificate, []string{"Ready"}, 90, 10*time.Second)
 		require.NoError(t, err, "internal Certificate error")
 		internalGateway, err := k8s.WaitUntilK8SGatewayAvailable(t, c, "internal", 120, 10*time.Second)
 		require.NoError(t, err, "Gateway internal error")
