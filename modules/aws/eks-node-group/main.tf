@@ -59,8 +59,13 @@ module "eks-managed-node-group" {
   cluster_name            = var.cluster_name
   kubernetes_version         = var.cluster_version
   subnet_ids              = var.subnets
-  cluster_primary_security_group_id = var.cluster_primary_security_group_id
   cluster_service_cidr    = var.cluster_service_cidr
+  # Nodes get only the shared node security group (plus whatever is passed in
+  # security_group_ids), the same layout as the aws/eks built-in node groups,
+  # Karpenter nodes and Zone node groups. The EKS-created cluster primary
+  # security group is deliberately not attached: it already carries the
+  # kubernetes.io/cluster/<name> tag, and the AWS Load Balancer Controller
+  # requires exactly one tagged security group per node ENI.
   vpc_security_group_ids = var.security_group_ids
 
   key_name = var.key_name

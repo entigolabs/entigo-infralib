@@ -18,12 +18,6 @@ variable "subnets" {
   type = list(string)
 }
 
-variable "cluster_primary_security_group_id" {
-  type     = string
-  nullable = false
-  default  = ""
-}
-
 variable "cluster_service_cidr" {
   type        = string
   default     = ""
