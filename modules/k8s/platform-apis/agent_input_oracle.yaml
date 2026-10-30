@@ -14,7 +14,6 @@ platform-apis:
     istioServiceEntries:
       region: "{{ .toutput.oke.region }}"
       domain: "{{ .agent.providerDomain }}"
-      objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
       ociApis:
         workloadIdentity:
           address: "{{ .toutput.oke.kubernetes_service_ip }}"
