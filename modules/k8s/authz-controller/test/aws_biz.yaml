@@ -1,0 +1,4 @@
+authz-controller:
+  config:
+    ORGANIZATION: martin
+    WORKSPACE: biz
