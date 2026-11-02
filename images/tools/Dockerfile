@@ -1,3 +1,4 @@
+# Rebuild to pick up the latest agent (v1.15.0 at time of writing)
 ARG AGENT_VERSION=latest
 FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 

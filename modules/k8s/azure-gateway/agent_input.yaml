@@ -23,5 +23,6 @@ gateways:
         value: "{{ .optout.infra.agc-service.frontend_name }}"
 alb-controller:
   albController:
+    namespace: "{{ .module.name }}"
     podIdentity:
       clientID: "{{ .toutput.aks.alb_controller_client_id }}"

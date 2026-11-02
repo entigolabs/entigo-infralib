@@ -28,15 +28,17 @@ locals {
     var.extra_key_statements,
   )
 
-  vault_name = var.vault_name != "" ? var.vault_name : "${var.prefix}-${random_string.suffix.result}"
+  name_suffix = var.name_salt ? "-${random_string.suffix[0].result}" : ""
+
+  vault_name = var.vault_name != "" ? var.vault_name : "${var.prefix}${local.name_suffix}"
 
   vault_id            = var.create_vault ? oci_kms_vault.this[0].id : var.vault_id
   management_endpoint = var.create_vault ? oci_kms_vault.this[0].management_endpoint : data.oci_kms_vault.this[0].management_endpoint
 
-  data_key_name      = var.data_key_name != "" ? var.data_key_name : "${var.prefix}-data-${random_string.suffix.result}"
-  config_key_name    = var.config_key_name != "" ? var.config_key_name : "${var.prefix}-config-${random_string.suffix.result}"
-  telemetry_key_name = var.telemetry_key_name != "" ? var.telemetry_key_name : "${var.prefix}-telemetry-${random_string.suffix.result}"
-  ca_key_name        = var.ca_key_name != "" ? var.ca_key_name : "${var.prefix}-ca-${random_string.suffix.result}"
+  data_key_name      = var.data_key_name != "" ? var.data_key_name : "${var.prefix}-data${local.name_suffix}"
+  config_key_name    = var.config_key_name != "" ? var.config_key_name : "${var.prefix}-config${local.name_suffix}"
+  telemetry_key_name = var.telemetry_key_name != "" ? var.telemetry_key_name : "${var.prefix}-telemetry${local.name_suffix}"
+  ca_key_name        = var.ca_key_name != "" ? var.ca_key_name : "${var.prefix}-ca${local.name_suffix}"
 
   ca_key_curve_id = lookup({
     32 = "NIST_P256"
@@ -50,12 +52,9 @@ locals {
   ca_key_id        = var.create_ca_key ? (var.create_keys ? oci_kms_key.ca[0].id : data.oci_kms_keys.ca[0].keys[0].id) : ""
 }
 
-# Every name here carries a random suffix, for the same reason modules/oracle/dns's
-# certificate does: deleting a vault or a key only *schedules* the deletion (7 days
-# minimum, 30 maximum), and the object keeps its name for the whole waiting period. A
-# teardown followed by a rebuild the same day - which is the normal development cycle
-# here - would otherwise collide with its own pending-deletion leftovers.
 resource "random_string" "suffix" {
+  count = var.name_salt ? 1 : 0
+
   length  = 8
   lower   = true
   upper   = false
