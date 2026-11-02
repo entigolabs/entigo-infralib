@@ -374,6 +374,17 @@ argocd:
   dex:
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    # Opt-in: set enabled: true when SSO is configured (configs.cm dex.config). Without dex.config ArgoCD
+    # never starts Dex, nothing listens and the probe would restart-loop. Checks the keys endpoint because
+    # Dex v2.46.0 was seen hanging there after a key rotation while /healthz/live stayed OK (SSO -> 504).
+    # With Dex TLS disabled set httpScheme: HTTP.
+    livenessProbe:
+      enabled: false
+      httpPath: /api/dex/keys
+      httpPort: http
+      httpScheme: HTTPS
+      periodSeconds: 30
+      timeoutSeconds: 5
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
