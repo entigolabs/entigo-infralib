@@ -3,4 +3,4 @@ dependencies:
   repository: https://charts.crossplane.io/stable
   version: 2.4.3
 digest: sha256:cc32c77d4dfa26c5ac0d39122a0ad24c4eefe3fe1953c20b3f64a8f7089edc91
-generated: "2026-10-26T13:15:31.587638389Z"
+generated: "2026-11-02T07:52:54.30478858Z"
