@@ -11,17 +11,11 @@ variable "cluster_name" {
 variable "cluster_version" {
   type     = string
   nullable = false
-  default  = "1.35"
+  default  = "1.36"
 }
 
 variable "subnets" {
   type = list(string)
-}
-
-variable "cluster_primary_security_group_id" {
-  type     = string
-  nullable = false
-  default  = ""
 }
 
 variable "cluster_service_cidr" {
