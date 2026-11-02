@@ -1,0 +1,26 @@
+# Provisions every environment from the latest release, as published to
+# entigo-infralib-release, and runs that release's tests, every weekday
+# morning after the nightly Nuke emptied the accounts. Release follows a
+# green scheduled run. Dispatched by hand it never triggers a release
+# (dispatch Release for that), and dispatched with one cloud it provisions
+# and tests only that cloud's environments.
+name: Stable
+
+on:
+  schedule:
+    - cron: "31 3 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      cloud:
+        description: cloud to run; a dispatched run never triggers a release
+        type: choice
+        options: [all, aws, google, oracle, azure]
+        default: all
+
+jobs:
+  stable:
+    uses: entigolabs/entigo-infralib-test/.github/workflows/module-stable.yaml@main
+    with:
+      clouds: ${{ inputs.cloud || '' }}
+      release_repo: https://github.com/entigolabs/entigo-infralib-release
+    secrets: inherit

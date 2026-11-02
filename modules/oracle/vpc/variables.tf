@@ -7,6 +7,18 @@ variable "compartment_id" {
   type        = string
 }
 
+variable "vcn_id" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "network_compartment_id" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
 variable "vpc_cidr" {
   type     = string
   nullable = false
@@ -83,18 +95,30 @@ variable "pod_subnet_names" {
 
 variable "enable_internet_gateway" {
   type     = bool
-  nullable = false
-  default  = true
+  nullable = true
+  default  = null
 }
 
 variable "enable_nat_gateway" {
   type     = bool
-  nullable = false
-  default  = true
+  nullable = true
+  default  = null
 }
 
 variable "enable_service_gateway" {
   type     = bool
-  nullable = false
-  default  = true
+  nullable = true
+  default  = null
+}
+
+variable "create_route_tables" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "public_subnets_allow_public_ip" {
+  type     = bool
+  nullable = true
+  default  = null
 }

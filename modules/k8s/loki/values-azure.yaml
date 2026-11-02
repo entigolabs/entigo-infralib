@@ -1,0 +1,119 @@
+global:
+  cloudProvider: azure
+  providerConfigRefName: crossplane-azure
+  bucketName: ""
+  azure:
+    subscriptionId: ""
+    resourceGroupName: ""
+    location: ""
+    # Own storage account (templates/azure/storage.yaml), globally unique: storageAccountPrefix alphanumerics (max 16)
+    # + uniqueSuffix, or storageAccountName (3-24 lowercase letters and digits) as is
+    storageAccountName: ""
+    storageAccountPrefix: ""
+    uniqueSuffix: ""
+    # Standard (HDD, like S3/GCS Standard) or Premium (SSD block blob, ~11x storage price), create time only
+    storageTier: Standard
+    storageReplication: ZRS
+    # kms telemetry key: versionless key id (CMK) and resource id (key role of the <release>-cmk WorkloadIdentity),
+    # "" = Microsoft-managed keys, create time only
+    telemetryKeyId: ""
+    telemetryKeyResourceId: ""
+    # crossplane-azure identityPrefix (AKS cluster name), for the id of the <release>-cmk identity
+    identityPrefix: ""
+    # AGC subnets, gateway ingress for the route's AGC
+    agcSubnetCidrs: ""
+
+loki:
+  serviceAccount:
+    create: false
+    name: loki
+  loki:
+    podLabels:
+      azure.workload.identity/use: "true"
+    storage:
+      type: azure
+      azure:
+        accountName: '{{ include "entigo.azureStorageAccountName" . }}'
+        useFederatedToken: true
+    schemaConfig:
+      configs:
+        - from: "2026-01-01"
+          store: tsdb
+          object_store: azure
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+  read:
+    persistence:
+      storageClass: managed-csi
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  gateway:
+    ingress:
+      enabled: false
+    route:
+      main:
+        enabled: true
+        annotations:
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  networkPolicy:
+    externalStorage:
+      ports:
+        - 443
+    discovery:
+      port: 53
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+  write:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  backend:
+    tolerations:
+      - key: "mon"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

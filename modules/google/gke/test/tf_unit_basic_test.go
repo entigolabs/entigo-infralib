@@ -2,43 +2,31 @@ package test
 
 import (
 	"testing"
-	"github.com/entigolabs/entigo-infralib-common/tf"
-	"github.com/entigolabs/entigo-infralib-common/google"
+
 	"github.com/stretchr/testify/assert"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	_ "github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
+func TestGke(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		outputs := tf.Get(t, e)
 
-func TestTerraformGke(t *testing.T) {
-	t.Run("Biz", testTerraformGkeBiz)
-	t.Run("Pri", testTerraformGkePri)
-}
+		clusterId := outputs.String(t, "gke__cluster_id")
+		assert.NotEmpty(t, clusterId, "cluster_id was not returned")
 
-func testTerraformGkeBiz(t *testing.T) {
-	t.Parallel()
-	testTerraformGke(t, "biz")
-}
+		clusterEndpoint := outputs.String(t, "gke__cluster_endpoint")
+		assert.NotEmpty(t, clusterEndpoint, "cluster_endpoint was not returned")
 
-func testTerraformGkePri(t *testing.T) {
-	t.Parallel()
-	testTerraformGke(t, "pri")
-}
+		clusterName := outputs.String(t, "gke__cluster_name")
+		assert.NotEmpty(t, clusterName, "cluster_name was not returned")
 
-func testTerraformGke(t *testing.T, envName string) {
-	outputs := google.GetTFOutputs(t, envName)
-	
-	clusterId := tf.GetStringValue(t, outputs, "gke__cluster_id")
-	assert.NotEmpty(t, clusterId, "cluster_id was not returned")
-      
-	clusterEndpoint := tf.GetStringValue(t, outputs, "gke__cluster_endpoint")
-	assert.NotEmpty(t, clusterEndpoint, "cluster_endpoint was not returned")
-	
-	clusterName := tf.GetStringValue(t, outputs, "gke__cluster_name")
-	assert.NotEmpty(t, clusterName, "cluster_name was not returned")
-	
-	region := tf.GetStringValue(t, outputs, "gke__region")
-	assert.NotEmpty(t, region, "region was not returned")
-	
-	serviceAccount := tf.GetStringValue(t, outputs, "gke__service_account")
-	assert.NotEmpty(t, serviceAccount, "service_account was not returned")
+		region := outputs.String(t, "gke__region")
+		assert.NotEmpty(t, region, "region was not returned")
 
+		serviceAccount := outputs.String(t, "gke__service_account")
+		assert.NotEmpty(t, serviceAccount, "service_account was not returned")
+	})
 }

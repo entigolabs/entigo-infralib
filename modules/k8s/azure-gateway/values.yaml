@@ -1,0 +1,69 @@
+global:
+  externalGateway: external
+  # On a bring-your-own AGC with a private frontend (azure/agc) until the managed AGC has one
+  # https://github.com/Azure/AKS/issues/5739
+  internalGateway: internal
+  azure:
+    # Subnets delegated to Microsoft.ServiceNetworking/trafficControllers (ApplicationLoadBalancer associations), one AGC
+    # per /24; Azure allows one association per AGC today, the list is for when that limit goes
+    agcSubnetIds: []
+
+# cert-manager ClusterIssuer, the agent sets the cert-manager module clusterIssuer.name
+certificateIssuer: letsencrypt
+certificatePrivateKey:
+  algorithm: ECDSA
+  size: 384
+  rotationPolicy: Always
+
+# One Gateway (= one AGC frontend) per entry with enabled: true, named after its key
+gateways:
+  external:
+    enabled: true
+    gatewayClassName: azure-alb-external
+    domain: ""
+    sslRedirect: true
+    # AGC predefined TLS policy (FrontendTLSPolicy on the https listener), "" = AGC default (currently 2023-06):
+    #   2023-06   - TLS 1.2 and 1.3, ECDHE AES-GCM ciphers, P-256/P-384
+    #   2023-06-S - stricter variant of 2023-06, currently the same ciphers
+    # AGC has no TLS 1.0/1.1 policy.
+    sslPolicy: "2023-06"
+    addresses: []
+    annotations: {}
+    labels: {}
+  # VPC default and spoke mode (spoke: on the control-agc subnet's AGC)
+  internal:
+    enabled: true
+    gatewayClassName: azure-alb-internal
+    domain: ""
+    sslRedirect: true
+    sslPolicy: "2023-06"
+    addresses: []
+    annotations: {}
+    labels: {}
+  # VPC Spoke mode
+  service:
+    enabled: false
+    gatewayClassName: azure-alb-internal
+    domain: ""
+    sslRedirect: true
+    sslPolicy: "2023-06"
+    addresses: []
+    annotations: {}
+    labels: {}
+
+alb-controller:
+  albController:
+    # Images stay on mcr.microsoft.com: the chart adds /public to any other registry path, which the acr-proxy
+    # MCR cache can't serve. With aks bootstrap_cache_enabled, nodes mirror all MCR pulls through acr-proxy anyway.
+    podIdentity:
+      clientID: ""
+    # azure-alb-internal GatewayClass: private frontends on bring-your-own AGCs
+    privateFrontend: true
+    controller:
+      tolerations:
+        - key: "tools"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"

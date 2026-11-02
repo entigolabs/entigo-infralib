@@ -1,0 +1,9 @@
+# Agent configuration of the azure_spoke environment: azure/vpc alone in
+# spoke subnet mode (modules/azure/vpc/test/azure_spoke.yaml). Shares the
+# subscription with azure_biz and azure_pri; nothing else is deployed under
+# this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: azure/vpc

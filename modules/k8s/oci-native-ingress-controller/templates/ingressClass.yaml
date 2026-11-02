@@ -1,5 +1,5 @@
 {{- range $key, $class := .Values.ingressClasses }}
-{{- if $class.enabled }}
+{{- if and $class.enabled (or (not (hasKey $class "domain")) $class.domain) }}
 ---
 apiVersion: "ingress.oraclecloud.com/v1beta1"
 kind: IngressClassParameters

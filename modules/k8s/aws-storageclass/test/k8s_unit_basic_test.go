@@ -7,18 +7,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	coreV1 "k8s.io/api/core/v1"
 	storageV1 "k8s.io/api/storage/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/random"
+	"github.com/entigolabs/entigo-infralib-test/retry"
 )
 
 const (
@@ -29,45 +29,38 @@ const (
 	podDeletedSleep   = 5 * time.Second
 )
 
-func TestK8sAwsStorageclassBiz(t *testing.T) {
-	testK8sAwsStorageclass(t, "aws", "biz")
-}
+func TestAwsStorageclass(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sAwsStorageclassPri(t *testing.T) {
-	testK8sAwsStorageclass(t, "aws", "pri")
-}
+		// Use a unique suffix to avoid collisions
+		uid := strings.ToLower(random.UniqueId())
 
-func testK8sAwsStorageclass(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, cloudName, envName)
+		// ECR proxy image prefix per environment
+		imagePrefix := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s-net-ecr-proxy-hub", aws.AccountID(t, e), e.MustRegion(t), e.Prefix)
 
-	// Use a unique suffix to avoid collisions
-	uid := strings.ToLower(random.UniqueId())
+		// Test that all expected storage classes exist with correct config
+		t.Run("StorageClasses", func(t *testing.T) {
+			t.Parallel()
+			testStorageClassConfig(t, c, e.Prefix)
+		})
 
-	// ECR proxy image prefix per environment
-	imagePrefix := fmt.Sprintf("877483565445.dkr.ecr.eu-north-1.amazonaws.com/%s-net-ecr-proxy-hub", envName)
+		// Test GP3 (EBS) - RWO cross-node persistence
+		t.Run("GP3", func(t *testing.T) {
+			t.Parallel()
+			testGP3CrossNode(t, c, imagePrefix, uid)
+		})
 
-	// Test that all expected storage classes exist with correct config
-	t.Run("StorageClasses", func(t *testing.T) {
-		t.Parallel()
-		testStorageClassConfig(t, kubectlOptions, envName)
-	})
-
-	// Test GP3 (EBS) - RWO cross-node persistence
-	t.Run("GP3", func(t *testing.T) {
-		t.Parallel()
-		testGP3CrossNode(t, kubectlOptions, imagePrefix, uid)
-	})
-
-	// Test EFS - RWX shared access between two pods
-	// Biz has shared-a and shared-b, Pri has shared
-	efsStorageClass := "shared"
-	if envName == "biz" {
-		efsStorageClass = "shared-a"
-	}
-	t.Run("EFS", func(t *testing.T) {
-		t.Parallel()
-		testEFSSharedAccess(t, kubectlOptions, efsStorageClass, imagePrefix, uid)
+		// Test EFS - RWX shared access between two pods
+		// Biz has shared-a and shared-b, Pri has shared
+		efsStorageClass := "shared"
+		if e.Prefix == "biz" {
+			efsStorageClass = "shared-a"
+		}
+		t.Run("EFS", func(t *testing.T) {
+			t.Parallel()
+			testEFSSharedAccess(t, c, efsStorageClass, imagePrefix, uid)
+		})
 	})
 }
 
@@ -80,8 +73,8 @@ type expectedSC struct {
 }
 
 // testStorageClassConfig verifies all expected storage classes exist with correct configuration
-func testStorageClassConfig(t *testing.T, opts *terrak8s.KubectlOptions, envName string) {
-	clientSet, err := terrak8s.GetKubernetesClientFromOptionsE(t, opts)
+func testStorageClassConfig(t *testing.T, c *k8s.Client, envName string) {
+	clientSet, err := c.Clientset()
 	require.NoError(t, err)
 
 	// Define expected storage classes per environment
@@ -141,16 +134,16 @@ func testStorageClassConfig(t *testing.T, opts *terrak8s.KubectlOptions, envName
 
 // testGP3CrossNode creates a PVC with gp3, writes data from a pod, deletes the pod,
 // starts a new pod on a different node with anti-affinity, and reads the data back.
-func testGP3CrossNode(t *testing.T, opts *terrak8s.KubectlOptions, imagePrefix string, uid string) {
+func testGP3CrossNode(t *testing.T, c *k8s.Client, imagePrefix string, uid string) {
 	pvcName := fmt.Sprintf("gp3-test-%s", uid)
 	writerPod := fmt.Sprintf("gp3-writer-%s", uid)
 	readerPod := fmt.Sprintf("gp3-reader-%s", uid)
 	testData := fmt.Sprintf("gp3-test-data-%s", uid)
 	antiAffinityLabel := fmt.Sprintf("gp3-test-%s", uid)
 
-	clientSet, err := terrak8s.GetKubernetesClientFromOptionsE(t, opts)
+	clientSet, err := c.Clientset()
 	require.NoError(t, err)
-	ns := opts.Namespace
+	ns := c.Namespace
 
 	// Create PVC
 	pvc := newPVC(pvcName, "gp3", coreV1.ReadWriteOnce, "1Gi")
@@ -164,21 +157,21 @@ func testGP3CrossNode(t *testing.T, opts *terrak8s.KubectlOptions, imagePrefix s
 	require.NoError(t, err, "Failed to create writer pod")
 
 	// Wait for writer pod to be running
-	waitForPodRunning(t, opts, writerPod)
+	waitForPodRunning(t, c, writerPod)
 
 	// Verify write succeeded
-	output, err := terrak8s.RunKubectlAndGetOutputE(t, opts, "exec", writerPod, "--", "cat", "/data/testfile")
+	output, err := k8s.RunKubectlAndGetOutputE(t, c, "exec", writerPod, "--", "cat", "/data/testfile")
 	require.NoError(t, err, "Failed to read from writer pod")
 	assert.Equal(t, testData, strings.TrimSpace(output), "Writer pod data mismatch")
 
 	// Record which node the writer pod landed on
-	writerNode := getPodNodeName(t, opts, writerPod)
-	logger.Logf(t, "Writer pod scheduled on node: %s", writerNode)
+	writerNode := getPodNodeName(t, c, writerPod)
+	t.Logf("Writer pod scheduled on node: %s", writerNode)
 
 	// Delete writer pod and wait for it to be gone
 	err = clientSet.CoreV1().Pods(ns).Delete(context.Background(), writerPod, metaV1.DeleteOptions{})
 	require.NoError(t, err, "Failed to delete writer pod")
-	waitForPodDeleted(t, opts, writerPod)
+	waitForPodDeleted(t, c, writerPod)
 
 	// Create reader pod with node affinity to prefer a different node
 	reader := newBusyboxPod(readerPod, pvcName, imagePrefix, map[string]string{"sc-test": antiAffinityLabel})
@@ -205,33 +198,33 @@ func testGP3CrossNode(t *testing.T, opts *terrak8s.KubectlOptions, imagePrefix s
 	require.NoError(t, err, "Failed to create reader pod")
 
 	// Wait for reader pod to be running
-	waitForPodRunning(t, opts, readerPod)
+	waitForPodRunning(t, c, readerPod)
 
-	readerNode := getPodNodeName(t, opts, readerPod)
-	logger.Logf(t, "Reader pod scheduled on node: %s", readerNode)
+	readerNode := getPodNodeName(t, c, readerPod)
+	t.Logf("Reader pod scheduled on node: %s", readerNode)
 
 	// Verify data persisted across pod restart
-	output, err = terrak8s.RunKubectlAndGetOutputE(t, opts, "exec", readerPod, "--", "cat", "/data/testfile")
+	output, err = k8s.RunKubectlAndGetOutputE(t, c, "exec", readerPod, "--", "cat", "/data/testfile")
 	require.NoError(t, err, "Failed to read from reader pod")
 	assert.Equal(t, testData, strings.TrimSpace(output), "GP3 data not persisted across pods")
 
 	// Cleanup on success only
 	_ = clientSet.CoreV1().Pods(ns).Delete(context.Background(), readerPod, metaV1.DeleteOptions{})
-	waitForPodDeleted(t, opts, readerPod)
+	waitForPodDeleted(t, c, readerPod)
 	_ = clientSet.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), pvcName, metaV1.DeleteOptions{})
 }
 
 // testEFSSharedAccess creates a PVC with the given EFS storage class, starts two pods
 // mounting the same PVC, writes from one and reads from the other.
-func testEFSSharedAccess(t *testing.T, opts *terrak8s.KubectlOptions, storageClass string, imagePrefix string, uid string) {
+func testEFSSharedAccess(t *testing.T, c *k8s.Client, storageClass string, imagePrefix string, uid string) {
 	pvcName := fmt.Sprintf("efs-test-%s", uid)
 	writerPod := fmt.Sprintf("efs-writer-%s", uid)
 	readerPod := fmt.Sprintf("efs-reader-%s", uid)
 	testData := fmt.Sprintf("efs-test-data-%s", uid)
 
-	clientSet, err := terrak8s.GetKubernetesClientFromOptionsE(t, opts)
+	clientSet, err := c.Clientset()
 	require.NoError(t, err)
-	ns := opts.Namespace
+	ns := c.Namespace
 
 	// Create RWX PVC with EFS storage class
 	pvc := newPVC(pvcName, storageClass, coreV1.ReadWriteMany, "1Gi")
@@ -251,22 +244,22 @@ func testEFSSharedAccess(t *testing.T, opts *terrak8s.KubectlOptions, storageCla
 	require.NoError(t, err, "Failed to create EFS reader pod")
 
 	// Wait for both pods to be running
-	waitForPodRunning(t, opts, writerPod)
-	waitForPodRunning(t, opts, readerPod)
+	waitForPodRunning(t, c, writerPod)
+	waitForPodRunning(t, c, readerPod)
 
 	// Give writer a moment to flush
 	time.Sleep(2 * time.Second)
 
 	// Read from the reader pod to verify shared access
-	output, err := terrak8s.RunKubectlAndGetOutputE(t, opts, "exec", readerPod, "--", "cat", "/data/testfile")
+	output, err := k8s.RunKubectlAndGetOutputE(t, c, "exec", readerPod, "--", "cat", "/data/testfile")
 	require.NoError(t, err, "Failed to read from EFS reader pod")
 	assert.Equal(t, testData, strings.TrimSpace(output), "EFS shared data not readable from second pod")
 
 	// Cleanup on success only
 	_ = clientSet.CoreV1().Pods(ns).Delete(context.Background(), writerPod, metaV1.DeleteOptions{})
 	_ = clientSet.CoreV1().Pods(ns).Delete(context.Background(), readerPod, metaV1.DeleteOptions{})
-	waitForPodDeleted(t, opts, writerPod)
-	waitForPodDeleted(t, opts, readerPod)
+	waitForPodDeleted(t, c, writerPod)
+	waitForPodDeleted(t, c, readerPod)
 	_ = clientSet.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), pvcName, metaV1.DeleteOptions{})
 }
 
@@ -279,7 +272,7 @@ func newPVC(name, storageClass string, accessMode coreV1.PersistentVolumeAccessM
 		Spec: coreV1.PersistentVolumeClaimSpec{
 			AccessModes:      []coreV1.PersistentVolumeAccessMode{accessMode},
 			StorageClassName: &storageClass,
-			Resources: coreV1.ResourceRequirements{
+			Resources: coreV1.VolumeResourceRequirements{
 				Requests: coreV1.ResourceList{
 					coreV1.ResourceStorage: resource.MustParse(size),
 				},
@@ -345,12 +338,12 @@ func newBusyboxPod(name, pvcName, imagePrefix string, labels map[string]string) 
 }
 
 // waitForPodRunning waits until a pod is in Running phase
-func waitForPodRunning(t *testing.T, opts *terrak8s.KubectlOptions, podName string) {
+func waitForPodRunning(t *testing.T, c *k8s.Client, podName string) {
 	_, err := retry.DoWithRetryE(t,
 		fmt.Sprintf("Wait for pod %s to be running", podName),
 		podReadyRetries, podReadySleep,
 		func() (string, error) {
-			pod, err := terrak8s.GetPodE(t, opts, podName)
+			pod, err := k8s.GetPodE(t, c, podName)
 			if err != nil {
 				return "", err
 			}
@@ -364,12 +357,12 @@ func waitForPodRunning(t *testing.T, opts *terrak8s.KubectlOptions, podName stri
 }
 
 // waitForPodDeleted waits until a pod no longer exists
-func waitForPodDeleted(t *testing.T, opts *terrak8s.KubectlOptions, podName string) {
+func waitForPodDeleted(t *testing.T, c *k8s.Client, podName string) {
 	_, err := retry.DoWithRetryE(t,
 		fmt.Sprintf("Wait for pod %s to be deleted", podName),
 		podDeletedRetries, podDeletedSleep,
 		func() (string, error) {
-			_, err := terrak8s.GetPodE(t, opts, podName)
+			_, err := k8s.GetPodE(t, c, podName)
 			if err != nil {
 				return "Pod deleted", nil
 			}
@@ -380,8 +373,8 @@ func waitForPodDeleted(t *testing.T, opts *terrak8s.KubectlOptions, podName stri
 }
 
 // getPodNodeName returns the node name where a pod is scheduled
-func getPodNodeName(t *testing.T, opts *terrak8s.KubectlOptions, podName string) string {
-	pod, err := terrak8s.GetPodE(t, opts, podName)
+func getPodNodeName(t *testing.T, c *k8s.Client, podName string) string {
+	pod, err := k8s.GetPodE(t, c, podName)
 	require.NoError(t, err, "Failed to get pod %s", podName)
 	return pod.Spec.NodeName
 }

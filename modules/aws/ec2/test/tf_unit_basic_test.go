@@ -2,33 +2,35 @@ package test
 
 import (
 	"testing"
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/tf"
+
 	"github.com/stretchr/testify/assert"
+
+	_ "github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/tf"
 )
 
-func TestTerraformEc2(t *testing.T) {
-	t.Run("Biz", testTerraformEc2Biz)
-	t.Run("Pri", testTerraformEc2Pri)
+func TestEc2(t *testing.T) {
+	env.RunEach(t, map[string]env.TestFunc{
+		"aws_biz": testEc2Biz,
+		"aws_pri": testEc2Pri,
+	})
 }
 
-func testTerraformEc2Biz(t *testing.T) {
-	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "biz")
-	
-	private_dns := tf.GetStringValue(t, outputs, "ec2__private_dns")
-	assert.NotEmpty(t, private_dns, "private_dns must not be empty")
-	
-	assert.False(t, tf.HasKeyWithPrefix(t, outputs, "ec2__public_ip"), "Must not contain any ec2__public_ip outputs.")
+// biz runs the instance in a private subnet without a public ip.
+func testEc2Biz(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+
+	privateDns := outputs.String(t, "ec2__private_dns")
+	assert.NotEmpty(t, privateDns, "private_dns must not be empty")
+
+	assert.False(t, outputs.HasKeyWithPrefix("ec2__public_ip"), "Must not contain any ec2__public_ip outputs.")
 }
 
-func testTerraformEc2Pri(t *testing.T) {
-	t.Parallel()
-	outputs := aws.GetTFOutputs(t, "pri")
-	private_dns := tf.GetStringValue(t, outputs, "ec2__private_dns")
-	public_ip := tf.GetStringValue(t, outputs, "ec2__public_ip")
-	assert.NotEmpty(t, private_dns, "private_dns must not be empty")
-	assert.NotEmpty(t, public_ip, "public_ip must not be empty")
+func testEc2Pri(t *testing.T, e *env.Environment) {
+	outputs := tf.Get(t, e)
+	privateDns := outputs.String(t, "ec2__private_dns")
+	publicIp := outputs.String(t, "ec2__public_ip")
+	assert.NotEmpty(t, privateDns, "private_dns must not be empty")
+	assert.NotEmpty(t, publicIp, "public_ip must not be empty")
 }
-
-

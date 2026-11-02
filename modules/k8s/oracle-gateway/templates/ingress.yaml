@@ -1,6 +1,6 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled $cfg.domain }}
 ---
 # NIC (not CCM) provisions this load balancer and terminates client TLS with the real
 # wildcard cert by OCID - see the README for why. Host is a wildcard, not per-app: matches

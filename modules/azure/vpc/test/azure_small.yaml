@@ -1,0 +1,7 @@
+vpc_cidr: "10.35.0.0/21"
+enable_flow_log: false
+enable_nat_gateway: false
+egress_next_hop_ip: "10.35.3.4"
+container_apps_subnets: |
+  []
+

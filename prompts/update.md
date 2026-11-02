@@ -287,7 +287,6 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
   # For 'provider' type: apply ALL provider/module version changes
   # For 'ami' type: update ami_release_version blocks in eks/main.tf and eks-node-group/main.tf
   <APPLY SED COMMANDS HERE> && \
-  # Also update images/test/cache/main.tf for provider type
   git add -A && \
   if git diff --cached --quiet; then
     echo "NO_CHANGES"
@@ -355,7 +354,6 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
   fi && \
   # Apply ALL Google version changes
   <APPLY SED COMMANDS HERE> && \
-  # Also update images/test/cache/main.tf
   git add -A && \
   if git diff --cached --quiet; then
     echo "NO_CHANGES"

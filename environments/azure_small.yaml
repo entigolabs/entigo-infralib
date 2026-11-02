@@ -1,0 +1,9 @@
+# Agent configuration of the azure_small environment: azure/vpc alone with
+# the small subnet layout (modules/azure/vpc/test/azure_small.yaml). Shares
+# the subscription with azure_biz and azure_pri; nothing else is deployed
+# under this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: azure/vpc

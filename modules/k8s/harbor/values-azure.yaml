@@ -1,0 +1,94 @@
+global:
+  cloudProvider: azure
+
+harbor:
+  expose:
+    type: route
+    tls:
+      enabled: false
+    route:
+      annotations:
+        argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  persistence:
+    # Registry uses the PVC (managed disk), no Blob container. Harbor's distribution v2.8 azure driver
+    # supports only account keys, which are disabled on the storage accounts. Workload identity needs
+    # distribution v3 (goharbor/harbor#21896); then switch to a Container + WorkloadIdentity like loki/mimir.
+    # https://github.com/goharbor/harbor/pull/21896
+    imageChartStorage:
+      type: filesystem
+  updateStrategy:
+    type: Recreate
+  portal:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  core:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  jobservice:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  registry:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  database:
+    internal:
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"
+  redis:
+    internal:
+      tolerations:
+        - key: "tools"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"
+  exporter:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
+  trivy:
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"

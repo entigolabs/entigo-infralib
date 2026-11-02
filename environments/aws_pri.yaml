@@ -1,0 +1,63 @@
+# Agent configuration of the aws_pri environment: cloud aws, prefix pri. The
+# "private" flavour of the AWS platform next to aws_biz in the same account:
+# a smaller VPC, external gateway only, karpenter and wireguard, ArgoCD with
+# direct OIDC. Inputs live in modules/<type>/<name>/test/aws_pri.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws/hello-world
+      - source: aws/vpc
+      - source: aws-v2/route53
+      - source: aws/ecr-proxy
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: aws/efs
+      - source: aws/eks
+      - source: aws/eks-node-group
+      - source: aws/crossplane
+      - source: aws/ec2
+      - source: aws/karpenter-node-role
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-pri
+    modules:
+      - source: alloy
+      - source: argocd
+      - source: aws-alb
+      - source: aws-storageclass
+      - name: crossplane-aws
+        source: crossplane-aws
+      - name: crossplane-system
+        source: crossplane-core
+      - source: crossplane-kafka
+      - name: crossplane-sql
+        source: crossplane-sql
+      - source: entigo-portal-agent
+      - source: entigo-vulnerability-agent
+      - source: external-dns
+      - source: external-secrets
+      - source: grafana
+      - source: harbor
+      - source: hello-world
+      - source: istio-base
+      - source: istio-gateway
+      - name: istio-system
+        source: istio-istiod
+      - source: karpenter
+      - source: kiali
+      - source: kyverno
+      - source: loki
+      - source: metrics-server
+      - source: mimir
+      - name: platform-apis
+        source: platform-apis
+      - source: prometheus
+      - source: rbac-bindings
+      - source: saml-proxy
+      - source: tempo
+      - source: trivy
+      - source: wireguard

@@ -1,0 +1,3 @@
+soft_delete_retention_days: 7
+key_rotation_period: "P90D"
+delete_lock_enabled: false

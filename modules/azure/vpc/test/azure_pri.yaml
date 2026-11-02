@@ -1,0 +1,3 @@
+vpc_cidr: "10.24.0.0/16"
+enable_flow_log: false
+container_apps_zone_redundancy_enabled: false

@@ -1,0 +1,50 @@
+# Agent configuration of the google_biz environment: cloud google, prefix
+# biz (project, region and zone from GOOGLE_PROJECT, GOOGLE_REGION and
+# GOOGLE_ZONE, as for the agent). The full platform of this repository on
+# Google Cloud, internal gateway flavour. Inputs live in
+# modules/<type>/<name>/test/google_biz.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: google/services
+      - source: google/vpc
+      - source: google/dns
+      - source: google/gar-proxy
+      - source: google/kms
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: google/gke
+      - source: google/gke-node-pool
+      - source: google/crossplane
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-biz
+    modules:
+      - source: alloy
+      - source: argocd
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-google
+        source: crossplane-google
+      - source: external-dns
+      - source: external-secrets
+      - name: google-gateway
+        source: google-gateway
+      - source: grafana
+      - source: harbor
+      - source: hello-world
+      - source: istio-base
+      - source: istio-gateway
+      - name: istio-system
+        source: istio-istiod
+      - source: kiali
+      - source: kyverno
+      - source: loki
+      - source: mimir
+      - source: prometheus
+      - source: tempo
+      - source: trivy
