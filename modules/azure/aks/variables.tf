@@ -137,6 +137,11 @@ variable "agc_subnet_ids" {
   default = []
 }
 
+variable "alb_controller_namespace" {
+  type    = string
+  default = "azure-gateway"
+}
+
 variable "lb_subnet_ids" {
   type        = list(string)
   default     = []
