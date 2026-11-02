@@ -185,6 +185,16 @@ if [ "$PROMPT_NAME" = "update" ]; then
     REPORT+="=== GOOGLE TERRAFORM UPDATES ===${LF}${GCP}${LF}${LF}"
   fi
 
+  AZURE=$("$REPORT_SH" azure 2>&1) || true
+  if [ -n "$AZURE" ]; then
+    REPORT+="=== AZURE TERRAFORM UPDATES ===${LF}${AZURE}${LF}${LF}"
+  fi
+
+  ORACLE=$("$REPORT_SH" oracle 2>&1) || true
+  if [ -n "$ORACLE" ]; then
+    REPORT+="=== ORACLE TERRAFORM UPDATES ===${LF}${ORACLE}${LF}${LF}"
+  fi
+
   cd - > /dev/null
 
   if [ -z "$REPORT" ]; then
