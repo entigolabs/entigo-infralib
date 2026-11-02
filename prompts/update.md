@@ -41,7 +41,7 @@ STEP 1 - GET THE REPO:
 - If not: git clone git@github.com:entigolabs/entigo-infralib.git /workspace/entigo-infralib && cd /workspace/entigo-infralib
 
 STEP 2 - READ THE REPORT:
-Read /workspace/update-report.txt. It has three sections:
+Read /workspace/update-report.txt. It has five sections:
 
 === K8S HELM UPDATES ===
 Lines like: <chart_name> newer version <NEW>, current <OLD> (<file_path>)
@@ -55,6 +55,14 @@ EKS AL2023_* lines: find the AMI version string in modules/aws/ and replace.
 === GOOGLE TERRAFORM UPDATES ===
 Lines like: hashicorp/google newer version <NEW>, current <OLD>
 Use grep -r to find <OLD> in modules/google/ and replace with <NEW>.
+
+=== AZURE TERRAFORM UPDATES ===
+Lines like: hashicorp/azurerm newer version <NEW>, current <OLD>
+Use grep -r to find <OLD> in modules/azure/ and replace with <NEW>.
+
+=== ORACLE TERRAFORM UPDATES ===
+Lines like: oracle/oci newer version <NEW>, current <OLD>
+Use grep -r to find <OLD> in modules/oracle/ and replace with <NEW>.
 
 STEP 3 - CREATE SEPARATE PRs:
 
@@ -402,6 +410,139 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
        hashicorp/google → https://github.com/hashicorp/terraform-provider-google/releases
        hashicorp/google-beta → https://github.com/hashicorp/terraform-provider-google-beta/releases
        terraform-google-modules/kubernetes-engine/google → https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/releases
+     - Fetch release notes with curl (five calls per provider max)
+     - Extract: breaking changes (⚠️), key changes summary, link to full changelog
+     - If it fails, note 'Release notes unavailable'.
+
+FOR AZURE TERRAFORM UPDATES - ONE COMBINED PR:
+  There is only one type of update for AZURE TERRAFORM UPDATES.
+  Run the ENTIRE branch+update+commit+push sequence in a SINGLE Bash call:
+  ```
+  cd /workspace/entigo-infralib && \
+  git checkout main && \
+  git fetch origin auto-azuretf 2>/dev/null || true && \
+  if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+    git checkout -B auto-azuretf origin/auto-azuretf
+    git rebase main
+  else
+    git checkout -b auto-azuretf
+  fi && \
+  # Apply ALL Azure version changes
+  <APPLY SED COMMANDS HERE> && \
+  git add -A && \
+  if git diff --cached --quiet; then
+    echo "NO_CHANGES"
+  else
+    echo "BRANCH: $(git branch --show-current)" && \
+    git commit -m 'chore(deps): update Azure Terraform providers' && \
+    if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+      # Compare actual file tree content, not commit history.
+      # After rebase, commits differ but content may be identical.
+      LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
+      REMOTE_TREE=$(git rev-parse origin/auto-azuretf^{tree}) && \
+      if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-azuretf --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-azuretf — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
+        git push --force origin auto-azuretf && echo "PUSHED"
+      else
+        echo "SKIP_PUSH_IDENTICAL"
+      fi
+    else
+      git push origin auto-azuretf && echo "PUSHED"
+    fi
+  fi
+  ```
+
+  After the Bash call, check the output:
+  - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to AFTER ALL PRs ARE DONE.
+  - "SKIPPED: ... human commits detected" → skip to AFTER ALL PRs ARE DONE, log the skip in final summary.
+  - "PUSHED" → check/update PR.
+
+  PR title: 'chore(deps): update Azure Terraform providers'
+  PR body MUST include for each updated component:
+     - Version change table
+     - Link to GitHub releases:
+       hashicorp/azurerm → https://github.com/hashicorp/terraform-provider-azurerm/releases
+       Azure/avm-res-containerservice-managedcluster/azurerm → https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster/releases
+     - Fetch release notes with curl (five calls per provider max)
+     - Extract: breaking changes (⚠️), key changes summary, link to full changelog
+     - If it fails, note 'Release notes unavailable'.
+
+FOR ORACLE TERRAFORM UPDATES - ONE COMBINED PR:
+  There is only one type of update for ORACLE TERRAFORM UPDATES.
+  Run the ENTIRE branch+update+commit+push sequence in a SINGLE Bash call:
+  ```
+  cd /workspace/entigo-infralib && \
+  git checkout main && \
+  git fetch origin auto-oracletf 2>/dev/null || true && \
+  if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+    git checkout -B auto-oracletf origin/auto-oracletf
+    git rebase main
+  else
+    git checkout -b auto-oracletf
+  fi && \
+  # Apply ALL Oracle version changes
+  <APPLY SED COMMANDS HERE> && \
+  git add -A && \
+  if git diff --cached --quiet; then
+    echo "NO_CHANGES"
+  else
+    echo "BRANCH: $(git branch --show-current)" && \
+    git commit -m 'chore(deps): update Oracle Terraform providers' && \
+    if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+      # Compare actual file tree content, not commit history.
+      # After rebase, commits differ but content may be identical.
+      LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
+      REMOTE_TREE=$(git rev-parse origin/auto-oracletf^{tree}) && \
+      if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-oracletf --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-oracletf — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
+        git push --force origin auto-oracletf && echo "PUSHED"
+      else
+        echo "SKIP_PUSH_IDENTICAL"
+      fi
+    else
+      git push origin auto-oracletf && echo "PUSHED"
+    fi
+  fi
+  ```
+
+  After the Bash call, check the output:
+  - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to AFTER ALL PRs ARE DONE.
+  - "SKIPPED: ... human commits detected" → skip to AFTER ALL PRs ARE DONE, log the skip in final summary.
+  - "PUSHED" → check/update PR.
+
+  PR title: 'chore(deps): update Oracle Terraform providers'
+  PR body MUST include for each updated component:
+     - Version change table
+     - Link to GitHub releases:
+       oracle/oci → https://github.com/oracle/terraform-provider-oci/releases
+       hashicorp/random → https://github.com/hashicorp/terraform-provider-random/releases
+       hashicorp/time → https://github.com/hashicorp/terraform-provider-time/releases
      - Fetch release notes with curl (five calls per provider max)
      - Extract: breaking changes (⚠️), key changes summary, link to full changelog
      - If it fails, note 'Release notes unavailable'.
