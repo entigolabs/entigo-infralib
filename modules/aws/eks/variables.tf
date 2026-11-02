@@ -453,3 +453,10 @@ variable "tags" {
   description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
   default     = {}
 }
+
+variable "node_security_group_cluster_tag" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Tag the node security group with kubernetes.io/cluster/<prefix>=owned. The AWS Load Balancer Controller requires exactly one security group with this tag on a node ENI when the ENI has several security groups. Set to false if the nodes also carry another security group with this tag."
+}

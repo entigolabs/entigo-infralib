@@ -550,10 +550,15 @@ module "eks" {
 
   }
 
-  #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
+  # The AWS Load Balancer Controller resolves the security group it adds backend
+  # rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
+  # more than one security group. Keep the upstream "owned" tag on the node
+  # security group so attaching additional groups to node groups keeps working.
+  # Set node_security_group_cluster_tag=false to drop it again if nodes also
+  # carry another security group with this tag (upstream issue 1986).
   node_security_group_tags = {
-    "kubernetes.io/cluster/${var.prefix}" = null
-    "karpenter.sh/discovery" = var.prefix
+    "kubernetes.io/cluster/${var.prefix}" = var.node_security_group_cluster_tag ? "owned" : null
+    "karpenter.sh/discovery"              = var.prefix
   }
 
 
