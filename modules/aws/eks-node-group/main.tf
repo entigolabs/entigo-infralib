@@ -1,16 +1,16 @@
 locals {
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
-     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
-     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
-     "BOTTLEROCKET_ARM_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
+     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261031"
+     "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
+     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
+     "BOTTLEROCKET_ARM_64"        = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64"        = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.0-a40abd2a"
   }
 
   # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
@@ -49,7 +49,7 @@ locals {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
   source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "21.26.0"
+  version = "21.29.0"
   use_name_prefix = true
   name                    = substr(var.prefix, 0, 35)
   iam_role_use_name_prefix = true
@@ -59,8 +59,13 @@ module "eks-managed-node-group" {
   cluster_name            = var.cluster_name
   kubernetes_version         = var.cluster_version
   subnet_ids              = var.subnets
-  cluster_primary_security_group_id = var.cluster_primary_security_group_id
   cluster_service_cidr    = var.cluster_service_cidr
+  # Nodes get only the shared node security group (plus whatever is passed in
+  # security_group_ids), the same layout as the aws/eks built-in node groups,
+  # Karpenter nodes and Zone node groups. The EKS-created cluster primary
+  # security group is deliberately not attached: it already carries the
+  # kubernetes.io/cluster/<name> tag, and the AWS Load Balancer Controller
+  # requires exactly one tagged security group per node ENI.
   vpc_security_group_ids = var.security_group_ids
 
   key_name = var.key_name
