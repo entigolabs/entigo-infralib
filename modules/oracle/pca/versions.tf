@@ -3,15 +3,15 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = "8.23.0"
+      version = "9.11.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.6.3"
+      version = "3.9.1"
     }
     time = {
       source  = "hashicorp/time"
-      version = "0.14.0"
+      version = "0.14.2"
     }
   }
 }
