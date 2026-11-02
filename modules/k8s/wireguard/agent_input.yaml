@@ -5,22 +5,22 @@ wireguard:
       # Not consumed by the load balancer, agent.yaml reads it back as vpn_host
       hostname: "{{ .module.name }}.{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain | required }}"
   image:
-    repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/wireguard'
+    repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/wireguard'
   keygenJob:
     wireguardMgrImage:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/k8s-wireguard-mgr'
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/k8s-wireguard-mgr'
     image:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/curium-rocks/wg-kubectl'
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/curium-rocks/wg-kubectl'
   metrics:
-    repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
+    repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/mindflavor/prometheus-wireguard-exporter'
   healthSideCar:
     image:
-      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/http-healthcheck-sidecar'
+      repository: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}/bryopsida/http-healthcheck-sidecar'
   # Serves the generated public key. On AWS it is reached through the extra
   # TCP 443 port of the wireguard NLB, on google through templates/google.
   extraSideCars:
   - name: pubkey
-    image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
+    image: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged:1.29-alpine'
     ports:
     - containerPort: 8080
       protocol: TCP

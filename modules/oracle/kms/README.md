@@ -66,10 +66,10 @@ Set `create_ca_key = false` in a deployment that issues no certificates from an 
 
 ### Deletion is always scheduled ###
 
-Vaults and keys cannot be deleted immediately - OCI schedules deletion 7 to 30 days out and
-the object keeps its name until then. Every name this module creates therefore carries a
-random suffix, so that tearing a deployment down and rebuilding it the same day does not
-collide with its own pending-deletion leftovers.
+Vaults and keys cannot be deleted immediately - OCI schedules deletion 7 to 30 days out.
+The vault and keys are named `<prefix>` and `<prefix>-<data|config|telemetry|ca>`, so a
+rebuild that keeps them adopts them by those names with `create_vault = false` and
+`create_keys = false`. `name_salt = true` appends a random suffix to every default name.
 
 ### Example code ###
 

@@ -32,7 +32,7 @@ CLAUDE.md
 - Gateway API CRDs v1.5.1 standard channel bundled in templates/gatewayApiCrds.yaml with helm.sh/resource-policy: keep
 - NLBGatewayAPI and ALBGatewayAPI feature gates are on by default in the controller binary (no explicit values needed)
 - GatewayClass controllerName for ALB: gateway.k8s.aws/alb
-- Common k8s test library (common/k8s/kubernetes.go) has CreateK8SGatewayClass, DeleteK8SGatewayClass, CreateK8SGateway, DeleteK8SGateway, WaitUntilK8SGatewayAvailable, WaitUntilK8SGatewayDeleted helpers
+- The entigo-infralib-test k8s package has CreateK8SGatewayClass, DeleteK8SGatewayClass, CreateK8SGateway, DeleteK8SGateway, WaitUntilK8SGatewayAvailable, WaitUntilK8SGatewayDeleted helpers
 - WaitUntilK8SGatewayAvailable uses gateway.networking.k8s.io/v1 (updated from v1beta1 which is no longer served in v1.5.x)
 - Gateway API testing: test/templates/gatewayclass.yaml and test/templates/gateway.yaml; GatewayClass is cluster-scoped so names are randomised per test run
 

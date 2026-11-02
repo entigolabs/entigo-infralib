@@ -139,6 +139,35 @@ variable "taints" {
   default     = {}
 }
 
+variable "node_repair_config" {
+  description = "Disabled when null, enable with { enabled = true }"
+  type = object({
+    enabled                                 = bool
+    max_parallel_nodes_repaired_count       = optional(number)
+    max_parallel_nodes_repaired_percentage  = optional(number)
+    max_unhealthy_node_threshold_count      = optional(number)
+    max_unhealthy_node_threshold_percentage = optional(number)
+    node_repair_config_overrides = optional(list(object({
+      min_repair_wait_time_mins = number
+      node_monitoring_condition = string
+      node_unhealthy_reason     = string
+      repair_action             = string
+    })))
+  })
+  default = null
+}
+
+variable "node_repair_wait_time_mins" {
+  description = "Wait time in minutes before repairing a node, applied to all repair triggering node conditions when node_repair_config does not set node_repair_config_overrides. 10-120 in steps of 10"
+  type        = number
+  nullable    = false
+  default     = 20
+  validation {
+    condition     = var.node_repair_wait_time_mins >= 10 && var.node_repair_wait_time_mins <= 120 && var.node_repair_wait_time_mins % 10 == 0
+    error_message = "node_repair_wait_time_mins must be between 10 and 120 and a multiple of 10."
+  }
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

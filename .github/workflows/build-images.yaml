@@ -1,9 +1,8 @@
 # .github/workflows/build-images.yaml
 #
 # Every image is multi-arch (amd64 and arm64). Each architecture builds on a
-# GitHub-hosted runner of its own kind, never under QEMU: the test image
-# warms its Go caches by compiling inside the image, which took the better
-# part of an hour emulated. The build jobs push single-platform images by
+# GitHub-hosted runner of its own kind, never under QEMU, which made the
+# builds take the better part of an hour. The build jobs push single-platform images by
 # digest only, to both registries, and the publish job joins the two digests
 # into one index under the real tag per registry. A tag therefore never
 # points at a half-built image, and the release and the downstream cascade
@@ -39,7 +38,7 @@ jobs:
     # inputs.is_dev is only meaningful for push/pull_request/workflow_dispatch.
     # On workflow_run the caller cannot tell whether the cascade started from a
     # PR: github.event.workflow_run describes only the immediate parent, and two
-    # hops out (tools -> google -> test) that parent's own event is
+    # hops out (tools -> google -> ...) that parent's own event is
     # "workflow_run", not "pull_request". So read the tag the parent recorded
     # instead. This is correct at any depth, because every build records its own.
     - name: Resolve image tag
@@ -113,11 +112,6 @@ jobs:
 
     # push-by-digest: the image is pushed untagged to both registries and
     # only its digest comes out; the publish job below tags it.
-    #
-    # The images/test Dockerfile warms its Go caches from the repo's shared
-    # test library in common/ and the module tests under modules/, both
-    # outside the image's build context. Hand them over as named contexts;
-    # images that do not declare stages of these names simply ignore them.
     - name: Build and push by digest
       id: build
       uses: docker/build-push-action@v6
@@ -126,9 +120,6 @@ jobs:
         platforms: linux/${{ matrix.arch }}
         build-args: |
           BASE_TAG=${{ needs.tag.outputs.image_tag }}
-        build-contexts: |
-          common=${{ github.workspace }}/common
-          modules=${{ github.workspace }}/modules
         outputs: type=image,"name=public.ecr.aws/entigolabs/${{ inputs.name }},docker.io/entigolabs/${{ inputs.name }}",push-by-digest=true,name-canonical=true,push=true
         provenance: mode=max
         sbom: true

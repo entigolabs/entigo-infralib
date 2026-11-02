@@ -1,0 +1,48 @@
+# Agent configuration of the google_pri environment: cloud google, prefix
+# pri. The external gateway flavour of the Google Cloud platform next to
+# google_biz in the same project. Inputs live in
+# modules/<type>/<name>/test/google_pri.yaml.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: google/vpc
+      - source: google/dns
+      - source: google/gar-proxy
+  - name: infra
+    type: terraform
+    vpc:
+      attach: true
+    modules:
+      - source: google/gke
+      - source: google/gke-node-pool
+      - source: google/crossplane
+  - name: apps
+    type: argocd-apps
+    argocd_namespace: argocd-pri
+    modules:
+      - source: alloy
+      - source: argocd
+      - name: crossplane-system
+        source: crossplane-core
+      - name: crossplane-google
+        source: crossplane-google
+      - source: external-dns
+      - source: external-secrets
+      - name: google-gateway
+        source: google-gateway
+      - source: grafana
+      - source: harbor
+      - source: hello-world
+      - source: istio-base
+      - source: istio-gateway
+      - name: istio-system
+        source: istio-istiod
+      - source: kiali
+      - source: kyverno
+      - source: loki
+      - source: mimir
+      - source: prometheus
+      - source: tempo
+      - source: trivy
+      - source: wireguard

@@ -19,17 +19,16 @@ The entry's key is the `IngressClass` name, so an app selects one with
 | `external` | public subnet, default class | `oke.lb_nsg_id` - ports from anywhere |
 | `internal` | private subnet, `isPrivate: true` | `oke.lb_int_nsg_id` - ports from the VCN CIDR |
 
-`internal` ships **disabled**, because enabling it provisions a second load balancer that is
-billed whether or not an `Ingress` uses it. Both are wired with their subnet and NSG regardless,
-so turning it on is one line in a deployment's config:
+Each class exists only for a kind of DNS zone that exists: `external` takes `domain` from
+`modules/oracle/dns`'s `public_domain`, `internal` from `private_domain`, and a class whose
+`domain` is empty is not created. A load balancer is billed whether or not an `Ingress` uses
+it, so a deployment with one kind of zone pays for one load balancer. This mirrors
+`modules/k8s/oracle-gateway`, whose gateways use these classes.
 
-```yaml
-ingressClasses:
-  internal:
-    enabled: true
-```
+Setting `domain` in the config creates a class regardless of the zones, and `enabled: false`
+still turns one off. An entry without a `domain` key is not gated at all.
 
-An app then selects it, in the deployment's own `config/apps/<module>.yaml`:
+An app selects a class in the deployment's own `config/apps/<module>.yaml`:
 
 ```yaml
 ingress:

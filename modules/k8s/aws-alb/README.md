@@ -302,8 +302,8 @@ converting the Ingress resources of your own applications to HTTPRoutes.**
 The mapping rule is simple: the `ingressClassName` of your Ingress maps to the
 Gateway of the same name. If your Ingress used ingressClass `external`, the
 HTTPRoute attaches to Gateway `external`, ingressClass `internal` maps to
-Gateway `internal`, and so forth. The Gateways live in the `aws-alb-<env>`
-namespace.
+Gateway `internal`, and so forth. The Gateways live in the namespace of the
+aws-alb module, `aws-alb` by default.
 
 ### Example: converting an Ingress to an HTTPRoute
 
@@ -349,7 +349,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: external          # was ingressClassName: external
-      namespace: aws-alb-biz  # gateways live in the aws-alb-<env> namespace
+      namespace: aws-alb      # gateways live in the aws-alb module namespace
       sectionName: https
   hostnames:
     - my-app.biz-net-route53.infralib.entigo.io   # was spec.rules[].host

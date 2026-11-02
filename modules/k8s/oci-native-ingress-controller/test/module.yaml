@@ -1,0 +1,6 @@
+# Installed once per environment: a pull request applies it under its regular
+# name instead of a per-branch copy.
+pin_step: true
+# kube-score checks skipped on top of the framework's defaults: the controller Deployment comes from the vendored upstream subchart, which ships no NetworkPolicy, same as the crossplane and karpenter modules.
+kube_score_ignore:
+  - pod-networkpolicy

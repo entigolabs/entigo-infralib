@@ -35,6 +35,9 @@ Outputs are the `pub_*`/`int_*` scalars (`_zone_id`, `_domain`, `_cert_ocid`), t
 `zone_ids` / `domain_names` / `certificate_ocids` / `nameservers` maps, and
 `certificate_authority_id`.
 
+`public_domain` and `private_domain` are `pub_domain` and `int_domain` without the fallback:
+each is empty when there is no zone of its kind.
+
 ### Private zones are views, not attachments ###
 
 A Route53 private zone is attached to a VPC. An OCI private zone belongs to a DNS **view**, and

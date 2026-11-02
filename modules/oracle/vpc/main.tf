@@ -1,6 +1,17 @@
 locals {
-  first_half  = cidrsubnet(var.vpc_cidr, 1, 0)
-  second_half = cidrsubnet(var.vpc_cidr, 1, 1)
+  create_vcn             = var.vcn_id == null
+  vcn_id                 = local.create_vcn ? oci_core_vcn.this[0].id : var.vcn_id
+  vpc_cidr               = local.create_vcn ? var.vpc_cidr : data.oci_core_vcn.existing[0].cidr_blocks[0]
+  network_compartment_id = coalesce(var.network_compartment_id, local.create_vcn ? var.compartment_id : data.oci_core_vcn.existing[0].compartment_id)
+
+  create_internet_gateway        = coalesce(var.enable_internet_gateway, local.create_vcn)
+  create_nat_gateway             = coalesce(var.enable_nat_gateway, local.create_vcn)
+  create_service_gateway         = coalesce(var.enable_service_gateway, local.create_vcn)
+  create_route_tables            = coalesce(var.create_route_tables, local.create_vcn)
+  public_subnets_allow_public_ip = coalesce(var.public_subnets_allow_public_ip, local.create_vcn)
+
+  first_half  = cidrsubnet(local.vpc_cidr, 1, 0)
+  second_half = cidrsubnet(local.vpc_cidr, 1, 1)
 
   # Pods get a quarter of the VCN and instances an eighth: pods are the tier that runs out, at
   # max_pods_per_node (31) VCN IPs reserved per node. The other way round caps a /21 at 8 nodes.
@@ -20,19 +31,19 @@ locals {
   # The public table intentionally omits the service gateway: OCI rejects an
   # internet gateway and an "All Services" service gateway target in the same
   # route table. Public subnets reach OCI services via the internet gateway.
-  public_routes = var.enable_internet_gateway ? [{
+  public_routes = local.create_internet_gateway ? [{
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.this[0].id
   }] : []
 
   private_routes = concat(
-    var.enable_nat_gateway ? [{
+    local.create_nat_gateway ? [{
       destination       = "0.0.0.0/0"
       destination_type  = "CIDR_BLOCK"
       network_entity_id = oci_core_nat_gateway.this[0].id
     }] : [],
-    var.enable_service_gateway ? [{
+    local.create_service_gateway ? [{
       destination       = local.services_cidr
       destination_type  = "SERVICE_CIDR_BLOCK"
       network_entity_id = oci_core_service_gateway.this[0].id
@@ -40,7 +51,7 @@ locals {
   )
 
   # Intra and database tiers stay isolated from the internet: service gateway only.
-  internal_routes = var.enable_service_gateway ? [{
+  internal_routes = local.create_service_gateway ? [{
     destination       = local.services_cidr
     destination_type  = "SERVICE_CIDR_BLOCK"
     network_entity_id = oci_core_service_gateway.this[0].id
@@ -48,6 +59,7 @@ locals {
 }
 
 resource "oci_core_vcn" "this" {
+  count          = local.create_vcn ? 1 : 0
   compartment_id = var.compartment_id
   cidr_blocks    = [var.vpc_cidr]
   display_name   = var.prefix
@@ -55,34 +67,59 @@ resource "oci_core_vcn" "this" {
 }
 
 resource "oci_core_internet_gateway" "this" {
-  count          = var.enable_internet_gateway ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_internet_gateway ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-igw"
+
+  lifecycle {
+    precondition {
+      condition     = local.create_route_tables
+      error_message = "enable_internet_gateway requires create_route_tables: without this module's route tables nothing routes to the gateway."
+    }
+    precondition {
+      condition     = local.public_subnets_allow_public_ip
+      error_message = "enable_internet_gateway requires public_subnets_allow_public_ip: an internet gateway only carries traffic for VNICs with a public IP."
+    }
+  }
 }
 
 resource "oci_core_nat_gateway" "this" {
-  count          = var.enable_nat_gateway ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_nat_gateway ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-nat"
+
+  lifecycle {
+    precondition {
+      condition     = local.create_route_tables
+      error_message = "enable_nat_gateway requires create_route_tables: without this module's route tables nothing routes to the gateway."
+    }
+  }
 }
 
 resource "oci_core_service_gateway" "this" {
-  count          = var.enable_service_gateway ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_service_gateway ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-sgw"
 
   services {
     service_id = data.oci_core_services.all.services[0].id
   }
+
+  lifecycle {
+    precondition {
+      condition     = local.create_route_tables
+      error_message = "enable_service_gateway requires create_route_tables: without this module's route tables nothing routes to the gateway."
+    }
+  }
 }
 
 resource "oci_core_route_table" "public" {
-  count          = length(local.public_subnets) > 0 ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_route_tables && length(local.public_subnets) > 0 ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-public"
 
   dynamic "route_rules" {
@@ -97,9 +134,9 @@ resource "oci_core_route_table" "public" {
 
 resource "oci_core_route_table" "private" {
   # Shared with the pod subnet, which needs the same NAT + service gateway egress.
-  count          = length(local.private_subnets) + length(local.pod_subnets) > 0 ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_route_tables && length(local.private_subnets) + length(local.pod_subnets) > 0 ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-private"
 
   dynamic "route_rules" {
@@ -113,9 +150,9 @@ resource "oci_core_route_table" "private" {
 }
 
 resource "oci_core_route_table" "internal" {
-  count          = length(local.intra_subnets) + length(local.database_subnets) > 0 ? 1 : 0
-  compartment_id = var.compartment_id
-  vcn_id         = oci_core_vcn.this.id
+  count          = local.create_route_tables && length(local.intra_subnets) + length(local.database_subnets) > 0 ? 1 : 0
+  compartment_id = local.network_compartment_id
+  vcn_id         = local.vcn_id
   display_name   = "${var.prefix}-internal"
 
   dynamic "route_rules" {
@@ -130,21 +167,21 @@ resource "oci_core_route_table" "internal" {
 
 resource "oci_core_subnet" "public" {
   count                      = length(local.public_subnets)
-  compartment_id             = var.compartment_id
-  vcn_id                     = oci_core_vcn.this.id
+  compartment_id             = local.network_compartment_id
+  vcn_id                     = local.vcn_id
   cidr_block                 = local.public_subnets[count.index]
   display_name               = try(var.public_subnet_names[count.index], "${var.prefix}-public-${count.index}")
-  route_table_id             = oci_core_route_table.public[0].id
-  prohibit_public_ip_on_vnic = false
+  route_table_id             = local.create_route_tables ? oci_core_route_table.public[0].id : null
+  prohibit_public_ip_on_vnic = !local.public_subnets_allow_public_ip
 }
 
 resource "oci_core_subnet" "private" {
   count                      = length(local.private_subnets)
-  compartment_id             = var.compartment_id
-  vcn_id                     = oci_core_vcn.this.id
+  compartment_id             = local.network_compartment_id
+  vcn_id                     = local.vcn_id
   cidr_block                 = local.private_subnets[count.index]
   display_name               = try(var.private_subnet_names[count.index], "${var.prefix}-private-${count.index}")
-  route_table_id             = oci_core_route_table.private[0].id
+  route_table_id             = local.create_route_tables ? oci_core_route_table.private[0].id : null
   prohibit_public_ip_on_vnic = true
 }
 
@@ -153,30 +190,30 @@ resource "oci_core_subnet" "private" {
 # is set, which is what makes it regional - OKE requires that of a pod subnet.
 resource "oci_core_subnet" "pod" {
   count                      = length(local.pod_subnets)
-  compartment_id             = var.compartment_id
-  vcn_id                     = oci_core_vcn.this.id
+  compartment_id             = local.network_compartment_id
+  vcn_id                     = local.vcn_id
   cidr_block                 = local.pod_subnets[count.index]
   display_name               = try(var.pod_subnet_names[count.index], "${var.prefix}-pod-${count.index}")
-  route_table_id             = oci_core_route_table.private[0].id
+  route_table_id             = local.create_route_tables ? oci_core_route_table.private[0].id : null
   prohibit_public_ip_on_vnic = true
 }
 
 resource "oci_core_subnet" "intra" {
   count                      = length(local.intra_subnets)
-  compartment_id             = var.compartment_id
-  vcn_id                     = oci_core_vcn.this.id
+  compartment_id             = local.network_compartment_id
+  vcn_id                     = local.vcn_id
   cidr_block                 = local.intra_subnets[count.index]
   display_name               = try(var.intra_subnet_names[count.index], "${var.prefix}-intra-${count.index}")
-  route_table_id             = oci_core_route_table.internal[0].id
+  route_table_id             = local.create_route_tables ? oci_core_route_table.internal[0].id : null
   prohibit_public_ip_on_vnic = true
 }
 
 resource "oci_core_subnet" "database" {
   count                      = length(local.database_subnets)
-  compartment_id             = var.compartment_id
-  vcn_id                     = oci_core_vcn.this.id
+  compartment_id             = local.network_compartment_id
+  vcn_id                     = local.vcn_id
   cidr_block                 = local.database_subnets[count.index]
   display_name               = try(var.database_subnet_names[count.index], "${var.prefix}-database-${count.index}")
-  route_table_id             = oci_core_route_table.internal[0].id
+  route_table_id             = local.create_route_tables ? oci_core_route_table.internal[0].id : null
   prohibit_public_ip_on_vnic = true
 }

@@ -1,4 +1,4 @@
 global:
   gateway:
-    name: '{{ .toptin.aws-alb.global.externalGateway | .toptin.google-gateway.global.externalGateway | required }}'
-    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | required }}'
+    name: '{{ .toptin.aws-alb.global.externalGateway | .toptin.google-gateway.global.externalGateway | .toptin.azure-gateway.global.externalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.azure-gateway | required }}'
