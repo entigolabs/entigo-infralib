@@ -7,17 +7,17 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
-     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
-     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
-     "BOTTLEROCKET_ARM_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
+     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261031"
+     "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
+     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
+     "BOTTLEROCKET_ARM_64"        = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64"        = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.0-a40abd2a"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
@@ -304,7 +304,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.26.0"
+  version = "21.29.0"
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
@@ -550,10 +550,15 @@ module "eks" {
 
   }
 
-  #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
+  # The AWS Load Balancer Controller resolves the security group it adds backend
+  # rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
+  # more than one security group. Keep the upstream "owned" tag on the node
+  # security group so attaching additional groups to node groups keeps working.
+  # Set node_security_group_cluster_tag=false to drop it again if nodes also
+  # carry another security group with this tag (upstream issue 1986).
   node_security_group_tags = {
-    "kubernetes.io/cluster/${var.prefix}" = null
-    "karpenter.sh/discovery" = var.prefix
+    "kubernetes.io/cluster/${var.prefix}" = var.node_security_group_cluster_tag ? "owned" : null
+    "karpenter.sh/discovery"              = var.prefix
   }
 
 
