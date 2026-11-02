@@ -1,0 +1,65 @@
+{{- define "entigo.azureStorageAccountName" -}}
+{{- $az := .Values.global.azure -}}
+{{- $az.storageAccountName | default (printf "%s%s" (regexReplaceAll "[^a-z0-9]" (lower $az.storageAccountPrefix) "" | trunc 16) $az.uniqueSuffix) -}}
+{{- end }}
+{{- if eq .Values.global.cloudProvider "azure" }}
+{{- $az := .Values.global.azure }}
+{{- $name := include "entigo.azureStorageAccountName" . }}
+apiVersion: storage.azure.m.upbound.io/v1beta1
+kind: Account
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: {{ $name }}
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan: no Delete
+  managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+  forProvider:
+    resourceGroupName: {{ required "global.azure.resourceGroupName" $az.resourceGroupName }}
+    location: {{ required "global.azure.location" $az.location }}
+    accountKind: {{ eq $az.storageTier "Premium" | ternary "BlockBlobStorage" "StorageV2" }}
+    accountTier: {{ $az.storageTier }}
+    accountReplicationType: {{ $az.storageReplication }}
+    minTlsVersion: TLS1_2
+    httpsTrafficOnlyEnabled: true
+    sharedAccessKeyEnabled: false
+    defaultToOauthAuthentication: true
+    allowNestedItemsToBePublic: false
+    blobProperties:
+      versioningEnabled: false
+    {{- if and $az.telemetryKeyId $az.telemetryKeyResourceId }}
+    {{- $cmk := printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s_%s_%s-cmk_nosa" $az.subscriptionId $az.resourceGroupName $az.identityPrefix .Release.Namespace .Release.Name }}
+    identity:
+      type: UserAssigned
+      identityIds:
+        - {{ $cmk }}
+    customerManagedKey:
+      keyVaultKeyId: {{ $az.telemetryKeyId }}
+      userAssignedIdentityId: {{ $cmk }}
+    {{- end }}
+    tags:
+      created-by: entigo-infralib
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Values.global.providerConfigRefName }}
+---
+apiVersion: storage.azure.m.upbound.io/v1beta1
+kind: Container
+metadata:
+  name: {{ .Values.global.bucketName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Orphan: no Delete
+  managementPolicies: ["Observe", "Create", "Update", "LateInitialize"]
+  forProvider:
+    storageAccountIdRef:
+      name: {{ .Release.Name }}
+    containerAccessType: private
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: {{ .Values.global.providerConfigRefName }}
+{{- end }}

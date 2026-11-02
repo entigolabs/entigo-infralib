@@ -1,0 +1,32 @@
+global:
+  cloudProvider: "azure"
+
+crossplane:
+  tolerations:
+  - key: tools
+    operator: Equal
+    value: 'true'
+    effect: NoSchedule
+  - key: CriticalAddonsOnly
+    operator: Exists
+    effect: NoSchedule
+  rbacManager:
+    tolerations:
+    - key: tools
+      operator: Equal
+      value: 'true'
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoSchedule
+
+  customLabels:
+    azure.workload.identity/use: "true"
+
+  resourcesCrossplane:
+    limits:
+      cpu: 2000m
+      memory: 1536Mi
+    requests:
+      cpu: 20m
+      memory: 200Mi

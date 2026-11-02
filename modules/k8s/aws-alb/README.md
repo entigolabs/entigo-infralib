@@ -31,6 +31,7 @@ gateways:
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
+  #   sourceRanges: []
 ```
 
 Here the `partner` gateway would be created in addition to the defaults.
@@ -71,6 +72,36 @@ gateways:
   external:
     subnets: '{{ .toutput.vpc.public_subnets }}'
 ```
+
+### Source ranges
+
+By default every gateway ALB accepts traffic from anywhere (`0.0.0.0/0`).
+`sourceRanges` limits the CIDRs allowed through the ALB security group, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/inbound-cidrs` Ingress annotation:
+
+```yaml
+gateways:
+  external:
+    sourceRanges:
+      - 10.0.0.0/8
+      - 192.168.1.0/24
+  partner:
+    enabled: true
+    scheme: internet-facing
+    sourceRanges: "203.0.113.0/24,198.51.100.0/24"   # a comma-separated string also works
+```
+
+A comma-separated string makes it possible to take the list from a terraform
+output, the same way as `subnets`:
+
+```yaml
+gateways:
+  internal:
+    sourceRanges: '{{ .toutput.vpc.vpc_cidr_block }}'
+```
+
+An empty list or string allows everything.
 
 ### Selecting which gateway infralib modules use
 
@@ -125,6 +156,14 @@ An existing bucket must use SSE-S3 encryption (ALB access logs do not support KM
 Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
 
 The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
+
+### Server header
+
+By default the Gateway ALBs do not send their `Server: awselb/2.0` response header. To send it again:
+
+```yaml
+serverHeader: true
+```
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)
@@ -263,8 +302,8 @@ converting the Ingress resources of your own applications to HTTPRoutes.**
 The mapping rule is simple: the `ingressClassName` of your Ingress maps to the
 Gateway of the same name. If your Ingress used ingressClass `external`, the
 HTTPRoute attaches to Gateway `external`, ingressClass `internal` maps to
-Gateway `internal`, and so forth. The Gateways live in the `aws-alb-<env>`
-namespace.
+Gateway `internal`, and so forth. The Gateways live in the namespace of the
+aws-alb module, `aws-alb` by default.
 
 ### Example: converting an Ingress to an HTTPRoute
 
@@ -281,6 +320,7 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-port: '8081'
     alb.ingress.kubernetes.io/healthcheck-path: /status/healthz
     alb.ingress.kubernetes.io/success-codes: '200-299'
+    alb.ingress.kubernetes.io/inbound-cidrs: 10.0.0.0/8,192.168.1.0/24
 spec:
   ingressClassName: external
   rules:
@@ -309,7 +349,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: external          # was ingressClassName: external
-      namespace: aws-alb-biz  # gateways live in the aws-alb-<env> namespace
+      namespace: aws-alb      # gateways live in the aws-alb module namespace
       sectionName: https
   hostnames:
     - my-app.biz-net-route53.infralib.entigo.io   # was spec.rules[].host
@@ -346,6 +386,27 @@ spec:
       matcher:
         httpCode: "200-299"    # was alb.ingress.kubernetes.io/success-codes
 ```
+
+`alb.ingress.kubernetes.io/inbound-cidrs` restricted who could reach the ALB.
+The security group belongs to the shared ALB, so the setting moves off the
+application and onto the gateway, in the infralib config of the `aws-alb`
+module:
+
+```yaml
+      - name: aws-alb
+        source: aws-alb
+        inputs:
+          gateways:
+            external:
+              sourceRanges:      # was alb.ingress.kubernetes.io/inbound-cidrs
+                - 10.0.0.0/8
+                - 192.168.1.0/24
+```
+
+The CIDRs apply to every route on that gateway. If only some applications
+need the restriction, give them a custom gateway with its own `sourceRanges`
+and attach their HTTPRoutes to it, see
+[Default gateways and custom gateways](#default-gateways-and-custom-gateways).
 
 Notes:
 

@@ -1,0 +1,3 @@
+# Installed once per environment: a pull request applies it under its regular
+# name instead of a per-branch copy.
+pin_step: true

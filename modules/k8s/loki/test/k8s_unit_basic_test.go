@@ -5,70 +5,46 @@ import (
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/aws"
-	"github.com/entigolabs/entigo-infralib-common/google"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/aws"
+	"github.com/entigolabs/entigo-infralib-test/azure"
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/google"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sLokiAWSBiz(t *testing.T) {
-	testK8sLoki(t, "aws", "biz")
-}
+func TestLoki(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sLokiAWSPri(t *testing.T) {
-	testK8sLoki(t, "aws", "pri")
-}
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-read", 20, 6*time.Second), "loki-read deployment error")
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-gateway", 20, 6*time.Second), "loki-gateway deployment error")
+		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, c.Namespace+"-write-0", 20, 6*time.Second), "loki-write-0 pod error")
+		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, c.Namespace+"-backend-0", 20, 6*time.Second), "loki-backend-0 pod error")
 
-func TestK8sLokiGoogleBiz(t *testing.T) {
-	testK8sLoki(t, "google", "biz")
-}
-
-func TestK8sLokiGooglePri(t *testing.T) {
-	testK8sLoki(t, "google", "pri")
-}
-
-func testK8sLoki(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "default")
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-read", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("loki-read deployment error:", err)
-	}
-
-	lokiGatewayName := fmt.Sprintf("%s-gateway", namespaceName)
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, lokiGatewayName, 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("loki-gateway deployment error:", err)
-	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-write-0", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("loki-write-0 pod error:", err)
-	}
-	err = terrak8s.WaitUntilPodAvailableE(t, kubectlOptions, fmt.Sprintf("%s-backend-0", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("loki-backend-0 pod error:", err)
-	}
-
-	switch cloudName {
-	case "aws":
-
-		err = aws.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-877483565445-eu-north-1", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
-		if err != nil {
-			t.Fatal("File not found in AWS bucket:", err)
+		// Loki writes a cluster seed file to its store on startup, which proves the
+		// pods can write to the bucket with their cloud identity.
+		switch e.Cloud {
+		case env.CloudAWS:
+			bucket := fmt.Sprintf("%s-%s-%s-%s", e.Prefix, c.Namespace, aws.AccountID(t, e), e.MustRegion(t))
+			require.NoError(t, aws.WaitUntilBucketFileAvailable(t, e.MustRegion(t), bucket, "loki_cluster_seed.json", 20, 6*time.Second), "File not found in AWS bucket")
+		case env.CloudGoogle:
+			require.NoError(t, google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", e.Prefix, c.Namespace), "loki_cluster_seed.json", 20, 6*time.Second), "File not found in Google bucket")
+		case env.CloudAzure:
+			account, err := k8s.RunKubectlAndGetOutputE(t, c, "get", "accounts.storage.azure.m.upbound.io", c.Namespace, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
+			require.NoError(t, err, "storage Account error")
+			azure.WaitUntilBlobExists(t, azure.AccountNamed(account), fmt.Sprintf("%s-%s-logs", e.Prefix, c.Namespace), "loki_cluster_seed.json", 20, 6*time.Second)
 		}
-	case "google":
-		err = google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-logs", envName, namespaceName), "loki_cluster_seed.json", 20, 6*time.Second)
-		if err != nil {
-			t.Fatal("File not found in Google bucket:", err)
-		}
-	}
 
-	successResponseCode := "200"
-	targetURL := fmt.Sprintf("https://%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
+		k8s.WaitUntilRouteReachable(t, c, "", routeRetries(e), 6*time.Second)
+	})
+}
+
+// Google and Azure gateways take long to program a new route.
+func routeRetries(e *env.Environment) int {
+	if e.Cloud == env.CloudGoogle || e.Cloud == env.CloudAzure {
+		return 400
+	}
+	return 100
 }

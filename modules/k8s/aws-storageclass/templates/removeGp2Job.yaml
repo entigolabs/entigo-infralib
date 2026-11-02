@@ -12,9 +12,6 @@ rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["list", "get", "delete", "create", "update"]
-- apiGroups: [""]
-  resources: ["persistentvolumes"]
-  verbs: ["list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -81,8 +78,20 @@ spec:
             ephemeral-storage: 20Mi
         command:
         - /bin/bash
-        - -c
-        - if [ "$(kubectl get pv | wc -l)" == "0" ]; then if [ "$(kubectl get sc {{ .Values.global.sc_prefix }}gp2 | grep 'kubernetes.io/aws-ebs' | wc -l)" == "1" ]; then kubectl delete sc gp2 && kubectl get sc {{ .Values.global.sc_prefix }}gp2-retain -o json | jq '.metadata.name = "{{ .Values.global.sc_prefix }}gp2"' | jq 'del(.metadata.labels."argocd.argoproj.io/instance")' | kubectl apply -f -; fi; fi
+        - -ec
+        # Replace the EKS-provided in-tree gp2 class with a copy of gp2-retain backed by the EBS CSI driver.
+        # Bound PVs are not affected by deleting or recreating their StorageClass (the class is only read at
+        # provisioning and expansion time), so this runs regardless of existing volumes. The replacement is
+        # rendered before the delete so a missing gp2-retain cannot leave the cluster without a gp2 class.
+        - |
+          set -o pipefail
+          SC="{{ .Values.global.sc_prefix }}gp2"
+          if kubectl get sc "$SC" -o jsonpath='{.provisioner}' 2>/dev/null | grep -q '^kubernetes.io/aws-ebs$'; then
+            NEW="$(kubectl get sc {{ .Values.global.sc_prefix }}gp2-retain -o json | jq --arg n "$SC" '.metadata.name = $n | del(.metadata.labels."argocd.argoproj.io/instance")')"
+            if [ -z "$NEW" ]; then echo "{{ .Values.global.sc_prefix }}gp2-retain not found, leaving $SC in place"; exit 1; fi
+            kubectl delete sc "$SC"
+            echo "$NEW" | kubectl apply -f -
+          fi
       restartPolicy: Never
   backoffLimit: 3
 

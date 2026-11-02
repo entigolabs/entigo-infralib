@@ -28,6 +28,22 @@ locals {
   main_subnet_ids  = length(var.oke_main_subnet_ids) > 0 ? var.oke_main_subnet_ids : var.node_subnet_ids
   mon_subnet_ids   = length(var.oke_mon_subnet_ids) > 0 ? var.oke_mon_subnet_ids : var.node_subnet_ids
   tools_subnet_ids = length(var.oke_tools_subnet_ids) > 0 ? var.oke_tools_subnet_ids : var.node_subnet_ids
+
+  # cluster-autoscaler discovers node pools by the cluster-autoscaler tag and reads each pool's
+  # limits from minSize and maxSize. A pool with max size 0 stays untagged, so the autoscaler
+  # never shrinks a pool it was not given.
+  pool_sizes = {
+    main  = { min = var.oke_main_min_size, max = var.oke_main_max_size }
+    mon   = { min = var.oke_mon_min_size, max = var.oke_mon_max_size }
+    tools = { min = var.oke_tools_min_size, max = var.oke_tools_max_size }
+  }
+  autoscaler_tags = {
+    for pool, size in local.pool_sizes : pool => size.max > 0 ? {
+      cluster-autoscaler = "enabled"
+      minSize            = tostring(size.min)
+      maxSize            = tostring(size.max)
+    } : {}
+  }
 }
 
 # oracle/vpc doesn't create any security lists/NSGs of its own, so subnets fall back to
@@ -316,6 +332,9 @@ resource "oci_identity_policy" "controllers" {
     # Each k8s module's own scoped IAM Policy is itself a Crossplane Policy CR, created
     # through this same workload identity - needs the grant too.
     "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+
+    "Allow any-user to read virtual-network-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+    "Allow any-user to read cluster-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
   ]
 }
 
@@ -337,6 +356,10 @@ resource "oci_containerengine_cluster" "this" {
     precondition {
       condition     = length(local.matching_versions) > 0
       error_message = "OKE does not offer Kubernetes ${var.kubernetes_version} in this region. Available: ${join(", ", local.versions)}."
+    }
+    precondition {
+      condition     = var.oke_tools_node_count > 0 || var.oke_main_node_count > 0
+      error_message = "Set oke_tools_node_count or oke_main_node_count above 0: the platform's own workloads run on the tools or main node pool."
     }
   }
 
@@ -422,6 +445,7 @@ module "main" {
   boot_volume_size_in_gbs = var.oke_main_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_main_node_pool_os_type
   labels                  = { main = "true" }
+  freeform_tags           = local.autoscaler_tags.main
   nsg_ids                 = [oci_core_network_security_group.node.id]
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]
@@ -447,6 +471,7 @@ module "mon" {
   # No NO_SCHEDULE taint - oci_containerengine_node_pool has no taint attribute in the
   # provider schema (see NOTES.md "Known, permanent-for-now limitation"). Label-only.
   labels            = { mon = "true" }
+  freeform_tags     = local.autoscaler_tags.mon
   nsg_ids           = [oci_core_network_security_group.node.id]
   pod_subnet_ids    = var.pod_subnet_ids
   pod_nsg_ids       = [oci_core_network_security_group.pods.id]
@@ -470,6 +495,7 @@ module "tools" {
   boot_volume_size_in_gbs = var.oke_tools_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_tools_node_pool_os_type
   labels                  = { tools = "true" }
+  freeform_tags           = local.autoscaler_tags.tools
   nsg_ids                 = [oci_core_network_security_group.node.id]
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]

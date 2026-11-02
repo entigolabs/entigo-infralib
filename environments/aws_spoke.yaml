@@ -1,0 +1,9 @@
+# Agent configuration of the aws_spoke environment: aws/vpc alone in spoke
+# subnet mode, three zones, no NAT (modules/aws/vpc/test/aws_spoke.yaml).
+# Shares the account with aws_biz and aws_pri; nothing else is deployed under
+# this prefix.
+steps:
+  - name: net
+    type: terraform
+    modules:
+      - source: aws/vpc

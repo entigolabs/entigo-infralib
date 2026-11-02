@@ -53,9 +53,9 @@ this path in the first place.
 ## One module, one namespace, a `gateways` map
 
 Unlike the two-Helm-release design this module started with, a single release now creates
-every Gateway named in `.Values.gateways` - any map entry with `enabled: true` becomes a
-`Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named after the entry's
-key, the way `aws-alb` names its own. The built-in entries:
+every Gateway named in `.Values.gateways` - any map entry with `enabled: true` and a `domain`
+becomes a `Gateway`/`Ingress`/backend-tls `Secret`/options `ConfigMap`, all named after the
+entry's key, the way `aws-alb` names its own. The built-in entries:
 
 ```yaml
 gateways:
@@ -63,12 +63,12 @@ gateways:
     enabled: true
     ingressClassName: external
     certificateOcid: ""   # set by agent_input_oracle.yaml from .toutput.dns.pub_cert_ocid
-    domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.pub_domain
+    domain: ""            # set by agent_input_oracle.yaml from .toutput.dns.public_domain
   internal:
     enabled: true
     ingressClassName: internal
     certificateOcid: ""   # .toutput.dns.int_cert_ocid
-    domain: ""            # .toutput.dns.int_domain
+    domain: ""            # .toutput.dns.private_domain
 ```
 
 Each still gets its own OCI load balancer and `IngressClass` - the same `external`/`internal`
@@ -81,6 +81,28 @@ duplicates per gateway.
 A deployment that needs a third gateway (a partner-facing one, say) adds another map entry
 with its own `ingressClassName`/`certificateOcid`/`domain` - no new module, no new Helm
 release.
+
+## A gateway exists only for a kind of zone that exists
+
+`external` takes its domain from `modules/oracle/dns`'s `public_domain`, `internal` from
+`private_domain`, and each is empty when there is no zone of that kind. A gateway without a
+domain is not deployed, so each zone gets only the load balancer of its own kind:
+
+| Zones              | Gateways                |
+|--------------------|-------------------------|
+| public and private | `external`, `internal`  |
+| public only        | `external`              |
+| private only       | `internal`              |
+
+A module that attaches to the missing gateway gets no route until it is pointed at the other
+one. With only a public zone, argocd, grafana and prometheus stay on `internal` and are
+unreachable until the deployment sets `global.internalGateway: external` here - the opt-in
+that makes them public. With only a private zone, as in the EU Sovereign Cloud (OC19), the
+modules that ask for `external` need `global.externalGateway: internal`, which
+`test/oracle_biz.yaml` and `test/oracle_pri.yaml` set.
+
+Setting a gateway's `domain` and `certificateOcid` in the config deploys it regardless of the
+zones, and `enabled: false` still turns one off.
 
 ## How apps attach
 

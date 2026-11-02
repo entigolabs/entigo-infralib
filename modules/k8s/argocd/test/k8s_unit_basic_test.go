@@ -1,75 +1,40 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
-	//"os"
-	//"strings"
-	"github.com/entigolabs/entigo-infralib-common/k8s"
+
 	"github.com/stretchr/testify/require"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sArgocdAWSBiz(t *testing.T) {
-	testK8sArgocd(t, "aws", "biz")
-}
+func TestArgocd(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sArgocdAWSPri(t *testing.T) {
-	testK8sArgocd(t, "aws", "pri")
-}
+		require.NoError(t, k8s.WaitUntilResourcesAvailable(t, c, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second), "Argocd no Applications CRD")
+		require.NoError(t, k8s.WaitUntilResourcesAvailable(t, c, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second), "Argocd no Applicationsets CRD")
 
-func TestK8sArgocdGoogleBiz(t *testing.T) {
-	testK8sArgocd(t, "google", "biz")
-}
-
-func TestK8sArgocdGooglePri(t *testing.T) {
-	testK8sArgocd(t, "google", "pri")
-}
-
-func testK8sArgocd(t *testing.T,  cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-	
-	gatewayName, gatewayNamespace, hostName, retries := k8s.GetGatewayConfig(t, cloudName, envName, "external")
-
-	err := k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applications"}, 60, 1*time.Second)
-	require.NoError(t, err, "Argocd no Applications CRD")
-	err = k8s.WaitUntilResourcesAvailable(t, kubectlOptions, "argoproj.io/v1alpha1", []string{"applicationsets"}, 60, 1*time.Second)
-	require.NoError(t, err, "Argocd no Applicationsets CRD")
-
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-server", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("argocd-server deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-repo-server", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("argocd-repo-server deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-notifications-controller", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("argocd-notifications-controller deployment error:", err)
-	}
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-applicationset-controller", namespaceName), 20, 6*time.Second)
-	if err != nil {
-		t.Fatal("argocd-applicationset-controller deployment error:", err)
-	}
-	// Dex is only deployed in "biz" environments; "pri" uses direct OIDC
-	if envName != "pri" {
-		err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, fmt.Sprintf("%s-dex-server", namespaceName), 20, 6*time.Second)
-		if err != nil {
-			t.Fatal("argocd-dex-server deployment error:", err)
+		for _, component := range []string{"server", "repo-server", "notifications-controller", "applicationset-controller"} {
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-"+component, 20, 6*time.Second), "argocd-%s deployment error", component)
 		}
+		// Dex is only deployed in the biz environments; pri uses direct OIDC.
+		if e.Prefix != "pri" {
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-dex-server", 20, 6*time.Second), "argocd-dex-server deployment error")
+		}
+
+		// The server's HTTPRoute is the only one in the namespace; its hostname,
+		// listener and gateway address all come from the cluster.
+		k8s.WaitUntilRouteReachable(t, c, "", routeRetries(e), 6*time.Second)
+	})
+}
+
+// Google and Azure gateways take long to program a new route.
+func routeRetries(e *env.Environment) int {
+	if e.Cloud == env.CloudGoogle || e.Cloud == env.CloudAzure {
+		return 400
 	}
-
-	successResponseCode := "301"
-	targetURL := fmt.Sprintf("http://%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
-
-	successResponseCode = "200"
-	targetURL = fmt.Sprintf("https://%s", hostName)
-	err = k8s.WaitUntilHostnameAvailable(t, kubectlOptions, retries, 6*time.Second, gatewayName, gatewayNamespace, namespaceName, targetURL, successResponseCode, cloudName)
-	require.NoError(t, err, fmt.Sprintf("%s ingress/gateway test error", namespaceName))
-	
+	return 100
 }

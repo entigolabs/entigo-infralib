@@ -1,0 +1,32 @@
+# Tests the modules a pull request changed through the entigo-infralib-test
+# framework: static checks (tflint; helm lint, helm template, kube-score) per
+# module without credentials, and each module applied in a step of its own
+# on the shared test environments of every cloud that has credentials, then
+# its tests. A module with pin_step in its test/module.yaml is applied under
+# its regular name instead and waits for every other run first. Dispatch with
+# a JSON list of module directories to test modules a pull request did not
+# change.
+name: Pull request
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['modules/**']
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: 'JSON list of module directories, e.g. ["modules/k8s/argocd"]'
+        required: true
+        type: string
+      environments:
+        description: comma separated environments to use; empty for every environment with credentials
+        type: string
+        default: ''
+
+jobs:
+  test:
+    uses: entigolabs/entigo-infralib-test/.github/workflows/module-pull-request.yaml@main
+    with:
+      modules: ${{ inputs.modules || '' }}
+      environments: ${{ inputs.environments || '' }}
+    secrets: inherit

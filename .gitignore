@@ -3,13 +3,10 @@
 */*/*/.terraform.lock.hcl
 */*/*/.terraform
 */*/*/terraform.tfstate.d
-*/*/*/go.mod
-*/*/*/go.sum
-*/*/*/agents
-providers/test_base.tf
-*/go.mod
-*/go.sum
 .idea
 .DS_Store
-providers/tmp_tf/
-agents
+# Written by ./test.sh (entigo-infralib-test)
+/agents/
+/logs/
+/.infralib-test/
+*.test

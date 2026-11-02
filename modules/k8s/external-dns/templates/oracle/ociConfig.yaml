@@ -12,7 +12,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Release.Name }}-oci-config
+  name: external-dns-oci-config
   namespace: {{ .Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: '-1'

@@ -1,0 +1,6 @@
+# The upstream chart puts the image registry/repository/tag directly under its
+# own `tempo:` block (not under an `image:` sub-key), so this must land at
+# tempo.tempo.registry — see values.yaml's nesting note.
+tempo:
+  tempo:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | "docker.io" }}'
