@@ -5,12 +5,12 @@ locals {
      "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
      "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
      "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
-     "BOTTLEROCKET_ARM_64"        = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64"        = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.1-b4870834"
   }
 
   # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
