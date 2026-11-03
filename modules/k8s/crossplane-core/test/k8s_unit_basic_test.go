@@ -93,3 +93,4 @@ func updatedExternalResourceCounts(t *testing.T, c *k8s.Client) map[string]int32
 	}
 	return counts
 }
+
