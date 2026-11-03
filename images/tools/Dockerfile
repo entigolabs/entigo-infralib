@@ -1,10 +1,10 @@
-# Rebuild to pick up the latest agent (v1.15.0 at time of writing)
+# Rebuild to pick up the latest agent (v1.15.1 at time of writing)
 ARG AGENT_VERSION=latest
 FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 
 FROM alpine:3.24
 ARG TARGETARCH
-ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.21.4 ARGOCD_CLI=v3.5.2 OPENTOFU_VERSION=1.12.6
+ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.22.1 ARGOCD_CLI=v3.5.7 OPENTOFU_VERSION=1.13.2
 
 COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 
