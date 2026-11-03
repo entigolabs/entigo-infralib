@@ -2,6 +2,8 @@
 # google-gateway/test points internalGateway at the external gateway,
 # which is the one this test probes.
 argocd:
+  dex:
+    enabled: true
   server:
     httproute:
       hostnames:

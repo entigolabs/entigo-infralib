@@ -1,4 +1,6 @@
 argocd:
+  dex:
+    enabled: true
   repoServer:
     # Test environments only. The agent copies a pull request's checkout into
     # this pod (/tmp/conf, the file:// source of the Applications it creates),
