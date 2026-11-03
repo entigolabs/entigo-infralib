@@ -35,3 +35,4 @@ steps:
       - source: oci-native-ingress-controller
       - source: oracle-gateway
       - source: platform-apis
+      - source: trivy
