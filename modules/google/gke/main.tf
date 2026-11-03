@@ -75,8 +75,8 @@ locals {
       disk_size_gb       = var.gke_main_volume_size
       disk_type          = var.gke_main_volume_type
       image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = true
+      auto_repair        = var.gke_main_auto_repair
+      auto_upgrade       = var.gke_main_auto_upgrade
       spot               = var.gke_main_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_main_max_surge
@@ -96,8 +96,8 @@ locals {
       disk_size_gb       = var.gke_mon_volume_size
       disk_type          = var.gke_mon_volume_type
       image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = true
+      auto_repair        = var.gke_mon_auto_repair
+      auto_upgrade       = var.gke_mon_auto_upgrade
       spot               = var.gke_mon_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_mon_max_surge
@@ -117,8 +117,8 @@ locals {
       disk_size_gb       = var.gke_tools_volume_size
       disk_type          = var.gke_tools_volume_type
       image_type         = "COS_CONTAINERD"
-      auto_repair        = true
-      auto_upgrade       = true
+      auto_repair        = var.gke_tools_auto_repair
+      auto_upgrade       = var.gke_tools_auto_upgrade
       spot               = var.gke_tools_spot_nodes
       boot_disk_kms_key  = var.boot_disk_kms_key
       max_surge          = var.gke_tools_max_surge

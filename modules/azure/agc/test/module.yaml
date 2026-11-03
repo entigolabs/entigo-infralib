@@ -1,0 +1,4 @@
+# Installed once per environment: the vpc AGC subnet takes one association and the
+# ALB controller's role assignment on it exists once, so a pull request applies it
+# under its regular name instead of a per-branch copy.
+pin_step: true
