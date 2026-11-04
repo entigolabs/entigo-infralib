@@ -16,20 +16,7 @@ spec:
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
-# Build the final list of providers based on conditions
-{{- $allProviders := list }}
-
-# Always include requiredProviders and extraProviders
-{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
-{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
-
-# Deduplicate the list
-{{- $uniqueProviders := list }}
-{{- range $provider := $allProviders }}
-  {{- if not (has $provider $uniqueProviders) }}
-    {{- $uniqueProviders = append $uniqueProviders $provider }}
-  {{- end }}
-{{- end }}
+{{- $uniqueProviders := include "crossplane-oracle.providers" . | fromYamlArray }}
 
 # Create Provider resources for each unique provider
 {{- range $index, $provider := $uniqueProviders }}
@@ -46,5 +33,9 @@ spec:
   skipDependencyResolution: true
   package: ghcr.io/oracle/provider-oci-{{ $provider }}:v2.0.0
   runtimeConfigRef:
+{{- if hasKey $.Values.providerResources.providers $provider }}
+    name: {{ $.Release.Name }}-{{ $provider }}
+{{- else }}
     name: {{ $.Release.Name }}
+{{- end }}
 {{- end }}
