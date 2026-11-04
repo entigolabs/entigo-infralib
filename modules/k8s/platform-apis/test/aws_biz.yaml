@@ -9,6 +9,8 @@ platform-apis:
       kind: '*'
     environmentConfig:
       granularEgress: true
+      # Also set by the infralib agent_input, repeated so these tests do not depend on that release
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
       roleMapping:
         - roleRef: maintainer
           groups: ["web-read-only-343159627493470238", "maintainer"]
