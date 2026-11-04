@@ -1,6 +1,21 @@
 #!/bin/bash
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd "$SCRIPTPATH/.."
+
+# Aligns tab-separated columns like column -t, which the test images (alpine
+# and Azure Linux) do not have; busybox awk and gawk both run this.
+align() {
+  awk -F'\t' '
+    { for (i = 1; i <= NF; i++) { if (length($i) > w[i]) w[i] = length($i); c[NR, i] = $i } n[NR] = NF }
+    END {
+      for (r = 1; r <= NR; r++) {
+        l = ""
+        for (i = 1; i <= n[r]; i++) l = l sprintf("%-" w[i] + 2 "s", c[r, i])
+        sub(/ +$/, "", l)
+        print l
+      }
+    }'
+}
 kubectl get vulnerabilityreports -A -o json | jq -r '
   # Group by namespace and image
   [.items[] | {
@@ -28,7 +43,7 @@ kubectl get vulnerabilityreports -A -o json | jq -r '
     (.vulnerabilities.MEDIUM.count // 0)
   ]) |
   @tsv
-' | column -t
+' | align
 
 
 kubectl get vulnerabilityreports -A -o json | jq -r '
@@ -54,7 +69,7 @@ kubectl get vulnerabilityreports -A -o json | jq -r '
     (.vulnerabilities.MEDIUM.count // 0)
   ]) |
   @tsv
-' | column -t
+' | align
 
 kubectl get vulnerabilityreports -A -o json | jq -r '
   # Collect all vulnerabilities from all reports
