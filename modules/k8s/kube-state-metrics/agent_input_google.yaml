@@ -1,6 +1,4 @@
 kube-state-metrics:
-  image:
-    registry: '{{ .toptout.gar-proxy.k8s_registry | "registry.k8s.io" }}'
   networkPolicy:
     egress:
       - to:

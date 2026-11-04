@@ -13,16 +13,12 @@ func TestK8sKubeStateMetricsAWSBiz(t *testing.T) {
 	testK8sKubeStateMetrics(t, "aws", "biz")
 }
 
-func TestK8sKubeStateMetricsAWSPri(t *testing.T) {
-	testK8sKubeStateMetrics(t, "aws", "pri")
+func TestK8sKubeStateMetricsAzureBiz(t *testing.T) {
+	testK8sKubeStateMetrics(t, "azure", "biz")
 }
 
 func TestK8sKubeStateMetricsGoogleBiz(t *testing.T) {
 	testK8sKubeStateMetrics(t, "google", "biz")
-}
-
-func TestK8sKubeStateMetricsGooglePri(t *testing.T) {
-	testK8sKubeStateMetrics(t, "google", "pri")
 }
 
 func testK8sKubeStateMetrics(t *testing.T, cloudName string, envName string) {
