@@ -543,6 +543,12 @@ cluster-metrics:
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   mimirTenantID: ""
 
+  # Gateway the UI's HTTPRoute attaches to.
+  createRoute: false
+  gateway:
+    name: ""
+    namespace: ""
+
   # Labels added to every series, e.g. {cluster: prod}
   externalLabels: {}
   scrapeInterval: "60s"
@@ -917,11 +923,7 @@ cluster-metrics:
 
   # Alloy's own UI (component graph/health).
   ui:
-    ingress:
-      enabled: false
-      ingressClassName: ""
-      annotations: {}
-      host: ""
+    host: ""
 
   serviceAccount:
     create: true
@@ -1171,7 +1173,6 @@ receiver:
     policyTypes:
       - Ingress
       - Egress
-    # Receiver endpoint: callers can be any pod in the mesh.
     ingress:
       - {}
     egress:

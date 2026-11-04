@@ -20,6 +20,9 @@ cluster-metrics:
     priorityClassName: "{{ .module.name }}"
   mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
   mimirTenantID: "{{ .config.prefix }}"
+  gateway:
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptmodule.azure-gateway | required }}'
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
   configReloader:

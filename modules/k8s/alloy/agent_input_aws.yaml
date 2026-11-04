@@ -1,7 +1,6 @@
 global:
-  # Consumed by templates/aws/networkPolicy.yaml to scope the cluster-metrics UI ALB ingress.
+  # Consumed by templates/aws/networkPolicy.yaml to scope the cluster-metrics UI's HTTPRoute ingress.
   aws:
-    publicSubnetCidrs: "{{ .toutput.vpc.public_subnets_cidr_blocks }}"
     privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
     serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
 node-agent:
@@ -52,3 +51,4 @@ node-agent:
 cluster-metrics:
   externalLabels:
     cluster: "{{ .toutput.eks.cluster_name }}"
+  createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
