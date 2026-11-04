@@ -20,6 +20,9 @@ global:
       lb: "{{ .toptout.oke.lb_nsg_id }}"
       lbInternal: "{{ .toptout.oke.lb_int_nsg_id }}"
     clusterId: "{{ .toutput.oke.cluster_id }}"
+    nodePools:
+      tools: "{{ .toutput.oke.tools_node_pool_id }}"
+      main: "{{ .toutput.oke.main_node_pool_id }}"
     kms:
       managementEndpoint: "{{ .toptout.kms.vault_management_endpoint }}"
       dataKeyId: "{{ .toptout.kms.data_key_id }}"

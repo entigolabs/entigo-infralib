@@ -76,9 +76,15 @@ metadata:
 spec:
   forProvider:
     region: {{ $.Values.global.aws.region }}
+    # bucketKeyEnabled and blockedEncryptionTypes must be set explicitly: AWS returns them on
+    # every bucket, and without them in the spec provider-aws sees drift and re-applies the
+    # configuration in a loop, which also floods CloudTrail (same fix as the loki/mimir buckets)
     rule:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: AES256
+        bucketKeyEnabled: true
+        blockedEncryptionTypes:
+          - SSE-C
     bucketRef:
       name: {{ $bucket }}
   providerConfigRef:
@@ -146,3 +152,4 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+

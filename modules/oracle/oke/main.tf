@@ -357,6 +357,10 @@ resource "oci_containerengine_cluster" "this" {
       condition     = length(local.matching_versions) > 0
       error_message = "OKE does not offer Kubernetes ${var.kubernetes_version} in this region. Available: ${join(", ", local.versions)}."
     }
+    precondition {
+      condition     = var.oke_tools_node_count > 0 || var.oke_main_node_count > 0
+      error_message = "Set oke_tools_node_count or oke_main_node_count above 0: the platform's own workloads run on the tools or main node pool."
+    }
   }
 
   # Encrypts etcd - and so every Kubernetes Secret - with a customer-managed key rather than

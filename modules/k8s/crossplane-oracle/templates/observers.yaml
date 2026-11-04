@@ -73,6 +73,23 @@ spec:
   providerConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}
+{{- $templateNodePool := coalesce $oracle.nodePools.tools $oracle.nodePools.main }}
+{{- if $templateNodePool }}
+---
+apiVersion: containerengine.oci.upbound.io/v1alpha1
+kind: NodePool
+metadata:
+  name: template
+  annotations:
+    crossplane.io/external-name: {{ $templateNodePool }}
+    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  managementPolicies: ["Observe"]
+  forProvider: {}
+  providerConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
 {{- if and $oracle.kms.dataKeyId $oracle.kms.managementEndpoint }}
 ---
 apiVersion: kms.oci.upbound.io/v1alpha1

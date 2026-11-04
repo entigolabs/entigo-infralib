@@ -10,6 +10,8 @@ global:
     nsgs:
       node: "ocid1.networksecuritygroup.oc1.eu-frankfurt-1.dummy"
     clusterId: "ocid1.cluster.oc1.eu-frankfurt-1.dummy"
+    nodePools:
+      tools: "ocid1.nodepool.oc1.eu-frankfurt-1.dummy"
     kms:
       managementEndpoint: "https://dummy-management.kms.eu-frankfurt-1.oraclecloud.com"
       dataKeyId: "ocid1.key.oc1.eu-frankfurt-1.dummy"

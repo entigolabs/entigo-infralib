@@ -58,23 +58,25 @@ stringData:
   username: \"${!USERNAME}\"
   password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create repository secret $secret_name"; exit 24; }
         else
-            # OCI helm registry secret, ArgoCD expects the url without the oci:// prefix
+            # OCI helm registry credentials, ArgoCD expects the url without the oci:// prefix.
+            # A credential template (repo-creds) matches by url prefix: the applications
+            # use the source with a module type appended (<source>/k8s), which a repository
+            # secret, matched on the exact url, would never cover.
             local url="${SOURCE#oci://}"
-            echo "Applying OCI repository secret $secret_name in namespace $namespace."
+            echo "Applying OCI credential secret $secret_name in namespace $namespace."
             echo "apiVersion: v1
 kind: Secret
 metadata:
   name: ${secret_name}
   namespace: ${namespace}
   labels:
-    argocd.argoproj.io/secret-type: repository
+    argocd.argoproj.io/secret-type: repo-creds
 stringData:
   type: helm
   enableOCI: \"true\"
-  name: ${NAME}
   url: ${url}
   username: \"${!USERNAME}\"
-  password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create repository secret $secret_name"; exit 24; }
+  password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create credential secret $secret_name"; exit 24; }
         fi
     done
 
