@@ -1,0 +1,3 @@
+authz-controller:
+  image:
+    repository: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/authz-controller'
