@@ -35,6 +35,9 @@ platform-apis:
         cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
+      # Every Zone gets a ServiceAccount, IRSA role and ClusterSecretStore. The ServiceAccounts are
+      # created in the external-secrets Namespace, which is named after the module.
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
   database:
     environmentConfig:
       esClusterSecretStore: "{{ .tmodule.external-secrets }}"
