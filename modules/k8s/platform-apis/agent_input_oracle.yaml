@@ -12,7 +12,11 @@ oci:
 platform-apis:
   zone:
     istioServiceEntries:
-      region: ""
+      region: "{{ .toutput.oke.region }}"
+      domain: "{{ .agent.providerDomain }}"
+      ociApis:
+        workloadIdentity:
+          address: "{{ .toutput.oke.kubernetes_service_ip }}"
       data:
         cidrs: "{{ .toptout.vpc.database_subnet_cidrs }}"
       podCidrs: "{{ .toptout.vpc.pod_subnet_cidrs }}"
