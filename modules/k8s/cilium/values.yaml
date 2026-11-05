@@ -1,5 +1,10 @@
 ---
 cilium:
+  # cilium-secrets only holds the TLS Secrets the operator syncs there, no pods,
+  # so the namespace can carry the restricted level the report expects.
+  secretsNamespaceLabels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
   operator:
     affinity:
       nodeAffinity:
