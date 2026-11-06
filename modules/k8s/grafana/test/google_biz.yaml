@@ -21,13 +21,3 @@ grafana:
       use_refresh_token: true
       client_id: "390879742523424751"
       role_attribute_path: "contains(groups[*], 'web-admin-390876846557773807') && 'Admin'"
-
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Google Cloud Monitoring
-          type: stackdriver
-          access: proxy
-          jsonData:
-            authenticationType: gce

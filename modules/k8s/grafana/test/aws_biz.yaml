@@ -24,16 +24,3 @@ grafana:
     main:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
-
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      deleteDatasources:
-        - name: "{{ .config.prefix }}"
-          orgId: 1
-      datasources:
-        - name: CloudWatch
-          type: cloudwatch
-          jsonData:
-            authType: default
-            defaultRegion: "{{ .toutput.eks.region }}"
