@@ -17,11 +17,23 @@ data:
   datasources.yaml: |
     apiVersion: 1
     datasources:
+      {{- if .Values.global.datasources.prometheus.module }}
       - name: Prometheus
         type: prometheus
         url: {{ .Values.global.datasources.prometheus.hostname }}
         access: proxy
         isDefault: true
+      {{- else }}
+      - name: Prometheus
+        type: prometheus
+        url: {{ .Values.global.datasources.mimir.hostname }}
+        access: proxy
+        isDefault: true
+        jsonData:
+          httpHeaderName1: X-Scope-OrgID
+        secureJsonData:
+          httpHeaderValue1: {{ .Values.global.datasources.mimir.tenantHeader | quote }}
+      {{- end }}
       {{- with .Values.global.datasources.loki.module }}
       - name: Loki
         type: loki

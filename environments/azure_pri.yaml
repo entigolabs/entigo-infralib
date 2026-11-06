@@ -21,7 +21,6 @@ steps:
     type: argocd-apps
     argocd_namespace: argocd-pri
     modules:
-      - source: alloy
       - source: argocd
       - name: azure-gateway
         source: azure-gateway

@@ -25,7 +25,6 @@ steps:
     type: argocd-apps
     argocd_namespace: argocd-pri
     modules:
-      - source: alloy
       - source: argocd
       - source: aws-alb
       - source: aws-storageclass

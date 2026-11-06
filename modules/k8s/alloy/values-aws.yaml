@@ -1,3 +1,76 @@
 global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
+
+node-agent:
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
+                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node.
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API (discovery.kubernetes node role).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
+
+cluster-metrics:
+  networkPolicy:
+    egress:
+      # DNS + all in-cluster scrape targets (KSM, annotated pods, service endpoints, Mimir gateway) — any pod, any port.
+      - to:
+          - namespaceSelector: {}
+      # Kubernetes API server (not a pod, so namespaceSelector won't match it -> ipBlock).
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
+
+  ui:
+    ingress:
+      ingressClassName: "alb"
+      annotations:
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
+        alb.ingress.kubernetes.io/group.name: internal
+        alb.ingress.kubernetes.io/healthcheck-path: /-/ready
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+        alb.ingress.kubernetes.io/scheme: internal
+        alb.ingress.kubernetes.io/success-codes: 200-499
+        alb.ingress.kubernetes.io/target-type: ip
+
