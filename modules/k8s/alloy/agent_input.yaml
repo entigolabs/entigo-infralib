@@ -4,9 +4,9 @@ node-agent:
     podLabels:
       netpol-loki: '{{ .toptmodule.loki | "loki" }}'
   logs:
-    lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
+    lokiEndpoint: "http://loki-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
   metrics:
-    mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+    mimirEndpoint: "http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push"
     mimirTenantID: "{{ .config.prefix }}"
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
@@ -18,7 +18,7 @@ node-agent:
 cluster-metrics:
   controller:
     priorityClassName: "{{ .module.name }}"
-  mimirEndpoint: "http://{{ .tmodule.mimir }}-gateway.{{ .tmodule.mimir }}/api/v1/push"
+  mimirEndpoint: "http://mimir-gateway.{{ .tmodule.mimir }}/api/v1/push"
   mimirTenantID: "{{ .config.prefix }}"
   gateway:
     name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
