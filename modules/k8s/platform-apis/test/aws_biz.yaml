@@ -22,6 +22,12 @@ platform-apis:
       tags:
         etag: etest
         eutag: eutest
+      namespaceRole:
+        # e2e: the zone RBAC test asserts additionalRules grants exactly these (positive and negative).
+        additionalRules:
+          - apiGroups: ["example.entigo.com"]
+            resources: ["widgets"]
+            verbs: ["create", "get"]
   artifact:
     environmentConfig:
       lifecycleRules:
