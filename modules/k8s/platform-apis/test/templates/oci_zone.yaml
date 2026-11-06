@@ -1,0 +1,20 @@
+---
+apiVersion: tenancy.entigo.com/v1alpha1
+kind: Zone
+metadata:
+  name: oci
+spec:
+  pools:
+  - name: default
+    requirements:
+    - key: instance-type
+      values:
+      - VM.Standard.E4.Flex
+    - key: oci/ocpus
+      value: 1
+    - key: oci/memory-gb
+      value: 8
+    - key: min-size
+      value: 1
+    - key: max-size
+      value: 1
