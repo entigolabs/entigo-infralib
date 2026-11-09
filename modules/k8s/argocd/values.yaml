@@ -372,9 +372,9 @@ argocd:
       targetMemoryUtilizationPercentage: 80
       targetCPUUtilizationPercentage: 90
   dex:
-    # Without configs.cm dex.config ArgoCD never starts Dex: set enabled: false when SSO is not configured,
-    # otherwise the liveness probe below finds nothing listening and the pod restart-loops.
-    enabled: true
+    # Off by default (values-aws.yaml turns it on). Without configs.cm dex.config ArgoCD never starts Dex,
+    # so enable it only with SSO configured, otherwise the liveness probe below restart-loops the pod.
+    enabled: false
     deploymentAnnotations:
       kube-score/ignore: pod-probes
     # Checks the keys endpoint because Dex v2.46.0 was seen hanging there after a key rotation while
