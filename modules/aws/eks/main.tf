@@ -12,12 +12,12 @@ locals {
      "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
      "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
      "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
-     "BOTTLEROCKET_ARM_64"        = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64"        = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.0-a40abd2a"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.0-a40abd2a"
+     "BOTTLEROCKET_ARM_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.1-b4870834"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
@@ -232,6 +232,20 @@ resource "aws_ec2_tag" "publicsubnets" {
   resource_id = each.key
   key         = "kubernetes.io/cluster/${var.prefix}"
   value       = "shared"
+}
+
+# The AWS Load Balancer Controller resolves the security group it adds backend
+# rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
+# more than one security group. aws_ec2_tag is not subject to the provider's
+# ignore_tags, unlike the tags attribute of aws_security_group, so this is the
+# only way to manage the tag without a perpetual diff. Set
+# node_security_group_cluster_tag=false to drop it if the nodes also carry
+# another security group with this tag.
+resource "aws_ec2_tag" "node_security_group_cluster" {
+  count       = var.node_security_group_cluster_tag ? 1 : 0
+  resource_id = module.eks.node_security_group_id
+  key         = "kubernetes.io/cluster/${var.prefix}"
+  value       = "owned"
 }
 
 module "ebs_csi_irsa_role" {
@@ -550,14 +564,12 @@ module "eks" {
 
   }
 
-  # The AWS Load Balancer Controller resolves the security group it adds backend
-  # rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
-  # more than one security group. Keep the upstream "owned" tag on the node
-  # security group so attaching additional groups to node groups keeps working.
-  # Set node_security_group_cluster_tag=false to drop it again if nodes also
-  # carry another security group with this tag (upstream issue 1986).
+  # The provider ignores every kubernetes.io/cluster/* key (providers/aws.tf),
+  # so the upstream module must not set the tag through the security group's
+  # tags attribute or the plan adds it on every run. The tag is managed by
+  # aws_ec2_tag.node_security_group_cluster instead (upstream issue 1986).
   node_security_group_tags = {
-    "kubernetes.io/cluster/${var.prefix}" = var.node_security_group_cluster_tag ? "owned" : null
+    "kubernetes.io/cluster/${var.prefix}" = null
     "karpenter.sh/discovery"              = var.prefix
   }
 

@@ -24,6 +24,7 @@ platform-apis:
         cidrs: ""
     environmentConfig:
       oracleProvider: "{{ .tmodule.crossplane-oracle }}"
+      secretStoreNamespace: not-used-on-oracle
   database:
     environmentConfig:
       esClusterSecretStore: not-used-on-oracle
