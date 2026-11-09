@@ -2,12 +2,21 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
   createProxyRepos: true
+  # External Secrets generates the admin password and secretKey into the Secret named by
+  # harbor.existingSecretAdminPassword (templates/adminSecret.yaml). Needs the
+  # external-secrets module. Set false to bring your own Secret, see README.md.
+  generateAdminSecret: true
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
   tag: "v1.25.1"
 
 harbor:
+  # Never fall back to the chart defaults (Harbor12345 / not-a-secure-key).
+  existingSecretAdminPassword: harbor-admin
+  existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+  existingSecretSecretKey: harbor-admin
+
   ipFamily:
     ipv6:
       enabled: false

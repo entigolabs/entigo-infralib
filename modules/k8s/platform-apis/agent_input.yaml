@@ -35,6 +35,7 @@ platform-apis:
         cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
   database:
     environmentConfig:
       esClusterSecretStore: "{{ .tmodule.external-secrets }}"

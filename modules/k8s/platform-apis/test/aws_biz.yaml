@@ -62,5 +62,3 @@ platform-apis:
       install: true
     function-patch-and-transform:
       install: true
-    function-extra-resources:
-      install: true
