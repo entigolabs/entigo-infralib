@@ -3,8 +3,6 @@ argocd:
     httproute:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"
-  dex:
-    enabled: false
   repoServer:
     # Test environments only. The agent copies a pull request's checkout into
     # this pod (/tmp/conf, the file:// source of the Applications it creates),
@@ -73,5 +71,3 @@ argocd:
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
-  dex:
-    enabled: false
