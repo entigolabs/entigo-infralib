@@ -51,9 +51,9 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   access go to `admin_object_ids` (not the installing identity, the plan rejects it).
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
 * `agc_subnet_ids` (vpc `public_agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one
-  per cluster, service account `azure-alb-system/alb-controller-sa`): Reader + AppGw for Containers Configuration
-  Manager on the node resource group, Network Contributor on every AGC subnet (one Application Gateway for Containers
-  per /24). Output `alb_controller_client_id`.
+  per cluster, service account `alb-controller-sa` in `alb_controller_namespace`, default `azure-gateway`): Reader +
+  AppGw for Containers Configuration Manager on the node resource group, Network Contributor on every AGC subnet (one
+  Application Gateway for Containers per /24). Output `alb_controller_client_id`.
   The azure/agc modules (bring-your-own AGCs with private frontends) give the same identity (output
   `alb_controller_principal_id`) Configuration Manager on their AGC and Network Contributor on their subnet.
 * `lb_subnet_ids` (default none): Network Contributor for the cluster identity on every listed subnet other than the
