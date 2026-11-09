@@ -1,4 +1,4 @@
-## Oppinionated module for vpc creation ##
+## Opinionated module for vpc creation ##
 
 
 Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
