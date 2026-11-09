@@ -20,8 +20,8 @@ func TestArgocd(t *testing.T) {
 		for _, component := range []string{"server", "repo-server", "notifications-controller", "applicationset-controller"} {
 			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-"+component, 20, 6*time.Second), "argocd-%s deployment error", component)
 		}
-		// Dex is disabled by default and only enabled where SSO (dex.config) is set: the biz
-		// environments except Oracle. pri uses direct OIDC.
+		// Dex only runs where SSO (dex.config) is set: the biz environments except Oracle, which
+		// disables it. pri uses direct OIDC.
 		if e.Prefix != "pri" && e.Cloud != env.CloudOracle {
 			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-dex-server", 20, 6*time.Second), "argocd-dex-server deployment error")
 		}

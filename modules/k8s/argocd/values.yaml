@@ -372,14 +372,13 @@ argocd:
       targetMemoryUtilizationPercentage: 80
       targetCPUUtilizationPercentage: 90
   dex:
-    # Disabled by default: without configs.cm dex.config ArgoCD never starts Dex, so the pod only idles.
-    # Set enabled: true when SSO is configured.
-    enabled: false
+    # Without configs.cm dex.config ArgoCD never starts Dex: set enabled: false when SSO is not configured,
+    # otherwise the liveness probe below finds nothing listening and the pod restart-loops.
+    enabled: true
     deploymentAnnotations:
       kube-score/ignore: pod-probes
     # Checks the keys endpoint because Dex v2.46.0 was seen hanging there after a key rotation while
-    # /healthz/live stayed OK (SSO -> 504). Needs dex.config set, otherwise nothing listens and the pod
-    # restart-loops. With Dex TLS disabled set httpScheme: HTTP.
+    # /healthz/live stayed OK (SSO -> 504). With Dex TLS disabled set httpScheme: HTTP.
     livenessProbe:
       enabled: true
       httpPath: /api/dex/keys
