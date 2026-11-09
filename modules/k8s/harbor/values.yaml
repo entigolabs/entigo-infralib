@@ -2,12 +2,21 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
   createProxyRepos: true
+  # External Secrets generates the admin password and secretKey into the Secret named by
+  # harbor.existingSecretAdminPassword (templates/adminSecret.yaml). Needs the
+  # external-secrets module. Set false to bring your own Secret, see README.md.
+  generateAdminSecret: true
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.24.6"
+  tag: "v1.25.1"
 
 harbor:
+  # Never fall back to the chart defaults (Harbor12345 / not-a-secure-key).
+  existingSecretAdminPassword: harbor-admin
+  existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+  existingSecretSecretKey: harbor-admin
+
   ipFamily:
     ipv6:
       enabled: false
@@ -30,6 +39,8 @@ harbor:
         size: 10Gi
 
   portal:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     replicas: 2
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
@@ -59,6 +70,8 @@ harbor:
         effect: "NoSchedule"
 
   core:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     replicas: 2
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
@@ -88,6 +101,8 @@ harbor:
         effect: "NoSchedule"
 
   jobservice:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     jobLoggers:
       - stdout
     podAnnotations:
@@ -118,6 +133,8 @@ harbor:
         effect: "NoSchedule"
 
   registry:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     registry:
@@ -161,6 +178,8 @@ harbor:
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     internal:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       readinessProbe:
         timeoutSeconds: 20
       livenessProbe:
@@ -215,6 +234,8 @@ harbor:
     podAnnotations:
       kube-score/ignore: pod-networkpolicy,pod-probes
     internal:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       resources:
         limits:
           cpu: 1000m
@@ -241,6 +262,8 @@ harbor:
           effect: "NoSchedule"
 
   exporter:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     resources:
       limits:
         cpu: 1000m
@@ -266,6 +289,8 @@ harbor:
         value: "true"
         effect: "NoSchedule"
   trivy:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     podAnnotations:
       kube-score/ignore: pod-networkpolicy
     resources:
@@ -294,6 +319,8 @@ harbor:
         effect: "NoSchedule"
 
   nginx:
+    nodeSelector:
+      kubernetes.io/arch: amd64
     resources:
       requests:
         memory: 5Mi

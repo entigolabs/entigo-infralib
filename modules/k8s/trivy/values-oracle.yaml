@@ -1,0 +1,11 @@
+global:
+  cloudProvider: oracle
+  providerConfigRefName: crossplane-oracle
+
+trivy-operator:
+  # Nothing cloud-side to bind an identity to: the images come from public registries (see
+  # agent_input_oracle.yaml) and the reports live in the cluster, so the subchart's own
+  # ServiceAccount is enough, as on google. aws and azure set this to false because their
+  # templates create an annotated account for IRSA / Workload Identity instead.
+  serviceAccount:
+    create: true
