@@ -305,7 +305,7 @@ spec:
 
 {{- if .Values.global.aws.eks.cluster_name }}
 ---
-apiVersion: eks.aws.upbound.io/v1beta1
+apiVersion: eks.aws.upbound.io/v1beta2
 kind: Cluster
 metadata:
   name: eks
