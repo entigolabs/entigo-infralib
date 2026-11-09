@@ -35,6 +35,12 @@ oci-native-ingress-controller:
   updateStrategy:
     type: Recreate
   deploymentNamespace: native-ingress-controller-system
+  # The controller's namespace above; argo-apps.yaml's labels land on the Application's own
+  # namespace instead. Read by a patched vendored template, see README.md deviation 4.
+  namespaceLabels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    tenancy.entigo.com/zone: infralib
   compartment_id: ""
   subnet_id: ""
   cluster_id: ""

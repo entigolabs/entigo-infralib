@@ -14,4 +14,3 @@ harbor:
         size: 1Gi
       trivy:
         size: 3Gi
-  harborAdminPassword: "Harbor12345"
