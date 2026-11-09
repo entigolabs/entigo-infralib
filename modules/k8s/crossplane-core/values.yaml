@@ -228,7 +228,7 @@ crossplane:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.24.6"
+  tag: "v1.25.1"
   deleteUnusedCrds: false
   # -- Delete Inactive ProviderRevisions after a sync.
   deleteInactiveProviderRevisions: false

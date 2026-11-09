@@ -44,9 +44,17 @@ spec:
           capabilities:
             drop:
             - ALL
-        envFrom:
-        - secretRef:
-            name: {{ .Release.Name }}-core
+        env:
+        - name: HARBOR_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.harbor.existingSecretAdminPassword }}
+              name: {{ .Values.harbor.existingSecretAdminPassword }}
+              key: {{ .Values.harbor.existingSecretAdminPasswordKey }}
+              {{- else }}
+              name: {{ .Release.Name }}-core
+              key: HARBOR_ADMIN_PASSWORD
+              {{- end }}
         resources:
           limits:
             cpu: 1000m

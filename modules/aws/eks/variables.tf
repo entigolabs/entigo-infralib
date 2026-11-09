@@ -28,7 +28,7 @@ variable "eks_nodeport_access_cidrs" {
 variable "eks_cluster_version" {
   type     = string
   nullable = false
-  default  = "1.35"
+  default  = "1.36"
 }
 
 variable "use_latest_ami_release_version" {
@@ -365,27 +365,27 @@ variable "node_repair_wait_time_mins" {
 
 variable "coredns_addon_version" {
   type = string
-  default = "v1.13.2-eksbuild.4"
+  default = "v1.14.7-eksbuild.22"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.35.3-eksbuild.5"
+  default = "v1.36.0-eksbuild.58"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.21.2-eksbuild.2"
+  default = "v1.23.2-eksbuild.8"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.59.0-eksbuild.1"
+  default = "v1.67.2-eksbuild.1"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v3.2.0-eksbuild.1"
+  default = "v3.5.3-eksbuild.1"
 }
 
 variable "node_monitoring_agent_addon_version" {
@@ -452,4 +452,11 @@ variable "tags" {
   type        = map(string)
   description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
   default     = {}
+}
+
+variable "node_security_group_cluster_tag" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Tag the node security group with kubernetes.io/cluster/<prefix>=owned. The AWS Load Balancer Controller requires exactly one security group with this tag on a node ENI when the ENI has several security groups. Set to false if the nodes also carry another security group with this tag."
 }
