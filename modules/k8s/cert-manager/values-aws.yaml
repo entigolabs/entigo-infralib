@@ -17,16 +17,6 @@ clusterIssuer:
   create: false
 
 cert-manager:
-  # Split horizon: the DNS-01 self check runs through public resolvers. In the VPC the Route53 resolver answers for
-  # the int domain from its private zone, which has no public NS and not the challenge records (those are in its public
-  # validation twin), so the check would never pass. Needs outbound port 53 to them; other DNS servers can be set
-  # instead if they resolve the int domain from public DNS, not from the private zone
-  dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
-  dns01RecursiveNameserversOnly: true
-  # The ServiceAccount is templates/aws/serviceAccount.yaml, with the IRSA role annotation when the issuer is created
-  serviceAccount:
-    create: false
-    name: cert-manager
   # The IRSA token is projected root-owned with mode 0600 and the controller runs as non-root: fsGroup makes it
   # readable (https://cert-manager.io/docs/configuration/acme/dns01/route53/)
   securityContext:
