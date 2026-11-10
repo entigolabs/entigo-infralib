@@ -1,7 +1,5 @@
 authz-controller:
   mode: cluster
-  config:
-    ARGOCD_NAMESPACE: argocd
   imagePullSecrets: []
   affinity:
     nodeAffinity:
