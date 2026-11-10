@@ -1,4 +1,4 @@
-{{- if and (eq .Values.global.cloudProvider "aws") (index .Values "cluster-metrics" "createRoute") }}
+{{- if and (eq .Values.global.cloudProvider "aws") (index .Values "cluster-metrics" "enabled") (index .Values "cluster-metrics" "createRoute") }}
 {{- $cidrs := printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

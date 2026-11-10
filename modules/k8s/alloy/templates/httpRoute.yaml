@@ -1,5 +1,5 @@
 {{- $clusterMetrics := index .Values "cluster-metrics" }}
-{{- if $clusterMetrics.createRoute }}
+{{- if and $clusterMetrics.enabled $clusterMetrics.createRoute }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
