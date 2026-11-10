@@ -1,4 +1,4 @@
-{{- if include "cert-manager.awsIssuer" . }}
+{{- if and .Values.clusterIssuer.create (eq .Values.global.cloudProvider "aws") }}
 apiVersion: iam.aws.upbound.io/v1beta1
 kind: RolePolicyAttachment
 metadata:

@@ -8,7 +8,20 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   acme:
-    {{- include "cert-manager.acme" . | nindent 4 }}
+    server: {{ .Values.acme.server }}
+    {{- with .Values.acme.email }}
+    email: {{ . }}
+    {{- end }}
+    privateKeySecretRef:
+      name: {{ .Values.clusterIssuer.name }}-account-key
+    {{- with .Values.acme.externalAccountBinding }}
+    {{- if .keyID }}
+    externalAccountBinding:
+      keyID: {{ .keyID }}
+      keySecretRef:
+        {{- toYaml .keySecretRef | nindent 8 }}
+    {{- end }}
+    {{- end }}
     # The WorkloadIdentity of the ServiceAccount; the zone's resource group and name from its resource ID
     solvers:
       {{- range $zoneId := compact (list (required "global.pubZoneId is required for the ClusterIssuer" .Values.global.pubZoneId) .Values.global.intCertZoneId) }}

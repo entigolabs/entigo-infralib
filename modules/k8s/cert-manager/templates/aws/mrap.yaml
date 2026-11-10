@@ -1,4 +1,4 @@
-{{- if include "cert-manager.awsIssuer" . }}
+{{- if and .Values.clusterIssuer.create (eq .Values.global.cloudProvider "aws") }}
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
 metadata:

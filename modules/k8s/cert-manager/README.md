@@ -11,9 +11,9 @@ cert-manager with an ACME `ClusterIssuer` (DNS-01 in the cloud DNS), default `le
   named `route53`, and an IRSA role (crossplane-aws) that may change records in those two zones only. Depends on:
   modules/aws-v2/route53, modules/k8s/crossplane-aws.
 
-Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), `agent_input_<cloud>.yaml` with its DNS module's
-zone outputs, and `templates/<cloud>/` with its ClusterIssuer (the ACME account from the `cert-manager.acme` helper
-plus its DNS-01 solvers) and the DNS identity of the controller.
+Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), its DNS module's zone outputs to the
+`global.pubZoneId` and `global.intCertZoneId` chains in `agent_input.yaml`, and `templates/<cloud>/` with its
+ClusterIssuer (ACME account plus its DNS-01 solvers) and the DNS identity of the controller.
 
 Test environments should use `acme.server: https://acme-staging-v02.api.letsencrypt.org/directory`: production
 allows 5 certificates per identical name set per 7 days.

@@ -1,6 +1,4 @@
 global:
-  pubZoneId: "{{ .toptout.route53.pub_zone_id }}"
-  intCertZoneId: "{{ .toptout.route53.int_cert_zone_id }}"
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
