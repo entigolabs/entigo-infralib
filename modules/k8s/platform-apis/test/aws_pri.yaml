@@ -11,15 +11,6 @@ platform-apis:
       syncInterval: 1m
     environmentConfig:
       granularEgress: false
-      roleMapping:
-        - roleRef: maintainer
-          groups: ["web-read-only-343159627493470238", "maintainer"]
-      namespaceRole:
-        # e2e: exercises additionalRules (see aws_biz.yaml).
-        additionalRules:
-          - apiGroups: ["example.entigo.com"]
-            resources: ["widgets"]
-            verbs: ["create", "get"]
   database:
     environmentConfig:
       backupBeforeDeletion: false
