@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "azure" }}
+{{- if and .Values.clusterIssuer.create (eq .Values.global.cloudProvider "azure") }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -22,9 +22,9 @@ spec:
         {{- toYaml .keySecretRef | nindent 8 }}
     {{- end }}
     {{- end }}
+    # The WorkloadIdentity of the ServiceAccount; the zone's resource group and name from its resource ID
     solvers:
-      {{- if eq .Values.global.cloudProvider "azure" }}
-      {{- range $zoneId := compact (list .Values.global.pubZoneId .Values.global.intCertZoneId) }}
+      {{- range $zoneId := compact (list (required "global.pubZoneId is required for the ClusterIssuer" .Values.global.pubZoneId) .Values.global.intCertZoneId) }}
       {{- $id := splitList "/" $zoneId }}
       - selector:
           dnsZones:
@@ -36,6 +36,5 @@ spec:
             hostedZoneName: {{ index $id 8 }}
             environment: AzurePublicCloud
             managedIdentity: {}
-      {{- end }}
       {{- end }}
 {{- end }}
