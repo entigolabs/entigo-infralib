@@ -44,6 +44,7 @@ steps:
       - source: crossplane-kafka
       - name: crossplane-sql
         source: crossplane-sql
+      - source: authz-controller
       - source: entigo-portal-agent
       - source: entigo-vulnerability-agent
       - source: external-dns
