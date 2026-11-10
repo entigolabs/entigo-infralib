@@ -4,8 +4,10 @@ global:
   # Public twin zone of the private int domain, "" = no int solver
   intCertZoneId: ""
 
-# ACME ClusterIssuer with DNS-01 in the cloud DNS
+# ACME ClusterIssuer with DNS-01 in the cloud DNS, with the cloud's DNS identity for the controller. Without it the
+# module is cert-manager alone, for charts that bring their own issuers
 clusterIssuer:
+  create: true
   name: letsencrypt
 
 acme:

@@ -1,0 +1,48 @@
+{{- if include "cert-manager.awsIssuer" . }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}"
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    tags:
+      created-by: "entigo-infralib"
+    # DNS-01 in the zones of the ClusterIssuer solvers only (https://cert-manager.io/docs/configuration/acme/dns01/route53/)
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "route53:GetChange",
+            "Resource": "arn:aws:route53:::change/*"
+          },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "route53:ChangeResourceRecordSets",
+              "route53:ListResourceRecordSets"
+            ],
+            "Resource": [
+              {{- range $i, $zoneId := compact (list (required "global.pubZoneId is required for the ClusterIssuer" .Values.global.pubZoneId) .Values.global.intCertZoneId) }}
+              {{- if $i }},{{ end }}
+              "arn:aws:route53:::hostedzone/{{ $zoneId }}"
+              {{- end }}
+            ]
+          },
+          {
+            "Effect": "Allow",
+            "Action": "route53:ListHostedZonesByName",
+            "Resource": "*"
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}

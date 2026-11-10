@@ -1,0 +1,3 @@
+global:
+  pubZoneId: '{{ .toptout.dns.pub_zone_id | required }}'
+  intCertZoneId: "{{ .toptout.dns.int_cert_zone_id }}"

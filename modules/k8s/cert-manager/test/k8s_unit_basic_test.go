@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	_ "github.com/entigolabs/entigo-infralib-test/aws"
 	_ "github.com/entigolabs/entigo-infralib-test/azure"
 	"github.com/entigolabs/entigo-infralib-test/env"
 	"github.com/entigolabs/entigo-infralib-test/k8s"
@@ -31,8 +32,14 @@ func TestCertManager(t *testing.T) {
 		_, err := waitUntilConditions(t, c, clusterIssuerGVR, "", "letsencrypt", []string{"Ready"}, 60, 10*time.Second)
 		require.NoError(t, err, "ClusterIssuer error")
 
-		// Issue a certificate for a random name under the public domain of the net step.
-		domain := tf.GetStep(t, e, "net").String(t, "dns__pub_domain")
+		// Issue a certificate for a random name under the public domain of the net step: the route53 module on AWS,
+		// the dns module elsewhere.
+		net := tf.GetStep(t, e, "net")
+		domainKey := "dns__pub_domain"
+		if net.Has("route53__pub_domain") {
+			domainKey = "route53__pub_domain"
+		}
+		domain := net.String(t, domainKey)
 		randomName := strings.ToLower(random.UniqueId())
 		certificateName := fmt.Sprintf("%s-%s", c.Namespace, randomName)
 		secretName := fmt.Sprintf("%s-tls", certificateName)
