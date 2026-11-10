@@ -151,9 +151,19 @@ node-agent:
           }
         }
 
+        prometheus.relabel "node_exporter_metrics" {
+          forward_to = [prometheus.remote_write.default.receiver]
+          rule {
+            source_labels = ["__name__"]
+            regex         = "node_uname_info"
+            target_label  = "nodename"
+            replacement   = sys.env("HOSTNAME")
+          }
+        }
+
         prometheus.scrape "node_exporter" {
           targets         = discovery.relabel.node_exporter.output
-          forward_to      = [prometheus.remote_write.default.receiver]
+          forward_to      = [prometheus.relabel.node_exporter_metrics.receiver]
           scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
         }
 
