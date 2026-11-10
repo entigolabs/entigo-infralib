@@ -1,9 +1,9 @@
 global:
-  pubZoneId: '{{ .toptout.route53.pub_zone_id | .toptout.dns.pub_zone_id }}'
-  intCertZoneId: '{{ .toptout.route53.int_cert_zone_id | .toptout.dns.int_cert_zone_id }}'
+  pubZoneId: "{{ .toptout.route53.pub_zone_id }}"
+  intCertZoneId: "{{ .toptout.route53.int_cert_zone_id }}"
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     region: "{{ .toutput.eks.region }}"
-    pubZoneName: '{{ .toptout.route53.pub_domain | .toptout.dns.pub_domain }}'
-    intCertZoneName: '{{ .toptout.route53.int_domain | .toptout.dns.int_domain }}'
+    pubZoneName: "{{ .toptout.route53.pub_domain }}"
+    intCertZoneName: "{{ .toptout.route53.int_domain }}"

@@ -7,12 +7,13 @@ cert-manager with an ACME `ClusterIssuer` (DNS-01 in the cloud DNS), default `le
   dns `pub_zone_id` and `int_cert_zone_id` zones. Depends on: modules/azure/dns, modules/k8s/crossplane-azure.
 * AWS: the gateways use ACM certificates, so by default cert-manager is installed alone, for charts that bring their
   own issuers (kcp, operator webhooks). `clusterIssuer.create: true` adds the issuer with Route53 DNS-01 solvers for
-  the route53 `pub_zone_id` and `int_cert_zone_id` (public validation twin of the private int zone) zones and an IRSA
-  role (crossplane-aws) that may change records in those two zones only. Depends on: modules/aws-v2/route53,
-  modules/k8s/crossplane-aws.
+  the `pub_zone_id` and `int_cert_zone_id` (public validation twin of the private int zone) zones of a route53 module
+  named `route53`, and an IRSA role (crossplane-aws) that may change records in those two zones only. Depends on:
+  modules/aws-v2/route53, modules/k8s/crossplane-aws.
 
-Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), its DNS-01 solvers in
-`templates/clusterIssuer.yaml` and its DNS identity in `templates/<cloud>/`.
+Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), `agent_input_<cloud>.yaml` with its DNS module's
+zone outputs, and `templates/<cloud>/` with its ClusterIssuer (the ACME account from the `cert-manager.acme` helper
+plus its DNS-01 solvers) and the DNS identity of the controller.
 
 Test environments should use `acme.server: https://acme-staging-v02.api.letsencrypt.org/directory`: production
 allows 5 certificates per identical name set per 7 days.
