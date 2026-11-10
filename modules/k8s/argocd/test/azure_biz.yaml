@@ -1,4 +1,6 @@
 argocd:
+  dex:
+    enabled: true
   server:
     httproute:
       hostnames:

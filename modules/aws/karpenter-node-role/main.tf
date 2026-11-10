@@ -19,7 +19,8 @@ resource "aws_iam_role_policy_attachment" "node" {
       AmazonEC2ContainerRegistryReadOnly = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
       AmazonEKS_CNI_Policy               = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
       AmazonSSMManagedInstanceCore       = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    }
+    },
+    zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
   ) : k => v }
 
   policy_arn = each.value

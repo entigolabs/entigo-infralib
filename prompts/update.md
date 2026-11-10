@@ -9,7 +9,8 @@ CRITICAL RULES:
 - If a report line has an EMPTY 'newer version' field, skip that update
   but print: 'SKIPPED: <line> — newer version is empty (likely expired credentials)'
 - NEVER force push, delete, or modify the main branch. NEVER run git push on main.
-  Only push to auto-* branches.
+  Only push to auto-* branches. Deleting a remote auto-* branch is allowed only in the
+  branch setup below, when that branch has no open PR; never delete any other branch.
 - Use node (not python3) for JSON processing — python3 is not available in this container.
 - Do not create a pull request when the new version is semver wise older than the current version.
 - EFFICIENCY: Combine multiple shell commands into a SINGLE Bash tool call wherever possible.
@@ -79,12 +80,19 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset Chart.yaml and Chart.lock to main's version before applying our change.
   # This prevents stale sub-dependency versions from persisting on long-lived branches.
@@ -158,12 +166,19 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset provider files to main's version before applying our change.
   # This prevents stale versions from persisting on long-lived branches.
@@ -285,12 +300,19 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-aws-<TYPE> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-aws-<TYPE> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
     git checkout -B auto-aws-<TYPE> origin/auto-aws-<TYPE>
     git rebase main
   else
-    git checkout -b auto-aws-<TYPE>
+    if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+      git push origin --delete auto-aws-<TYPE> && git fetch --prune origin
+    fi
+    git checkout -B auto-aws-<TYPE> main
   fi && \
   # For 'provider' type: apply ALL provider/module version changes
   # For 'ami' type: update ami_release_version blocks in eks/main.tf and eks-node-group/main.tf
@@ -353,12 +375,19 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-gcptf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-gcptf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
     git checkout -B auto-gcptf origin/auto-gcptf
     git rebase main
   else
-    git checkout -b auto-gcptf
+    if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+      git push origin --delete auto-gcptf && git fetch --prune origin
+    fi
+    git checkout -B auto-gcptf main
   fi && \
   # Apply ALL Google version changes
   <APPLY SED COMMANDS HERE> && \
@@ -420,12 +449,19 @@ FOR AZURE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-azuretf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-azuretf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
     git checkout -B auto-azuretf origin/auto-azuretf
     git rebase main
   else
-    git checkout -b auto-azuretf
+    if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+      git push origin --delete auto-azuretf && git fetch --prune origin
+    fi
+    git checkout -B auto-azuretf main
   fi && \
   # Apply ALL Azure version changes
   <APPLY SED COMMANDS HERE> && \
@@ -486,12 +522,19 @@ FOR ORACLE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-oracletf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-oracletf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
     git checkout -B auto-oracletf origin/auto-oracletf
     git rebase main
   else
-    git checkout -b auto-oracletf
+    if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+      git push origin --delete auto-oracletf && git fetch --prune origin
+    fi
+    git checkout -B auto-oracletf main
   fi && \
   # Apply ALL Oracle version changes
   <APPLY SED COMMANDS HERE> && \

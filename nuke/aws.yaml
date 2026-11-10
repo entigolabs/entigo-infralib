@@ -181,6 +181,8 @@ accounts:
       - "OrganizationAccountAccessRole -> AdministratorAccess"
       CloudTrailTrail:
       - "entigo-org-trail"
+      KMSKey:
+      - "mrk-4aa3b4b732284e54a2f85c35d193de67" # arn:aws:kms:eu-north-1:877483565445:key/mrk-4aa3b4b732284e54a2f85c35d193de67
       # AWS-managed ElastiCache IAM defaults, created in every region alongside
       # AWSServiceRoleForElastiCache. Not deletable: the dot in the ID fails
       # DeleteUser/DeleteUserGroup validation. Upstream: ekristen/aws-nuke#1039
