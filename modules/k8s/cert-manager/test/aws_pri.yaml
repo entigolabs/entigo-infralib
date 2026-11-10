@@ -1,6 +1,2 @@
-# The platform keeps ACM for its gateways; the test environments create the
-# ACME ClusterIssuer (Route53 DNS-01 with the IRSA role) to exercise it.
-clusterIssuer:
-  create: true
-acme:
-  server: https://acme-staging-v02.api.letsencrypt.org/directory
+# cert-manager alone, the AWS default: no ACME ClusterIssuer, the gateways use ACM certificates. The
+# ClusterIssuer is exercised on aws_biz.

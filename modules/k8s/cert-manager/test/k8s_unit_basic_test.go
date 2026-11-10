@@ -28,21 +28,41 @@ func TestCertManager(t *testing.T) {
 			require.NoError(t, err, "%s deployment error", deployment)
 		}
 
-		clusterIssuerGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "clusterissuers"}
-		_, err := waitUntilConditions(t, c, clusterIssuerGVR, "", "letsencrypt", []string{"Ready"}, 60, 10*time.Second)
-		require.NoError(t, err, "ClusterIssuer error")
-
-		// Issue a certificate for a random name under the public domain of the net step: the route53 module on AWS,
-		// the dns module elsewhere.
-		net := tf.GetStep(t, e, "net")
-		domainKey := "dns__pub_domain"
-		if net.Has("route53__pub_domain") {
-			domainKey = "route53__pub_domain"
-		}
-		domain := net.String(t, domainKey)
 		randomName := strings.ToLower(random.UniqueId())
 		certificateName := fmt.Sprintf("%s-%s", c.Namespace, randomName)
 		secretName := fmt.Sprintf("%s-tls", certificateName)
+		var dnsName string
+		var issuerRef map[string]any
+		if clusterIssuerCreated(t, e) {
+			// The ACME ClusterIssuer: a certificate for a random name under the public domain of the net step, from
+			// the route53 module on AWS and the dns module elsewhere.
+			clusterIssuerGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "clusterissuers"}
+			_, err := waitUntilConditions(t, c, clusterIssuerGVR, "", "letsencrypt", []string{"Ready"}, 60, 10*time.Second)
+			require.NoError(t, err, "ClusterIssuer error")
+			net := tf.GetStep(t, e, "net")
+			domainKey := "dns__pub_domain"
+			if net.Has("route53__pub_domain") {
+				domainKey = "route53__pub_domain"
+			}
+			dnsName = fmt.Sprintf("%s.%s", randomName, net.String(t, domainKey))
+			issuerRef = map[string]any{"kind": "ClusterIssuer", "name": "letsencrypt"}
+		} else {
+			// cert-manager alone, for charts that bring their own issuers: a self-signed Issuer in the namespace
+			// proves the controller and the webhook work.
+			issuerGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "issuers"}
+			issuer := &unstructured.Unstructured{Object: map[string]any{
+				"apiVersion": "cert-manager.io/v1",
+				"kind":       "Issuer",
+				"metadata":   map[string]any{"name": certificateName, "namespace": c.Namespace},
+				"spec":       map[string]any{"selfSigned": map[string]any{}},
+			}}
+			_, err := c.CreateObjectE(issuerGVR, c.Namespace, issuer)
+			require.NoError(t, err, "Creating Issuer error")
+			defer func() { _ = c.DeleteObjectE(issuerGVR, c.Namespace, certificateName) }()
+			dnsName = fmt.Sprintf("%s.%s.svc", randomName, c.Namespace)
+			issuerRef = map[string]any{"kind": "Issuer", "name": certificateName}
+		}
+
 		certificate := &unstructured.Unstructured{Object: map[string]any{
 			"apiVersion": "cert-manager.io/v1",
 			"kind":       "Certificate",
@@ -52,15 +72,12 @@ func TestCertManager(t *testing.T) {
 			},
 			"spec": map[string]any{
 				"secretName": secretName,
-				"dnsNames":   []any{fmt.Sprintf("%s.%s", randomName, domain)},
-				"issuerRef": map[string]any{
-					"kind": "ClusterIssuer",
-					"name": "letsencrypt",
-				},
+				"dnsNames":   []any{dnsName},
+				"issuerRef":  issuerRef,
 			},
 		}}
 		certificateGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "certificates"}
-		_, err = c.CreateObjectE(certificateGVR, c.Namespace, certificate)
+		_, err := c.CreateObjectE(certificateGVR, c.Namespace, certificate)
 		require.NoError(t, err, "Creating Certificate error")
 		defer func() {
 			_ = c.DeleteObjectE(certificateGVR, c.Namespace, certificateName)
@@ -71,6 +88,19 @@ func TestCertManager(t *testing.T) {
 		_, err = waitUntilConditions(t, c, certificateGVR, c.Namespace, certificateName, []string{"Ready"}, 90, 10*time.Second)
 		require.NoError(t, err, "Certificate %s error", certificateName)
 	})
+}
+
+// clusterIssuerCreated reports whether the module creates the ACME ClusterIssuer in the environment: the
+// clusterIssuer.create input when set, else the default of the cloud's values (on, except on AWS where the gateways
+// use ACM certificates).
+func clusterIssuerCreated(t *testing.T, e *env.Environment) bool {
+	inputs := env.ModulePlacement(t, e).Module.Inputs
+	if clusterIssuer, ok := inputs["clusterIssuer"].(map[string]any); ok {
+		if create, ok := clusterIssuer["create"].(bool); ok {
+			return create
+		}
+	}
+	return e.Cloud != env.CloudAWS
 }
 
 // waitUntilConditions waits until every named status condition of the object is True.
