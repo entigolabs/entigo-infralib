@@ -16,3 +16,23 @@ grafana:
       use_refresh_token: true
       client_id: "390876949318221807"
       role_attribute_path: "contains(groups[*], 'web-admin-390876846557773807') && 'Admin'"
+  dashboards:
+    kubernetes:
+      global:
+        datasource: Mimir
+      namespaces:
+        datasource: Mimir
+      nodes:
+        datasource: Mimir
+      pods:
+        datasource: Mimir
+      apiserver:
+        datasource: Mimir
+      limitsrequests:
+        datasource: Mimir
+      crossplane:
+        datasource: Mimir
+      pvc:
+        datasource: Mimir
+      trivy-operator-vulnerabilities:
+        datasource: Mimir

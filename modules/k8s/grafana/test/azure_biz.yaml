@@ -6,3 +6,26 @@ grafana:
   grafana.ini:
     server:
       root_url: https://{{ .module.name }}.{{ .toutput.dns.pub_domain }}
+  # No prometheus module in biz, only mimir: bundled dashboards default to
+  # "Prometheus" so existing infralib users aren't forced to change their
+  # values, so biz/pri point them at Mimir instead until prometheus is removed.
+  dashboards:
+    kubernetes:
+      global:
+        datasource: Mimir
+      namespaces:
+        datasource: Mimir
+      nodes:
+        datasource: Mimir
+      pods:
+        datasource: Mimir
+      apiserver:
+        datasource: Mimir
+      limitsrequests:
+        datasource: Mimir
+      crossplane:
+        datasource: Mimir
+      pvc:
+        datasource: Mimir
+      trivy-operator-vulnerabilities:
+        datasource: Mimir

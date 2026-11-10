@@ -24,3 +24,26 @@ grafana:
     main:
       hostnames:
         - "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+  # No Prometheus module in biz, only Alloy with Mimir: bundled dashboards default to
+  # "Prometheus" so existing infralib users aren't forced to change their
+  # values, so biz/pri point them at Mimir instead until Prometheus is removed.
+  dashboards:
+    kubernetes:
+      global:
+        datasource: Mimir
+      namespaces:
+        datasource: Mimir
+      nodes:
+        datasource: Mimir
+      pods:
+        datasource: Mimir
+      apiserver:
+        datasource: Mimir
+      limitsrequests:
+        datasource: Mimir
+      crossplane:
+        datasource: Mimir
+      pvc:
+        datasource: Mimir
+      trivy-operator-vulnerabilities:
+        datasource: Mimir
