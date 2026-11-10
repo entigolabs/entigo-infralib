@@ -24,7 +24,7 @@ node-agent:
                 kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
             podSelector:
               matchLabels:
-                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/name: loki
                 app.kubernetes.io/component: gateway
       - ports:
           - port: 80
