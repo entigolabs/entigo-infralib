@@ -7,7 +7,7 @@ global:
       tenantHeader: "{{ .config.prefix }}"
     prometheus:
       module: '{{ .toptmodule.prometheus }}'
-      hostname: "http://prometheus-server.{{ .toptmodule.prometheus }}"
+      hostname: "http://{{ .toptmodule.prometheus }}-server.{{ .toptmodule.prometheus }}"
 grafana:
   grafana.ini:
     server:
