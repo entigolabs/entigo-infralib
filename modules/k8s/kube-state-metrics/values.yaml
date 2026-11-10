@@ -6,7 +6,7 @@ kube-state-metrics:
   fullnameOverride: kube-state-metrics
 
   metricLabelsAllowlist:
-    - nodes=[eks.amazonaws.com/nodegroup,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,eks.amazonaws.com/capacityType,topology.kubernetes.io/zone]
+    - nodes=[kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,topology.kubernetes.io/zone]
     - namespaces=[tenancy.entigo.com/zone]
 
   networkPolicy:
