@@ -25,6 +25,7 @@ steps:
     type: argocd-apps
     argocd_namespace: argocd-pri
     modules:
+      - source: alloy
       - source: argocd
       - source: aws-alb
       - source: aws-storageclass
@@ -48,6 +49,7 @@ steps:
         source: istio-istiod
       - source: karpenter
       - source: kiali
+      - source: kube-state-metrics
       - source: kyverno
       - source: loki
       - source: metrics-server
