@@ -631,18 +631,8 @@ cluster-metrics:
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
-            target_label  = "namespace"
-          }
-          // Duplicate label for dashboards/queries written against the older Prometheus convention.
-          rule {
-            source_labels = ["__meta_kubernetes_namespace"]
             target_label  = "kubernetes_namespace"
           }
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            target_label  = "pod"
-          }
-          // Duplicate label for dashboards/queries written against the older Prometheus convention.
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
             target_label  = "kubernetes_pod_name"
