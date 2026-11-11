@@ -19,3 +19,5 @@ argocd:
       aws:
         serviceType: ClusterIP
         backendProtocolVersion: GRPC
+  dex:
+    enabled: true
