@@ -79,4 +79,4 @@ __node_monitoring_agent_config__ Defaults to {}, configuration values for the ek
 ```
 
 ### Limitations ###
-The module name has to be "eks" - otherwise the terraform provider for kubernets will be misconfigured.
+The module name has to be "eks" - otherwise the OpenTofu provider for kubernets will be misconfigured.

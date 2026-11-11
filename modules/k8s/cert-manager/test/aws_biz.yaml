@@ -1,0 +1,6 @@
+# The platform keeps ACM for its gateways; biz creates the ACME ClusterIssuer
+# (Route53 DNS-01 with the IRSA role) to exercise it, pri keeps the default.
+clusterIssuer:
+  create: true
+acme:
+  server: https://acme-staging-v02.api.letsencrypt.org/directory

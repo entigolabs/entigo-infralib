@@ -4,8 +4,10 @@ global:
   # Public twin zone of the private int domain, "" = no int solver
   intCertZoneId: ""
 
-# ACME ClusterIssuer with DNS-01 in the cloud DNS
+# ACME ClusterIssuer with DNS-01 in the cloud DNS, with the cloud's DNS identity for the controller. Without it the
+# module is cert-manager alone, for charts that bring their own issuers
 clusterIssuer:
+  create: true
   name: letsencrypt
 
 acme:
@@ -33,6 +35,17 @@ cert-manager:
     enabled: false
   prometheus:
     enabled: true
+  # Split horizon: the DNS-01 self check runs through public resolvers. In the cloud network the cloud resolver answers
+  # for the int domain from its private zone, which has no public NS and not the challenge records (those are in its
+  # public twin), so the check would never pass. Needs outbound port 53 to them; other DNS servers can be set instead if
+  # they resolve the int domain from public DNS, not from the private zone
+  dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
+  dns01RecursiveNameserversOnly: true
+  # The ServiceAccount comes from the cloud's templates: templates/aws/serviceAccount.yaml with the IRSA role annotation
+  # when the issuer is created, the WorkloadIdentity on Azure
+  serviceAccount:
+    create: false
+    name: cert-manager
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
   affinity:

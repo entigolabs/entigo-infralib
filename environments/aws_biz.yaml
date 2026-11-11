@@ -36,6 +36,7 @@ steps:
       - source: argocd
       - source: aws-alb
       - source: aws-storageclass
+      - source: cert-manager
       - source: cluster-autoscaler
       - name: crossplane-aws
         source: crossplane-aws
@@ -44,6 +45,7 @@ steps:
       - source: crossplane-kafka
       - name: crossplane-sql
         source: crossplane-sql
+      - source: authz-controller
       - source: entigo-portal-agent
       - source: entigo-vulnerability-agent
       - source: external-dns
