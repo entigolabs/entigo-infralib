@@ -1,35 +1,20 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestK8sKubeStateMetricsAWSBiz(t *testing.T) {
-	testK8sKubeStateMetrics(t, "aws", "biz")
-}
+func TestKubeStateMetrics(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		c := k8s.Connect(t, e)
 
-func TestK8sKubeStateMetricsAzureBiz(t *testing.T) {
-	testK8sKubeStateMetrics(t, "azure", "biz")
-}
-
-func TestK8sKubeStateMetricsGoogleBiz(t *testing.T) {
-	testK8sKubeStateMetrics(t, "google", "biz")
-}
-
-func testK8sKubeStateMetrics(t *testing.T, cloudName string, envName string) {
-	t.Parallel()
-	kubectlOptions, namespaceName := k8s.CheckKubectlConnection(t, cloudName, envName)
-
-	// fullnameOverride pins the Deployment name to "kube-state-metrics".
-	deploymentName := "kube-state-metrics"
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, deploymentName, 20, 6*time.Second)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("%s %s deployment error:", namespaceName, deploymentName), err)
-	}
+		// fullnameOverride pins the Deployment name to "kube-state-metrics".
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "kube-state-metrics", 20, 6*time.Second), "kube-state-metrics deployment error")
+	})
 }
