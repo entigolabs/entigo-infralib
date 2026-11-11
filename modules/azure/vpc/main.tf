@@ -79,6 +79,51 @@ locals {
   })
 }
 
+resource "terraform_data" "checks" {
+  lifecycle {
+    precondition {
+      condition     = var.create_vpc || var.vpc_name != ""
+      error_message = "create_vpc = false needs vpc_name, the existing VNet in resource_group_name."
+    }
+    precondition {
+      condition     = length(local.subnets_outside_vpc) == 0
+      error_message = "Subnets outside the VNet address space ${var.vpc_cidr}: ${join(", ", local.subnets_outside_vpc)}."
+    }
+    precondition {
+      condition     = var.egress_next_hop_ip == null || !var.enable_nat_gateway
+      error_message = "egress_next_hop_ip needs enable_nat_gateway = false: the 0.0.0.0/0 route to the appliance bypasses the NAT gateway."
+    }
+    precondition {
+      condition     = local.vpc_bits <= 22 || (var.public_agc_subnets != null && var.aks_subnets != null && var.container_apps_subnets != null)
+      error_message = "vpc_cidr is smaller than /22: set public_agc_subnets, aks_subnets and container_apps_subnets explicitly (or [])."
+    }
+    precondition {
+      condition     = !local.spoke || local.vpc_bits <= 21 || (var.control_agc_subnets != null && var.service_agc_subnets != null && var.private_subnets != null && var.database_subnets != null)
+      error_message = "subnet_split_mode spoke smaller than /21: set control_agc_subnets, service_agc_subnets, private_subnets and database_subnets explicitly (no room for the control-agc and service-agc /24s)."
+    }
+    precondition {
+      condition     = !local.spoke || (length(local.control_agc_subnets) > 0 && length(local.service_agc_subnets) > 0)
+      error_message = "subnet_split_mode spoke needs at least one control-agc and one service-agc subnet."
+    }
+    precondition {
+      condition     = alltrue([for cidr in local.agc_cidrs : tonumber(split("/", cidr)[1]) == 24])
+      error_message = "Application Gateway for Containers subnets (public-agc, private-agc, control-agc, service-agc and custom subnets delegated to Microsoft.ServiceNetworking/trafficControllers) must be exactly /24: ${join(", ", local.agc_cidrs)}."
+    }
+    precondition {
+      condition     = length(distinct(local.subnet_names)) == length(local.subnet_names)
+      error_message = "Subnet names must be unique: ${join(", ", [for n in distinct(local.subnet_names) : n if length([for m in local.subnet_names : m if m == n]) > 1])}."
+    }
+    precondition {
+      condition     = alltrue([for key, subnet in var.custom_subnets : !(subnet.nat_gateway && subnet.route_table)])
+      error_message = "custom_subnets nat_gateway and route_table exclude each other: the egress route table and an own route table can't both be associated."
+    }
+    precondition {
+      condition     = length(local.subnet_overlaps) == 0
+      error_message = "Overlapping subnets: ${join(", ", local.subnet_overlaps)}. The automatic split does not shift when a subnet list is set, so give the overlapping lists explicitly too."
+    }
+  }
+}
+
 resource "azurerm_virtual_network" "this" {
   count               = var.create_vpc ? 1 : 0
   name                = var.vpc_name != "" ? var.vpc_name : var.prefix
@@ -92,13 +137,6 @@ data "azurerm_virtual_network" "existing" {
   count               = var.create_vpc ? 0 : 1
   name                = var.vpc_name
   resource_group_name = var.resource_group_name
-
-  lifecycle {
-    precondition {
-      condition     = var.vpc_name != ""
-      error_message = "create_vpc = false needs vpc_name, the existing VNet in resource_group_name."
-    }
-  }
 }
 
 resource "azurerm_subnet" "private" {
