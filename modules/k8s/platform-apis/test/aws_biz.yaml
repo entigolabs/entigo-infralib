@@ -16,9 +16,6 @@ platform-apis:
       granularEgress: true
       # Also set by the infralib agent_input, repeated so these tests do not depend on that release
       secretStoreNamespace: "{{ .tmodule.external-secrets }}"
-      roleMapping:
-        - roleRef: maintainer
-          groups: ["web-read-only-343159627493470238", "maintainer"]
       appProject:
         namespaceResourceBlacklist: []
         namespaceResourceWhitelist:
@@ -27,12 +24,6 @@ platform-apis:
       tags:
         etag: etest
         eutag: eutest
-      namespaceRole:
-        # e2e: the zone RBAC test asserts additionalRules grants exactly these (positive and negative).
-        additionalRules:
-          - apiGroups: ["example.entigo.com"]
-            resources: ["widgets"]
-            verbs: ["create", "get"]
   artifact:
     environmentConfig:
       lifecycleRules:
