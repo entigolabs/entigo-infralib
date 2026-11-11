@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: server-header-check
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        server-header-check: "true"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server-header-check
+          image: curlimages/curl:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command: ["/bin/sh", "-c"]
+          # The host has no route, so the ALB answers itself (redirect or default 404) and the
+          # response can only carry the ALB's own Server header, not the one of a backend
+          args:
+            - |
+              for i in $(seq 1 60); do
+                headers=$(curl -s -o /dev/null -D - --connect-to "$TARGET_DOMAIN:80:$TARGET_IP:80" "http://$TARGET_DOMAIN/")
+                if [ -n "$headers" ]; then
+                  echo "$headers"
+                  if echo "$headers" | grep -qi '^server: *awselb'; then found=true; else found=false; fi
+                  if [ "$found" = "$EXPECT_SERVER_HEADER" ]; then
+                    echo "Success: awselb Server header present=$found, expected $EXPECT_SERVER_HEADER"
+                    exit 0
+                  fi
+                  echo "Failed: awselb Server header present=$found, expected $EXPECT_SERVER_HEADER"
+                  exit 1
+                fi
+                echo "Attempt $i: no response from $TARGET_IP, retrying in 5 seconds"
+                sleep 5
+              done
+              exit 1
+      restartPolicy: Never

@@ -9,7 +9,8 @@ CRITICAL RULES:
 - If a report line has an EMPTY 'newer version' field, skip that update
   but print: 'SKIPPED: <line> — newer version is empty (likely expired credentials)'
 - NEVER force push, delete, or modify the main branch. NEVER run git push on main.
-  Only push to auto-* branches.
+  Only push to auto-* branches. Deleting a remote auto-* branch is allowed only in the
+  branch setup below, when that branch has no open PR; never delete any other branch.
 - Use node (not python3) for JSON processing — python3 is not available in this container.
 - Do not create a pull request when the new version is semver wise older than the current version.
 - EFFICIENCY: Combine multiple shell commands into a SINGLE Bash tool call wherever possible.
@@ -41,7 +42,7 @@ STEP 1 - GET THE REPO:
 - If not: git clone git@github.com:entigolabs/entigo-infralib.git /workspace/entigo-infralib && cd /workspace/entigo-infralib
 
 STEP 2 - READ THE REPORT:
-Read /workspace/update-report.txt. It has three sections:
+Read /workspace/update-report.txt. It has five sections:
 
 === K8S HELM UPDATES ===
 Lines like: <chart_name> newer version <NEW>, current <OLD> (<file_path>)
@@ -55,6 +56,14 @@ EKS AL2023_* lines: find the AMI version string in modules/aws/ and replace.
 === GOOGLE TERRAFORM UPDATES ===
 Lines like: hashicorp/google newer version <NEW>, current <OLD>
 Use grep -r to find <OLD> in modules/google/ and replace with <NEW>.
+
+=== AZURE TERRAFORM UPDATES ===
+Lines like: hashicorp/azurerm newer version <NEW>, current <OLD>
+Use grep -r to find <OLD> in modules/azure/ and replace with <NEW>.
+
+=== ORACLE TERRAFORM UPDATES ===
+Lines like: oracle/oci newer version <NEW>, current <OLD>
+Use grep -r to find <OLD> in modules/oracle/ and replace with <NEW>.
 
 STEP 3 - CREATE SEPARATE PRs:
 
@@ -71,12 +80,19 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset Chart.yaml and Chart.lock to main's version before applying our change.
   # This prevents stale sub-dependency versions from persisting on long-lived branches.
@@ -150,12 +166,19 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset provider files to main's version before applying our change.
   # This prevents stale versions from persisting on long-lived branches.
@@ -277,17 +300,23 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-aws-<TYPE> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-aws-<TYPE> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
     git checkout -B auto-aws-<TYPE> origin/auto-aws-<TYPE>
     git rebase main
   else
-    git checkout -b auto-aws-<TYPE>
+    if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+      git push origin --delete auto-aws-<TYPE> && git fetch --prune origin
+    fi
+    git checkout -B auto-aws-<TYPE> main
   fi && \
   # For 'provider' type: apply ALL provider/module version changes
   # For 'ami' type: update ami_release_version blocks in eks/main.tf and eks-node-group/main.tf
   <APPLY SED COMMANDS HERE> && \
-  # Also update images/test/cache/main.tf for provider type
   git add -A && \
   if git diff --cached --quiet; then
     echo "NO_CHANGES"
@@ -346,16 +375,22 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-gcptf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-gcptf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
     git checkout -B auto-gcptf origin/auto-gcptf
     git rebase main
   else
-    git checkout -b auto-gcptf
+    if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+      git push origin --delete auto-gcptf && git fetch --prune origin
+    fi
+    git checkout -B auto-gcptf main
   fi && \
   # Apply ALL Google version changes
   <APPLY SED COMMANDS HERE> && \
-  # Also update images/test/cache/main.tf
   git add -A && \
   if git diff --cached --quiet; then
     echo "NO_CHANGES"
@@ -404,6 +439,153 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
        hashicorp/google → https://github.com/hashicorp/terraform-provider-google/releases
        hashicorp/google-beta → https://github.com/hashicorp/terraform-provider-google-beta/releases
        terraform-google-modules/kubernetes-engine/google → https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/releases
+     - Fetch release notes with curl (five calls per provider max)
+     - Extract: breaking changes (⚠️), key changes summary, link to full changelog
+     - If it fails, note 'Release notes unavailable'.
+
+FOR AZURE TERRAFORM UPDATES - ONE COMBINED PR:
+  There is only one type of update for AZURE TERRAFORM UPDATES.
+  Run the ENTIRE branch+update+commit+push sequence in a SINGLE Bash call:
+  ```
+  cd /workspace/entigo-infralib && \
+  git checkout main && \
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-azuretf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+    git checkout -B auto-azuretf origin/auto-azuretf
+    git rebase main
+  else
+    if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+      git push origin --delete auto-azuretf && git fetch --prune origin
+    fi
+    git checkout -B auto-azuretf main
+  fi && \
+  # Apply ALL Azure version changes
+  <APPLY SED COMMANDS HERE> && \
+  git add -A && \
+  if git diff --cached --quiet; then
+    echo "NO_CHANGES"
+  else
+    echo "BRANCH: $(git branch --show-current)" && \
+    git commit -m 'chore(deps): update Azure Terraform providers' && \
+    if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+      # Compare actual file tree content, not commit history.
+      # After rebase, commits differ but content may be identical.
+      LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
+      REMOTE_TREE=$(git rev-parse origin/auto-azuretf^{tree}) && \
+      if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-azuretf --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-azuretf — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
+        git push --force origin auto-azuretf && echo "PUSHED"
+      else
+        echo "SKIP_PUSH_IDENTICAL"
+      fi
+    else
+      git push origin auto-azuretf && echo "PUSHED"
+    fi
+  fi
+  ```
+
+  After the Bash call, check the output:
+  - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to AFTER ALL PRs ARE DONE.
+  - "SKIPPED: ... human commits detected" → skip to AFTER ALL PRs ARE DONE, log the skip in final summary.
+  - "PUSHED" → check/update PR.
+
+  PR title: 'chore(deps): update Azure Terraform providers'
+  PR body MUST include for each updated component:
+     - Version change table
+     - Link to GitHub releases:
+       hashicorp/azurerm → https://github.com/hashicorp/terraform-provider-azurerm/releases
+       Azure/avm-res-containerservice-managedcluster/azurerm → https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster/releases
+     - Fetch release notes with curl (five calls per provider max)
+     - Extract: breaking changes (⚠️), key changes summary, link to full changelog
+     - If it fails, note 'Release notes unavailable'.
+
+FOR ORACLE TERRAFORM UPDATES - ONE COMBINED PR:
+  There is only one type of update for ORACLE TERRAFORM UPDATES.
+  Run the ENTIRE branch+update+commit+push sequence in a SINGLE Bash call:
+  ```
+  cd /workspace/entigo-infralib && \
+  git checkout main && \
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-oracletf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+    git checkout -B auto-oracletf origin/auto-oracletf
+    git rebase main
+  else
+    if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+      git push origin --delete auto-oracletf && git fetch --prune origin
+    fi
+    git checkout -B auto-oracletf main
+  fi && \
+  # Apply ALL Oracle version changes
+  <APPLY SED COMMANDS HERE> && \
+  git add -A && \
+  if git diff --cached --quiet; then
+    echo "NO_CHANGES"
+  else
+    echo "BRANCH: $(git branch --show-current)" && \
+    git commit -m 'chore(deps): update Oracle Terraform providers' && \
+    if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+      # Compare actual file tree content, not commit history.
+      # After rebase, commits differ but content may be identical.
+      LOCAL_TREE=$(git rev-parse HEAD^{tree}) && \
+      REMOTE_TREE=$(git rev-parse origin/auto-oracletf^{tree}) && \
+      if [ "$LOCAL_TREE" != "$REMOTE_TREE" ]; then
+        # Human commit guard
+        PR_NUMBER=$(gh pr list --head auto-oracletf --json number --jq '.[0].number' 2>/dev/null) && \
+        if [ -n "$PR_NUMBER" ]; then
+          NON_BOT=$(gh api repos/entigolabs/entigo-infralib/pulls/${PR_NUMBER}/commits \
+            --jq '[.[] | select(
+              (.commit.message | test("^chore\\(deps\\): update")) or
+              (.commit.message | test("^Merge branch .main. into auto-"))
+              | not
+            )] | length') && \
+          if [ "$NON_BOT" -gt 0 ]; then
+            echo "SKIPPED: auto-oracletf — human commits detected, not overwriting manual work"
+            exit 0
+          fi
+        fi
+        git push --force origin auto-oracletf && echo "PUSHED"
+      else
+        echo "SKIP_PUSH_IDENTICAL"
+      fi
+    else
+      git push origin auto-oracletf && echo "PUSHED"
+    fi
+  fi
+  ```
+
+  After the Bash call, check the output:
+  - "NO_CHANGES" or "SKIP_PUSH_IDENTICAL" → skip to AFTER ALL PRs ARE DONE.
+  - "SKIPPED: ... human commits detected" → skip to AFTER ALL PRs ARE DONE, log the skip in final summary.
+  - "PUSHED" → check/update PR.
+
+  PR title: 'chore(deps): update Oracle Terraform providers'
+  PR body MUST include for each updated component:
+     - Version change table
+     - Link to GitHub releases:
+       oracle/oci → https://github.com/oracle/terraform-provider-oci/releases
+       hashicorp/random → https://github.com/hashicorp/terraform-provider-random/releases
+       hashicorp/time → https://github.com/hashicorp/terraform-provider-time/releases
      - Fetch release notes with curl (five calls per provider max)
      - Extract: breaking changes (⚠️), key changes summary, link to full changelog
      - If it fails, note 'Release notes unavailable'.

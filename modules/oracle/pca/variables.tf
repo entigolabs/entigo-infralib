@@ -140,11 +140,11 @@ variable "signing_algorithm" {
 # module creates an intermediate in the deployment's own compartment, and clients that
 # already trust the root need no new import.
 #
-# UNTESTED. Every CA this repo has created so far has been a self-signed root. The issuing
-# CA must also grant this compartment the use of it, which is not something this module can
-# do from the subordinate's side.
+# The validity defaults suit a root, not a subordinate: OCI bounds a subordinate's validity by
+# its issuer's, see the README for values that pass. An issuer in another compartment of the
+# same tenancy needs no grant; one in another tenancy is untested.
 variable "issuer_certificate_authority_id" {
-  description = "OCID of a CA to sign this one, making it a subordinate rather than a self-signed root. Leave empty for a root CA. Untested - see the README."
+  description = "OCID of a CA to sign this one, making it a subordinate rather than a self-signed root. Leave empty for a root CA. Lower ca_validity_years and subordinate_ca_max_validity to fit the issuer - see the README."
   type        = string
   default     = ""
 }

@@ -1,0 +1,5 @@
+# Installed once per environment: a pull request applies it under its regular
+# name instead of a per-branch copy. Alloy collects logs and metrics from every
+# node, so a second copy would double the collection and hide whether the
+# branch's one works.
+pin_step: true

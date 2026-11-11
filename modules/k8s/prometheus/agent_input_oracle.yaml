@@ -25,6 +25,13 @@ prometheus:
           ports:
             - port: 443
               protocol: TCP
+        # The same API server after Service translation, which is where Cilium checks it.
+        - to:
+            - ipBlock:
+                cidr: "{{ .toutput.oke.private_endpoint_ip }}/32"
+          ports:
+            - port: 6443
+              protocol: TCP
         - to:
             - namespaceSelector:
                 matchLabels:

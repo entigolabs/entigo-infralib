@@ -2,6 +2,7 @@ global:
   aws:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
 aws-load-balancer-controller:
   vpcId: "{{ .toutput.vpc.vpc_id }}"
   clusterName: "{{ .toutput.eks.cluster_name }}"

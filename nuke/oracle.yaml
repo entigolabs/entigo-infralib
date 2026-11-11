@@ -1,0 +1,64 @@
+regions:
+- eu-frankfurt-2
+
+accounts:
+  ocid1.compartment.oc19..aaaaaaaavzlzuvoosubz3nz5f727qiidbicp5myfmoieb4xqthszyful262q:
+    filters:
+      OCICustomerSecretKey:
+      - property: Name
+        type: In
+        values:
+        - entigo-infralib-biz-state
+        - entigo-infralib-pri-state
+        # The exbiz environment of entigo-infralib-example-source shares this
+        # compartment; its agent's state key, bootstrap policy, vault and key
+        # survive like those of biz and pri.
+        - entigo-infralib-exbiz-state
+      OCIUser:
+      - property: Name
+        type: In
+        values:
+        - biz-loki
+        - biz-mimir
+      OCIGroup:
+      - property: Name
+        type: In
+        values:
+        - biz-loki
+        - biz-mimir
+      OCIPolicy:
+      - property: Name
+        type: In
+        values:
+        - infralib-root-ca
+        - infralib-agent-bootstrap
+        - infralib-github-bootstrap
+        - github-example-bootstrap
+      OCIVault:
+      - property: Name
+        type: In
+        values:
+        - infralib-root-ca
+        - biz-eu-frankfurt-2
+        - at-eu-frankfurt-2
+        - pri-eu-frankfurt-2
+        - exbiz-eu-frankfurt-2
+      OCIKey:
+      - property: Name
+        type: In
+        values:
+        - infralib-root-ca-key
+        - biz-net-pca-ca-key
+        - pri-net-pca-ca-key
+        - biz-eu-frankfurt-2-agent
+        - at-eu-frankfurt-2-agent
+        - pri-eu-frankfurt-2-agent
+        - exbiz-eu-frankfurt-2-agent
+        - at-net-pca-ca
+      OCICertificateAuthority:
+      - property: Name
+        type: In
+        values:
+        - infralib-root-ca
+        - biz-net-pca-ca
+        - pri-net-pca-ca

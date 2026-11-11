@@ -9,3 +9,10 @@ spec:
   - 'policies.iam.aws.upbound.io'
   - 'rolepolicyattachments.iam.aws.upbound.io'
   - 'roles.iam.aws.upbound.io'
+  # access logs buckets of the gateways
+  - 'buckets.s3.aws.upbound.io'
+  - 'bucketownershipcontrols.s3.aws.upbound.io'
+  - 'bucketpublicaccessblocks.s3.aws.upbound.io'
+  - 'bucketserversideencryptionconfigurations.s3.aws.upbound.io'
+  - 'bucketpolicies.s3.aws.upbound.io'
+  - 'bucketlifecycleconfigurations.s3.aws.upbound.io'

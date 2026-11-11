@@ -15,13 +15,35 @@ locals {
   # ("must be a public subnet if public ip enabled"), so the subnet choice must follow it.
   endpoint_subnet_id = var.is_public_ip_enabled ? var.public_subnet_id : var.private_subnet_id
 
-  # An empty cluster_identity_providers means "no OIDC". The block below is still emitted, so
-  # this drives is_open_id_connect_auth_enabled rather than the block's presence.
+  # An empty cluster_identity_providers means "no OIDC".
   oidc_enabled = length(var.cluster_identity_providers) > 0
+
+  # Whether the existing cluster has OIDC on, so that turning it off sends "enabled = false"
+  # once. False before the cluster exists.
+  oidc_on_in_oci = anytrue([
+    for c in data.oci_containerengine_clusters.current.clusters :
+    try(c.options[0].open_id_connect_token_authentication_config[0].is_open_id_connect_auth_enabled, false)
+  ])
 
   main_subnet_ids  = length(var.oke_main_subnet_ids) > 0 ? var.oke_main_subnet_ids : var.node_subnet_ids
   mon_subnet_ids   = length(var.oke_mon_subnet_ids) > 0 ? var.oke_mon_subnet_ids : var.node_subnet_ids
   tools_subnet_ids = length(var.oke_tools_subnet_ids) > 0 ? var.oke_tools_subnet_ids : var.node_subnet_ids
+
+  # cluster-autoscaler discovers node pools by the cluster-autoscaler tag and reads each pool's
+  # limits from minSize and maxSize. A pool with max size 0 stays untagged, so the autoscaler
+  # never shrinks a pool it was not given.
+  pool_sizes = {
+    main  = { min = var.oke_main_min_size, max = var.oke_main_max_size }
+    mon   = { min = var.oke_mon_min_size, max = var.oke_mon_max_size }
+    tools = { min = var.oke_tools_min_size, max = var.oke_tools_max_size }
+  }
+  autoscaler_tags = {
+    for pool, size in local.pool_sizes : pool => size.max > 0 ? {
+      cluster-autoscaler = "enabled"
+      minSize            = tostring(size.min)
+      maxSize            = tostring(size.max)
+    } : {}
+  }
 }
 
 # oracle/vpc doesn't create any security lists/NSGs of its own, so subnets fall back to
@@ -310,6 +332,9 @@ resource "oci_identity_policy" "controllers" {
     # Each k8s module's own scoped IAM Policy is itself a Crossplane Policy CR, created
     # through this same workload identity - needs the grant too.
     "Allow any-user to manage policies in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+
+    "Allow any-user to read virtual-network-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
+    "Allow any-user to read cluster-family in compartment id ${var.compartment_id} where all { request.principal.type = 'workload', request.principal.cluster_id = '${oci_containerengine_cluster.this.id}', request.principal.namespace = '${var.kubernetes_namespace}', request.principal.service_account = '${var.kubernetes_service_account}' }",
   ]
 }
 
@@ -331,6 +356,10 @@ resource "oci_containerengine_cluster" "this" {
     precondition {
       condition     = length(local.matching_versions) > 0
       error_message = "OKE does not offer Kubernetes ${var.kubernetes_version} in this region. Available: ${join(", ", local.versions)}."
+    }
+    precondition {
+      condition     = var.oke_tools_node_count > 0 || var.oke_main_node_count > 0
+      error_message = "Set oke_tools_node_count or oke_main_node_count above 0: the platform's own workloads run on the tools or main node pool."
     }
   }
 
@@ -369,29 +398,31 @@ resource "oci_containerengine_cluster" "this" {
       services_cidr = var.services_cidr
     }
 
-    # Emitted unconditionally, with the enable flag driven from the variable, because
-    # is_open_id_connect_auth_enabled is Required and Updatable: turning OIDC on or off is then
-    # an in-place update of one field. Removing the whole block instead would make the two
-    # states differ structurally for no gain.
+    # OCI returns no block while OIDC is off, so "enabled = false" is only sent to turn OIDC
+    # off on a cluster that has it; sent every time, it would be planned on every apply. Left
+    # out, the block is kept from state, which alone would never turn OIDC off.
     #
     # Requires an enhanced cluster, which this module always creates - see type above.
-    open_id_connect_token_authentication_config {
-      is_open_id_connect_auth_enabled = local.oidc_enabled
+    dynamic "open_id_connect_token_authentication_config" {
+      for_each = local.oidc_enabled || local.oidc_on_in_oci ? [var.cluster_identity_providers] : []
+      content {
+        is_open_id_connect_auth_enabled = local.oidc_enabled
 
-      issuer_url         = try(var.cluster_identity_providers.issuer_url, null)
-      client_id          = try(var.cluster_identity_providers.client_id, null)
-      username_claim     = try(var.cluster_identity_providers.username_claim, null)
-      username_prefix    = try(var.cluster_identity_providers.username_prefix, null)
-      groups_claim       = try(var.cluster_identity_providers.groups_claim, null)
-      groups_prefix      = try(var.cluster_identity_providers.groups_prefix, null)
-      ca_certificate     = try(var.cluster_identity_providers.ca_certificate, null)
-      signing_algorithms = try(var.cluster_identity_providers.signing_algorithms, null)
+        issuer_url         = try(open_id_connect_token_authentication_config.value.issuer_url, null)
+        client_id          = try(open_id_connect_token_authentication_config.value.client_id, null)
+        username_claim     = try(open_id_connect_token_authentication_config.value.username_claim, null)
+        username_prefix    = try(open_id_connect_token_authentication_config.value.username_prefix, null)
+        groups_claim       = try(open_id_connect_token_authentication_config.value.groups_claim, null)
+        groups_prefix      = try(open_id_connect_token_authentication_config.value.groups_prefix, null)
+        ca_certificate     = try(open_id_connect_token_authentication_config.value.ca_certificate, null)
+        signing_algorithms = try(open_id_connect_token_authentication_config.value.signing_algorithms, null)
 
-      dynamic "required_claims" {
-        for_each = try(var.cluster_identity_providers.required_claims, {})
-        content {
-          key   = required_claims.key
-          value = required_claims.value
+        dynamic "required_claims" {
+          for_each = try(open_id_connect_token_authentication_config.value.required_claims, {})
+          content {
+            key   = required_claims.key
+            value = required_claims.value
+          }
         }
       }
     }
@@ -400,7 +431,7 @@ resource "oci_containerengine_cluster" "this" {
 
 module "main" {
   count  = var.oke_main_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-main"
   compartment_id          = var.compartment_id
@@ -414,6 +445,7 @@ module "main" {
   boot_volume_size_in_gbs = var.oke_main_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_main_node_pool_os_type
   labels                  = { main = "true" }
+  freeform_tags           = local.autoscaler_tags.main
   nsg_ids                 = [oci_core_network_security_group.node.id]
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]
@@ -423,7 +455,7 @@ module "main" {
 
 module "mon" {
   count  = var.oke_mon_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-mon"
   compartment_id          = var.compartment_id
@@ -439,6 +471,7 @@ module "mon" {
   # No NO_SCHEDULE taint - oci_containerengine_node_pool has no taint attribute in the
   # provider schema (see NOTES.md "Known, permanent-for-now limitation"). Label-only.
   labels            = { mon = "true" }
+  freeform_tags     = local.autoscaler_tags.mon
   nsg_ids           = [oci_core_network_security_group.node.id]
   pod_subnet_ids    = var.pod_subnet_ids
   pod_nsg_ids       = [oci_core_network_security_group.pods.id]
@@ -448,7 +481,7 @@ module "mon" {
 
 module "tools" {
   count  = var.oke_tools_node_count > 0 ? 1 : 0
-  source = "../oke-node-pool"
+  source = "./oke-node-pool"
 
   prefix                  = "${var.prefix}-tools"
   compartment_id          = var.compartment_id
@@ -462,6 +495,7 @@ module "tools" {
   boot_volume_size_in_gbs = var.oke_tools_boot_volume_size_in_gbs
   node_pool_os_type       = var.oke_tools_node_pool_os_type
   labels                  = { tools = "true" }
+  freeform_tags           = local.autoscaler_tags.tools
   nsg_ids                 = [oci_core_network_security_group.node.id]
   pod_subnet_ids          = var.pod_subnet_ids
   pod_nsg_ids             = [oci_core_network_security_group.pods.id]

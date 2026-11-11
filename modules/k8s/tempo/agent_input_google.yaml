@@ -1,0 +1,16 @@
+# GCS bucket names are global across all Google Cloud projects, so the project
+# id is part of the name, the same way agent_input_aws.yaml uses the account.
+global:
+  bucketName: "{{ .config.prefix }}-{{ .module.name }}-traces-{{ .toutput.crossplane.project_id }}"
+  google:
+    projectID: "{{ .toutput.crossplane.project_id }}"
+    bucket:
+      location: "{{ .toutput.gke.region }}"
+      kmsKeyId: "{{ .toptout.kms.telemetry_key_id }}"
+
+tempo:
+  tempo:
+    storage:
+      trace:
+        gcs:
+          bucket_name: "{{ .config.prefix }}-{{ .module.name }}-traces-{{ .toutput.crossplane.project_id }}"

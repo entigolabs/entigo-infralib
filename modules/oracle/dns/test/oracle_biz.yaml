@@ -1,0 +1,20 @@
+---
+# Two private zones, so the map outputs and the explicit default are exercised: with a single
+# domain every default falls out of a shortcut and the multi-zone logic is never reached. There
+# is no public zone, so pub_* fall back to the default private one.
+#
+# Both zones are resolvable only inside the VCN and take their vcn_id from modules/oracle/vpc.
+# Both issue a certificate from the authority modules/oracle/pca adopts.
+domains: |
+  {
+    "private" = {
+      domain_name     = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-int.oci.infralib.entigo.io"
+      private         = true
+      default_private = true
+    },
+    "extra" = {
+      domain_name = "{{ .config.prefix }}-{{ .step.name }}-{{ .module.name }}-extra.oci.infralib.entigo.io"
+      private     = true
+    }
+  }
+name_salt: true

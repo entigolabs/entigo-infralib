@@ -20,7 +20,7 @@ spec:
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
 # Also carries settings that used to be per-Ingress annotations but apply to
-# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn
+# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn, inbound-cidrs, security-groups
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:
@@ -29,13 +29,22 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   scheme: {{ $scheme }}
-  {{- if or $cfg.certificates $cfg.sslPolicy }}
-  # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
-  # via route hostnames, e.g. istio-managed domains behind the fallback route)
-  # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
+  # alpnPolicy is written out since the CRD defaults it to None, otherwise ArgoCD shows a diff
   listenerConfigurations:
+    - protocolPort: HTTP:80
+      alpnPolicy: None
+      listenerAttributes:
+        - key: routing.http.response.server.enabled
+          value: {{ $.Values.serverHeader | quote }}
     - protocolPort: HTTPS:443
       alpnPolicy: None
+      listenerAttributes:
+        - key: routing.http.response.server.enabled
+          value: {{ $.Values.serverHeader | quote }}
+      {{- if or $cfg.certificates $cfg.sslPolicy }}
+      # HTTPS listener settings: static certs (for hosts ACM discovery cannot find
+      # via route hostnames, e.g. istio-managed domains behind the fallback route)
+      # and/or the TLS security policy (replaces alb.ingress.kubernetes.io/ssl-policy)
       {{- if $cfg.sslPolicy }}
       sslPolicy: {{ $cfg.sslPolicy }}
       {{- end }}
@@ -49,21 +58,77 @@ spec:
         {{- end }}
       {{- end }}
       {{- end }}
-  {{- end }}
+      {{- end }}
   {{- if $cfg.wafv2AclArn }}
   # Replaces alb.ingress.kubernetes.io/wafv2-acl-arn
   wafV2:
     webACL: {{ $cfg.wafv2AclArn }}
   {{- end }}
-  {{- if $cfg.loadBalancerAttributes }}
+  {{- /* Access logs are on when accessLogs.enabled is true and the gateway does not turn them off.
+         Compared as strings, agent inputs can pass "true" and "false".
+         Off is written out as false, otherwise an ALB that already logs keeps logging */}}
+  {{- $accessLogs := and (eq (toString $.Values.accessLogs.enabled) "true") (ne (toString (dig "accessLogs" "enabled" true $cfg)) "false") }}
+  {{- /* The gateway's own bucket, or the one this module creates for it */}}
+  {{- $accessLogsBucket := dig "accessLogs" "bucket" "" $cfg | default (printf "%s-%s-%s-%s-alb-logs" $.Release.Name $name (toString $.Values.global.aws.account) $.Values.global.aws.region | lower | trunc 63 | trimSuffix "-") }}
   # Replaces alb.ingress.kubernetes.io/load-balancer-attributes
   # values format: map of attribute -> value; converted to the CRD's key/value list,
   # values quoted since the CRD expects strings
   loadBalancerAttributes:
+    - key: access_logs.s3.enabled
+      value: {{ $accessLogs | quote }}
+    {{- if $accessLogs }}
+    - key: access_logs.s3.bucket
+      value: {{ $accessLogsBucket }}
+    - key: access_logs.s3.prefix
+      value: {{ $name }}
+    {{- end }}
     {{- range $k, $v := $cfg.loadBalancerAttributes }}
     - key: {{ $k }}
       value: {{ $v | quote }}
     {{- end }}
+  {{- /* Comma-separated string (agent outputs arrive comma-separated and per-element quoted) or a YAML list */}}
+  {{- $sourceRanges := list }}
+  {{- if kindIs "string" $cfg.sourceRanges }}
+  {{- range split "," $cfg.sourceRanges }}
+  {{- with . | trim | trimAll "\"" }}{{ $sourceRanges = append $sourceRanges . }}{{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $cfg.sourceRanges }}
+  {{- with . | toString | trim | trimAll "\"" }}{{ $sourceRanges = append $sourceRanges . }}{{- end }}
+  {{- end }}
+  {{- end }}
+  {{- /* Same parsing for the user-supplied security groups */}}
+  {{- $securityGroups := list }}
+  {{- if kindIs "string" $cfg.securityGroups }}
+  {{- range split "," $cfg.securityGroups }}
+  {{- with . | trim | trimAll "\"" }}{{ $securityGroups = append $securityGroups . }}{{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $cfg.securityGroups }}
+  {{- with . | toString | trim | trimAll "\"" }}{{ $securityGroups = append $securityGroups . }}{{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if and $sourceRanges $securityGroups }}
+  {{- fail (printf "gateways.%s: sourceRanges and securityGroups are mutually exclusive, the controller ignores sourceRanges when securityGroups is set" $name) }}
+  {{- end }}
+  {{- if $sourceRanges }}
+  # Replaces alb.ingress.kubernetes.io/inbound-cidrs: only these CIDRs may reach the ALB,
+  # empty allows everything (0.0.0.0/0)
+  sourceRanges:
+    {{- range $sourceRanges }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if $securityGroups }}
+  # Replaces alb.ingress.kubernetes.io/security-groups: the ALB uses these security groups
+  # instead of one managed by the controller, so inbound rules are the user's responsibility.
+  # The controller still adds the rules on the node/pod security group that let the ALB
+  # reach the targets (alb.ingress.kubernetes.io/manage-backend-security-group-rules)
+  securityGroups:
+    {{- range $securityGroups }}
+    - {{ . | quote }}
+    {{- end }}
+  manageBackendSecurityGroupRules: true
   {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:

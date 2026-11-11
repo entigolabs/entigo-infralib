@@ -1,0 +1,25 @@
+{{- if eq .Values.global.cloudProvider "azure" }}
+{{- with .Values.loki.gateway.route.main.parentRefs }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $.Release.Name }}-gateway-route
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        {{- range splitList "," $.Values.global.azure.agcSubnetCidrs }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . | trimAll "\"" }}
+        {{- end }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}
+{{- end }}

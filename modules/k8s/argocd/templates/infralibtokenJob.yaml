@@ -68,6 +68,11 @@ spec:
           operator: "Equal"
           value: "true"
           effect: "NoSchedule"
+        {{- if eq .Values.global.cloudProvider "azure" }}
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+          effect: "NoSchedule"
+        {{- end }}
       securityContext:
         runAsNonRoot: true
         seccompProfile:

@@ -1,0 +1,5 @@
+# kube-score checks skipped on top of the framework's defaults: the upstream loki chart sets no ephemeral storage, resources or probes on every component.
+kube_score_ignore:
+  - container-ephemeral-storage-request-and-limit
+  - container-resources
+  - pod-probes

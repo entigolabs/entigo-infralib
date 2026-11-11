@@ -9,6 +9,7 @@ global:
   aws:
     account: ""
     clusterOIDC: ""
+    region: ""
 
 aws-load-balancer-controller:
   defaultTags:
@@ -62,7 +63,7 @@ aws-load-balancer-controller:
     kube-score/ignore: pod-networkpolicy,pod-probes
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.24.6"
+  tag: "v1.25.1"
 
 ingressClass:
   tags: {}
@@ -76,6 +77,21 @@ ingressClass:
     enabled: true
     subnets: ""
 
+# Access logs of the gateway ALBs, stored in S3 under the gateway name.
+# Set them here, not as access_logs.* in gateways.<name>.loadBalancerAttributes
+accessLogs:
+  enabled: false
+  lifecycleRules:              # for the buckets created by this module
+    - id: expire-alb-logs
+      status: Enabled
+      filter:
+        - prefix: ""
+      expiration:
+        - days: 90
+
+# Server: awselb/2.0 response header of the gateway ALBs
+serverHeader: false
+
 gateways:
   tags: {}
   internal:
@@ -83,8 +99,10 @@ gateways:
     scheme: internal
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    securityGroups: []         # existing security group ids for the ALB instead of a controller-managed one, exclusive with sourceRanges; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # TLS 1.3 only, "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -96,8 +114,10 @@ gateways:
     scheme: internal
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    securityGroups: []         # existing security group ids for the ALB instead of a controller-managed one, exclusive with sourceRanges; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # TLS 1.3 only, "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -109,8 +129,10 @@ gateways:
     scheme: internet-facing
     sslRedirect: true
     subnets: ""
+    sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+    securityGroups: []         # existing security group ids for the ALB instead of a controller-managed one, exclusive with sourceRanges; a comma-separated string also works
     certificates: ""
-    sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+    sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # TLS 1.3 only, "" uses the controller default ELBSecurityPolicy-2016-08 (TLS 1.0-1.2)
     wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
     loadBalancerAttributes: {}
     #  idle_timeout.timeout_seconds: "300"
@@ -120,10 +142,16 @@ gateways:
   # custom user-defined gateway, just add an entry
   # partner:
   #   enabled: true
+  #   accessLogs:
+  #     enabled: false         # access logs off for this gateway
+  #     bucket: ""             # existing bucket, empty creates <module>-<gateway>-<account>-<region>-alb-logs
+  #     lifecycleRules: []     # replaces accessLogs.lifecycleRules, [] keeps the logs forever
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
-  #   sslPolicy: ""              # e.g. ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06
+  #   sourceRanges: []           # CIDRs allowed to reach the ALB, empty allows everything; a comma-separated string also works
+  #   securityGroups: []         # existing security group ids for the ALB instead of a controller-managed one, exclusive with sourceRanges; a comma-separated string also works
+  #   sslPolicy: ELBSecurityPolicy-TLS13-1-3-2021-06   # custom gateways get no default, set it here
   #   wafv2AclArn: ""            # e.g. arn:aws:wafv2:us-east-1:XXXXXXXXX:regional/webacl/prod-us-application-waf/XXXXX-XXXX-XXXX-XXXX
   #   loadBalancerAttributes: {}
   #   #  idle_timeout.timeout_seconds: "300"

@@ -7,20 +7,54 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
-     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
-     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
-     "BOTTLEROCKET_ARM_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
+     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261031"
+     "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
+     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
+     "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
+     "BOTTLEROCKET_ARM_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64"        = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.1-b4870834"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.1-b4870834"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
+
+  # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
+  node_repair_reasons = {
+    Ready                 = ["NodeStatusUnknown", "KubeletNotReady"]
+    ContainerRuntimeReady = ["PodStuckTerminating"]
+    KernelReady           = ["ForkFailedOutOfPIDs"]
+    NetworkingReady       = ["IPAMDNotReady", "IPAMDNotRunning", "InterfaceNotRunning", "InterfaceNotUp", "MissingLoopbackInterface"]
+  }
+
+  # Every reason above gets the same wait time
+  node_repair_default_overrides = tolist(flatten([
+    for condition, reasons in local.node_repair_reasons : [
+      for reason in reasons : {
+        node_monitoring_condition = condition
+        node_unhealthy_reason     = reason
+        min_repair_wait_time_mins = var.node_repair_wait_time_mins
+        repair_action             = "Replace"
+      }
+    ]
+  ]))
+
+  node_repair_enabled          = try(var.node_repair_config.enabled, false)
+  node_repair_custom_overrides = try(var.node_repair_config.node_repair_config_overrides, null)
+
+  # Custom overrides win, otherwise use the defaults
+  node_repair_overrides = local.node_repair_custom_overrides != null ? local.node_repair_custom_overrides : local.node_repair_default_overrides
+
+  # No node_repair_config means repair stays off. When repair is enabled add the overrides
+  node_repair_config = var.node_repair_config == null ? null : merge(var.node_repair_config, {
+    node_repair_config_overrides = local.node_repair_enabled ? local.node_repair_overrides : var.node_repair_config.node_repair_config_overrides
+  })
+
+  # Node repair always needs the agent, the agent can also be installed alone
+  enable_node_monitoring_agent = local.node_repair_enabled || var.enable_node_monitoring_agent
 
   eks_managed_node_groups_all = {
     main = {
@@ -37,6 +71,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = local.node_repair_config
       labels = {
         main = "true"
       }
@@ -76,6 +111,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = local.node_repair_config
       taints = {
         mon = {
           key    = "mon"
@@ -123,6 +159,7 @@ locals {
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
+      node_repair_config = local.node_repair_config
       taints = {
         tools = {
           key    = "tools"
@@ -168,6 +205,7 @@ locals {
   eks_managed_node_groups_extra = {
     for k, v in var.eks_managed_node_groups_extra :
     k => merge(
+      local.node_repair_config != null ? { node_repair_config = local.node_repair_config } : {},
       v,
       {
         desired_size = lookup(v, "desired_size", 0) > 0 ? v.desired_size : lookup(v, "min_size", 1)
@@ -196,9 +234,23 @@ resource "aws_ec2_tag" "publicsubnets" {
   value       = "shared"
 }
 
+# The AWS Load Balancer Controller resolves the security group it adds backend
+# rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
+# more than one security group. aws_ec2_tag is not subject to the provider's
+# ignore_tags, unlike the tags attribute of aws_security_group, so this is the
+# only way to manage the tag without a perpetual diff. Set
+# node_security_group_cluster_tag=false to drop it if the nodes also carry
+# another security group with this tag.
+resource "aws_ec2_tag" "node_security_group_cluster" {
+  count       = var.node_security_group_cluster_tag ? 1 : 0
+  resource_id = module.eks.node_security_group_id
+  key         = "kubernetes.io/cluster/${var.prefix}"
+  value       = "owned"
+}
+
 module "ebs_csi_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.0"
+  version               = "6.8.2"
   name                  = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_arns  = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -221,7 +273,7 @@ module "ebs_csi_irsa_role" {
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.0"
+  version               = "6.8.2"
   name                  = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -242,7 +294,7 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.0"
+  version               = "6.8.2"
   name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -266,7 +318,7 @@ module "vpc_cni_irsa_role" {
 #https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.25.0"
+  version = "21.29.0"
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
@@ -275,6 +327,9 @@ module "eks" {
   enabled_log_types       = var.cluster_enabled_log_types
   encryption_config = null
   cloudwatch_log_group_kms_key_id = var.cloudwatch_log_group_kms_key_id != "" ? var.cloudwatch_log_group_kms_key_id : null
+  cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention_in_days
+  cloudwatch_log_group_class             = var.cloudwatch_log_group_class
+  cloudwatch_log_group_tags              = var.cloudwatch_log_group_tags
   
   identity_providers = var.cluster_identity_providers
   
@@ -375,6 +430,14 @@ module "eks" {
         }, var.efs_csi_controller_config)
       })
     }
+  } : {}, local.enable_node_monitoring_agent ? {
+    eks-node-monitoring-agent = merge({
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
+      addon_version               = var.node_monitoring_agent_addon_version
+    }, length(var.node_monitoring_agent_config) > 0 ? {
+      configuration_values = jsonencode(var.node_monitoring_agent_config)
+    } : {})
   } : {}, {
     aws-ebs-csi-driver = {
       resolve_conflicts_on_update = "OVERWRITE"
@@ -501,10 +564,13 @@ module "eks" {
 
   }
 
-  #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
+  # The provider ignores every kubernetes.io/cluster/* key (providers/aws.tf),
+  # so the upstream module must not set the tag through the security group's
+  # tags attribute or the plan adds it on every run. The tag is managed by
+  # aws_ec2_tag.node_security_group_cluster instead (upstream issue 1986).
   node_security_group_tags = {
     "kubernetes.io/cluster/${var.prefix}" = null
-    "karpenter.sh/discovery" = var.prefix
+    "karpenter.sh/discovery"              = var.prefix
   }
 
 

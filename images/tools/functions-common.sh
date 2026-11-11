@@ -1,20 +1,9 @@
 #!/bin/bash
 # Common functions shared across all cloud providers
 
-# TF_TOOL controls which binary is used: terraform (default) or tofu
-TF_TOOL=${TF_TOOL:-terraform}
-
-# Run Go tests
-run_tests() {
-    if [ ! -f go.mod ]; then
-        cd /common && go mod download -x && cd /app
-        go mod init github.com/entigolabs/entigo-infralib
-        go mod edit -require github.com/entigolabs/entigo-infralib-common@v0.0.0 -replace github.com/entigolabs/entigo-infralib-common=/common
-        go mod tidy
-    fi
-    cd test && go test -timeout $ENTIGO_INFRALIB_TEST_TIMEOUT
-    exit $?
-}
+# TF_TOOL controls which binary is used. Only tofu ships in the image; the agent
+# sets TF_TOOL=tofu explicitly, this default covers running the scripts without it.
+TF_TOOL=${TF_TOOL:-tofu}
 
 # Prepare working directory and copy files for plan stage
 prepare_plan_stage() {
@@ -221,10 +210,8 @@ git_login() {
             # OCI source, OpenTofu reads oci_credentials blocks from the CLI config
             # The label supports a registry domain with an optional repository path prefix
             SOURCE="${!var#oci://}"
-            echo "oci_credentials \"${SOURCE}\" {
-  username = \"${!USERNAME}\"
-  password = \"${!PASSWORD}\"
-}" >> $HOME/.tofurc
+            tofurc_credentials "${SOURCE}" "  username = \"${!USERNAME}\"
+  password = \"${!PASSWORD}\""
         fi
     done
 
@@ -234,22 +221,32 @@ git_login() {
     # GIT_AUTH_SOURCE_* oci:// entries handled above, so no helper block is needed.
     if [ -n "$OCI_REGION" ]; then
       :
+    elif [ -n "$AZURE_LOCATION" ]; then
+      for REGISTRY in $(grep -ohE 'oci://[a-z0-9]+\.azurecr\.io' *.tf 2>/dev/null | sort -u); do
+        REGISTRY="${REGISTRY#oci://}"
+        ACR_TOKEN=$(get_acr_token "${REGISTRY}") || { echo "ACR login failed for ${REGISTRY}"; exit 25; }
+        tofurc_credentials "${REGISTRY}" "  username = \"${ACR_TOKEN_USERNAME}\"
+  password = \"${ACR_TOKEN}\""
+      done
     elif [ -n "$AWS_REGION" ]; then
       # Get current account number
       ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-      cat >> "$HOME/.tofurc" <<EOF
-oci_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" {
-  docker_credentials_helper = "ecr-login"
-}
-EOF
+      tofurc_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" '  docker_credentials_helper = "ecr-login"'
     elif [ ! -z "$GOOGLE_REGION" ]; then
-      cat >> "$HOME/.tofurc" <<EOF
-oci_credentials "${GOOGLE_REGION}-docker.pkg.dev" {
-  docker_credentials_helper = "gcloud"
-}
-EOF
+      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" '  docker_credentials_helper = "gcloud"'
     fi
+}
+
+# Appends an oci_credentials block for a registry to the OpenTofu CLI config
+# unless one is there already: in a local pipeline the plan and the apply run
+# in one container, and OpenTofu warns about every duplicate block.
+tofurc_credentials() {
+    local registry="$1" body="$2"
+    if [ -f "$HOME/.tofurc" ] && grep -q "^oci_credentials \"${registry}\" {" "$HOME/.tofurc"; then
+        return
+    fi
+    printf 'oci_credentials "%s" {\n%s\n}\n' "${registry}" "${body}" >> "$HOME/.tofurc"
 }
 
 # Setup CA certificates

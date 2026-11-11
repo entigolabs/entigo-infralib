@@ -1,0 +1,34 @@
+# The upstream chart's own NetworkPolicy only opens service.targetPort (3200),
+# which would drop traces sent to the OTLP/Jaeger/Zipkin receivers, so this
+# module owns the policy instead. Ingress only: Tempo needs egress to S3/GCS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tempo
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: tempo
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    # No `from`: Grafana queries 3200 and alloy pushes traces from other namespaces.
+    - ports:
+        - port: 3200  # HTTP API / query
+          protocol: TCP
+        - port: 4317  # OTLP gRPC
+          protocol: TCP
+        - port: 4318  # OTLP HTTP
+          protocol: TCP
+        - port: 14250 # Jaeger gRPC
+          protocol: TCP
+        - port: 14268 # Jaeger thrift HTTP
+          protocol: TCP
+        - port: 9411  # Zipkin
+          protocol: TCP
+        - port: 6831  # Jaeger thrift compact
+          protocol: UDP
+        - port: 6832  # Jaeger thrift binary
+          protocol: UDP

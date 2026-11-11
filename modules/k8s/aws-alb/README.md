@@ -31,6 +31,8 @@ gateways:
   #   scheme: internet-facing
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
+  #   sourceRanges: []
+  #   securityGroups: []
 ```
 
 Here the `partner` gateway would be created in addition to the defaults.
@@ -72,6 +74,64 @@ gateways:
     subnets: '{{ .toutput.vpc.public_subnets }}'
 ```
 
+### Source ranges
+
+By default every gateway ALB accepts traffic from anywhere (`0.0.0.0/0`).
+`sourceRanges` limits the CIDRs allowed through the ALB security group, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/inbound-cidrs` Ingress annotation:
+
+```yaml
+gateways:
+  external:
+    sourceRanges:
+      - 10.0.0.0/8
+      - 192.168.1.0/24
+  partner:
+    enabled: true
+    scheme: internet-facing
+    sourceRanges: "203.0.113.0/24,198.51.100.0/24"   # a comma-separated string also works
+```
+
+A comma-separated string makes it possible to take the list from a terraform
+output, the same way as `subnets`:
+
+```yaml
+gateways:
+  internal:
+    sourceRanges: '{{ .toutput.vpc.vpc_cidr_block }}'
+```
+
+An empty list or string allows everything.
+
+### Security groups
+
+By default the controller creates and manages the security group of each
+gateway ALB. `securityGroups` attaches existing security groups instead, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/security-groups` Ingress annotation and takes the
+same shapes as `sourceRanges`, a list or a comma-separated string:
+
+```yaml
+gateways:
+  partner:
+    enabled: true
+    scheme: internet-facing
+    securityGroups:
+      - sg-0123456789abcdef0
+  internal:
+    securityGroups: '{{ .toutput.eks.cluster_primary_security_group_id }}'
+```
+
+With `securityGroups` set the controller no longer manages a frontend security
+group, so the inbound rules of the given groups decide who can reach the ALB
+and `sourceRanges` has no effect. The chart therefore refuses a gateway that
+sets both. The controller still manages the rules on the node and pod security
+group that let the ALB reach the targets
+(`manageBackendSecurityGroupRules: true`).
+
+An empty list or string keeps the controller-managed security group.
+
 ### Selecting which gateway infralib modules use
 
 Which gateway the infralib modules attach to for internal and external
@@ -87,6 +147,77 @@ If you want all internal services to use the external gateway, set
 `global.internalGateway` to `external` (or any other gateway you have
 defined, such as `partner`). Some infralib modules are external by default;
 those are controlled by `global.externalGateway`.
+
+### Access logs
+
+The gateway ALBs can write access logs to S3. They are off by default and cover only the Gateway API gateways, not the ALBs of Ingress objects.
+
+```yaml
+accessLogs:
+  enabled: true
+```
+
+Every gateway then logs to its own bucket `<module>-<gateway>-<account>-<region>-alb-logs`, created with Crossplane. The logs are stored under the gateway name and deleted after 90 days.
+
+A gateway can turn its logs off, use an existing bucket or keep the logs for a different time:
+
+```yaml
+gateways:
+  external:
+    accessLogs:
+      bucket: my-log-archive-bucket   # existing bucket
+  internal:
+    accessLogs:
+      lifecycleRules:                 # keep the logs for a year, [] keeps them forever
+        - id: expire-alb-logs
+          status: Enabled
+          filter:
+            - prefix: ""
+          expiration:
+            - days: 365
+  service:
+    accessLogs:
+      enabled: false
+```
+
+An existing bucket must use SSE-S3 encryption (ALB access logs do not support KMS) and allow `logdelivery.elasticloadbalancing.amazonaws.com` to write to it from this account.
+
+Set access logs with `accessLogs`, not with `access_logs.*` in `gateways.<name>.loadBalancerAttributes`.
+
+The buckets created by the module are deleted when access logs or the module are removed. A bucket that still has logs in it can not be deleted, empty it first.
+
+### Server header
+
+By default the Gateway ALBs do not send their `Server: awselb/2.0` response header. To send it again:
+
+```yaml
+serverHeader: true
+```
+
+### TLS security policy
+
+`sslPolicy` sets the [ELB security policy](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html)
+of the HTTPS listener, which decides the TLS versions and ciphers the ALB accepts from clients.
+The `internal`, `service` and `external` gateways default to `ELBSecurityPolicy-TLS13-1-3-2021-06`,
+which accepts TLS 1.3 only. Clients that can not do TLS 1.3 fail the handshake.
+
+To allow TLS 1.2 again for a gateway that has to serve older clients:
+
+```yaml
+gateways:
+  external:
+    sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+```
+
+| Policy                                     | TLS versions |
+| ------------------------------------------ | ------------ |
+| `ELBSecurityPolicy-TLS13-1-3-2021-06`      | 1.3 only     |
+| `ELBSecurityPolicy-TLS13-1-2-2021-06`      | 1.2 and 1.3  |
+| `ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06` | 1.2 and 1.3, more 1.2 ciphers for older clients |
+
+Custom gateways get no default, set `sslPolicy` on them as well. `sslPolicy: ""` sets no policy, the ALB then uses the controller default `ELBSecurityPolicy-2016-08`,
+which allows TLS 1.0 to 1.2 and no TLS 1.3. The Ingress classes are not affected, their ALBs keep
+the controller default.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)
@@ -225,8 +356,8 @@ converting the Ingress resources of your own applications to HTTPRoutes.**
 The mapping rule is simple: the `ingressClassName` of your Ingress maps to the
 Gateway of the same name. If your Ingress used ingressClass `external`, the
 HTTPRoute attaches to Gateway `external`, ingressClass `internal` maps to
-Gateway `internal`, and so forth. The Gateways live in the `aws-alb-<env>`
-namespace.
+Gateway `internal`, and so forth. The Gateways live in the namespace of the
+aws-alb module, `aws-alb` by default.
 
 ### Example: converting an Ingress to an HTTPRoute
 
@@ -238,6 +369,12 @@ kind: Ingress
 metadata:
   name: my-app
   namespace: my-app-biz
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-port: '8081'
+    alb.ingress.kubernetes.io/healthcheck-path: /status/healthz
+    alb.ingress.kubernetes.io/success-codes: '200-299'
+    alb.ingress.kubernetes.io/inbound-cidrs: 10.0.0.0/8,192.168.1.0/24
 spec:
   ingressClassName: external
   rules:
@@ -266,7 +403,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: external          # was ingressClassName: external
-      namespace: aws-alb-biz  # gateways live in the aws-alb-<env> namespace
+      namespace: aws-alb      # gateways live in the aws-alb module namespace
       sectionName: https
   hostnames:
     - my-app.biz-net-route53.infralib.entigo.io   # was spec.rules[].host
@@ -282,6 +419,52 @@ spec:
           port: 8080           # was backend.service.port.number
 ```
 
+The `alb.ingress.kubernetes.io/*` annotations that tune the target group have
+no place on the HTTPRoute. They move to a `TargetGroupConfiguration` that
+references the backend Service and lives in the same namespace as the Service:
+
+```yaml
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: my-app
+  namespace: my-app-biz        # same namespace as the Service
+spec:
+  targetReference:
+    name: my-app               # the backendRefs Service name
+  defaultConfiguration:
+    protocol: HTTPS            # was alb.ingress.kubernetes.io/backend-protocol, HTTP is the default
+    healthCheckConfig:
+      healthCheckPort: "8081"  # was alb.ingress.kubernetes.io/healthcheck-port
+      healthCheckPath: /status/healthz  # was alb.ingress.kubernetes.io/healthcheck-path
+      matcher:
+        httpCode: "200-299"    # was alb.ingress.kubernetes.io/success-codes
+```
+
+`alb.ingress.kubernetes.io/inbound-cidrs` restricted who could reach the ALB.
+The security group belongs to the shared ALB, so the setting moves off the
+application and onto the gateway, in the infralib config of the `aws-alb`
+module:
+
+```yaml
+      - name: aws-alb
+        source: aws-alb
+        inputs:
+          gateways:
+            external:
+              sourceRanges:      # was alb.ingress.kubernetes.io/inbound-cidrs
+                - 10.0.0.0/8
+                - 192.168.1.0/24
+```
+
+The CIDRs apply to every route on that gateway. If only some applications
+need the restriction, give them a custom gateway with its own `sourceRanges`
+and attach their HTTPRoutes to it, see
+[Default gateways and custom gateways](#default-gateways-and-custom-gateways).
+
+`alb.ingress.kubernetes.io/security-groups` moves the same way, to
+`gateways.<name>.securityGroups`, see [Security groups](#security-groups).
+
 Notes:
 
 - One Ingress `host` becomes an entry in `spec.hostnames`. An Ingress with
@@ -292,6 +475,15 @@ Notes:
   `type: Exact`.
 - SSL redirect is handled on the Gateway (`sslRedirect: true`), so
   redirect-related Ingress annotations can be dropped.
+- `healthCheckPort` and `matcher.httpCode` are strings, quote them.
+- `defaultConfiguration` applies to every route that uses the Service,
+  per-route overrides go under `spec.routeConfigurations`. Other target group
+  annotations such as `target-group-attributes` map to
+  `targetGroupAttributes`, see the `TargetGroupConfiguration` CRD in this
+  module for the full list.
+- `protocol` is what the ALB speaks to the pods. Leave it out for a plain HTTP
+  backend, set `HTTPS` when the pods terminate TLS themselves. The health check
+  has its own `healthCheckProtocol`, which defaults to the target group protocol.
 
 ### Example: multiple paths
 

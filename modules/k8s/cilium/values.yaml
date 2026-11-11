@@ -1,0 +1,26 @@
+---
+cilium:
+  operator:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+            - key: tools
+              operator: In
+              values:
+              - "true"
+  hubble:
+    tls:
+      auto:
+        method: cronJob
+  certgen:
+    annotations:
+      cronJob:
+        kube-score/ignore: cronjob-has-deadline
+  # The chart's own cilium-secrets namespace, which holds TLS Secrets only and runs no pods.
+  secretsNamespaceLabels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    tenancy.entigo.com/zone: infralib

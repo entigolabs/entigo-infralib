@@ -23,7 +23,7 @@ mcp:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.24.6"
+  tag: "v1.25.1"
 
 argocd:
   crds:
@@ -286,6 +286,48 @@ argocd:
               health_status.message = "Resource is up-to-date."
             end
             return health_status
+
+        "autoscaling/HorizontalPodAutoscaler":
+          health.lua: |
+            -- Mirrors gitops-engine health_hpa.go, except that a missing metric sample
+            -- (ScalingActive=False/FailedGetResourceMetric) is Progressing instead of Degraded:
+            -- it is the normal state for ~15-45s whenever the scale target rolls out and the
+            -- only pods left are too new to have a metrics-server sample.
+            local hs = {}
+            if obj.status == nil or obj.status.conditions == nil then
+              hs.status = "Progressing"
+              hs.message = "Waiting to Autoscale"
+              return hs
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if c.type == "AbleToScale" and (c.reason == "FailedGetScale" or c.reason == "FailedUpdateScale") then
+                hs.status = "Degraded"
+                hs.message = c.message
+                return hs
+              end
+              if c.type == "ScalingActive" and c.reason == "InvalidSelector" then
+                hs.status = "Degraded"
+                hs.message = c.message
+                return hs
+              end
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if c.type == "ScalingActive" and c.reason == "FailedGetResourceMetric" then
+                hs.status = "Progressing"
+                hs.message = c.message
+                return hs
+              end
+            end
+            for _, c in ipairs(obj.status.conditions) do
+              if (c.type == "AbleToScale" or c.type == "ScalingLimited") and c.status == "True" then
+                hs.status = "Healthy"
+                hs.message = c.message
+                return hs
+              end
+            end
+            hs.status = "Progressing"
+            hs.message = "Waiting to Autoscale"
+            return hs
       server.rbac.log.enforce.enable: "true"
       admin.enabled: "true"
       exec.enabled: "true"
@@ -330,8 +372,20 @@ argocd:
       targetMemoryUtilizationPercentage: 80
       targetCPUUtilizationPercentage: 90
   dex:
+    # Off by default (values-aws.yaml turns it on). Without configs.cm dex.config ArgoCD never starts Dex,
+    # so enable it only with SSO configured, otherwise the liveness probe below restart-loops the pod.
+    enabled: false
     deploymentAnnotations:
       kube-score/ignore: pod-probes
+    # Checks the keys endpoint because Dex v2.46.0 was seen hanging there after a key rotation while
+    # /healthz/live stayed OK (SSO -> 504). With Dex TLS disabled set httpScheme: HTTP.
+    livenessProbe:
+      enabled: true
+      httpPath: /api/dex/keys
+      httpPort: http
+      httpScheme: HTTPS
+      periodSeconds: 30
+      timeoutSeconds: 5
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:

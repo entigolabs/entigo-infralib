@@ -9,9 +9,9 @@ global:
 gatewayClassName: istio
 
 # One Gateway (= one NIC IngressClass + OCI load balancer) per entry. Any map entry with
-# enabled: true becomes a Gateway, its Ingress, its backend-tls Secret and its options
-# ConfigMap - all named after the entry's key, the way modules/k8s/aws-alb names its own
-# gateways. Gateways are namespaced, so the unprefixed names cannot collide with another
+# enabled: true and a domain becomes a Gateway, its Ingress, its backend-tls Secret and its
+# options ConfigMap - all named after the entry's key, the way modules/k8s/aws-alb names its
+# own gateways. Gateways are namespaced, so the unprefixed names cannot collide with another
 # deployment's.
 gateways:
   external:

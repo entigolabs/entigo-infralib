@@ -32,14 +32,15 @@ STEP 3 - FOR EACH FAILED BRANCH (process one at a time):
      - The upstream chart added a new required value. Check the chart's values.yaml
        for the new required field. Add a placeholder/default in the wrapper chart's
        values.yaml that satisfies the template check.
-     - Look at the test.sh or agent_input_*.yaml for how values are passed during testing.
+     - Look at test/<cloud>_<env>.yaml, test/static_values.yaml or agent_input_*.yaml for how values are passed during testing.
 
      KUBE-SCORE FAILURES (e.g. "kube-score failed", "[CRITICAL] Container Resources"):
      - A new component in the chart is missing resource limits, NetworkPolicy, etc.
-     - Check test.sh for KUBESCORE_EXTRA_OPTS to see what's already ignored.
+     - Check test/module.yaml for kube_score_ignore to see what's already ignored.
      - If the new component is from an upstream subchart (like kafka in mimir-distributed),
        add resource limits in the wrapper values.yaml under the subchart's key,
-       or add --ignore-test flags in test.sh if the check is not applicable.
+       or add the check to kube_score_ignore in test/module.yaml, with a comment, if it is not applicable.
+     - Reproduce locally with ./test.sh static modules/k8s/<module>.
 
      WEBHOOK/PROVIDER CONNECTION ERRORS (e.g. "conversion webhook failed", "connection refused"):
      - Usually a timing issue in CI — the provider pod wasn't ready when tests ran.
@@ -59,7 +60,7 @@ STEP 3 - FOR EACH FAILED BRANCH (process one at a time):
   d) Apply the fix. Verify the fix makes sense by checking:
      - The upstream chart's values.yaml for correct key paths
      - The existing values.yaml patterns in the wrapper chart
-     - The test.sh for how tests are invoked
+     - The test in test/k8s_unit_basic_test.go and the framework README (entigo-infralib-test) for how tests are invoked
 
   e) Verify you are on the correct branch: git branch --show-current
 

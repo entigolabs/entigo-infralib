@@ -1,0 +1,6 @@
+dependencies:
+- name: alb-controller
+  repository: oci://mcr.microsoft.com/application-lb/charts
+  version: 1.13.0
+digest: sha256:82296b9e867c0c5b199ec6958dad15acb32da9a40cd10a288046ae2f5876d014
+generated: "2026-11-02T07:52:23.236812266Z"

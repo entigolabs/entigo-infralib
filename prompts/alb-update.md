@@ -17,7 +17,7 @@ CLAUDE.md
 - Account structure: multi-account with organization
 
 # Module context
-- Wrapper chart for aws-load-balancer-controller, currently on chart/app version 3.2.2
+- Wrapper chart for aws-load-balancer-controller, currently on chart/app version 3.6.2
 - EKS-only — never deployed on GKE or AKS
 - Uses Crossplane (upbound AWS provider) for IRSA: IAM Policy, Role, RolePolicyAttachment via templates/irsa/
 - ArgoCD manages deployment with ServerSideApply=true; ignoreDifferences covers TLS secret data and all webhook caBundle fields
@@ -29,10 +29,10 @@ CLAUDE.md
 - On upgrades, new webhook entries may be created without caBundle by ArgoCD SSA — fixcertjob corrects this
 
 # Gateway API
-- Gateway API CRDs v1.5.1 standard channel bundled in templates/gatewayApiCrds.yaml with helm.sh/resource-policy: keep
-- NLBGatewayAPI and ALBGatewayAPI feature gates are on by default in the controller binary (no explicit values needed)
+- Gateway API CRDs v1.6.3 standard channel bundled in templates/gatewayApiCrds.yaml with helm.sh/resource-policy: keep (controller 3.6.x is built against Gateway API v1.6.0; v1.6 moved TCPRoute and UDPRoute into the standard channel)
+- NLBGatewayAPI and ALBGatewayAPI feature gates are on by default in the controller binary (no explicit values needed); since 3.5.0 the controller checks at startup that gateway.k8s.aws/v1 (TargetGroupConfiguration, LoadBalancerConfiguration, ListenerRuleConfiguration) is served and otherwise logs "Disabling ALBGatewayAPI: missing required CRDs" and stops reconciling Gateways and HTTPRoutes — templates/albGatewayCrds.yaml must carry the v1 storage version
 - GatewayClass controllerName for ALB: gateway.k8s.aws/alb
-- Common k8s test library (common/k8s/kubernetes.go) has CreateK8SGatewayClass, DeleteK8SGatewayClass, CreateK8SGateway, DeleteK8SGateway, WaitUntilK8SGatewayAvailable, WaitUntilK8SGatewayDeleted helpers
+- The entigo-infralib-test k8s package has CreateK8SGatewayClass, DeleteK8SGatewayClass, CreateK8SGateway, DeleteK8SGateway, WaitUntilK8SGatewayAvailable, WaitUntilK8SGatewayDeleted helpers
 - WaitUntilK8SGatewayAvailable uses gateway.networking.k8s.io/v1 (updated from v1beta1 which is no longer served in v1.5.x)
 - Gateway API testing: test/templates/gatewayclass.yaml and test/templates/gateway.yaml; GatewayClass is cluster-scoped so names are randomised per test run
 

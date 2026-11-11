@@ -2,15 +2,11 @@ package test
 
 import (
 	"testing"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
 )
 
-
-func TestTerraformRoute53ResolverAssociate(t *testing.T) {
-	t.Run("Biz", testTerraformRoute53ResolverAssociateBiz)
+// The module has no outputs to check; a successful apply is the test.
+func TestRoute53ResolverAssociate(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {})
 }
-
-func testTerraformRoute53ResolverAssociateBiz(t *testing.T) {
-        t.Parallel()
-	
-}
-

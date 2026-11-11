@@ -9,6 +9,8 @@ global:
     # hostname, which is why path-style addressing (the bucket in the path, not a
     # subdomain) is what OCI's endpoint needs - see the endpoint format below.
     objectStorageNamespace: ""
+    # The realm's domain, oraclecloud.com or oraclecloud.eu, from the agent.
+    providerDomain: ""
     region: ""
     # Name of the classic tenancy Group the client puts mimir's manually-created User
     # into - see templates/oracle/credentials.yaml. agent_input_oracle.yaml names it
@@ -99,7 +101,7 @@ mimir-distributed:
           region: {{ .Values.global.oracle.region }}
           # OCI's S3-compatibility endpoint - the Object Storage namespace is embedded in the
           # hostname, same as loki's endpoint (see modules/k8s/loki/agent_input_oracle.yaml).
-          endpoint: {{ .Values.global.oracle.objectStorageNamespace }}.compat.objectstorage.{{ .Values.global.oracle.region }}.oraclecloud.com
+          endpoint: {{ .Values.global.oracle.objectStorageNamespace }}.compat.objectstorage.{{ .Values.global.oracle.region }}.{{ .Values.global.oracle.providerDomain }}
           access_key_id: {{ .Values.global.oracle.accessKeyId }}
           secret_access_key: {{ .Values.global.oracle.secretAccessKey }}
           insecure: false
@@ -198,7 +200,7 @@ mimir-distributed:
         s3:
           bucket_name: {{ .Values.global.bucketName }}
           region: {{ .Values.global.oracle.region }}
-          endpoint: {{ .Values.global.oracle.objectStorageNamespace }}.compat.objectstorage.{{ .Values.global.oracle.region }}.oraclecloud.com
+          endpoint: {{ .Values.global.oracle.objectStorageNamespace }}.compat.objectstorage.{{ .Values.global.oracle.region }}.{{ .Values.global.oracle.providerDomain }}
           access_key_id: {{ .Values.global.oracle.accessKeyId }}
           secret_access_key: {{ .Values.global.oracle.secretAccessKey }}
           insecure: false

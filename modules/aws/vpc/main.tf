@@ -46,7 +46,8 @@ locals {
   elasticache_subnets = var.elasticache_subnets == null ? var.subnet_split_mode == "default" ? local.default_elasticache : [] : var.elasticache_subnets
 
   #In spoke mode, when no dedicated elasticache subnets are defined, reuse the database subnets for the elasticache subnet group.
-  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null
+  #Skipped when there are no database subnets (e.g. database_subnets = []), since there is nothing to reuse.
+  reuse_db_for_elasticache = var.subnet_split_mode == "spoke" && var.elasticache_subnets == null && length(local.database_subnets) > 0
 
   #IPv6 prefix indices — each subnet needs a unique /64 slot within the VPC's /56 block.
   #Only populated when enable_ipv6 is true; assigned sequentially across all subnet types.
@@ -70,7 +71,7 @@ resource "aws_elasticache_subnet_group" "database_reuse" {
 #https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.7.0"
+  version = "6.7.3"
 
   name = var.prefix
   cidr = var.vpc_cidr
@@ -124,6 +125,10 @@ module "vpc" {
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   enable_flow_log                                 = var.enable_flow_log
+  flow_log_destination_type                       = var.flow_log_destination_type
+  # Taken from the bucket policy so the flow log is created after log delivery is allowed, otherwise AWS adds its own policy to the bucket
+  flow_log_destination_arn                        = var.flow_log_s3_destination_arn != "" ? var.flow_log_s3_destination_arn : join("", formatlist("arn:aws:s3:::%s", aws_s3_bucket_policy.flow_log[*].bucket))
+  # The upstream module skips the CloudWatch log group and IAM role when flow_log_destination_type is s3
   create_flow_log_cloudwatch_log_group            = var.enable_flow_log
   create_flow_log_cloudwatch_iam_role             = var.enable_flow_log
   flow_log_cloudwatch_log_group_name_prefix       = "${var.prefix}/vpc-flow-log/"

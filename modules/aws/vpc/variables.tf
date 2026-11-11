@@ -200,6 +200,46 @@ variable "flow_log_cloudwatch_log_group_kms_key_id" {
   default = ""
 }
 
+variable "flow_log_destination_type" {
+  type     = string
+  nullable = false
+  default  = "cloud-watch-logs"
+  validation {
+    condition     = contains(["cloud-watch-logs", "s3"], var.flow_log_destination_type)
+    error_message = "flow_log_destination_type must be cloud-watch-logs or s3."
+  }
+}
+
+# S3 bucket ARN, optionally with a folder: arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/
+# Empty with flow_log_destination_type = "s3" creates a bucket in this account
+variable "flow_log_s3_destination_arn" {
+  type     = string
+  nullable = false
+  default  = ""
+  validation {
+    condition     = var.flow_log_s3_destination_arn == "" || can(regex("^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](/.*)?$", var.flow_log_s3_destination_arn))
+    error_message = "flow_log_s3_destination_arn must be an S3 bucket ARN, e.g. arn:aws:s3:::bucket or arn:aws:s3:::bucket/folder/."
+  }
+}
+
+# Only used for the bucket created by this module
+variable "flow_log_s3_retention_in_days" {
+  type     = number
+  nullable = false
+  default  = 90
+  validation {
+    condition     = var.flow_log_s3_retention_in_days >= 1
+    error_message = "flow_log_s3_retention_in_days must be at least 1."
+  }
+}
+
+# Only used for the bucket created by this module, empty encrypts it with SSE-S3
+variable "flow_log_s3_kms_key_arn" {
+  type     = string
+  nullable = false
+  default  = ""
+}
+
 variable "create_gateway_s3" {
   type     = bool
   nullable = false
@@ -236,8 +276,15 @@ variable "create_endpoint_efs" {
   default  = false
 }
 
+variable "endpoint_policy_org_id" {
+  description = "AWS organization ID (o-xxxxxxxxxx) trusted by the default endpoint policies in addition to the current account. Empty trusts only the current account"
+  type        = string
+  nullable    = false
+  default     = ""
+}
+
 variable "endpoint_policies" {
-  description = "Custom JSON policies by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs). Replaces the default service scoped policy for that endpoint"
+  description = "Custom JSON policies by endpoint key (s3, s3e, ecr_api, ecr_dkr, ec2, sts, efs). Replaces the default policy for that endpoint"
   type        = map(string)
   nullable    = false
   default     = {}

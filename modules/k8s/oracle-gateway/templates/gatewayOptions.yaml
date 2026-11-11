@@ -1,7 +1,7 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
 {{- $namespace := .Release.Namespace }}
 {{- range $name, $cfg := .Values.gateways }}
-{{- if and (kindIs "map" $cfg) $cfg.enabled }}
+{{- if and (kindIs "map" $cfg) $cfg.enabled $cfg.domain }}
 ---
 # Referenced from the matching Gateway's spec.infrastructure.parametersRef
 # (templates/gateways.yaml) - Istio strategic-merge-applies this to the Deployment it

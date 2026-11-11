@@ -1,0 +1,128 @@
+global:
+  cloudProvider: ""
+  pubZoneId: ""
+  # Public twin zone of the private int domain, "" = no int solver
+  intCertZoneId: ""
+
+# ACME ClusterIssuer with DNS-01 in the cloud DNS, with the cloud's DNS identity for the controller. Without it the
+# module is cert-manager alone, for charts that bring their own issuers
+clusterIssuer:
+  create: true
+  name: letsencrypt
+
+acme:
+  server: https://acme-v02.api.letsencrypt.org/directory
+  email: ""
+  # For ACME CAs that require it (ZeroSSL, Sectigo, Google Public CA). The HMAC key Secret must be in this namespace
+  externalAccountBinding:
+    keyID: ""
+    keySecretRef:
+      name: ""
+      key: ""
+
+# More ClusterIssuers, spec as is (CA, Vault, ...):
+#  - name: internal-ca
+#    spec:
+#      ca:
+#        secretName: internal-ca
+extraClusterIssuers: []
+
+cert-manager:
+  crds:
+    enabled: true
+    keep: true
+  startupapicheck:
+    enabled: false
+  prometheus:
+    enabled: true
+  # Split horizon: the DNS-01 self check runs through public resolvers. In the cloud network the cloud resolver answers
+  # for the int domain from its private zone, which has no public NS and not the challenge records (those are in its
+  # public twin), so the check would never pass. Needs outbound port 53 to them; other DNS servers can be set instead if
+  # they resolve the int domain from public DNS, not from the private zone
+  dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
+  dns01RecursiveNameserversOnly: true
+  # The ServiceAccount comes from the cloud's templates: templates/aws/serviceAccount.yaml with the IRSA role annotation
+  # when the issuer is created, the WorkloadIdentity on Azure
+  serviceAccount:
+    create: false
+    name: cert-manager
+  deploymentAnnotations:
+    kube-score/ignore: pod-networkpolicy,pod-probes
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 90
+          preference:
+            matchExpressions:
+              - key: tools
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 1Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+      ephemeral-storage: 24Mi
+  webhook:
+    deploymentAnnotations:
+      kube-score/ignore: pod-networkpolicy,pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+        ephemeral-storage: 256Mi
+      requests:
+        cpu: 5m
+        memory: 32Mi
+        ephemeral-storage: 8Mi
+  cainjector:
+    deploymentAnnotations:
+      kube-score/ignore: pod-networkpolicy,pod-probes
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 90
+            preference:
+              matchExpressions:
+                - key: tools
+                  operator: In
+                  values:
+                    - "true"
+    tolerations:
+      - key: "tools"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+        ephemeral-storage: 256Mi
+      requests:
+        cpu: 5m
+        memory: 64Mi
+        ephemeral-storage: 8Mi

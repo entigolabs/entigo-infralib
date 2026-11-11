@@ -1,17 +1,17 @@
-## Oppinionated module for vpc creation ##
+## Opinionated module for vpc creation ##
 
 
-Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
+Opinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
 
 
 ### Automatic subnet calculations ###
 If you do not specify the subnet ranges and only the vpc_cidr, then the module will create the subnets automatically. When the range is smaller than 19 (/21, /22 ...) then the database and elasticache subnets are not created.
 
-In addition we support two subnet calculation modes (subnet_split_mode = "default" and "spoke)". The latter will create separated subnets for control plane, loadbalancers and servers/compute.
+In addition, we support two subnet calculation modes (subnet_split_mode = "default" and "spoke". The latter will create separate subnets for the control plane, load balancers, and servers/compute.
 
-We do leave a lot of spare space when using (azs = 2). This is done to enable clients to later switch to a 3 zone setup without recreating subnets. It will also keep NACL rules simple - by allowing one range to cover the same type subnets.
+We do leave a lot of spare space when using (azs = 2). This is done to enable clients to later switch to a 3-zone setup without recreating subnets. It will also keep NACL rules simple - by allowing one range to cover the same type of subnets.
 
-If the automatic calculation is not to Your liking then specify each subnet as desired.
+If the automatic calculation is not to your liking, then specify each subnet as desired.
 
 
 ### subnet_split_mode = default
@@ -69,7 +69,7 @@ private-b ( 10.24.10.0/23 )
 
 __No database networks are created.__
 
-__No elasticsearch networks are created.__
+__No Elasticsearch networks are created.__
 
 
 
@@ -117,7 +117,7 @@ db-a 10.24.14.0/24
 
 db-b 10.24.15.0/24
 
-__No elasticsearch networks are created.__
+__No Elasticsearch networks are created.__
 
 ### IPv6 support scenarios ###
 
@@ -128,7 +128,7 @@ External IPv6 clients connect to a dual-stack ALB/NLB. The load balancer accepts
 IPv4-mode EKS pods only have IPv4 addresses. When DNS64 is disabled (the default), internal services that are not dual-stack like MSK return only A records, pods connect over IPv4, and everything works without any special configuration.
 
 **Scenario 3 — IPv4-mode EKS pods connecting to dual-stack internal services, or DNS64 is enabled**
-When a service has AAAA records (dual-stack) or DNS64 is enabled (synthesizing `64:ff9b::` AAAA records for IPv4-only hostnames), IPv4-mode EKS pods will see both A and AAAA records for internal services. Since the pod has no IPv6 address it cannot complete an IPv6 connection. What happens next depends on the client:
+When a service has AAAA records (dual-stack) or DNS64 is enabled (synthesizing `64:ff9b::` AAAA records for IPv4-only hostnames), IPv4-mode EKS pods will see both A and AAAA records for internal services. Since the pod has no IPv6 address, it cannot complete an IPv6 connection. What happens next depends on the client:
 
 - **Clients with proper fallback** — attempt IPv6, receive an immediate "network unreachable", retry over IPv4 transparently. No visible impact.
 - **Clients with poor fallback** — ends on the IPv6 error instead of falling back, causing connection failures.
@@ -137,6 +137,22 @@ If you hit this with a specific client, either disable DNS64 (`subnet_enable_dns
 
 **DNS64 + NAT64 (`subnet_enable_dns64`, default: `false`)**
 DNS64 is only beneficial for genuinely IPv6-capable clients (e.g. EC2 instances with IPv6 addresses, or a dual-stack EKS cluster) that need to reach IPv4-only destinations. AWS NAT Gateway supports NAT64 natively — when `subnet_enable_dns64 = true` and a NAT Gateway is present, this module automatically creates a `64:ff9b::/96` route via the NAT Gateway to handle the translation. IPv4-mode EKS pods have no IPv6 source address and cannot use this path.
+
+### VPC flow logs ###
+
+Enabled by default (`enable_flow_log`). Logs go to a CloudWatch log group `<prefix>/vpc-flow-log/` (7 days retention) unless `flow_log_destination_type = "s3"` is set:
+- without `flow_log_s3_destination_arn` a bucket `<prefix>-<account id>-<region>-flow-logs` is created in this account, logs expire after `flow_log_s3_retention_in_days` (default 90). The bucket is encrypted with the `telemetry` KMS key when the `kms` module is used (`flow_log_s3_kms_key_arn`), otherwise with SSE-S3
+- with `flow_log_s3_destination_arn` the logs go to that existing bucket, for example a central log archive. Its policy must allow `delivery.logs.amazonaws.com` to write from this account.
+
+```
+    modules:
+      - name: vpc
+        source: aws/vpc
+        inputs:
+          flow_log_destination_type: s3
+          flow_log_s3_destination_arn: arn:aws:s3:::my-log-archive-bucket #Optional
+```
+Changing the destination deletes the old CloudWatch log group. The created bucket must be emptied before it can be removed.
 
 ### VPC endpoint policies ###
 
@@ -150,7 +166,9 @@ Every endpoint gets a default policy that allows only its own service's actions,
 | `sts` | `sts:*` |
 | `efs` | `elasticfilesystem:*` |
 
-To use your own policy, set `endpoint_policies` (endpoint key => JSON policy). It replaces the default for that endpoint. Use `jsonencode()`, because the agent passes multi-line values to terraform as expressions.
+Only callers from the current account, the organization in `endpoint_policy_org_id` and AWS services can use the endpoints. The agent sets `endpoint_policy_org_id` automatically (`{{ .agent.organizationId }}`), it is empty for accounts without an organization. This needs entigo-infralib-agent v1.14.2 or newer, older agents fail with `unknown agent replace type organizationId`. The S3 policy also allows reading objects from buckets of the current account/organization without credentials (public buckets), AWS-owned buckets (ECR image layers, Amazon Linux repositories) and the STS policy allows `AssumeRoleWithWebIdentity` (IRSA).
+
+To use your own policy, set `endpoint_policies` (endpoint key => JSON policy). It replaces the default for that endpoint. Use `jsonencode()`, because the agent passes multi-line values to OpenTofu as expressions.
 
 Example that only allows this account to use the `ecr_api` endpoint:
 ```

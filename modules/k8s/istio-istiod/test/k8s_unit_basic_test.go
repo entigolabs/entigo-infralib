@@ -4,54 +4,25 @@ import (
 	"testing"
 	"time"
 
-	// TODO(oracle): restore together with TestIstioIstiodOracleDev below.
-	// "github.com/entigolabs/entigo-infralib-common/k8s"
-	terrak8s "github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
+
+	"github.com/entigolabs/entigo-infralib-test/env"
+	"github.com/entigolabs/entigo-infralib-test/k8s"
 )
 
-func TestIstioIstiodAWSBiz(t *testing.T) {
-	testIstioIstiod(t, "arn:aws:eks:eu-north-1:877483565445:cluster/biz-infra-eks")
-}
+func TestIstioIstiod(t *testing.T) {
+	env.Run(t, func(t *testing.T, e *env.Environment) {
+		// The application is named istio-system in every environment, so the
+		// client's namespace is istio-system.
+		c := k8s.Connect(t, e)
 
-func TestIstioIstiodAWSPri(t *testing.T) {
-	testIstioIstiod(t, "arn:aws:eks:eu-north-1:877483565445:cluster/pri-infra-eks")
-}
+		output, err := k8s.RunKubectlAndGetOutputE(t, c, "auth", "can-i", "get", "pods")
+		require.NoError(t, err, "Unable to connect to context %s cluster %s", c.Context, err)
+		require.Equal(t, "yes", output)
 
-func TestIstioIstiodGoogleBiz(t *testing.T) {
-	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_biz-infra-gke")
-}
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "istiod", 10, 6*time.Second), "istiod deployment error")
 
-func TestIstioIstiodGooglePri(t *testing.T) {
-	testIstioIstiod(t, "gke_entigo-infralib2_europe-north1_pri-infra-gke")
-}
-
-// TODO(oracle): re-enable once a shared Oracle OKE test cluster exists in CI.
-// There is no OKE cluster behind this test yet, so it only ever fails in
-// CheckKubectlConnection.
-/*
-func TestIstioIstiodOracleDev(t *testing.T) {
-	// Oracle's kubeconfig context isn't named after the cluster the way EKS/GKE ones are,
-	// so it goes through the shared helper instead of a hardcoded context string.
-	kubectlOptions, _ := k8s.CheckKubectlConnection(t, "oracle", "dev")
-	kubectlOptions.Namespace = "istio-system"
-
-	err := terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 30, 10*time.Second)
-	require.NoError(t, err, "istiod deployment error: %s", err)
-}
-*/
-
-func testIstioIstiod(t *testing.T, contextName string) {
-	t.Parallel()
-	namespaceName := "istio-system"
-
-	kubectlOptions := terrak8s.NewKubectlOptions(contextName, "", namespaceName)
-	output, err := terrak8s.RunKubectlAndGetOutputE(t, kubectlOptions, "auth", "can-i", "get", "pods")
-	require.NoError(t, err, "Unable to connect to context %s cluster %s", contextName, err)
-	require.Equal(t, output, "yes")
-
-	err = terrak8s.WaitUntilDeploymentAvailableE(t, kubectlOptions, "istiod", 10, 6*time.Second)
-	if err != nil {
-		t.Fatal("istiod deployment error:", err)
-	}
+		_, err = k8s.RunKubectlAndGetOutputE(t, c, "get", "envoyfilter", "remove-envoy-headers")
+		require.NoError(t, err, "remove-envoy-headers EnvoyFilter missing: %s", err)
+	})
 }

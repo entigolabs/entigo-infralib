@@ -18,6 +18,12 @@ output "private_endpoint" {
   value = oci_containerengine_cluster.this.endpoints[0].private_endpoint
 }
 
+# The address behind the kubernetes Service. NetworkPolicies enforced after Service translation
+# (modules/k8s/cilium) have to allow the API server here, on port 6443.
+output "private_endpoint_ip" {
+  value = split(":", oci_containerengine_cluster.this.endpoints[0].private_endpoint)[0]
+}
+
 output "kubernetes_endpoint" {
   value = yamldecode(data.oci_containerengine_cluster_kube_config.this.content)["clusters"][0]["cluster"]["server"]
 }
@@ -128,4 +134,14 @@ output "object_storage_namespace" {
 # oci.oraclecloud.com/oci-network-security-groups annotation - see modules/k8s/wireguard.
 output "nlb_nsg_id" {
   value = oci_core_network_security_group.nlb.id
+}
+
+# For node pools created outside this module (modules/oracle/oke-node-pool), so their nodes and
+# pods get the same rules as the pools created here.
+output "node_nsg_id" {
+  value = oci_core_network_security_group.node.id
+}
+
+output "pod_nsg_id" {
+  value = oci_core_network_security_group.pods.id
 }

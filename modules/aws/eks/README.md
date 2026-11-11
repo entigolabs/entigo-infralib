@@ -46,7 +46,21 @@ __eks_tools_subnets__ Defaults to the value of 'private_subnets' variable.
 
 __cluster_enabled_log_types__ Defaults to ["api", "authenticator"], to disable logging set to [].
 
+__cloudwatch_log_group_retention_in_days__ Defaults to 90, number of days to retain control plane logs in the CloudWatch log group.
+
+__cloudwatch_log_group_class__ Defaults to null (STANDARD), log class of the CloudWatch log group. Set to INFREQUENT_ACCESS for cheaper storage with limited query features.
+
+__cloudwatch_log_group_tags__ Defaults to {}, additional tags for the CloudWatch log group.
+
 __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or orverride defaults.
+
+__node_repair_config__ Defaults to null (node auto repair disabled). EKS managed node group auto repair configuration, applied to all managed node groups 
+
+__node_repair_wait_time_mins__ Defaults to 20, minutes before repairing a node for all repair triggering node conditions (10-120, multiple of 10). Ignored when node_repair_config sets node_repair_config_overrides.
+
+__enable_node_monitoring_agent__ Defaults to false. Set to true to install the eks-node-monitoring-agent addon without node repair. The addon is always installed when node_repair_config is enabled.
+
+__node_monitoring_agent_config__ Defaults to {}, configuration values for the eks-node-monitoring-agent addon.
 
 
 
@@ -65,4 +79,4 @@ __eks_managed_node_groups_extra__ Defaults to {}, can add custom nodegroups or o
 ```
 
 ### Limitations ###
-The module name has to be "eks" - otherwise the terraform provider for kubernets will be misconfigured.
+The module name has to be "eks" - otherwise the OpenTofu provider for kubernets will be misconfigured.

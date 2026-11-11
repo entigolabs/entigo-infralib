@@ -1,0 +1,22 @@
+# Static check of the provider templates under providers/: every module pins
+# the same version of a provider, and the templates lint with those versions.
+# No cloud is touched; the modules that use the providers are tested by Pull
+# request and Main.
+name: Providers
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['providers/**', 'modules/**/versions.tf']
+  push:
+    branches: [main]
+    paths: ['providers/**']
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check providers
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - run: providers/test.sh

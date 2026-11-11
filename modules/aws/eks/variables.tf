@@ -28,7 +28,7 @@ variable "eks_nodeport_access_cidrs" {
 variable "eks_cluster_version" {
   type     = string
   nullable = false
-  default  = "1.35"
+  default  = "1.36"
 }
 
 variable "use_latest_ami_release_version" {
@@ -296,6 +296,27 @@ variable "cloudwatch_log_group_kms_key_id" {
   default = ""
 }
 
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Number of days to retain EKS control plane log events in the CloudWatch log group"
+  type        = number
+  nullable    = false
+  default     = 90
+}
+
+variable "cloudwatch_log_group_class" {
+  description = "Log class of the CloudWatch log group. Possible values are STANDARD or INFREQUENT_ACCESS"
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "cloudwatch_log_group_tags" {
+  description = "Additional tags to add to the CloudWatch log group"
+  type        = map(string)
+  nullable    = false
+  default     = {}
+}
+
 variable "node_encryption_kms_key_arn" {
   type = string
   default = ""
@@ -313,29 +334,63 @@ variable "node_launch_template_tags" {
   nullable = false
 }
 
+variable "node_repair_config" {
+  description = "Disabled when null, enable with true"
+  type = object({
+    enabled                                 = bool
+    max_parallel_nodes_repaired_count       = optional(number)
+    max_parallel_nodes_repaired_percentage  = optional(number)
+    max_unhealthy_node_threshold_count      = optional(number)
+    max_unhealthy_node_threshold_percentage = optional(number)
+    node_repair_config_overrides = optional(list(object({
+      min_repair_wait_time_mins = number
+      node_monitoring_condition = string
+      node_unhealthy_reason     = string
+      repair_action             = string
+    })))
+  })
+  default = null
+}
+
+variable "node_repair_wait_time_mins" {
+  description = "Wait time in minutes before repairing a node, applied to all repair triggering node conditions when node_repair_config does not set node_repair_config_overrides. 10-120 in steps of 10"
+  type        = number
+  nullable    = false
+  default     = 20
+  validation {
+    condition     = var.node_repair_wait_time_mins >= 10 && var.node_repair_wait_time_mins <= 120 && var.node_repair_wait_time_mins % 10 == 0
+    error_message = "node_repair_wait_time_mins must be between 10 and 120 and a multiple of 10."
+  }
+}
+
 variable "coredns_addon_version" {
   type = string
-  default = "v1.13.2-eksbuild.4"
+  default = "v1.14.7-eksbuild.22"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.35.3-eksbuild.5"
+  default = "v1.36.0-eksbuild.58"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.21.2-eksbuild.2"
+  default = "v1.23.2-eksbuild.8"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.59.0-eksbuild.1"
+  default = "v1.67.2-eksbuild.1"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v3.2.0-eksbuild.1"
+  default = "v3.5.3-eksbuild.1"
+}
+
+variable "node_monitoring_agent_addon_version" {
+  type = string
+  default = "v1.7.2-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {
@@ -351,6 +406,13 @@ variable "enable_vpc_cni_network_policy" {
 variable "enable_efs_csi" {
   type    = bool
   default = false
+}
+
+variable "enable_node_monitoring_agent" {
+  description = "Install the eks-node-monitoring-agent addon without node repair. The addon is always installed when node_repair_config is enabled"
+  type        = bool
+  nullable    = false
+  default     = false
 }
 
 variable "coredns_config" {
@@ -378,9 +440,23 @@ variable "efs_csi_controller_config" {
   default = {}
 }
 
+variable "node_monitoring_agent_config" {
+  description = "eks-node-monitoring-agent EKS addon configuration_values"
+  type     = any
+  nullable = false
+  default  = {}
+}
+
 
 variable "tags" {
   type        = map(string)
   description = "Additional tags for the EKS cluster resource only (does not affect node groups)"
   default     = {}
+}
+
+variable "node_security_group_cluster_tag" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Tag the node security group with kubernetes.io/cluster/<prefix>=owned. The AWS Load Balancer Controller requires exactly one security group with this tag on a node ENI when the ENI has several security groups. Set to false if the nodes also carry another security group with this tag."
 }

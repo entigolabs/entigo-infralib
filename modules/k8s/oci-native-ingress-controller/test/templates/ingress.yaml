@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: test
 spec:
-  ingressClassName: external
+  # The class every Oracle test cluster keeps; the external one is turned off there.
+  ingressClassName: internal
   rules:
     - host: change-domain
       http:
