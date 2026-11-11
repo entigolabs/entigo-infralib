@@ -29,6 +29,11 @@ output "int_cert_arn" {
   value = length(local.default_private_key) > 0 && local.domains_with_defaults[local.default_private_key].create_certificate ? aws_acm_certificate.this[local.default_private_key].arn : null
 }
 
+output "int_cert_zone_id" {
+  description = "Public validation zone ID of the domain marked as default private (ACME DNS-01 by the cert-manager k8s module), empty when it has none"
+  value = try(aws_route53_zone.validation[local.default_private_key].zone_id, "")
+}
+
 output "zone_ids" {
   description = "Map of domain keys to their zone IDs"
   value = local.effective_zone_ids

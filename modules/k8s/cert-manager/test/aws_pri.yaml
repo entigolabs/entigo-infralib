@@ -1,0 +1,2 @@
+# cert-manager alone, the AWS default: no ACME ClusterIssuer, the gateways use ACM certificates. The
+# ClusterIssuer is exercised on aws_biz.

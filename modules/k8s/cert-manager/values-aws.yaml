@@ -1,0 +1,23 @@
+global:
+  cloudProvider: aws
+  providerConfigRefName: crossplane-aws
+
+  aws:
+    account: ""
+    clusterOIDC: ""
+    region: ""
+    # Route53 zone IDs carry no name, the solver selectors need the zone names
+    # of global.pubZoneId and global.intCertZoneId
+    pubZoneName: ""
+    intCertZoneName: ""
+
+# The gateways on AWS use ACM certificates, so by default cert-manager is installed alone. true adds the ACME
+# ClusterIssuer with Route53 DNS-01 solvers and the IRSA role for it (crossplane-aws)
+clusterIssuer:
+  create: false
+
+cert-manager:
+  # The IRSA token is projected root-owned with mode 0600 and the controller runs as non-root: fsGroup makes it
+  # readable (https://cert-manager.io/docs/configuration/acme/dns01/route53/)
+  securityContext:
+    fsGroup: 1001
