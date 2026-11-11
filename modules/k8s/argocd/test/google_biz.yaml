@@ -94,7 +94,7 @@ argocd-apps:
                         - values.yaml
                     values: |
                       image:
-                        registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged'
+                        registry: '{{ .toptout.gar-proxy.hub_registry | "docker.io" }}/nginx/nginx-unprivileged'
                 path: modules/k8s/hello-world
                 repoURL: https://github.com/entigolabs/entigo-infralib-release.git
                 targetRevision: main
