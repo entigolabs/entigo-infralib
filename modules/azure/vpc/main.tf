@@ -134,7 +134,7 @@ resource "azurerm_virtual_network" "this" {
 }
 
 data "azurerm_virtual_network" "existing" {
-  count               = var.create_vpc ? 0 : 1
+  count               = var.create_vpc || var.vpc_name == "" ? 0 : 1
   name                = var.vpc_name
   resource_group_name = var.resource_group_name
 }
