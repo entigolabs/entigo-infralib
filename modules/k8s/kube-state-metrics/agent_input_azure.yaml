@@ -1,0 +1,26 @@
+kube-state-metrics:
+  networkPolicy:
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Kubernetes API: same pattern as prometheus's embedded kube-state-metrics
+      # (prometheus/agent_input_azure.yaml) and alloy's node-agent
+      # (alloy/agent_input_azure.yaml) - the AKS subnet CIDR, not the apiserver's
+      # ClusterIP/service CIDR, since AKS API Server VNet Integration puts the
+      # real backend IP in that subnet.
+      - to:
+          - ipBlock:
+              cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"
+        ports:
+          - port: 443
+            protocol: TCP
