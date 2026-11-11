@@ -176,6 +176,12 @@ The flow log lives in the region's Network Watcher (`NetworkWatcherRG`/`NetworkW
 * Cost: per GB collected, 5 GB/month free per subscription, plus storage
   ([pricing](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#pricing)).
 
+### VNet name and existing VNet ###
+`vpc_name` names the VNet, the prefix by default. With `create_vpc: false` the VNet `vpc_name` must already exist in
+the agent's resource group (e.g. created and peered to a hub by a network team): the module creates the subnets, NAT
+gateway, Container Apps environment and flow log in it and leaves the VNet itself, its peerings and DNS servers alone.
+`vpc_cidr` must be the VNet's address space.
+
 ### Plan time checks ###
 `vpc_cidr` IPv4 and /24 or larger, `subnet_split_mode`, overlaps, subnets inside the VNet, AGC subnets exactly /24,
 unique names, `custom_subnets` keys and `nat_gateway`/`route_table`, `egress_next_hop_ip` only without NAT gateway,

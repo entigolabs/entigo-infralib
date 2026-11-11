@@ -21,6 +21,20 @@ variable "location" {
   default = ""
 }
 
+variable "create_vpc" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "false = use the existing VNet vpc_name"
+}
+
+variable "vpc_name" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "\"\" = prefix"
+}
+
 variable "vpc_cidr" {
   type     = string
   nullable = false

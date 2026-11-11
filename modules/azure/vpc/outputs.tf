@@ -1,9 +1,9 @@
 output "vpc_id" {
-  value = azurerm_virtual_network.this.id
+  value = local.vpc_id
 }
 
 output "vpc_name" {
-  value = azurerm_virtual_network.this.name
+  value = local.vpc_name
 }
 
 output "vpc_cidr" {
@@ -110,7 +110,7 @@ output "custom_subnet_cidrs" {
 }
 
 output "name" {
-  value = azurerm_virtual_network.this.name
+  value = local.vpc_name
 }
 
 output "nat_public_ips" {
