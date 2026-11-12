@@ -155,6 +155,8 @@ stringData:
     fi
     # Register credential-less OCI registries found in application files
     # ArgoCD requires a repository entry with enableOCI even for public OCI registries
+    # Only for helm OCI sources (with the chart field): native OCI sources (oci:// and
+    # no chart) are recognized by their scheme and need no repository entry
     local done_urls=""
     for app_file in ./*.yaml; do
         for url in $(yq -r '.spec.sources[]? | select(.chart != null) | .repoURL' $app_file); do
@@ -255,6 +257,9 @@ argocd_helm_bootstrap() {
             source_type="git"
         elif [ "$(yq -r '.spec.sources[0].chart' $app_file)" == "argocd" ]; then
             source_type="oci"
+        elif yq -r '.spec.sources[0] | select(.chart == null) | .repoURL // ""' $app_file | grep -Eq "^oci://.*/argocd$"; then
+            # Native OCI source: the repoURL is the chart itself and there is no chart field
+            source_type="oci-native"
         else
             continue
         fi
@@ -276,13 +281,20 @@ argocd_helm_bootstrap() {
             chart_dir="git-$app/$path"
         else
             # Pull and unpack the OCI chart so the value files inside the package can be referenced
-            local chart=$(yq -r '.spec.sources[0].chart' $app_file)
             local oci_repo="${repo#oci://}"
-            local chart_ref="oci://${oci_repo}/${chart}"
+            local chart chart_ref
+            if [ "$source_type" == "oci-native" ]; then
+                chart="${oci_repo##*/}"
+                chart_ref="oci://${oci_repo}"
+            else
+                chart=$(yq -r '.spec.sources[0].chart' $app_file)
+                chart_ref="oci://${oci_repo}/${chart}"
+            fi
             local version_arg="--version $version"
-            # Digest pinned revisions go into the chart reference, --version only accepts semver
-            if [[ "$version" == sha256:* ]]; then
-                chart_ref="${chart_ref}@${version}"
+            # Digest pinned revisions (sha256:<digest> or <tag>@sha256:<digest>) go into the
+            # chart reference, --version only accepts semver
+            if [[ "$version" == *sha256:* ]]; then
+                chart_ref="${chart_ref}@sha256:${version##*sha256:}"
                 version_arg=""
             fi
             helm_oci_login "$oci_repo" >&2
@@ -475,8 +487,9 @@ argocd_apply_destroy() {
     # Patch external-dns to sync mode before destroy
     echo "Detecting external-dns modules."
     for app_file in ./*.yaml; do
-        # Module name comes from .path for git sources and from .chart for OCI sources
-        if yq -r '.spec.sources[0].path // .spec.sources[0].chart // ""' $app_file | grep -Eq "(^|/)external-dns$"; then
+        # Module name comes from .path for git sources, from .chart for helm OCI sources and
+        # is the last part of .repoURL for native OCI sources (oci:// and no .chart, path is ".")
+        if yq -r '.spec.sources[0] | (select(.chart == null and ((.repoURL // "") | test("^oci://"))) | .repoURL) // .path // .chart // ""' $app_file | grep -Eq "(^|/)external-dns$"; then
             app=$(yq -r '.metadata.name' $app_file)
             echo "Found $app, patching policy to sync."
             POLICY_INDEX=$(kubectl get deployment $app -n $app -o jsonpath='{.spec.template.spec.containers[0].args}' | jq -r 'to_entries[] | select(.value | test("--policy")) | .key')
