@@ -278,7 +278,7 @@ resource "azurerm_container_app_environment" "container_apps" {
   location                           = var.location
   resource_group_name                = var.resource_group_name
   infrastructure_subnet_id           = azurerm_subnet.container_apps[count.index].id
-  infrastructure_resource_group_name = "${azurerm_subnet.container_apps[count.index].name}-${var.location}"
+  infrastructure_resource_group_name = try(var.container_apps_resource_group_names[count.index], "${azurerm_subnet.container_apps[count.index].name}-${var.location}")
   internal_load_balancer_enabled     = true
   zone_redundancy_enabled            = var.container_apps_zone_redundancy_enabled
   logs_destination                   = "log-analytics"

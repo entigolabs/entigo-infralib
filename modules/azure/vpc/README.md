@@ -188,6 +188,10 @@ unique names, `custom_subnets` keys and `nat_gateway`/`route_table`, `egress_nex
 explicit lists below /22 (spoke: /21), at least one control-agc and service-agc subnet in spoke mode, `unique_suffix`.
 Azure itself requires aks /28 or larger and Container Apps /27 or larger.
 
+### Managed resource group ###
+Azure creates a managed resource group per Container Apps environment, `<subnet name>-<location>`.
+`container_apps_resource_group_names` overrides the names (create time only: a change replaces the environment).
+
 ### Outputs ###
 * Per tier `*_subnets` (ids) and `*_subnet_cidrs`: private, public, intra, database, public_agc, private_agc, aks,
   container_apps; `container_apps_environment_ids`; `control_agc_subnets`, `service_agc_subnets`, `control_subnets`,
