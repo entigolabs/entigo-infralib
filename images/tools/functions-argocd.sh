@@ -21,6 +21,60 @@ init_argocd_connection() {
     fi
 }
 
+# Apply an ArgoCD credential template (repo-creds) for an OCI registry
+# ArgoCD has two kinds of OCI sources and each one only matches its own credential:
+#   helm - repoURL without a scheme plus the chart field, matched by type helm with
+#          enableOCI and the url without the oci:// prefix
+#   oci  - repoURL with the oci:// prefix and no chart field (native OCI), matched
+#          by type oci and the url with the oci:// prefix
+# Both are kept so that applications of either form find their credentials.
+# Usage: argocd_oci_creds_secret <secret name> <namespace> <helm|oci> <url without oci://> <username> <password>
+argocd_oci_creds_secret() {
+    local secret_name="$1" namespace="$2" type="$3" url="$4" username="$5" password="$6"
+    local type_data="type: helm
+  enableOCI: \"true\""
+    if [ "$type" == "oci" ]; then
+        type_data="type: oci"
+        url="oci://${url}"
+    fi
+    echo "apiVersion: v1
+kind: Secret
+metadata:
+  name: ${secret_name}
+  namespace: ${namespace}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  ${type_data}
+  url: ${url}
+  username: \"${username}\"
+  password: \"${password}\"" | kubectl apply -f -
+}
+
+# Seed the helm and oci credential templates of a cloud registry that do not exist yet
+# The token command only runs when a secret is missing, existing secrets (owned by
+# External Secrets after the first sync) are left alone.
+# Usage: argocd_seed_registry_creds <secret name> <namespace> <url without oci://> <username> <token command...>
+argocd_seed_registry_creds() {
+    local secret_name="$1" namespace="$2" url="$3" username="$4"
+    shift 4
+    local token="" type name
+    for type in helm oci; do
+        name="$secret_name"
+        if [ "$type" == "oci" ]; then
+            name="${secret_name}-oci"
+        fi
+        if kubectl -n $namespace get secret $name >/dev/null 2>&1; then
+            continue
+        fi
+        if [ -z "$token" ]; then
+            token=$("$@") || { echo "Failed to get a registry token for $url"; exit 24; }
+        fi
+        echo "Applying temporary $type credential secret $name in namespace $namespace."
+        argocd_oci_creds_secret "$name" "$namespace" "$type" "$url" "$username" "$token" || { echo "Failed to create credential secret $name"; exit 24; }
+    done
+}
+
 # Create/update ArgoCD repository secrets from GIT_AUTH_SOURCE_*, GIT_AUTH_USERNAME_*, GIT_AUTH_PASSWORD_* env variables
 # Detects GIT vs OCI sources by URL scheme: https://, http://, ssh:// or git@ means GIT, anything else is an OCI registry
 # Usage: argocd_repositories [namespace], defaults to $ARGOCD_NAMESPACE
@@ -58,99 +112,42 @@ stringData:
   username: \"${!USERNAME}\"
   password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create repository secret $secret_name"; exit 24; }
         else
-            # OCI helm registry credentials, ArgoCD expects the url without the oci:// prefix.
-            # A credential template (repo-creds) matches by url prefix: the applications
-            # use the source with a module type appended (<source>/k8s), which a repository
-            # secret, matched on the exact url, would never cover.
+            # OCI registry credentials as credential templates (repo-creds), which match
+            # by url prefix: the applications use the source with a module type appended
+            # (<source>/k8s), which a repository secret, matched on the exact url, would
+            # never cover. Applied in both forms, see argocd_oci_creds_secret.
             local url="${SOURCE#oci://}"
-            echo "Applying OCI credential secret $secret_name in namespace $namespace."
-            echo "apiVersion: v1
-kind: Secret
-metadata:
-  name: ${secret_name}
-  namespace: ${namespace}
-  labels:
-    argocd.argoproj.io/secret-type: repo-creds
-stringData:
-  type: helm
-  enableOCI: \"true\"
-  url: ${url}
-  username: \"${!USERNAME}\"
-  password: \"${!PASSWORD}\"" | kubectl apply -f - || { echo "Failed to create credential secret $secret_name"; exit 24; }
+            echo "Applying OCI credential secrets $secret_name and ${secret_name}-oci in namespace $namespace."
+            argocd_oci_creds_secret "$secret_name" "$namespace" helm "$url" "${!USERNAME}" "${!PASSWORD}" || { echo "Failed to create credential secret $secret_name"; exit 24; }
+            argocd_oci_creds_secret "${secret_name}-oci" "$namespace" oci "$url" "${!USERNAME}" "${!PASSWORD}" || { echo "Failed to create credential secret ${secret_name}-oci"; exit 24; }
         fi
     done
 
-    # Seed a temporary ECR credential secret on AWS until External Secrets takes over
-    # ECR tokens are valid for 12 hours, ESO keeps the secret refreshed afterwards
+    # Seed temporary ECR credential secrets on AWS until External Secrets takes over
+    # ECR tokens are valid for 12 hours, ESO adopts and keeps the secrets refreshed afterwards
+    # The names and urls must match the ExternalSecrets in modules/k8s/external-secrets/templates/aws/ecr.yaml
     if [ "$PROVIDER" == "aws" ]; then
         local account_id=$(aws sts get-caller-identity --query Account --output text)
-        local ecr_secret="repo-${account_id}-${AWS_REGION}"
-        if ! kubectl -n $namespace get secret $ecr_secret >/dev/null 2>&1; then
-            echo "Applying temporary ECR credential secret $ecr_secret in namespace $namespace."
-            local ecr_token=$(aws ecr get-login-password --region $AWS_REGION) || { echo "Failed to get ECR token"; exit 24; }
-            echo "apiVersion: v1
-kind: Secret
-metadata:
-  name: ${ecr_secret}
-  namespace: ${namespace}
-  labels:
-    argocd.argoproj.io/secret-type: repo-creds
-stringData:
-  type: helm
-  enableOCI: \"true\"
-  url: ${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com
-  username: AWS
-  password: \"${ecr_token}\"" | kubectl apply -f - || { echo "Failed to create ECR credential secret $ecr_secret"; exit 24; }
-        fi
+        argocd_seed_registry_creds "repo-${account_id}-${AWS_REGION}" "$namespace" "${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com" AWS \
+            aws ecr get-login-password --region $AWS_REGION
     fi
 
-    # Seed a temporary Artifact Registry credential secret on Google until External Secrets takes over
-    # GAR access tokens are valid for 1 hour, ESO adopts and keeps the secret refreshed afterwards
-    # The name and url must match the ExternalSecret in modules/k8s/external-secrets/templates/google/gar.yaml
+    # Seed temporary Artifact Registry credential secrets on Google until External Secrets takes over
+    # GAR access tokens are valid for 1 hour, ESO adopts and keeps the secrets refreshed afterwards
+    # The names and urls must match the ExternalSecrets in modules/k8s/external-secrets/templates/google/gar.yaml
     if [ "$PROVIDER" == "google" ]; then
-        local gar_secret="repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}"
-        if ! kubectl -n $namespace get secret $gar_secret >/dev/null 2>&1; then
-            echo "Applying temporary Artifact Registry credential secret $gar_secret in namespace $namespace."
-            local gar_token=$(gcloud auth print-access-token) || { echo "Failed to get Artifact Registry token"; exit 24; }
-            echo "apiVersion: v1
-kind: Secret
-metadata:
-  name: ${gar_secret}
-  namespace: ${namespace}
-  labels:
-    argocd.argoproj.io/secret-type: repo-creds
-stringData:
-  type: helm
-  enableOCI: \"true\"
-  url: ${GOOGLE_REGION}-docker.pkg.dev/${GOOGLE_PROJECT}
-  username: oauth2accesstoken
-  password: \"${gar_token}\"" | kubectl apply -f - || { echo "Failed to create Artifact Registry credential secret $gar_secret"; exit 24; }
-        fi
+        argocd_seed_registry_creds "repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}" "$namespace" "${GOOGLE_REGION}-docker.pkg.dev/${GOOGLE_PROJECT}" oauth2accesstoken \
+            gcloud auth print-access-token
     fi
-    # Seed a temporary ACR credential secret on Azure until External Secrets takes over
-    # ACR refresh tokens are valid for 3 hours, ESO adopts and keeps the secret refreshed afterwards
-    # The name and url must match the ExternalSecret in modules/k8s/external-secrets/templates/azure/acr.yaml
+    # Seed temporary ACR credential secrets on Azure until External Secrets takes over
+    # ACR refresh tokens are valid for 3 hours, ESO adopts and keeps the secrets refreshed afterwards
+    # The names and urls must match the ExternalSecrets in modules/k8s/external-secrets/templates/azure/acr.yaml
     if [ "$PROVIDER" == "azure" ]; then
         local acr_server
         acr_server=$(get_acr_login_server) || { echo "Failed to find the ACR login server"; exit 24; }
-        local acr_secret="repo-${acr_server%%.*}"
-        if [ -n "$acr_server" ] && ! kubectl -n $namespace get secret $acr_secret >/dev/null 2>&1; then
-            echo "Applying temporary ACR credential secret $acr_secret in namespace $namespace."
-            local acr_token
-            acr_token=$(get_acr_token "$acr_server") || { echo "Failed to get ACR token"; exit 24; }
-            echo "apiVersion: v1
-kind: Secret
-metadata:
-  name: ${acr_secret}
-  namespace: ${namespace}
-  labels:
-    argocd.argoproj.io/secret-type: repo-creds
-stringData:
-  type: helm
-  enableOCI: \"true\"
-  url: ${acr_server}
-  username: ${ACR_TOKEN_USERNAME}
-  password: \"${acr_token}\"" | kubectl apply -f - || { echo "Failed to create ACR credential secret $acr_secret"; exit 24; }
+        if [ -n "$acr_server" ]; then
+            argocd_seed_registry_creds "repo-${acr_server%%.*}" "$namespace" "$acr_server" "$ACR_TOKEN_USERNAME" \
+                get_acr_token "$acr_server"
         fi
     fi
     # Register credential-less OCI registries found in application files
