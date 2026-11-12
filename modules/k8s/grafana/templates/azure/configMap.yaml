@@ -37,7 +37,7 @@ data:
       - name: Loki
         type: loki
         access: proxy
-        url: http://{{ . }}-gateway.{{ . }}
+        url: http://loki-gateway.{{ . }}
         jsonData:
           maxLines: 1000
       {{- end }}
