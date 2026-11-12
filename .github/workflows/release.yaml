@@ -51,11 +51,11 @@ jobs:
       # that repository's own releases.
       #
       # Each versioned image is signed by digest in both registries with
-      # cosign keyless signing. The build already signed latest, but under the
-      # identity of build-images.yaml, which dev images carry too; this
-      # signature names release.yaml, so it marks an image as released. The
-      # release notes then get a section with every image, tag and digest; a
-      # re-run replaces the section.
+      # cosign keyless signing: no key, the certificate names this workflow,
+      # the signature is logged in Rekor. Only released images are signed;
+      # dev and latest are not, though latest has the digest of the newest
+      # release until the next build. The release notes then get a section
+      # with every image, tag and digest; a re-run replaces the section.
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
