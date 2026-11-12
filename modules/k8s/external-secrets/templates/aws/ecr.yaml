@@ -168,6 +168,40 @@ spec:
           name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
           
 ---
+# The same credentials for sources that ArgoCD reads as native OCI repositories
+# (repoURL with the oci:// prefix and no chart field). Those only match a
+# credential template of type oci with the oci:// prefix in the url, the helm
+# one above keeps serving sources that still set the chart field.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "repo-{{ .accountNumber }}-{{ .accountRegion }}-oci"
+  namespace: {{ $.Values.global.aws.createECRNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 30m
+  target:
+    name: "repo-{{ .accountNumber }}-{{ .accountRegion }}-oci"
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repo-creds
+      data:
+        name: "repo-{{ .accountNumber }}-{{ .accountRegion }}-oci"
+        type: oci
+        url: oci://{{ .accountNumber }}.dkr.ecr.{{ .accountRegion }}.amazonaws.com
+        password: "{{`{{ .password }}`}}"
+        username: "{{`{{ .username }}`}}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: ECRAuthorizationToken
+          name: "ecr-token-{{ .accountNumber }}-{{ .accountRegion }}"
+          
+---
 
 
 {{- end }}
