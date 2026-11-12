@@ -51,28 +51,21 @@ stringData:
   password: \"${password}\"" | kubectl apply -f -
 }
 
-# Seed the helm and oci credential templates of a cloud registry that do not exist yet
-# The token command only runs when a secret is missing, existing secrets (owned by
-# External Secrets after the first sync) are left alone.
+# Seed temporary helm and oci credential templates of a cloud registry
+# Only on a cluster that has neither yet: once the helm secret exists External Secrets
+# owns the credentials and creates the oci one itself, so nothing is applied.
 # Usage: argocd_seed_registry_creds <secret name> <namespace> <url without oci://> <username> <token command...>
 argocd_seed_registry_creds() {
     local secret_name="$1" namespace="$2" url="$3" username="$4"
     shift 4
-    local token="" type name
-    for type in helm oci; do
-        name="$secret_name"
-        if [ "$type" == "oci" ]; then
-            name="${secret_name}-oci"
-        fi
-        if kubectl -n $namespace get secret $name >/dev/null 2>&1; then
-            continue
-        fi
-        if [ -z "$token" ]; then
-            token=$("$@") || { echo "Failed to get a registry token for $url"; exit 24; }
-        fi
-        echo "Applying temporary $type credential secret $name in namespace $namespace."
-        argocd_oci_creds_secret "$name" "$namespace" "$type" "$url" "$username" "$token" || { echo "Failed to create credential secret $name"; exit 24; }
-    done
+    if kubectl -n $namespace get secret $secret_name >/dev/null 2>&1; then
+        return
+    fi
+    local token
+    token=$("$@") || { echo "Failed to get a registry token for $url"; exit 24; }
+    echo "Applying temporary credential secrets $secret_name and ${secret_name}-oci in namespace $namespace."
+    argocd_oci_creds_secret "$secret_name" "$namespace" helm "$url" "$username" "$token" || { echo "Failed to create credential secret $secret_name"; exit 24; }
+    argocd_oci_creds_secret "${secret_name}-oci" "$namespace" oci "$url" "$username" "$token" || { echo "Failed to create credential secret ${secret_name}-oci"; exit 24; }
 }
 
 # Create/update ArgoCD repository secrets from GIT_AUTH_SOURCE_*, GIT_AUTH_USERNAME_*, GIT_AUTH_PASSWORD_* env variables
