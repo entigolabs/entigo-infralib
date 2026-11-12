@@ -38,8 +38,8 @@ output "node_resource_group_id" {
   value = module.aks.node_resource_group_id
 }
 
-output "identity_principal_id" {
-  value = azurerm_user_assigned_identity.aks.principal_id
+output "cluster_identity_principal_id" {
+  value = local.cluster_identity_principal_id
 }
 
 output "kubelet_identity_object_id" {

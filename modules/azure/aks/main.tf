@@ -15,6 +15,12 @@ data "azapi_resource_list" "vm_skus" {
 locals {
   disk_encryption = var.disk_encryption_key_id != ""
 
+  cluster_identity_name                = var.cluster_identity_id != "" ? provider::azurerm::parse_resource_id(var.cluster_identity_id).resource_name : var.prefix
+  cluster_identity_resource_group_name = var.cluster_identity_id != "" ? provider::azurerm::parse_resource_id(var.cluster_identity_id).resource_group_name : var.resource_group_name
+
+  cluster_identity_id           = one(concat(azurerm_user_assigned_identity.aks[*].id, data.azurerm_user_assigned_identity.existing[*].id))
+  cluster_identity_principal_id = one(concat(azurerm_user_assigned_identity.aks[*].principal_id, data.azurerm_user_assigned_identity.existing[*].principal_id))
+
   # Zones restricted for the subscription (NotAvailableForSubscription) are left out
   skus = { for v in try(data.azapi_resource_list.vm_skus[0].output.vms, []) : v.name => v }
   sku_zones = {
@@ -80,12 +86,7 @@ locals {
   ))
 }
 
-resource "azurerm_user_assigned_identity" "aks" {
-  name                = var.prefix
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  tags                = local.tags
-
+resource "terraform_data" "checks" {
   lifecycle {
     precondition {
       condition     = length(local.unavailable_sizes) == 0
@@ -94,10 +95,24 @@ resource "azurerm_user_assigned_identity" "aks" {
   }
 }
 
+resource "azurerm_user_assigned_identity" "aks" {
+  count               = var.create_cluster_identity ? 1 : 0
+  name                = local.cluster_identity_name
+  location            = var.location
+  resource_group_name = local.cluster_identity_resource_group_name
+  tags                = local.tags
+}
+
+data "azurerm_user_assigned_identity" "existing" {
+  count               = var.create_cluster_identity ? 0 : 1
+  name                = local.cluster_identity_name
+  resource_group_name = local.cluster_identity_resource_group_name
+}
+
 resource "azurerm_role_assignment" "aks_network" {
   scope                            = var.vnet_subnet_id
   role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -105,7 +120,7 @@ resource "azurerm_role_assignment" "aks_apiserver_network" {
   count                            = var.api_server_vnet_integration_enabled ? 1 : 0
   scope                            = var.api_server_subnet_id
   role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -113,16 +128,16 @@ resource "azurerm_role_assignment" "aks_lb_network" {
   for_each                         = { for id in distinct(var.lb_subnet_ids) : element(split("/", id), -1) => id if id != var.vnet_subnet_id }
   scope                            = each.value
   role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
 # Central private DNS zone: AKS writes the API server record and links the zone to the cluster VNet
 resource "azurerm_role_assignment" "aks_private_dns_zone" {
-  count                            = var.private_dns_zone_id != "" ? 1 : 0
+  count                            = var.private_dns_zone_id != "" && var.create_private_dns_zone_role ? 1 : 0
   scope                            = var.private_dns_zone_id
   role_definition_name             = "Private DNS Zone Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -130,7 +145,7 @@ resource "azurerm_role_assignment" "aks_vnet" {
   count                            = var.private_dns_zone_id != "" ? 1 : 0
   scope                            = regex("^(.*)/subnets/[^/]+$", var.vnet_subnet_id)[0]
   role_definition_name             = "Network Contributor"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -147,7 +162,7 @@ resource "azurerm_role_assignment" "kubelet_identity_operator" {
   count                            = var.bootstrap_cache_enabled ? 1 : 0
   scope                            = azurerm_user_assigned_identity.kubelet[0].id
   role_definition_name             = "Managed Identity Operator"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -185,7 +200,7 @@ resource "azurerm_role_assignment" "disk_encryption_reader" {
   count                            = local.disk_encryption ? 1 : 0
   scope                            = azurerm_disk_encryption_set.this[0].id
   role_definition_name             = "Reader"
-  principal_id                     = azurerm_user_assigned_identity.aks.principal_id
+  principal_id                     = local.cluster_identity_principal_id
   skip_service_principal_aad_check = true
 }
 
@@ -231,7 +246,7 @@ module "aks" {
   auto_scaler_profile      = var.auto_scaler_profile
 
   managed_identities = {
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.aks.id]
+    user_assigned_resource_ids = [local.cluster_identity_id]
   }
 
   bootstrap_profile = var.bootstrap_cache_enabled ? {

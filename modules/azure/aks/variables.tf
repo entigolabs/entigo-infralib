@@ -95,6 +95,26 @@ variable "private_dns_zone_id" {
   description = "Central private DNS zone for the private API server, private.<location>.azmk8s.io or <subzone>.private.<location>.azmk8s.io, create time only. \"\" = AKS creates a zone per cluster"
 }
 
+variable "create_private_dns_zone_role" {
+  type        = bool
+  default     = true
+  description = "false = the cluster identity has Private DNS Zone Contributor on private_dns_zone_id already"
+}
+
+variable "create_cluster_identity" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "false = use the existing identity cluster_identity_id"
+}
+
+variable "cluster_identity_id" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "User assigned identity of the cluster, create time only. \"\" = prefix in resource_group_name"
+}
+
 variable "api_server_authorized_ip_ranges" {
   type = list(string)
   default = [
