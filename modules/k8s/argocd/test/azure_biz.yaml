@@ -91,7 +91,7 @@ argocd-apps:
                         - values.yaml
                     values: |
                       image:
-                        registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/nginxinc/nginx-unprivileged'
+                        registry: '{{ .toptout.acr-proxy.hub_registry | "docker.io" }}/nginx/nginx-unprivileged'
                 path: modules/k8s/hello-world
                 repoURL: https://github.com/entigolabs/entigo-infralib-release.git
                 targetRevision: main
@@ -103,3 +103,4 @@ argocd-apps:
                   labels:
                     pod-security.kubernetes.io/enforce: restricted
                     pod-security.kubernetes.io/warn: restricted
+                    tenancy.entigo.com/zone: infralib
