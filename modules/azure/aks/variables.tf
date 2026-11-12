@@ -92,7 +92,7 @@ variable "private_cluster_enabled" {
 variable "private_dns_zone_id" {
   type        = string
   default     = ""
-  description = "Central private DNS zone for the private API server, private.<location>.azmk8s.io or <subzone>.private.<location>.azmk8s.io, create time only. \"\" = AKS creates a zone per cluster"
+  description = "Central private DNS zone for the private API server, private.<location>.azmk8s.io or <subzone>.private.<location>.azmk8s.io (privatelink.<location>.azmk8s.io with api_server_vnet_integration_enabled = false), create time only. \"\" = AKS creates a zone per cluster"
 }
 
 variable "create_private_dns_zone_role" {
