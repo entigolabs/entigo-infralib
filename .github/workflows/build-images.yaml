@@ -11,10 +11,11 @@
 # The publish job signs the index it tagged, dev and latest alike, in both
 # registries with cosign keyless signing: no key, the certificate names this
 # workflow, the signature is logged in Rekor. The caller has to grant
-# id-token: write. The release workflow gives the image behind latest its
-# version tag without a rebuild, so that tag has the same digest and the
-# signature covers it too. A signature says the image was built here; it does
-# not tell dev from latest, since a cascaded dev build also runs from main.
+# id-token: write. A signature made here says the image was built by this
+# workflow; it does not tell dev from latest, since a cascaded dev build also
+# runs from main. The release workflow signs the images it gives a version
+# tag once more, under its own identity. The image's release candidate
+# release lists the registries, the tag and the digest in its notes.
 name: Reusable Image Builder
 
 on:
@@ -244,19 +245,24 @@ jobs:
         set -euo pipefail
         issuer=https://token.actions.githubusercontent.com
         identity="^https://github\\.com/${GITHUB_REPOSITORY}/\\.github/workflows/build-images\\.yaml@"
+        notes="${RUNNER_TEMP}/image-notes.md"
         {
-          echo "### ${NAME}:${IMAGE_TAG}"
+          echo "## Container images"
+          echo
+          echo "Multi-arch (linux/amd64, linux/arm64), signed with cosign:"
           echo
           echo "| Image | Tag | Digest |"
           echo "| --- | --- | --- |"
-        } >> "$GITHUB_STEP_SUMMARY"
+        } > "$notes"
         for image in "public.ecr.aws/entigolabs/${NAME}" "entigolabs/${NAME}"; do
           digest=$(docker buildx imagetools inspect "${image}:${IMAGE_TAG}" --format '{{.Manifest.Digest}}')
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::no digest for ${image}:${IMAGE_TAG}" >&2; exit 1; }
           cosign sign --yes "${image}@${digest}"
           cosign verify --certificate-oidc-issuer "$issuer" --certificate-identity-regexp "$identity" "${image}@${digest}" >/dev/null
-          echo "| \`${image}\` | \`${IMAGE_TAG}\` | \`${digest}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`${image}\` | \`${IMAGE_TAG}\` | \`${digest}\` |" >> "$notes"
         done
+        echo >> "$notes"
+        cat "$notes" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Record image tag for downstream builds
       run: echo "${{ needs.tag.outputs.image_tag }}" > "${RUNNER_TEMP}/image-tag.txt"
@@ -281,6 +287,7 @@ jobs:
         RELEASE_URL=$(gh release create ${RELEASE_TAG} \
           --title "Release ${RELEASE_TAG}" \
           --generate-notes \
+          --notes-file "${RUNNER_TEMP}/image-notes.md" \
           --draft=false \
           --latest=false \
           --prerelease=true)

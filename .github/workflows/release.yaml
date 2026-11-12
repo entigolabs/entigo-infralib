@@ -1,7 +1,8 @@
 # Applies main to every environment, tests it, and when main differs from the
 # latest release tags a new version, publishes the modules to
 # entigo-infralib-release over git and as OCI packages to ghcr.io and the AWS
-# Public ECR, then retags the images with the version. Follows a green
+# Public ECR, then retags the images with the version, signs them and lists
+# them with their digests in the release notes. Follows a green
 # scheduled Stable run; a Stable run somebody dispatched triggers nothing.
 # Dispatched by hand with one cloud it applies and tests main there and
 # releases nothing, so a cloud can be re-run without making a version.
@@ -34,21 +35,33 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the release notes
+      id-token: write # keyless cosign signing
     env:
       VERSION: ${{ needs.release.outputs.version }}
       HAS_SLACK: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
     steps:
+    - uses: sigstore/cosign-installer@v3
     - name: Retag latest as ${{ needs.release.outputs.version }}
       # The agent's base images are built from main by the Build images
       # workflows and tagged latest; a release gives the images that latest
       # points at the release's version, on both registries, without a
       # rebuild. The test images of entigo-infralib-test are versioned by
       # that repository's own releases.
+      #
+      # Each versioned image is signed by digest in both registries with
+      # cosign keyless signing. The build already signed latest, but under the
+      # identity of build-images.yaml, which dev images carry too; this
+      # signature names release.yaml, so it marks an image as released. The
+      # release notes then get a section with every image, tag and digest; a
+      # re-run replaces the section.
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
         echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
@@ -59,12 +72,49 @@ jobs:
             -t "entigolabs/entigo-infralib-${image}:${VERSION}" \
             "public.ecr.aws/entigolabs/entigo-infralib-${image}:latest"
         done
+
+        issuer=https://token.actions.githubusercontent.com
+        identity="^https://github\\.com/${GITHUB_REPOSITORY}/\\.github/workflows/release\\.yaml@"
+        section="${RUNNER_TEMP}/images.md"
+        {
+          echo "## Container images"
+          echo
+          echo "Multi-arch (linux/amd64, linux/arm64), signed with cosign:"
+          echo
+          echo "| Image | Tag | Digest |"
+          echo "| --- | --- | --- |"
+        } > "$section"
+        for image in kubectl aws google oracle azure; do
+          for repo in "public.ecr.aws/entigolabs/entigo-infralib-${image}" "entigolabs/entigo-infralib-${image}"; do
+            digest=$(docker buildx imagetools inspect "${repo}:${VERSION}" --format '{{.Manifest.Digest}}')
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::no digest for ${repo}:${VERSION}" >&2; exit 1; }
+            cosign sign --yes "${repo}@${digest}"
+            cosign verify --certificate-oidc-issuer "$issuer" --certificate-identity-regexp "$identity" "${repo}@${digest}" >/dev/null
+            echo "| \`${repo}\` | \`${VERSION}\` | \`${digest}\` |" >> "$section"
+          done
+        done
+        {
+          echo
+          echo "Verify a signature:"
+          echo
+          echo '```bash'
+          echo "cosign verify --certificate-oidc-issuer $issuer \\"
+          echo "  --certificate-identity-regexp '$identity' \\"
+          echo "  public.ecr.aws/entigolabs/entigo-infralib-aws:${VERSION}"
+          echo '```'
+        } >> "$section"
+        cat "$section" >> "$GITHUB_STEP_SUMMARY"
+
+        gh release view "${VERSION}" -R "${GITHUB_REPOSITORY}" --json body --jq .body \
+          | sed '/^## Container images$/,$d' > "${RUNNER_TEMP}/notes.md"
+        { echo; cat "$section"; } >> "${RUNNER_TEMP}/notes.md"
+        gh release edit "${VERSION}" -R "${GITHUB_REPOSITORY}" --notes-file "${RUNNER_TEMP}/notes.md"
     - name: Slack message about the failure
       if: failure() && env.HAS_SLACK == 'true'
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_COLOR: failure
-        SLACK_MESSAGE: "Release ${{ env.VERSION }} is published but tagging the images with it failed"
+        SLACK_MESSAGE: "Release ${{ env.VERSION }} is published but tagging and signing the images with it failed"
         SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
