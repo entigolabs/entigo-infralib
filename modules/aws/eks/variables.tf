@@ -390,7 +390,7 @@ variable "efs_csi_addon_version" {
 
 variable "node_monitoring_agent_addon_version" {
   type = string
-  default = "v1.7.2-eksbuild.1"
+  default = "v1.7.6-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {
