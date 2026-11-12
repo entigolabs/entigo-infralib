@@ -19,6 +19,13 @@ concurrency:
 
 jobs:
   build:
+    # A called workflow gets no more than its caller grants: tag and release
+    # creation need contents, the parent's image-tag artifact needs actions,
+    # and the cosign signature needs the OIDC token.
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
     uses: ./.github/workflows/build-images.yaml
     with:
       path: images/tools
