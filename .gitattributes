@@ -1,0 +1,2 @@
+# Community modules vendored by ./vendor.sh: collapsed in diffs, not counted as our code.
+modules/*/*/vendors/** linguist-generated=true

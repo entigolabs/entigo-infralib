@@ -1,0 +1,5 @@
+# Community modules this module calls from ./vendors. After a change run
+# ./vendor.sh modules/aws/efs, which updates the directories and vendors.lock.
+modules:
+  - source: terraform-aws-modules/efs/aws
+    version: 2.2.1

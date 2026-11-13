@@ -1,7 +1,7 @@
 #https://registry.terraform.io/modules/terraform-aws-modules/efs/aws/latest
+# Vendored: the version is in vendors/vendors.yaml and changes with ./vendor.sh.
 module "efs" {
-  source = "terraform-aws-modules/efs/aws"
-  version = "2.2.1"
+  source = "./vendors/terraform-aws-efs"
 
   for_each = toset(var.efs_volumes)
 
