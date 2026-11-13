@@ -1,0 +1,9 @@
+# Written by ./vendor.sh from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+modules:
+  - name: terraform-aws-efs
+    source: terraform-aws-modules/efs/aws
+    version: 2.2.1
+    repository: https://github.com/terraform-aws-modules/terraform-aws-efs
+    commit: e0ec33d8436363960395b859aff0168ce25c27a4
+    checksum: sha256:0b2632416cdf48fc229fae2b154a5ee4b99c7c40df9de31854f4bdebad89f3d8

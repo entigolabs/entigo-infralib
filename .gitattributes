@@ -1,0 +1,3 @@
+# Community modules vendored by ./vendor.sh: collapsed in diffs, not counted as our code.
+# vendor.yaml and vendor.lock sit next to vendors/, so a version change stays visible.
+modules/*/*/vendors/** linguist-generated=true

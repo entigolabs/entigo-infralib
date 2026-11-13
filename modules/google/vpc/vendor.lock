@@ -1,0 +1,9 @@
+# Written by ./vendor.sh from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+modules:
+  - name: terraform-google-cloud-nat
+    source: terraform-google-modules/cloud-nat/google
+    version: 7.1.0
+    repository: https://github.com/terraform-google-modules/terraform-google-cloud-nat
+    commit: 4527cee64841eb2fb7a9f568311586210af43f6c
+    checksum: sha256:949870f07e96a7e4413229e641e00ff44d230432f1b9a82a2b33578edf6a5e4f
