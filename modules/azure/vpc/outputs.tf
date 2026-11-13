@@ -88,7 +88,10 @@ output "aks_subnet_cidrs" {
   value = local.aks_subnets
 }
 
-# Agent default subnet for vpc attached steps
+output "api_server_cidrs" {
+  value = length(local.aks_subnets) > 0 ? local.aks_subnets : local.private_subnets
+}
+
 output "container_apps_subnets" {
   value = azurerm_subnet.container_apps[*].id
 }

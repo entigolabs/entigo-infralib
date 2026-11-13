@@ -9,8 +9,10 @@ metadata:
 spec:
   serviceAccountName: {{ index .Values "external-dns" "serviceAccount" "name" }}
   azurePermissions:
+    {{- if contains "/dnszones/" (lower .Values.global.azure.pubZoneId) }}
     - role: DNS Zone Contributor
       scope: {{ .Values.global.azure.pubZoneId }}
+    {{- end }}
     {{- if and (index .Values "external-dns-private" "enabled") (contains "/privatednszones/" (lower .Values.global.azure.intZoneId)) }}
     - role: Private DNS Zone Contributor
       scope: {{ .Values.global.azure.intZoneId }}

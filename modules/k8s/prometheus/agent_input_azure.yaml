@@ -4,7 +4,7 @@ prometheus:
       egress:
         - to:
             - ipBlock:
-                cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"
+                cidr: "{{ .toutput.vpc.api_server_cidrs[0] }}"
           ports:
             - port: 443
         - to:
