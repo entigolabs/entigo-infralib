@@ -1,5 +1,5 @@
 # Community modules this module calls from ./vendors. After a change run
-# ./vendor.sh modules/google/vpc, which updates the directories and vendors.lock.
+# ./vendor.sh modules/google/vpc, which updates the directories and vendor.lock.
 modules:
   - source: terraform-google-modules/cloud-nat/google
     version: 7.1.0

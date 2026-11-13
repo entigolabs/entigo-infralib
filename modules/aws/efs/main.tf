@@ -1,5 +1,5 @@
 # https://search.opentofu.org/module/terraform-aws-modules/efs/aws/latest
-# Vendored: the version is in vendors.yaml and changes with ./vendor.sh.
+# Vendored: the version is in vendor.yaml and changes with ./vendor.sh.
 module "efs" {
   source = "./vendors/terraform-aws-efs"
 

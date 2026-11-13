@@ -5,7 +5,7 @@
 # in the module directory, after Chart.yaml and Chart.lock, and the modules
 # themselves under <module-dir>/vendors, after charts/:
 #
-#   vendors.yaml   written by hand (or by the update automation): what is
+#   vendor.yaml   written by hand (or by the update automation): what is
 #                  wanted, a source and a version per module
 #                    modules:
 #                      - source: terraform-aws-modules/efs/aws
@@ -16,19 +16,19 @@
 #                  today. A prefixed one (git::https://...) is reserved for
 #                  modules outside the registry: only resolve() has to learn
 #                  it, the fetch and the lock already work for any git host.
-#   vendors.lock   written by this script: what that resolved to, the
+#   vendor.lock   written by this script: what that resolved to, the
 #                  directory name, repository, commit and a checksum of the
 #                  vendored tree
 #
 #   ./vendor.sh <module-dir>...
-#       Like "helm dependency update": downloads every module of vendors.yaml
+#       Like "helm dependency update": downloads every module of vendor.yaml
 #       in the version the registry serves, prunes what a module call never
 #       reads, writes it to <module-dir>/vendors/<repository-name> and writes
-#       <module-dir>/vendors.lock. The module calls it with
+#       <module-dir>/vendor.lock. The module calls it with
 #       source = "./vendors/<repository-name>" (optionally //modules/<sub>)
-#       and no version. A version bump is an edit of vendors.yaml and this.
+#       and no version. A version bump is an edit of vendor.yaml and this.
 #   ./vendor.sh --check [<module-dir>...]
-#       Offline: vendors.lock is what vendors.yaml asks for and every vendored
+#       Offline: vendor.lock is what vendor.yaml asks for and every vendored
 #       tree still matches its checksum (nobody edited it by hand). Without
 #       arguments, every module of the repository.
 #
@@ -43,7 +43,7 @@ tree_checksum() {
   ( cd "$1" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1 )
 }
 
-# wanted FILE: "source version" per entry of a vendors.yaml or vendors.lock.
+# wanted FILE: "source version" per entry of a vendor.yaml or vendor.lock.
 wanted() {
   awk '{ sub(/[[:space:]]+#.*$/, "") }
        $1 == "-" { $1 = ""; $0 = $0 }
@@ -51,7 +51,7 @@ wanted() {
        $1 == "version:" { version = $2; gsub(/["\x27]/, "", version); print source, version }' "$1"
 }
 
-# locked FILE: "name checksum" per entry of a vendors.lock.
+# locked FILE: "name checksum" per entry of a vendor.lock.
 locked() {
   awk '$1 == "-" && $2 == "name:" { name = $3 } $1 == "checksum:" { sub(/^sha256:/, "", $2); print name, $2 }' "$1"
 }
@@ -61,21 +61,21 @@ check() {
   [ $# -gt 0 ] || set -- "$ROOT"/modules/*/*/
   for dir in "$@"; do
     dir="${dir%/}"; vendors="$dir/vendors"
-    [ -d "$vendors" ] || [ -f "$dir/vendors.yaml" ] || [ -f "$dir/vendors.lock" ] || continue
-    [ -f "$dir/vendors.yaml" ] || { echo "FAIL $dir has vendored modules but no vendors.yaml" >&2; rc=1; continue; }
-    [ -f "$dir/vendors.lock" ] || { echo "FAIL $dir has no vendors.lock: run ./vendor.sh $dir" >&2; rc=1; continue; }
-    if [ "$(wanted "$dir/vendors.yaml" | LC_ALL=C sort)" != "$(wanted "$dir/vendors.lock" | LC_ALL=C sort)" ]; then
-      echo "FAIL $dir/vendors.lock is not what vendors.yaml asks for: run ./vendor.sh $dir" >&2; rc=1; continue
+    [ -d "$vendors" ] || [ -f "$dir/vendor.yaml" ] || [ -f "$dir/vendor.lock" ] || continue
+    [ -f "$dir/vendor.yaml" ] || { echo "FAIL $dir has vendored modules but no vendor.yaml" >&2; rc=1; continue; }
+    [ -f "$dir/vendor.lock" ] || { echo "FAIL $dir has no vendor.lock: run ./vendor.sh $dir" >&2; rc=1; continue; }
+    if [ "$(wanted "$dir/vendor.yaml" | LC_ALL=C sort)" != "$(wanted "$dir/vendor.lock" | LC_ALL=C sort)" ]; then
+      echo "FAIL $dir/vendor.lock is not what vendor.yaml asks for: run ./vendor.sh $dir" >&2; rc=1; continue
     fi
     while read -r name want; do
       got=$(tree_checksum "$vendors/$name" 2>/dev/null || true)
       if [ "$got" = "$want" ]; then echo "ok   $vendors/$name"
-      else echo "FAIL $vendors/$name does not match vendors.lock (edited by hand?)" >&2; rc=1; fi
-    done < <(locked "$dir/vendors.lock")
+      else echo "FAIL $vendors/$name does not match vendor.lock (edited by hand?)" >&2; rc=1; fi
+    done < <(locked "$dir/vendor.lock")
     # A directory the lock does not know is as wrong as a changed one.
     for d in "$vendors"/*/; do
       [ -d "$d" ] || continue
-      locked "$dir/vendors.lock" | grep -q "^$(basename "$d") " || { echo "FAIL ${d%/} is not in vendors.lock" >&2; rc=1; }
+      locked "$dir/vendor.lock" | grep -q "^$(basename "$d") " || { echo "FAIL ${d%/} is not in vendor.lock" >&2; rc=1; }
     done
   done
   return $rc
@@ -106,14 +106,14 @@ resolve() {
 }
 
 # fetch SOURCE VERSION STAGE: one module into STAGE/<repository-name>, its
-# lock entry appended to STAGE/vendors.lock.
+# lock entry appended to STAGE/vendor.lock.
 fetch() {
   local source=$1 version=$2 stage=$3 REPO COMMIT repo commit name src nested
   resolve "$source" "$version"
   repo=$REPO; commit=$COMMIT; name="$(basename "$repo")"
 
   src="$stage/$name"
-  [ ! -e "$src" ] || die "vendors.yaml lists $name twice"
+  [ ! -e "$src" ] || die "vendor.yaml lists $name twice"
   # That one commit, over git: no host has to offer an archive download.
   git init -q "$src"
   git -C "$src" -c advice.detachedHead=false fetch -q --depth 1 "$repo" "$commit" || die "cannot fetch $commit from $repo"
@@ -143,7 +143,7 @@ fetch() {
     echo "    repository: $repo"
     echo "    commit: $commit"
     echo "    checksum: sha256:$(tree_checksum "$src")"
-  } >> "$stage/vendors.lock"
+  } >> "$stage/vendor.lock"
   echo "Vendored $source $version (${commit:0:12}) as $name: $(find "$src" -type f | wc -l) files, $(du -sk "$src" | cut -f1)K"
 }
 
@@ -151,23 +151,23 @@ update() {
   local dir=${1%/} vendors stage source version d
   vendors="$dir/vendors"
   [ -f "$dir/main.tf" ] || die "$dir is not a module directory"
-  [ -f "$dir/vendors.yaml" ] || die "$dir/vendors.yaml does not exist: list the modules to vendor there"
-  [ -n "$(wanted "$dir/vendors.yaml")" ] || die "$dir/vendors.yaml lists no module (source and version)"
+  [ -f "$dir/vendor.yaml" ] || die "$dir/vendor.yaml does not exist: list the modules to vendor there"
+  [ -n "$(wanted "$dir/vendor.yaml")" ] || die "$dir/vendor.yaml lists no module (source and version)"
   mkdir -p "$vendors"
 
   # Everything is fetched next to the target first: a failed download leaves
   # the vendored trees and the lock as they were.
   stage=$(mktemp -d "$vendors/.stage.XXXXXX"); STAGE=$stage
   {
-    echo "# Written by ./vendor.sh from vendors.yaml: what each module resolved to."
+    echo "# Written by ./vendor.sh from vendor.yaml: what each module resolved to."
     echo "# Never edit this file or the directories under vendors/ by hand."
     echo "modules:"
-  } > "$stage/vendors.lock"
-  while read -r source version; do fetch "$source" "$version" "$stage"; done < <(wanted "$dir/vendors.yaml")
+  } > "$stage/vendor.lock"
+  while read -r source version; do fetch "$source" "$version" "$stage"; done < <(wanted "$dir/vendor.yaml")
 
   for d in "$vendors"/*/; do [ ! -d "$d" ] || rm -rf "$d"; done
   mv "$stage"/*/ "$vendors/"
-  mv "$stage/vendors.lock" "$dir/vendors.lock"
+  mv "$stage/vendor.lock" "$dir/vendor.lock"
   rm -rf "$stage"
 }
 
