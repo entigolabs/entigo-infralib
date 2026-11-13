@@ -107,5 +107,38 @@ spec:
           kind: GCRAccessToken
           name: gar-token
 ---
+# The same credentials for sources that ArgoCD reads as native OCI repositories
+# (repoURL with the oci:// prefix and no chart field). Those only match a
+# credential template of type oci with the oci:// prefix in the url, the helm
+# one above keeps serving sources that still set the chart field.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "repo-{{ .projectID }}-{{ .projectRegion }}-oci"
+  namespace: {{ $.Values.global.google.createGARNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  refreshInterval: 30m
+  target:
+    name: "repo-{{ .projectID }}-{{ .projectRegion }}-oci"
+    template:
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repo-creds
+      data:
+        name: "repo-{{ .projectID }}-{{ .projectRegion }}-oci"
+        type: oci
+        url: oci://{{ .projectRegion }}-docker.pkg.dev/{{ .projectID }}
+        password: "{{`{{ .password }}`}}"
+        username: "{{`{{ .username }}`}}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: GCRAccessToken
+          name: gar-token
+---
 {{- end }}
 {{- end }}

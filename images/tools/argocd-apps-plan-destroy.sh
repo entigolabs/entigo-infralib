@@ -26,8 +26,9 @@ fi
 if kubectl get applications.argoproj.io $app_name -n $app_namespace -o jsonpath='{.metadata.name}' >/dev/null 2>&1; then
     APP_EXISTED="yes"
 
-    # Module name comes from .path for git sources and from .chart for OCI sources
-    module=$(yq -r '.spec.sources[0].path // .spec.sources[0].chart // ""' "$app_file")
+    # Module name comes from .path for git sources, from .chart for helm OCI sources and
+    # is the last part of .repoURL for native OCI sources (oci:// and no .chart, path is ".")
+    module=$(yq -r '.spec.sources[0] | (select(.chart == null and ((.repoURL // "") | test("^oci://"))) | .repoURL) // .path // .chart // ""' "$app_file")
     if echo "$module" | grep -Evq "(^|/)(crossplane-core|crossplane-aws|crossplane-google|crossplane-oracle|crossplane-azure|aws-storageclass)$"
     then
       kubectl patch -n $app_namespace applications.argoproj.io $app_name --type=json -p="[{'op': 'remove', 'path': '/spec/syncPolicy/automated'}]" > /dev/null 2>&1
