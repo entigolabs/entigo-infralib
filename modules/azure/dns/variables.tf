@@ -18,6 +18,7 @@ variable "domains" {
     domain_name       = string
     parent_zone_id    = optional(string, "")
     create_zone       = optional(bool, true)
+    zone_id           = optional(string, "")
     create_validation = optional(bool, true)
     private           = optional(bool, false)
     vpc_ids           = optional(list(string), [])

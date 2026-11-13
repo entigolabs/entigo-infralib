@@ -176,11 +176,21 @@ The flow log lives in the region's Network Watcher (`NetworkWatcherRG`/`NetworkW
 * Cost: per GB collected, 5 GB/month free per subscription, plus storage
   ([pricing](https://learn.microsoft.com/azure/network-watcher/vnet-flow-logs-overview#pricing)).
 
+### VNet name and existing VNet ###
+`vpc_name` names the VNet, the prefix by default. With `create_vpc: false` the VNet `vpc_name` must already exist in
+the agent's resource group (e.g. created and peered to a hub by a network team): the module creates the subnets, NAT
+gateway, Container Apps environment and flow log in it and leaves the VNet itself, its peerings and DNS servers alone.
+`vpc_cidr` must be the VNet's address space.
+
 ### Plan time checks ###
 `vpc_cidr` IPv4 and /24 or larger, `subnet_split_mode`, overlaps, subnets inside the VNet, AGC subnets exactly /24,
 unique names, `custom_subnets` keys and `nat_gateway`/`route_table`, `egress_next_hop_ip` only without NAT gateway,
 explicit lists below /22 (spoke: /21), at least one control-agc and service-agc subnet in spoke mode, `unique_suffix`.
 Azure itself requires aks /28 or larger and Container Apps /27 or larger.
+
+### Managed resource group ###
+Azure creates a managed resource group per Container Apps environment, `<subnet name>-<location>`.
+`container_apps_resource_group_names` overrides the names (create time only: a change replaces the environment).
 
 ### Outputs ###
 * Per tier `*_subnets` (ids) and `*_subnet_cidrs`: private, public, intra, database, public_agc, private_agc, aks,

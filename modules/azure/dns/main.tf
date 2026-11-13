@@ -6,7 +6,8 @@ locals {
 
   domains = {
     for k, d in var.domains : k => merge(d, {
-      vpc_ids = length(d.vpc_ids) > 0 ? d.vpc_ids : var.vpc_ids
+      vpc_ids     = length(d.vpc_ids) > 0 ? d.vpc_ids : var.vpc_ids
+      create_zone = d.create_zone && d.zone_id == ""
       default_public = d.default_public != null ? d.default_public : (
         length(var.domains) == 1 ? true : (!d.private && local.public_domains_count == 1 ? true : null)
       )
@@ -14,7 +15,7 @@ locals {
         length(var.domains) == 1 ? true : (d.private && local.private_domains_count == 1 ? true : null)
       )
       # Public twin of a private zone for ACME DNS-01 challenges (cert-manager)
-      needs_validation_zone = d.private && d.create_zone && d.create_validation
+      needs_validation_zone = d.private && d.create_zone && d.zone_id == "" && d.create_validation
       # NS records in the parent zone, also in another resource group (e.g. a root zone shared by environments);
       # a parent in another subscription is delegated by hand (manual_delegations output)
       parent_zone_name = d.parent_zone_id != "" ? provider::azurerm::parse_resource_id(d.parent_zone_id).resource_name : ""
@@ -27,7 +28,7 @@ locals {
   default_private_keys = [for k, v in local.domains : k if v.default_private == true]
 
   zone_ids = {
-    for k, v in local.domains : k => (
+    for k, v in local.domains : k => v.zone_id != "" ? v.zone_id : (
       v.private ? (v.create_zone ? azurerm_private_dns_zone.this[k].id : data.azurerm_private_dns_zone.existing[k].id) :
       (v.create_zone ? azurerm_dns_zone.this[k].id : data.azurerm_dns_zone.existing[k].id)
     )
@@ -61,13 +62,13 @@ resource "azurerm_private_dns_zone" "this" {
 }
 
 data "azurerm_dns_zone" "existing" {
-  for_each            = { for k, v in local.domains : k => v if !v.private && !v.create_zone }
+  for_each            = { for k, v in local.domains : k => v if !v.private && !v.create_zone && v.zone_id == "" }
   name                = each.value.domain_name
   resource_group_name = var.resource_group_name
 }
 
 data "azurerm_private_dns_zone" "existing" {
-  for_each            = { for k, v in local.domains : k => v if v.private && !v.create_zone }
+  for_each            = { for k, v in local.domains : k => v if v.private && !v.create_zone && v.zone_id == "" }
   name                = each.value.domain_name
   resource_group_name = var.resource_group_name
 }

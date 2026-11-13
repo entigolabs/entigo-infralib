@@ -4,6 +4,9 @@ global:
     tenantId: ""
     pubZoneId: ""
     intZoneId: ""
+    # Existing managed identity (resource id) instead of a new one, for zones the cluster can't assign roles on
+    # (another subscription): it has the zone roles already. crossplane-azure allows it (existingIdentities)
+    existingIdentityId: ""
 
 external-dns:
   provider:
