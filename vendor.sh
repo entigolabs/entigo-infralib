@@ -2,7 +2,8 @@
 # Vendors the community OpenTofu modules a module calls into the module
 # itself, so that it carries them the way a chart carries charts/*.tgz and
 # nothing is downloaded from the registry or GitHub at init time. Two files
-# under <module-dir>/vendors, after Chart.yaml and Chart.lock:
+# in the module directory, after Chart.yaml and Chart.lock, and the modules
+# themselves under <module-dir>/vendors, after charts/:
 #
 #   vendors.yaml   written by hand (or by the update automation): what is
 #                  wanted, a source and a version per module
@@ -23,7 +24,7 @@
 #       Like "helm dependency update": downloads every module of vendors.yaml
 #       in the version the registry serves, prunes what a module call never
 #       reads, writes it to <module-dir>/vendors/<repository-name> and writes
-#       vendors.lock. The module calls it with
+#       <module-dir>/vendors.lock. The module calls it with
 #       source = "./vendors/<repository-name>" (optionally //modules/<sub>)
 #       and no version. A version bump is an edit of vendors.yaml and this.
 #   ./vendor.sh --check [<module-dir>...]
@@ -59,22 +60,22 @@ check() {
   local rc=0 dir vendors name want got d
   [ $# -gt 0 ] || set -- "$ROOT"/modules/*/*/
   for dir in "$@"; do
-    vendors="${dir%/}/vendors"
-    [ -d "$vendors" ] || continue
-    [ -f "$vendors/vendors.yaml" ] || { echo "FAIL $vendors has no vendors.yaml" >&2; rc=1; continue; }
-    [ -f "$vendors/vendors.lock" ] || { echo "FAIL $vendors has no vendors.lock: run ./vendor.sh ${dir%/}" >&2; rc=1; continue; }
-    if [ "$(wanted "$vendors/vendors.yaml" | LC_ALL=C sort)" != "$(wanted "$vendors/vendors.lock" | LC_ALL=C sort)" ]; then
-      echo "FAIL $vendors/vendors.lock is not what vendors.yaml asks for: run ./vendor.sh ${dir%/}" >&2; rc=1; continue
+    dir="${dir%/}"; vendors="$dir/vendors"
+    [ -d "$vendors" ] || [ -f "$dir/vendors.yaml" ] || [ -f "$dir/vendors.lock" ] || continue
+    [ -f "$dir/vendors.yaml" ] || { echo "FAIL $dir has vendored modules but no vendors.yaml" >&2; rc=1; continue; }
+    [ -f "$dir/vendors.lock" ] || { echo "FAIL $dir has no vendors.lock: run ./vendor.sh $dir" >&2; rc=1; continue; }
+    if [ "$(wanted "$dir/vendors.yaml" | LC_ALL=C sort)" != "$(wanted "$dir/vendors.lock" | LC_ALL=C sort)" ]; then
+      echo "FAIL $dir/vendors.lock is not what vendors.yaml asks for: run ./vendor.sh $dir" >&2; rc=1; continue
     fi
     while read -r name want; do
       got=$(tree_checksum "$vendors/$name" 2>/dev/null || true)
       if [ "$got" = "$want" ]; then echo "ok   $vendors/$name"
       else echo "FAIL $vendors/$name does not match vendors.lock (edited by hand?)" >&2; rc=1; fi
-    done < <(locked "$vendors/vendors.lock")
+    done < <(locked "$dir/vendors.lock")
     # A directory the lock does not know is as wrong as a changed one.
     for d in "$vendors"/*/; do
       [ -d "$d" ] || continue
-      locked "$vendors/vendors.lock" | grep -q "^$(basename "$d") " || { echo "FAIL ${d%/} is not in vendors.lock" >&2; rc=1; }
+      locked "$dir/vendors.lock" | grep -q "^$(basename "$d") " || { echo "FAIL ${d%/} is not in vendors.lock" >&2; rc=1; }
     done
   done
   return $rc
@@ -150,22 +151,23 @@ update() {
   local dir=${1%/} vendors stage source version d
   vendors="$dir/vendors"
   [ -f "$dir/main.tf" ] || die "$dir is not a module directory"
-  [ -f "$vendors/vendors.yaml" ] || die "$vendors/vendors.yaml does not exist: list the modules to vendor there"
-  [ -n "$(wanted "$vendors/vendors.yaml")" ] || die "$vendors/vendors.yaml lists no module (source and version)"
+  [ -f "$dir/vendors.yaml" ] || die "$dir/vendors.yaml does not exist: list the modules to vendor there"
+  [ -n "$(wanted "$dir/vendors.yaml")" ] || die "$dir/vendors.yaml lists no module (source and version)"
+  mkdir -p "$vendors"
 
   # Everything is fetched next to the target first: a failed download leaves
   # the vendored trees and the lock as they were.
   stage=$(mktemp -d "$vendors/.stage.XXXXXX"); STAGE=$stage
   {
     echo "# Written by ./vendor.sh from vendors.yaml: what each module resolved to."
-    echo "# Never edit this file or the directories next to it by hand."
+    echo "# Never edit this file or the directories under vendors/ by hand."
     echo "modules:"
   } > "$stage/vendors.lock"
-  while read -r source version; do fetch "$source" "$version" "$stage"; done < <(wanted "$vendors/vendors.yaml")
+  while read -r source version; do fetch "$source" "$version" "$stage"; done < <(wanted "$dir/vendors.yaml")
 
   for d in "$vendors"/*/; do [ ! -d "$d" ] || rm -rf "$d"; done
   mv "$stage"/*/ "$vendors/"
-  mv "$stage/vendors.lock" "$vendors/vendors.lock"
+  mv "$stage/vendors.lock" "$dir/vendors.lock"
   rm -rf "$stage"
 }
 

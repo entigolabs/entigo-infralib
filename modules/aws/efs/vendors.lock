@@ -1,5 +1,5 @@
 # Written by ./vendor.sh from vendors.yaml: what each module resolved to.
-# Never edit this file or the directories next to it by hand.
+# Never edit this file or the directories under vendors/ by hand.
 modules:
   - name: terraform-aws-efs
     source: terraform-aws-modules/efs/aws

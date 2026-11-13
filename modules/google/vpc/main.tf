@@ -66,7 +66,7 @@ resource "google_compute_address" "cloud_nat" {
 }
 
 # https://github.com/terraform-google-modules/terraform-google-cloud-nat
-# Vendored: the version is in vendors/vendors.yaml and changes with ./vendor.sh.
+# Vendored: the version is in vendors.yaml and changes with ./vendor.sh.
 module "cloud_nat" {
   count                               = var.enable_nat_gateway ? 1 : 0
   source                              = "./vendors/terraform-google-cloud-nat"

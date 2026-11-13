@@ -1,5 +1,5 @@
-#https://registry.terraform.io/modules/terraform-aws-modules/efs/aws/latest
-# Vendored: the version is in vendors/vendors.yaml and changes with ./vendor.sh.
+# https://search.opentofu.org/module/terraform-aws-modules/efs/aws/latest
+# Vendored: the version is in vendors.yaml and changes with ./vendor.sh.
 module "efs" {
   source = "./vendors/terraform-aws-efs"
 
