@@ -1,5 +1,4 @@
-authz-controller:
-  mode: cluster
+authz-controller-cluster:
   imagePullSecrets: []
   affinity:
     nodeAffinity:

@@ -1,0 +1,6 @@
+dependencies:
+- name: authz-controller-cluster
+  repository: oci://ghcr.io/entigolabs/authz-controller
+  version: 0.2.1
+digest: sha256:e3091aad5502812a3e1d4ca6b37cc2e6cfabc62b253c706536080af5739bc3bc
+generated: "2026-11-13T11:56:29.774242+02:00"

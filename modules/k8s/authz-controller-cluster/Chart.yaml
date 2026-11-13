@@ -1,0 +1,11 @@
+apiVersion: v2
+name: authz-controller-cluster
+description: A authz-controller-cluster chart for Kubernetes
+type: application
+version: 0.2.1
+appVersion: "0.2.1"
+
+dependencies:
+  - name: authz-controller-cluster
+    version: 0.2.1
+    repository: oci://ghcr.io/entigolabs/authz-controller
