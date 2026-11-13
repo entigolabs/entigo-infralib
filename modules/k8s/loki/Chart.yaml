@@ -7,5 +7,5 @@ appVersion: "1.0"
 
 dependencies:
   - name: loki
-    version: 21.2.1
+    version: 21.2.2
     repository: https://grafana-community.github.io/helm-charts
