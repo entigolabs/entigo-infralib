@@ -15,6 +15,10 @@ cluster-metrics:
   enabled: true
   externalLabels:
     cluster: "{{ .toutput.oke.cluster_id }}-alloy"
+  rules: true
+
+global:
+  installPrometheusOperatorCRDs: true
 
 receiver:
   enabled: true

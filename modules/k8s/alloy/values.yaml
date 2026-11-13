@@ -569,6 +569,12 @@ cluster-metrics:
   serviceMonitors: false
   podMonitors: false
 
+  # Sync PrometheusRule CRDs cluster-wide into Mimir's ruler, which evaluates them and fires into
+  # Mimir's alertmanager. Requires global.installPrometheusOperatorCRDs (for the CRD itself) and
+  # mimir-distributed.alertmanager.enabled: true in the mimir module (otherwise the ruler has
+  # nowhere to send firing alerts).
+  rules: false
+
   # Multi-target proxy scrape of redis-exporter: each entry in redisExporterTargets is passed to
   # the exporter's /scrape endpoint via the `target` query param.
   redisExporterTargets: []
@@ -875,6 +881,14 @@ cluster-metrics:
         // Scrape all PodMonitor CRDs cluster-wide (requires the operator CRDs)
         prometheus.operator.podmonitors "podmonitors" {
           forward_to = [prometheus.remote_write.default.receiver]
+        }
+        {{- end }}
+        {{- if .Values.rules }}
+        mimir.rules.kubernetes "default" {
+          address = {{ trimSuffix "/api/v1/push" .Values.mimirEndpoint | quote }}
+          {{- if .Values.mimirTenantID }}
+          tenant_id = {{ .Values.mimirTenantID | quote }}
+          {{- end }}
         }
         {{- end }}
         {{- if .Values.selfMonitor }}

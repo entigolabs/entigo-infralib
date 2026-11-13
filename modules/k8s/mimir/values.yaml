@@ -40,8 +40,13 @@ mimir-distributed:
         # only permits disabling it when ingest-storage is enabled.
         push_grpc_method_enabled: true
 
+  # Alloy's cluster-metrics "mimir.rules.kubernetes" component (see
+  # modules/k8s/alloy) syncs PrometheusRule CRDs into the Mimir ruler above, which
+  # evaluates them and fires into this alertmanager. No per-tenant config is
+  # shipped by default, so every tenant falls back to the chart's default no-op receiver
+  # until one is added.
   alertmanager:
-    enabled: false
+    enabled: true
 
   distributor:
     replicas: 1
