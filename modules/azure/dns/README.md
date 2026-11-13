@@ -12,6 +12,9 @@ domains - map of objects:
                         (e.g. a platform subscription with the root zone) is delegated by hand from the
                         manual_delegations output (default "": by hand from nameservers / validation_nameservers)
     create_zone       - false uses an existing zone in the resource group (default true)
+    zone_id           - existing zone by its resource id, in any resource group or subscription (e.g. the central zone
+                        of a hub): nothing is created or linked, the other modules get the id and domain_name
+                        (default "")
     create_validation - public validation zone (twin) for a private domain, used by cert-manager DNS-01 (default true).
     private           - private DNS zone (default false)
     vpc_ids           - VNets linked to the private zone, defaults to var.vpc_ids

@@ -4,6 +4,8 @@ global:
     tenantId: ""
     pubZoneId: ""
     intZoneId: ""
+    workloadIdentity:
+      create: true
 
 external-dns:
   provider:

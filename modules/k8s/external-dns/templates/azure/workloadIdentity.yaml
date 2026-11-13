@@ -1,4 +1,4 @@
-{{- if eq .Values.global.cloudProvider "azure" }}
+{{- if and (eq .Values.global.cloudProvider "azure") .Values.global.azure.workloadIdentity.create }}
 apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
