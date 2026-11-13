@@ -1,4 +1,4 @@
-{{- if and (eq .Values.global.cloudProvider "azure") .Values.global.azure.workloadIdentity.create }}
+{{- if eq .Values.global.cloudProvider "azure" }}
 apiVersion: iam.entigo.com/v1alpha1
 kind: WorkloadIdentity
 metadata:
@@ -8,6 +8,9 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   serviceAccountName: {{ index .Values "external-dns" "serviceAccount" "name" }}
+  {{- if .Values.global.azure.existingIdentityId }}
+  azureIdentityId: {{ .Values.global.azure.existingIdentityId }}
+  {{- else }}
   azurePermissions:
     {{- if contains "/dnszones/" (lower .Values.global.azure.pubZoneId) }}
     - role: DNS Zone Contributor
@@ -17,4 +20,5 @@ spec:
     - role: Private DNS Zone Contributor
       scope: {{ .Values.global.azure.intZoneId }}
     {{- end }}
+  {{- end }}
 {{- end }}
