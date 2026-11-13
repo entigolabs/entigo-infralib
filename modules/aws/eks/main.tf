@@ -7,17 +7,17 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261031"
-     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261031"
-     "AL2023_x86_64_NEURON"       = "1.36.5-20261031"
-     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261031"
-     "AL2023_x86_64_STANDARD"     = "1.36.5-20261031"
-     "BOTTLEROCKET_ARM_64"        = "1.68.1-b4870834"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.68.1-b4870834"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.68.1-b4870834"
-     "BOTTLEROCKET_x86_64"        = "1.68.1-b4870834"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.68.1-b4870834"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.68.1-b4870834"
+     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261107"
+     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261107"
+     "AL2023_x86_64_NEURON"       = "1.36.5-20261107"
+     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261107"
+     "AL2023_x86_64_STANDARD"     = "1.36.5-20261107"
+     "BOTTLEROCKET_ARM_64"        = "1.69.0-be6a1e85"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.69.0-be6a1e85"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.69.0-be6a1e85"
+     "BOTTLEROCKET_x86_64"        = "1.69.0-be6a1e85"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.69.0-be6a1e85"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.69.0-be6a1e85"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
