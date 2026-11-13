@@ -59,7 +59,9 @@ jobs:
           return 1
         }
         images='[]'
-        for name in kubectl aws google oracle azure; do
+        # tools is not run by the agent: the other images are built from it.
+        # It is released with them so that the release names it too.
+        for name in tools kubectl aws google oracle azure; do
           registries='{}'
           for target in "ecr=public.ecr.aws/entigolabs/entigo-infralib-${name}" "dockerhub=docker.io/entigolabs/entigo-infralib-${name}"; do
             label=${target%%=*}; repo=${target#*=}
