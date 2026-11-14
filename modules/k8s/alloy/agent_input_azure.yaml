@@ -1,4 +1,4 @@
-logs:
+node-agent:
   networkPolicy:
     egress:
       - ports:
@@ -21,7 +21,18 @@ logs:
                 kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
             podSelector:
               matchLabels:
-                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
                 app.kubernetes.io/component: gateway
       - ports:
           - port: 443

@@ -22,7 +22,7 @@ func TestMimir(t *testing.T) {
 		for _, component := range []string{"gateway", "distributor", "query-scheduler", "querier", "query-frontend", "ruler"} {
 			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "mimir-"+component, 20, 6*time.Second), "mimir-%s deployment error", component)
 		}
-		for _, pod := range []string{"mimir-compactor-0", "mimir-ingester-0", "mimir-store-gateway-0"} {
+		for _, pod := range []string{"mimir-compactor-0", "mimir-ingester-0", "mimir-store-gateway-0", "mimir-alertmanager-0"} {
 			require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, pod, 20, 6*time.Second), "%s pod error", pod)
 		}
 

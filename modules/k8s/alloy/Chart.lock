@@ -2,5 +2,14 @@ dependencies:
 - name: alloy
   repository: https://grafana.github.io/helm-charts
   version: 1.15.0
-digest: sha256:1d319749635e382c95aae173a9e810027a22691860750c9c9c84c4e05bf22d59
-generated: "2026-11-03T08:51:00.464854267Z"
+- name: alloy
+  repository: https://grafana.github.io/helm-charts
+  version: 1.15.0
+- name: alloy
+  repository: https://grafana.github.io/helm-charts
+  version: 1.15.0
+- name: prometheus-operator-crds
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 33.0.2
+digest: sha256:f42fe226a30e5f9897c94a64d745b3639edfdaba35eb282afacbcbd2b7bf6856
+generated: "2026-11-11T16:16:55.596159+02:00"

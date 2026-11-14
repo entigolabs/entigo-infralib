@@ -1,0 +1,21 @@
+grafana:
+  dashboards:
+    kubernetes:
+      global:
+        datasource: Mimir
+      namespaces:
+        datasource: Mimir
+      nodes:
+        datasource: Mimir
+      pods:
+        datasource: Mimir
+      apiserver:
+        datasource: Mimir
+      limitsrequests:
+        datasource: Mimir
+      crossplane:
+        datasource: Mimir
+      pvc:
+        datasource: Mimir
+      trivy-operator-vulnerabilities:
+        datasource: Mimir

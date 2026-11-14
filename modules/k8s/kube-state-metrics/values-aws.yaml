@@ -1,0 +1,28 @@
+global:
+  cloudProvider: aws
+
+kube-state-metrics:
+  metricLabelsAllowlist:
+    - nodes=[eks.amazonaws.com/nodegroup,kubernetes.io/arch,node.kubernetes.io/instance-type,tenancy.entigo.com/zone,tenancy.entigo.com/zone-pool,eks.amazonaws.com/capacityType,topology.kubernetes.io/zone]
+    - namespaces=[tenancy.entigo.com/zone]
+  networkPolicy:
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      # Kubernetes API
+      - to:
+          - ipBlock:
+              cidr: 172.20.0.1/32
+        ports:
+          - port: 443
+            protocol: TCP

@@ -1,4 +1,12 @@
-logs:
+global:
+  # Consumed by templates/aws/networkPolicy.yaml to scope the cluster-metrics UI's HTTPRoute ingress.
+  aws:
+    privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
+    serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
+node-agent:
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -21,7 +29,18 @@ logs:
                 kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
             podSelector:
               matchLabels:
-                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
+                app.kubernetes.io/name: loki
+                app.kubernetes.io/component: gateway
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector: {}
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mimir
                 app.kubernetes.io/component: gateway
       - ports:
           - port: 443
@@ -40,3 +59,7 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.eks.cluster_name }}"
+  createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
