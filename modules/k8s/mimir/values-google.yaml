@@ -148,19 +148,19 @@ mimir-distributed:
         enable_api: true
         rule_path: /data
 
-      {{- if index .Values "metadata-cache" "enabled" }}
       ruler_storage:
         backend: gcs
         storage_prefix: ruler
         gcs:
           bucket_name: {{ .Values.global.bucketName }}
-          
+
+        {{- if index .Values "metadata-cache" "enabled" }}
         cache:
           backend: memcached
           memcached:
             addresses: {{ include "mimir.metadataCacheAddress" . }}
             max_item_size: {{ mul (index .Values "metadata-cache").maxItemMemory 1024 1024 }}
-      {{- end }}
+        {{- end }}
 
       runtime_config:
         file: /var/{{ include "mimir.name" . }}/runtime.yaml
