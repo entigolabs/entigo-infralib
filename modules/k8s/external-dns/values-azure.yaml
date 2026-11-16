@@ -4,6 +4,7 @@ global:
     tenantId: ""
     pubZoneId: ""
     intZoneId: ""
+    existingIdentityId: ""
 
 external-dns:
   provider:

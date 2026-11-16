@@ -14,3 +14,5 @@ entigo-infralib-apis:
       azure:
         encryptionKeyIds:
           - "{{ .toptout.kms.telemetry_key_resource_id }}"
+        existingIdentities:
+          - "{{ .toptin.external-dns.global.azure.existingIdentityId }}"

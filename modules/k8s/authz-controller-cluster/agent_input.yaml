@@ -1,3 +1,3 @@
-authz-controller:
+authz-controller-cluster:
   config:
     ARGOCD_NAMESPACE: "{{ .toptmodule.argocd }}"

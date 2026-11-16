@@ -1,9 +1,9 @@
 output "vpc_id" {
-  value = azurerm_virtual_network.this.id
+  value = local.vpc_id
 }
 
 output "vpc_name" {
-  value = azurerm_virtual_network.this.name
+  value = local.vpc_name
 }
 
 output "vpc_cidr" {
@@ -88,7 +88,10 @@ output "aks_subnet_cidrs" {
   value = local.aks_subnets
 }
 
-# Agent default subnet for vpc attached steps
+output "api_server_cidrs" {
+  value = length(local.aks_subnets) > 0 ? local.aks_subnets : local.private_subnets
+}
+
 output "container_apps_subnets" {
   value = azurerm_subnet.container_apps[*].id
 }
@@ -110,7 +113,7 @@ output "custom_subnet_cidrs" {
 }
 
 output "name" {
-  value = azurerm_virtual_network.this.name
+  value = local.vpc_name
 }
 
 output "nat_public_ips" {
