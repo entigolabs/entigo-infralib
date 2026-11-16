@@ -1,0 +1,14 @@
+{{- if and .Values.awsPrivateCA.enabled .Values.awsPrivateCA.clusterIssuer.create (eq .Values.global.cloudProvider "aws") }}
+{{- $arn := first (required "awsPrivateCA.arns is required with awsPrivateCA.enabled" .Values.awsPrivateCA.arns) }}
+apiVersion: awspca.cert-manager.io/v1beta1
+kind: AWSPCAClusterIssuer
+metadata:
+  name: {{ .Values.awsPrivateCA.clusterIssuer.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  arn: {{ $arn | quote }}
+  # The region of the CA, from its ARN: a shared CA can be in another region than the cluster
+  region: {{ index (splitList ":" $arn) 3 }}
+{{- end }}

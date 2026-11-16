@@ -1,4 +1,4 @@
-{{- if and .Values.clusterIssuer.create (eq .Values.global.cloudProvider "aws") }}
+{{- if and (or .Values.clusterIssuer.create .Values.awsPrivateCA.enabled) (eq .Values.global.cloudProvider "aws") }}
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
 metadata:

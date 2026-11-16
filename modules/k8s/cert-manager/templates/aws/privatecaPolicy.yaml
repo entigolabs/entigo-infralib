@@ -1,0 +1,39 @@
+{{- if and .Values.awsPrivateCA.enabled (eq .Values.global.cloudProvider "aws") }}
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-privateca
+  annotations:
+    crossplane.io/external-name: "{{ .Release.Name }}-privateca"
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    tags:
+      created-by: "entigo-infralib"
+    # Issuing from the CAs of awsPrivateCA.arns only (https://github.com/cert-manager/aws-privateca-issuer#configuration)
+    policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "acm-pca:DescribeCertificateAuthority",
+              "acm-pca:GetCertificate",
+              "acm-pca:IssueCertificate"
+            ],
+            "Resource": [
+              {{- range $i, $arn := required "awsPrivateCA.arns is required with awsPrivateCA.enabled" .Values.awsPrivateCA.arns }}
+              {{- if $i }},{{ end }}
+              {{ $arn | quote }}
+              {{- end }}
+            ]
+          }
+        ]
+      }
+
+  providerConfigRef:
+    name: {{ .Values.global.providerConfigRefName }}
+
+{{- end }}

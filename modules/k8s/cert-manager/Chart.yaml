@@ -9,3 +9,7 @@ dependencies:
   - name: cert-manager
     version: v1.21.3
     repository: https://charts.jetstack.io
+  - name: aws-privateca-issuer
+    version: v1.12.1
+    repository: https://cert-manager.github.io/aws-privateca-issuer
+    condition: awsPrivateCA.enabled
