@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuthzController(t *testing.T) {
+func TestAuthzControllerCluster(t *testing.T) {
 	env.Run(t, func(t *testing.T, e *env.Environment) {
 		c := k8s.Connect(t, e)
 
