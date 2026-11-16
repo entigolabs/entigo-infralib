@@ -12,4 +12,4 @@ dependencies:
   - name: aws-privateca-issuer
     version: v1.12.1
     repository: https://cert-manager.github.io/aws-privateca-issuer
-    condition: aws.privateCA.enabled
+    condition: global.aws.privateCA.enabled

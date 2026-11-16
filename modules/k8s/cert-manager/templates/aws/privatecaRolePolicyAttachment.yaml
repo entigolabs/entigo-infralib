@@ -1,4 +1,4 @@
-{{- if and .Values.aws.privateCA.enabled (eq .Values.global.cloudProvider "aws") }}
+{{- if and .Values.global.aws.privateCA.enabled (eq .Values.global.cloudProvider "aws") }}
 apiVersion: iam.aws.upbound.io/v1beta1
 kind: RolePolicyAttachment
 metadata:

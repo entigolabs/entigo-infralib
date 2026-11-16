@@ -1,4 +1,4 @@
-{{- if and .Values.aws.privateCA.enabled (eq .Values.global.cloudProvider "aws") }}
+{{- if and .Values.global.aws.privateCA.enabled (eq .Values.global.cloudProvider "aws") }}
 # The cert-manager approver may approve the requests of the AWS Private CA issuers. The subchart's own approverRole
 # takes the namespace of cert-manager from values, this one follows the release
 apiVersion: rbac.authorization.k8s.io/v1

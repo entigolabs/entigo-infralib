@@ -1,9 +1,9 @@
-{{- if and .Values.aws.privateCA.enabled .Values.aws.privateCA.clusterIssuer.create .Values.aws.privateCA.arns (eq .Values.global.cloudProvider "aws") }}
-{{- $arn := first .Values.aws.privateCA.arns }}
+{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.clusterIssuer.create .Values.global.aws.privateCA.arns (eq .Values.global.cloudProvider "aws") }}
+{{- $arn := first .Values.global.aws.privateCA.arns }}
 apiVersion: awspca.cert-manager.io/v1beta1
 kind: AWSPCAClusterIssuer
 metadata:
-  name: {{ .Values.aws.privateCA.clusterIssuer.name }}
+  name: {{ .Values.global.aws.privateCA.clusterIssuer.name }}
   annotations:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true

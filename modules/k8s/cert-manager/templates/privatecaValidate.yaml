@@ -1,8 +1,8 @@
-{{- if .Values.aws.privateCA.enabled }}
+{{- if .Values.global.aws.privateCA.enabled }}
 {{- if ne .Values.global.cloudProvider "aws" }}
-{{- fail "aws.privateCA.enabled is for AWS only" }}
+{{- fail "global.aws.privateCA.enabled is for AWS only" }}
 {{- end }}
-{{- if not .Values.aws.privateCA.arns }}
-{{- fail "aws.privateCA.arns is required with aws.privateCA.enabled" }}
+{{- if not .Values.global.aws.privateCA.arns }}
+{{- fail "global.aws.privateCA.arns is required with global.aws.privateCA.enabled" }}
 {{- end }}
 {{- end }}

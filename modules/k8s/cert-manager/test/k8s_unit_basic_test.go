@@ -113,17 +113,19 @@ func clusterIssuerCreated(t *testing.T, e *env.Environment) bool {
 	return e.Cloud != env.CloudAWS
 }
 
-// privateCAEnabled reports whether the environment enables the aws-privateca-issuer subchart (aws.privateCA.enabled).
+// privateCAEnabled reports whether the environment enables the aws-privateca-issuer subchart
+// (global.aws.privateCA.enabled).
 func privateCAEnabled(t *testing.T, e *env.Environment) bool {
-	inputs := env.ModulePlacement(t, e).Module.Inputs
-	if aws, ok := inputs["aws"].(map[string]any); ok {
-		if privateCA, ok := aws["privateCA"].(map[string]any); ok {
-			if enabled, ok := privateCA["enabled"].(bool); ok {
-				return enabled
-			}
+	var value any = env.ModulePlacement(t, e).Module.Inputs
+	for _, key := range []string{"global", "aws", "privateCA", "enabled"} {
+		values, ok := value.(map[string]any)
+		if !ok {
+			return false
 		}
+		value = values[key]
 	}
-	return false
+	enabled, _ := value.(bool)
+	return enabled
 }
 
 // waitUntilConditions waits until every named status condition of the object is True.
