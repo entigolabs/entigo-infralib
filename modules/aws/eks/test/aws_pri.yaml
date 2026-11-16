@@ -14,6 +14,7 @@ eks_main_max_size: 8
 eks_main_capacity_type: "SPOT"
 eks_main_volume_size: 30
 enable_efs_csi: true
+privateca_arn: "arn:aws:acm-pca:eu-north-1:123456789012:certificate-authority/00000000-0000-0000-0000-000000000000"
 use_latest_ami_release_version: true
 node_launch_template_tags: |
   {

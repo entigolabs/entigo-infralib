@@ -62,6 +62,12 @@ __enable_node_monitoring_agent__ Defaults to false. Set to true to install the e
 
 __node_monitoring_agent_config__ Defaults to {}, configuration values for the eks-node-monitoring-agent addon.
 
+__privateca_arn__ Defaults to "" (addon not installed). ARN of an AWS Private CA, it can be a CA shared from another account with AWS RAM. When set the aws-privateca-connector-for-kubernetes addon (aws-privateca-issuer) is installed in the aws-privateca-issuer namespace with an IRSA role that can issue certificates from this CA. The addon requires cert-manager in the cluster (k8s/cert-manager), create an AWSPCAClusterIssuer or AWSPCAIssuer with the same ARN to use it.
+
+__privateca_connector_addon_version__ SHOULD NOT BE CHANGED, but can override the aws-privateca-connector-for-kubernetes addon version.
+
+__privateca_connector_config__ Defaults to {}, configuration values for the aws-privateca-connector-for-kubernetes addon.
+
 
 
 ### Example code ###

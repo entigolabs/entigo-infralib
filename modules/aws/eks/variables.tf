@@ -393,6 +393,11 @@ variable "node_monitoring_agent_addon_version" {
   default = "v1.7.6-eksbuild.1"
 }
 
+variable "privateca_connector_addon_version" {
+  type = string
+  default = "v1.12.0-eksbuild.2"
+}
+
 variable "enable_vpc_cni_prefix_delegation" {
   type    = string
   default = "true"
@@ -413,6 +418,13 @@ variable "enable_node_monitoring_agent" {
   type        = bool
   nullable    = false
   default     = false
+}
+
+variable "privateca_arn" {
+  description = "ARN of an AWS Private CA, it can be shared from another account with AWS RAM. When set the aws-privateca-connector-for-kubernetes addon (aws-privateca-issuer for cert-manager) is installed with an IRSA role that can issue certificates from this CA. Requires cert-manager in the cluster"
+  type        = string
+  nullable    = false
+  default     = ""
 }
 
 variable "coredns_config" {
@@ -442,6 +454,13 @@ variable "efs_csi_controller_config" {
 
 variable "node_monitoring_agent_config" {
   description = "eks-node-monitoring-agent EKS addon configuration_values"
+  type     = any
+  nullable = false
+  default  = {}
+}
+
+variable "privateca_connector_config" {
+  description = "aws-privateca-connector-for-kubernetes EKS addon configuration_values"
   type     = any
   nullable = false
   default  = {}

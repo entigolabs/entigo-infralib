@@ -292,6 +292,37 @@ module "efs_csi_irsa_role" {
   )
 }
 
+module "privateca_connector_irsa_role" {
+  count   = var.privateca_arn != "" ? 1 : 0
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "6.8.2"
+  name    = "${var.prefix}-privateca-connector"
+  permissions = {
+    privateca = {
+      actions = [
+        "acm-pca:DescribeCertificateAuthority",
+        "acm-pca:GetCertificate",
+        "acm-pca:IssueCertificate"
+      ]
+      resources = [var.privateca_arn]
+    }
+  }
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["aws-privateca-issuer:aws-privateca-issuer"]
+    }
+  }
+  tags = merge(
+    {
+      Terraform  = "true"
+      Prefix     = var.prefix
+      created-by = "entigo-infralib"
+    },
+    var.node_launch_template_tags
+  )
+}
+
 module "vpc_cni_irsa_role" {
   source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version               = "6.8.2"
@@ -430,6 +461,16 @@ module "eks" {
         }, var.efs_csi_controller_config)
       })
     }
+  } : {}, var.privateca_arn != "" ? {
+    # Requires cert-manager in the cluster, the issuer controller watches cert-manager CertificateRequests.
+    aws-privateca-connector-for-kubernetes = merge({
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
+      addon_version               = var.privateca_connector_addon_version
+      service_account_role_arn    = module.privateca_connector_irsa_role[0].arn
+    }, length(var.privateca_connector_config) > 0 ? {
+      configuration_values = jsonencode(var.privateca_connector_config)
+    } : {})
   } : {}, local.enable_node_monitoring_agent ? {
     eks-node-monitoring-agent = merge({
       resolve_conflicts_on_update = "OVERWRITE"

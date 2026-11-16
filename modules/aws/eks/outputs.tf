@@ -129,6 +129,11 @@ output "efs_csi_service_account_role_arn" {
   value       = var.enable_efs_csi ? module.eks.cluster_addons["aws-efs-csi-driver"].service_account_role_arn : ""
 }
 
+output "privateca_connector_service_account_role_arn" {
+  description = "AWS Private CA Connector for Kubernetes Service Account Role ARN"
+  value       = var.privateca_arn != "" ? module.privateca_connector_irsa_role[0].arn : ""
+}
+
 output "cluster_identity_providers" {
   description = "Map of attribute maps for all EKS identity providers enabled"
   value = module.eks.cluster_identity_providers
