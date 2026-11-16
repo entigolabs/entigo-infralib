@@ -2,7 +2,8 @@
 # ClusterIssuer is exercised on aws_biz.
 # The aws-privateca-issuer subchart with its IRSA role and the AWSPCAClusterIssuer. The account has no private CA, so
 # the ARN is a placeholder: the issuer gets Ready from its IRSA credentials alone and no certificate is issued from it.
-awsPrivateCA:
-  enabled: true
-  arns:
-    - arn:aws:acm-pca:eu-north-1:123456789012:certificate-authority/00000000-0000-0000-0000-000000000000
+aws:
+  privateCA:
+    enabled: true
+    arns:
+      - arn:aws:acm-pca:eu-north-1:123456789012:certificate-authority/00000000-0000-0000-0000-000000000000

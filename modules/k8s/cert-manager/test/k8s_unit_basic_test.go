@@ -113,12 +113,14 @@ func clusterIssuerCreated(t *testing.T, e *env.Environment) bool {
 	return e.Cloud != env.CloudAWS
 }
 
-// privateCAEnabled reports whether the environment enables the aws-privateca-issuer subchart (awsPrivateCA.enabled).
+// privateCAEnabled reports whether the environment enables the aws-privateca-issuer subchart (aws.privateCA.enabled).
 func privateCAEnabled(t *testing.T, e *env.Environment) bool {
 	inputs := env.ModulePlacement(t, e).Module.Inputs
-	if awsPrivateCA, ok := inputs["awsPrivateCA"].(map[string]any); ok {
-		if enabled, ok := awsPrivateCA["enabled"].(bool); ok {
-			return enabled
+	if aws, ok := inputs["aws"].(map[string]any); ok {
+		if privateCA, ok := aws["privateCA"].(map[string]any); ok {
+			if enabled, ok := privateCA["enabled"].(bool); ok {
+				return enabled
+			}
 		}
 	}
 	return false

@@ -30,14 +30,15 @@ extraClusterIssuers: []
 # AWS only: the aws-privateca-issuer subchart, so cert-manager can issue certificates from AWS Private CA (also a CA
 # of another account shared with AWS RAM). Creates the IRSA role of the issuer (crossplane-aws), which may issue from
 # the CAs in arns only
-awsPrivateCA:
-  enabled: false
-  arns: []
-  # AWSPCAClusterIssuer for the first CA of arns. false installs the issuer controller alone, for own AWSPCAIssuer and
-  # AWSPCAClusterIssuer objects
-  clusterIssuer:
-    create: true
-    name: aws-privateca
+aws:
+  privateCA:
+    enabled: false
+    arns: []
+    # AWSPCAClusterIssuer for the first CA of arns. false installs the issuer controller alone, for own AWSPCAIssuer
+    # and AWSPCAClusterIssuer objects
+    clusterIssuer:
+      create: true
+      name: aws-privateca
 
 aws-privateca-issuer:
   fullnameOverride: aws-privateca-issuer

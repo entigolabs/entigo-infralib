@@ -1,3 +1,0 @@
-{{- if and .Values.awsPrivateCA.enabled (ne .Values.global.cloudProvider "aws") }}
-{{- fail "awsPrivateCA.enabled is for AWS only" }}
-{{- end }}
