@@ -463,14 +463,42 @@ module "eks" {
     }
   } : {}, var.privateca_arn != "" ? {
     # Requires cert-manager in the cluster, the issuer controller watches cert-manager CertificateRequests.
-    aws-privateca-connector-for-kubernetes = merge({
+    aws-privateca-connector-for-kubernetes = {
       resolve_conflicts_on_update = "OVERWRITE"
       resolve_conflicts_on_create = "OVERWRITE"
       addon_version               = var.privateca_connector_addon_version
       service_account_role_arn    = module.privateca_connector_irsa_role[0].arn
-    }, length(var.privateca_connector_config) > 0 ? {
-      configuration_values = jsonencode(var.privateca_connector_config)
-    } : {})
+      configuration_values = jsonencode(merge({
+        tolerations : [
+          {
+            key : "tools",
+            operator : "Equal",
+            value : "true",
+            effect : "NoSchedule"
+          }
+        ],
+        affinity : {
+          nodeAffinity : {
+            preferredDuringSchedulingIgnoredDuringExecution : [
+              {
+                preference : {
+                  matchExpressions : [
+                    {
+                      "key" : "tools",
+                      "operator" : "In",
+                      "values" : [
+                        "true"
+                      ]
+                    }
+                  ]
+                },
+                "weight" : 5
+              }
+            ]
+          }
+        }
+      }, var.privateca_connector_config))
+    }
   } : {}, local.enable_node_monitoring_agent ? {
     eks-node-monitoring-agent = merge({
       resolve_conflicts_on_update = "OVERWRITE"
