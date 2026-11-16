@@ -1,4 +1,4 @@
-authz-controller:
+authz-controller-cluster:
   config:
     ORGANIZATION: martin
     WORKSPACE: biz
