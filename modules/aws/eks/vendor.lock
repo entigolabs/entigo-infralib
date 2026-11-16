@@ -1,0 +1,15 @@
+# Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+modules:
+  - name: terraform-aws-eks
+    source: terraform-aws-modules/eks/aws
+    version: 21.29.0
+    repository: https://github.com/terraform-aws-modules/terraform-aws-eks
+    commit: 91f11ea01656c26b8e6b8eb1b74f19863f60056c
+    checksum: sha256:7582f090a46c47c00b86cd21d35932d9ee76150f047c69266a227a5fd95fcfa4
+  - name: terraform-aws-iam
+    source: terraform-aws-modules/iam/aws
+    version: 6.8.2
+    repository: https://github.com/terraform-aws-modules/terraform-aws-iam
+    commit: 55514b7873c411040395e024a422684998da77c2
+    checksum: sha256:16fc9a0b6b06bfe5d791132d2e504b0ff782ec6d5050cef5cf297de596a3c992

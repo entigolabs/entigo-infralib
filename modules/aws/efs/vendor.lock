@@ -1,4 +1,4 @@
-# Written by ./vendor.sh from vendor.yaml: what each module resolved to.
+# Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
 modules:
   - name: terraform-aws-efs

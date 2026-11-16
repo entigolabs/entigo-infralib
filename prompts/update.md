@@ -48,22 +48,36 @@ Read /workspace/update-report.txt. It has five sections:
 Lines like: <chart_name> newer version <NEW>, current <OLD> (<file_path>)
 Each line means: open <file_path>, find version <OLD>, replace with <NEW>.
 
+VENDORED MODULES (applies to every TERRAFORM section below):
+Community modules are vendored into the module that calls them: the version is in
+modules/<cloud>/<module>/vendor.yaml, the module's files are under
+modules/<cloud>/<module>/vendors/ and vendor.lock records what was vendored.
+- A report line whose name has three parts (<namespace>/<name>/<provider>, e.g.
+  terraform-aws-modules/eks/aws) is a module: replace <OLD> with <NEW> for that source in
+  every vendor.yaml that lists it (grep -rl --include=vendor.yaml '<source>' modules/), then
+  for each of those module directories run
+  /workspace/entigo-infralib-test/scripts/vendor.sh modules/<cloud>/<module>
+  from /workspace/entigo-infralib. It rewrites vendors/ and vendor.lock; commit all of it.
+- NEVER edit vendor.lock or any file under a vendors/ directory by hand, and exclude them from
+  every grep/sed replacement (grep -r --exclude-dir=vendors --exclude=vendor.lock).
+- If vendor.sh fails, leave that module out of the PR and say so in the final summary.
+
 === AWS TERRAFORM UPDATES ===
 Lines like: hashicorp/aws newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/aws/ and in modules/aws-v2 and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/aws/ and in modules/aws-v2 and replace with <NEW>.
 EKS AL2023_* lines: find the AMI version string in modules/aws/ and replace.
 
 === GOOGLE TERRAFORM UPDATES ===
 Lines like: hashicorp/google newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/google/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/google/ and replace with <NEW>.
 
 === AZURE TERRAFORM UPDATES ===
 Lines like: hashicorp/azurerm newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/azure/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/azure/ and replace with <NEW>.
 
 === ORACLE TERRAFORM UPDATES ===
 Lines like: oracle/oci newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/oracle/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/oracle/ and replace with <NEW>.
 
 STEP 3 - CREATE SEPARATE PRs:
 

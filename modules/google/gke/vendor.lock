@@ -1,0 +1,9 @@
+# Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+modules:
+  - name: terraform-google-kubernetes-engine
+    source: terraform-google-modules/kubernetes-engine/google
+    version: 47.0.0
+    repository: https://github.com/terraform-google-modules/terraform-google-kubernetes-engine
+    commit: a19597ac18ad833d224448e2954df93095b8ce9d
+    checksum: sha256:7b1baa1c9f968c76ed899f5773e7d18a3f0d20c271dc79bb46b2b04b2e406493

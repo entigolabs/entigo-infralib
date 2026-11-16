@@ -206,8 +206,7 @@ resource "time_sleep" "roles" {
 
 # https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster
 module "aks" {
-  source  = "Azure/avm-res-containerservice-managedcluster/azurerm"
-  version = "0.8.7"
+  source  = "./vendors/terraform-azurerm-avm-res-containerservice-managedcluster" # version in vendor.yaml
 
   name                = var.prefix
   location            = var.location

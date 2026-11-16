@@ -1,7 +1,6 @@
 # https://search.opentofu.org/module/terraform-aws-modules/efs/aws/latest
-# Vendored: the version is in vendor.yaml and changes with ./vendor.sh.
 module "efs" {
-  source = "./vendors/terraform-aws-efs"
+  source = "./vendors/terraform-aws-efs" # version in vendor.yaml
 
   for_each = toset(var.efs_volumes)
 

@@ -66,10 +66,9 @@ resource "google_compute_address" "cloud_nat" {
 }
 
 # https://github.com/terraform-google-modules/terraform-google-cloud-nat
-# Vendored: the version is in vendor.yaml and changes with ./vendor.sh.
 module "cloud_nat" {
   count                               = var.enable_nat_gateway ? 1 : 0
-  source                              = "./vendors/terraform-google-cloud-nat"
+  source                              = "./vendors/terraform-google-cloud-nat" # version in vendor.yaml
   project_id                          = data.google_client_config.this.project
   region                              = data.google_client_config.this.region
   router                              = google_compute_router.router.name
