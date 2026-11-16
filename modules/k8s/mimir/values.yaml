@@ -52,13 +52,13 @@ mimir-distributed:
 
     resources:
       limits:
-        cpu: 2
-        memory: 2Gi
-        ephemeral-storage: 2Gi
+        cpu: 500m
+        memory: 500Mi
+        ephemeral-storage: 500Mi
       requests:
-        cpu: 100m
-        memory: 128Mi
-        ephemeral-storage: 128Mi
+        cpu: 50m
+        memory: 70Mi
+        ephemeral-storage: 70Mi
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
