@@ -28,7 +28,7 @@ logs:
             protocol: TCP
         to:
           - ipBlock:
-              cidr: "{{ .toutput.vpc.aks_subnet_cidrs[0] }}"
+              cidr: "{{ .toutput.vpc.api_server_cidrs[0] }}"
       # This list replaces values.yaml's egress list entirely, so the traces
       # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
       # repeated here — without it spans queue in Alloy and never reach Tempo.

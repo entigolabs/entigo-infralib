@@ -21,6 +21,20 @@ variable "location" {
   default = ""
 }
 
+variable "create_vpc" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "false = use the existing VNet vpc_name"
+}
+
+variable "vpc_name" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "\"\" = prefix"
+}
+
 variable "vpc_cidr" {
   type     = string
   nullable = false
@@ -242,6 +256,12 @@ variable "container_apps_subnets" {
 variable "container_apps_subnet_names" {
   type    = list(string)
   default = []
+}
+
+variable "container_apps_resource_group_names" {
+  type        = list(string)
+  default     = []
+  description = "Managed resource groups of the Container Apps environments, default <subnet name>-<location>. Create time only"
 }
 
 variable "container_apps_subnet_service_endpoints" {
