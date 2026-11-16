@@ -38,22 +38,36 @@ jobs:
     steps:
     - name: Resolve latest in both registries
       id: resolve
+      # Logged in to both registries: anonymous requests to ECR Public are
+      # rate limited per address, and a runner shares its address with others
+      # (429 Too Many Requests). A request that still fails is tried again.
       env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
         set -euo pipefail
         echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+        aws ecr-public get-login-password --region us-east-1 | docker login -u AWS --password-stdin public.ecr.aws/entigolabs
+        inspect() {
+          local attempt
+          for attempt in 1 2 3 4 5; do
+            docker buildx imagetools inspect "$@" && return 0
+            sleep $((attempt * 5))
+          done
+          return 1
+        }
         images='[]'
         for name in kubectl aws google oracle azure; do
           registries='{}'
           for target in "ecr=public.ecr.aws/entigolabs/entigo-infralib-${name}" "dockerhub=docker.io/entigolabs/entigo-infralib-${name}"; do
             label=${target%%=*}; repo=${target#*=}
-            digest=$(docker buildx imagetools inspect "${repo}:latest" --format '{{.Manifest.Digest}}')
+            digest=$(inspect "${repo}:latest" --format '{{.Manifest.Digest}}')
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::no digest for ${repo}:latest" >&2; exit 1; }
             # buildx attached an SBOM to each platform as an attestation manifest
             # inside the index; record which one belongs to which platform.
-            sbom=$(docker buildx imagetools inspect "${repo}@${digest}" --raw | jq -c '
+            sbom=$(inspect "${repo}@${digest}" --raw | jq -c '
               (.manifests | map(select(.platform.os != "unknown") | {(.digest): "\(.platform.os)/\(.platform.architecture)"}) | add) as $platform
               | [.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest")
                  | {($platform[.annotations["vnd.docker.reference.digest"]]): .digest}] | add // {}')
