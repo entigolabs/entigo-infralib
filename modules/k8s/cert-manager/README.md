@@ -37,6 +37,13 @@ allows 5 certificates per identical name set per 7 days.
 * azure-gateway and istio-gateway default to `clusterIssuer.name` of this module, their `certificateIssuer` picks
   another one.
 
+### Updating aws-privateca-issuer ###
+
+The subchart keeps its CRDs in `crds/`, which ArgoCD does not render (modules/k8s/README.md), so they are copied into
+`templates/aws/privateCACrds.yaml`. After a version bump of the `aws-privateca-issuer` dependency copy the two files of
+the new tarball's `crds/` there again, inside the `global.aws.privateCA.enabled` gate, with the annotations
+`helm.sh/resource-policy: keep` and `argocd.argoproj.io/sync-wave: "-1"` on each.
+
 ### Example code ###
 
 ```
