@@ -24,3 +24,8 @@ global:
 # WorkloadIdentity (iam.entigo.com): chart dependency github.com/entigolabs/entigo-infralib-apis, values under
 # entigo-infralib-apis (roles allowlist: iam.environmentConfig.azure.roles)
 entigo-infralib-apis: {}
+
+# sha256 digests of the provider packages, keyed by <package>:<version>. Filled in by the generated
+# values-images.yaml (written by `pullpush.sh digests`), do not set it here. A package without an
+# entry is installed by its tag alone.
+imageDigests: {}
