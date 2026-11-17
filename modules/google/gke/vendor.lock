@@ -1,9 +1,11 @@
 # Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
 modules:
   - name: terraform-google-kubernetes-engine
     source: terraform-google-modules/kubernetes-engine/google
     version: 47.0.0
     repository: https://github.com/terraform-google-modules/terraform-google-kubernetes-engine
     commit: a19597ac18ad833d224448e2954df93095b8ce9d
-    checksum: sha256:7b1baa1c9f968c76ed899f5773e7d18a3f0d20c271dc79bb46b2b04b2e406493
+    checksum: sha256:8717456a23064a35f16bf26714e5b41a802ef6c517d6ca74b9a06259f463336f

@@ -1,9 +1,18 @@
 # Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
 modules:
   - name: terraform-azurerm-avm-res-containerservice-managedcluster
     source: Azure/avm-res-containerservice-managedcluster/azurerm
     version: 0.8.7
     repository: https://github.com/azure/terraform-azurerm-avm-res-containerservice-managedcluster
     commit: e45c3dc8a605e54de39a70780ac1b8fc42b11a26
-    checksum: sha256:c01d221cfef1f8a75c4227889ae8389322cf6237795a8142d549f7aebdb95b46
+    checksum: sha256:d3c503677f6a67649f0c04fb35aaf7d1ca1bd5a890569c87ddfcbce1fdde621e
+  - name: terraform-azurerm-avm-res-containerservice-managedcluster--terraform-azure-avm-utl-interfaces
+    required_by: terraform-azurerm-avm-res-containerservice-managedcluster
+    source: Azure/avm-utl-interfaces/azure
+    version: 0.9.0
+    repository: https://github.com/azure/terraform-azure-avm-utl-interfaces
+    commit: 7ef66f795bd44f23f3ca83994705e950ae034f68
+    checksum: sha256:d64e00814c1708ac8d143d0b92104e060f5a515ba78fe9d26ba0afe293382a19

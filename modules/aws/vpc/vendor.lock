@@ -1,9 +1,11 @@
 # Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
 modules:
   - name: terraform-aws-vpc
     source: terraform-aws-modules/vpc/aws
     version: 6.7.3
     repository: https://github.com/terraform-aws-modules/terraform-aws-vpc
     commit: b3abd6df2ecf052451a361ed55b8f06f8742a795
-    checksum: sha256:147e1cbf6445df51585a6145110616c0ab026fea1a569110d00a4d690a9a27f2
+    checksum: sha256:ba480e0613cffdf659baeaf82f413077b508f162165721e7c0aeeac46719303c
