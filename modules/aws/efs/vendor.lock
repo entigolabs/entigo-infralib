@@ -1,9 +1,11 @@
 # Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
 modules:
   - name: terraform-aws-efs
     source: terraform-aws-modules/efs/aws
     version: 2.2.1
     repository: https://github.com/terraform-aws-modules/terraform-aws-efs
     commit: e0ec33d8436363960395b859aff0168ce25c27a4
-    checksum: sha256:0b2632416cdf48fc229fae2b154a5ee4b99c7c40df9de31854f4bdebad89f3d8
+    checksum: sha256:1042fed913784c5956ba6c13dab533873132644a928d4189dc619319a8687bc3

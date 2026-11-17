@@ -1,9 +1,11 @@
 # Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
 # Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
 modules:
   - name: terraform-aws-kms
     source: terraform-aws-modules/kms/aws
     version: 4.2.2
     repository: https://github.com/terraform-aws-modules/terraform-aws-kms
     commit: d25e459bd43d8d0bdff7c250ba6b237a12be7381
-    checksum: sha256:e809a18dbcd1c1090440ea48db24cd228d147774d9d489f4a8b2e71ad8917279
+    checksum: sha256:c8b645e14b3a813083a342b7e73c2ddf5f4cb6300f722502c9c5b6c08353caec

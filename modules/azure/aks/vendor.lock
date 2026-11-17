@@ -8,11 +8,11 @@ modules:
     version: 0.8.7
     repository: https://github.com/azure/terraform-azurerm-avm-res-containerservice-managedcluster
     commit: e45c3dc8a605e54de39a70780ac1b8fc42b11a26
-    checksum: sha256:f466805c4363625fa5c7453c8ceaba65ff0da271070ee484383ec32a2327b5a0
+    checksum: sha256:d3c503677f6a67649f0c04fb35aaf7d1ca1bd5a890569c87ddfcbce1fdde621e
   - name: terraform-azurerm-avm-res-containerservice-managedcluster--terraform-azure-avm-utl-interfaces
     required_by: terraform-azurerm-avm-res-containerservice-managedcluster
     source: Azure/avm-utl-interfaces/azure
     version: 0.9.0
     repository: https://github.com/azure/terraform-azure-avm-utl-interfaces
     commit: 7ef66f795bd44f23f3ca83994705e950ae034f68
-    checksum: sha256:8b482e72ce0ad5b65b445b5b654f87de0ebfb16ae93f185f986f383cd35ad6b6
+    checksum: sha256:d64e00814c1708ac8d143d0b92104e060f5a515ba78fe9d26ba0afe293382a19
