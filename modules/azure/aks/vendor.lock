@@ -1,0 +1,9 @@
+# Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+modules:
+  - name: terraform-azurerm-avm-res-containerservice-managedcluster
+    source: Azure/avm-res-containerservice-managedcluster/azurerm
+    version: 0.8.7
+    repository: https://github.com/azure/terraform-azurerm-avm-res-containerservice-managedcluster
+    commit: e45c3dc8a605e54de39a70780ac1b8fc42b11a26
+    checksum: sha256:c01d221cfef1f8a75c4227889ae8389322cf6237795a8142d549f7aebdb95b46

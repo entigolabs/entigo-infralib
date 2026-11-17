@@ -1,7 +1,7 @@
 ## Oppinionated module for eks creation ##
 
 
-Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
+Oppinionated version of this https://search.opentofu.org/module/terraform-aws-modules/eks/aws/latest
 
 
 __vpc_id__ the VPC id where eks is installed.

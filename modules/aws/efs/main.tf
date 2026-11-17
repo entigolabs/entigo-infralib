@@ -1,7 +1,6 @@
-#https://registry.terraform.io/modules/terraform-aws-modules/efs/aws/latest
+# https://search.opentofu.org/module/terraform-aws-modules/efs/aws/latest
 module "efs" {
-  source = "terraform-aws-modules/efs/aws"
-  version = "2.2.1"
+  source = "./vendors/terraform-aws-efs" # version in vendor.yaml
 
   for_each = toset(var.efs_volumes)
 
