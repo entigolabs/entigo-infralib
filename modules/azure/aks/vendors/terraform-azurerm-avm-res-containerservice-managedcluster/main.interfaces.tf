@@ -82,7 +82,7 @@ locals {
 }
 
 module "interfaces" {
-  source = "./vendors/terraform-azure-avm-utl-interfaces"
+  source = "../terraform-azurerm-avm-res-containerservice-managedcluster--terraform-azure-avm-utl-interfaces"
 
   location                                = var.location
   diagnostic_settings_v2                  = local.diagnostic_settings_v2
