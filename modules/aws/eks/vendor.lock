@@ -6,7 +6,13 @@ modules:
     version: 21.29.0
     repository: https://github.com/terraform-aws-modules/terraform-aws-eks
     commit: 91f11ea01656c26b8e6b8eb1b74f19863f60056c
-    checksum: sha256:7582f090a46c47c00b86cd21d35932d9ee76150f047c69266a227a5fd95fcfa4
+    checksum: sha256:3c99f32119007927fc35c7e61e3f3643a2b09ecff6052cacfa394711584e56df
+  - name: terraform-aws-kms
+    parent: terraform-aws-eks
+    source: terraform-aws-modules/kms/aws
+    version: 4.0.0
+    repository: https://github.com/terraform-aws-modules/terraform-aws-kms
+    commit: 28846a0d9ba83629f006847f25f0e69bd05116b1
   - name: terraform-aws-iam
     source: terraform-aws-modules/iam/aws
     version: 6.8.2

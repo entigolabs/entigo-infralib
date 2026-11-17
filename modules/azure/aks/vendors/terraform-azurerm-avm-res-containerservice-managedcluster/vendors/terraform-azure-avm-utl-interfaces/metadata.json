@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AVM Interfaces",
+  "moduleDescription": "AVM utility module for implementing interfaces in AzAPI",
+  "canonicalType": "interfaces",
+  "owners": [
+    "jaredfholgate"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.utl.adc67f4"
+}

@@ -82,8 +82,7 @@ locals {
 }
 
 module "interfaces" {
-  source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.9.0"
+  source = "./vendors/terraform-azure-avm-utl-interfaces"
 
   location                                = var.location
   diagnostic_settings_v2                  = local.diagnostic_settings_v2
