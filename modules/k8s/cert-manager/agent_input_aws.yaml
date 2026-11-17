@@ -5,3 +5,6 @@ global:
     region: "{{ .toutput.eks.region }}"
     pubZoneName: "{{ .toptout.route53.pub_domain }}"
     intCertZoneName: "{{ .toptout.route53.int_domain }}"
+aws-privateca-issuer:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/k1n1h4h4/cert-manager-aws-privateca-issuer'

@@ -28,6 +28,16 @@ func TestCertManager(t *testing.T) {
 			require.NoError(t, err, "%s deployment error", deployment)
 		}
 
+		if privateCAEnabled(t, e) {
+			// The aws-privateca-issuer subchart: the AWSPCAClusterIssuer gets Ready once the controller has verified
+			// its IRSA credentials. No certificate is requested from it, the test account has no private CA.
+			err := k8s.WaitUntilDeploymentAvailableE(t, c, "aws-privateca-issuer", 60, 10*time.Second)
+			require.NoError(t, err, "aws-privateca-issuer deployment error")
+			awsPCAClusterIssuerGVR := schema.GroupVersionResource{Group: "awspca.cert-manager.io", Version: "v1beta1", Resource: "awspcaclusterissuers"}
+			_, err = waitUntilConditions(t, c, awsPCAClusterIssuerGVR, "", "aws-privateca", []string{"Ready"}, 60, 10*time.Second)
+			require.NoError(t, err, "AWSPCAClusterIssuer error")
+		}
+
 		randomName := strings.ToLower(random.UniqueId())
 		certificateName := fmt.Sprintf("%s-%s", c.Namespace, randomName)
 		secretName := fmt.Sprintf("%s-tls", certificateName)
@@ -101,6 +111,21 @@ func clusterIssuerCreated(t *testing.T, e *env.Environment) bool {
 		}
 	}
 	return e.Cloud != env.CloudAWS
+}
+
+// privateCAEnabled reports whether the environment enables the aws-privateca-issuer subchart
+// (global.aws.privateCA.enabled).
+func privateCAEnabled(t *testing.T, e *env.Environment) bool {
+	var value any = env.ModulePlacement(t, e).Module.Inputs
+	for _, key := range []string{"global", "aws", "privateCA", "enabled"} {
+		values, ok := value.(map[string]any)
+		if !ok {
+			return false
+		}
+		value = values[key]
+	}
+	enabled, _ := value.(bool)
+	return enabled
 }
 
 // waitUntilConditions waits until every named status condition of the object is True.
