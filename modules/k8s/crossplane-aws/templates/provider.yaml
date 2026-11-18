@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/upbound/provider-family-aws:v2.9.4
+  {{- include "crossplane-aws.digest" (list $ "provider-family-aws:v2.9.4") }}
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
@@ -27,6 +28,7 @@ metadata:
 spec:
   skipDependencyResolution: true
   package: xpkg.upbound.io/upbound/provider-aws-{{ $provider }}:v2.9.4
+  {{- include "crossplane-aws.digest" (list $ (printf "provider-aws-%s:v2.9.4" $provider)) }}
   runtimeConfigRef:
 {{- if hasKey $.Values.providerResources.providers $provider }}
     name: {{ $.Release.Name }}-{{ $provider }}

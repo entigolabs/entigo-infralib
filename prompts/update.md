@@ -196,7 +196,7 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   fi && \
   # Reset provider files to main's version before applying our change.
   # This prevents stale versions from persisting on long-lived branches.
-  git checkout main -- modules/k8s/<DIR>/templates/provider.yaml modules/k8s/<DIR>/pullpush.sh 2>/dev/null || true && \
+  git checkout main -- modules/k8s/<DIR>/templates/provider.yaml modules/k8s/<DIR>/pullpush.sh modules/k8s/<DIR>/values-images.yaml 2>/dev/null || true && \
   # Check if the target version is already in provider.yaml — skip if so
   if grep -q '<NEW>' modules/k8s/<DIR>/templates/provider.yaml; then
     # Version already matches — check if branch has different file content than remote
@@ -228,6 +228,8 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   else
     sed -i 's/<OLD>/<NEW>/g' modules/k8s/<DIR>/templates/provider.yaml && \
     sed -i 's/VERSION="<OLD>"/VERSION="<NEW>"/' modules/k8s/<DIR>/pullpush.sh && \
+    # Pin the new version's packages by digest (resolved upstream, no login needed).
+    modules/k8s/<DIR>/pullpush.sh digests && \
     git add -A && \
     if git diff --cached --quiet; then
       echo "NO_CHANGES"
