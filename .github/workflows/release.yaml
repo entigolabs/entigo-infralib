@@ -141,6 +141,7 @@ jobs:
           echo "| Image | Tag | Digest |"
           echo "| --- | --- | --- |"
         } > "$section"
+        signed=()
         while read -r repo tag digest; do
           current=$(docker buildx imagetools inspect "${repo}:${tag}" --format '{{.Manifest.Digest}}' 2>/dev/null || true)
           if [ -z "$current" ]; then
@@ -151,21 +152,25 @@ jobs:
           fi
           if ! verify "${repo}@${digest}"; then
             cosign sign --yes "${repo}@${digest}"
-            # A registry does not always serve the signature it was just
-            # pushed, ECR Public in particular, so the check is retried.
-            attempt=1
-            until verify "${repo}@${digest}"; do
-              if [ "$attempt" -ge 6 ]; then
-                cosign verify --certificate-oidc-issuer "$issuer" --certificate-identity-regexp "$identity" "${repo}@${digest}" >/dev/null || true
-                echo "::error::the signature of ${repo}@${digest} does not verify" >&2; exit 1
-              fi
-              echo "The signature of ${repo}@${digest} does not verify yet, attempt ${attempt} of 6"
-              attempt=$((attempt + 1))
-              sleep 5
-            done
+            signed+=("${repo}@${digest}")
           fi
           echo "| \`${repo}\` | \`${tag}\` | \`${digest}\` |" >> "$section"
         done < "${RUNNER_TEMP}/images.txt"
+        # The new signatures are checked after all of them are pushed: a
+        # registry does not always serve a signature it was just pushed, ECR
+        # Public in particular. The check is retried for the same reason.
+        for image in "${signed[@]}"; do
+          attempt=1
+          until verify "$image"; do
+            if [ "$attempt" -ge 6 ]; then
+              cosign verify --certificate-oidc-issuer "$issuer" --certificate-identity-regexp "$identity" "$image" >/dev/null || true
+              echo "::error::the signature of ${image} does not verify" >&2; exit 1
+            fi
+            echo "The signature of ${image} does not verify yet, attempt ${attempt} of 6"
+            attempt=$((attempt + 1))
+            sleep 5
+          done
+        done
         {
           echo
           echo "Verify a signature:"
