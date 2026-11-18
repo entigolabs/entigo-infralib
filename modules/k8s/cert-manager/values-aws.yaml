@@ -10,9 +10,6 @@ global:
     # of global.pubZoneId and global.intCertZoneId
     pubZoneName: ""
     intCertZoneName: ""
-    # AWS Private CA of the default private domain of the route53 module (certificate_authority_arn), "" = none. The
-    # default of global.aws.privateCA.arns
-    intCertificateAuthorityArn: ""
 
 # The gateways on AWS use ACM certificates, so by default cert-manager is installed alone. true adds the ACME
 # ClusterIssuer with Route53 DNS-01 solvers and the IRSA role for it (crossplane-aws)

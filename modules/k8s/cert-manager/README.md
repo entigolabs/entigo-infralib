@@ -45,8 +45,8 @@ the CA can sign. `global.aws.privateCA.policy.enabled: true` adds the
 [cert-manager-approver-policy](https://cert-manager.io/docs/policy/approval/approver-policy/) subchart and one
 `CertificateRequestPolicy` for all `AWSPCAIssuer` and `AWSPCAClusterIssuer` requests, own issuers included.
 
-Without `global.aws.privateCA.policy.allowed` the policy allows the default private domain of the route53 module
-(`int_domain`) and every name under it, as common name and as DNS names, with the usages `server auth` and
+By default (`agent_input_aws.yaml`) the policy allows the names of the default private domain of the route53 module
+(`int_domain`): DNS names `*.<int_domain>` and `<int_domain>`, common name `*.<int_domain>`, usages `server auth` and
 `client auth`. When that domain also has a `certificate_authority_arn`, enabling is all it takes:
 
 ```
@@ -62,8 +62,9 @@ Without `global.aws.privateCA.policy.allowed` the policy allows the default priv
                   enabled: true
 ```
 
-`global.aws.privateCA.policy.allowed` replaces that default. It is the `spec.allowed` of the policy as is, `*` is a
-wildcard that also matches dots:
+`global.aws.privateCA.policy.allowed` is the `spec.allowed` of the policy as is, `*` is a wildcard that also matches
+dots. It is merged on top of the default: `commonName.value`, `dnsNames.values` and `usages` set in the inputs replace
+the default ones, a key left out keeps its default:
 
 ```
     modules:

@@ -1,9 +1,4 @@
 {{- if and .Values.global.aws.privateCA.enabled (eq .Values.global.cloudProvider "aws") }}
-# global.aws.privateCA.arns, else the CA of the default private domain of the route53 module
-{{- $arns := .Values.global.aws.privateCA.arns }}
-{{- if and (not $arns) .Values.global.aws.intCertificateAuthorityArn }}
-{{- $arns = list .Values.global.aws.intCertificateAuthorityArn }}
-{{- end }}
 apiVersion: iam.aws.upbound.io/v1beta1
 kind: Policy
 metadata:
@@ -29,7 +24,7 @@ spec:
               "acm-pca:IssueCertificate"
             ],
             "Resource": [
-              {{- range $i, $arn := $arns }}
+              {{- range $i, $arn := .Values.global.aws.privateCA.arns }}
               {{- if $i }},{{ end }}
               {{ $arn | quote }}
               {{- end }}
