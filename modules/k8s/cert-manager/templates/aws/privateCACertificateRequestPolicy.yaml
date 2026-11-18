@@ -1,5 +1,4 @@
-{{- $allowed := include "cert-manager.privateCAPolicyAllowed" . | fromJson }}
-{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.policy.enabled $allowed (eq .Values.global.cloudProvider "aws") }}
+{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.policy.enabled (or .Values.global.aws.privateCA.policy.allowed .Values.global.aws.intCertZoneName) (eq .Values.global.cloudProvider "aws") }}
 # What may be requested from the AWS Private CA issuers, the one of this module and own ones alike
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
@@ -10,7 +9,24 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   allowed:
-    {{- toYaml $allowed | nindent 4 }}
+    {{- if .Values.global.aws.privateCA.policy.allowed }}
+    {{- toYaml .Values.global.aws.privateCA.policy.allowed | nindent 4 }}
+    {{- else }}
+    {{- $domain := .Values.global.aws.intCertZoneName }}
+    # The default private domain of the route53 module and the names under it, with the usages of the default end
+    # entity template. The common name is a rule, its value takes one pattern only
+    commonName:
+      validations:
+        - rule: {{ printf "self == %s || self.endsWith(%s)" ($domain | quote) (printf ".%s" $domain | quote) | squote }}
+          message: must be {{ $domain }} or a name under it
+    dnsNames:
+      values:
+        - {{ printf "*.%s" $domain | quote }}
+        - {{ $domain | quote }}
+    usages:
+      - server auth
+      - client auth
+    {{- end }}
   selector:
     issuerRef:
       group: awspca.cert-manager.io
