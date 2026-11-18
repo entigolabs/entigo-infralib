@@ -28,3 +28,14 @@ trivy-operator:
     metricsVulnIdEnabled: true
   trivy:
     severity: MEDIUM,HIGH,CRITICAL
+    # Scan the workload images that are referenced by their public registry name through the
+    # ECR pull through caches (modules/aws/ecr-proxy) instead of pulling them from upstream.
+    # The operator swaps the key for the value as a prefix of the fully qualified image name,
+    # so Docker Hub is "index.docker.io" and the official images already carry "library/".
+    registry:
+      mirror:
+        "index.docker.io": '{{ .toptout.ecr-proxy.hub_registry }}'
+        "ghcr.io": '{{ .toptout.ecr-proxy.ghcr_registry }}'
+        "quay.io": '{{ .toptout.ecr-proxy.quay_registry }}'
+        "registry.k8s.io": '{{ .toptout.ecr-proxy.k8s_registry }}'
+        "public.ecr.aws": '{{ .toptout.ecr-proxy.ecr_registry }}'

@@ -1,3 +1,12 @@
+# pri scans through the pull through caches of the biz environment (same account and region),
+# so both environments fill one cache. The biz ecr-proxy policy replaces the pri one on the
+# scan job role: it is the one that may create and import into the biz-net-ecr-proxy-*
+# repositories, and it allows pulling from every repository of the account, which covers the
+# images pri runs from its own caches.
+global:
+  aws:
+    ecrPolicy: "arn:aws:iam::877483565445:policy/biz-net-ecr-proxy"
+
 trivy-operator:
   trivyOperator:
     scanJobAffinity:
@@ -26,3 +35,12 @@ trivy-operator:
                     - "true"
   trivy:
     severity: MEDIUM,HIGH,CRITICAL
+    # See aws_biz.yaml. The operator swaps the key for the value as a prefix of the fully
+    # qualified image name, so Docker Hub is "index.docker.io".
+    registry:
+      mirror:
+        "index.docker.io": 877483565445.dkr.ecr.eu-north-1.amazonaws.com/biz-net-ecr-proxy-hub
+        "ghcr.io": 877483565445.dkr.ecr.eu-north-1.amazonaws.com/biz-net-ecr-proxy-ghcr
+        "quay.io": 877483565445.dkr.ecr.eu-north-1.amazonaws.com/biz-net-ecr-proxy-quay
+        "registry.k8s.io": 877483565445.dkr.ecr.eu-north-1.amazonaws.com/biz-net-ecr-proxy-k8s
+        "public.ecr.aws": 877483565445.dkr.ecr.eu-north-1.amazonaws.com/biz-net-ecr-proxy-ecr
