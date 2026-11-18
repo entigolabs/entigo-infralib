@@ -25,6 +25,8 @@ cert-manager:
 # The subchart of global.aws.privateCA.enabled
 aws-privateca-issuer:
   fullnameOverride: aws-privateca-issuer
+  # One pod like the cert-manager deployments, the chart defaults to 2
+  replicaCount: 1
   # The ServiceAccount with the IRSA role annotation comes from templates/aws/privateCAServiceAccount.yaml
   serviceAccount:
     create: false
