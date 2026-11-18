@@ -4,5 +4,10 @@ trivy-operator:
   trivy:
     image:
       registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
+    # The vulnerability databases come through the ECR pull through cache of Docker Hub when
+    # the platform has one, so they are fetched inside the region instead of through the NAT
+    # gateway. mirror.gcr.io is the subchart's own default and serves the same repositories.
+    dbRegistry: '{{ .toptout.ecr-proxy.hub_registry | "mirror.gcr.io" }}'
+    javaDbRegistry: '{{ .toptout.ecr-proxy.hub_registry | "mirror.gcr.io" }}'
   nodeCollector:
     registry: '{{ .toptout.ecr-proxy.ghcr_registry | .toptout.gar-proxy.ghcr_registry | .toptout.acr-proxy.ghcr_registry | "ghcr.io" }}'
