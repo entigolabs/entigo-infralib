@@ -1,0 +1,16 @@
+{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.policy.enabled .Values.global.aws.privateCA.policy.allowed (eq .Values.global.cloudProvider "aws") }}
+# A CertificateRequestPolicy applies to the requests of those who may use it
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-use-privateca-policy
+rules:
+  - apiGroups:
+      - policy.cert-manager.io
+    resources:
+      - certificaterequestpolicies
+    verbs:
+      - use
+    resourceNames:
+      - {{ .Release.Name }}-privateca
+{{- end }}

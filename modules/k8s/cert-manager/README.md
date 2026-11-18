@@ -37,6 +37,48 @@ allows 5 certificates per identical name set per 7 days.
 * azure-gateway and istio-gateway default to `clusterIssuer.name` of this module, their `certificateIssuer` picks
   another one.
 
+### AWS Private CA request policy ###
+
+By default every certificate request to the AWS Private CA issuers is approved, so a Certificate may ask for any name
+the CA can sign. `global.aws.privateCA.policy.enabled: true` adds the
+[cert-manager-approver-policy](https://cert-manager.io/docs/policy/approval/approver-policy/) subchart and one
+`CertificateRequestPolicy` for all `AWSPCAIssuer` and `AWSPCAClusterIssuer` requests, own issuers included.
+`global.aws.privateCA.policy.allowed` is its `spec.allowed` as is, `*` is a wildcard that also matches dots:
+
+```
+    modules:
+      - name: cert-manager
+        source: cert-manager
+        inputs:
+          global:
+            aws:
+              privateCA:
+                enabled: true
+                arns:
+                  - arn:aws:acm-pca:eu-north-1:111122223333:certificate-authority/11111111-2222-3333-4444-555555555555
+                policy:
+                  enabled: true
+                  allowed:
+                    commonName:
+                      value: "*.foo.example.com"
+                    dnsNames:
+                      values:
+                        - "*.foo.example.com"
+                    usages:
+                      - server auth
+                      - client auth
+```
+
+* A request is approved when everything it asks for is in `allowed`, anything else is denied: the common name, each
+  DNS name, the usages, and also IP addresses, URIs, email addresses and subject fields when the Certificate sets them.
+  A Certificate without `usages` asks for `digital signature` and `key encipherment`.
+* A denied request shows in `kubectl describe certificaterequest` with the reason; the Certificate retries after a
+  change of its spec.
+* The policy covers the AWS Private CA issuers only. The requests of the ACME and other issuers stay with the approver
+  of cert-manager, which loses its right to approve the AWS Private CA ones.
+* It limits what is requested through cert-manager. It does not limit direct calls to AWS Private CA with the IAM
+  role of the issuer or another role of the account.
+
 ### Updating aws-privateca-issuer ###
 
 The subchart keeps its CRDs in `crds/`, which ArgoCD does not render (modules/k8s/README.md), so they are copied into

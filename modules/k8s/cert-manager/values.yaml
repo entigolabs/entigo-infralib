@@ -15,6 +15,21 @@ global:
       clusterIssuer:
         create: true
         name: aws-privateca
+      # Limits what may be requested from the AWS Private CA issuers: adds the cert-manager-approver-policy subchart
+      # with one CertificateRequestPolicy for them. A request is approved when everything it asks for is in allowed,
+      # anything else is denied. false = every request is approved
+      policy:
+        enabled: false
+        # spec.allowed of the CertificateRequestPolicy as is, * is a wildcard:
+        #   commonName:
+        #     value: "*.foo.example.com"
+        #   dnsNames:
+        #     values:
+        #       - "*.foo.example.com"
+        #   usages:
+        #     - server auth
+        #     - client auth
+        allowed: {}
 
 # ACME ClusterIssuer with DNS-01 in the cloud DNS, with the cloud's DNS identity for the controller. Without it the
 # module is cert-manager alone, for charts that bring their own issuers

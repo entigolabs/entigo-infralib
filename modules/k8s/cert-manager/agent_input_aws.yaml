@@ -8,3 +8,5 @@ global:
 aws-privateca-issuer:
   image:
     repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/k1n1h4h4/cert-manager-aws-privateca-issuer'
+cert-manager-approver-policy:
+  imageRegistry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

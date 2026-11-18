@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -36,6 +37,19 @@ func TestCertManager(t *testing.T) {
 			awsPCAClusterIssuerGVR := schema.GroupVersionResource{Group: "awspca.cert-manager.io", Version: "v1beta1", Resource: "awspcaclusterissuers"}
 			_, err = waitUntilConditions(t, c, awsPCAClusterIssuerGVR, "", "aws-privateca", []string{"Ready"}, 60, 10*time.Second)
 			require.NoError(t, err, "AWSPCAClusterIssuer error")
+		}
+
+		if privateCAPolicyEnabled(t, e) {
+			// The cert-manager-approver-policy subchart: it alone decides on the requests of the AWS Private CA
+			// issuers, so a name inside the policy of test/aws_pri.yaml is approved and one outside of it is denied.
+			// Nothing is issued, the CA is a placeholder.
+			err := k8s.WaitUntilDeploymentAvailableE(t, c, "cert-manager-approver-policy", 60, 10*time.Second)
+			require.NoError(t, err, "cert-manager-approver-policy deployment error")
+			policyGVR := schema.GroupVersionResource{Group: "policy.cert-manager.io", Version: "v1alpha1", Resource: "certificaterequestpolicies"}
+			_, err = waitUntilConditions(t, c, policyGVR, "", fmt.Sprintf("%s-privateca", c.Namespace), []string{"Ready"}, 60, 10*time.Second)
+			require.NoError(t, err, "CertificateRequestPolicy error")
+			testPrivateCAPolicy(t, c, "allowed.example.com", "Approved")
+			testPrivateCAPolicy(t, c, "denied.example.com", "Denied")
 		}
 
 		randomName := strings.ToLower(random.UniqueId())
@@ -126,6 +140,68 @@ func privateCAEnabled(t *testing.T, e *env.Environment) bool {
 	}
 	enabled, _ := value.(bool)
 	return enabled
+}
+
+// privateCAPolicyEnabled reports whether the environment enables the cert-manager-approver-policy subchart
+// (global.aws.privateCA.policy.enabled).
+func privateCAPolicyEnabled(t *testing.T, e *env.Environment) bool {
+	var value any = env.ModulePlacement(t, e).Module.Inputs
+	for _, key := range []string{"global", "aws", "privateCA", "policy", "enabled"} {
+		values, ok := value.(map[string]any)
+		if !ok {
+			return false
+		}
+		value = values[key]
+	}
+	enabled, _ := value.(bool)
+	return enabled
+}
+
+// testPrivateCAPolicy requests a certificate for a random name under the domain from the AWSPCAClusterIssuer and waits
+// until its CertificateRequest has the condition, Approved or Denied.
+func testPrivateCAPolicy(t *testing.T, c *k8s.Client, domain string, condition string) {
+	name := fmt.Sprintf("%s-policy-%s", c.Namespace, strings.ToLower(random.UniqueId()))
+	certificateGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "certificates"}
+	certificate := &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": "cert-manager.io/v1",
+		"kind":       "Certificate",
+		"metadata":   map[string]any{"name": name, "namespace": c.Namespace},
+		"spec": map[string]any{
+			"secretName": fmt.Sprintf("%s-tls", name),
+			"dnsNames":   []any{fmt.Sprintf("%s.%s", name, domain)},
+			"usages":     []any{"server auth", "client auth"},
+			"issuerRef":  map[string]any{"group": "awspca.cert-manager.io", "kind": "AWSPCAClusterIssuer", "name": "aws-privateca"},
+		},
+	}}
+	_, err := c.CreateObjectE(certificateGVR, c.Namespace, certificate)
+	require.NoError(t, err, "Creating Certificate error")
+	defer func() { _ = c.DeleteObjectE(certificateGVR, c.Namespace, name) }()
+
+	requestGVR := schema.GroupVersionResource{Group: "cert-manager.io", Version: "v1", Resource: "certificaterequests"}
+	_, err = retry.DoWithRetryE(t, fmt.Sprintf("Wait for the CertificateRequest of %s to be %s", name, condition), 30, 10*time.Second, func() (string, error) {
+		requests, err := c.ListObjectsE(requestGVR, c.Namespace, metav1.ListOptions{})
+		if err != nil {
+			return "", err
+		}
+		for _, request := range requests.Items {
+			if request.GetAnnotations()["cert-manager.io/certificate-name"] != name {
+				continue
+			}
+			items, _, _ := unstructured.NestedSlice(request.Object, "status", "conditions")
+			status := []string{}
+			for _, item := range items {
+				if cond, ok := item.(map[string]any); ok {
+					if cond["type"] == condition && cond["status"] == "True" {
+						return fmt.Sprintf("CertificateRequest %s is %s", request.GetName(), condition), nil
+					}
+					status = append(status, fmt.Sprintf("%v=%v (%v)", cond["type"], cond["status"], cond["message"]))
+				}
+			}
+			return "", fmt.Errorf("CertificateRequest %s is not %s: %s", request.GetName(), condition, strings.Join(status, ", "))
+		}
+		return "", fmt.Errorf("no CertificateRequest of Certificate %s", name)
+	})
+	require.NoError(t, err, "CertificateRequest of %s error", name)
 }
 
 // waitUntilConditions waits until every named status condition of the object is True.

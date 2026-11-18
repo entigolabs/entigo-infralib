@@ -6,3 +6,11 @@
 {{- fail "global.aws.privateCA.arns is required with global.aws.privateCA.enabled" }}
 {{- end }}
 {{- end }}
+{{- if .Values.global.aws.privateCA.policy.enabled }}
+{{- if not .Values.global.aws.privateCA.enabled }}
+{{- fail "global.aws.privateCA.policy.enabled needs global.aws.privateCA.enabled" }}
+{{- end }}
+{{- if not .Values.global.aws.privateCA.policy.allowed }}
+{{- fail "global.aws.privateCA.policy.allowed is required with global.aws.privateCA.policy.enabled" }}
+{{- end }}
+{{- end }}
