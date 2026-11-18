@@ -9,7 +9,8 @@ CRITICAL RULES:
 - If a report line has an EMPTY 'newer version' field, skip that update
   but print: 'SKIPPED: <line> — newer version is empty (likely expired credentials)'
 - NEVER force push, delete, or modify the main branch. NEVER run git push on main.
-  Only push to auto-* branches.
+  Only push to auto-* branches. Deleting a remote auto-* branch is allowed only in the
+  branch setup below, when that branch has no open PR; never delete any other branch.
 - Use node (not python3) for JSON processing — python3 is not available in this container.
 - Do not create a pull request when the new version is semver wise older than the current version.
 - EFFICIENCY: Combine multiple shell commands into a SINGLE Bash tool call wherever possible.
@@ -47,22 +48,36 @@ Read /workspace/update-report.txt. It has five sections:
 Lines like: <chart_name> newer version <NEW>, current <OLD> (<file_path>)
 Each line means: open <file_path>, find version <OLD>, replace with <NEW>.
 
+VENDORED MODULES (applies to every TERRAFORM section below):
+Community modules are vendored into the module that calls them: the version is in
+modules/<cloud>/<module>/vendor.yaml, the module's files are under
+modules/<cloud>/<module>/vendors/ and vendor.lock records what was vendored.
+- A report line whose name has three parts (<namespace>/<name>/<provider>, e.g.
+  terraform-aws-modules/eks/aws) is a module: replace <OLD> with <NEW> for that source in
+  every vendor.yaml that lists it (grep -rl --include=vendor.yaml '<source>' modules/), then
+  for each of those module directories run
+  /workspace/entigo-infralib-test/scripts/vendor.sh modules/<cloud>/<module>
+  from /workspace/entigo-infralib. It rewrites vendors/ and vendor.lock; commit all of it.
+- NEVER edit vendor.lock or any file under a vendors/ directory by hand, and exclude them from
+  every grep/sed replacement (grep -r --exclude-dir=vendors --exclude=vendor.lock).
+- If vendor.sh fails, leave that module out of the PR and say so in the final summary.
+
 === AWS TERRAFORM UPDATES ===
 Lines like: hashicorp/aws newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/aws/ and in modules/aws-v2 and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/aws/ and in modules/aws-v2 and replace with <NEW>.
 EKS AL2023_* lines: find the AMI version string in modules/aws/ and replace.
 
 === GOOGLE TERRAFORM UPDATES ===
 Lines like: hashicorp/google newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/google/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/google/ and replace with <NEW>.
 
 === AZURE TERRAFORM UPDATES ===
 Lines like: hashicorp/azurerm newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/azure/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/azure/ and replace with <NEW>.
 
 === ORACLE TERRAFORM UPDATES ===
 Lines like: oracle/oci newer version <NEW>, current <OLD>
-Use grep -r to find <OLD> in modules/oracle/ and replace with <NEW>.
+Use grep -r --exclude-dir=vendors --exclude=vendor.lock to find <OLD> in modules/oracle/ and replace with <NEW>.
 
 STEP 3 - CREATE SEPARATE PRs:
 
@@ -79,12 +94,19 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset Chart.yaml and Chart.lock to main's version before applying our change.
   # This prevents stale sub-dependency versions from persisting on long-lived branches.
@@ -158,16 +180,23 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-k8s-<DIR> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-k8s-<DIR> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
     git checkout -B auto-k8s-<DIR> origin/auto-k8s-<DIR>
     git merge main --no-edit
   else
-    git checkout -b auto-k8s-<DIR>
+    if git rev-parse --verify origin/auto-k8s-<DIR> >/dev/null 2>&1; then
+      git push origin --delete auto-k8s-<DIR> && git fetch --prune origin
+    fi
+    git checkout -B auto-k8s-<DIR> main
   fi && \
   # Reset provider files to main's version before applying our change.
   # This prevents stale versions from persisting on long-lived branches.
-  git checkout main -- modules/k8s/<DIR>/templates/provider.yaml modules/k8s/<DIR>/pullpush.sh 2>/dev/null || true && \
+  git checkout main -- modules/k8s/<DIR>/templates/provider.yaml modules/k8s/<DIR>/pullpush.sh modules/k8s/<DIR>/values-images.yaml 2>/dev/null || true && \
   # Check if the target version is already in provider.yaml — skip if so
   if grep -q '<NEW>' modules/k8s/<DIR>/templates/provider.yaml; then
     # Version already matches — check if branch has different file content than remote
@@ -199,6 +228,8 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   else
     sed -i 's/<OLD>/<NEW>/g' modules/k8s/<DIR>/templates/provider.yaml && \
     sed -i 's/VERSION="<OLD>"/VERSION="<NEW>"/' modules/k8s/<DIR>/pullpush.sh && \
+    # Pin the new version's packages by digest (resolved upstream, no login needed).
+    modules/k8s/<DIR>/pullpush.sh digests && \
     git add -A && \
     if git diff --cached --quiet; then
       echo "NO_CHANGES"
@@ -285,12 +316,19 @@ FOR AWS TERRAFORM UPDATES - SEPARATE PRs PER TYPE:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-aws-<TYPE> 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-aws-<TYPE> --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
     git checkout -B auto-aws-<TYPE> origin/auto-aws-<TYPE>
     git rebase main
   else
-    git checkout -b auto-aws-<TYPE>
+    if git rev-parse --verify origin/auto-aws-<TYPE> >/dev/null 2>&1; then
+      git push origin --delete auto-aws-<TYPE> && git fetch --prune origin
+    fi
+    git checkout -B auto-aws-<TYPE> main
   fi && \
   # For 'provider' type: apply ALL provider/module version changes
   # For 'ami' type: update ami_release_version blocks in eks/main.tf and eks-node-group/main.tf
@@ -353,12 +391,19 @@ FOR GOOGLE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-gcptf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-gcptf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
     git checkout -B auto-gcptf origin/auto-gcptf
     git rebase main
   else
-    git checkout -b auto-gcptf
+    if git rev-parse --verify origin/auto-gcptf >/dev/null 2>&1; then
+      git push origin --delete auto-gcptf && git fetch --prune origin
+    fi
+    git checkout -B auto-gcptf main
   fi && \
   # Apply ALL Google version changes
   <APPLY SED COMMANDS HERE> && \
@@ -420,12 +465,19 @@ FOR AZURE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-azuretf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-azuretf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
     git checkout -B auto-azuretf origin/auto-azuretf
     git rebase main
   else
-    git checkout -b auto-azuretf
+    if git rev-parse --verify origin/auto-azuretf >/dev/null 2>&1; then
+      git push origin --delete auto-azuretf && git fetch --prune origin
+    fi
+    git checkout -B auto-azuretf main
   fi && \
   # Apply ALL Azure version changes
   <APPLY SED COMMANDS HERE> && \
@@ -486,12 +538,19 @@ FOR ORACLE TERRAFORM UPDATES - ONE COMBINED PR:
   ```
   cd /workspace/entigo-infralib && \
   git checkout main && \
-  git fetch origin auto-oracletf 2>/dev/null || true && \
-  if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+  git fetch --prune origin && \
+  # Reuse the branch only while its PR is open. Once that PR was merged or
+  # closed, the branch and its history go, so the next PR shows only its own
+  # commits; a fresh branch of the same name starts from main.
+  OPEN_PR=$(gh pr list --head auto-oracletf --state open --json number --jq '.[0].number' 2>/dev/null) && \
+  if [ -n "$OPEN_PR" ] && git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
     git checkout -B auto-oracletf origin/auto-oracletf
     git rebase main
   else
-    git checkout -b auto-oracletf
+    if git rev-parse --verify origin/auto-oracletf >/dev/null 2>&1; then
+      git push origin --delete auto-oracletf && git fetch --prune origin
+    fi
+    git checkout -B auto-oracletf main
   fi && \
   # Apply ALL Oracle version changes
   <APPLY SED COMMANDS HERE> && \

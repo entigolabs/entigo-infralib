@@ -1,3 +1,6 @@
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=false
 spec:
   ignoreDifferences:
   - jsonPointers:

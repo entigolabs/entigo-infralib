@@ -10,7 +10,7 @@ image:
   repository: grafana/loki
 ```
 
-The `eks`, `eks-node-group` and `crossplane` modules attach the `policy` output so the nodes and Crossplane are allowed to pull through the caches and to create the cached repositories.
+The `eks`, `eks-node-group`, `karpenter-node-role` and `crossplane` modules attach the `policy` output so the nodes and Crossplane are allowed to pull through the caches and to create the cached repositories.
 
 ### Available pull through caches ###
 
@@ -93,7 +93,7 @@ __upstream_registry_lifecycle_policy__ Lifecycle policy JSON applied to the repo
 
 __hub_registry__, __ghcr_registry__, __gcr_registry__, __k8s_registry__, __ecr_registry__, __quay_registry__ Registry URL of each cache, `null` for caches that were not created.
 
-__policy__ ARN of an IAM policy that allows pulling through the caches and creating the `<prefix>-*` repositories. Attach it to every role that pulls images, the `eks`, `eks-node-group` and `crossplane` modules do this on their own.
+__policy__ ARN of an IAM policy that allows pulling through the caches and creating the `<prefix>-*` repositories. Attach it to every role that pulls images, the `eks`, `eks-node-group`, `karpenter-node-role` and `crossplane` modules do this on their own.
 
 ### Example code ###
 

@@ -46,6 +46,14 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   the cluster VNet, so hub/on-prem DNS can't resolve several clusters; one central zone per region, linked to the hub
   VNets, resolves all of them. The module gives the cluster identity Private DNS Zone Contributor on the zone and
   Network Contributor on the VNet, AKS links the zone to the cluster VNet.
+* Private link cluster instead of API Server VNet Integration: `api_server_vnet_integration_enabled: false` and
+  `api_server_subnet_id: ""` (vpc `aks_subnets: "[]"` leaves the subnet out); a central zone is then
+  `privatelink.<location>.azmk8s.io`.
+* `cluster_identity_id`: resource ID of the cluster's user assigned identity, default the prefix in the agent's
+  resource group, create time only. `create_cluster_identity: false` uses an existing identity instead of creating it;
+  it gets the same roles as a created one.
+* `create_private_dns_zone_role: false`: the module doesn't assign Private DNS Zone Contributor on the zone, for an
+  existing identity that has it already (e.g. a central zone in another team's subscription).
 * Access: the identity that installs the module (normally the agent job identity) gets Azure Kubernetes Service RBAC
   Cluster Admin and keeps it, a later run by someone else doesn't replace it. Others who run the module or need admin
   access go to `admin_object_ids` (not the installing identity, the plan rejects it).

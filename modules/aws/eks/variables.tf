@@ -365,32 +365,32 @@ variable "node_repair_wait_time_mins" {
 
 variable "coredns_addon_version" {
   type = string
-  default = "v1.14.7-eksbuild.22"
+  default = "v1.14.7-eksbuild.35"
 }
 
 variable "kube_proxy_addon_version" {
   type = string
-  default = "v1.36.0-eksbuild.58"
+  default = "v1.36.0-eksbuild.65"
 }
 
 variable "vpc_cni_addon_version" {
   type = string
-  default = "v1.23.2-eksbuild.8"
+  default = "v1.23.3-eksbuild.1"
 }
 
 variable "ebs_csi_addon_version" {
   type = string
-  default = "v1.67.2-eksbuild.1"
+  default = "v1.68.0-eksbuild.1"
 }
 
 variable "efs_csi_addon_version" {
   type = string
-  default = "v3.5.3-eksbuild.1"
+  default = "v3.5.4-eksbuild.1"
 }
 
 variable "node_monitoring_agent_addon_version" {
   type = string
-  default = "v1.7.2-eksbuild.1"
+  default = "v1.7.6-eksbuild.1"
 }
 
 variable "enable_vpc_cni_prefix_delegation" {

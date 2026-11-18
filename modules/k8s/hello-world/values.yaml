@@ -1,5 +1,5 @@
 image:
-  registry: docker.io/nginxinc/nginx-unprivileged
+  registry: docker.io/nginx/nginx-unprivileged
   tag: "1.31"
 
 ingress:

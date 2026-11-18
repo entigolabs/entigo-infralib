@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   package: xpkg.upbound.io/upbound/provider-family-gcp:v3.1.3
+  {{- include "crossplane-google.digest" (list $ "provider-family-gcp:v3.1.3") }}
   runtimeConfigRef:
     name: {{ .Release.Name }}-family
 
@@ -45,6 +46,7 @@ metadata:
 spec:
   skipDependencyResolution: true
   package: xpkg.upbound.io/upbound/provider-gcp-{{ $provider }}:v3.1.3
+  {{- include "crossplane-google.digest" (list $ (printf "provider-gcp-%s:v3.1.3" $provider)) }}
   runtimeConfigRef:
     name: {{ $.Release.Name }}
 {{- end }}

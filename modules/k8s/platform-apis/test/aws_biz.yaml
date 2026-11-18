@@ -1,3 +1,8 @@
+global:
+  # Restrict every Zone's AppProject to the test chart registry so the negative
+  # sourcerepos-allow-list check can prove an out-of-list repo is rejected.
+  sourceRepos:
+  - ghcr.io/entigolabs
 platform-apis:
   zone:
     # The sweep that picks up edits to an existing Application runs on this interval, so the
@@ -9,6 +14,8 @@ platform-apis:
       kind: '*'
     environmentConfig:
       granularEgress: true
+      # Also set by the infralib agent_input, repeated so these tests do not depend on that release
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
       roleMapping:
         - roleRef: maintainer
           groups: ["web-read-only-343159627493470238", "maintainer"]
@@ -20,6 +27,12 @@ platform-apis:
       tags:
         etag: etest
         eutag: eutest
+      namespaceRole:
+        # e2e: the zone RBAC test asserts additionalRules grants exactly these (positive and negative).
+        additionalRules:
+          - apiGroups: ["example.entigo.com"]
+            resources: ["widgets"]
+            verbs: ["create", "get"]
   artifact:
     environmentConfig:
       lifecycleRules:
@@ -59,6 +72,4 @@ platform-apis:
     function-sequencer:
       install: true
     function-patch-and-transform:
-      install: true
-    function-extra-resources:
       install: true

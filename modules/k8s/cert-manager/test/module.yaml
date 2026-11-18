@@ -1,0 +1,5 @@
+# Installed once per environment: a pull request applies it under its regular
+# name instead of a per-branch copy. The CRDs, the webhook and the kube-system
+# leader election lease are cluster-wide, so a second copy would share them
+# with the regular installation and hide whether the branch's one works.
+pin_step: true

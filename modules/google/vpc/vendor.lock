@@ -1,0 +1,11 @@
+# Written by ./test.sh vendor from vendor.yaml: what each module resolved to.
+# Never edit this file or the directories under vendors/ by hand.
+# An entry with required_by is a dependency the script discovered by itself:
+# a module that the named vendored module calls. It is not in vendor.yaml.
+modules:
+  - name: terraform-google-cloud-nat
+    source: terraform-google-modules/cloud-nat/google
+    version: 7.1.0
+    repository: https://github.com/terraform-google-modules/terraform-google-cloud-nat
+    commit: 4527cee64841eb2fb7a9f568311586210af43f6c
+    checksum: sha256:c48c3c54d37ba65b38935785c08a344c20bb301cc44bd8d7135c4b35e0cbd26b
