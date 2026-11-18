@@ -79,3 +79,31 @@ AWS with an AWS Private CA issuer:
                 arns:
                   - arn:aws:acm-pca:eu-north-1:111122223333:certificate-authority/11111111-2222-3333-4444-555555555555
 ```
+
+A Certificate issued from the AWS Private CA issuer:
+
+```
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-pca
+spec:
+  secretName: example-pca-certificate
+  commonName: example-pca.your.domain
+  dnsNames:
+    - example-pca.your.domain
+    - foo-example-pca.your.domain
+  duration: 2160h      # 90 days
+  renewBefore: 720h    # renew 30 days before expiry
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    group: awspca.cert-manager.io
+    kind: AWSPCAClusterIssuer
+    name: aws-privateca
+```
