@@ -11,7 +11,7 @@ spec:
   forProvider:
     tags:
       created-by: "entigo-infralib"
-    # Issuing from the CAs of global.aws.privateCA.arns only (https://github.com/cert-manager/aws-privateca-issuer#configuration)
+    # Issuing from the CAs of global.aws.privateCA.arns (templates/_helpers.tpl) only (https://github.com/cert-manager/aws-privateca-issuer#configuration)
     policy: |
       {
         "Version": "2012-10-17",
@@ -24,7 +24,7 @@ spec:
               "acm-pca:IssueCertificate"
             ],
             "Resource": [
-              {{- range $i, $arn := .Values.global.aws.privateCA.arns }}
+              {{- range $i, $arn := include "cert-manager.privateCAArns" . | fromJsonArray }}
               {{- if $i }},{{ end }}
               {{ $arn | quote }}
               {{- end }}

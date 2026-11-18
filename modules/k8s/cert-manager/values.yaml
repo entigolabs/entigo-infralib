@@ -9,6 +9,7 @@ global:
     # from the CAs in arns only
     privateCA:
       enabled: false
+      # [] = the CA of the default private domain of the route53 module (its certificate_authority_arn)
       arns: []
       # AWSPCAClusterIssuer for the first CA of arns. false installs the issuer controller alone, for own AWSPCAIssuer
       # and AWSPCAClusterIssuer objects
@@ -20,7 +21,9 @@ global:
       # anything else is denied. false = every request is approved
       policy:
         enabled: false
-        # spec.allowed of the CertificateRequestPolicy as is, * is a wildcard:
+        # {} = the default private domain of the route53 module and the names under it, as common name and DNS names,
+        # with the usages server auth and client auth. Else spec.allowed of the CertificateRequestPolicy as is, * is a
+        # wildcard:
         #   commonName:
         #     value: "*.foo.example.com"
         #   dnsNames:

@@ -1,4 +1,5 @@
-{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.policy.enabled .Values.global.aws.privateCA.policy.allowed (eq .Values.global.cloudProvider "aws") }}
+{{- $allowed := include "cert-manager.privateCAPolicyAllowed" . | fromJson }}
+{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.policy.enabled $allowed (eq .Values.global.cloudProvider "aws") }}
 # What may be requested from the AWS Private CA issuers, the one of this module and own ones alike
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
@@ -9,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   allowed:
-    {{- toYaml .Values.global.aws.privateCA.policy.allowed | nindent 4 }}
+    {{- toYaml $allowed | nindent 4 }}
   selector:
     issuerRef:
       group: awspca.cert-manager.io
