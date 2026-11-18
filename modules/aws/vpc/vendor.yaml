@@ -2,4 +2,4 @@
 # ./test.sh vendor modules/aws/vpc, which updates the directories and vendor.lock.
 modules:
   - source: terraform-aws-modules/vpc/aws
-    version: 6.7.3
+    version: 6.8.0

@@ -5,10 +5,10 @@
 modules:
   - name: terraform-aws-eks
     source: terraform-aws-modules/eks/aws
-    version: 21.29.0
+    version: 21.30.2
     repository: https://github.com/terraform-aws-modules/terraform-aws-eks
-    commit: 91f11ea01656c26b8e6b8eb1b74f19863f60056c
-    checksum: sha256:00639c59026aa75f669b88575cd59e1616dad519ab3804f21e29e871f25c7a9f
+    commit: 25c846a384bc66d16cc801d2f851431deb38de5d
+    checksum: sha256:c0d3c766036dca98f64210440d1b8af2a5af6f321d51a54979aaa6265e2e2dfe
   - name: terraform-aws-eks--terraform-aws-kms
     required_by: terraform-aws-eks
     source: terraform-aws-modules/kms/aws
@@ -18,7 +18,7 @@ modules:
     checksum: sha256:85f7068d98d57ef1b88301416a193658fdfe7fbe2e487bbf1830b56c0588b889
   - name: terraform-aws-iam
     source: terraform-aws-modules/iam/aws
-    version: 6.8.2
+    version: 6.11.1
     repository: https://github.com/terraform-aws-modules/terraform-aws-iam
-    commit: 55514b7873c411040395e024a422684998da77c2
-    checksum: sha256:f35a018021703cdb631b286c6b36561252235656e3348014d852f16bb48d6ba0
+    commit: b42db0208b69c731093a8d46da03f505378841a3
+    checksum: sha256:7b43f64de13ff5eab557881bf8e35cd3a997b61ae02d0b6b382dac1bc4a0d564
