@@ -305,15 +305,10 @@ metadata:
         # Create repository secrets before install so ArgoCD can access the repositories
         argocd_repositories "$namespace" >&2
 
-        # values-images.yaml (the image digests of the module) is optional: older versions of the
-        # chart do not have it.
-        local images_values=""
-        [ -f "$chart_dir/values-images.yaml" ] && images_values="-f $chart_dir/values-images.yaml"
-
         helm upgrade --install -n $namespace \
             -f $chart_dir/values.yaml \
             -f $chart_dir/values-${PROVIDER}.yaml \
-            $images_values \
+            -f $chart_dir/values-images.yaml \
             -f values-$app.yaml \
             --set-string 'argocd.configs.cm.admin\.enabled=true' \
             --set argocd.server.ingress.enabled=false \
