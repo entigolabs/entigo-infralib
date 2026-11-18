@@ -308,6 +308,7 @@ metadata:
         helm upgrade --install -n $namespace \
             -f $chart_dir/values.yaml \
             -f $chart_dir/values-${PROVIDER}.yaml \
+            -f $chart_dir/values-images.yaml \
             -f values-$app.yaml \
             --set-string 'argocd.configs.cm.admin\.enabled=true' \
             --set argocd.server.ingress.enabled=false \
