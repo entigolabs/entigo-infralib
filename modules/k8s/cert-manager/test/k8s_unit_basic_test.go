@@ -41,14 +41,14 @@ func TestCertManager(t *testing.T) {
 
 		if privateCAPolicyEnabled(t, e) {
 			// The cert-manager-approver-policy subchart: it alone decides on the requests of the AWS Private CA
-			// issuers, so a name inside the policy of test/aws_pri.yaml is approved and one outside of it is denied.
-			// Nothing is issued, the CA is a placeholder.
+			// issuers. The policy defaults to the default private domain of route53, so a name under it is approved and
+			// one outside of it is denied. Nothing is issued, the CA is a placeholder.
 			err := k8s.WaitUntilDeploymentAvailableE(t, c, "cert-manager-approver-policy", 60, 10*time.Second)
 			require.NoError(t, err, "cert-manager-approver-policy deployment error")
 			policyGVR := schema.GroupVersionResource{Group: "policy.cert-manager.io", Version: "v1alpha1", Resource: "certificaterequestpolicies"}
 			_, err = waitUntilConditions(t, c, policyGVR, "", fmt.Sprintf("%s-privateca", c.Namespace), []string{"Ready"}, 60, 10*time.Second)
 			require.NoError(t, err, "CertificateRequestPolicy error")
-			testPrivateCAPolicy(t, c, "allowed.example.com", "Approved")
+			testPrivateCAPolicy(t, c, tf.GetStep(t, e, "net").String(t, "route53__int_domain"), "Approved")
 			testPrivateCAPolicy(t, c, "denied.example.com", "Denied")
 		}
 

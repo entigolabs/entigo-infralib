@@ -8,14 +8,7 @@ global:
       enabled: true
       arns:
         - arn:aws:acm-pca:eu-north-1:123456789012:certificate-authority/00000000-0000-0000-0000-000000000000
-      # cert-manager-approver-policy with the CertificateRequestPolicy of the AWS Private CA issuers: the test requests
-      # one name inside and one outside of it
+      # cert-manager-approver-policy with the CertificateRequestPolicy of the AWS Private CA issuers. No allowed, so
+      # it is the default private domain of route53: the test requests one name under it and one outside of it
       policy:
         enabled: true
-        allowed:
-          dnsNames:
-            values:
-              - "*.allowed.example.com"
-          usages:
-            - server auth
-            - client auth

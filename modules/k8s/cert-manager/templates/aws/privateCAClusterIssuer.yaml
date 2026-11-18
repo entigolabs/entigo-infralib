@@ -1,4 +1,4 @@
-{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.clusterIssuer.create .Values.global.aws.privateCA.arns (eq .Values.global.cloudProvider "aws") }}
+{{- if and .Values.global.aws.privateCA.enabled .Values.global.aws.privateCA.clusterIssuer.create (compact .Values.global.aws.privateCA.arns) (eq .Values.global.cloudProvider "aws") }}
 {{- $arn := first .Values.global.aws.privateCA.arns }}
 apiVersion: awspca.cert-manager.io/v1beta1
 kind: AWSPCAClusterIssuer

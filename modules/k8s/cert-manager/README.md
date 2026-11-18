@@ -14,7 +14,8 @@ cert-manager with an ACME `ClusterIssuer` (DNS-01 in the cloud DNS), default `le
 * AWS Private CA: `global.aws.privateCA.enabled: true` adds the aws-privateca-issuer subchart, so certificates can be issued
   from AWS Private CA, also from a CA of another account shared with AWS RAM. `global.aws.privateCA.arns` lists the CAs: the
   IRSA role of the issuer (crossplane-aws) may issue from those only, and the `AWSPCAClusterIssuer` `aws-privateca`
-  is created for the first one. `global.aws.privateCA.clusterIssuer.create: false` installs the issuer controller alone, for
+  is created for the first one. Without `arns` it is the CA of the default private domain of the route53 module (its
+  `certificate_authority_arn`, output `int_certificate_authority_arn`). `global.aws.privateCA.clusterIssuer.create: false` installs the issuer controller alone, for
   own `AWSPCAIssuer` and `AWSPCAClusterIssuer` objects. Depends on: modules/k8s/crossplane-aws.
 
 Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), its DNS module's zone outputs to the
@@ -43,7 +44,27 @@ By default every certificate request to the AWS Private CA issuers is approved, 
 the CA can sign. `global.aws.privateCA.policy.enabled: true` adds the
 [cert-manager-approver-policy](https://cert-manager.io/docs/policy/approval/approver-policy/) subchart and one
 `CertificateRequestPolicy` for all `AWSPCAIssuer` and `AWSPCAClusterIssuer` requests, own issuers included.
-`global.aws.privateCA.policy.allowed` is its `spec.allowed` as is, `*` is a wildcard that also matches dots:
+
+By default (`agent_input_aws.yaml`) the policy allows the names of the default private domain of the route53 module
+(`int_domain`): DNS names `*.<int_domain>` and `<int_domain>`, common name `*.<int_domain>`, usages `server auth` and
+`client auth`. When that domain also has a `certificate_authority_arn`, enabling is all it takes:
+
+```
+    modules:
+      - name: cert-manager
+        source: cert-manager
+        inputs:
+          global:
+            aws:
+              privateCA:
+                enabled: true
+                policy:
+                  enabled: true
+```
+
+`global.aws.privateCA.policy.allowed` is the `spec.allowed` of the policy as is, `*` is a wildcard that also matches
+dots. It is merged on top of the default: `commonName.value`, `dnsNames.values` and `usages` set in the inputs replace
+the default ones, a key left out keeps its default:
 
 ```
     modules:

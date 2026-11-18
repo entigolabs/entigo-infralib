@@ -2,8 +2,8 @@
 {{- if ne .Values.global.cloudProvider "aws" }}
 {{- fail "global.aws.privateCA.enabled is for AWS only" }}
 {{- end }}
-{{- if not .Values.global.aws.privateCA.arns }}
-{{- fail "global.aws.privateCA.arns is required with global.aws.privateCA.enabled" }}
+{{- if not (compact .Values.global.aws.privateCA.arns) }}
+{{- fail "global.aws.privateCA.arns is required with global.aws.privateCA.enabled: the default private domain of the route53 module has no certificate_authority_arn" }}
 {{- end }}
 {{- end }}
 {{- if .Values.global.aws.privateCA.policy.enabled }}
