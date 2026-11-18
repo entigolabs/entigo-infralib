@@ -1,7 +1,7 @@
 ## Opinionated module for vpc creation ##
 
 
-Opinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
+Opinionated version of this https://search.opentofu.org/module/terraform-aws-modules/vpc/aws/latest
 
 
 ### Automatic subnet calculations ###

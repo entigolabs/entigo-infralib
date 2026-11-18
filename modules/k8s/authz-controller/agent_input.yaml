@@ -1,3 +1,0 @@
-authz-controller:
-  config:
-    ARGOCD_NAMESPACE: "{{ .toptmodule.argocd }}"

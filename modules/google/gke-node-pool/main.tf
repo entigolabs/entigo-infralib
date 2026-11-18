@@ -19,8 +19,7 @@ locals {
 
 # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/gke-node-pool
 module "gke_node_pool" {
-  source  = "terraform-google-modules/kubernetes-engine/google//modules/gke-node-pool"
-  version = "47.0.0"
+  source  = "./vendors/terraform-google-kubernetes-engine/modules/gke-node-pool" # version in vendor.yaml
 
   name               = local.node_pool_name
   cluster            = var.cluster_name

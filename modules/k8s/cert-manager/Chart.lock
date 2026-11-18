@@ -2,5 +2,11 @@ dependencies:
 - name: cert-manager
   repository: https://charts.jetstack.io
   version: v1.21.3
-digest: sha256:2762aafdd75a7e316b0aacf572c3decd0bcbff10e4fb207b2bd76385cd39281f
-generated: "2026-10-26T13:15:19.166991013Z"
+- name: aws-privateca-issuer
+  repository: https://cert-manager.github.io/aws-privateca-issuer
+  version: v1.12.1
+- name: cert-manager-approver-policy
+  repository: https://charts.jetstack.io
+  version: v0.29.0
+digest: sha256:eea35b49d167b2c97e10a0886098aecbc7ac9db5b99915c6ab3b9260b3b7d29f
+generated: "2026-11-18T07:44:48.458471231Z"

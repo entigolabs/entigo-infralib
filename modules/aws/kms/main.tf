@@ -1,9 +1,8 @@
 
-#https://registry.terraform.io/modules/terraform-aws-modules/kms/aws/latest
+#https://search.opentofu.org/module/terraform-aws-modules/kms/aws/latest
 
 module "kms_telemetry" {
-  source = "terraform-aws-modules/kms/aws"
-  version = "4.2.2"
+  source = "./vendors/terraform-aws-kms" # version in vendor.yaml
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} telemetry"
@@ -198,8 +197,7 @@ module "kms_telemetry" {
 }
 
 module "kms_config" {
-  source = "terraform-aws-modules/kms/aws"
-  version = "4.2.2"
+  source = "./vendors/terraform-aws-kms" # version in vendor.yaml
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} config"
@@ -294,8 +292,7 @@ module "kms_config" {
 }
 
 module "kms_data" {
-  source = "terraform-aws-modules/kms/aws"
-  version = "4.2.2"
+  source = "./vendors/terraform-aws-kms" # version in vendor.yaml
   count = var.mode == "kms" ? 1 : 0
   deletion_window_in_days = var.deletion_window_in_days
   description             = "${var.prefix} data"
