@@ -45,6 +45,13 @@ themselves and the AKS node resource group, Key Vault Crypto Service Encryption 
 namespace can grant these roles, so creating WorkloadIdentities is a platform (administrator) permission: platform
 charts create them, don't grant the kind to tenants (see the
 [security section](https://github.com/entigolabs/entigo-infralib-apis/tree/main/compositions/workloadidentity#security-who-may-create-workloadidentities)).
+Existing identities: `azureIdentityId` uses an identity that exists already (e.g. a customer's, with a role on their
+central DNS zone in another subscription) instead of creating one: only its federated credential and the service
+account are created. Only the identities in `entigo-infralib-apis.iam.environmentConfig.azure.existingIdentities`
+(resource ids) are allowed, by default the one of the external-dns module (`global.azure.existingIdentityId`): a
+service account federated with an identity has all of its roles, never list the identity of Crossplane, the cluster
+or the kubelet. Crossplane needs write access to it (Contributor of the agent resource group, Managed Identity
+Contributor on an identity elsewhere).
 `keepOnDelete: true` (only without a service account) keeps the Azure identity `<cluster name>_<namespace>_<name>_nosa`
 and its role assignments when the WorkloadIdentity is deleted (loki/mimir CMK identities, so an uninstall keeps the
 storage account readable).

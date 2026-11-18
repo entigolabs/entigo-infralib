@@ -1,0 +1,5 @@
+# Community modules this module calls from ./vendors. After a change run
+# ./test.sh vendor modules/aws/vpc, which updates the directories and vendor.lock.
+modules:
+  - source: terraform-aws-modules/vpc/aws
+    version: 6.7.3

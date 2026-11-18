@@ -11,6 +11,13 @@ cert-manager with an ACME `ClusterIssuer` (DNS-01 in the cloud DNS), default `le
   named `route53`, and an IRSA role (crossplane-aws) that may change records in those two zones only. Depends on:
   modules/aws-v2/route53, modules/k8s/crossplane-aws.
 
+* AWS Private CA: `global.aws.privateCA.enabled: true` adds the aws-privateca-issuer subchart, so certificates can be issued
+  from AWS Private CA, also from a CA of another account shared with AWS RAM. `global.aws.privateCA.arns` lists the CAs: the
+  IRSA role of the issuer (crossplane-aws) may issue from those only, and the `AWSPCAClusterIssuer` `aws-privateca`
+  is created for the first one. Without `arns` it is the CA of the default private domain of the route53 module (its
+  `certificate_authority_arn`, output `int_certificate_authority_arn`). `global.aws.privateCA.clusterIssuer.create: false` installs the issuer controller alone, for
+  own `AWSPCAIssuer` and `AWSPCAClusterIssuer` objects. Depends on: modules/k8s/crossplane-aws.
+
 Another cloud adds `values-<cloud>.yaml` (`global.cloudProvider`), its DNS module's zone outputs to the
 `global.pubZoneId` and `global.intCertZoneId` chains in `agent_input.yaml`, and `templates/<cloud>/` with its
 ClusterIssuer (ACME account plus its DNS-01 solvers) and the DNS identity of the controller.
@@ -23,9 +30,82 @@ allows 5 certificates per identical name set per 7 days.
 * `clusterIssuer.create` creates the ACME ClusterIssuer and the cloud identity of the controller; `clusterIssuer.name`
   and `acme.server` select the ACME CA. CAs that need External Account Binding (ZeroSSL, Sectigo, Google Public CA):
   `acme.externalAccountBinding` with a Secret holding the HMAC key in this namespace.
+* `global.aws.privateCA` (AWS): the `AWSPCAClusterIssuer` `global.aws.privateCA.clusterIssuer.name` (default `aws-privateca`). A
+  Certificate refers to it with `issuerRef` group `awspca.cert-manager.io`, kind `AWSPCAClusterIssuer`. The usages of
+  the Certificate select the AWS Private CA template, and a CA shared with the default AWS RAM permission only allows
+  the default end entity template (`server auth` together with `client auth`).
 * `extraClusterIssuers`: more ClusterIssuers with the spec as is (CA, Vault, ...).
 * azure-gateway and istio-gateway default to `clusterIssuer.name` of this module, their `certificateIssuer` picks
   another one.
+
+### AWS Private CA request policy ###
+
+By default every certificate request to the AWS Private CA issuers is approved, so a Certificate may ask for any name
+the CA can sign. `global.aws.privateCA.policy.enabled: true` adds the
+[cert-manager-approver-policy](https://cert-manager.io/docs/policy/approval/approver-policy/) subchart and one
+`CertificateRequestPolicy` for all `AWSPCAIssuer` and `AWSPCAClusterIssuer` requests, own issuers included.
+
+By default (`agent_input_aws.yaml`) the policy allows the names of the default private domain of the route53 module
+(`int_domain`): DNS names `*.<int_domain>` and `<int_domain>`, common name `*.<int_domain>`, usages `server auth` and
+`client auth`. When that domain also has a `certificate_authority_arn`, enabling is all it takes:
+
+```
+    modules:
+      - name: cert-manager
+        source: cert-manager
+        inputs:
+          global:
+            aws:
+              privateCA:
+                enabled: true
+                policy:
+                  enabled: true
+```
+
+`global.aws.privateCA.policy.allowed` is the `spec.allowed` of the policy as is, `*` is a wildcard that also matches
+dots. It is merged on top of the default: `commonName.value`, `dnsNames.values` and `usages` set in the inputs replace
+the default ones, a key left out keeps its default:
+
+```
+    modules:
+      - name: cert-manager
+        source: cert-manager
+        inputs:
+          global:
+            aws:
+              privateCA:
+                enabled: true
+                arns:
+                  - arn:aws:acm-pca:eu-north-1:111122223333:certificate-authority/11111111-2222-3333-4444-555555555555
+                policy:
+                  enabled: true
+                  allowed:
+                    commonName:
+                      value: "*.foo.example.com"
+                    dnsNames:
+                      values:
+                        - "*.foo.example.com"
+                    usages:
+                      - server auth
+                      - client auth
+```
+
+* A request is approved when everything it asks for is in `allowed`, anything else is denied: the common name, each
+  DNS name, the usages, and also IP addresses, URIs, email addresses and subject fields when the Certificate sets them.
+  A Certificate without `usages` asks for `digital signature` and `key encipherment`.
+* A denied request shows in `kubectl describe certificaterequest` with the reason; the Certificate retries after a
+  change of its spec.
+* The policy covers the AWS Private CA issuers only. The requests of the ACME and other issuers stay with the approver
+  of cert-manager, which loses its right to approve the AWS Private CA ones.
+* It limits what is requested through cert-manager. It does not limit direct calls to AWS Private CA with the IAM
+  role of the issuer or another role of the account.
+
+### Updating aws-privateca-issuer ###
+
+The subchart keeps its CRDs in `crds/`, which ArgoCD does not render (modules/k8s/README.md), so they are copied into
+`templates/aws/privateCACrds.yaml`. After a version bump of the `aws-privateca-issuer` dependency copy the two files of
+the new tarball's `crds/` there again, inside the `global.aws.privateCA.enabled` gate, with the annotations
+`helm.sh/resource-policy: keep` and `argocd.argoproj.io/sync-wave: "-1"` on each.
 
 ### Example code ###
 
@@ -46,4 +126,47 @@ AWS with the ACME issuer:
             create: true
           acme:
             email: ops@example.com
+```
+
+AWS with an AWS Private CA issuer:
+
+```
+    modules:
+      - name: cert-manager
+        source: cert-manager
+        inputs:
+          global:
+            aws:
+              privateCA:
+                enabled: true
+                arns:
+                  - arn:aws:acm-pca:eu-north-1:111122223333:certificate-authority/11111111-2222-3333-4444-555555555555
+```
+
+A Certificate issued from the AWS Private CA issuer:
+
+```
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-pca
+spec:
+  secretName: example-pca-certificate
+  commonName: example-pca.your.domain
+  dnsNames:
+    - example-pca.your.domain
+    - foo-example-pca.your.domain
+  duration: 2160h      # 90 days
+  renewBefore: 720h    # renew 30 days before expiry
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    group: awspca.cert-manager.io
+    kind: AWSPCAClusterIssuer
+    name: aws-privateca
 ```

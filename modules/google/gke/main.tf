@@ -150,8 +150,7 @@ locals {
 
 # https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/tree/main/modules/private-cluster
 module "gke" {
-  source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "47.0.0"
+  source  = "./vendors/terraform-google-kubernetes-engine/modules/private-cluster" # version in vendor.yaml
 
   project_id             = data.google_client_config.this.project
   name                   = var.prefix

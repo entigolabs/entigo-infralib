@@ -45,6 +45,7 @@ overrides them.
 | `charts/*.tgz` | The vendored upstream chart, committed to the repository |
 | `values.yaml` | Cloud neutral defaults for the wrapper and the upstream chart |
 | `values-aws.yaml` / `values-google.yaml` / `values-azure.yaml` | Defaults that only apply on that cloud |
+| `values-images.yaml` | Generated sha256 digests of the module's images, see [values-images.yaml](#values-imagesyaml) |
 | `agent_input.yaml` | Agent templated values, the environment specific wiring |
 | `agent_input_aws.yaml` / `agent_input_google.yaml` / `agent_input_azure.yaml` | Wiring that exists on one cloud only |
 | `templates/` | Resources this repository owns, not the upstream chart |
@@ -78,6 +79,7 @@ spec:
         valueFiles:
           - 'values.yaml'
           - 'values-<cloud>.yaml'
+          - 'values-images.yaml'
         values: |
           <the rendered agent inputs>
 ```
@@ -93,11 +95,12 @@ From weakest to strongest:
 |---|---|---|
 | 1 | `values.yaml` | this repository |
 | 2 | `values-<cloud>.yaml` | this repository |
-| 3 | `agent_input.yaml` | this repository, templated by the agent |
-| 4 | `agent_input_<cloud>.yaml` | this repository, templated by the agent |
-| 5 | `inputs:` in the agent config | the platform being deployed |
+| 3 | `values-images.yaml` | this repository, generated |
+| 4 | `agent_input.yaml` | this repository, templated by the agent |
+| 5 | `agent_input_<cloud>.yaml` | this repository, templated by the agent |
+| 6 | `inputs:` in the agent config | the platform being deployed |
 
-The dividing line between 1–2 and 3–5 is the principle to follow: **value files
+The dividing line between 1–3 and 4–6 is the principle to follow: **value files
 hold what is true for every installation of this module, agent inputs hold what
 can only be known once the module is placed in a real environment.** A chart
 default, a resource limit, a security context or a hardcoded image tag belongs
@@ -141,6 +144,26 @@ grafana:
 
 `global.cloudProvider` is set here and nowhere else. It is what every cloud
 specific template gates on, so it must never be templated by the agent.
+
+### values-images.yaml
+
+The sha256 digests of the images a module installs, so that what runs is the
+exact content that was tested and not whatever a tag points at later. The file
+is generated and committed, never written by hand, and it only ever adds a
+digest to a reference the other value files already produce: `values.yaml` on
+its own must keep rendering a working module that installs by tag. That is what
+makes the file optional. A module without one, or an `Application` that leaves
+it out of `valueFiles`, installs by tag exactly as before.
+
+Only images we mirror are pinned, and a module gets the file when it is
+converted, so most modules do not have one yet. The `crossplane-*` provider
+modules are the first: `pullpush.sh digests` resolves the digest of every
+provider package upstream and writes them under `imageDigests`, keyed by
+`<package>:<version>`, and `pullpush.sh` copies those exact digests to the
+mirror. A key carries the version, so a digest can never be applied to another
+version: after a version bump that did not regenerate the file the packages
+are installed by tag, and the mirror workflow fails until the file is
+regenerated.
 
 ## Agent inputs
 

@@ -6,9 +6,13 @@ on:
       - main
     paths:
       - 'modules/k8s/crossplane-sql/pullpush.sh'
+      - 'modules/k8s/crossplane-sql/values-images.yaml'
+      - 'modules/k8s/provider-images.sh'
   pull_request:
     paths:
       - 'modules/k8s/crossplane-sql/pullpush.sh'
+      - 'modules/k8s/crossplane-sql/values-images.yaml'
+      - 'modules/k8s/provider-images.sh'
   workflow_dispatch:
 
 concurrency:

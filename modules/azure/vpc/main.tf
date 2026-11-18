@@ -39,6 +39,9 @@ locals {
   custom_names         = { for key, subnet in var.custom_subnets : key => coalesce(subnet.name, "${var.prefix}-${key}") }
   subnet_names         = concat(local.private_names, local.public_names, local.intra_names, local.database_names, local.public_agc_names, local.aks_names, local.container_apps_names, local.private_agc_names, local.control_agc_names, local.service_agc_names, local.control_names, local.service_names, values(local.custom_names))
 
+  vpc_id   = one(concat(azurerm_virtual_network.this[*].id, data.azurerm_virtual_network.existing[*].id))
+  vpc_name = one(concat(azurerm_virtual_network.this[*].name, data.azurerm_virtual_network.existing[*].name))
+
   flow_log_storage_account_id = try(coalesce(var.flow_log_storage_account_id, one(azurerm_storage_account.flow_log[*].id)), "")
 
   # Plan time validations
@@ -76,14 +79,12 @@ locals {
   })
 }
 
-resource "azurerm_virtual_network" "this" {
-  name                = var.prefix
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  address_space       = [var.vpc_cidr]
-  tags                = local.tags
-
+resource "terraform_data" "checks" {
   lifecycle {
+    precondition {
+      condition     = var.create_vpc || var.vpc_name != ""
+      error_message = "create_vpc = false needs vpc_name, the existing VNet in resource_group_name."
+    }
     precondition {
       condition     = length(local.subnets_outside_vpc) == 0
       error_message = "Subnets outside the VNet address space ${var.vpc_cidr}: ${join(", ", local.subnets_outside_vpc)}."
@@ -123,11 +124,26 @@ resource "azurerm_virtual_network" "this" {
   }
 }
 
+resource "azurerm_virtual_network" "this" {
+  count               = var.create_vpc ? 1 : 0
+  name                = var.vpc_name != "" ? var.vpc_name : var.prefix
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  address_space       = [var.vpc_cidr]
+  tags                = local.tags
+}
+
+data "azurerm_virtual_network" "existing" {
+  count               = var.create_vpc ? 0 : 1
+  name                = var.vpc_name
+  resource_group_name = var.resource_group_name
+}
+
 resource "azurerm_subnet" "private" {
   count                = length(local.private_subnets)
   name                 = local.private_names[count.index]
   resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.this.name
+  virtual_network_name = local.vpc_name
   address_prefixes     = [local.private_subnets[count.index]]
   # No implicit internet egress, private subnets use the NAT gateway
   default_outbound_access_enabled = false
@@ -144,7 +160,7 @@ resource "azurerm_subnet" "public" {
   count                           = length(local.public_subnets)
   name                            = local.public_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.public_subnets[count.index]]
   default_outbound_access_enabled = false
 }
@@ -153,7 +169,7 @@ resource "azurerm_subnet" "intra" {
   count                           = length(local.intra_subnets)
   name                            = local.intra_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.intra_subnets[count.index]]
   default_outbound_access_enabled = false
 }
@@ -162,7 +178,7 @@ resource "azurerm_subnet" "database" {
   count                           = length(local.database_subnets)
   name                            = local.database_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.database_subnets[count.index]]
   default_outbound_access_enabled = false
 }
@@ -171,7 +187,7 @@ resource "azurerm_subnet" "public_agc" {
   count                           = length(local.public_agc_subnets)
   name                            = local.public_agc_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.public_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -189,7 +205,7 @@ resource "azurerm_subnet" "private_agc" {
   count                           = length(local.private_agc_subnets)
   name                            = local.private_agc_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.private_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -207,7 +223,7 @@ resource "azurerm_subnet" "aks" {
   count                           = length(local.aks_subnets)
   name                            = local.aks_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.aks_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -225,7 +241,7 @@ resource "azurerm_subnet" "container_apps" {
   count                           = length(local.container_apps_subnets)
   name                            = local.container_apps_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.container_apps_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -262,7 +278,7 @@ resource "azurerm_container_app_environment" "container_apps" {
   location                           = var.location
   resource_group_name                = var.resource_group_name
   infrastructure_subnet_id           = azurerm_subnet.container_apps[count.index].id
-  infrastructure_resource_group_name = "${azurerm_subnet.container_apps[count.index].name}-${var.location}"
+  infrastructure_resource_group_name = try(var.container_apps_resource_group_names[count.index], "${azurerm_subnet.container_apps[count.index].name}-${var.location}")
   internal_load_balancer_enabled     = true
   zone_redundancy_enabled            = var.container_apps_zone_redundancy_enabled
   logs_destination                   = "log-analytics"
@@ -292,7 +308,7 @@ resource "azurerm_subnet" "control_agc" {
   count                           = length(local.control_agc_subnets)
   name                            = local.control_agc_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.control_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -310,7 +326,7 @@ resource "azurerm_subnet" "service_agc" {
   count                           = length(local.service_agc_subnets)
   name                            = local.service_agc_names[count.index]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [local.service_agc_subnets[count.index]]
   default_outbound_access_enabled = false
 
@@ -330,7 +346,7 @@ resource "azurerm_subnet" "control" {
   count                             = length(local.control_subnets)
   name                              = local.control_names[count.index]
   resource_group_name               = var.resource_group_name
-  virtual_network_name              = azurerm_virtual_network.this.name
+  virtual_network_name              = local.vpc_name
   address_prefixes                  = [local.control_subnets[count.index]]
   default_outbound_access_enabled   = false
   private_endpoint_network_policies = "Enabled"
@@ -340,7 +356,7 @@ resource "azurerm_subnet" "service" {
   count                             = length(local.service_subnets)
   name                              = local.service_names[count.index]
   resource_group_name               = var.resource_group_name
-  virtual_network_name              = azurerm_virtual_network.this.name
+  virtual_network_name              = local.vpc_name
   address_prefixes                  = [local.service_subnets[count.index]]
   default_outbound_access_enabled   = false
   private_endpoint_network_policies = "Enabled"
@@ -350,7 +366,7 @@ resource "azurerm_subnet" "custom" {
   for_each                        = var.custom_subnets
   name                            = local.custom_names[each.key]
   resource_group_name             = var.resource_group_name
-  virtual_network_name            = azurerm_virtual_network.this.name
+  virtual_network_name            = local.vpc_name
   address_prefixes                = [each.value.cidr]
   default_outbound_access_enabled = false
 
@@ -524,7 +540,7 @@ resource "azurerm_network_watcher_flow_log" "this" {
   network_watcher_name = var.network_watcher_name != "" ? var.network_watcher_name : "NetworkWatcher_${var.location}"
   resource_group_name  = var.network_watcher_resource_group_name
   location             = var.location
-  target_resource_id   = azurerm_virtual_network.this.id
+  target_resource_id   = local.vpc_id
   storage_account_id   = local.flow_log_storage_account_id
   enabled              = true
   version              = 2

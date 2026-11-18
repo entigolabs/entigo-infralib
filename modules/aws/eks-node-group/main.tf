@@ -46,10 +46,9 @@ locals {
 }
 
 
-#https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
+#https://search.opentofu.org/module/terraform-aws-modules/eks/aws/latest
 module "eks-managed-node-group" {
-  source  = "terraform-aws-modules/eks/aws//modules/eks-managed-node-group"
-  version = "21.29.0"
+  source  = "./vendors/terraform-aws-eks/modules/eks-managed-node-group" # version in vendor.yaml
   use_name_prefix = true
   name                    = substr(var.prefix, 0, 35)
   iam_role_use_name_prefix = true

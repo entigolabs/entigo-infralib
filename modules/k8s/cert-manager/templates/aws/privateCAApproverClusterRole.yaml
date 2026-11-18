@@ -1,0 +1,19 @@
+{{- if and .Values.global.aws.privateCA.enabled (not .Values.global.aws.privateCA.policy.enabled) (eq .Values.global.cloudProvider "aws") }}
+# The cert-manager approver may approve the requests of the AWS Private CA issuers. The subchart's own approverRole
+# takes the namespace of cert-manager from values, this one follows the release. Not with
+# global.aws.privateCA.policy.enabled: then cert-manager-approver-policy alone decides on those requests
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-approve-awspca
+rules:
+  - apiGroups:
+      - cert-manager.io
+    resources:
+      - signers
+    verbs:
+      - approve
+    resourceNames:
+      - awspcaclusterissuers.awspca.cert-manager.io/*
+      - awspcaissuers.awspca.cert-manager.io/*
+{{- end }}
