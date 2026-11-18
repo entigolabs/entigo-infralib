@@ -36,11 +36,11 @@ node-agent:
               matchLabels:
                 app.kubernetes.io/name: mimir
                 app.kubernetes.io/component: gateway
-      # Kubelet / cAdvisor on the local node.
+      # Kubelet / cAdvisor on the local node
       - ports:
           - port: 10250
             protocol: TCP
-      # Kubernetes API (discovery.kubernetes node role).
+      # Kubernetes API
       - ports:
           - port: 443
             protocol: TCP
@@ -51,10 +51,10 @@ node-agent:
 cluster-metrics:
   networkPolicy:
     egress:
-      # DNS + all in-cluster scrape targets (KSM, annotated pods, service endpoints, Mimir gateway) — any pod, any port.
+      # All in-cluster scrape targets
       - to:
           - namespaceSelector: {}
-      # Kubernetes API server (not a pod, so namespaceSelector won't match it -> ipBlock).
+      # Kubernetes API server
       - ports:
           - port: 443
             protocol: TCP
