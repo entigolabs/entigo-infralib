@@ -46,7 +46,7 @@ mimir-distributed:
   # shipped by default, so every tenant falls back to the chart's default no-op receiver
   # until one is added.
   alertmanager:
-    enabled: true
+    enabled: false
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy
 

@@ -11,6 +11,8 @@ global:
     namespace: "{{ .tmodule.aws-alb }}"
 
 mimir-distributed:
+  alertmanager:
+    enabled: true
   ingester:
     persistentVolume:
       size: 5Gi
