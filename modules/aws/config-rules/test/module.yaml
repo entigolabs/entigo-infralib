@@ -1,3 +1,9 @@
 # Installed once per environment: a pull request applies it under its regular
 # name instead of a per-branch copy.
 pin_step: true
+# The AWS Config recorder bills every configuration change of the account
+# for as long as it is installed, the largest line of the test account's
+# bill. Stable, release and main runs install and test the module on
+# Tuesdays only; its own pull requests and the main run after their merge
+# always do.
+run_days: tue
