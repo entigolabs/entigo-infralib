@@ -1,0 +1,12 @@
+global:
+  cloudProvider: azure
+
+developer-portal-agent:
+  tolerations:
+    - key: "tools"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"

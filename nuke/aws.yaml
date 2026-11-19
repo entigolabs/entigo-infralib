@@ -9,6 +9,15 @@ blocklist:
 - 046792967279
 - 324427516708
 
+# RDS instances with deletion protection on (the platform-apis
+# PostgresqlInstance and MariadbInstance default) cannot be deleted as they
+# are; this makes aws-nuke turn the protection off first. Left in place,
+# such an instance also keeps its subnet group, so the next Stable run
+# fails on DBSubnetGroupAlreadyExists.
+settings:
+  RDSInstance:
+    DisableDeletionProtection: true
+
 resource-types:
   alternatives:
   - AWS::ECR::RepositoryCreationTemplate

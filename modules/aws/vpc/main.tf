@@ -68,10 +68,9 @@ resource "aws_elasticache_subnet_group" "database_reuse" {
 }
 
 
-#https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest
+#https://search.opentofu.org/module/terraform-aws-modules/vpc/aws/latest
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "6.7.3"
+  source  = "./vendors/terraform-aws-vpc" # version in vendor.yaml
 
   name = var.prefix
   cidr = var.vpc_cidr

@@ -1,3 +1,8 @@
+global:
+  # Restrict every Zone's AppProject to the test chart registry so the negative
+  # sourcerepos-allow-list check can prove an out-of-list repo is rejected.
+  sourceRepos:
+  - ghcr.io/entigolabs
 platform-apis:
   zone:
     # The sweep that picks up edits to an existing Application runs on this interval, so the
@@ -9,6 +14,12 @@ platform-apis:
       roleMapping:
         - roleRef: maintainer
           groups: ["web-read-only-343159627493470238", "maintainer"]
+      namespaceRole:
+        # e2e: exercises additionalRules (see aws_biz.yaml).
+        additionalRules:
+          - apiGroups: ["example.entigo.com"]
+            resources: ["widgets"]
+            verbs: ["create", "get"]
   database:
     environmentConfig:
       backupBeforeDeletion: false
@@ -21,6 +32,4 @@ platform-apis:
     function-sequencer:
       install: false
     function-patch-and-transform:
-      install: false
-    function-extra-resources:
       install: false

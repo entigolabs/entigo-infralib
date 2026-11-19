@@ -1,0 +1,5 @@
+# Community modules this module calls from ./vendors. After a change run
+# ./test.sh vendor modules/google/gke-node-pool, which updates the directories and vendor.lock.
+modules:
+  - source: terraform-google-modules/kubernetes-engine/google
+    version: 47.0.0

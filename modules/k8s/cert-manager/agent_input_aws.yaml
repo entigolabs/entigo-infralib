@@ -1,0 +1,28 @@
+global:
+  aws:
+    account: "{{ .toutput.eks.account }}"
+    clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
+    region: "{{ .toutput.eks.region }}"
+    pubZoneName: "{{ .toptout.route53.pub_domain }}"
+    intCertZoneName: "{{ .toptout.route53.int_domain }}"
+    # Defaults from the default private domain of the route53 module: its AWS Private CA and, for the policy, the domain
+    # with the names under it. The module inputs are merged on top: a list or value set there replaces the one here
+    privateCA:
+      arns:
+        - "{{ .toptout.route53.int_certificate_authority_arn }}"
+      policy:
+        allowed:
+          commonName:
+            value: "*.{{ .toptout.route53.int_domain }}"
+          dnsNames:
+            values:
+              - "*.{{ .toptout.route53.int_domain }}"
+              - "{{ .toptout.route53.int_domain }}"
+          usages:
+            - server auth
+            - client auth
+aws-privateca-issuer:
+  image:
+    repository: '{{ .toptout.ecr-proxy.ecr_registry | "public.ecr.aws" }}/k1n1h4h4/cert-manager-aws-privateca-issuer'
+cert-manager-approver-policy:
+  imageRegistry: '{{ .toptout.ecr-proxy.quay_registry | "quay.io" }}'

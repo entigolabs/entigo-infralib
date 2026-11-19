@@ -697,6 +697,10 @@ mimir-distributed:
     enabledNonEnterprise: true
     replicas: 3
     nginx:
+      # The chart default nginxinc/nginx-unprivileged is no longer maintained.
+      image:
+        repository: nginx/nginx-unprivileged
+        tag: 1.31-alpine
       verboseLogging: false # Disable HTTP 2xx and 3xx logging
     podAnnotations:
       kube-score/ignore: pod-probes,pod-networkpolicy

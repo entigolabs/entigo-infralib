@@ -1,3 +1,4 @@
+{{- if .Values.gateways.external.enabled }}
 apiVersion: alb.networking.azure.io/v1
 kind: ApplicationLoadBalancer
 metadata:
@@ -8,3 +9,4 @@ metadata:
 spec:
   associations:
     {{- toYaml .Values.global.azure.agcSubnetIds | nindent 4 }}
+{{- end }}

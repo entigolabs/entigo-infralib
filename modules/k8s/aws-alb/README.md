@@ -32,6 +32,7 @@ gateways:
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
   #   sourceRanges: []
+  #   securityGroups: []
 ```
 
 Here the `partner` gateway would be created in addition to the defaults.
@@ -102,6 +103,34 @@ gateways:
 ```
 
 An empty list or string allows everything.
+
+### Security groups
+
+By default the controller creates and manages the security group of each
+gateway ALB. `securityGroups` attaches existing security groups instead, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/security-groups` Ingress annotation and takes the
+same shapes as `sourceRanges`, a list or a comma-separated string:
+
+```yaml
+gateways:
+  partner:
+    enabled: true
+    scheme: internet-facing
+    securityGroups:
+      - sg-0123456789abcdef0
+  internal:
+    securityGroups: '{{ .toutput.eks.cluster_primary_security_group_id }}'
+```
+
+With `securityGroups` set the controller no longer manages a frontend security
+group, so the inbound rules of the given groups decide who can reach the ALB
+and `sourceRanges` has no effect. The chart therefore refuses a gateway that
+sets both. The controller still manages the rules on the node and pod security
+group that let the ALB reach the targets
+(`manageBackendSecurityGroupRules: true`).
+
+An empty list or string keeps the controller-managed security group.
 
 ### Selecting which gateway infralib modules use
 
@@ -432,6 +461,9 @@ The CIDRs apply to every route on that gateway. If only some applications
 need the restriction, give them a custom gateway with its own `sourceRanges`
 and attach their HTTPRoutes to it, see
 [Default gateways and custom gateways](#default-gateways-and-custom-gateways).
+
+`alb.ingress.kubernetes.io/security-groups` moves the same way, to
+`gateways.<name>.securityGroups`, see [Security groups](#security-groups).
 
 Notes:
 

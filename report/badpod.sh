@@ -37,9 +37,14 @@ kubectl get namespaces -o json | jq -r '.items[] |
   select(.metadata.name != "bar") |
   select(.metadata.name != "test-postgresql") |
   select(.metadata.name != "gke-managed-volumepopulator") |
+  select(.metadata.name != "cilium-biz") |
+  select(.metadata.name != "cilium-pri") |
+  {"privileged": 0, "baseline": 1, "restricted": 2} as $rank |
+  # Namespaces whose module sets a looser level on purpose (modules/k8s/<module>/argo-apps.yaml).
+  ({"azure-gateway": "baseline"}[.metadata.name] // "restricted") as $required |
   (.metadata.labels["pod-security.kubernetes.io/enforce"] // "privileged") as $enforce |
   (.metadata.labels["pod-security.kubernetes.io/warn"] // "privileged") as $warn |
-  select($enforce != "restricted" or $warn != "restricted") |
+  select($rank[$enforce] < $rank[$required] or $rank[$warn] < $rank[$required]) |
   [.metadata.name, $enforce, $warn] | @tsv
 ' | while IFS=$'\t' read -r ns enforce warn; do
   printf "%-40s %-12s %-12s\n" "$ns" "$enforce" "$warn"
