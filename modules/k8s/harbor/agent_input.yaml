@@ -32,6 +32,16 @@ harbor:
   trivy:
     image:
       repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/goharbor/trivy-adapter-photon'
+    # The vulnerability databases come through the ECR pull through cache of Docker Hub when
+    # the platform has one, so they are fetched inside the region instead of through the NAT
+    # gateway. mirror.gcr.io and ghcr.io are the subchart's own defaults: the second entry is
+    # only tried when the first one answers with a temporary error.
+    dbRepository:
+      - '{{ .toptout.ecr-proxy.hub_registry | "mirror.gcr.io" }}/aquasec/trivy-db'
+      - "ghcr.io/aquasecurity/trivy-db"
+    javaDBRepository:
+      - '{{ .toptout.ecr-proxy.hub_registry | "mirror.gcr.io" }}/aquasec/trivy-java-db'
+      - "ghcr.io/aquasecurity/trivy-java-db"
   database:
     internal:
       image:
