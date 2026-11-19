@@ -61,6 +61,21 @@ trivy-operator:
     # replaced, so it needs no storage class and no volume tied to one zone.
     storageClassEnabled: false
     server:
+      # Measured on the biz and pri test clusters through a database download and a scan of every
+      # workload: 29Mi at rest, 88Mi and 12m at the peak. The database is read through the page
+      # cache, which the memory limit has to leave room for.
+      # The database is a 1.7Gi file in an emptyDir. An update downloads the new copy to /tmp,
+      # another emptyDir, before it replaces the old one, so the limit covers two copies and
+      # growth. A pod over the ephemeral storage limit is evicted.
+      resources:
+        requests:
+          cpu: 5m
+          memory: 64Mi
+          ephemeral-storage: 2Gi
+        limits:
+          cpu: 1
+          memory: 1Gi
+          ephemeral-storage: 5Gi
       podSecurityContext:
         runAsUser: 65534
         runAsGroup: 65534
