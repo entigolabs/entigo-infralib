@@ -269,8 +269,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("repositories", nargs="+", metavar="REPOSITORY")
     parser.add_argument("--alias", default="entigolabs", help="registry alias (default: entigolabs)")
-    parser.add_argument("--grace-days", type=float, default=7,
-                        help="keep everything pushed within this many days (default: 7)")
+    parser.add_argument("--grace-days", type=float, default=14,
+                        help="keep everything pushed within this many days (default: 14)")
     parser.add_argument("--delete", action="store_true", help="delete; without it only report")
     parser.add_argument("--largest", type=int, default=0, metavar="N",
                         help="also report the N largest repositories of the registry")

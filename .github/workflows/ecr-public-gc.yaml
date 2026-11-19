@@ -19,10 +19,10 @@ on:
     inputs:
       repositories:
         description: "Repositories under public.ecr.aws/entigolabs, space separated"
-        default: "entigo-infralib-test entigo-infralib-testing"
+        default: "entigo-infralib-test entigo-infralib-testing entigo-infralib-tools"
       grace_days:
         description: "Keep everything pushed within this many days"
-        default: "7"
+        default: "14"
       delete:
         description: "Delete (unchecked: only report)"
         type: boolean
@@ -42,8 +42,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       # The repositories the scheduled run collects.
-      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing' }}
-      GRACE_DAYS: ${{ inputs.grace_days || '7' }}
+      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing entigo-infralib-tools' }}
+      GRACE_DAYS: ${{ inputs.grace_days || '14' }}
       DELETE: ${{ github.event_name == 'schedule' && vars.ECR_PUBLIC_GC_DELETE == 'true' || inputs.delete == true }}
     steps:
     - uses: actions/checkout@v7
