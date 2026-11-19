@@ -410,22 +410,6 @@ node-agent:
         - name: sysfs
           mountPath: /host/sys
           readOnly: true
-    # Alloy's image has no USER directive (runs as root by default); the
-    # procfs/sysfs mounts above are read-only, but root bypasses host file
-    # permission checks entirely. Run unprivileged instead: the unix
-    # exporter's data (proc/sys stats) doesn't need root.
-    # No /host/root (rootfs) mount: the only thing it feeds is the
-    # filesystem collector's disk/inode stats, and mounting the entire host
-    # filesystem just for that isn't worth the exposure.
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-      runAsNonRoot: true
-      runAsUser: 65534
-      runAsGroup: 65534
-      seccompProfile:
-        type: RuntimeDefault
     resources:
       requests:
         cpu: "20m"
