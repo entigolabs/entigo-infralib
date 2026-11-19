@@ -20,7 +20,14 @@ The rest is deleted, or only reported without --delete: untagged images
 nothing refers to any more, and the signatures and attachments of images
 that are gone.
 
-    ecr-public-gc.py [--delete] [--grace-days N] [--largest N] [--alias ALIAS] REPOSITORY...
+With --prune-prerelease the release candidate and alpha tags (v1.2.3-rc4,
+v1.2.3-alpha1, alpha7, dev-alpha1) of manifests older than the grace period
+are removed first, so an image only such tags hold becomes garbage. They
+stay on a manifest that also has a tag which is not a version (latest, dev):
+that image is still what the moving tag serves.
+
+    ecr-public-gc.py [--delete] [--grace-days N] [--largest N] [--prune-prerelease]
+                     [--alias ALIAS] REPOSITORY...
 
 --largest N also reports the N largest repositories of the whole registry,
 by the sum of their manifest sizes, after anything was deleted.
@@ -57,6 +64,8 @@ ACCEPT = ", ".join(INDEX_TYPES + (
 # cosign's tags for the signature, attestation and SBOM of a digest, and the
 # OCI referrers fallback tag, which has no suffix.
 DIGEST_TAG = re.compile(r"^sha256-([0-9a-f]{64})(\.(sig|att|sbom))?$")
+PRERELEASE_TAG = re.compile(r"(^|[-.])(rc|alpha)[-.]?[0-9]*$")
+VERSION_TAG = re.compile(r"^v?[0-9]+(\.[0-9]+)*([-.+].*)?$")
 
 
 def aws(*args):
@@ -131,6 +140,26 @@ def references(manifest):
     children = [m["digest"] for m in manifest.get("manifests") or [] if "digest" in m]
     subject = (manifest.get("subject") or {}).get("digest")
     return children, subject
+
+
+def prune_prerelease(images, cutoff):
+    """Takes the pre-release tags off the manifests that may lose them.
+
+    Returns the (digest, tag) pairs removed from images, which from here on
+    has the tags that remain. A manifest keeps them when it was pushed after
+    the cutoff or when it also has a moving tag: one that is neither a
+    version nor the tag of a digest.
+    """
+    removed = []
+    for digest, image in images.items():
+        prerelease = [t for t in image["tags"] if PRERELEASE_TAG.search(t)]
+        moving = [t for t in image["tags"]
+                  if not PRERELEASE_TAG.search(t) and not VERSION_TAG.match(t) and not DIGEST_TAG.match(t)]
+        if not prerelease or moving or image["pushed"] > cutoff:
+            continue
+        image["tags"] = [t for t in image["tags"] if t not in prerelease]
+        removed += [(digest, t) for t in prerelease]
+    return removed
 
 
 def plan(images, manifests, cutoff):
@@ -223,20 +252,35 @@ def largest(count):
     return rows[:count], rows
 
 
+def delete_tags(repository, tags):
+    """Removes the tags, each from a manifest that keeps another one. Returns the failures."""
+    failures = []
+    for i in range(0, len(tags), 100):
+        ids = [{"imageTag": t} for t in tags[i:i + 100]]
+        result = aws("ecr-public", "batch-delete-image", "--repository-name", repository,
+                     "--image-ids", json.dumps(ids))
+        failures += result.get("failures", [])
+    return failures
+
+
 def gb(size):
     return f"{size / 1e9:.1f}"
 
 
-def collect(alias, repository, grace_days, do_delete):
+def collect(alias, repository, grace_days, do_delete, prerelease):
     images = list_images(repository)
     token = registry_token(alias, repository)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=grace_days)).timestamp()
+    all_tags = {d: list(i["tags"]) for d, i in images.items()}
+    untag = prune_prerelease(images, cutoff) if prerelease else []
     wanted = [d for d, i in images.items()
               if i["media_type"] in INDEX_TYPES or not i["tags"] or all(DIGEST_TAG.match(t) for t in i["tags"])]
     with ThreadPoolExecutor(max_workers=8) as pool:
         bodies = pool.map(lambda d: fetch_manifest(alias, repository, d, token), wanted)
     manifests = dict(zip(wanted, bodies))
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=grace_days)).timestamp()
     keep, garbage = plan(images, manifests, cutoff)
+    # A tag of a manifest that goes is deleted with it; the others one by one.
+    untag = sorted(t for d, t in untag if d in keep)
 
     unreadable = sum(1 for m in manifests.values() if m is None)
     row = {
@@ -245,22 +289,31 @@ def collect(alias, repository, grace_days, do_delete):
         "kept": len(keep),
         "garbage": len(garbage),
         "garbage_gb": gb(sum(images[d]["size"] for d in garbage)),
+        "untag": len(untag),
         "unreadable": unreadable,
         "deleted": 0,
         "failures": 0,
     }
     print(f"{repository}: {len(images)} manifests, {len(keep)} kept, {len(garbage)} to delete "
-          f"({row['garbage_gb']} GB of manifest sizes), {unreadable} unreadable and kept")
+          f"({row['garbage_gb']} GB of manifest sizes), {len(untag)} pre-release tags to remove "
+          f"from kept manifests, {unreadable} unreadable and kept")
+    for tag in untag:
+        print(f"  {'untag' if do_delete else 'would untag'} {tag}")
     for digest in sorted(garbage, key=lambda d: images[d]["pushed"]):
         image = images[digest]
         pushed = datetime.fromtimestamp(image["pushed"], timezone.utc).strftime("%Y-%m-%d")
         print(f"  {'delete' if do_delete else 'would delete'} {digest} pushed {pushed} "
-              f"{image['size']} bytes {' '.join(image['tags'])}".rstrip())
+              f"{image['size']} bytes {' '.join(all_tags[digest])}".rstrip())
+    if do_delete and untag:
+        failures = delete_tags(repository, untag)
+        for f in failures:
+            print(f"  FAILED {f.get('imageId', {}).get('imageTag')}: {f.get('failureCode')} {f.get('failureReason')}")
+        row["failures"] += len(failures)
     if do_delete and garbage:
         failures = delete(repository, images, garbage)
         for f in failures:
             print(f"  FAILED {f.get('imageId', {}).get('imageDigest')}: {f.get('failureCode')} {f.get('failureReason')}")
-        row["failures"] = len(failures)
+        row["failures"] += len(failures)
         row["deleted"] = len(garbage) - len(failures)
     return row
 
@@ -272,6 +325,8 @@ def main():
     parser.add_argument("--grace-days", type=float, default=14,
                         help="keep everything pushed within this many days (default: 14)")
     parser.add_argument("--delete", action="store_true", help="delete; without it only report")
+    parser.add_argument("--prune-prerelease", action="store_true",
+                        help="remove rc and alpha tags older than the grace period first")
     parser.add_argument("--largest", type=int, default=0, metavar="N",
                         help="also report the N largest repositories of the registry")
     args = parser.parse_args()
@@ -279,7 +334,7 @@ def main():
     rows, failed = [], False
     for repository in args.repositories:
         try:
-            rows.append(collect(args.alias, repository, args.grace_days, args.delete))
+            rows.append(collect(args.alias, repository, args.grace_days, args.delete, args.prune_prerelease))
         except subprocess.CalledProcessError as e:
             print(f"{repository}: {e.stderr.strip() or e}", file=sys.stderr)
             failed = True
@@ -311,11 +366,11 @@ def main():
         with open(summary, "a") as f:
             f.write(f"### ECR Public garbage collection ({'delete' if args.delete else 'dry run'}, "
                     f"grace {args.grace_days:g} days)\n\n")
-            f.write("| Repository | Manifests | Kept | Garbage | Garbage GB | Deleted | Failed | Unreadable |\n")
-            f.write("|---|---|---|---|---|---|---|---|\n")
+            f.write("| Repository | Manifests | Kept | Garbage | Garbage GB | Tags removed from kept | Deleted | Failed | Unreadable |\n")
+            f.write("|---|---|---|---|---|---|---|---|---|\n")
             for r in rows:
                 f.write(f"| {r['repository']} | {r['manifests']} | {r['kept']} | {r['garbage']} | "
-                        f"{r['garbage_gb']} | {r['deleted']} | {r['failures']} | {r['unreadable']} |\n")
+                        f"{r['garbage_gb']} | {r['untag']} | {r['deleted']} | {r['failures']} | {r['unreadable']} |\n")
             f.write("\nGarbage GB adds up manifest sizes, which count a layer once per image that uses it.\n")
     sys.exit(1 if failed else 0)
 

@@ -3,8 +3,9 @@
 # untagged manifests no tag leads to any more and the signatures of images
 # that are gone, and keeps what a tag reaches (the architectures and
 # attestations of a multi-arch tag, attached SBOMs, cosign signatures) and
-# everything pushed within the grace period. images/ecr-public-gc.py has the
-# rules.
+# everything pushed within the grace period. Release candidate and alpha tags
+# older than the grace period are removed first, unless the image also has a
+# moving tag such as latest or dev. images/ecr-public-gc.py has the rules.
 #
 # The weekly run (Monday 14:00 UTC) deletes; a run dispatched by hand only
 # reports unless asked to delete. The job summary lists what was or would be
@@ -18,7 +19,7 @@ on:
     inputs:
       repositories:
         description: "Repositories under public.ecr.aws/entigolabs, space separated"
-        default: "entigo-infralib-test entigo-infralib-testing entigo-infralib-tools"
+        default: "entigo-infralib-test entigo-infralib-testing entigo-infralib-tools entigo-infralib-base"
       grace_days:
         description: "Keep everything pushed within this many days"
         default: "14"
@@ -41,7 +42,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       # The repositories the scheduled run collects.
-      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing entigo-infralib-tools' }}
+      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing entigo-infralib-tools entigo-infralib-base' }}
       GRACE_DAYS: ${{ inputs.grace_days || '14' }}
       DELETE: ${{ github.event_name == 'schedule' || inputs.delete == true }}
     steps:
@@ -49,7 +50,7 @@ jobs:
     - name: Collect garbage
       run: |
         set -euo pipefail
-        args=(--grace-days "$GRACE_DAYS" --largest 10)
+        args=(--grace-days "$GRACE_DAYS" --largest 10 --prune-prerelease)
         if [ "$DELETE" = true ]; then args+=(--delete); fi
         # shellcheck disable=SC2086
         python3 images/ecr-public-gc.py "${args[@]}" $REPOSITORIES
