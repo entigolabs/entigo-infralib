@@ -6,15 +6,14 @@
 # everything pushed within the grace period. images/ecr-public-gc.py has the
 # rules.
 #
-# The weekly run only reports until the repository variable
-# ECR_PUBLIC_GC_DELETE is "true"; a run dispatched by hand deletes when asked
-# to. The job summary lists what was or would be deleted per repository and
-# the 10 largest repositories of the registry.
+# The weekly run (Monday 14:00 UTC) deletes; a run dispatched by hand only
+# reports unless asked to delete. The job summary lists what was or would be
+# deleted per repository and the 10 largest repositories of the registry.
 name: ECR Public GC
 
 on:
   schedule:
-    - cron: "17 3 * * 6"
+    - cron: "0 14 * * 1"
   workflow_dispatch:
     inputs:
       repositories:
@@ -44,7 +43,7 @@ jobs:
       # The repositories the scheduled run collects.
       REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing entigo-infralib-tools' }}
       GRACE_DAYS: ${{ inputs.grace_days || '14' }}
-      DELETE: ${{ github.event_name == 'schedule' && vars.ECR_PUBLIC_GC_DELETE == 'true' || inputs.delete == true }}
+      DELETE: ${{ github.event_name == 'schedule' || inputs.delete == true }}
     steps:
     - uses: actions/checkout@v7
     - name: Collect garbage
