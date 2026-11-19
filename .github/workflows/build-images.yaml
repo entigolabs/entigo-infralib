@@ -158,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      contents: write
+      contents: read
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -172,21 +172,6 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
-    - name: Get latest release
-      id: get_latest_release
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const latestStableRelease = await github.rest.repos.getLatestRelease({ owner: context.repo.owner, repo: context.repo.repo });
-          const versionString = '' + latestStableRelease.data.tag_name;
-          const regex = /^v(\d+)\.(\d+)\.(\d+)$/;
-          const match = versionString.match(regex);
-          const major = parseInt(match[1], 10);
-          const minor = parseInt(match[2], 10);
-          const patch = parseInt(match[3], 10) + 1;
-          const new_version = `v${major}.${minor}.${patch}`
-          core.setOutput('new_version', new_version);
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -231,36 +216,6 @@ jobs:
         name: image-tag
         path: ${{ runner.temp }}/image-tag.txt
         retention-days: 1
-
-    - name: Create Release
-      if: ${{ needs.tag.outputs.is_dev != 'true' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_TAG: ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }}
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git tag -a ${RELEASE_TAG} -m "Release ${RELEASE_TAG}"
-        git push origin ${RELEASE_TAG}
-        RELEASE_URL=$(gh release create ${RELEASE_TAG} \
-          --title "Release ${RELEASE_TAG}" \
-          --generate-notes \
-          --draft=false \
-          --latest=false \
-          --prerelease=true)
-        echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
-
-    - name: Slack Success Release Message
-      if: ${{ success() && needs.tag.outputs.is_dev != 'true' }}
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_COLOR: 'success'
-        SLACK_MESSAGE: 'Released ${{ inputs.name }}-${{ steps.get_latest_release.outputs.new_version }}-rc${{ github.run_number }} ${{ env.RELEASE_URL }}'
-        SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_ICON_EMOJI: ${{ secrets.SLACK_ICON_EMOJI }}
-        MSG_MINIMAL: actions url,commit
-        SLACK_FOOTER: ""
 
     - name: Slack Failed Message
       if: failure()
