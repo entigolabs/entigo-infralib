@@ -20,11 +20,14 @@ The rest is deleted, or only reported without --delete: untagged images
 nothing refers to any more, and the signatures and attachments of images
 that are gone.
 
-    ecr-public-gc.py [--delete] [--grace-days N] [--alias ALIAS] REPOSITORY...
+    ecr-public-gc.py [--delete] [--grace-days N] [--largest N] [--alias ALIAS] REPOSITORY...
+
+--largest N also reports the N largest repositories of the whole registry,
+by the sum of their manifest sizes, after anything was deleted.
 
 Needs the aws CLI with credentials for the registry's account
-(ecr-public:DescribeImages, GetAuthorizationToken and, with --delete,
-BatchDeleteImage). Exit status 1 when a repository could not be processed or
+(ecr-public:DescribeImages, GetAuthorizationToken, with --largest
+DescribeRepositories and with --delete BatchDeleteImage). Exit status 1 when a repository could not be processed or
 a deletion failed.
 """
 import argparse
@@ -184,6 +187,42 @@ def delete(repository, images, digests):
     return failures
 
 
+def list_repositories():
+    names, token = [], None
+    while True:
+        args = ["ecr-public", "describe-repositories", "--max-results", "1000"]
+        if token:
+            args += ["--next-token", token]
+        page = aws(*args)
+        names += [r["repositoryName"] for r in page.get("repositories", [])]
+        token = page.get("nextToken")
+        if not token:
+            return names
+
+
+def largest(count):
+    """The repositories of the registry with the largest sum of manifest sizes."""
+    def sizes(repository):
+        images = list_images(repository).values()
+        untagged = [i for i in images if not i["tags"]]
+        return {
+            "repository": repository,
+            "manifests": len(images),
+            "size": sum(i["size"] for i in images),
+            "untagged": len(untagged),
+            "untagged_size": sum(i["size"] for i in untagged),
+        }
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        rows = list(pool.map(sizes, list_repositories()))
+    rows.sort(key=lambda r: r["size"], reverse=True)
+    print(f"The {count} largest of {len(rows)} repositories, {gb(sum(r['size'] for r in rows))} GB in all:")
+    for r in rows[:count]:
+        print(f"  {r['repository']}: {gb(r['size'])} GB in {r['manifests']} manifests, "
+              f"{gb(r['untagged_size'])} GB in {r['untagged']} untagged")
+    return rows[:count], rows
+
+
 def gb(size):
     return f"{size / 1e9:.1f}"
 
@@ -233,6 +272,8 @@ def main():
     parser.add_argument("--grace-days", type=float, default=7,
                         help="keep everything pushed within this many days (default: 7)")
     parser.add_argument("--delete", action="store_true", help="delete; without it only report")
+    parser.add_argument("--largest", type=int, default=0, metavar="N",
+                        help="also report the N largest repositories of the registry")
     args = parser.parse_args()
 
     rows, failed = [], False
@@ -247,7 +288,25 @@ def main():
             failed = True
     failed = failed or any(r["failures"] for r in rows)
 
+    top, every = [], []
+    if args.largest > 0:
+        try:
+            top, every = largest(args.largest)
+        except subprocess.CalledProcessError as e:
+            print(f"largest repositories: {e.stderr.strip() or e}", file=sys.stderr)
+            failed = True
+
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary and top:
+        with open(summary, "a") as f:
+            f.write(f"### The {len(top)} largest of {len(every)} repositories\n\n")
+            f.write("| Repository | GB | Manifests | Untagged GB | Untagged manifests |\n|---|---|---|---|---|\n")
+            for r in top:
+                f.write(f"| {r['repository']} | {gb(r['size'])} | {r['manifests']} | "
+                        f"{gb(r['untagged_size'])} | {r['untagged']} |\n")
+            f.write(f"\nAll repositories: {gb(sum(r['size'] for r in every))} GB. Sizes add up manifest sizes, "
+                    "which count a layer once per image that uses it, so they rank repositories "
+                    "and are more than what is billed.\n\n")
     if summary and rows:
         with open(summary, "a") as f:
             f.write(f"### ECR Public garbage collection ({'delete' if args.delete else 'dry run'}, "

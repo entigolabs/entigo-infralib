@@ -8,7 +8,8 @@
 #
 # The weekly run only reports until the repository variable
 # ECR_PUBLIC_GC_DELETE is "true"; a run dispatched by hand deletes when asked
-# to. The job summary lists what was or would be deleted per repository.
+# to. The job summary lists what was or would be deleted per repository and
+# the 10 largest repositories of the registry.
 name: ECR Public GC
 
 on:
@@ -18,7 +19,7 @@ on:
     inputs:
       repositories:
         description: "Repositories under public.ecr.aws/entigolabs, space separated"
-        default: "entigo-infralib-test"
+        default: "entigo-infralib-test entigo-infralib-testing"
       grace_days:
         description: "Keep everything pushed within this many days"
         default: "7"
@@ -41,7 +42,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       # The repositories the scheduled run collects.
-      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test' }}
+      REPOSITORIES: ${{ inputs.repositories || 'entigo-infralib-test entigo-infralib-testing' }}
       GRACE_DAYS: ${{ inputs.grace_days || '7' }}
       DELETE: ${{ github.event_name == 'schedule' && vars.ECR_PUBLIC_GC_DELETE == 'true' || inputs.delete == true }}
     steps:
@@ -49,7 +50,7 @@ jobs:
     - name: Collect garbage
       run: |
         set -euo pipefail
-        args=(--grace-days "$GRACE_DAYS")
+        args=(--grace-days "$GRACE_DAYS" --largest 10)
         if [ "$DELETE" = true ]; then args+=(--delete); fi
         # shellcheck disable=SC2086
         python3 images/ecr-public-gc.py "${args[@]}" $REPOSITORIES
