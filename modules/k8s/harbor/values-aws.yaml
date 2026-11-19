@@ -6,6 +6,7 @@ global:
     account: ""
     clusterOIDC: ""
     kmsKeyId: ""
+    ecrPolicy: ""
 
 harbor:
   expose:
@@ -23,6 +24,12 @@ harbor:
       controller: alb
   updateStrategy:
     type: Recreate
+
+  # Trivy runs as its own service account (templates/aws/trivyServiceAccount.yaml), which gets
+  # an IRSA role when the platform has an ecr-proxy, so that it can download the vulnerability
+  # databases from the pull through cache.
+  trivy:
+    serviceAccountName: "harbor-trivy"
 
   # S3 storage for the registry, commented out and not usable yet.
   #

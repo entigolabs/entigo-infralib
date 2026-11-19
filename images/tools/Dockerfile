@@ -4,7 +4,7 @@ FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 
 FROM alpine:3.24
 ARG TARGETARCH
-ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.22.1 ARGOCD_CLI=v3.5.7 OPENTOFU_VERSION=1.13.2
+ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.22.1 ARGOCD_CLI=v3.6.1 OPENTOFU_VERSION=1.13.9
 
 COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 
