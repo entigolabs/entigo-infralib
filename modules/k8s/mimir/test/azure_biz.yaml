@@ -4,6 +4,8 @@ global:
     namespace: "{{ .tmodule.azure-gateway }}"
 
 mimir-distributed:
+  alertmanager:
+    enabled: true
   ingester:
     persistentVolume:
       size: 5Gi

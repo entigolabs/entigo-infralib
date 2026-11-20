@@ -2,11 +2,30 @@ global:
   cloudProvider: ""
   providerConfigRefName: ""
   prefix: ""
+  # The same for every datasource and every cloud: `module` is the name of the module in
+  # this platform, filled in by the agent and empty when the module is not installed;
+  # `hostname` is the full URL of an instance somewhere else and wins over `module`. A
+  # datasource with neither is left out. Prometheus is the default datasource when it is
+  # there, Mimir otherwise.
   datasources:
     loki:
+      module: ""
       hostname: ""
+    mimir:
+      module: ""
+      hostname: ""
+      # The tenant alloy writes to by default, see modules/k8s/alloy.
+      tenantHeader: "anonymous"
+      # How often the metrics in Mimir are scraped, alloy's scrapeInterval. Grafana sizes
+      # the rate() windows of the dashboards from it; left at Grafana's own default of 15s
+      # a short time range gets a window with a single sample in it and an empty graph.
+      scrapeInterval: "60s"
     prometheus:
+      module: ""
       hostname: ""
+      # The scrape interval of that Prometheus, the prometheus module's default. See
+      # mimir.scrapeInterval.
+      scrapeInterval: "60s"
 
 grafana:
   enabled: true
@@ -58,48 +77,43 @@ grafana:
 
   datasources: {}
 
+  # None of these names a datasource. Each dashboard has a datasource variable that offers
+  # every Prometheus-type datasource and starts on the default one, so they follow whatever
+  # global.datasources ends up with: Prometheus when it is installed, Mimir otherwise.
   dashboards:
     kubernetes:
       global:
         gnetId: 15757
         revision: 43
-        datasource: Prometheus
       namespaces:
         gnetId: 15758
         revision: 46
-        datasource: Prometheus
       nodes:
         gnetId: 15759
         revision: 40
-        datasource: Prometheus
       pods:
         gnetId: 15760
         revision: 39
-        datasource: Prometheus
       apiserver:
         gnetId: 15761
         revision: 21
-        datasource: Prometheus
-      prometheus:
-        gnetId: 19105
-        revision: 9
-        datasource: Prometheus
       limitsrequests:
         gnetId: 22849
         revision: 9
-        datasource: Prometheus
       crossplane:
         gnetId: 24549
         revision: 3
-        datasource: Prometheus
       pvc:
         gnetId: 13646
         revision: 2
-        datasource: Prometheus
+        # The one dashboard whose panels use the import-time input instead of its own
+        # datasource variable: point the input at that variable.
+        datasource:
+          - name: DS_PROMETHEUS
+            value: "${datasource}"
       trivy-operator-vulnerabilities:
         gnetId: 16337
         revision: 16
-        datasource: Prometheus
   deploymentStrategy:
     type: Recreate
 

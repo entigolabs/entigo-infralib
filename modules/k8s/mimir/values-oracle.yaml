@@ -96,6 +96,7 @@ mimir-distributed:
           {{- end }}
           sync_dir: /data/tsdb-sync
 
+        storage_prefix: blocks
         s3:
           bucket_name: {{ .Values.global.bucketName }}
           region: {{ .Values.global.oracle.region }}
@@ -194,9 +195,9 @@ mimir-distributed:
         enable_api: true
         rule_path: /data
 
-      {{- if index .Values "metadata-cache" "enabled" }}
       ruler_storage:
         backend: s3
+        storage_prefix: ruler
         s3:
           bucket_name: {{ .Values.global.bucketName }}
           region: {{ .Values.global.oracle.region }}
@@ -206,21 +207,36 @@ mimir-distributed:
           insecure: false
           signature_version: v4
 
+        {{- if index .Values "metadata-cache" "enabled" }}
         cache:
           backend: memcached
           memcached:
             addresses: {{ include "mimir.metadataCacheAddress" . }}
             max_item_size: {{ mul (index .Values "metadata-cache").maxItemMemory 1024 1024 }}
-      {{- end }}
+        {{- end }}
 
       runtime_config:
         file: /var/{{ include "mimir.name" . }}/runtime.yaml
 
+      alertmanager:
+        data_dir: /data
+        enable_api: true
+        external_url: /alertmanager
+
+      alertmanager_storage:
+        backend: s3
+        storage_prefix: alertmanager
+        s3:
+          bucket_name: {{ .Values.global.bucketName }}
+          region: {{ .Values.global.oracle.region }}
+          endpoint: {{ .Values.global.oracle.objectStorageNamespace }}.compat.objectstorage.{{ .Values.global.oracle.region }}.{{ .Values.global.oracle.providerDomain }}
+          access_key_id: {{ .Values.global.oracle.accessKeyId }}
+          secret_access_key: {{ .Values.global.oracle.secretAccessKey }}
+          insecure: false
+          signature_version: v4
+
       server:
         grpc_server_max_concurrent_streams: 1000
-        grpc_server_max_connection_age: 2m
-        grpc_server_max_connection_age_grace: 5m
-        grpc_server_max_connection_idle: 1m
 
       store_gateway:
         sharding_ring:

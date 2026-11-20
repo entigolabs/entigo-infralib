@@ -41,7 +41,6 @@ steps:
       - source: kiali
       - source: kyverno
       - source: loki
-      - source: mimir
       - source: prometheus
       - source: trivy
       - source: wireguard
