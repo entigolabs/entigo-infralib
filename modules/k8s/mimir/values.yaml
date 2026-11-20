@@ -44,6 +44,11 @@ mimir-distributed:
         # 6.x sets this false so ingesters only accept data from Kafka. Mimir
         # only permits disabling it when ingest-storage is enabled.
         push_grpc_method_enabled: true
+      # The distributor forwards every remote-write batch uncompressed to each
+      # ingester replica, much of it across availability zones. Compress that hop.
+      ingester_client:
+        grpc_client_config:
+          grpc_compression: snappy
 
   # Alloy's cluster-metrics "mimir.rules.kubernetes" component (see
   # modules/k8s/alloy) syncs PrometheusRule CRDs into the Mimir ruler above, which
