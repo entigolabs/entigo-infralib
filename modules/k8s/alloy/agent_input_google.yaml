@@ -45,21 +45,3 @@ node-agent:
 cluster-metrics:
   externalLabels:
     cluster: "{{ .toutput.gke.cluster_name }}"
-  networkPolicy:
-    egress:
-      # All in-cluster scrape targets
-      - to:
-          - namespaceSelector: {}
-      # Loki and Mimir, in this cluster or in another one.
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-      # Kubernetes API server
-      - ports:
-          - port: 443
-            protocol: TCP
-        to:
-          - ipBlock:
-              cidr: "{{ .toutput.gke.master_ipv4_cidr_block }}"

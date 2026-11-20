@@ -60,6 +60,21 @@ apart by that label. Change the tenant with `node-agent.metrics.mimirTenantID`
 and `cluster-metrics.mimirTenantID`, and the labels with
 `node-agent.metrics.externalLabels` and `cluster-metrics.externalLabels`.
 
+### What is left out
+
+Two sources produce far more series than anything uses, so part of them is
+dropped before it is sent. Each list is a regex on the metric name and can be
+changed or emptied:
+
+| Input | Default | Why |
+|---|---|---|
+| `node-agent.metrics.cadvisorDropMetrics` | a short list of per-container cAdvisor metrics (`container_tasks_state`, `container_memory_failures_total`, file system internals, ...) | No bundled dashboard uses them. |
+| `cluster-metrics.apiserverDropMetrics` | `.+_bucket` | The API server's histogram buckets are the largest source of series in a cluster. Their `_sum` and `_count` stay, so rates and averages work; percentiles do not. |
+
+To keep the API server's request latency percentiles, list the histograms to
+drop instead of all of them, for example
+`apiserver_(response_sizes|watch_events_sizes|admission_.*|flowcontrol_.*)_bucket|etcd_request_duration_seconds_bucket|workqueue_.*_bucket`.
+
 ### Rules, ServiceMonitors and the CRDs
 
 `cluster-metrics` can work with the Prometheus Operator resources that many
@@ -115,11 +130,12 @@ URL of both parts. An input replaces what the agent would have looked up:
   the same host.
 - Set `mimirTenantID` on both parts when that Mimir expects another tenant
   than `anonymous`.
-- The NetworkPolicies of both parts allow egress to ports 80 and 8080 on any
-  address. An endpoint on another port, 443 for example, needs that port
-  added to `node-agent.networkPolicy.egress` and
+- The NetworkPolicies allow egress to ports 80 and 8080 on any address, and
+  `cluster-metrics` also to 443. An endpoint on another port, or on 443 for
+  `node-agent`, needs that port added to `node-agent.networkPolicy.egress` or
   `cluster-metrics.networkPolicy.egress`. These are lists, so the input has to
-  repeat the whole list of `agent_input_<cloud>.yaml` with the rule added.
+  repeat the whole list (`agent_input_<cloud>.yaml` for `node-agent`,
+  `values.yaml` for `cluster-metrics`) with the rule added.
 
 Loki works the same way, with `node-agent.logs.lokiEndpoint` (ending in
 `/loki/api/v1/push`) and `node-agent.logs.lokiTenantID`.

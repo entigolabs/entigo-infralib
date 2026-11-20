@@ -33,6 +33,10 @@ node-agent:
     externalLabels: {}
     scrapeInterval: "60s"
     selfMonitor: true
+    # cAdvisor metrics that are dropped before they are sent, as a regex on the metric name.
+    # These are per-container series that no bundled dashboard uses and that make up a large
+    # share of what cAdvisor exposes. Empty keeps everything.
+    cadvisorDropMetrics: "container_tasks_state|container_memory_failures_total|container_cpu_load_average_10s|container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)|container_threads_max|container_last_seen"
 
   logLevel: "warn"
 
@@ -197,9 +201,21 @@ node-agent:
           }
         }
 
+        {{- if .Values.metrics.cadvisorDropMetrics }}
+
+        prometheus.relabel "cadvisor" {
+          forward_to = [prometheus.remote_write.default.receiver]
+          rule {
+            source_labels = ["__name__"]
+            regex         = {{ .Values.metrics.cadvisorDropMetrics | quote }}
+            action        = "drop"
+          }
+        }
+        {{- end }}
+
         prometheus.scrape "cadvisor" {
           targets           = discovery.relabel.kubelet.output
-          forward_to        = [prometheus.remote_write.default.receiver]
+          forward_to        = [{{ if .Values.metrics.cadvisorDropMetrics }}prometheus.relabel.cadvisor.receiver{{ else }}prometheus.remote_write.default.receiver{{ end }}]
           job_name          = "cadvisor"
           scheme            = "https"
           metrics_path      = "/metrics/cadvisor"
@@ -541,6 +557,13 @@ cluster-metrics:
   selfMonitor: true
   logLevel: "warn"
 
+  # API server metrics that are dropped before they are sent, as a regex on the metric name.
+  # The API server's histograms are the largest source of series in a cluster, and no bundled
+  # dashboard charts their buckets: the _sum and _count of each histogram stay, so rates and
+  # averages still work, percentiles do not. Empty keeps everything; to keep the request
+  # latency percentiles list the other histograms instead of ".+_bucket".
+  apiserverDropMetrics: ".+_bucket"
+
   # Scrape Prometheus Operator ServiceMonitor / PodMonitor CRDs. Requires the CRDs to exist (set global.installPrometheusOperatorCRDs to true)
   serviceMonitors: false
   podMonitors: false
@@ -781,9 +804,21 @@ cluster-metrics:
           }
         }
 
+        {{- if .Values.apiserverDropMetrics }}
+
+        prometheus.relabel "apiserver" {
+          forward_to = [prometheus.remote_write.default.receiver]
+          rule {
+            source_labels = ["__name__"]
+            regex         = {{ .Values.apiserverDropMetrics | quote }}
+            action        = "drop"
+          }
+        }
+        {{- end }}
+
         prometheus.scrape "apiserver" {
           targets           = discovery.relabel.apiserver.output
-          forward_to        = [prometheus.remote_write.default.receiver]
+          forward_to        = [{{ if .Values.apiserverDropMetrics }}prometheus.relabel.apiserver.receiver{{ else }}prometheus.remote_write.default.receiver{{ end }}]
           job_name          = "kubernetes-apiservers"
           scheme            = "https"
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -936,6 +971,11 @@ cluster-metrics:
           - port: 80
             protocol: TCP
           - port: 8080
+            protocol: TCP
+      # The Kubernetes API, for discovery, and the API servers themselves, which are scraped
+      # at their own addresses outside the pod network.
+      - ports:
+          - port: 443
             protocol: TCP
 
   controller:
