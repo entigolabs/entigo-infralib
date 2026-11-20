@@ -49,6 +49,14 @@ prometheus-blackbox-exporter:
 
 prometheus:
   fullnameOverride: prometheus
+  scrapeConfigs:
+    kubernetes-nodes-cadvisor:
+      # The chart's cAdvisor job names the node only in `instance`. The Kubernetes dashboards
+      # select container metrics with node="...", as kube-state-metrics and the alloy module
+      # label them, so add it here too.
+      post_relabel_configs: |
+        - source_labels: [__meta_kubernetes_node_name]
+          target_label: node
   server:
     affinity:
       nodeAffinity:

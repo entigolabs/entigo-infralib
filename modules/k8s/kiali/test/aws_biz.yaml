@@ -1,0 +1,25 @@
+global:
+  gateway:
+    name: '{{ .toptin.aws-alb.global.externalGateway | required }}'
+kiali-server:
+  # biz keeps its metrics in Mimir and has no prometheus module. No tenant header: the
+  # Mimir gateway puts a request without one in the "anonymous" tenant, the one alloy writes to.
+  external_services:
+    prometheus:
+      url: "http://mimir-gateway.{{ .tmodule.mimir }}/prometheus"
+      # Kiali asks Prometheus for its scrape interval and retention. Mimir does not
+      # answer that, so they are stated here.
+      thanos_proxy:
+        enabled: true
+        scrape_interval: "60s"
+        retention_period: "7d"
+  server:
+    web_fqdn: "{{ .module.name }}.{{ .toutput.route53.pub_domain }}"
+  auth:
+    strategy: openid
+    openid:
+      client_id: "390876939822514159"
+      disable_rbac: true
+      issuer_uri: "https://entigo-dev-if3upz.zitadel.cloud"
+      scopes: ["openid", "profile", "email", "roles"]
+      username_claim: "email"
