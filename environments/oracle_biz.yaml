@@ -40,3 +40,4 @@ steps:
       - source: oracle-gateway
       - source: platform-apis
       - source: trivy
+      - source: trust-private-ca

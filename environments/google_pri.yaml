@@ -45,4 +45,5 @@ steps:
       - source: prometheus
       - source: tempo
       - source: trivy
+      - source: trust-private-ca
       - source: wireguard

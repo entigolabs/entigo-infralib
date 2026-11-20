@@ -48,3 +48,4 @@ steps:
       - source: mimir
       - source: prometheus
       - source: trivy
+      - source: trust-private-ca
