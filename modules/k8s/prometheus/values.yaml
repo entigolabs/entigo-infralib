@@ -50,7 +50,24 @@ prometheus-blackbox-exporter:
 prometheus:
   fullnameOverride: prometheus
   scrapeConfigs:
+    kubernetes-api-servers:
+      # The API server's histograms are the largest source of series in a cluster, and no
+      # bundled dashboard charts their buckets. The _sum and _count of each histogram stay,
+      # so rates and averages still work, percentiles do not. The same list as
+      # cluster-metrics.apiserverDropMetrics of the alloy module; set an empty list to keep
+      # everything.
+      metric_relabel_configs:
+        - source_labels: [__name__]
+          regex: ".+_bucket"
+          action: drop
     kubernetes-nodes-cadvisor:
+      # Per-container cAdvisor metrics that no bundled dashboard uses. The same list as
+      # node-agent.metrics.cadvisorDropMetrics of the alloy module; set an empty list to
+      # keep everything.
+      metric_relabel_configs:
+        - source_labels: [__name__]
+          regex: "container_tasks_state|container_memory_failures_total|container_cpu_load_average_10s|container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)|container_threads_max|container_last_seen"
+          action: drop
       # The chart's cAdvisor job names the node only in `instance`. The Kubernetes dashboards
       # select container metrics with node="...", as kube-state-metrics and the alloy module
       # label them, so add it here too.
