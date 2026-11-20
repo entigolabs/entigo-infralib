@@ -1,0 +1,6 @@
+apiVersion: v2
+name: trust-private-ca
+description: Lets the pods of the listed namespaces trust private CA certificates
+type: application
+version: 0.1.0
+appVersion: '1'

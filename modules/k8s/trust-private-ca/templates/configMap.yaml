@@ -1,0 +1,11 @@
+{{- if .Values.certificates }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  {{ .Release.Name }}.crt: |
+    {{- range $name, $certificate := .Values.certificates }}
+    {{- $certificate | trim | nindent 4 }}
+    {{- end }}
+{{- end }}

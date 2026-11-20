@@ -62,4 +62,5 @@ steps:
       - source: saml-proxy
       - source: tempo
       - source: trivy
+      - source: trust-private-ca
       - source: wireguard
