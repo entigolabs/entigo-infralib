@@ -57,7 +57,6 @@ steps:
       - source: istio-gateway
       - name: istio-system
         source: istio-istiod
-      - source: kiali
       - source: kube-state-metrics
       - source: kyverno
       - source: loki

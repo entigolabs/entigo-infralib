@@ -7,6 +7,10 @@ global:
     region: ""
     kmsKeyId: ""
     bucketLifecycleRules: []
+    # Moves the blocks an earlier version wrote to the root of the bucket under blocks/,
+    # see templates/aws/blocksPrefixJob.yaml. Nothing to do on a new installation, and can
+    # be turned off once it has run on an existing one.
+    migrateBlocksPrefix: true
 
 mimir-distributed:
   gateway:

@@ -8,13 +8,9 @@ node-agent:
       }
   metrics:
     enabled: true
-    externalLabels:
-      cluster: "{{ .toutput.oke.cluster_id }}-alloy"
 
 cluster-metrics:
   enabled: true
-  externalLabels:
-    cluster: "{{ .toutput.oke.cluster_id }}-alloy"
   rules: true
 
 global:

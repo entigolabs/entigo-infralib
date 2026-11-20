@@ -1,4 +1,7 @@
 node-agent:
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.oke.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -10,30 +13,16 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: loki
-                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node
       - ports:
-          - port: 80
+          - port: 10250
             protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
       - ports:
           - port: 443
             protocol: TCP
@@ -47,3 +36,25 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.oke.cluster_name }}"
+  networkPolicy:
+    egress:
+      # All in-cluster scrape targets
+      - to:
+          - namespaceSelector: {}
+      # Loki and Mimir, in this cluster or in another one.
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+      # Kubernetes API server
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.oke.kubernetes_service_ip }}/32"

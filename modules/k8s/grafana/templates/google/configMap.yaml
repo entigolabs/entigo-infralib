@@ -18,28 +18,46 @@ data:
   datasources.yaml: |
     apiVersion: 1
     datasources:
-      {{- if .Values.global.datasources.prometheus.module }}
+      {{- /* A datasource is added when its module is part of this platform (module, from the
+             agent) or when hostname points at an instance somewhere else; hostname wins. */}}
+      {{- $prometheus := .Values.global.datasources.prometheus.hostname }}
+      {{- if and (not $prometheus) .Values.global.datasources.prometheus.module }}
+      {{- $prometheus = printf "http://%s-server.%s" .Values.global.datasources.prometheus.module .Values.global.datasources.prometheus.module }}
+      {{- end }}
+      {{- $mimir := .Values.global.datasources.mimir.hostname }}
+      {{- if and (not $mimir) .Values.global.datasources.mimir.module }}
+      {{- $mimir = printf "http://mimir-gateway.%s/prometheus" .Values.global.datasources.mimir.module }}
+      {{- end }}
+      {{- $loki := .Values.global.datasources.loki.hostname }}
+      {{- if and (not $loki) .Values.global.datasources.loki.module }}
+      {{- $loki = printf "http://loki-gateway.%s" .Values.global.datasources.loki.module }}
+      {{- end }}
+      {{- if $prometheus }}
       - name: Prometheus
         type: prometheus
-        url: {{ .Values.global.datasources.prometheus.hostname }}
+        url: {{ $prometheus }}
         access: proxy
         isDefault: true
       {{- end }}
+      {{- if $mimir }}
       - name: Mimir
         type: prometheus
-        url: {{ .Values.global.datasources.mimir.hostname }}
+        url: {{ $mimir }}
         access: proxy
-        isDefault: {{ not .Values.global.datasources.prometheus.module }}
+        isDefault: {{ not $prometheus }}
         jsonData:
           httpHeaderName1: X-Scope-OrgID
         secureJsonData:
           httpHeaderValue1: {{ .Values.global.datasources.mimir.tenantHeader | quote }}
+      {{- end }}
+      {{- if $loki }}
       - name: Loki
         type: loki
         access: proxy
-        url: {{ .Values.global.datasources.loki.hostname }}
+        url: {{ $loki }}
         jsonData:
           maxLines: 1000
+      {{- end }}
       - name: Google Cloud Monitoring
         type: stackdriver
         access: proxy

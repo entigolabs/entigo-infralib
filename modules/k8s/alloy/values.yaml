@@ -25,8 +25,11 @@ node-agent:
   metrics:
     enabled: false
     mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
-    mimirTenantID: ""
-    
+    # Every cluster writes to the same Mimir tenant and is told apart by the
+    # `cluster` external label. "anonymous" is the tenant Mimir itself uses
+    # when multitenancy is switched off.
+    mimirTenantID: "anonymous"
+
     externalLabels: {}
     scrapeInterval: "60s"
     selfMonitor: true
@@ -479,28 +482,12 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: loki
-                app.kubernetes.io/component: gateway
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
       # Kubelet / cAdvisor on the local node
       - ports:
           - port: 10250
@@ -539,7 +526,8 @@ cluster-metrics:
   crds:
     create: false
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
-  mimirTenantID: ""
+  # See node-agent.metrics.mimirTenantID.
+  mimirTenantID: "anonymous"
 
   # Gateway the UI's HTTPRoute attaches to.
   createRoute: false
@@ -943,6 +931,12 @@ cluster-metrics:
       # All in-cluster scrape targets
       - to:
           - namespaceSelector: {}
+      # Loki and Mimir, in this cluster or in another one.
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
 
   controller:
     type: "deployment"
@@ -1187,28 +1181,12 @@ receiver:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: loki
-                app.kubernetes.io/component: gateway
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
       # Tempo
       - ports:
           - port: 443

@@ -51,11 +51,9 @@ steps:
         source: istio-istiod
       - source: karpenter
       - source: kiali
-      - source: kube-state-metrics
       - source: kyverno
       - source: loki
       - source: metrics-server
-      - source: mimir
       - name: platform-apis
         source: platform-apis
       - source: prometheus

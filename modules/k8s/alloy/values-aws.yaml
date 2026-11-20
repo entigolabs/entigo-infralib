@@ -14,28 +14,12 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: loki
-                app.kubernetes.io/component: gateway
-      - ports:
-          - port: 80
-            protocol: TCP
-          - port: 8080
-            protocol: TCP
-        to:
-          - namespaceSelector: {}
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: mimir
-                app.kubernetes.io/component: gateway
       # Kubelet / cAdvisor on the local node
       - ports:
           - port: 10250
@@ -54,6 +38,12 @@ cluster-metrics:
       # All in-cluster scrape targets
       - to:
           - namespaceSelector: {}
+      # Loki and Mimir, in this cluster or in another one.
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
       # Kubernetes API server
       - ports:
           - port: 443
@@ -61,16 +51,3 @@ cluster-metrics:
         to:
           - ipBlock:
               cidr: 172.20.0.1/32
-
-  ui:
-    ingress:
-      ingressClassName: "alb"
-      annotations:
-        alb.ingress.kubernetes.io/ssl-redirect: "443"
-        alb.ingress.kubernetes.io/group.name: internal
-        alb.ingress.kubernetes.io/healthcheck-path: /-/ready
-        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-        alb.ingress.kubernetes.io/scheme: internal
-        alb.ingress.kubernetes.io/success-codes: 200-499
-        alb.ingress.kubernetes.io/target-type: ip
-

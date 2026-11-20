@@ -1,3 +1,0 @@
-kiali-server:
-  server:
-    web_fqdn: "{{ .module.name }}.{{ .toutput.dns.pub_domain }}"

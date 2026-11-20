@@ -11,6 +11,11 @@ global:
   bucketName: "mimir"
   prefix: ""
 
+# Image of the Job in templates/aws/blocksPrefixJob.yaml.
+job:
+  image: docker.io/amazon/aws-cli
+  tag: "2.41.2"
+
 mimir-distributed:
   fullnameOverride: mimir
   serviceAccount:
