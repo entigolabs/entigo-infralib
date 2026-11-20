@@ -23,6 +23,9 @@ global:
     prometheus:
       module: ""
       hostname: ""
+      # The scrape interval of that Prometheus, the prometheus module's default. See
+      # mimir.scrapeInterval.
+      scrapeInterval: "60s"
 
 grafana:
   enabled: true

@@ -38,6 +38,8 @@ data:
         url: {{ $prometheus }}
         access: proxy
         isDefault: true
+        jsonData:
+          timeInterval: {{ .Values.global.datasources.prometheus.scrapeInterval | quote }}
       {{- end }}
       {{- if $mimir }}
       - name: Mimir
