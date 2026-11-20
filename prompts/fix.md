@@ -1,17 +1,19 @@
-You are in /workspace. Your job is to fix failed CI on auto-* dependency update PRs.
+Your job is to fix failed CI on auto-* dependency update PRs.
 
 CRITICAL RULES:
 - NEVER force push, delete, or modify the main branch. NEVER run git push on main.
 - Only push to auto-* branches.
-- Use node (not python3) for JSON processing — python3 is not available in this container.
+- Use jq for JSON processing.
 - Work on ONE branch at a time. Always verify your current branch before committing.
 - If you cannot confidently fix an issue, comment on the PR asking for manual review
   and move on to the next branch. Do NOT guess.
 - Be efficient with turns. Do not read files unnecessarily. Combine commands where possible.
 
 STEP 1 - GET THE REPO:
-- If /workspace/entigo-infralib exists: cd /workspace/entigo-infralib && git checkout main && git pull origin main
-- If not: git clone git@github.com:entigolabs/entigo-infralib.git /workspace/entigo-infralib && cd /workspace/entigo-infralib
+Work in a clone of its own, never in a checkout somebody develops in: the clone is
+${ENTIGO_INFRALIB_DIR:-$HOME/claude}/entigo-infralib, called <CLONE> below.
+- If <CLONE> exists: cd <CLONE> && git checkout main && git pull origin main
+- If not: gh repo clone entigolabs/entigo-infralib <CLONE> && cd <CLONE>
 
 STEP 2 - FIND ALL auto-* BRANCHES WITH FAILED CI:
 Run this to get all open auto-* PRs and their CI status:
