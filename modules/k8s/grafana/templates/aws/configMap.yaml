@@ -47,6 +47,7 @@ data:
         isDefault: {{ not $prometheus }}
         jsonData:
           httpHeaderName1: X-Scope-OrgID
+          timeInterval: {{ .Values.global.datasources.mimir.scrapeInterval | quote }}
         secureJsonData:
           httpHeaderValue1: {{ .Values.global.datasources.mimir.tenantHeader | quote }}
       {{- end }}

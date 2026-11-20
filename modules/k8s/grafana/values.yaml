@@ -16,6 +16,10 @@ global:
       hostname: ""
       # The tenant alloy writes to by default, see modules/k8s/alloy.
       tenantHeader: "anonymous"
+      # How often the metrics in Mimir are scraped, alloy's scrapeInterval. Grafana sizes
+      # the rate() windows of the dashboards from it; left at Grafana's own default of 15s
+      # a short time range gets a window with a single sample in it and an empty graph.
+      scrapeInterval: "60s"
     prometheus:
       module: ""
       hostname: ""
