@@ -123,7 +123,7 @@ stringData:
         local ecr_registry
         ecr_registry=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 24; }
         argocd_seed_registry_creds "repo-${ecr_registry%%.*}-${AWS_REGION}" "$namespace" "$ecr_registry" AWS \
-            shackle registry-token aws --region "$AWS_REGION"
+            get_ecr_token "$ecr_registry"
     fi
 
     # Seed temporary Artifact Registry credential secrets on Google until External Secrets takes over
@@ -204,18 +204,9 @@ helm_oci_login() {
     done
     # Oracle OCIR logins happen via the GIT_AUTH_SOURCE_* oci:// match above
     # (helm registry login), so no credential helper config is needed there.
-    if [ "$PROVIDER" == "aws" ]; then
-      # The account's own registry
-      local ecr_registry
-      ecr_registry=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 25; }
-      mkdir -p "$HOME/.config/helm/registry"
-      cat > "$HOME/.config/helm/registry/config.json" <<EOF
-{
-  "credHelpers": {
-    "${ecr_registry}": "ecr-login"
-  }
-}
-EOF
+    if [ "$PROVIDER" == "aws" ] && [[ "${repo%%/*}" == *.dkr.ecr.*.amazonaws.com* ]]; then
+      # Login with a token: no ecr-login credential helper needed in the image
+      get_ecr_token "${repo%%/*}" | helm registry login "${repo%%/*}" --username "$ECR_TOKEN_USERNAME" --password-stdin || { echo "Helm registry login failed for ${repo%%/*}"; exit 25; }
     elif [ "$PROVIDER" == "google" ] && [[ "${repo%%/*}" == *-docker.pkg.dev ]]; then
       # Login with an access token: the credential helper is part of the gcloud CLI
       get_gar_token | helm registry login "${repo%%/*}" --username "$GAR_TOKEN_USERNAME" --password-stdin || { echo "Helm registry login failed for ${repo%%/*}"; exit 25; }

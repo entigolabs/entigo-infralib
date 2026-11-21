@@ -80,6 +80,17 @@ get_ecr_registry() {
     shackle registries aws --region "$AWS_REGION"
 }
 
+# ECR login: a token with a fixed user name, valid for 12 hours
+# Usage: get_ecr_token [registry host], the region is the host's, else AWS_REGION
+ECR_TOKEN_USERNAME="AWS"
+get_ecr_token() {
+    local region="$AWS_REGION"
+    if [[ "$1" == *.dkr.ecr.*.amazonaws.com* ]]; then
+        region=$(echo "$1" | cut -d. -f4)
+    fi
+    shackle registry-token aws --region "$region"
+}
+
 # Get Kubernetes credentials
 get_k8s_credentials() {
     shackle kubeconfig aws --cluster "$KUBERNETES_CLUSTER_NAME" --region "$AWS_REGION"

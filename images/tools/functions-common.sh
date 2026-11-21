@@ -232,7 +232,14 @@ git_login() {
       # The account's own registry
       ECR_REGISTRY=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 25; }
 
-      tofurc_credentials "${ECR_REGISTRY}" '  docker_credentials_helper = "ecr-login"'
+      # A token instead of the ecr-login credential helper, so that the step
+      # needs nothing but shackle. The helper asked for a token only when a
+      # module came from the registry; an identity that may not log in to it
+      # gets no credentials block and fails there, as before.
+      if ECR_TOKEN=$(get_ecr_token "${ECR_REGISTRY}" 2>/dev/null); then
+        tofurc_credentials "${ECR_REGISTRY}" "  username = \"${ECR_TOKEN_USERNAME}\"
+  password = \"${ECR_TOKEN}\""
+      fi
     elif [ ! -z "$GOOGLE_REGION" ]; then
       # An access token instead of a credential helper: the helper is part of
       # the gcloud CLI. The token is valid for an hour, and OpenTofu reads
