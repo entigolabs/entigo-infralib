@@ -18,13 +18,13 @@ copy_from_bucket() {
     local bucket="$1"
     local source_path="$2"
     local dest_path="$3"
-    local exclude_pattern=""
+    local exclude=()
 
     if [ "$TERRAFORM_CACHE" != "true" ]; then
-        exclude_pattern="-x \.terraform/.*"
+        exclude=(--exclude '.terraform/*')
     fi
 
-    gsutil -m -q rsync -r ${exclude_pattern} "gs://${bucket}/${source_path}" "${dest_path}"
+    shackle cp "gs://${bucket}/${source_path}" "${dest_path}" --recursive --quiet "${exclude[@]}"
 }
 
 # Copy file to bucket
@@ -34,7 +34,7 @@ copy_to_bucket() {
     local bucket="$2"
     local dest_path="$3"
 
-    gsutil -m -q cp "${local_file}" "gs://${bucket}/${dest_path}"
+    shackle cp "${local_file}" "gs://${bucket}/${dest_path}" --quiet
 }
 
 # Sync terraform cache to bucket
@@ -43,7 +43,7 @@ sync_terraform_cache() {
     local prefix="$2"
 
     echo "Syncing .terraform back to bucket"
-    gsutil -m -q rsync -d -r .terraform "gs://${bucket}/steps/${prefix}/.terraform"
+    shackle sync .terraform "gs://${bucket}/steps/${prefix}/.terraform" --delete --quiet
 }
 
 # Fetch plan artifact for apply stage
@@ -55,7 +55,7 @@ fetch_plan_artifact() {
         fi
         cd "/tmp/project/steps/$TF_VAR_prefix"
     else
-        gsutil -m -q cp "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz" /project/tf.tar.gz
+        shackle cp "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz" /project/tf.tar.gz --quiet
         if [ $? -ne 0 ]; then
             echo "Unable to find artifacts from plan stage! gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz"
             exit 4
@@ -71,12 +71,18 @@ upload_plan_artifact() {
       cd ../..
       tar -czf tf.tar.gz "steps/$TF_VAR_prefix"
       echo "Copy plan to Google Storage"
-      gsutil -m -q cp tf.tar.gz "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz"
+      shackle cp tf.tar.gz "gs://${INFRALIB_BUCKET}/${TF_VAR_prefix}-tf.tar.gz" --quiet
       upload_plan_json
     fi
 }
 
+# Artifact Registry login: an access token with a fixed user name
+GAR_TOKEN_USERNAME="oauth2accesstoken"
+get_gar_token() {
+    shackle registry-token google --region "$GOOGLE_REGION"
+}
+
 # Get Kubernetes credentials
 get_k8s_credentials() {
-    gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --region $GOOGLE_REGION --project $GOOGLE_PROJECT
+    shackle kubeconfig google --cluster "$KUBERNETES_CLUSTER_NAME" --region "$GOOGLE_REGION" --project "$GOOGLE_PROJECT"
 }
