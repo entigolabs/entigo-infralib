@@ -120,9 +120,10 @@ stringData:
     # ECR tokens are valid for 12 hours, ESO adopts and keeps the secrets refreshed afterwards
     # The names and urls must match the ExternalSecrets in modules/k8s/external-secrets/templates/aws/ecr.yaml
     if [ "$PROVIDER" == "aws" ]; then
-        local account_id=$(aws sts get-caller-identity --query Account --output text)
-        argocd_seed_registry_creds "repo-${account_id}-${AWS_REGION}" "$namespace" "${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com" AWS \
-            aws ecr get-login-password --region $AWS_REGION
+        local ecr_registry
+        ecr_registry=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 24; }
+        argocd_seed_registry_creds "repo-${ecr_registry%%.*}-${AWS_REGION}" "$namespace" "$ecr_registry" AWS \
+            shackle registry-token aws --region "$AWS_REGION"
     fi
 
     # Seed temporary Artifact Registry credential secrets on Google until External Secrets takes over
@@ -130,7 +131,7 @@ stringData:
     # The names and urls must match the ExternalSecrets in modules/k8s/external-secrets/templates/google/gar.yaml
     if [ "$PROVIDER" == "google" ]; then
         argocd_seed_registry_creds "repo-${GOOGLE_PROJECT}-${GOOGLE_REGION}" "$namespace" "${GOOGLE_REGION}-docker.pkg.dev/${GOOGLE_PROJECT}" oauth2accesstoken \
-            gcloud auth print-access-token
+            get_gar_token
     fi
     # Seed temporary ACR credential secrets on Azure until External Secrets takes over
     # ACR refresh tokens are valid for 3 hours, ESO adopts and keeps the secrets refreshed afterwards
@@ -204,25 +205,20 @@ helm_oci_login() {
     # Oracle OCIR logins happen via the GIT_AUTH_SOURCE_* oci:// match above
     # (helm registry login), so no credential helper config is needed there.
     if [ "$PROVIDER" == "aws" ]; then
-      # Get current account number
-      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      # The account's own registry
+      local ecr_registry
+      ecr_registry=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 25; }
       mkdir -p "$HOME/.config/helm/registry"
       cat > "$HOME/.config/helm/registry/config.json" <<EOF
 {
   "credHelpers": {
-    "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com": "ecr-login"
+    "${ecr_registry}": "ecr-login"
   }
 }
 EOF
-    elif [ "$PROVIDER" == "google" ]; then
-      mkdir -p "$HOME/.config/helm/registry"
-      cat > "$HOME/.config/helm/registry/config.json" <<EOF
-{
-  "credHelpers": {
-    "${GOOGLE_REGION}-docker.pkg.dev": "gcloud"
-  }
-}
-EOF
+    elif [ "$PROVIDER" == "google" ] && [[ "${repo%%/*}" == *-docker.pkg.dev ]]; then
+      # Login with an access token: the credential helper is part of the gcloud CLI
+      get_gar_token | helm registry login "${repo%%/*}" --username "$GAR_TOKEN_USERNAME" --password-stdin || { echo "Helm registry login failed for ${repo%%/*}"; exit 25; }
     elif [ "$PROVIDER" == "azure" ] && [[ "${repo%%/*}" == *.azurecr.io ]]; then
       # No ACR credential helper in the image, login with a refresh token instead
       get_acr_token "${repo%%/*}" | helm registry login "${repo%%/*}" --username "$ACR_TOKEN_USERNAME" --password-stdin || { echo "Helm registry login failed for ${repo%%/*}"; exit 25; }

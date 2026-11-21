@@ -229,12 +229,17 @@ git_login() {
   password = \"${ACR_TOKEN}\""
       done
     elif [ -n "$AWS_REGION" ]; then
-      # Get current account number
-      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      # The account's own registry
+      ECR_REGISTRY=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 25; }
 
-      tofurc_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" '  docker_credentials_helper = "ecr-login"'
+      tofurc_credentials "${ECR_REGISTRY}" '  docker_credentials_helper = "ecr-login"'
     elif [ ! -z "$GOOGLE_REGION" ]; then
-      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" '  docker_credentials_helper = "gcloud"'
+      # An access token instead of a credential helper: the helper is part of
+      # the gcloud CLI. The token is valid for an hour, and OpenTofu reads
+      # modules from the registry during init only.
+      GAR_TOKEN=$(get_gar_token) || { echo "Artifact Registry login failed for ${GOOGLE_REGION}-docker.pkg.dev"; exit 25; }
+      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" "  username = \"${GAR_TOKEN_USERNAME}\"
+  password = \"${GAR_TOKEN}\""
     fi
 }
 

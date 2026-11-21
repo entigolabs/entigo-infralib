@@ -7,6 +7,10 @@ ARG TARGETARCH
 ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.22.1 ARGOCD_CLI=v3.6.1 OPENTOFU_VERSION=1.13.9
 
 COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
+# shackle (https://github.com/entigolabs/shackle): kubeconfig and cluster
+# tokens, registry credentials and bucket copy for every cloud from one static
+# binary. The step scripts use it instead of the cloud CLIs.
+COPY --from=ghcr.io/entigolabs/shackle:v0.1.4@sha256:7d4629e9856d45d03625b7eea9e790afb21c5476c185bda62b8c74453702d2b4 /usr/local/bin/shackle /entigo-bin/shackle
 
 RUN apk --no-cache add \
     unzip \
