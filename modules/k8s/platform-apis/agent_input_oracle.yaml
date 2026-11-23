@@ -25,7 +25,6 @@ platform-apis:
     environmentConfig:
       oracleProvider: "{{ .tmodule.crossplane-oracle }}"
       secretStoreNamespace: not-used-on-oracle
-      amiReleaseVersion: not-used-on-oracle
   database:
     environmentConfig:
       esClusterSecretStore: not-used-on-oracle

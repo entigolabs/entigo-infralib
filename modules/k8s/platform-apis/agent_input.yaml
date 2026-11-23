@@ -35,7 +35,6 @@ platform-apis:
         cidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
-      amiReleaseVersion: '{{ .toutput.eks.ami_release_version }}'
       secretStoreNamespace: "{{ .tmodule.external-secrets }}"
   database:
     environmentConfig:
