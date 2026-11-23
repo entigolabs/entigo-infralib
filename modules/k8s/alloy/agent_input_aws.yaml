@@ -52,3 +52,8 @@ cluster-metrics:
   externalLabels:
     cluster: "{{ .toutput.eks.cluster_name }}"
   createRoute: "{{ .tinput.aws-alb.global.createRoute }}"
+
+receiver:
+  faro:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"

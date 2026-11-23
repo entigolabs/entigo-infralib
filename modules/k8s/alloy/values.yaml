@@ -1045,6 +1045,9 @@ receiver:
     # Point this at a dedicated instance, or at least to a distinct tenant.
     lokiEndpoint: ""
     lokiTenantID: ""
+    # Labels added to every log stream, e.g. {cluster: prod}. The agent sets `cluster` to
+    # the name of the cluster, as for node-agent.logs.externalLabels.
+    externalLabels: {}
 
   logLevel: "warn"
 
@@ -1061,6 +1064,13 @@ receiver:
         {{- if .Values.faro.enabled }}
 
         loki.write "default" {
+          {{- if .Values.faro.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.faro.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
           endpoint {
             url = {{ required "receiver.faro.lokiEndpoint must be set when receiver.faro.enabled is true" .Values.faro.lokiEndpoint | quote }}
             {{- if .Values.faro.lokiTenantID }}

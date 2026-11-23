@@ -43,3 +43,8 @@ node-agent:
 cluster-metrics:
   externalLabels:
     cluster: "{{ .toutput.oke.cluster_name }}"
+
+receiver:
+  faro:
+    externalLabels:
+      cluster: "{{ .toutput.oke.cluster_name }}"
