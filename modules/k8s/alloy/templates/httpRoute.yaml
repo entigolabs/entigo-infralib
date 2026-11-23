@@ -1,0 +1,28 @@
+{{- $clusterMetrics := index .Values "cluster-metrics" }}
+{{- if and $clusterMetrics.enabled $clusterMetrics.createRoute }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-cluster-metrics-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ $clusterMetrics.gateway.name }}
+      namespace: {{ $clusterMetrics.gateway.namespace }}
+      sectionName: https
+  hostnames:
+    - {{ required "cluster-metrics.ui.host must be set when cluster-metrics.createRoute is true" $clusterMetrics.ui.host | quote }}
+  rules:
+    - backendRefs:
+        - group: ''
+          kind: Service
+          name: {{ .Release.Name }}-cluster-metrics
+          port: {{ $clusterMetrics.listenPort | default 12345 }}
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}

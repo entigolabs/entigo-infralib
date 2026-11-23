@@ -26,12 +26,16 @@ func TestMimir(t *testing.T) {
 			require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, pod, 20, 6*time.Second), "%s pod error", pod)
 		}
 
+		if e.Prefix == "biz" {
+			require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, "mimir-alertmanager-0", 20, 6*time.Second), "mimir-alertmanager-0 pod error")
+		}
+
 		// Mimir writes a cluster seed file to its blocks store on startup, which proves
 		// the pods can write to the bucket with their cloud identity.
 		switch e.Cloud {
 		case env.CloudAWS:
 			bucket := fmt.Sprintf("%s-%s-%s-%s", e.Prefix, c.Namespace, aws.AccountID(t, e), e.MustRegion(t))
-			require.NoError(t, aws.WaitUntilBucketFileAvailable(t, e.MustRegion(t), bucket, "__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in AWS bucket")
+			require.NoError(t, aws.WaitUntilBucketFileAvailable(t, e.MustRegion(t), bucket, "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in AWS bucket")
 		case env.CloudGoogle:
 			require.NoError(t, google.WaitUntilBucketFileAvailable(t, fmt.Sprintf("%s-%s-metrics", e.Prefix, c.Namespace), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in Google bucket")
 		case env.CloudAzure:
