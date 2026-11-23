@@ -20,6 +20,9 @@ node-agent:
     enabled: true
     lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
     lokiTenantID: ""
+    # Labels added to every log stream, e.g. {cluster: prod}. The agent sets `cluster` to
+    # the name of the cluster, the same value the metrics carry.
+    externalLabels: {}
     extraProcessStages: ""
 
   metrics:
@@ -350,6 +353,13 @@ node-agent:
         }
 
         loki.write "default" {
+          {{- if .Values.logs.externalLabels }}
+          external_labels = {
+            {{- range $k, $v := .Values.logs.externalLabels }}
+            {{ $k }} = {{ $v | quote }},
+            {{- end }}
+          }
+          {{- end }}
           endpoint {
             url = {{ .Values.logs.lokiEndpoint | quote }}
             {{- if .Values.logs.lokiTenantID }}

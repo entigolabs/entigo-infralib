@@ -4,6 +4,9 @@ global:
     privateSubnetCidrs: "{{ .toutput.vpc.private_subnets_cidr_blocks }}"
     serviceSubnetCidrs: "{{ .toutput.vpc.service_subnets_cidr_blocks }}"
 node-agent:
+  logs:
+    externalLabels:
+      cluster: "{{ .toutput.eks.cluster_name }}"
   metrics:
     externalLabels:
       cluster: "{{ .toutput.eks.cluster_name }}"

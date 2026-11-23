@@ -139,3 +139,6 @@ URL of both parts. An input replaces what the agent would have looked up:
 
 Loki works the same way, with `node-agent.logs.lokiEndpoint` (ending in
 `/loki/api/v1/push`) and `node-agent.logs.lokiTenantID`.
+
+Log streams carry the same `cluster` label as the metrics, set by the agent;
+change it with `node-agent.logs.externalLabels`.

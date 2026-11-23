@@ -1,4 +1,7 @@
 node-agent:
+  logs:
+    externalLabels:
+      cluster: "{{ .toutput.aks.cluster_name }}"
   metrics:
     externalLabels:
       cluster: "{{ .toutput.aks.cluster_name }}"
