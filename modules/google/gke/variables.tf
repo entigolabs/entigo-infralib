@@ -4,7 +4,7 @@ variable "prefix" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.35."
+  default = "1.36."
 }
 
 variable "maintenance_exclusions" {
@@ -209,6 +209,16 @@ variable "gke_main_max_surge" {
   default = 1
 }
 
+variable "gke_main_auto_repair" {
+  type    = bool
+  default = true
+}
+
+variable "gke_main_auto_upgrade" {
+  type    = bool
+  default = false
+}
+
 variable "gke_mon_min_size" {
   type     = number
   nullable = false
@@ -261,6 +271,16 @@ variable "gke_mon_max_surge" {
   default = 1
 }
 
+variable "gke_mon_auto_repair" {
+  type    = bool
+  default = true
+}
+
+variable "gke_mon_auto_upgrade" {
+  type    = bool
+  default = false
+}
+
 variable "gke_tools_min_size" {
   type     = number
   nullable = false
@@ -311,6 +331,16 @@ variable "gke_tools_volume_type" {
 variable "gke_tools_max_surge" {
   type    = number
   default = 1
+}
+
+variable "gke_tools_auto_repair" {
+  type    = bool
+  default = true
+}
+
+variable "gke_tools_auto_upgrade" {
+  type    = bool
+  default = false
 }
 
 variable "gke_managed_node_groups_extra" {

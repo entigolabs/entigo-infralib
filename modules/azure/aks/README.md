@@ -46,14 +46,22 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   the cluster VNet, so hub/on-prem DNS can't resolve several clusters; one central zone per region, linked to the hub
   VNets, resolves all of them. The module gives the cluster identity Private DNS Zone Contributor on the zone and
   Network Contributor on the VNet, AKS links the zone to the cluster VNet.
+* Private link cluster instead of API Server VNet Integration: `api_server_vnet_integration_enabled: false` and
+  `api_server_subnet_id: ""` (vpc `aks_subnets: "[]"` leaves the subnet out); a central zone is then
+  `privatelink.<location>.azmk8s.io`.
+* `cluster_identity_id`: resource ID of the cluster's user assigned identity, default the prefix in the agent's
+  resource group, create time only. `create_cluster_identity: false` uses an existing identity instead of creating it;
+  it gets the same roles as a created one.
+* `create_private_dns_zone_role: false`: the module doesn't assign Private DNS Zone Contributor on the zone, for an
+  existing identity that has it already (e.g. a central zone in another team's subscription).
 * Access: the identity that installs the module (normally the agent job identity) gets Azure Kubernetes Service RBAC
   Cluster Admin and keeps it, a later run by someone else doesn't replace it. Others who run the module or need admin
   access go to `admin_object_ids` (not the installing identity, the plan rejects it).
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
 * `agc_subnet_ids` (vpc `public_agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one
-  per cluster, service account `azure-alb-system/alb-controller-sa`): Reader + AppGw for Containers Configuration
-  Manager on the node resource group, Network Contributor on every AGC subnet (one Application Gateway for Containers
-  per /24). Output `alb_controller_client_id`.
+  per cluster, service account `alb-controller-sa` in `alb_controller_namespace`, default `azure-gateway`): Reader +
+  AppGw for Containers Configuration Manager on the node resource group, Network Contributor on every AGC subnet (one
+  Application Gateway for Containers per /24). Output `alb_controller_client_id`.
   The azure/agc modules (bring-your-own AGCs with private frontends) give the same identity (output
   `alb_controller_principal_id`) Configuration Manager on their AGC and Network Contributor on their subnet.
 * `lb_subnet_ids` (default none): Network Contributor for the cluster identity on every listed subnet other than the

@@ -20,7 +20,7 @@ spec:
 ---
 # Replaces IngressClassParams {{ $name }}: scheme, subnets, tags
 # Also carries settings that used to be per-Ingress annotations but apply to
-# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn, inbound-cidrs
+# the whole ALB: ssl-policy, load-balancer-attributes, wafv2-acl-arn, inbound-cidrs, security-groups
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:
@@ -97,6 +97,20 @@ spec:
   {{- with . | toString | trim | trimAll "\"" }}{{ $sourceRanges = append $sourceRanges . }}{{- end }}
   {{- end }}
   {{- end }}
+  {{- /* Same parsing for the user-supplied security groups */}}
+  {{- $securityGroups := list }}
+  {{- if kindIs "string" $cfg.securityGroups }}
+  {{- range split "," $cfg.securityGroups }}
+  {{- with . | trim | trimAll "\"" }}{{ $securityGroups = append $securityGroups . }}{{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $cfg.securityGroups }}
+  {{- with . | toString | trim | trimAll "\"" }}{{ $securityGroups = append $securityGroups . }}{{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if and $sourceRanges $securityGroups }}
+  {{- fail (printf "gateways.%s: sourceRanges and securityGroups are mutually exclusive, the controller ignores sourceRanges when securityGroups is set" $name) }}
+  {{- end }}
   {{- if $sourceRanges }}
   # Replaces alb.ingress.kubernetes.io/inbound-cidrs: only these CIDRs may reach the ALB,
   # empty allows everything (0.0.0.0/0)
@@ -104,6 +118,17 @@ spec:
     {{- range $sourceRanges }}
     - {{ . | quote }}
     {{- end }}
+  {{- end }}
+  {{- if $securityGroups }}
+  # Replaces alb.ingress.kubernetes.io/security-groups: the ALB uses these security groups
+  # instead of one managed by the controller, so inbound rules are the user's responsibility.
+  # The controller still adds the rules on the node/pod security group that let the ALB
+  # reach the targets (alb.ingress.kubernetes.io/manage-backend-security-group-rules)
+  securityGroups:
+    {{- range $securityGroups }}
+    - {{ . | quote }}
+    {{- end }}
+  manageBackendSecurityGroupRules: true
   {{- end }}
   {{- if $cfg.subnets }}
   loadBalancerSubnets:

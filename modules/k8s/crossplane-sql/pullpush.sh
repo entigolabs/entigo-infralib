@@ -1,28 +1,10 @@
 #!/bin/bash
+# Mirrors this module's provider packages and pins them by digest, see ../provider-images.sh:
+#   pullpush.sh digests   write values-images.yaml (after changing VERSION or PROVIDERS)
+#   pullpush.sh           copy the packages to the mirrors
 
-if [ "$1" == "" ]; then
-    VERSION="v0.16.2"
-    echo "Defaulting to version $VERSION"
-else
-    VERSION=$1
-fi
-
+VERSION="v0.16.2"
+REGISTRY="xpkg.upbound.io/crossplane-contrib"
 PROVIDERS="provider-sql"
 
-for provider in $PROVIDERS; do
-    SOURCE="xpkg.upbound.io/crossplane-contrib/$provider:$VERSION"
-    DEST="entigolabs/$provider:$VERSION"
-    if docker manifest inspect $DEST > /dev/null 2>&1; then
-        echo "Skipping $provider - already exists at $DEST"
-        continue
-    fi
-    echo "Copying $SOURCE to $DEST"
-    docker buildx imagetools create --tag $DEST $SOURCE
-    
-    if [ $? -ne 0 ]; then
-        echo "Failed to copy $SOURCE to $DEST"
-        exit 2
-    fi
-done
-
-echo "All providers copied successfully"
+source "$(dirname "$0")/../provider-images.sh"

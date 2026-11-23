@@ -16,5 +16,9 @@ func TestTrivy(t *testing.T) {
 
 		// The trivy-operator subchart names its deployment <release>-trivy-operator.
 		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-trivy-operator", 20, 6*time.Second), "trivy-operator deployment error")
+
+		// The built-in trivy server only answers its readiness probe once it has downloaded
+		// the vulnerability database, on AWS through the ECR pull through cache.
+		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, "trivy-server-0", 50, 6*time.Second), "trivy-server pod error")
 	})
 }

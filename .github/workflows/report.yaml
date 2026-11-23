@@ -1,5 +1,5 @@
 # Reports the updates available to the modules' dependencies every Monday
-# morning: one job and one Slack message per kind (k8s, aws, google, oracle),
+# morning: one job and one Slack message per kind (k8s, aws, google, azure, oracle),
 # through the shared workflow of entigo-infralib-test, so that the long k8s
 # list no longer buries the cloud ones. report/aws.sh adds the EKS AMI release
 # versions, which the framework knows nothing about. Dispatch with `kinds` to
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       kinds:
-        description: comma separated kinds (k8s, aws, google, oracle); empty for all
+        description: comma separated kinds (k8s, aws, google, azure, oracle); empty for all
         type: string
         default: ''
 

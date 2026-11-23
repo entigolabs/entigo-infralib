@@ -1,3 +1,33 @@
 global:
   cloudProvider: aws
   providerConfigRefName: crossplane-aws
+
+node-agent:
+  networkPolicy:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+      # Kubelet / cAdvisor on the local node
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.1/32

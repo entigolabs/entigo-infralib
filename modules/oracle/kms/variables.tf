@@ -25,7 +25,7 @@ variable "vault_id" {
 }
 
 variable "vault_name" {
-  description = "Display name for the vault this module creates. Defaults to <prefix>-<random suffix>. Ignored when create_vault is false, which takes vault_id instead."
+  description = "Display name for the vault this module creates. Defaults to <prefix>, see name_salt. Ignored when create_vault is false, which takes vault_id instead."
   type        = string
   default     = ""
 }
@@ -56,27 +56,35 @@ variable "vault_endpoint_wait" {
 }
 
 variable "create_keys" {
-  description = "Create the data/config/telemetry/ca keys. Set false to adopt existing keys named by data_key_name/config_key_name/telemetry_key_name/ca_key_name instead of creating a fresh (randomly suffixed) set on every apply."
+  description = "Create the data/config/telemetry/ca keys. Set false to adopt existing keys named by data_key_name/config_key_name/telemetry_key_name/ca_key_name."
   type        = bool
   default     = true
 }
 
 variable "data_key_name" {
-  description = "Display name of the data key. Defaults to <prefix>-data-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  description = "Display name of the data key. Defaults to <prefix>-data, see name_salt. When create_keys is false this must name an existing ENABLED key in the vault."
   type        = string
   default     = ""
 }
 
 variable "config_key_name" {
-  description = "Display name of the config key. Defaults to <prefix>-config-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  description = "Display name of the config key. Defaults to <prefix>-config, see name_salt. When create_keys is false this must name an existing ENABLED key in the vault."
   type        = string
   default     = ""
 }
 
 variable "telemetry_key_name" {
-  description = "Display name of the telemetry key. Defaults to <prefix>-telemetry-<random suffix> when creating; when create_keys is false this must name an existing ENABLED key in the vault."
+  description = "Display name of the telemetry key. Defaults to <prefix>-telemetry, see name_salt. When create_keys is false this must name an existing ENABLED key in the vault."
   type        = string
   default     = ""
+}
+
+# The suffix lives in terraform state, so a nuke that takes the state bucket with it gets a new
+# one on the next run, and the kept keys then have to be adopted by their old names.
+variable "name_salt" {
+  description = "Append a random suffix to the default vault and key names. Leave false for stable names that a rebuild adopts without pinning them."
+  type        = bool
+  default     = false
 }
 
 variable "create_ca_key" {
@@ -86,7 +94,7 @@ variable "create_ca_key" {
 }
 
 variable "ca_key_name" {
-  description = "Display name of the CA signing key. Defaults to <prefix>-ca-<random suffix> when creating; when create_keys is false and create_ca_key is true, this must name an existing ENABLED key in the vault."
+  description = "Display name of the CA signing key. Defaults to <prefix>-ca, see name_salt. When create_keys is false and create_ca_key is true, this must name an existing ENABLED key in the vault."
   type        = string
   default     = ""
 }

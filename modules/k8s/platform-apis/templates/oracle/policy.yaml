@@ -1,0 +1,28 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- $compartment := .Values.oci.compartmentId }}
+{{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = '%s'" .Values.oci.clusterId .Values.oci.crossplaneNamespace .Values.oci.crossplaneServiceAccount }}
+apiVersion: identity.oci.upbound.io/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  forProvider:
+    compartmentId: {{ $compartment }}
+    name: {{ .Release.Name }}
+    description: Grants the Crossplane OCI provider permission to manage Zone node pools, via OKE Workload Identity
+    freeformTags:
+      created-by: "entigo-infralib"
+    statements:
+      - "Allow any-user to manage cluster-node-pools in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to manage instance-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to use subnets in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to use vnics in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to use network-security-groups in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to read virtual-network-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to inspect compartments in compartment id {{ $compartment }} where all { {{ $wl }} }"
+  providerConfigRef:
+    name: {{ .Values.oci.providerConfigRefName }}
+{{- end }}

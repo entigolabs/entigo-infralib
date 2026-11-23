@@ -32,6 +32,7 @@ gateways:
   #   sslRedirect: true
   #   subnets: "subnet-aaa,subnet-bbb"
   #   sourceRanges: []
+  #   securityGroups: []
 ```
 
 Here the `partner` gateway would be created in addition to the defaults.
@@ -103,6 +104,34 @@ gateways:
 
 An empty list or string allows everything.
 
+### Security groups
+
+By default the controller creates and manages the security group of each
+gateway ALB. `securityGroups` attaches existing security groups instead, per
+gateway. It is the Gateway API equivalent of the
+`alb.ingress.kubernetes.io/security-groups` Ingress annotation and takes the
+same shapes as `sourceRanges`, a list or a comma-separated string:
+
+```yaml
+gateways:
+  partner:
+    enabled: true
+    scheme: internet-facing
+    securityGroups:
+      - sg-0123456789abcdef0
+  internal:
+    securityGroups: '{{ .toutput.eks.cluster_primary_security_group_id }}'
+```
+
+With `securityGroups` set the controller no longer manages a frontend security
+group, so the inbound rules of the given groups decide who can reach the ALB
+and `sourceRanges` has no effect. The chart therefore refuses a gateway that
+sets both. The controller still manages the rules on the node and pod security
+group that let the ALB reach the targets
+(`manageBackendSecurityGroupRules: true`).
+
+An empty list or string keeps the controller-managed security group.
+
 ### Selecting which gateway infralib modules use
 
 Which gateway the infralib modules attach to for internal and external
@@ -164,6 +193,31 @@ By default the Gateway ALBs do not send their `Server: awselb/2.0` response head
 ```yaml
 serverHeader: true
 ```
+
+### TLS security policy
+
+`sslPolicy` sets the [ELB security policy](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html)
+of the HTTPS listener, which decides the TLS versions and ciphers the ALB accepts from clients.
+The `internal`, `service` and `external` gateways default to `ELBSecurityPolicy-TLS13-1-3-2021-06`,
+which accepts TLS 1.3 only. Clients that can not do TLS 1.3 fail the handshake.
+
+To allow TLS 1.2 again for a gateway that has to serve older clients:
+
+```yaml
+gateways:
+  external:
+    sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+```
+
+| Policy                                     | TLS versions |
+| ------------------------------------------ | ------------ |
+| `ELBSecurityPolicy-TLS13-1-3-2021-06`      | 1.3 only     |
+| `ELBSecurityPolicy-TLS13-1-2-2021-06`      | 1.2 and 1.3  |
+| `ELBSecurityPolicy-TLS13-1-2-Ext2-2021-06` | 1.2 and 1.3, more 1.2 ciphers for older clients |
+
+Custom gateways get no default, set `sslPolicy` on them as well. `sslPolicy: ""` sets no policy, the ALB then uses the controller default `ELBSecurityPolicy-2016-08`,
+which allows TLS 1.0 to 1.2 and no TLS 1.3. The Ingress classes are not affected, their ALBs keep
+the controller default.
 
 
 # Migrating from Ingress to Gateway API (aws-alb module)
@@ -407,6 +461,9 @@ The CIDRs apply to every route on that gateway. If only some applications
 need the restriction, give them a custom gateway with its own `sourceRanges`
 and attach their HTTPRoutes to it, see
 [Default gateways and custom gateways](#default-gateways-and-custom-gateways).
+
+`alb.ingress.kubernetes.io/security-groups` moves the same way, to
+`gateways.<name>.securityGroups`, see [Security groups](#security-groups).
 
 Notes:
 

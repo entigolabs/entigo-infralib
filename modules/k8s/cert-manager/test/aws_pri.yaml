@@ -1,0 +1,14 @@
+# cert-manager alone, the AWS default: no ACME ClusterIssuer, the gateways use ACM certificates. The
+# ClusterIssuer is exercised on aws_biz.
+# The aws-privateca-issuer subchart with its IRSA role and the AWSPCAClusterIssuer. The account has no private CA, so
+# the ARN is a placeholder: the issuer gets Ready from its IRSA credentials alone and no certificate is issued from it.
+global:
+  aws:
+    privateCA:
+      enabled: true
+      arns:
+        - arn:aws:acm-pca:eu-north-1:123456789012:certificate-authority/00000000-0000-0000-0000-000000000000
+      # cert-manager-approver-policy with the CertificateRequestPolicy of the AWS Private CA issuers. No allowed, so
+      # it is the default private domain of route53: the test requests one name under it and one outside of it
+      policy:
+        enabled: true

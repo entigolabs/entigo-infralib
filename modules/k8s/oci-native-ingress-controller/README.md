@@ -94,10 +94,10 @@ Unlike every other `modules/k8s/*` module, this one does **not** use a `dependen
 entry + `Chart.lock` pointing at a Helm chart repository - NIC has no chart repository,
 only an in-repo chart at `github.com/oracle/oci-native-ingress-controller/helm/oci-native-ingress-controller`.
 `charts/oci-native-ingress-controller/` is a byte-for-byte copy of that chart at tag
-`v1.4.5`, minus `templates/webhook.yaml` (deviation 1 below). Nothing in it is edited;
-every other deviation lives in this module. To upgrade: replace the directory with
-upstream's at the new tag, delete `templates/webhook.yaml` again, and bump the dependency
-version in `Chart.yaml`.
+`v1.4.5`, minus `templates/webhook.yaml` (deviation 1 below) and with one patched template
+(deviation 4). Every other deviation lives in this module. To upgrade: replace the directory
+with upstream's at the new tag, delete `templates/webhook.yaml` again, re-apply deviation 4,
+and bump the dependency version in `Chart.yaml`.
 
 Redistributing it here is permitted: the chart is Oracle's own, under the Universal
 Permissive License v1.0, whose only condition is keeping the copyright notice and a
@@ -138,6 +138,11 @@ sits at the root of Oracle's repository, outside the chart.
    `private_subnets` lists - the agent's k8s Helm value templating (`agent_input_oracle.yaml`)
    has no way to index into a list output the way Terraform module variables get auto-wired,
    so anything needing exactly one OCID as a plain string needs its own singular output.
+4. **The vendored `templates/deployment.yaml` labels its `Namespace` from `namespaceLabels`.**
+   The controller runs in `native-ingress-controller-system`, which that template creates,
+   while `argo-apps.yaml`'s `managedNamespaceMetadata` labels only the Application's own
+   namespace. Without the patch the controller's namespace gets no Pod Security level.
+   Upstream has no value for namespace labels as of v1.4.6.
 
 ### Example code ###
 

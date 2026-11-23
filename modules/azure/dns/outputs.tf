@@ -57,7 +57,7 @@ output "nameservers" {
   description = "Map of public domain keys to their name servers, for delegation from the parent zone"
   value = {
     for k, v in local.domains : k => (v.create_zone ? azurerm_dns_zone.this[k].name_servers : data.azurerm_dns_zone.existing[k].name_servers)
-    if !v.private
+    if !v.private && v.zone_id == ""
   }
 }
 

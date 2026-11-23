@@ -1,0 +1,15 @@
+trivy-operator:
+  # No Oracle registry-proxy module exists yet, so the proxy chain in the shared
+  # agent_input.yaml falls through to its docker.io default here. Override that with the
+  # subchart's own upstream default, mirror.gcr.io: Google's Docker Hub mirror serves the same
+  # images without Docker Hub's anonymous pull rate limit, which every scan job on the nodes
+  # behind the VCN's NAT gateway would otherwise share. ghcr.io has no such mirror and stays
+  # as it is. All three stay fully qualified: OKE's runtime refuses unqualified image names
+  # ("short name mode is enforcing ... returns ambiguous list").
+  image:
+    registry: mirror.gcr.io
+  trivy:
+    image:
+      registry: mirror.gcr.io
+  nodeCollector:
+    registry: ghcr.io

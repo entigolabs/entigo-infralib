@@ -39,7 +39,7 @@ func TestKms(t *testing.T) {
 			response, err := client.GetKey(context.Background(), keymanagement.GetKeyRequest{KeyId: &keyId})
 			require.NoError(t, err, "Failed to get the %s key", name)
 			key := response.Key
-			assert.True(t, strings.HasPrefix(*key.DisplayName, keyPrefix+"-"+name+"-"), "Wrong name for the %s key: %s", name, *key.DisplayName)
+			assert.Equal(t, keyPrefix+"-"+name, *key.DisplayName, "Wrong name for the %s key", name)
 			assert.Equal(t, vaultId, *key.VaultId, "The %s key is not in the vault", name)
 			assert.Equal(t, keymanagement.KeyLifecycleStateEnabled, key.LifecycleState, "The %s key is not enabled", name)
 			assert.Equal(t, keymanagement.KeyShapeAlgorithmAes, key.KeyShape.Algorithm, "Wrong algorithm for the %s key", name)

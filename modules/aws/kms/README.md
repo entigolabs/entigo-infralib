@@ -1,7 +1,7 @@
 ## Oppinionated module for kms creation ##
 
 
-Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/kms/aws/latest
+Oppinionated version of this https://search.opentofu.org/module/terraform-aws-modules/kms/aws/latest
 
 The other modules will automatically detect the KMS keys and encrypt their data.
 

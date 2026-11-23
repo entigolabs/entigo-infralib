@@ -77,6 +77,7 @@ func testGatewayApi(t *testing.T, e *env.Environment, gatewayNames []string, acc
 	for _, gatewayName := range gatewayNames {
 		testGatewayAccessLogs(t, c, gatewayName, !slices.Contains(accessLogsDisabled, gatewayName))
 		testGatewaySourceRanges(t, c, gatewayName, sourceRanges[gatewayName])
+		testGatewaySslPolicy(t, c, gatewayName)
 	}
 
 	// Every enabled gateway gets its own HTTPRoute with a unique hostname
@@ -113,6 +114,15 @@ func testGatewayAccessLogs(t *testing.T, c *k8s.Client, gatewayName string, enab
 		"-o", `jsonpath={.status.conditions[?(@.type=="Ready")].status}`)
 	require.NoError(t, err, "Getting access logs Bucket %s error", bucket)
 	require.Equal(t, "True", ready, "Access logs Bucket %s is not Ready", bucket)
+}
+
+// The test values set no sslPolicy, so every gateway gets the TLS 1.3 only default
+func testGatewaySslPolicy(t *testing.T, c *k8s.Client, gatewayName string) {
+	value, err := k8s.RunKubectlAndGetOutputE(t, c,
+		"get", "loadbalancerconfigurations.gateway.k8s.aws", gatewayName,
+		"-o", `jsonpath={.spec.listenerConfigurations[?(@.protocolPort=="HTTPS:443")].sslPolicy}`)
+	require.NoError(t, err, "Getting LoadBalancerConfiguration %s error", gatewayName)
+	require.Equal(t, "ELBSecurityPolicy-TLS13-1-3-2021-06", value, "Gateway %s sslPolicy", gatewayName)
 }
 
 // Gateways without sourceRanges in the test values must not set any, the ALB then allows 0.0.0.0/0

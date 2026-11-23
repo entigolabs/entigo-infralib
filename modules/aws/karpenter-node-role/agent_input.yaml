@@ -1,1 +1,3 @@
 cluster_name: "{{ .toutput.eks.cluster_name }}"
+iam_role_additional_policies: |
+  ["{{ .toptout.ecr-proxy.policy }}"]

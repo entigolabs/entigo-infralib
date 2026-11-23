@@ -36,6 +36,7 @@ platform-apis:
     environmentConfig:
       argoCDNamespace: "{{ .tmodule.argocd }}"
       amiReleaseVersion: '{{ .toutput.eks.ami_release_version }}'
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
   database:
     environmentConfig:
       esClusterSecretStore: "{{ .tmodule.external-secrets }}"

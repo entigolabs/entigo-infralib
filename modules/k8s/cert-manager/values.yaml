@@ -3,9 +3,42 @@ global:
   pubZoneId: ""
   # Public twin zone of the private int domain, "" = no int solver
   intCertZoneId: ""
+  aws:
+    # AWS only: the aws-privateca-issuer subchart, so cert-manager can issue certificates from AWS Private CA (also a
+    # CA of another account shared with AWS RAM). Creates the IRSA role of the issuer (crossplane-aws), which may issue
+    # from the CAs in arns only
+    privateCA:
+      enabled: false
+      # On AWS the agent input defaults it to the CA of the default private domain of the route53 module (its
+      # certificate_authority_arn)
+      arns: []
+      # AWSPCAClusterIssuer for the first CA of arns. false installs the issuer controller alone, for own AWSPCAIssuer
+      # and AWSPCAClusterIssuer objects
+      clusterIssuer:
+        create: true
+        name: aws-privateca
+      # Limits what may be requested from the AWS Private CA issuers: adds the cert-manager-approver-policy subchart
+      # with one CertificateRequestPolicy for them. A request is approved when everything it asks for is in allowed,
+      # anything else is denied. false = every request is approved
+      policy:
+        enabled: false
+        # spec.allowed of the CertificateRequestPolicy as is, * is a wildcard. On AWS the agent input defaults it to
+        # the default private domain of the route53 module and the names under it, with the usages server auth and
+        # client auth:
+        #   commonName:
+        #     value: "*.foo.example.com"
+        #   dnsNames:
+        #     values:
+        #       - "*.foo.example.com"
+        #   usages:
+        #     - server auth
+        #     - client auth
+        allowed: {}
 
-# ACME ClusterIssuer with DNS-01 in the cloud DNS
+# ACME ClusterIssuer with DNS-01 in the cloud DNS, with the cloud's DNS identity for the controller. Without it the
+# module is cert-manager alone, for charts that bring their own issuers
 clusterIssuer:
+  create: true
   name: letsencrypt
 
 acme:
@@ -33,6 +66,17 @@ cert-manager:
     enabled: false
   prometheus:
     enabled: true
+  # Split horizon: the DNS-01 self check runs through public resolvers. In the cloud network the cloud resolver answers
+  # for the int domain from its private zone, which has no public NS and not the challenge records (those are in its
+  # public twin), so the check would never pass. Needs outbound port 53 to them; other DNS servers can be set instead if
+  # they resolve the int domain from public DNS, not from the private zone
+  dns01RecursiveNameservers: "1.1.1.1:53,8.8.8.8:53"
+  dns01RecursiveNameserversOnly: true
+  # The ServiceAccount comes from the cloud's templates: templates/aws/serviceAccount.yaml with the IRSA role annotation
+  # when the issuer is created, the WorkloadIdentity on Azure
+  serviceAccount:
+    create: false
+    name: cert-manager
   deploymentAnnotations:
     kube-score/ignore: pod-networkpolicy,pod-probes
   affinity:

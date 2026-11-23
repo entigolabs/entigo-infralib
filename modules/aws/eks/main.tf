@@ -7,17 +7,17 @@ locals {
   #}] : []
 
   ami_release_version = {
-     "AL2023_ARM_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_ARM_64_STANDARD"     = "1.35.4-20260512"
-     "AL2023_x86_64_NEURON"       = "1.35.4-20260512"
-     "AL2023_x86_64_NVIDIA"       = "1.35.4-20260512"
-     "AL2023_x86_64_STANDARD"     = "1.35.4-20260512"
-     "BOTTLEROCKET_ARM_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64"        = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_FIPS"   = "1.61.0-8ef015e0"
-     "BOTTLEROCKET_x86_64_NVIDIA" = "1.61.0-8ef015e0"
+     "AL2023_ARM_64_NVIDIA"       = "1.36.5-20261119"
+     "AL2023_ARM_64_STANDARD"     = "1.36.5-20261119"
+     "AL2023_x86_64_NEURON"       = "1.36.5-20261119"
+     "AL2023_x86_64_NVIDIA"       = "1.36.5-20261119"
+     "AL2023_x86_64_STANDARD"     = "1.36.5-20261119"
+     "BOTTLEROCKET_ARM_64"        = "1.70.0-59b0684a"
+     "BOTTLEROCKET_ARM_64_FIPS"   = "1.70.0-59b0684a"
+     "BOTTLEROCKET_ARM_64_NVIDIA" = "1.70.0-59b0684a"
+     "BOTTLEROCKET_x86_64"        = "1.70.0-59b0684a"
+     "BOTTLEROCKET_x86_64_FIPS"   = "1.70.0-59b0684a"
+     "BOTTLEROCKET_x86_64_NVIDIA" = "1.70.0-59b0684a"
   }
    
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
@@ -234,9 +234,22 @@ resource "aws_ec2_tag" "publicsubnets" {
   value       = "shared"
 }
 
+# The AWS Load Balancer Controller resolves the security group it adds backend
+# rules to by the kubernetes.io/cluster/<name> tag whenever a node ENI carries
+# more than one security group. aws_ec2_tag is not subject to the provider's
+# ignore_tags, unlike the tags attribute of aws_security_group, so this is the
+# only way to manage the tag without a perpetual diff. Set
+# node_security_group_cluster_tag=false to drop it if the nodes also carry
+# another security group with this tag.
+resource "aws_ec2_tag" "node_security_group_cluster" {
+  count       = var.node_security_group_cluster_tag ? 1 : 0
+  resource_id = module.eks.node_security_group_id
+  key         = "kubernetes.io/cluster/${var.prefix}"
+  value       = "owned"
+}
+
 module "ebs_csi_irsa_role" {
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.2"
+  source                = "./vendors/terraform-aws-iam/modules/iam-role-for-service-accounts" # version in vendor.yaml
   name                  = "${var.prefix}-ebs-csi"
   attach_ebs_csi_policy = true
   ebs_csi_kms_cmk_arns  = var.node_encryption_kms_key_arn != "" ? [var.node_encryption_kms_key_arn] : []
@@ -258,8 +271,7 @@ module "ebs_csi_irsa_role" {
 
 module "efs_csi_irsa_role" {
   count                 = var.enable_efs_csi ? 1 : 0
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.2"
+  source                = "./vendors/terraform-aws-iam/modules/iam-role-for-service-accounts" # version in vendor.yaml
   name                  = "${var.prefix}-efs-csi"
   attach_efs_csi_policy = true
   oidc_providers = {
@@ -279,8 +291,7 @@ module "efs_csi_irsa_role" {
 }
 
 module "vpc_cni_irsa_role" {
-  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version               = "6.8.2"
+  source                = "./vendors/terraform-aws-iam/modules/iam-role-for-service-accounts" # version in vendor.yaml
   name                  = "VPC-CNI-IRSA"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
@@ -301,10 +312,9 @@ module "vpc_cni_irsa_role" {
   )
 }
 
-#https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
+#https://search.opentofu.org/module/terraform-aws-modules/eks/aws/latest
 module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "21.26.0"
+  source  = "./vendors/terraform-aws-eks" # version in vendor.yaml
 
   name                    = var.prefix
   kubernetes_version      = var.eks_cluster_version
@@ -550,10 +560,13 @@ module "eks" {
 
   }
 
-  #https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1986
+  # The provider ignores every kubernetes.io/cluster/* key (providers/aws.tf),
+  # so the upstream module must not set the tag through the security group's
+  # tags attribute or the plan adds it on every run. The tag is managed by
+  # aws_ec2_tag.node_security_group_cluster instead (upstream issue 1986).
   node_security_group_tags = {
     "kubernetes.io/cluster/${var.prefix}" = null
-    "karpenter.sh/discovery" = var.prefix
+    "karpenter.sh/discovery"              = var.prefix
   }
 
 

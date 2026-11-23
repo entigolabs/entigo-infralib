@@ -1,7 +1,7 @@
 ## Oppinionated module for eks creation ##
 
 
-Oppinionated version of this https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest
+Oppinionated version of this https://search.opentofu.org/module/terraform-aws-modules/eks/aws/latest
 
 
 __vpc_id__ the VPC id where eks is installed.
@@ -79,4 +79,4 @@ __node_monitoring_agent_config__ Defaults to {}, configuration values for the ek
 ```
 
 ### Limitations ###
-The module name has to be "eks" - otherwise the terraform provider for kubernets will be misconfigured.
+The module name has to be "eks" - otherwise the OpenTofu provider for kubernets will be misconfigured.

@@ -3,6 +3,7 @@ global:
     account: "{{ .toutput.eks.account }}"
     clusterOIDC: "{{ .toutput.eks.oidc_provider }}"
     kmsKeyId: "{{ .toptout.kms.data_alias_arn }}"
+    ecrPolicy: "{{ .toptout.ecr-proxy.policy }}"
 
 harbor:
   expose:

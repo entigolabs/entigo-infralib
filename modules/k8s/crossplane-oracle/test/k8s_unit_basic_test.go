@@ -57,6 +57,7 @@ func TestCrossplaneOracle(t *testing.T) {
 			{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "subnets"}, "private-0"},
 			{schema.GroupVersionResource{Group: "networking.oci.upbound.io", Version: "v1alpha1", Resource: "networksecuritygroups"}, "node"},
 			{schema.GroupVersionResource{Group: "containerengine.oci.upbound.io", Version: "v1alpha1", Resource: "clusters"}, "oke"},
+			{schema.GroupVersionResource{Group: "containerengine.oci.upbound.io", Version: "v1alpha1", Resource: "nodepools"}, "template"},
 		}
 		for _, step := range e.Steps {
 			for _, m := range step.Modules {

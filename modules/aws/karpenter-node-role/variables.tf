@@ -13,3 +13,9 @@ variable "access_entry_type" {
   type        = string
   default     = "EC2_LINUX"
 }
+
+variable "iam_role_additional_policies" {
+  description = "Additional IAM policy ARNs to attach to the Karpenter node role"
+  type        = list(string)
+  default     = []
+}

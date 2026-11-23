@@ -8,8 +8,6 @@ loki:
           name: internal
           namespace: "{{ .tmodule.azure-gateway }}"
           sectionName: https
-  fullnameOverride: '{{ .module.name }}'
-  nameOverride: '{{ .module.name }}'
   write:
     persistence:
       size: 3Gi

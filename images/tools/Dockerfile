@@ -1,11 +1,16 @@
+# Rebuild to pick up the latest agent (v1.15.1 at time of writing)
 ARG AGENT_VERSION=latest
 FROM entigolabs/entigo-infralib-agent:${AGENT_VERSION} AS agent
 
 FROM alpine:3.24
 ARG TARGETARCH
-ENV KUBECTL_VERSION=v1.35.6 HELM_VERSION=v3.21.4 ARGOCD_CLI=v3.5.2 OPENTOFU_VERSION=1.12.6
+ENV KUBECTL_VERSION=v1.36.6 HELM_VERSION=v3.22.1 ARGOCD_CLI=v3.6.1 OPENTOFU_VERSION=1.13.9
 
 COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
+# shackle (https://github.com/entigolabs/shackle): kubeconfig and cluster
+# tokens, registry credentials and bucket copy for every cloud from one static
+# binary. The step scripts use it instead of the cloud CLIs.
+COPY --from=ghcr.io/entigolabs/shackle:v0.1.4@sha256:7d4629e9856d45d03625b7eea9e790afb21c5476c185bda62b8c74453702d2b4 /usr/local/bin/shackle /entigo-bin/shackle
 
 RUN apk --no-cache add \
     unzip \
