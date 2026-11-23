@@ -5,8 +5,8 @@ global:
   # The same for every datasource and every cloud: `module` is the name of the module in
   # this platform, filled in by the agent and empty when the module is not installed;
   # `hostname` is the full URL of an instance somewhere else and wins over `module`. A
-  # datasource with neither is left out. Prometheus is the default datasource when it is
-  # there, Mimir otherwise.
+  # datasource with neither is left out. Mimir is the default datasource when it is
+  # there, Prometheus otherwise.
   datasources:
     loki:
       module: ""
@@ -79,7 +79,7 @@ grafana:
 
   # None of these names a datasource. Each dashboard has a datasource variable that offers
   # every Prometheus-type datasource and starts on the default one, so they follow whatever
-  # global.datasources ends up with: Prometheus when it is installed, Mimir otherwise.
+  # global.datasources ends up with: Mimir when it is installed, Prometheus otherwise.
   dashboards:
     kubernetes:
       global:

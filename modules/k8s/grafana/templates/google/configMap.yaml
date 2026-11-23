@@ -37,7 +37,7 @@ data:
         type: prometheus
         url: {{ $prometheus }}
         access: proxy
-        isDefault: true
+        isDefault: {{ not $mimir }}
         jsonData:
           timeInterval: {{ .Values.global.datasources.prometheus.scrapeInterval | quote }}
       {{- end }}
@@ -46,7 +46,7 @@ data:
         type: prometheus
         url: {{ $mimir }}
         access: proxy
-        isDefault: {{ not $prometheus }}
+        isDefault: true
         jsonData:
           httpHeaderName1: X-Scope-OrgID
           timeInterval: {{ .Values.global.datasources.mimir.scrapeInterval | quote }}

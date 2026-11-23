@@ -3,14 +3,16 @@ node-agent:
     priorityClassName: "{{ .module.name }}"
     podLabels:
       netpol-loki: '{{ .toptmodule.loki | "loki" }}'
-  # Optional lookups (not required) with the default module name as the fallback: the
-  # platform may run Loki or Mimir in another instance, or have no Mimir at all when
-  # metrics.enabled is left at its default false. Override the endpoint in the inputs to
-  # send to another instance.
+  # Optional lookups (not required): the platform may run Loki, Mimir or Prometheus in
+  # another instance, or not at all. Loki falls back to the default module name. For the
+  # metrics only the module names are passed, empty when the module is missing, and
+  # values.yaml builds the URLs: metrics go to the Mimir and the Prometheus that exist.
+  # Override the endpoints in the inputs to send to another instance.
   logs:
     lokiEndpoint: 'http://loki-gateway.{{ .toptmodule.loki | "loki" }}/loki/api/v1/push'
   metrics:
-    mimirEndpoint: 'http://mimir-gateway.{{ .toptmodule.mimir | "mimir" }}/api/v1/push'
+    mimirModule: '{{ .toptmodule.mimir }}'
+    prometheusModule: '{{ .toptmodule.prometheus }}'
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
   configReloader:
@@ -26,7 +28,8 @@ node-agent:
 cluster-metrics:
   controller:
     priorityClassName: "{{ .module.name }}"
-  mimirEndpoint: 'http://mimir-gateway.{{ .toptmodule.mimir | "mimir" }}/api/v1/push'
+  mimirModule: '{{ .toptmodule.mimir }}'
+  prometheusModule: '{{ .toptmodule.prometheus }}'
   gateway:
     name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
     namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptmodule.azure-gateway | required }}'
