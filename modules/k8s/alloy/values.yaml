@@ -27,7 +27,16 @@ node-agent:
 
   metrics:
     enabled: false
-    mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+    # Where the metrics go: the Mimir and the Prometheus of this platform, whichever of the
+    # two exist, both when both do. The agent fills in the two module names (empty when the
+    # module is not part of the platform) and the URLs are built from them. A Prometheus
+    # that is written to needs its remote write receiver on and must not scrape itself.
+    mimirModule: ""
+    prometheusModule: ""
+    # Full remote write URLs, for a Mimir (.../api/v1/push) or a Prometheus (.../api/v1/write)
+    # somewhere else. Each wins over its module name.
+    mimirEndpoint: ""
+    prometheusEndpoint: ""
     # Every cluster writes to the same Mimir tenant and is told apart by the
     # `cluster` external label. "anonymous" is the tenant Mimir itself uses
     # when multitenancy is switched off.
@@ -121,14 +130,34 @@ node-agent:
             {{- end }}
           }
           {{- end }}
+          {{- $mimir := .Values.metrics.mimirEndpoint }}
+          {{- if and (not $mimir) .Values.metrics.mimirModule }}
+          {{- $mimir = printf "http://mimir-gateway.%s/api/v1/push" .Values.metrics.mimirModule }}
+          {{- end }}
+          {{- $prometheus := .Values.metrics.prometheusEndpoint }}
+          {{- if and (not $prometheus) .Values.metrics.prometheusModule }}
+          {{- $prometheus = printf "http://%s-server.%s/api/v1/write" .Values.metrics.prometheusModule .Values.metrics.prometheusModule }}
+          {{- end }}
+          {{- if not (or $mimir $prometheus) }}
+          {{- fail "node-agent.metrics.enabled is true but there is nowhere to send to: the platform has no mimir or prometheus module, and neither metrics.mimirEndpoint nor metrics.prometheusEndpoint is set" }}
+          {{- end }}
+          {{- if $mimir }}
           endpoint {
-            url = {{ .Values.metrics.mimirEndpoint | quote }}
+            name = "mimir"
+            url  = {{ $mimir | quote }}
             {{- if .Values.metrics.mimirTenantID }}
             headers = {
               "X-Scope-OrgID" = {{ .Values.metrics.mimirTenantID | quote }},
             }
             {{- end }}
           }
+          {{- end }}
+          {{- if $prometheus }}
+          endpoint {
+            name = "prometheus"
+            url  = {{ $prometheus | quote }}
+          }
+          {{- end }}
         }
 
         prometheus.exporter.unix "node" {
@@ -551,7 +580,12 @@ cluster-metrics:
   enabled: false
   crds:
     create: false
-  mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
+  # Where the metrics go, as for node-agent.metrics: the Mimir and the Prometheus of this
+  # platform by module name, or full URLs for ones somewhere else.
+  mimirModule: ""
+  prometheusModule: ""
+  mimirEndpoint: ""
+  prometheusEndpoint: ""
   # See node-agent.metrics.mimirTenantID.
   mimirTenantID: "anonymous"
 
@@ -581,7 +615,8 @@ cluster-metrics:
   # Sync PrometheusRule CRDs cluster-wide into Mimir's ruler, which evaluates them and fires into
   # Mimir's alertmanager. Requires global.installPrometheusOperatorCRDs (for the CRD itself) and
   # mimir-distributed.alertmanager.enabled: true in the mimir module (otherwise the ruler has
-  # nowhere to send firing alerts).
+  # nowhere to send firing alerts). Mimir only: a Prometheus that is written to gets no rules
+  # from here.
   rules: false
 
   # Multi-target proxy scrape of redis-exporter: each entry in redisExporterTargets is passed to
@@ -617,14 +652,34 @@ cluster-metrics:
             {{- end }}
           }
           {{- end }}
+          {{- $mimir := .Values.mimirEndpoint }}
+          {{- if and (not $mimir) .Values.mimirModule }}
+          {{- $mimir = printf "http://mimir-gateway.%s/api/v1/push" .Values.mimirModule }}
+          {{- end }}
+          {{- $prometheus := .Values.prometheusEndpoint }}
+          {{- if and (not $prometheus) .Values.prometheusModule }}
+          {{- $prometheus = printf "http://%s-server.%s/api/v1/write" .Values.prometheusModule .Values.prometheusModule }}
+          {{- end }}
+          {{- if not (or $mimir $prometheus) }}
+          {{- fail "cluster-metrics.enabled is true but there is nowhere to send to: the platform has no mimir or prometheus module, and neither cluster-metrics.mimirEndpoint nor cluster-metrics.prometheusEndpoint is set" }}
+          {{- end }}
+          {{- if $mimir }}
           endpoint {
-            url = {{ .Values.mimirEndpoint | quote }}
+            name = "mimir"
+            url  = {{ $mimir | quote }}
             {{- if .Values.mimirTenantID }}
             headers = {
               "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
             }
             {{- end }}
           }
+          {{- end }}
+          {{- if $prometheus }}
+          endpoint {
+            name = "prometheus"
+            url  = {{ $prometheus | quote }}
+          }
+          {{- end }}
         }
 
         discovery.kubernetes "pods" {
@@ -905,8 +960,15 @@ cluster-metrics:
         }
         {{- end }}
         {{- if .Values.rules }}
+        {{- $rulesMimir := .Values.mimirEndpoint }}
+        {{- if and (not $rulesMimir) .Values.mimirModule }}
+        {{- $rulesMimir = printf "http://mimir-gateway.%s/api/v1/push" .Values.mimirModule }}
+        {{- end }}
+        {{- if not $rulesMimir }}
+        {{- fail "cluster-metrics.rules syncs PrometheusRules into the Mimir ruler and needs a mimir module or cluster-metrics.mimirEndpoint" }}
+        {{- end }}
         mimir.rules.kubernetes "default" {
-          address = {{ trimSuffix "/api/v1/push" .Values.mimirEndpoint | quote }}
+          address = {{ trimSuffix "/api/v1/push" $rulesMimir | quote }}
           {{- if .Values.mimirTenantID }}
           tenant_id = {{ .Values.mimirTenantID | quote }}
           {{- end }}
