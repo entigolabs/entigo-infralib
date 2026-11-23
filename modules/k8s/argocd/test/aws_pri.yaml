@@ -59,13 +59,14 @@ argocd:
     params:
       server.dex.server: ""
     rbac:
+      scopes: '[role_grants]'
       policy.csv: |
         g, web-admin-258953744228679165, role:admin
         g, web-admin-390876846557773807, role:admin
         p, infralib, applications, get, */*, allow
         p, infralib, applications, sync, */*, allow
         p, infralib, projects, get, *, allow
-      policy.default: role:readonly
+      policy.default: role:authenticated
     cm:
       oidc.config: |
         name: Zitadel
@@ -76,5 +77,4 @@ argocd:
           - openid
           - profile
           - email
-          - groups
         logoutURL: https://entigo-dev-if3upz.zitadel.cloud/oidc/v1/end_session
