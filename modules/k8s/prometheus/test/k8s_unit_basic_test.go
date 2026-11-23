@@ -15,7 +15,10 @@ func TestPrometheus(t *testing.T) {
 		c := k8s.Connect(t, e)
 
 		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-server", 20, 6*time.Second), "%s-server deployment error", c.Namespace)
-		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-kube-state-metrics", 20, 6*time.Second), "%s-kube-state-metrics deployment error", c.Namespace)
+		// biz runs the kube-state-metrics module instead; its fixtures turn this copy off.
+		if e.Prefix != "biz" {
+			require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-kube-state-metrics", 20, 6*time.Second), "%s-kube-state-metrics deployment error", c.Namespace)
+		}
 		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, c.Namespace+"-alertmanager-0", 20, 6*time.Second), "%s-alertmanager-0 pod error", c.Namespace)
 
 		// The server's HTTPRoute (prometheus.server.route from the subchart) is the only one in the namespace.

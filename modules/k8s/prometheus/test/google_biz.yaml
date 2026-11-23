@@ -1,0 +1,4 @@
+prometheus:
+  # biz runs the kube-state-metrics module. A second copy doubles every kube_* series.
+  kube-state-metrics:
+    enabled: false
