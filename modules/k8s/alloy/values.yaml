@@ -32,6 +32,10 @@ node-agent:
     # `cluster` external label. "anonymous" is the tenant Mimir itself uses
     # when multitenancy is switched off.
     mimirTenantID: "anonymous"
+    # A Prometheus to write the same metrics to, its remote write receiver URL
+    # (http://<prometheus>/api/v1/write). Empty: no Prometheus. It is written to next to
+    # Mimir, or instead of it when mimirEndpoint is set to "".
+    prometheusEndpoint: ""
 
     externalLabels: {}
     scrapeInterval: "60s"
@@ -121,14 +125,26 @@ node-agent:
             {{- end }}
           }
           {{- end }}
+          {{- if not (or .Values.metrics.mimirEndpoint .Values.metrics.prometheusEndpoint) }}
+          {{- fail "node-agent.metrics.enabled is true but there is nowhere to send to: set metrics.mimirEndpoint or metrics.prometheusEndpoint" }}
+          {{- end }}
+          {{- if .Values.metrics.mimirEndpoint }}
           endpoint {
-            url = {{ .Values.metrics.mimirEndpoint | quote }}
+            name = "mimir"
+            url  = {{ .Values.metrics.mimirEndpoint | quote }}
             {{- if .Values.metrics.mimirTenantID }}
             headers = {
               "X-Scope-OrgID" = {{ .Values.metrics.mimirTenantID | quote }},
             }
             {{- end }}
           }
+          {{- end }}
+          {{- if .Values.metrics.prometheusEndpoint }}
+          endpoint {
+            name = "prometheus"
+            url  = {{ .Values.metrics.prometheusEndpoint | quote }}
+          }
+          {{- end }}
         }
 
         prometheus.exporter.unix "node" {
@@ -554,6 +570,8 @@ cluster-metrics:
   mimirEndpoint: "http://mimir-gateway.mimir/api/v1/push"
   # See node-agent.metrics.mimirTenantID.
   mimirTenantID: "anonymous"
+  # See node-agent.metrics.prometheusEndpoint.
+  prometheusEndpoint: ""
 
   # Gateway the UI's HTTPRoute attaches to.
   createRoute: false
@@ -581,7 +599,8 @@ cluster-metrics:
   # Sync PrometheusRule CRDs cluster-wide into Mimir's ruler, which evaluates them and fires into
   # Mimir's alertmanager. Requires global.installPrometheusOperatorCRDs (for the CRD itself) and
   # mimir-distributed.alertmanager.enabled: true in the mimir module (otherwise the ruler has
-  # nowhere to send firing alerts).
+  # nowhere to send firing alerts). Mimir only: a Prometheus written to with prometheusEndpoint
+  # gets no rules from here.
   rules: false
 
   # Multi-target proxy scrape of redis-exporter: each entry in redisExporterTargets is passed to
@@ -617,14 +636,26 @@ cluster-metrics:
             {{- end }}
           }
           {{- end }}
+          {{- if not (or .Values.mimirEndpoint .Values.prometheusEndpoint) }}
+          {{- fail "cluster-metrics.enabled is true but there is nowhere to send to: set cluster-metrics.mimirEndpoint or cluster-metrics.prometheusEndpoint" }}
+          {{- end }}
+          {{- if .Values.mimirEndpoint }}
           endpoint {
-            url = {{ .Values.mimirEndpoint | quote }}
+            name = "mimir"
+            url  = {{ .Values.mimirEndpoint | quote }}
             {{- if .Values.mimirTenantID }}
             headers = {
               "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
             }
             {{- end }}
           }
+          {{- end }}
+          {{- if .Values.prometheusEndpoint }}
+          endpoint {
+            name = "prometheus"
+            url  = {{ .Values.prometheusEndpoint | quote }}
+          }
+          {{- end }}
         }
 
         discovery.kubernetes "pods" {
@@ -905,6 +936,9 @@ cluster-metrics:
         }
         {{- end }}
         {{- if .Values.rules }}
+        {{- if not .Values.mimirEndpoint }}
+        {{- fail "cluster-metrics.rules syncs PrometheusRules into the Mimir ruler and needs cluster-metrics.mimirEndpoint" }}
+        {{- end }}
         mimir.rules.kubernetes "default" {
           address = {{ trimSuffix "/api/v1/push" .Values.mimirEndpoint | quote }}
           {{- if .Values.mimirTenantID }}

@@ -137,6 +137,31 @@ URL of both parts. An input replaces what the agent would have looked up:
   repeat the whole list (`agent_input_<cloud>.yaml` for `node-agent`,
   `values.yaml` for `cluster-metrics`) with the rule added.
 
+### Prometheus as the store
+
+The metrics can also be written to a Prometheus, next to Mimir or instead of
+it. That Prometheus needs its remote write receiver on
+(`--web.enable-remote-write-receiver`) and must not scrape the same targets
+itself, or everything is stored twice.
+
+```yaml
+        inputs:
+          node-agent:
+            metrics:
+              enabled: true
+              prometheusEndpoint: "http://prometheus-server.prometheus/api/v1/write"
+          cluster-metrics:
+            enabled: true
+            prometheusEndpoint: "http://prometheus-server.prometheus/api/v1/write"
+```
+
+- `prometheusEndpoint` is empty by default and is never looked up: it is only
+  written to when set. The URL ends in `/api/v1/write`.
+- To write to Prometheus only, on a platform without Mimir, also set
+  `mimirEndpoint: ""` on both parts.
+- `cluster-metrics.rules` works with Mimir only. A Prometheus keeps its rules
+  in its own configuration.
+
 Loki works the same way, with `node-agent.logs.lokiEndpoint` (ending in
 `/loki/api/v1/push`) and `node-agent.logs.lokiTenantID`.
 
