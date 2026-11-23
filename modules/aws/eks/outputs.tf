@@ -181,7 +181,7 @@ output "region" {
 }
 
 output "ami_release_version" {
-  description = "AMI release version per ami_type for this infralib release, used to align other node groups"
-  value = local.ami_release_version
+  description = "JSON map of ami_type to AMI release version for this infralib release, used to align other node groups"
+  value = jsonencode(local.ami_release_version)
 }
 
