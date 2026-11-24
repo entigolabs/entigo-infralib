@@ -1,0 +1,4 @@
+platform-apis:
+  # The PostgreSQLCluster end-to-end suite (platform-apis test/tests/k8s_postgresqlcluster_oci_test.go).
+  postgresqlcluster:
+    install: true
