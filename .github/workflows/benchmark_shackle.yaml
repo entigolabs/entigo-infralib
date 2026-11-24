@@ -1,0 +1,144 @@
+# Times shackle (https://github.com/entigolabs/shackle) against each cloud's
+# own CLI on the biz test environments, with the benchmark script of the
+# shackle release under test (scripts/bench.sh there: both tools run inside
+# the CLI's image, the median of several runs is reported). The tables land in
+# the run's summary. Everything the copies write goes under shackle-bench/ in
+# the environment's own bucket and is removed again.
+#
+# Run it by hand, for a shackle version or the latest release. A pull request
+# that changes this file runs it too, so that a change here is tried before
+# it is merged.
+name: Benchmark shackle
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: shackle release to measure (vX.Y.Z); empty means the latest
+        default: ''
+      runs:
+        description: runs per case; the median is reported
+        default: '5'
+  pull_request:
+    paths:
+      - .github/workflows/benchmark_shackle.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-shackle
+  cancel-in-progress: false
+
+env:
+  # The environments measured: <prefix>-infra-<eks|gke|aks|oke> and the
+  # agent's bucket of that prefix on each cloud.
+  PREFIX: biz
+  AWS_CLI_IMAGE: amazon/aws-cli:2.42.2
+  GOOGLE_CLI_IMAGE: gcr.io/google.com/cloudsdktool/google-cloud-cli:594.0.1
+  AZURE_CLI_IMAGE: mcr.microsoft.com/azure-cli:2.93.0
+  KUBELOGIN_VERSION: v0.2.22
+  ORACLE_CLI_IMAGE: ghcr.io/oracle/oci-cli:latest
+
+jobs:
+  bench:
+    name: ${{ matrix.cloud }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cloud: [aws, google, azure, oracle]
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+      GOOGLE_REGION: ${{ secrets.GOOGLE_REGION }}
+      OCI_REGION: ${{ secrets.OCI_REGION }}
+      OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+    - uses: actions/checkout@v7
+    - uses: entigolabs/entigo-infralib-test/.github/actions/credentials@main
+      with:
+        google_credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+        oci_config: ${{ secrets.OCI_CONFIG }}
+        oci_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
+    - name: shackle and its benchmark script
+      env:
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        version=${VERSION:-$(gh release view --repo entigolabs/shackle --json tagName --jq .tagName)}
+        [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::not a shackle version: $version" >&2; exit 1; }
+        mkdir -p bench/dist bench/scripts && cd bench
+        base=https://github.com/entigolabs/shackle/releases/download/${version}
+        curl -fsSL -o dist/shackle-linux-amd64 "$base/shackle-linux-amd64"
+        curl -fsSL -o dist/SHA256SUMS "$base/SHA256SUMS"
+        (cd dist && grep ' shackle-linux-amd64$' SHA256SUMS | sha256sum -c -)
+        chmod +x dist/shackle-linux-amd64
+        curl -fsSL -o scripts/bench.sh "https://raw.githubusercontent.com/entigolabs/shackle/${version}/scripts/bench.sh"
+        chmod +x scripts/bench.sh
+        echo "SHACKLE_VERSION=${version}" >> "$GITHUB_ENV"
+    - name: Benchmark
+      env:
+        CLOUD: ${{ matrix.cloud }}
+        BENCH_RUNS: ${{ inputs.runs || '5' }}
+      run: |
+        set -euo pipefail
+        cd bench
+        # The credential files belong to the runner's user.
+        export BENCH_DOCKER_ARGS="-u $(id -u):$(id -g) -e HOME=/tmp"
+        case $CLOUD in
+          aws)
+            account=$(aws sts get-caller-identity --query Account --output text)
+            echo "::add-mask::${account}"
+            export BENCH_IMAGE="$AWS_CLI_IMAGE" BENCH_CLUSTER="${PREFIX}-infra-eks" BENCH_REGION="$AWS_REGION"
+            export BENCH_BUCKET="s3://${PREFIX}-${account}-${AWS_REGION}/shackle-bench" ;;
+          google)
+            export BENCH_IMAGE="$GOOGLE_CLI_IMAGE" BENCH_CLUSTER="${PREFIX}-infra-gke" BENCH_REGION="$GOOGLE_REGION"
+            export BENCH_BUCKET="gs://${PREFIX}-${GOOGLE_PROJECT}-${GOOGLE_REGION}/shackle-bench" ;;
+          azure)
+            # The Azure CLI image has no kubelogin, which an AKS kubeconfig needs.
+            mkdir image
+            {
+              echo "FROM ${AZURE_CLI_IMAGE}"
+              echo "RUN curl -fsSL -o /tmp/k.zip https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip \\"
+              echo " && python3 -c \"import zipfile; zipfile.ZipFile('/tmp/k.zip').extract('bin/linux_amd64/kubelogin', '/tmp')\" \\"
+              echo " && install -m 755 /tmp/bin/linux_amd64/kubelogin /usr/local/bin/kubelogin && rm -rf /tmp/k.zip /tmp/bin"
+            } > image/Dockerfile
+            docker build -q -t local/azure-cli-kubelogin image
+            export BENCH_IMAGE=local/azure-cli-kubelogin BENCH_CLUSTER="${PREFIX}-infra-aks"
+            export AZURE_RESOURCE_GROUP="${PREFIX}-${AZURE_LOCATION}"
+            az() {
+              # shellcheck disable=SC2086,SC2016
+              docker run --rm $BENCH_DOCKER_ARGS -e AZURE_CLIENT_ID -e AZURE_CLIENT_SECRET -e AZURE_TENANT_ID -e AZURE_SUBSCRIPTION_ID --entrypoint bash "$BENCH_IMAGE" \
+                -c 'az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID" --output none && az account set --subscription "$AZURE_SUBSCRIPTION_ID" && az "$@"' az "$@"
+            }
+            # The agent's storage account is the one with the shortest name
+            # in the resource group; its files are in the tfstate container.
+            account=$(az storage account list -g "$AZURE_RESOURCE_GROUP" --query '[].name' -o tsv | awk '{print length($0), $0}' | sort -n | head -1 | cut -d' ' -f2)
+            [ -n "$account" ] || { echo "::error::no storage account in ${AZURE_RESOURCE_GROUP}" >&2; exit 1; }
+            export BENCH_BUCKET="az://${account}/tfstate/shackle-bench"
+            BENCH_REGISTRY=$(az acr list -g "$AZURE_RESOURCE_GROUP" --query '[0].name' -o tsv)
+            export BENCH_REGISTRY ;;
+          oracle)
+            export BENCH_IMAGE="$ORACLE_CLI_IMAGE" BENCH_CLUSTER="${PREFIX}-infra-oke" BENCH_REGION="$OCI_REGION"
+            # shellcheck disable=SC2086
+            namespace=$(docker run --rm $BENCH_DOCKER_ARGS -v "$HOME/.oci:$HOME/.oci:ro" -e "OCI_CLI_CONFIG_FILE=$HOME/.oci/config" --entrypoint oci "$BENCH_IMAGE" os ns get --query data --raw-output)
+            echo "::add-mask::${namespace}"
+            export BENCH_BUCKET="oci://${PREFIX}-${OCI_REGION}@${namespace}/shackle-bench" ;;
+        esac
+        scripts/bench.sh "$CLOUD" | tee table.md
+        {
+          echo "### ${CLOUD}: shackle ${SHACKLE_VERSION} against $(echo "$BENCH_IMAGE" | sed 's#^local/azure-cli-kubelogin$#'"${AZURE_CLI_IMAGE} with kubelogin ${KUBELOGIN_VERSION}"'#')"
+          echo
+          grep '^|' table.md
+        } >> "$GITHUB_STEP_SUMMARY"
+        # A case that could not run prints "failed" in its cell.
+        ! grep -q '| failed' table.md || { echo "::error::a case failed, see the log" >&2; exit 1; }
