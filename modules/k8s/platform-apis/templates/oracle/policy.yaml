@@ -26,7 +26,10 @@ spec:
       - "Allow any-user to inspect compartments in compartment id {{ $compartment }} where all { {{ $wl }} }"
 {{- if $postgresql }}
       # PostgreSQLCluster: the DB system, and the security group that admits the cluster's workloads.
-      - "Allow any-user to manage postgres-db-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to manage postgres-db-systems in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to manage postgres-backups in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to read postgres-configurations in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to read postgres-work-requests in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to manage network-security-groups in compartment id {{ $compartment }} where all { {{ $wl }} }"
 {{- end }}
   providerConfigRef:
