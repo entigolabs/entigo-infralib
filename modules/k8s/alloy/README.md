@@ -139,6 +139,51 @@ URL of both parts. An input replaces what the agent would have looked up:
   repeat the whole list (`agent_input_<cloud>.yaml` for `node-agent`,
   `values.yaml` for `cluster-metrics`) with the rule added.
 
+### Endpoints behind OAuth2
+
+A Loki or Mimir that accepts only OAuth2-authenticated pushes, such as the
+Entigo portal's, takes client credentials next to its URL. Alloy fetches a token
+from the token URL and sends it with every push:
+
+```yaml
+        inputs:
+          node-agent:
+            logs:
+              lokiEndpoint: "https://portal.example.com/loki/api/v1/push"
+              lokiOAuth2:
+                clientId: "agent-example"
+                clientSecret: "{{ .output-custom.agent-client-secret }}"
+                tokenUrl: "https://idp.example.com/oauth/v2/token"
+                scopes:
+                - openid
+            metrics:
+              enabled: true
+              mimirEndpoint: "https://portal.example.com/api/v1/push"
+              mimirOAuth2:
+                clientId: "agent-example"
+                clientSecret: "{{ .output-custom.agent-client-secret }}"
+                tokenUrl: "https://idp.example.com/oauth/v2/token"
+                scopes:
+                - openid
+          cluster-metrics:
+            enabled: true
+            mimirEndpoint: "https://portal.example.com/api/v1/push"
+            mimirOAuth2:
+              clientId: "agent-example"
+              clientSecret: "{{ .output-custom.agent-client-secret }}"
+              tokenUrl: "https://idp.example.com/oauth/v2/token"
+              scopes:
+              - openid
+```
+
+- The credentials apply only when `clientId` is set.
+- `cluster-metrics.mimirOAuth2` also authenticates the rules of
+  `cluster-metrics.rules`, and `receiver.faro.lokiOAuth2` the logs that Faro
+  takes in.
+- With either OAuth2 input of `node-agent` set, the module adds a NetworkPolicy
+  that lets the node agent reach port 443 on any address, for the token URL and
+  the endpoint. `cluster-metrics` and `receiver` reach 443 already.
+
 ### Prometheus as the store
 
 With metrics enabled, alloy writes to the Mimir and to the Prometheus of the
