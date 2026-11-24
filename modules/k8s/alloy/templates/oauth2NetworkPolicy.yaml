@@ -1,0 +1,21 @@
+{{- $nodeAgent := index .Values "node-agent" }}
+{{- if and $nodeAgent.enabled (or $nodeAgent.logs.lokiOAuth2.clientId $nodeAgent.metrics.mimirOAuth2.clientId) }}
+# The node agent's own policy allows HTTPS at most to the Kubernetes API. With OAuth2 it also
+# reaches the token URL and the endpoint, which are usually outside the cluster on port 443.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-node-agent-oauth2
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: node-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - port: 443
+      protocol: TCP
+{{- end }}

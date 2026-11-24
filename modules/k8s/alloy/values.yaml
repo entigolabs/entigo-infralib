@@ -20,6 +20,13 @@ node-agent:
     enabled: true
     lokiEndpoint: "http://loki-gateway.loki/loki/api/v1/push"
     lokiTenantID: ""
+    # OAuth2 client credentials for a Loki that accepts only authenticated pushes, such as
+    # the Entigo portal's. Used when clientId is set, and then also opens egress to port 443.
+    lokiOAuth2:
+      clientId: ""
+      clientSecret: ""
+      tokenUrl: ""
+      scopes: []
     # Labels added to every log stream, e.g. {cluster: prod}. The agent sets `cluster` to
     # the name of the cluster, the same value the metrics carry.
     externalLabels: {}
@@ -41,6 +48,12 @@ node-agent:
     # `cluster` external label. "anonymous" is the tenant Mimir itself uses
     # when multitenancy is switched off.
     mimirTenantID: "anonymous"
+    # OAuth2 client credentials for the Mimir, as for logs.lokiOAuth2.
+    mimirOAuth2:
+      clientId: ""
+      clientSecret: ""
+      tokenUrl: ""
+      scopes: []
 
     externalLabels: {}
     scrapeInterval: "60s"
@@ -149,6 +162,18 @@ node-agent:
             headers = {
               "X-Scope-OrgID" = {{ .Values.metrics.mimirTenantID | quote }},
             }
+            {{- end }}
+            {{- with .Values.metrics.mimirOAuth2 }}
+            {{- if .clientId }}
+            oauth2 {
+              client_id     = {{ .clientId | quote }}
+              client_secret = {{ .clientSecret | quote }}
+              token_url     = {{ .tokenUrl | quote }}
+              {{- if .scopes }}
+              scopes        = [{{ range $i, $s := .scopes }}{{ if $i }}, {{ end }}{{ $s | quote }}{{ end }}]
+              {{- end }}
+            }
+            {{- end }}
             {{- end }}
           }
           {{- end }}
@@ -394,6 +419,18 @@ node-agent:
             {{- if .Values.logs.lokiTenantID }}
             tenant_id = {{ .Values.logs.lokiTenantID | quote }}
             {{- end }}
+            {{- with .Values.logs.lokiOAuth2 }}
+            {{- if .clientId }}
+            oauth2 {
+              client_id     = {{ .clientId | quote }}
+              client_secret = {{ .clientSecret | quote }}
+              token_url     = {{ .tokenUrl | quote }}
+              {{- if .scopes }}
+              scopes        = [{{ range $i, $s := .scopes }}{{ if $i }}, {{ end }}{{ $s | quote }}{{ end }}]
+              {{- end }}
+            }
+            {{- end }}
+            {{- end }}
           }
         }
         {{- end }}
@@ -588,6 +625,12 @@ cluster-metrics:
   prometheusEndpoint: ""
   # See node-agent.metrics.mimirTenantID.
   mimirTenantID: "anonymous"
+  # See node-agent.metrics.mimirOAuth2. The rules use it too.
+  mimirOAuth2:
+    clientId: ""
+    clientSecret: ""
+    tokenUrl: ""
+    scopes: []
 
   # Gateway the UI's HTTPRoute attaches to.
   createRoute: false
@@ -671,6 +714,18 @@ cluster-metrics:
             headers = {
               "X-Scope-OrgID" = {{ .Values.mimirTenantID | quote }},
             }
+            {{- end }}
+            {{- with .Values.mimirOAuth2 }}
+            {{- if .clientId }}
+            oauth2 {
+              client_id     = {{ .clientId | quote }}
+              client_secret = {{ .clientSecret | quote }}
+              token_url     = {{ .tokenUrl | quote }}
+              {{- if .scopes }}
+              scopes        = [{{ range $i, $s := .scopes }}{{ if $i }}, {{ end }}{{ $s | quote }}{{ end }}]
+              {{- end }}
+            }
+            {{- end }}
             {{- end }}
           }
           {{- end }}
@@ -972,6 +1027,18 @@ cluster-metrics:
           {{- if .Values.mimirTenantID }}
           tenant_id = {{ .Values.mimirTenantID | quote }}
           {{- end }}
+          {{- with .Values.mimirOAuth2 }}
+          {{- if .clientId }}
+          oauth2 {
+            client_id     = {{ .clientId | quote }}
+            client_secret = {{ .clientSecret | quote }}
+            token_url     = {{ .tokenUrl | quote }}
+            {{- if .scopes }}
+            scopes        = [{{ range $i, $s := .scopes }}{{ if $i }}, {{ end }}{{ $s | quote }}{{ end }}]
+            {{- end }}
+          }
+          {{- end }}
+          {{- end }}
         }
         {{- end }}
         {{- if .Values.selfMonitor }}
@@ -1107,6 +1174,12 @@ receiver:
     # Point this at a dedicated instance, or at least to a distinct tenant.
     lokiEndpoint: ""
     lokiTenantID: ""
+    # See node-agent.logs.lokiOAuth2.
+    lokiOAuth2:
+      clientId: ""
+      clientSecret: ""
+      tokenUrl: ""
+      scopes: []
     # Labels added to every log stream, e.g. {cluster: prod}. The agent sets `cluster` to
     # the name of the cluster, as for node-agent.logs.externalLabels.
     externalLabels: {}
@@ -1137,6 +1210,18 @@ receiver:
             url = {{ required "receiver.faro.lokiEndpoint must be set when receiver.faro.enabled is true" .Values.faro.lokiEndpoint | quote }}
             {{- if .Values.faro.lokiTenantID }}
             tenant_id = {{ .Values.faro.lokiTenantID | quote }}
+            {{- end }}
+            {{- with .Values.faro.lokiOAuth2 }}
+            {{- if .clientId }}
+            oauth2 {
+              client_id     = {{ .clientId | quote }}
+              client_secret = {{ .clientSecret | quote }}
+              token_url     = {{ .tokenUrl | quote }}
+              {{- if .scopes }}
+              scopes        = [{{ range $i, $s := .scopes }}{{ if $i }}, {{ end }}{{ $s | quote }}{{ end }}]
+              {{- end }}
+            }
+            {{- end }}
             {{- end }}
           }
         }
