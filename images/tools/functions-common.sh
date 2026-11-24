@@ -68,11 +68,7 @@ terraform_plan_destroy() {
 # Run terraform apply
 terraform_apply() {
     if [ "$TERRAFORM_CACHE" == "true" ]; then
-        # The lock file travels inside .terraform, see restore_cached_lock_file.
-        if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
-            cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
-        fi
-        sync_terraform_cache "$INFRALIB_BUCKET" "$TF_VAR_prefix"
+        store_terraform_cache
     fi
     $TF_TOOL apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
     if [ $? -ne 0 ]; then
@@ -302,6 +298,12 @@ terraform_init() {
         rm -rf "$TF_LOCK_FILE" .terraform
         $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
         init_status=$?
+        # The new cache goes to the bucket now and not with the apply: a plan
+        # without changes has no apply, and every later run would download
+        # the old cache only to throw it away again.
+        if [ $init_status -eq 0 ]; then
+            store_terraform_cache
+        fi
     fi
     if [ $init_status -ne 0 ]; then
         echo "Terraform init failed."
@@ -309,8 +311,17 @@ terraform_init() {
     fi
 }
 
+# Send .terraform to the bucket, with the lock file in it (see
+# restore_cached_lock_file for why it is kept there).
+store_terraform_cache() {
+    if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
+        cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
+    fi
+    sync_terraform_cache "$INFRALIB_BUCKET" "$TF_VAR_prefix"
+}
+
 # The dependency lock file travels with the terraform cache, inside .terraform,
-# where terraform_apply copies it before the cache is synced: the agent
+# where store_terraform_cache copies it before the cache is synced: the agent
 # removes the files it does not know from the step folder of the bucket, and
 # leaves that folder alone. Without the lock file init has no checksums to
 # trust the cached providers by and installs every one again.
