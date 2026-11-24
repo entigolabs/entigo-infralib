@@ -19,9 +19,10 @@ With the default inputs the module is a log shipper only.
 
 ## Metrics
 
-Use either this module's metrics or the `prometheus` module on a cluster, not
-both. They scrape the same targets, so running both collects everything twice,
-and both can install the Prometheus Operator CRDs.
+Collect metrics with either this module or the `prometheus` module's own
+scrape jobs on a cluster, not both. They scrape the same targets, so running
+both collects everything twice, and both can install the Prometheus Operator
+CRDs.
 
 Turn the two parts on together. `node-agent` covers what lives on a node,
 `cluster-metrics` covers the rest, and the bundled Grafana dashboards need both:
@@ -39,9 +40,10 @@ Turn the two parts on together. `node-agent` covers what lives on a node,
 
 What this needs next to it:
 
-- **A Mimir to write to.** By default the `mimir` module of the same platform,
-  found by the agent. For a Mimir somewhere else see
-  [Mimir in another place](#mimir-in-another-place).
+- **A store to write to.** By default the `mimir` module of the same platform,
+  found by the agent, and the `prometheus` module when there is one, see
+  [Prometheus as the store](#prometheus-as-the-store). For a Mimir somewhere
+  else see [Mimir in another place](#mimir-in-another-place).
 - **The `kube-state-metrics` module.** The `prometheus` module brings its own
   kube-state-metrics, this module does not. `cluster-metrics` scrapes the pods
   labelled `app.kubernetes.io/name: kube-state-metrics` on port 8080; without
@@ -136,6 +138,25 @@ URL of both parts. An input replaces what the agent would have looked up:
   `cluster-metrics.networkPolicy.egress`. These are lists, so the input has to
   repeat the whole list (`agent_input_<cloud>.yaml` for `node-agent`,
   `values.yaml` for `cluster-metrics`) with the rule added.
+
+### Prometheus as the store
+
+With metrics enabled, alloy writes to the Mimir and to the Prometheus of the
+platform, whichever of the two modules exist, and to both when both do. The
+agent finds them; nothing has to be set.
+
+A Prometheus that alloy writes to is a store, not a collector. It needs its
+remote write receiver on (`--web.enable-remote-write-receiver`), and its own
+scrape jobs, node exporter and kube-state-metrics off, or everything is stored
+twice. Enabling alloy metrics on a platform is the decision to stop Prometheus
+scraping there.
+
+- A Prometheus somewhere else: set `prometheusEndpoint` on both parts, the URL
+  ends in `/api/v1/write`.
+- Not writing to a Mimir or Prometheus that is part of the platform: set
+  `mimirModule: ""` or `prometheusModule: ""` on both parts.
+- `cluster-metrics.rules` works with Mimir only. A Prometheus keeps its rules
+  in its own configuration.
 
 Loki works the same way, with `node-agent.logs.lokiEndpoint` (ending in
 `/loki/api/v1/push`) and `node-agent.logs.lokiTenantID`.
