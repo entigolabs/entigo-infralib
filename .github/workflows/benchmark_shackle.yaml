@@ -75,8 +75,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         VERSION: ${{ inputs.version }}
-        # TEMPORARY default, to try the script of a shackle branch from this pull request.
-        SCRIPT_REF: ${{ inputs.script_ref || '9e75cff14571a8b405ef002e875df87d439576b9' }}
+        SCRIPT_REF: ${{ inputs.script_ref }}
       run: |
         set -euo pipefail
         version=${VERSION:-$(gh release view --repo entigolabs/shackle --json tagName --jq .tagName)}
