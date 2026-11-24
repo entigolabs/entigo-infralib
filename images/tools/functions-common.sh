@@ -68,7 +68,10 @@ terraform_plan_destroy() {
 # Run terraform apply
 terraform_apply() {
     if [ "$TERRAFORM_CACHE" == "true" ]; then
-        save_cached_lock_file
+        # The lock file travels inside .terraform, see restore_cached_lock_file.
+        if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
+            cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
+        fi
         sync_terraform_cache "$INFRALIB_BUCKET" "$TF_VAR_prefix"
     fi
     $TF_TOOL apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
@@ -302,10 +305,11 @@ terraform_init() {
     fi
 }
 
-# The dependency lock file travels with the terraform cache, inside .terraform:
-# the agent removes the files it does not know from the step folder of the
-# bucket, and leaves that folder alone. Without the lock file init has no
-# checksums to trust the cached providers by and installs every one again.
+# The dependency lock file travels with the terraform cache, inside .terraform,
+# where terraform_apply copies it before the cache is synced: the agent
+# removes the files it does not know from the step folder of the bucket, and
+# leaves that folder alone. Without the lock file init has no checksums to
+# trust the cached providers by and installs every one again.
 TF_LOCK_FILE=".terraform.lock.hcl"
 TF_CACHED_LOCK_FILE=".terraform/terraform.lock.hcl"
 
@@ -316,13 +320,6 @@ restore_cached_lock_file() {
     fi
     echo "Using the cached $TF_LOCK_FILE"
     cp "$TF_CACHED_LOCK_FILE" "$TF_LOCK_FILE"
-}
-
-# Copy the lock file into .terraform, for sync_terraform_cache to carry along.
-save_cached_lock_file() {
-    if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
-        cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
-    fi
 }
 
 # Get ArgoCD hostname, prefer Gateway API HTTPRoute and fall back to Ingress
