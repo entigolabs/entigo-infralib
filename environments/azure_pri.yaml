@@ -42,5 +42,6 @@ steps:
       - source: kyverno
       - source: loki
       - source: prometheus
+      - source: rbac-bindings
       - source: trivy
       - source: wireguard
