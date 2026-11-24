@@ -31,6 +31,7 @@ spec:
       - "Allow any-user to read postgres-configurations in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to read postgres-work-requests in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to manage network-security-groups in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to use vcns in compartment id {{ $compartment }} where all { {{ $wl }}, any { request.operation = 'CreateNetworkSecurityGroup', request.operation = 'DeleteNetworkSecurityGroup' } }"
 {{- end }}
   providerConfigRef:
     name: {{ .Values.oci.providerConfigRefName }}
