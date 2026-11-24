@@ -394,6 +394,35 @@ resource "azurerm_role_assignment" "cluster_admin" {
   }
 }
 
+# OIDC login (Zitadel) with the aws/eks cluster_identity_providers input. AKS structured authentication is preview
+# (subscription feature Microsoft.ContainerService/JWTAuthenticatorPreview) and every user and group must start with
+# aks:jwt:. Each authenticator updates the managed cluster, so after the node pools
+resource "azapi_resource" "jwt_authenticator" {
+  for_each                  = var.cluster_identity_providers
+  type                      = "Microsoft.ContainerService/managedClusters/jwtAuthenticators@2026-06-02-preview"
+  name                      = try(each.value.identity_provider_config_name, each.key)
+  parent_id                 = module.aks.resource_id
+  schema_validation_enabled = false
+  body = {
+    properties = merge(
+      {
+        issuer = {
+          url       = each.value.issuer_url
+          audiences = [each.value.client_id]
+        }
+        claimValidationRules = [for k, v in try(each.value.required_claims, {}) : { expression = "claims['${k}'] == '${v}'" }]
+        claimMappings = merge(
+          { username = { expression = "'aks:jwt:${try(each.value.username_prefix, "")}' + claims['${try(each.value.username_claim, "sub")}']" } },
+          try(each.value.groups_claim, "") != "" ? { groups = { expression = "'${each.value.groups_claim}' in claims ? claims['${each.value.groups_claim}'].map(g, 'aks:jwt:${try(each.value.groups_prefix, "")}' + g) : []" } } : null
+        )
+      },
+      try(each.value.ca_certificate, "") != "" ? { certificateAuthorityBundle = base64decode(each.value.ca_certificate) } : null
+    )
+  }
+
+  depends_on = [module.main, module.mon]
+}
+
 resource "azurerm_log_analytics_workspace" "control_plane" {
   count               = var.control_plane_logs_enabled ? 1 : 0
   name                = "${var.prefix}-logs"

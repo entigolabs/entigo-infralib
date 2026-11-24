@@ -22,6 +22,10 @@ output "cluster_oidc_issuer_url" {
   value = module.aks.oidc_issuer_profile_issuer_url
 }
 
+output "cluster_identity_providers" {
+  value = { for k, v in azapi_resource.jwt_authenticator : k => v.id }
+}
+
 output "region" {
   value = var.location
 }

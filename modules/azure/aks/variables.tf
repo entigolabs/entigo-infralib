@@ -138,6 +138,19 @@ variable "disable_local_accounts" {
   default = true
 }
 
+variable "cluster_identity_providers" {
+  type    = any
+  default = {}
+  validation {
+    condition     = alltrue([for k, v in var.cluster_identity_providers : can(regex("^[a-z][a-z0-9]{0,23}$", try(v.identity_provider_config_name, k)))])
+    error_message = "cluster_identity_providers names (identity_provider_config_name or the key) must be a lowercase letter followed by at most 23 lowercase letters or digits."
+  }
+  validation {
+    condition     = length(var.cluster_identity_providers) == 0 || !var.api_server_vnet_integration_enabled
+    error_message = "cluster_identity_providers needs api_server_vnet_integration_enabled = false: AKS JWT authenticators don't work with API Server VNet Integration (https://github.com/Azure/AKS/issues/6037)."
+  }
+}
+
 variable "acr_id" {
   type    = string
   default = ""

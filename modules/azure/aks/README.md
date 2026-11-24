@@ -58,6 +58,31 @@ Azure CNI Overlay + Cilium, NAT gateway egress (vpc), Workload Identity + OIDC i
   Cluster Admin and keeps it, a later run by someone else doesn't replace it. Others who run the module or need admin
   access go to `admin_object_ids` (not the installing identity, the plan rejects it).
   The kubelet identity gets AcrPull on `acr_id` and `kubelet_additional_role_assignments`.
+* `cluster_identity_providers`: OIDC login to the API server (e.g. the portal's Zitadel), the same input as aws/eks,
+  next to Entra ID. Each entry becomes a JWT authenticator named by `identity_provider_config_name` or its key
+  (lowercase letters and digits, at most 24): the token audience is `client_id`, the username is `username_claim`
+  (default `sub`) and the groups the list in `groups_claim`, with `required_claims` checked. AKS requires every
+  username and group to start with `aks:jwt:`, which the module puts before `username_prefix`/`groups_prefix`, so
+  RBAC subjects are e.g. `aks:jwt:oidc:<group>`. `ca_certificate` (base64 PEM, like oracle/oke) is the CA bundle
+  for an issuer with a private certificate. Only without API Server VNet Integration (`api_server_vnet_integration_enabled:
+  false`, a private link or public cluster): AKS can't reach the issuer from VNet-integrated clusters yet
+  ([Azure/AKS#6037](https://github.com/Azure/AKS/issues/6037)), the plan refuses the combination. AKS structured
+  authentication is preview: register the feature first,
+  `az feature register --namespace Microsoft.ContainerService --name JWTAuthenticatorPreview`, then
+  `az provider register --namespace Microsoft.ContainerService`.
+  ```
+  cluster_identity_providers: |
+    {
+      zitadel = {
+        client_id       = "<the workspace's OIDC application client id>"
+        issuer_url      = "https://<tenant>.zitadel.cloud"
+        username_claim  = "sub"
+        username_prefix = "oidc:"
+        groups_claim    = "groups"
+        groups_prefix   = "oidc:"
+      }
+    }
+  ```
 * `agc_subnet_ids` (vpc `public_agc_subnets`) creates the workload identity of the ALB controller (k8s azure-gateway, one
   per cluster, service account `alb-controller-sa` in `alb_controller_namespace`, default `azure-gateway`): Reader +
   AppGw for Containers Configuration Manager on the node resource group, Network Contributor on every AGC subnet (one
