@@ -68,6 +68,10 @@ terraform_plan_destroy() {
 # Run terraform apply
 terraform_apply() {
     if [ "$TERRAFORM_CACHE" == "true" ]; then
+        # The lock file travels inside .terraform, see restore_cached_lock_file.
+        if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
+            cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
+        fi
         sync_terraform_cache "$INFRALIB_BUCKET" "$TF_VAR_prefix"
     fi
     $TF_TOOL apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
@@ -281,12 +285,45 @@ terraform_init() {
     #
     find .terraform/providers -name 'terraform-provider-*' -exec chmod +x {} +
 
+    restore_cached_lock_file
+    local lock_restored=$?
+
     # tofu requires -reconfigure when taking over a Terraform-initialized backend
     $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
-    if [ $? -ne 0 ]; then
+    local init_status=$?
+    if [ $init_status -ne 0 ] && [ $lock_restored -eq 0 ]; then
+        # The cached lock file holds the provider versions of the previous run.
+        # When the modules now ask for other versions, init refuses the lock.
+        # The cache goes with it: without a lock file init installs every
+        # provider again, so nothing in it would be reused, and a version
+        # left behind would be carried along for good (the sync of the next
+        # apply removes from the bucket what is not here).
+        echo "Init failed with the cached $TF_LOCK_FILE, retrying with an empty cache."
+        rm -rf "$TF_LOCK_FILE" .terraform
+        $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
+        init_status=$?
+    fi
+    if [ $init_status -ne 0 ]; then
         echo "Terraform init failed."
         exit 14
     fi
+}
+
+# The dependency lock file travels with the terraform cache, inside .terraform,
+# where terraform_apply copies it before the cache is synced: the agent
+# removes the files it does not know from the step folder of the bucket, and
+# leaves that folder alone. Without the lock file init has no checksums to
+# trust the cached providers by and installs every one again.
+TF_LOCK_FILE=".terraform.lock.hcl"
+TF_CACHED_LOCK_FILE=".terraform/terraform.lock.hcl"
+
+# Put the cached lock file in place before init. Returns 0 if it did.
+restore_cached_lock_file() {
+    if [ "$TERRAFORM_CACHE" != "true" ] || [ -f "$TF_LOCK_FILE" ] || [ ! -f "$TF_CACHED_LOCK_FILE" ]; then
+        return 1
+    fi
+    echo "Using the cached $TF_LOCK_FILE"
+    cp "$TF_CACHED_LOCK_FILE" "$TF_LOCK_FILE"
 }
 
 # Get ArgoCD hostname, prefer Gateway API HTTPRoute and fall back to Ingress
