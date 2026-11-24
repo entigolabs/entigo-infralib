@@ -76,7 +76,6 @@ data "aws_iam_policy_document" "endpoint" {
         "arn:aws:s3:::prod-${data.aws_region.current.region}-starport-layer-bucket/*",
         "arn:aws:s3:::al2023-repos-${data.aws_region.current.region}-*/*",
         "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.current.region}/*",
-        "arn:aws:s3:::docker-images-prod/*",
       ]
       principals {
         type        = "*"
