@@ -1,3 +1,6 @@
 ---
 global:
   createObservers: true
+  # The platform-apis PostgreSQLCluster OCI backend composes DB systems.
+  extraProviders:
+  - psql

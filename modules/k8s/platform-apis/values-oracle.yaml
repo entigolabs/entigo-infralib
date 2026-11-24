@@ -16,6 +16,12 @@ platform-apis:
       computeSubnetType: private
   postgresql:
     install: false
+  # PostgreSQLCluster on OCI Database with PostgreSQL. Off until a deployment enables it, which
+  # also needs the psql provider in crossplane-oracle's global.extraProviders.
+  postgresqlcluster:
+    install: false
+    backends:
+    - PostgreSQLOCIConfig.oci.database.entigo.com
   valkey:
     install: false
   repository:

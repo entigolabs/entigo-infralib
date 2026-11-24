@@ -1,5 +1,6 @@
 {{- if eq .Values.global.cloudProvider "oracle" }}
 {{- $compartment := .Values.oci.compartmentId }}
+{{- $postgresql := (index .Values "platform-apis" "postgresqlcluster" | default dict).install }}
 {{- $wl := printf "request.principal.type = 'workload', request.principal.cluster_id = '%s', request.principal.namespace = '%s', request.principal.service_account = '%s'" .Values.oci.clusterId .Values.oci.crossplaneNamespace .Values.oci.crossplaneServiceAccount }}
 apiVersion: identity.oci.upbound.io/v1alpha1
 kind: Policy
@@ -12,7 +13,7 @@ spec:
   forProvider:
     compartmentId: {{ $compartment }}
     name: {{ .Release.Name }}
-    description: Grants the Crossplane OCI provider permission to manage Zone node pools, via OKE Workload Identity
+    description: Grants the Crossplane OCI provider permission to manage Zone node pools{{ if $postgresql }} and PostgreSQL DB systems{{ end }}, via OKE Workload Identity
     freeformTags:
       created-by: "entigo-infralib"
     statements:
@@ -23,6 +24,11 @@ spec:
       - "Allow any-user to use network-security-groups in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to read virtual-network-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
       - "Allow any-user to inspect compartments in compartment id {{ $compartment }} where all { {{ $wl }} }"
+{{- if $postgresql }}
+      # PostgreSQLCluster: the DB system, and the security group that admits the cluster's workloads.
+      - "Allow any-user to manage postgres-db-family in compartment id {{ $compartment }} where all { {{ $wl }} }"
+      - "Allow any-user to manage network-security-groups in compartment id {{ $compartment }} where all { {{ $wl }} }"
+{{- end }}
   providerConfigRef:
     name: {{ .Values.oci.providerConfigRefName }}
 {{- end }}

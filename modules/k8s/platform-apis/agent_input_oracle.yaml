@@ -28,3 +28,5 @@ platform-apis:
   database:
     environmentConfig:
       esClusterSecretStore: not-used-on-oracle
+      oci:
+        providerConfig: "{{ .tmodule.crossplane-oracle }}"
