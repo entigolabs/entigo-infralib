@@ -294,8 +294,12 @@ terraform_init() {
     if [ $init_status -ne 0 ] && [ $lock_restored -eq 0 ]; then
         # The cached lock file holds the provider versions of the previous run.
         # When the modules now ask for other versions, init refuses the lock.
-        echo "Init failed with the cached $TF_LOCK_FILE, retrying without it."
-        rm -f "$TF_LOCK_FILE"
+        # The cache goes with it: without a lock file init installs every
+        # provider again, so nothing in it would be reused, and a version
+        # left behind would be carried along for good (the sync of the next
+        # apply removes from the bucket what is not here).
+        echo "Init failed with the cached $TF_LOCK_FILE, retrying with an empty cache."
+        rm -rf "$TF_LOCK_FILE" .terraform
         $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
         init_status=$?
     fi
