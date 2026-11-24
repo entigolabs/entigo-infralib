@@ -19,6 +19,9 @@ on:
       runs:
         description: runs per case; the median is reported
         default: '5'
+      script_ref:
+        description: branch, tag or commit of the shackle repository to take scripts/bench.sh from; empty means the version's tag
+        default: ''
   pull_request:
     paths:
       - .github/workflows/benchmark_shackle.yaml
@@ -72,6 +75,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         VERSION: ${{ inputs.version }}
+        # TEMPORARY default, to try the script of a shackle branch from this pull request.
+        SCRIPT_REF: ${{ inputs.script_ref || '9e75cff14571a8b405ef002e875df87d439576b9' }}
       run: |
         set -euo pipefail
         version=${VERSION:-$(gh release view --repo entigolabs/shackle --json tagName --jq .tagName)}
@@ -82,7 +87,7 @@ jobs:
         curl -fsSL -o dist/SHA256SUMS "$base/SHA256SUMS"
         (cd dist && grep ' shackle-linux-amd64$' SHA256SUMS | sha256sum -c -)
         chmod +x dist/shackle-linux-amd64
-        curl -fsSL -o scripts/bench.sh "https://raw.githubusercontent.com/entigolabs/shackle/${version}/scripts/bench.sh"
+        curl -fsSL -o scripts/bench.sh "https://raw.githubusercontent.com/entigolabs/shackle/${SCRIPT_REF:-$version}/scripts/bench.sh"
         chmod +x scripts/bench.sh
         echo "SHACKLE_VERSION=${version}" >> "$GITHUB_ENV"
     - name: Benchmark
@@ -93,7 +98,8 @@ jobs:
         set -euo pipefail
         cd bench
         # The credential files belong to the runner's user.
-        export BENCH_DOCKER_ARGS="-u $(id -u):$(id -g) -e HOME=/tmp"
+        BENCH_DOCKER_ARGS="-u $(id -u):$(id -g) -e HOME=/tmp"
+        export BENCH_DOCKER_ARGS
         case $CLOUD in
           aws)
             account=$(aws sts get-caller-identity --query Account --output text)
