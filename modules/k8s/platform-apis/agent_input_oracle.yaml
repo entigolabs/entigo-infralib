@@ -30,3 +30,4 @@ platform-apis:
       esClusterSecretStore: not-used-on-oracle
       oci:
         providerConfig: "{{ .tmodule.crossplane-oracle }}"
+        availabilityDomains: "{{ .toutput.oke.availability_domains }}"
