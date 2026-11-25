@@ -18,10 +18,10 @@ func TestLoki(t *testing.T) {
 	env.Run(t, func(t *testing.T, e *env.Environment) {
 		c := k8s.Connect(t, e)
 
-		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-read", 20, 6*time.Second), "loki-read deployment error")
-		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, c.Namespace+"-gateway", 20, 6*time.Second), "loki-gateway deployment error")
-		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, c.Namespace+"-write-0", 20, 6*time.Second), "loki-write-0 pod error")
-		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, c.Namespace+"-backend-0", 20, 6*time.Second), "loki-backend-0 pod error")
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "loki-read", 20, 6*time.Second), "loki-read deployment error")
+		require.NoError(t, k8s.WaitUntilDeploymentAvailableE(t, c, "loki-gateway", 20, 6*time.Second), "loki-gateway deployment error")
+		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, "loki-write-0", 20, 6*time.Second), "loki-write-0 pod error")
+		require.NoError(t, k8s.WaitUntilPodAvailableE(t, c, "loki-backend-0", 20, 6*time.Second), "loki-backend-0 pod error")
 
 		// Loki writes a cluster seed file to its store on startup, which proves the
 		// pods can write to the bucket with their cloud identity.

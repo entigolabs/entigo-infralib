@@ -1,9 +1,11 @@
-logs:
+node-agent:
+  logs:
+    externalLabels:
+      cluster: "{{ .toutput.oke.cluster_name }}"
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.oke.cluster_name }}"
   networkPolicy:
-    # The whole egress list, not just the oracle-specific rule: Helm replaces lists rather
-    # than merging them, so the DNS and loki rules have to be repeated to survive. Nothing
-    # enforces any of it today - OKE ships no policy controller with either CNI - but it
-    # documents intent and is ready for the day one is added.
     egress:
       - ports:
           - port: 53
@@ -14,29 +16,29 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
-                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node
+      - ports:
+          - port: 10250
+            protocol: TCP
       - ports:
           - port: 443
             protocol: TCP
         to:
           - ipBlock:
               cidr: "{{ .toutput.oke.kubernetes_service_ip }}/32"
-      # This list replaces values.yaml's egress list entirely, so the traces
-      # exporter's rule (otelcol.exporter.otlp -> <tempo>:4317) has to be
-      # repeated here — without it spans queue in Alloy and never reach Tempo.
-      # Harmless when traces.enabled is false: nothing opens the connection.
+      # The same API server after Service translation, which is where Cilium checks it.
+      - ports:
+          - port: 6443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.oke.private_endpoint_ip }}/32"
       - ports:
           - port: 4317
             protocol: TCP
@@ -44,3 +46,36 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.oke.cluster_name }}"
+  # values.yaml's list with the API server added on the port Cilium checks it at, after
+  # Service translation.
+  networkPolicy:
+    egress:
+      # All in-cluster scrape targets
+      - to:
+          - namespaceSelector: {}
+      # Loki and Mimir, in this cluster or in another one.
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 8080
+            protocol: TCP
+      # The Kubernetes API, for discovery, and the API servers themselves, which are scraped
+      # at their own addresses outside the pod network.
+      - ports:
+          - port: 443
+            protocol: TCP
+      - ports:
+          - port: 6443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: "{{ .toutput.oke.private_endpoint_ip }}/32"
+
+receiver:
+  faro:
+    externalLabels:
+      cluster: "{{ .toutput.oke.cluster_name }}"

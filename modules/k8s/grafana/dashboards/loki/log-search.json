@@ -172,8 +172,8 @@
       {
         "current": {
           "selected": false,
-          "text": "dev",
-          "value": "dev"
+          "text": "",
+          "value": ""
         },
         "datasource": "$datasource",
         "definition": "label_values({}, namespace)",
@@ -191,7 +191,7 @@
         "type": "query"
       },
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "selected": false,
           "text": "All",
@@ -213,7 +213,7 @@
         "type": "query"
       },
       {
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "selected": false,
           "text": "All",
