@@ -4,4 +4,4 @@ modules:
   - source: terraform-aws-modules/eks/aws
     version: 21.30.2
   - source: terraform-aws-modules/iam/aws
-    version: 6.11.1
+    version: 6.11.2
