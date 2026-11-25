@@ -28,3 +28,7 @@ data "oci_containerengine_cluster_kube_config" "this" {
   token_version = "2.0.0"
   endpoint      = var.is_public_ip_enabled ? "PUBLIC_ENDPOINT" : "PRIVATE_ENDPOINT"
 }
+
+data "oci_identity_availability_domains" "this" {
+  compartment_id = var.compartment_id
+}

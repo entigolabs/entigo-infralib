@@ -145,3 +145,10 @@ output "node_nsg_id" {
 output "pod_nsg_id" {
   value = oci_core_network_security_group.pods.id
 }
+
+output "availability_domain" {
+  # The region's availability domain where it has only one, empty where it has more. Services that
+  # keep data regionally only in regions with three, such as OCI Database with PostgreSQL, need the
+  # name elsewhere, and it carries a tenancy-specific prefix (wAtM:eu-frankfurt-2-ad-1).
+  value = length(data.oci_identity_availability_domains.this.availability_domains) == 1 ? data.oci_identity_availability_domains.this.availability_domains[0].name : ""
+}
