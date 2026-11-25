@@ -87,7 +87,8 @@ resource "aws_iam_role_policy_attachment" "config_rules" {
 
 # S3 Bucket for Config logs
 resource "aws_s3_bucket" "config_rules_logs" {
-  bucket = substr(var.config_logs_bucket, 0, 63)
+  bucket        = substr(var.config_logs_bucket, 0, 63)
+  force_destroy = var.force_destroy
   tags = {
     created-by = "entigo-infralib"
   }

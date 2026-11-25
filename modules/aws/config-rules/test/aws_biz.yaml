@@ -7,3 +7,7 @@ recording_mode_override: |
     resource_types      = ["AWS::EC2::Instance"]
     recording_frequency = "DAILY"
   }
+# The module is installed on some days only (run_days in module.yaml) and the
+# test account is emptied daily, so its log buckets go with what AWS Config
+# has delivered into them.
+force_destroy: true
