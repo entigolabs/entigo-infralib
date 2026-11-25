@@ -68,6 +68,10 @@ write_digests() {
     fi
     mv "$VALUES_FILE.tmp" "$VALUES_FILE"
     echo "Wrote $(grep -c sha256: "$VALUES_FILE") digests to $VALUES_FILE"
+    # The file was written anew: put the module's pod image digests back.
+    if [ -f "$MODULE_DIR/pod-images.txt" ]; then
+        "$(dirname "${BASH_SOURCE[0]}")/pod-images.sh" "$MODULE_DIR" || exit 2
+    fi
 }
 
 mirror() {
