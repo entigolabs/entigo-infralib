@@ -5,7 +5,7 @@
 modules:
   - name: terraform-aws-eks
     source: terraform-aws-modules/eks/aws
-    version: 21.29.0
+    version: 21.30.2
     repository: https://github.com/terraform-aws-modules/terraform-aws-eks
-    commit: 91f11ea01656c26b8e6b8eb1b74f19863f60056c
-    checksum: sha256:e6da5aeb5fc25aaf8966be9a4f38259b5aa263e16906283dc3e81fb696c44ef4
+    commit: 25c846a384bc66d16cc801d2f851431deb38de5d
+    checksum: sha256:5bcbf80ba06c54a521ff2ed46074da4014a8c1a9da07cb431c9ae7b3958c709c

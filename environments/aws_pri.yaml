@@ -54,7 +54,6 @@ steps:
       - source: kyverno
       - source: loki
       - source: metrics-server
-      - source: mimir
       - name: platform-apis
         source: platform-apis
       - source: prometheus

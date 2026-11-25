@@ -29,7 +29,7 @@ cluster_identity_providers: |
   {
     zitadel = {
       client_id = "390876949670608879"
-      groups_claim = "groups"
+      groups_claim = "role_grants"
       groups_prefix = "oidc:"
       identity_provider_config_name = "zitadel"
       issuer_url = "https://entigo-dev-if3upz.zitadel.cloud"
