@@ -18,7 +18,7 @@ modules:
     checksum: sha256:85f7068d98d57ef1b88301416a193658fdfe7fbe2e487bbf1830b56c0588b889
   - name: terraform-aws-iam
     source: terraform-aws-modules/iam/aws
-    version: 6.11.1
+    version: 6.11.2
     repository: https://github.com/terraform-aws-modules/terraform-aws-iam
-    commit: b42db0208b69c731093a8d46da03f505378841a3
-    checksum: sha256:7b43f64de13ff5eab557881bf8e35cd3a997b61ae02d0b6b382dac1bc4a0d564
+    commit: eade10d0ce9f46077fc304c6a68b83db44881f89
+    checksum: sha256:4e072857da7408ce26458eccb711e2aa39ddfeab9f8a4bc3c622efdab682ae43
