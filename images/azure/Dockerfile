@@ -3,7 +3,11 @@ FROM entigolabs/entigo-infralib-tools:${BASE_TAG} AS tools
 FROM mcr.microsoft.com/azure-cli:azurelinux3.0
 ARG TARGETARCH
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-ENV KUBELOGIN_VERSION=v0.2.21 YQ_VERSION=v4.53.6 AZCOPY_VERSION=10.32.8 \
+# The Azure CLI is still here for one thing: logging in as the managed
+# identity of a job for OpenTofu (functions-azure.sh). The bucket, the
+# registry and the cluster are reached with shackle, so kubelogin and azcopy
+# are gone.
+ENV YQ_VERSION=v4.53.6 \
     AZURE_CORE_COLLECT_TELEMETRY=false AZURE_CORE_ONLY_SHOW_ERRORS=true
 
 RUN tdnf install -y \
@@ -18,16 +22,8 @@ RUN tdnf install -y \
     diffutils \
     shadow-utils \
     && tdnf clean all \
-    # kubelogin is needed by AKS kubeconfigs
-    && curl -fsSL -o /tmp/kubelogin.zip "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-${TARGETARCH}.zip" \
-    && unzip -j /tmp/kubelogin.zip "bin/linux_${TARGETARCH}/kubelogin" -d /usr/bin/ \
-    && rm /tmp/kubelogin.zip \
     && curl -fsSL -o /usr/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETARCH}" \
-    && chmod +x /usr/bin/kubelogin /usr/bin/yq \
-    # azcopy syncs the terraform cache (functions-azure.sh)
-    && curl -fsSL "https://github.com/Azure/azure-storage-azcopy/releases/download/v${AZCOPY_VERSION}/azcopy_linux_${TARGETARCH}_${AZCOPY_VERSION}.tar.gz" \
-       | tar -xz --strip-components=1 -C /usr/bin "azcopy_linux_${TARGETARCH}_${AZCOPY_VERSION}/azcopy" \
-    && azcopy --version \
+    && chmod +x /usr/bin/yq \
     # Azure Linux uses update-ca-trust, keep the update-ca-certificates interface used by functions-common.sh
     && mkdir -p /usr/local/share/ca-certificates \
     && printf '#!/bin/bash\ncp /usr/local/share/ca-certificates/*.crt /etc/pki/ca-trust/source/anchors/\nupdate-ca-trust\n' > /usr/sbin/update-ca-certificates \

@@ -5,7 +5,9 @@ provider "kubernetes" {
   ignore_labels = ["app\\.kubernetes\\.io\\/managed-by","argocd\\.argoproj\\.io\\/instance"]
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    # shackle signs the token itself; the image has no AWS CLI. The region
+    # comes from AWS_REGION, which every step has.
+    command     = "shackle"
+    args        = ["token", "aws", "--cluster", module.eks.cluster_name]
   }
 }
