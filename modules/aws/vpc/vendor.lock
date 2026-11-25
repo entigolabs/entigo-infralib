@@ -5,7 +5,7 @@
 modules:
   - name: terraform-aws-vpc
     source: terraform-aws-modules/vpc/aws
-    version: 6.7.3
+    version: 6.8.0
     repository: https://github.com/terraform-aws-modules/terraform-aws-vpc
-    commit: b3abd6df2ecf052451a361ed55b8f06f8742a795
-    checksum: sha256:ba480e0613cffdf659baeaf82f413077b508f162165721e7c0aeeac46719303c
+    commit: 577ad620abe00da27a3a0f1e5acee041959fb3be
+    checksum: sha256:21820477961381eccbc1d68512dbde49baf06f992edc0629ed26c6843404b11b
