@@ -68,6 +68,10 @@ terraform_plan_destroy() {
 # Run terraform apply
 terraform_apply() {
     if [ "$TERRAFORM_CACHE" == "true" ]; then
+        # The lock file travels inside .terraform, see restore_cached_lock_file.
+        if [ -f "$TF_LOCK_FILE" ] && [ -d .terraform ]; then
+            cp "$TF_LOCK_FILE" "$TF_CACHED_LOCK_FILE"
+        fi
         sync_terraform_cache "$INFRALIB_BUCKET" "$TF_VAR_prefix"
     fi
     $TF_TOOL apply -no-color -input=false ${TF_VAR_prefix}.tf-plan
@@ -229,12 +233,24 @@ git_login() {
   password = \"${ACR_TOKEN}\""
       done
     elif [ -n "$AWS_REGION" ]; then
-      # Get current account number
-      ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      # The account's own registry
+      ECR_REGISTRY=$(get_ecr_registry) || { echo "Failed to find the ECR registry"; exit 25; }
 
-      tofurc_credentials "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" '  docker_credentials_helper = "ecr-login"'
+      # A token instead of the ecr-login credential helper, so that the step
+      # needs nothing but shackle. The helper asked for a token only when a
+      # module came from the registry; an identity that may not log in to it
+      # gets no credentials block and fails there, as before.
+      if ECR_TOKEN=$(get_ecr_token "${ECR_REGISTRY}" 2>/dev/null); then
+        tofurc_credentials "${ECR_REGISTRY}" "  username = \"${ECR_TOKEN_USERNAME}\"
+  password = \"${ECR_TOKEN}\""
+      fi
     elif [ ! -z "$GOOGLE_REGION" ]; then
-      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" '  docker_credentials_helper = "gcloud"'
+      # An access token instead of a credential helper: the helper is part of
+      # the gcloud CLI. The token is valid for an hour, and OpenTofu reads
+      # modules from the registry during init only.
+      GAR_TOKEN=$(get_gar_token) || { echo "Artifact Registry login failed for ${GOOGLE_REGION}-docker.pkg.dev"; exit 25; }
+      tofurc_credentials "${GOOGLE_REGION}-docker.pkg.dev" "  username = \"${GAR_TOKEN_USERNAME}\"
+  password = \"${GAR_TOKEN}\""
     fi
 }
 
@@ -269,12 +285,45 @@ terraform_init() {
     #
     find .terraform/providers -name 'terraform-provider-*' -exec chmod +x {} +
 
+    restore_cached_lock_file
+    local lock_restored=$?
+
     # tofu requires -reconfigure when taking over a Terraform-initialized backend
     $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
-    if [ $? -ne 0 ]; then
+    local init_status=$?
+    if [ $init_status -ne 0 ] && [ $lock_restored -eq 0 ]; then
+        # The cached lock file holds the provider versions of the previous run.
+        # When the modules now ask for other versions, init refuses the lock.
+        # The cache goes with it: without a lock file init installs every
+        # provider again, so nothing in it would be reused, and a version
+        # left behind would be carried along for good (the sync of the next
+        # apply removes from the bucket what is not here).
+        echo "Init failed with the cached $TF_LOCK_FILE, retrying with an empty cache."
+        rm -rf "$TF_LOCK_FILE" .terraform
+        $TF_TOOL init -input=false -reconfigure -backend-config=backend.conf
+        init_status=$?
+    fi
+    if [ $init_status -ne 0 ]; then
         echo "Terraform init failed."
         exit 14
     fi
+}
+
+# The dependency lock file travels with the terraform cache, inside .terraform,
+# where terraform_apply copies it before the cache is synced: the agent
+# removes the files it does not know from the step folder of the bucket, and
+# leaves that folder alone. Without the lock file init has no checksums to
+# trust the cached providers by and installs every one again.
+TF_LOCK_FILE=".terraform.lock.hcl"
+TF_CACHED_LOCK_FILE=".terraform/terraform.lock.hcl"
+
+# Put the cached lock file in place before init. Returns 0 if it did.
+restore_cached_lock_file() {
+    if [ "$TERRAFORM_CACHE" != "true" ] || [ -f "$TF_LOCK_FILE" ] || [ ! -f "$TF_CACHED_LOCK_FILE" ]; then
+        return 1
+    fi
+    echo "Using the cached $TF_LOCK_FILE"
+    cp "$TF_CACHED_LOCK_FILE" "$TF_LOCK_FILE"
 }
 
 # Get ArgoCD hostname, prefer Gateway API HTTPRoute and fall back to Ingress

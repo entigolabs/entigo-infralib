@@ -1,18 +1,50 @@
-logs:
+node-agent:
   controller:
     priorityClassName: "{{ .module.name }}"
     podLabels:
       netpol-loki: '{{ .toptmodule.loki | "loki" }}'
-  lokiEndpoint: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}/loki/api/v1/push"
+  # Optional lookups (not required): the platform may run Loki, Mimir or Prometheus in
+  # another instance, or not at all. Loki falls back to the default module name. For the
+  # metrics only the module names are passed, empty when the module is missing, and
+  # values.yaml builds the URLs: metrics go to the Mimir and the Prometheus that exist.
+  # Override the endpoints in the inputs to send to another instance.
+  logs:
+    lokiEndpoint: 'http://loki-gateway.{{ .toptmodule.loki | "loki" }}/loki/api/v1/push'
+  metrics:
+    mimirModule: '{{ .toptmodule.mimir }}'
+    prometheusModule: '{{ .toptmodule.prometheus }}'
   image:
     registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
   configReloader:
     image:
       registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'
-  # Optional lookup (not required): a stack that never deploys tempo must
+  # Optional tempo lookup (not required): a stack that never deploys tempo must
   # still be able to render this module with traces.enabled left at its
   # default false. No fallback on purpose: if traces.enabled is turned on
   # without a tempo module, values.yaml fails the render instead of pointing
   # the exporter at a tempo that isn't there.
   traces:
     tempoNamespace: '{{ .toptmodule.tempo }}'
+cluster-metrics:
+  controller:
+    priorityClassName: "{{ .module.name }}"
+  mimirModule: '{{ .toptmodule.mimir }}'
+  prometheusModule: '{{ .toptmodule.prometheus }}'
+  gateway:
+    name: '{{ .toptin.aws-alb.global.internalGateway | .toptin.google-gateway.global.internalGateway | .toptin.oracle-gateway.global.internalGateway | .toptin.azure-gateway.global.internalGateway | required }}'
+    namespace: '{{ .toptmodule.aws-alb | .toptmodule.google-gateway | .toptmodule.oracle-gateway | .toptmodule.azure-gateway | required }}'
+  ui:
+    host: "{{ .module.name }}.{{ .toptout.route53.int_domain | .toptout.dns.int_domain | required }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'
+receiver:
+  controller:
+    priorityClassName: "{{ .module.name }}"
+  image:
+    registry: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}'
+  configReloader:
+    image:
+      registry: '{{ .toptout.ecr-proxy.quay_registry | .toptout.gar-proxy.quay_registry | .toptout.acr-proxy.quay_registry | "quay.io" }}'

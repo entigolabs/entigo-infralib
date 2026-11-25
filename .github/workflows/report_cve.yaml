@@ -5,7 +5,7 @@
 # environments under environments/ describe; the framework's kubeconfig
 # action builds the contexts, and the report scripts run in each cloud's
 # test image (test.sh shell ENV -- command), which has the credential
-# plugin the context execs: oci for OKE, kubelogin for AKS.
+# plugin every context execs: shackle.
 name: Report CVE
 
 on:
@@ -38,11 +38,13 @@ jobs:
         google_credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
         oci_config: ${{ secrets.OCI_CONFIG }}
         oci_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
-    - uses: google-github-actions/setup-gcloud@v3
-      with:
-        install_components: gke-gcloud-auth-plugin
     - uses: entigolabs/entigo-infralib-test/.github/actions/kubeconfig@main
     - name: Create CVE report
+      env:
+        # Where the kubeconfig action writes the contexts. kubectl on the
+        # runner only lists and selects them; the clusters are reached from
+        # the test containers, which have shackle for the tokens.
+        KUBECONFIG: ${{ github.workspace }}/.infralib-test/kubeconfig
       run: |
         set -uo pipefail
         all_images=""

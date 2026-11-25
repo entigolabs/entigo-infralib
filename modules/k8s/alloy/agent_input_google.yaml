@@ -1,4 +1,10 @@
-logs:
+node-agent:
+  logs:
+    externalLabels:
+      cluster: "{{ .toutput.gke.cluster_name }}"
+  metrics:
+    externalLabels:
+      cluster: "{{ .toutput.gke.cluster_name }}"
   networkPolicy:
     egress:
       - ports:
@@ -10,19 +16,17 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
+      # Loki and Mimir, in this cluster or in another one.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
             protocol: TCP
-        to:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: '{{ .toptmodule.loki | "loki" }}'
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: '{{ .toptmodule.loki | "loki" }}'
-                app.kubernetes.io/component: gateway
+      # Kubelet / cAdvisor on the local node
+      - ports:
+          - port: 10250
+            protocol: TCP
+      # Kubernetes API
       - ports:
           - port: 443
             protocol: TCP
@@ -40,3 +44,12 @@ logs:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: '{{ .toptmodule.tempo | "tempo" }}'
+
+cluster-metrics:
+  externalLabels:
+    cluster: "{{ .toutput.gke.cluster_name }}"
+
+receiver:
+  faro:
+    externalLabels:
+      cluster: "{{ .toutput.gke.cluster_name }}"

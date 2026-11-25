@@ -9,7 +9,7 @@ global:
 
 job:
   image: docker.io/entigolabs/entigo-infralib-kubectl
-  tag: "v1.25.1"
+  tag: "v1.25.14"
 
 harbor:
   # Never fall back to the chart defaults (Harbor12345 / not-a-secure-key).

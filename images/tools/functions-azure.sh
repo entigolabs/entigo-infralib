@@ -7,21 +7,32 @@
 export PROVIDER="azure"
 [ -z "$AZURE_SUBSCRIPTION_ID" ] && echo "AZURE_SUBSCRIPTION_ID must be set" && exit 1
 export ARM_SUBSCRIPTION_ID="$AZURE_SUBSCRIPTION_ID"
+# OpenTofu reads a service principal from ARM_*, shackle from AZURE_*: whichever
+# set is given, both get it.
 if [ -z "$ARM_CLIENT_ID" ] && [ -n "$AZURE_CLIENT_SECRET" ]; then
     export ARM_CLIENT_ID="$AZURE_CLIENT_ID" ARM_CLIENT_SECRET="$AZURE_CLIENT_SECRET" ARM_TENANT_ID="$AZURE_TENANT_ID"
+elif [ -z "$AZURE_CLIENT_SECRET" ] && [ -n "$ARM_CLIENT_SECRET" ]; then
+    export AZURE_CLIENT_ID="$ARM_CLIENT_ID" AZURE_CLIENT_SECRET="$ARM_CLIENT_SECRET" AZURE_TENANT_ID="$ARM_TENANT_ID"
 fi
 AZ_CONTAINER="tfstate"
 
+# The bucket, the registry and the cluster are reached with shackle, which
+# takes the identity straight from the environment: the service principal
+# above, the managed identity of the job, or a mounted az login. The az CLI
+# is logged in for one case only: OpenTofu under a managed identity, where the
+# azurerm provider authenticates through the CLI.
 azure_login() {
-    if az account show >/dev/null 2>&1; then
-        :
-    elif [ -n "$ARM_CLIENT_ID" ] && [ -n "$ARM_CLIENT_SECRET" ]; then
-        az login --service-principal -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --tenant "$ARM_TENANT_ID" >/dev/null || exit 1
-    elif [ -n "$IDENTITY_ENDPOINT" ] || [ "$AZURE_CONTAINER_APP_JOB" == "true" ]; then
+    if [ -n "$ARM_CLIENT_ID" ] && [ -n "$ARM_CLIENT_SECRET" ]; then
+        return
+    fi
+    if [ -n "$IDENTITY_ENDPOINT" ] || [ "$AZURE_CONTAINER_APP_JOB" == "true" ]; then
+        case "$COMMAND" in
+            argocd-*) return ;;
+        esac
         az login --identity ${AZURE_CLIENT_ID:+--client-id "$AZURE_CLIENT_ID"} >/dev/null || exit 1
         export ARM_USE_MSI=false ARM_USE_CLI=true
         unset ARM_TENANT_ID
-    else
+    elif ! az account show >/dev/null 2>&1; then
         echo "No Azure credentials found: mount ~/.azure, set ARM_CLIENT_ID/ARM_CLIENT_SECRET/ARM_TENANT_ID or run with a managed identity"
         exit 1
     fi
@@ -37,17 +48,13 @@ copy_from_bucket() {
     local bucket="$1"
     local source_path="$2"
     local dest_path="$3"
-    local tmp_dir=$(mktemp -d)
-
-    az storage blob download-batch --auth-mode login --account-name "$bucket" -s "$AZ_CONTAINER" \
-        --pattern "${source_path}/*" -d "$tmp_dir" --overwrite --no-progress >/dev/null || exit 1
-    mkdir -p "$dest_path"
-    cp -a "$tmp_dir/$source_path/." "$dest_path/"
-    rm -rf "$tmp_dir"
+    local exclude=()
 
     if [ "$TERRAFORM_CACHE" != "true" ]; then
-        rm -rf "$dest_path/.terraform"
+        exclude=(--exclude '.terraform/*')
     fi
+
+    shackle cp "az://${bucket}/${AZ_CONTAINER}/${source_path}" "${dest_path}" --recursive --quiet "${exclude[@]}" || exit 1
 }
 
 copy_to_bucket() {
@@ -55,8 +62,7 @@ copy_to_bucket() {
     local bucket="$2"
     local dest_path="$3"
 
-    az storage blob upload --auth-mode login --account-name "$bucket" -c "$AZ_CONTAINER" \
-        -n "$dest_path" -f "$local_file" --overwrite --no-progress >/dev/null || exit 1
+    shackle cp "${local_file}" "az://${bucket}/${AZ_CONTAINER}/${dest_path}" --quiet || exit 1
 }
 
 sync_terraform_cache() {
@@ -64,10 +70,7 @@ sync_terraform_cache() {
     local prefix="$2"
 
     echo "Syncing .terraform back to bucket"
-    AZCOPY_AUTO_LOGIN_TYPE=AZCLI azcopy sync .terraform \
-        "https://${bucket}.blob.core.windows.net/${AZ_CONTAINER}/steps/${prefix}/.terraform" \
-        --recursive --delete-destination=true --compare-hash=MD5 --put-md5 \
-        --output-level=essential --log-level=ERROR || exit 1
+    shackle sync .terraform "az://${bucket}/${AZ_CONTAINER}/steps/${prefix}/.terraform" --delete --quiet || exit 1
 }
 
 fetch_plan_artifact() {
@@ -79,8 +82,7 @@ fetch_plan_artifact() {
         cd "/tmp/project/steps/$TF_VAR_prefix"
     else
         mkdir -p /tmp/project
-        az storage blob download --auth-mode login --account-name "$INFRALIB_BUCKET" -c "$AZ_CONTAINER" \
-            -n "${TF_VAR_prefix}-tf.tar.gz" -f /tmp/project/tf.tar.gz --overwrite --no-progress >/dev/null
+        shackle cp "az://${INFRALIB_BUCKET}/${AZ_CONTAINER}/${TF_VAR_prefix}-tf.tar.gz" /tmp/project/tf.tar.gz --quiet
         if [ $? -ne 0 ]; then
             echo "Unable to find artifacts from plan stage! ${INFRALIB_BUCKET}/${AZ_CONTAINER}/${TF_VAR_prefix}-tf.tar.gz"
             exit 4
@@ -100,13 +102,15 @@ upload_plan_artifact() {
     fi
 }
 
+# Login server of the environment's container registry: the one AZURE_ACR_NAME
+# names, else the one registry of the resource group; empty when it has none.
 get_acr_login_server() {
     if [ -n "$AZURE_ACR_NAME" ]; then
-        az acr show -n "$AZURE_ACR_NAME" --query loginServer -o tsv
+        shackle registries azure --registry "$AZURE_ACR_NAME"
         return
     fi
     local servers
-    servers=$(az acr list -g "$AZURE_RESOURCE_GROUP" --query '[].loginServer' -o tsv) || return 1
+    servers=$(shackle registries azure --resource-group "$AZURE_RESOURCE_GROUP") || return 1
     if [ $(echo "$servers" | grep -c .) -gt 1 ]; then
         echo "Several container registries in $AZURE_RESOURCE_GROUP, set AZURE_ACR_NAME: $(echo $servers)" >&2
         return 1
@@ -116,11 +120,11 @@ get_acr_login_server() {
 
 ACR_TOKEN_USERNAME="00000000-0000-0000-0000-000000000000"
 get_acr_token() {
-    az acr login -n "${1%%.*}" --expose-token --query accessToken -o tsv
+    shackle registry-token azure --registry "$1"
 }
 
 get_k8s_credentials() {
-    az aks get-credentials -g "$AZURE_RESOURCE_GROUP" -n "$KUBERNETES_CLUSTER_NAME" --overwrite-existing || exit 1
-    kubelogin convert-kubeconfig -l azurecli || exit 1
+    shackle kubeconfig azure --cluster "$KUBERNETES_CLUSTER_NAME" --resource-group "$AZURE_RESOURCE_GROUP" \
+        --subscription "$AZURE_SUBSCRIPTION_ID" || exit 1
     echo "Kubeconfig set for AKS cluster $KUBERNETES_CLUSTER_NAME in $AZURE_RESOURCE_GROUP"
 }
