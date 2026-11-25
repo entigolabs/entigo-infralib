@@ -165,28 +165,31 @@ version: after a version bump that did not regenerate the file the packages
 are installed by tag, and the mirror workflow fails until the file is
 regenerated.
 
-Pod images are pinned through the value that carries their tag. A module lists
-them in `pod-images.txt`, one `<value path of the tag> <image repository>` per
-line, and `modules/k8s/pod-images.sh modules/k8s/<module>` reads each tag from
-`values.yaml`, resolves its digest and writes `<tag>@sha256:<digest>` to the
-same value path in `values-images.yaml`:
-
-```
-# pod-images.txt
-job.tag docker.io/entigolabs/entigo-infralib-kubectl
-```
+Pod images are pinned through the value that carries their tag.
+`modules/k8s/pod-images.sh modules/k8s/<module>` finds the images in the
+module's agent inputs, which already name every repository that can be pulled
+through a registry proxy. The tag of such an image is the `tag` value next to
+it: the script reads it from `values.yaml`, resolves its digest and writes
+`<tag>@sha256:<digest>` to the same value path in `values-images.yaml`:
 
 ```yaml
+# agent_input.yaml
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
+# values.yaml
+job:
+  tag: "v1.25.14"
 # values-images.yaml
 job:
   tag: v1.25.14@sha256:516c...
 ```
 
-The pin repeats the tag, so it has to be regenerated whenever a listed tag
-changes. The static check enforces that: it renders the module with and without
-`values-images.yaml` and fails when the file changes anything other than adding
-a digest. `pullpush.sh digests` runs `pod-images.sh` for a module that has
-both.
+Only the images we build ourselves are pinned so far, the script lists the
+others as not pinned. The pin repeats the tag, so it has to be regenerated
+whenever a tag changes. The static check enforces that: it renders the module
+with and without `values-images.yaml` and fails when the file changes anything
+other than adding a digest. `pullpush.sh digests` runs `pod-images.sh` for a
+crossplane module whose file already has pod image digests.
 
 ## Agent inputs
 

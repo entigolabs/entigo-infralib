@@ -39,8 +39,10 @@ recorded_digest() {
 }
 
 write_digests() {
-    local tmp provider digest failed=0
+    local tmp provider digest failed=0 pods=0
     tmp=$(mktemp)
+    # Top level values other than imageDigests are pod image digests (pod-images.sh).
+    [ -f "$VALUES_FILE" ] && pods=$(grep -cvE '^(#|imageDigests:|[[:space:]]|$)' "$VALUES_FILE")
     export -f digest_of
     # shellcheck disable=SC2086
     printf '%s\n' $PROVIDERS | sort | xargs -P 8 -I{} bash -c \
@@ -69,7 +71,7 @@ write_digests() {
     mv "$VALUES_FILE.tmp" "$VALUES_FILE"
     echo "Wrote $(grep -c sha256: "$VALUES_FILE") digests to $VALUES_FILE"
     # The file was written anew: put the module's pod image digests back.
-    if [ -f "$MODULE_DIR/pod-images.txt" ]; then
+    if [ "$pods" -ne 0 ]; then
         "$(dirname "${BASH_SOURCE[0]}")/pod-images.sh" "$MODULE_DIR" || exit 2
     fi
 }
