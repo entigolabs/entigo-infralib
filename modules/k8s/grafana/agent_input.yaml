@@ -1,9 +1,16 @@
 global:
+  # `.toptmodule` (optional) rather than `.tmodule` (required): a missing module makes
+  # `.tmodule` fail the whole apps step, and none of these has to be part of the platform.
+  # The module name is passed rather than a full URL because an empty optional value would
+  # otherwise render the nonsense "http://loki-gateway."; the configMap templates build the
+  # URL and skip the datasource when the name is empty.
   datasources:
     loki:
-      hostname: "http://{{ .tmodule.loki }}-gateway.{{ .tmodule.loki }}"
+      module: '{{ .toptmodule.loki }}'
+    mimir:
+      module: '{{ .toptmodule.mimir }}'
     prometheus:
-      hostname: "http://{{ .tmodule.prometheus }}-server.{{ .tmodule.prometheus }}"
+      module: '{{ .toptmodule.prometheus }}'
 grafana:
   grafana.ini:
     server:

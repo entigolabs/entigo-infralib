@@ -1,0 +1,26 @@
+{{- if and (eq .Values.global.cloudProvider "aws") (index .Values "cluster-metrics" "enabled") (index .Values "cluster-metrics" "createRoute") }}
+{{- $cidrs := printf "%s,%s" (.Values.global.aws.privateSubnetCidrs | default "") (.Values.global.aws.serviceSubnetCidrs | default "") }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-cluster-metrics-ui-alb
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cluster-metrics
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        {{- range (splitList "," $cidrs) }}
+        {{- if trim . }}
+        - ipBlock:
+            cidr: {{ trim . }}
+        {{- end }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 12345
+{{- end }}

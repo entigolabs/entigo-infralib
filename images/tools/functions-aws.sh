@@ -18,13 +18,13 @@ copy_from_bucket() {
     local bucket="$1"
     local source_path="$2"
     local dest_path="$3"
-    local exclude_pattern=""
+    local exclude=()
 
     if [ "$TERRAFORM_CACHE" != "true" ]; then
-        exclude_pattern="--exclude *.terraform/*"
+        exclude=(--exclude '*.terraform/*')
     fi
 
-    aws s3 cp "s3://${bucket}/${source_path}" "${dest_path}" --recursive --no-progress --quiet ${exclude_pattern}
+    shackle cp "s3://${bucket}/${source_path}" "${dest_path}" --recursive --quiet "${exclude[@]}"
 }
 
 # Copy file to bucket
@@ -34,7 +34,7 @@ copy_to_bucket() {
     local bucket="$2"
     local dest_path="$3"
 
-    aws s3 cp "${local_file}" "s3://${bucket}/${dest_path}" --no-progress --quiet
+    shackle cp "${local_file}" "s3://${bucket}/${dest_path}" --quiet
 }
 
 # Sync terraform cache to bucket
@@ -43,7 +43,7 @@ sync_terraform_cache() {
     local prefix="$2"
 
     echo "Syncing .terraform back to bucket"
-    aws s3 sync .terraform "s3://${bucket}/steps/${prefix}/.terraform" --no-progress --quiet --delete
+    shackle sync .terraform "s3://${bucket}/steps/${prefix}/.terraform" --delete --quiet
 }
 
 # Fetch plan artifact for apply stage
@@ -75,7 +75,23 @@ upload_plan_artifact() {
     fi
 }
 
+# Host of the account's ECR registry in the region
+get_ecr_registry() {
+    shackle registries aws --region "$AWS_REGION"
+}
+
+# ECR login: a token with a fixed user name, valid for 12 hours
+# Usage: get_ecr_token [registry host], the region is the host's, else AWS_REGION
+ECR_TOKEN_USERNAME="AWS"
+get_ecr_token() {
+    local region="$AWS_REGION"
+    if [[ "$1" == *.dkr.ecr.*.amazonaws.com* ]]; then
+        region=$(echo "$1" | cut -d. -f4)
+    fi
+    shackle registry-token aws --region "$region"
+}
+
 # Get Kubernetes credentials
 get_k8s_credentials() {
-    aws eks update-kubeconfig --name $KUBERNETES_CLUSTER_NAME --region $AWS_REGION
+    shackle kubeconfig aws --cluster "$KUBERNETES_CLUSTER_NAME" --region "$AWS_REGION"
 }
