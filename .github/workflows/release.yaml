@@ -87,6 +87,7 @@ jobs:
       clouds: ${{ inputs.cloud || '' }}
       release_repo: https://github.com/entigolabs/entigo-infralib-release
       oci_registries: ghcr.io/entigolabs/entigo-infralib-release,public.ecr.aws/entigolabs/entigo-infralib-release
+      oci_supplier: Entigo OÜ (security@entigo.com)
       oci_images: ${{ needs.image-digests.outputs.images }}
     secrets: inherit
 
