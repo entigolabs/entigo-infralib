@@ -57,7 +57,6 @@ steps:
       - name: platform-apis
         source: platform-apis
       - source: prometheus
-      - source: rbac-bindings
       - source: saml-proxy
       - source: tempo
       - source: trivy
