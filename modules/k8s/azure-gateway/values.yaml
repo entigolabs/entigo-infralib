@@ -8,7 +8,8 @@ global:
     # per /24; Azure allows one association per AGC today, the list is for when that limit goes
     agcSubnetIds: []
 
-# cert-manager ClusterIssuer, the agent sets the cert-manager module clusterIssuer.name
+# cert-manager ClusterIssuer, the agent sets the cert-manager module clusterIssuer.name; a gateway's own
+# certificateIssuer overrides it (one Certificate per domain, from the first gateway of that domain)
 certificateIssuer: letsencrypt
 certificatePrivateKey:
   algorithm: ECDSA
@@ -21,6 +22,7 @@ gateways:
     enabled: true
     gatewayClassName: azure-alb-external
     domain: ""
+    certificateIssuer: ""
     sslRedirect: true
     # AGC predefined TLS policy (FrontendTLSPolicy on the https listener), "" = AGC default (currently 2023-06):
     #   2023-06   - TLS 1.2 and 1.3, ECDHE AES-GCM ciphers, P-256/P-384
@@ -35,6 +37,7 @@ gateways:
     enabled: true
     gatewayClassName: azure-alb-internal
     domain: ""
+    certificateIssuer: ""
     sslRedirect: true
     sslPolicy: "2023-06"
     addresses: []
@@ -45,6 +48,7 @@ gateways:
     enabled: false
     gatewayClassName: azure-alb-internal
     domain: ""
+    certificateIssuer: ""
     sslRedirect: true
     sslPolicy: "2023-06"
     addresses: []

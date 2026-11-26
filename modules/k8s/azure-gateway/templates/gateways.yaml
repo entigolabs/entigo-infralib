@@ -16,7 +16,7 @@ spec:
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
-    name: {{ $.Values.certificateIssuer }}
+    name: {{ .certificateIssuer | default $.Values.certificateIssuer }}
   dnsNames:
     - {{ .domain }}
     - "*.{{ .domain }}"

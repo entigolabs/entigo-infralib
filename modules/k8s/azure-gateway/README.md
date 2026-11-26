@@ -10,6 +10,8 @@ The subscription needs the `Microsoft.ServiceNetworking` and `Microsoft.NetworkF
 
 * One `Gateway` (one AGC frontend with its own `*.fzXX.alb.azure.com` FQDN, no static IP) per enabled `gateways` entry,
   named after its key (`external`): HTTPS with a cert-manager wildcard for `<domain>`, HTTP only redirects (`sslRedirect`).
+  The certificate is from `certificateIssuer` (the cert-manager module's issuer) or the gateway's own `certificateIssuer`,
+  e.g. Let's Encrypt for `external` and a private CA for `internal` and `service`.
 * Internal: the managed AGC can't have a private frontend yet (Azure/AKS#5739), so the Gateway `internal`
   (`global.internalGateway`, in this module's namespace) is on the bring-your-own AGC of the azure/agc module:
   GatewayClass `azure-alb-internal` (alb-controller `privateFrontend: true`), annotation
