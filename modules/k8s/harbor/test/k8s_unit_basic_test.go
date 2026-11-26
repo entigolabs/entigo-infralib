@@ -2,14 +2,20 @@ package test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/entigolabs/entigo-infralib-test/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/entigolabs/entigo-infralib-test/env"
 	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/retry"
 )
 
 func TestHarbor(t *testing.T) {
@@ -41,7 +47,60 @@ func TestHarbor(t *testing.T) {
 
 		// The harbor HTTPRoute is the only one in the namespace.
 		k8s.WaitUntilRouteAnswers(t, c, "", "/api/v2.0/ping", "200", routeRetries(e), 6*time.Second)
+
+		testPushPullScan(t, c, password)
 	})
+}
+
+// testPushPullScan pushes a small image to the library project as admin, pulls it back and has
+// Trivy scan it: the registry stores and serves, and the scanner reads from it and has its
+// vulnerability database. Harbor is reached through a port-forward to core, which serves both
+// the registry and the API.
+func testPushPullScan(t *testing.T, c *k8s.Client, encodedPassword string) {
+	password, err := base64.StdEncoding.DecodeString(encodedPassword)
+	require.NoError(t, err, "harbor-admin password is not base64")
+	addr, stop := k8s.PortForwardService(t, c, c.Namespace+"-core", 80)
+	defer stop()
+	harbor := registry{url: "http://" + addr, password: string(password)}
+
+	// A repository of its own, so runs on the same environment do not meet.
+	name := "infralib-test-" + strings.ToLower(random.UniqueId())
+	repository, tag := "library/"+name, "test"
+	layer, config, manifest, err := testImage(name)
+	require.NoError(t, err)
+	require.NoError(t, harbor.push(repository, tag, layer, config, manifest), "pushing %s:%s", repository, tag)
+	defer func() {
+		_, err := harbor.do(http.MethodDelete, "/api/v2.0/projects/library/repositories/"+name, "", nil, http.StatusOK)
+		assert.NoError(t, err, "deleting the test repository")
+	}()
+	require.NoError(t, harbor.pull(repository, tag, manifest, layer), "pulling %s:%s", repository, tag)
+
+	artifact := fmt.Sprintf("/api/v2.0/projects/library/repositories/%s/artifacts/%s", name, tag)
+	_, err = harbor.do(http.MethodPost, artifact+"/scan", "", nil, http.StatusAccepted)
+	require.NoError(t, err, "starting the scan")
+	// The first scan of a fresh Harbor also downloads the vulnerability database.
+	_, err = retry.DoWithRetryE(t, "Trivy scans the pushed image", 60, 10*time.Second, func() (string, error) {
+		body, err := harbor.do(http.MethodGet, artifact+"?with_scan_overview=true", "", nil, http.StatusOK)
+		if err != nil {
+			return "", err
+		}
+		var answer struct {
+			ScanOverview map[string]struct {
+				ScanStatus string `json:"scan_status"`
+			} `json:"scan_overview"`
+		}
+		if err := json.Unmarshal(body, &answer); err != nil {
+			return "", err
+		}
+		for _, report := range answer.ScanOverview {
+			if report.ScanStatus == "Success" {
+				return "", nil
+			}
+			return "", fmt.Errorf("scan status is %s", report.ScanStatus)
+		}
+		return "", fmt.Errorf("no scan report yet")
+	})
+	require.NoError(t, err)
 }
 
 // Google and Azure gateways take long to program a new route.
