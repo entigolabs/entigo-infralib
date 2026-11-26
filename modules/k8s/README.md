@@ -654,7 +654,6 @@ every Crossplane provider and function, Helm test hooks left out.
 | oracle-gateway | – | ✖ | ✖ | ✖ | 🟡 |
 | platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
-| promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
 | saml-proxy | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | tempo | 🔴 0/1 | 🟢 | 🟢 | 🔴 | 🔴 |
@@ -719,8 +718,7 @@ unchanged, until everyone has moved off it.
 2. Write the module's `README.md`, starting with a `## Deprecated` section that
    names the replacement, followed by numbered migration steps: the agent
    configuration before and after, how to verify the replacement is working,
-   and how to remove the old app and namespace. `promtail` and
-   `argocd-ecr-updater` are the examples to copy.
+   and how to remove the old app and namespace.
 3. Remove the module from every `environments/<cloud>_<env>.yaml` and delete
    its `test/<cloud>_<env>.yaml` files. A module no step lists is in no test
    platform, and its test skips itself: keep `test/k8s_unit_basic_test.go` and
