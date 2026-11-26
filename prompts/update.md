@@ -320,7 +320,6 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
     crossplane → crossplane/crossplane
     karpenter → aws/karpenter-provider-aws
     mimir-distributed → grafana/mimir
-    promtail → grafana/loki (promtail is part of loki)
     wireguard → bryopsida/wireguard-chart
     upbound/provider-family-aws → crossplane-contrib/provider-upjet-aws
     upbound/provider-family-gcp → crossplane-contrib/provider-upjet-gcp
