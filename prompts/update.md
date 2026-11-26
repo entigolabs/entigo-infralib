@@ -163,6 +163,8 @@ FOR K8S HELM UPDATES - ONE PR PER CHART or PROVIDER:
   else
     sed -i 's/version: <OLD>/version: <NEW>/' modules/k8s/<DIR>/Chart.yaml && \
     cd modules/k8s/<DIR> && helm dependency update && cd <CLONE> && \
+    # Refresh the pod image digests of a module that pins them (a tag may have moved with the chart).
+    if grep -qvE '^(#|imageDigests:|[[:space:]]|$)' modules/k8s/<DIR>/values-images.yaml 2>/dev/null; then modules/k8s/pod-images.sh modules/k8s/<DIR>; fi && \
     git add -A && \
     if git diff --cached --quiet; then
       echo "NO_CHANGES"
