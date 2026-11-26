@@ -1,0 +1,4 @@
+node-agent:
+  # The test reads the agent's own delivery counters through this Service.
+  service:
+    enabled: true
