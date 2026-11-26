@@ -666,10 +666,10 @@ Summary. The score is the share of green among the modules that have images
 
 | | Digests | AWS | Google | Azure | Oracle |
 |---|:-:|:-:|:-:|:-:|:-:|
-| 🟢 | 9 | 12 | 8 | 9 | 3 |
-| 🟡 | 5 | 23 | 14 | 12 | 12 |
+| 🟢 | 10 | 12 | 8 | 9 | 3 |
+| 🟡 | 4 | 23 | 14 | 12 | 12 |
 | 🔴 | 27 | 3 | 12 | 13 | 21 |
-| **Green of applicable** | **22% (9 of 41)** | **32% (12 of 38)** | **24% (8 of 34)** | **26% (9 of 34)** | **8% (3 of 36)** |
+| **Green of applicable** | **24% (10 of 41)** | **32% (12 of 38)** | **24% (8 of 34)** | **26% (9 of 34)** | **8% (3 of 36)** |
 
 `platform-apis` is tested from its own repository, where its tests run on AWS
 and Oracle.
