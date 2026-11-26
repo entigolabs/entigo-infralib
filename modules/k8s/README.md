@@ -623,7 +623,7 @@ every Crossplane provider and function, Helm test hooks left out.
 | aws-storageclass | 🟢 1/1 | 🟢 | ✖ | ✖ | ✖ |
 | azure-gateway | 🔴 0/3 | ✖ | ✖ | 🟢 | ✖ |
 | cert-manager | 🔴 0/3 | 🟢 | 🔴 | 🟢 | 🔴 |
-| cilium | 🟢 4/4 | 🔴 | 🔴 | 🔴 | 🟡 |
+| cilium | 🟢 4/4 | ✖ | ✖ | ✖ | 🟡 |
 | cluster-autoscaler | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
 | crossplane-aws | 🟢 4/4 | 🟢 | ✖ | ✖ | ✖ |
 | crossplane-azure | 🟢 6/6 | ✖ | ✖ | 🟢 | ✖ |
@@ -668,8 +668,8 @@ Summary. The score is the share of green among the modules that have images
 |---|:-:|:-:|:-:|:-:|:-:|
 | 🟢 | 11 | 12 | 8 | 9 | 3 |
 | 🟡 | 3 | 23 | 14 | 12 | 12 |
-| 🔴 | 27 | 3 | 12 | 13 | 21 |
-| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 38)** | **24% (8 of 34)** | **26% (9 of 34)** | **8% (3 of 36)** |
+| 🔴 | 27 | 2 | 11 | 12 | 21 |
+| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **24% (8 of 33)** | **27% (9 of 33)** | **8% (3 of 36)** |
 
 `platform-apis` is tested from its own repository, where its tests run on AWS
 and Oracle.
