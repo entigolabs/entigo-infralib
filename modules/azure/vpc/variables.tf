@@ -229,6 +229,16 @@ variable "public_agc_bgp_route_propagation_enabled" {
   description = "false gives the public-agc subnets a route table without BGP route propagation, for a VNet that gets a default route from a hub gateway: the replies of the public AGC have to go back to the internet"
 }
 
+variable "public_agc_allowed_source_addresses" {
+  type        = list(string)
+  default     = null
+  description = "Source addresses (CIDRs) allowed to the public AGC frontends on 80/443 through an NSG on the public-agc subnets; null = no NSG, open to the internet"
+  validation {
+    condition     = var.public_agc_allowed_source_addresses == null || length(coalesce(var.public_agc_allowed_source_addresses, [])) > 0
+    error_message = "public_agc_allowed_source_addresses: at least one address, or null for no restriction."
+  }
+}
+
 # https://learn.microsoft.com/azure/aks/egress-outboundtype#outbound-type-of-userdefinedrouting
 variable "egress_next_hop_ip" {
   type        = string

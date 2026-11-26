@@ -156,6 +156,10 @@ A hub gateway (ExpressRoute/VPN) that advertises a default route over BGP also s
 through the hub, so its frontend times out: `public_agc_bgp_route_propagation_enabled: false` gives the public-agc
 subnets a route table `<prefix>-public-agc` without BGP route propagation, as Microsoft documents for AGC. The subnets
 then belong to that route table (one per subnet).
+`public_agc_allowed_source_addresses` (CIDRs) limits who reaches the public AGC frontends: an NSG `<prefix>-public-agc` on
+the public-agc subnets allows 80/443 from them, Azure's default rules deny the rest of the internet and keep the load
+balancer probes and VNet traffic (AGC enforces NSGs on associations created since April 23, 2026). Every public gateway
+on that AGC is limited, and OIDC issuers behind it must stay reachable for their consumers (e.g. AKS fetching the keys).
 
 The private and Container Apps subnets have Storage and Key Vault service endpoints (`*_subnet_service_endpoints`):
 these services see the private IP instead of the NAT IP, so firewalls need VNet rules.

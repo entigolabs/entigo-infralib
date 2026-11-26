@@ -217,6 +217,33 @@ resource "azurerm_subnet_route_table_association" "public_agc" {
   route_table_id = azurerm_route_table.public_agc[0].id
 }
 
+# Only these sources reach the public AGC frontends; the default rules deny the rest of the internet
+resource "azurerm_network_security_group" "public_agc" {
+  count               = length(local.public_agc_subnets) > 0 && var.public_agc_allowed_source_addresses != null ? 1 : 0
+  name                = "${var.prefix}-public-agc"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+
+  security_rule {
+    name                       = "allow-https"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    source_address_prefixes    = var.public_agc_allowed_source_addresses
+    destination_port_ranges    = ["80", "443"]
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "public_agc" {
+  count                     = var.public_agc_allowed_source_addresses != null ? length(local.public_agc_subnets) : 0
+  subnet_id                 = azurerm_subnet.public_agc[count.index].id
+  network_security_group_id = azurerm_network_security_group.public_agc[0].id
+}
+
 resource "azurerm_subnet" "private_agc" {
   count                           = length(local.private_agc_subnets)
   name                            = local.private_agc_names[count.index]
