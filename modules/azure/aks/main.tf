@@ -413,7 +413,7 @@ resource "azapi_resource" "jwt_authenticator" {
         claimValidationRules = [for k, v in try(each.value.required_claims, {}) : { expression = "claims['${k}'] == '${v}'" }]
         claimMappings = merge(
           { username = { expression = "'aks:jwt:${try(each.value.username_prefix, "")}' + claims['${try(each.value.username_claim, "sub")}']" } },
-          try(each.value.groups_claim, "") != "" ? { groups = { expression = "'${each.value.groups_claim}' in claims ? claims['${each.value.groups_claim}'].map(g, 'aks:jwt:${try(each.value.groups_prefix, "")}' + g) : []" } } : null
+          try(each.value.groups_claim, "") != "" ? { groups = { expression = "'${each.value.groups_claim}' in claims ? dyn(claims['${each.value.groups_claim}']).map(g, 'aks:jwt:${try(each.value.groups_prefix, "")}' + g) : []" } } : null
         )
       },
       try(each.value.ca_certificate, "") != "" ? { certificateAuthorityBundle = base64decode(each.value.ca_certificate) } : null
