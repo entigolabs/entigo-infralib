@@ -1,0 +1,48 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: wildbitca-provider-family-cloudflare
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  package: xpkg.upbound.io/wildbitca/provider-family-cloudflare:v0.2.5
+  runtimeConfigRef:
+    name: {{ .Release.Name }}-family
+
+# Build the final list of providers based on conditions
+{{- $allProviders := list }}
+
+# Always include requiredProviders and extraProviders
+{{- $allProviders = concat $allProviders .Values.global.requiredProviders }}
+{{- $allProviders = concat $allProviders .Values.global.extraProviders }}
+
+# Deduplicate the list
+{{- $uniqueProviders := list }}
+{{- range $provider := $allProviders }}
+  {{- if not (has $provider $uniqueProviders) }}
+    {{- $uniqueProviders = append $uniqueProviders $provider }}
+  {{- end }}
+{{- end }}
+
+# Create Provider resources for each unique provider
+{{- range $index, $provider := $uniqueProviders }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: wildbitca-provider-cloudflare-{{ $provider }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '{{ add 5 (div $index 4) }}'
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  skipDependencyResolution: true
+  package: xpkg.upbound.io/wildbitca/provider-cloudflare-{{ $provider }}:v0.2.5
+  runtimeConfigRef:
+    name: {{ $.Release.Name }}
+{{- end }}
+
+
+

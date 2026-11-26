@@ -1,0 +1,7 @@
+global:
+  extraProviders: []
+  requiredProviders:  ["dns", "zone"]
+  cloudProvider: ""
+  deploymentRuntimeConfig:
+    args:
+      - --enable-management-policies
