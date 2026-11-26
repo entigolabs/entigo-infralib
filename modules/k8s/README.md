@@ -169,7 +169,8 @@ Pod images are pinned through the value that carries their tag.
 `modules/k8s/pod-images.sh modules/k8s/<module>` finds the images in the
 module's agent inputs, which already name every repository that can be pulled
 through a registry proxy. The tag of such an image is the `tag` value next to
-it: the script reads it from `values.yaml`, resolves its digest and writes
+it: the script reads it from `values.yaml`, or from the subchart's defaults when
+the module does not set it, resolves its digest and writes
 `<tag>@sha256:<digest>` to the same value path in `values-images.yaml`:
 
 ```yaml
@@ -184,8 +185,17 @@ job:
   tag: v1.25.14@sha256:516c...
 ```
 
-Only the images we build ourselves are pinned so far, the script lists the
-others as not pinned. The pin repeats the tag, so it has to be regenerated
+By default only the images we build ourselves are pinned, the script lists the
+others as not pinned. An image that is already pinned in the file stays pinned,
+so the images of another publisher are added by one run that names them, and
+kept by every later run:
+
+```sh
+PIN=goharbor/ modules/k8s/pod-images.sh modules/k8s/harbor
+```
+
+The digest is the one the tag points to: the multi-arch index when the image
+has one. The pin repeats the tag, so it has to be regenerated
 whenever a tag changes. The static check enforces that: it renders the module
 with and without `values-images.yaml` and fails when the file changes anything
 other than adding a digest. `pullpush.sh digests` runs `pod-images.sh` for a
@@ -589,6 +599,8 @@ installed by sha256 digest.
   workloads or resources are available, its route answers).
 - 🔴 the module is not installed in the test environments of that cloud (no
   `test/<cloud>_<env>.yaml`), so nothing is tested there.
+- ✖ the module does not belong in that cloud: it installs something of
+  another cloud, like `aws-alb` or `crossplane-google`.
 
 **Digests**, with the number of pinned images out of all images:
 
@@ -603,44 +615,44 @@ every Crossplane provider and function, Helm test hooks left out.
 
 | Module | Digests | AWS | Google | Azure | Oracle |
 |---|---|:-:|:-:|:-:|:-:|
-| alloy | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🟡 |
+| alloy | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
 | argocd | 🟡 1/3 | 🟡 | 🟡 | 🟡 | 🟡 |
-| argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
+| argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | ✖ | ✖ | ✖ |
 | authz-controller-cluster | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
-| aws-alb | 🟡 1/2 | 🟢 | 🔴 | 🔴 | 🔴 |
-| aws-storageclass | 🟢 1/1 | 🟢 | 🔴 | 🔴 | 🔴 |
-| azure-gateway | 🔴 0/3 | 🔴 | 🔴 | 🟢 | 🔴 |
+| aws-alb | 🟡 1/2 | 🟢 | ✖ | ✖ | ✖ |
+| aws-storageclass | 🟢 1/1 | 🟢 | ✖ | ✖ | ✖ |
+| azure-gateway | 🔴 0/3 | ✖ | ✖ | 🟢 | ✖ |
 | cert-manager | 🔴 0/3 | 🟢 | 🔴 | 🟢 | 🔴 |
-| cilium | 🟢 4/4 | 🔴 | 🔴 | 🔴 | 🟡 |
+| cilium | 🟢 4/4 | ✖ | ✖ | ✖ | 🟡 |
 | cluster-autoscaler | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
-| crossplane-aws | 🟢 4/4 | 🟢 | 🔴 | 🔴 | 🔴 |
-| crossplane-azure | 🟡 4/6 | 🔴 | 🔴 | 🟢 | 🔴 |
+| crossplane-aws | 🟢 4/4 | 🟢 | ✖ | ✖ | ✖ |
+| crossplane-azure | 🟢 6/6 | ✖ | ✖ | 🟢 | ✖ |
 | crossplane-core | 🟡 1/2 | 🟡 | 🟡 | 🟡 | 🟡 |
-| crossplane-google | 🟢 4/4 | 🔴 | 🟢 | 🔴 | 🔴 |
+| crossplane-google | 🟢 4/4 | ✖ | 🟢 | ✖ | ✖ |
 | crossplane-kafka | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
-| crossplane-oracle | 🔴 0/6 | 🔴 | 🔴 | 🔴 | 🟢 |
+| crossplane-oracle | 🔴 0/6 | ✖ | ✖ | ✖ | 🟢 |
 | crossplane-sql | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | entigo-portal-agent | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | entigo-vulnerability-agent | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | external-dns | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
 | external-secrets | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
-| google-gateway | – | 🔴 | 🟡 | 🔴 | 🔴 |
+| google-gateway | – | ✖ | 🟡 | ✖ | ✖ |
 | grafana | 🔴 0/3 | 🟡 | 🟡 | 🟡 | 🔴 |
-| harbor | 🟡 1/9 | 🟢 | 🟢 | 🟢 | 🔴 |
+| harbor | 🟢 9/9 | 🟢 | 🟢 | 🟢 | 🔴 |
 | hello-world | 🔴 0/1 | 🟡 | 🟡 | 🔴 | 🔴 |
 | istio-base | – | 🟡 | 🟡 | 🟡 | 🟡 |
 | istio-gateway | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
 | istio-istiod | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🟡 |
-| karpenter | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| karpenter | 🟢 1/1 | 🟡 | ✖ | ✖ | ✖ |
 | kiali | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
 | kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🔴 |
 | kyverno | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
 | loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🔴 |
-| metrics-server | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
+| metrics-server | 🔴 0/1 | 🟡 | ✖ | ✖ | 🟡 |
 | mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🔴 |
-| oci-native-ingress-controller | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🟢 |
-| oracle-gateway | – | 🔴 | 🔴 | 🔴 | 🟡 |
-| platform-apis | 🟢 16/16 | 🟡 | 🔴 | 🔴 | 🟡 |
+| oci-native-ingress-controller | 🔴 0/1 | ✖ | ✖ | ✖ | 🟢 |
+| oracle-gateway | – | ✖ | ✖ | ✖ | 🟡 |
+| platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
@@ -649,8 +661,21 @@ every Crossplane provider and function, Helm test hooks left out.
 | trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |
 | wireguard | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🔴 |
 
-The table is written by hand. Update the row of a module when its tests or its
-`values-images.yaml` change.
+Summary. The score is the share of green among the modules that have images
+(digests) or belong in the cloud (tests):
+
+| | Digests | AWS | Google | Azure | Oracle |
+|---|:-:|:-:|:-:|:-:|:-:|
+| 🟢 | 11 | 12 | 8 | 9 | 3 |
+| 🟡 | 3 | 23 | 14 | 12 | 12 |
+| 🔴 | 27 | 2 | 11 | 12 | 21 |
+| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **24% (8 of 33)** | **27% (9 of 33)** | **8% (3 of 36)** |
+
+`platform-apis` is tested from its own repository, where its tests run on AWS
+and Oracle.
+
+The table is written by hand. Update the row of a module and the summary when
+its tests or its `values-images.yaml` change.
 
 ## Adding a new module
 

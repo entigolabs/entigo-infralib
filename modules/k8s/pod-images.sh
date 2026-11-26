@@ -12,19 +12,34 @@
 # The tag of such an image is the "tag" value next to it (job.tag). It is read
 # from the module's values.yaml, its digest is resolved in the default registry
 # and "<tag>@<digest>" is written to the same value path in the module's
-# values-images.yaml. Needs docker and yq, no credentials. Run it whenever a
+# values-images.yaml. A tag the module does not set is the subchart's default.
+# Needs docker, helm and yq, no credentials. Run it whenever a
 # tag changes and commit the result; the static check fails while
 # values-images.yaml still carries the previous tag.
 #
 # Only images we mirror are pinned, PIN (an extended regular expression on the
 # repository) says which: for now the ones we build ourselves. An image that is
-# not pinned is listed with the reason.
+# already pinned in values-images.yaml stays pinned, so another image is added
+# by one run with its PIN (PIN=goharbor/ pod-images.sh modules/k8s/harbor) and
+# kept by every later run. An image that is not pinned is listed with the reason.
 #
 # The imageDigests of a crossplane-* module (pullpush.sh digests) are kept,
 # every other value of the file is replaced.
 set -euo pipefail
 
 PIN="${PIN:-^(docker\.io/)?entigolabs/}"
+
+# The tag at a value path: from the module's values.yaml, else the default of the
+# subchart the path starts with (charts/<name>-<version>.tgz, by name or alias).
+module_tag() {
+    local module=$1 path=$2 tag chart
+    tag=$(yq ".$path // \"\"" "$module/values.yaml" 2>/dev/null)
+    if [ -z "$tag" ]; then
+        chart=$(d="${path%%.*}" yq '.dependencies[] | select((.alias // .name) == strenv(d)) | .name + "-" + .version' "$module/Chart.yaml" | head -1)
+        [ -n "$chart" ] && [ -f "$module/charts/$chart.tgz" ] && tag=$(helm show values "$module/charts/$chart.tgz" | yq ".${path#*.} // \"\"")
+    fi
+    echo "$tag"
+}
 
 [ $# -gt 0 ] || { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 1; }
 
@@ -45,16 +60,15 @@ for module in "$@"; do
         tagpath="${path%.*}.tag"
         if [ -z "$image" ]; then
             echo "  not pinned: $path ($value): no repository in the agent input" >&2
-        elif ! grep -qE "$PIN" <<<"$image"; then
+        elif ! grep -qE "$PIN" <<<"$image" && ! yq ".$tagpath // \"\"" "$out" 2>/dev/null | grep -q '@sha256:'; then
             echo "  not pinned: $image: not mirrored" >&2
-        elif tag=$(yq ".$tagpath // \"\"" "$module/values.yaml" 2>/dev/null) && [ -n "$tag" ]; then
+        elif tag=$(module_tag "$module" "$tagpath") && [ -n "$tag" ]; then
             digest=$(docker buildx imagetools inspect "$image:$tag" --format '{{.Manifest.Digest}}' 2>/dev/null | grep -E '^sha256:[0-9a-f]{64}$') \
                 || { echo "No digest found for $image:$tag" >&2; exit 2; }
             v="$tag@$digest" yq -i ".$tagpath = strenv(v)" "$tmp"
             count=$((count + 1))
         else
-            # shortcut: a tag the subchart defaults is not looked up, read it from the default render when third-party images get pinned.
-            echo "  not pinned: $image: values.yaml has no $tagpath" >&2
+            echo "  not pinned: $image: neither values.yaml nor the subchart has $tagpath" >&2
         fi
     done < <(cat "$module"/agent_input*.yaml 2>/dev/null | yq '.. | select(tag == "!!str" and test("_registry")) | (path | join(".")) + " " + .' | sort -u)
     # Not mv: the file keeps its mode, mktemp's is private.
