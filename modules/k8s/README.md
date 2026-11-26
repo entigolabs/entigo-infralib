@@ -638,11 +638,11 @@ every Crossplane provider and function, Helm test hooks left out.
 | kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🔴 |
 | kyverno | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
 | loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🔴 |
-| metrics-server | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
+| metrics-server | 🔴 0/1 | 🟡 | ✖ | ✖ | 🟡 |
 | mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🔴 |
 | oci-native-ingress-controller | 🔴 0/1 | ✖ | ✖ | ✖ | 🟢 |
 | oracle-gateway | – | ✖ | ✖ | ✖ | 🟡 |
-| platform-apis | 🟢 16/16 | 🟡 | 🔴 | 🔴 | 🟡 |
+| platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
@@ -651,8 +651,21 @@ every Crossplane provider and function, Helm test hooks left out.
 | trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |
 | wireguard | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🔴 |
 
-The table is written by hand. Update the row of a module when its tests or its
-`values-images.yaml` change.
+Summary. The score is the share of green among the modules that have images
+(digests) or belong in the cloud (tests):
+
+| | Digests | AWS | Google | Azure | Oracle |
+|---|:-:|:-:|:-:|:-:|:-:|
+| 🟢 | 9 | 11 | 7 | 8 | 3 |
+| 🟡 | 5 | 24 | 15 | 13 | 12 |
+| 🔴 | 27 | 3 | 12 | 13 | 21 |
+| **Green of applicable** | **22% (9 of 41)** | **29% (11 of 38)** | **21% (7 of 34)** | **24% (8 of 34)** | **8% (3 of 36)** |
+
+`platform-apis` is tested from its own repository, where its tests run on AWS
+and Oracle.
+
+The table is written by hand. Update the row of a module and the summary when
+its tests or its `values-images.yaml` change.
 
 ## Adding a new module
 
