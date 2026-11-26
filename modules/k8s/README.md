@@ -589,6 +589,8 @@ installed by sha256 digest.
   workloads or resources are available, its route answers).
 - 🔴 the module is not installed in the test environments of that cloud (no
   `test/<cloud>_<env>.yaml`), so nothing is tested there.
+- ✖ the module does not belong in that cloud: it installs something of
+  another cloud, like `aws-alb` or `crossplane-google`.
 
 **Digests**, with the number of pinned images out of all images:
 
@@ -603,44 +605,44 @@ every Crossplane provider and function, Helm test hooks left out.
 
 | Module | Digests | AWS | Google | Azure | Oracle |
 |---|---|:-:|:-:|:-:|:-:|
-| alloy | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🟡 |
+| alloy | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
 | argocd | 🟡 1/3 | 🟡 | 🟡 | 🟡 | 🟡 |
-| argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
+| argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | ✖ | ✖ | ✖ |
 | authz-controller-cluster | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
-| aws-alb | 🟡 1/2 | 🟢 | 🔴 | 🔴 | 🔴 |
-| aws-storageclass | 🟢 1/1 | 🟢 | 🔴 | 🔴 | 🔴 |
-| azure-gateway | 🔴 0/3 | 🔴 | 🔴 | 🟢 | 🔴 |
+| aws-alb | 🟡 1/2 | 🟢 | ✖ | ✖ | ✖ |
+| aws-storageclass | 🟢 1/1 | 🟢 | ✖ | ✖ | ✖ |
+| azure-gateway | 🔴 0/3 | ✖ | ✖ | 🟢 | ✖ |
 | cert-manager | 🔴 0/3 | 🟢 | 🔴 | 🟢 | 🔴 |
 | cilium | 🟢 4/4 | 🔴 | 🔴 | 🔴 | 🟡 |
 | cluster-autoscaler | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
-| crossplane-aws | 🟢 4/4 | 🟢 | 🔴 | 🔴 | 🔴 |
-| crossplane-azure | 🟡 4/6 | 🔴 | 🔴 | 🟢 | 🔴 |
+| crossplane-aws | 🟢 4/4 | 🟢 | ✖ | ✖ | ✖ |
+| crossplane-azure | 🟡 4/6 | ✖ | ✖ | 🟢 | ✖ |
 | crossplane-core | 🟡 1/2 | 🟡 | 🟡 | 🟡 | 🟡 |
-| crossplane-google | 🟢 4/4 | 🔴 | 🟢 | 🔴 | 🔴 |
+| crossplane-google | 🟢 4/4 | ✖ | 🟢 | ✖ | ✖ |
 | crossplane-kafka | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
-| crossplane-oracle | 🔴 0/6 | 🔴 | 🔴 | 🔴 | 🟢 |
+| crossplane-oracle | 🔴 0/6 | ✖ | ✖ | ✖ | 🟢 |
 | crossplane-sql | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | entigo-portal-agent | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | entigo-vulnerability-agent | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | external-dns | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
 | external-secrets | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
-| google-gateway | – | 🔴 | 🟡 | 🔴 | 🔴 |
+| google-gateway | – | ✖ | 🟡 | ✖ | ✖ |
 | grafana | 🔴 0/3 | 🟡 | 🟡 | 🟡 | 🔴 |
 | harbor | 🟡 1/9 | 🟢 | 🟢 | 🟢 | 🔴 |
 | hello-world | 🔴 0/1 | 🟡 | 🟡 | 🔴 | 🔴 |
 | istio-base | – | 🟡 | 🟡 | 🟡 | 🟡 |
 | istio-gateway | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
 | istio-istiod | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🟡 |
-| karpenter | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| karpenter | 🟢 1/1 | 🟡 | ✖ | ✖ | ✖ |
 | kiali | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
 | kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🔴 |
 | kyverno | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
 | loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🔴 |
-| metrics-server | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
+| metrics-server | 🔴 0/1 | 🟡 | ✖ | ✖ | 🟡 |
 | mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🔴 |
-| oci-native-ingress-controller | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🟢 |
-| oracle-gateway | – | 🔴 | 🔴 | 🔴 | 🟡 |
-| platform-apis | 🟢 16/16 | 🟡 | 🔴 | 🔴 | 🟡 |
+| oci-native-ingress-controller | 🔴 0/1 | ✖ | ✖ | ✖ | 🟢 |
+| oracle-gateway | – | ✖ | ✖ | ✖ | 🟡 |
+| platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
@@ -649,8 +651,21 @@ every Crossplane provider and function, Helm test hooks left out.
 | trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |
 | wireguard | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🔴 |
 
-The table is written by hand. Update the row of a module when its tests or its
-`values-images.yaml` change.
+Summary. The score is the share of green among the modules that have images
+(digests) or belong in the cloud (tests):
+
+| | Digests | AWS | Google | Azure | Oracle |
+|---|:-:|:-:|:-:|:-:|:-:|
+| 🟢 | 9 | 12 | 8 | 9 | 3 |
+| 🟡 | 5 | 23 | 14 | 12 | 12 |
+| 🔴 | 27 | 3 | 12 | 13 | 21 |
+| **Green of applicable** | **22% (9 of 41)** | **32% (12 of 38)** | **24% (8 of 34)** | **26% (9 of 34)** | **8% (3 of 36)** |
+
+`platform-apis` is tested from its own repository, where its tests run on AWS
+and Oracle.
+
+The table is written by hand. Update the row of a module and the summary when
+its tests or its `values-images.yaml` change.
 
 ## Adding a new module
 
