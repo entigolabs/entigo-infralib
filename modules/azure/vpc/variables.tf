@@ -222,6 +222,13 @@ variable "nat_idle_timeout_minutes" {
   default = 4
 }
 
+# https://learn.microsoft.com/azure/application-gateway/for-containers/application-gateway-for-containers-components
+variable "public_agc_bgp_route_propagation_enabled" {
+  type        = bool
+  default     = true
+  description = "false gives the public-agc subnets a route table without BGP route propagation, for a VNet that gets a default route from a hub gateway: the replies of the public AGC have to go back to the internet"
+}
+
 # https://learn.microsoft.com/azure/aks/egress-outboundtype#outbound-type-of-userdefinedrouting
 variable "egress_next_hop_ip" {
   type        = string

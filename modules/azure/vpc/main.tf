@@ -201,6 +201,22 @@ resource "azurerm_subnet" "public_agc" {
   }
 }
 
+# Internet ingress of the public AGC has to return to the internet: no default route of a hub gateway (BGP)
+resource "azurerm_route_table" "public_agc" {
+  count                         = length(local.public_agc_subnets) > 0 && !var.public_agc_bgp_route_propagation_enabled ? 1 : 0
+  name                          = "${var.prefix}-public-agc"
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  bgp_route_propagation_enabled = false
+  tags                          = local.tags
+}
+
+resource "azurerm_subnet_route_table_association" "public_agc" {
+  count          = var.public_agc_bgp_route_propagation_enabled ? 0 : length(local.public_agc_subnets)
+  subnet_id      = azurerm_subnet.public_agc[count.index].id
+  route_table_id = azurerm_route_table.public_agc[0].id
+}
+
 resource "azurerm_subnet" "private_agc" {
   count                           = length(local.private_agc_subnets)
   name                            = local.private_agc_names[count.index]

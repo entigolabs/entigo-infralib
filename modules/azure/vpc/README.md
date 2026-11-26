@@ -152,6 +152,10 @@ changing it replaces the gateway and its IPs; `nat_idle_timeout_minutes`). Intra
 access, public subnets only through a resource's own public IP or load balancer. To egress through a firewall/NVA
 (e.g. in a peered hub) set `enable_nat_gateway: false`, `egress_next_hop_ip` (0.0.0.0/0 route on the private and
 Container Apps subnets) and aks `outbound_type: userDefinedRouting`; without either, AKS and pipeline jobs fail.
+A hub gateway (ExpressRoute/VPN) that advertises a default route over BGP also sends the replies of the public AGC
+through the hub, so its frontend times out: `public_agc_bgp_route_propagation_enabled: false` gives the public-agc
+subnets a route table `<prefix>-public-agc` without BGP route propagation, as Microsoft documents for AGC. The subnets
+then belong to that route table (one per subnet).
 
 The private and Container Apps subnets have Storage and Key Vault service endpoints (`*_subnet_service_endpoints`):
 these services see the private IP instead of the NAT IP, so firewalls need VNet rules.
