@@ -45,11 +45,11 @@ locals {
   # lookup. Only computed for private domains - the data sources below are keyed the same way.
   view_ids = {
     for k, v in local.domains : k => v.view_id != "" ? v.view_id : data.oci_dns_resolver.this[k].default_view_id
-    if v.private
+    if v.private && v.zone_id == ""
   }
 
   zone_ids = {
-    for k, v in local.domains : k => v.create_zone ? oci_dns_zone.this[k].id : data.oci_dns_zones.existing[k].zones[0].id
+    for k, v in local.domains : k => v.zone_id != "" ? v.zone_id : (v.create_zone ? oci_dns_zone.this[k].id : data.oci_dns_zones.existing[k].zones[0].id)
   }
 
   domain_names = { for k, v in local.domains : k => v.domain_name }
@@ -63,14 +63,14 @@ locals {
   # Only zones this module created report nameservers; an existing zone was delegated long ago.
   nameservers = {
     for k, v in local.domains : k => oci_dns_zone.this[k].nameservers[*].hostname
-    if v.create_zone
+    if v.create_zone && v.zone_id == ""
   }
 
   name_suffix = var.name_salt ? "-${random_string.suffix[0].result}" : ""
 }
 
 resource "oci_dns_zone" "this" {
-  for_each = { for k, v in local.domains : k => v if v.create_zone }
+  for_each = { for k, v in local.domains : k => v if v.create_zone && v.zone_id == "" }
 
   compartment_id = var.compartment_id
   name           = each.value.domain_name
@@ -94,7 +94,7 @@ resource "oci_dns_zone" "this" {
 # plural, list-and-filter data source) is used because the singular requires the OCID that we
 # are trying to find.
 data "oci_dns_zones" "existing" {
-  for_each = { for k, v in local.domains : k => v if !v.create_zone }
+  for_each = { for k, v in local.domains : k => v if !v.create_zone && v.zone_id == "" }
 
   compartment_id = var.compartment_id
   name           = each.value.domain_name
@@ -111,7 +111,7 @@ data "oci_dns_zones" "existing" {
 resource "oci_dns_rrset" "ns_delegation" {
   for_each = {
     for k, v in local.domains : k => v
-    if v.parent_zone_id != "" && v.create_zone && !v.private
+    if v.parent_zone_id != "" && v.create_zone && v.zone_id == "" && !v.private
   }
 
   zone_name_or_id = each.value.parent_zone_id

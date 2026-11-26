@@ -12,6 +12,7 @@ Each key names a domain. Everything but `domain_name` is optional:
 |---|---|---|
 | `domain_name` | - | the zone's name, e.g. `dev.example.com` |
 | `create_zone` | `true` | false looks the zone up by name instead of creating it |
+| `zone_id` | `""` | an existing zone by OCID, in any compartment: nothing is created or looked up, the certificate is still issued here |
 | `parent_zone_id` | `""` | OCID of the parent zone **when it is also in OCI DNS**; the NS delegation is then created here |
 | `private` | `false` | resolvable only inside a VCN |
 | `vcn_id` | module `vcn_id` | which VCN, for a private zone |

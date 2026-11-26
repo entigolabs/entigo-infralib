@@ -32,5 +32,5 @@ stringData:
       # looking perfectly healthy, and records silently stop being published.
       region: {{ .Values.global.oracle.region }}
       useWorkloadIdentity: true
-    compartment: {{ .Values.global.oracle.compartmentId }}
+    compartment: {{ .Values.global.oracle.zoneCompartmentId | default .Values.global.oracle.compartmentId }}
 {{- end }}

@@ -8,7 +8,7 @@
 data "oci_core_vcn_dns_resolver_association" "this" {
   for_each = {
     for k, v in local.domains : k => v
-    if v.private && v.view_id == ""
+    if v.private && v.view_id == "" && v.zone_id == ""
   }
 
   vcn_id = each.value.effective_vcn_id
@@ -17,7 +17,7 @@ data "oci_core_vcn_dns_resolver_association" "this" {
 data "oci_dns_resolver" "this" {
   for_each = {
     for k, v in local.domains : k => v
-    if v.private && v.view_id == ""
+    if v.private && v.view_id == "" && v.zone_id == ""
   }
 
   resolver_id = data.oci_core_vcn_dns_resolver_association.this[each.key].dns_resolver_id

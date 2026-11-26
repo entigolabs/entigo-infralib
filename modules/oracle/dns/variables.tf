@@ -32,6 +32,9 @@ variable "domains" {
     domain_name = string
 
     create_zone = optional(bool, true)
+    # An existing zone by OCID, in any compartment (e.g. a zone the network team owns): nothing is
+    # created or looked up for it, the certificate is still issued here.
+    zone_id = optional(string, "")
     # OCID of the parent zone, when that zone is also in OCI DNS - the NS delegation is then
     # created here. Leave empty when the parent lives elsewhere (Route53, a registrar), which
     # is the usual case: the delegation is then added by hand from the nameservers output.

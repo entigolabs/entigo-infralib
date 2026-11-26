@@ -5,6 +5,9 @@ global:
   oracle:
     # Filled by agent_input_oracle.yaml; consumed by templates/oracle/policy.yaml.
     compartmentId: ""
+    # Compartment of the zones when it isn't compartmentId (e.g. a zone the network team owns,
+    # with its own IAM grants for this cluster's workloads); the policy stays in compartmentId.
+    zoneCompartmentId: ""
     # OKE Workload Identity policy conditions are scoped to one cluster, so the policy needs
     # the cluster OCID alongside the namespace and service account.
     clusterId: ""
