@@ -57,7 +57,7 @@ overrides them.
 | `README.md` | Module specific documentation, when the module needs it |
 
 A module that only ships its own manifests, for example `hello-world`,
-`rbac-bindings`, `aws-storageclass`, `google-gateway` or the `crossplane-*`
+`aws-storageclass`, `google-gateway` or the `crossplane-*`
 provider modules, has no `charts/` folder and no dependencies in `Chart.yaml`.
 Everything else in the table still applies.
 
@@ -655,7 +655,6 @@ every Crossplane provider and function, Helm test hooks left out.
 | platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
-| rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
 | saml-proxy | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
 | tempo | 🔴 0/1 | 🟢 | 🟢 | 🔴 | 🔴 |
 | trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |

@@ -301,7 +301,7 @@ variable "oke_api_access_cidrs" {
 #     }
 #
 # Enabling this only makes the cluster ACCEPT such tokens. A user authenticated this way still
-# has no permissions until something binds their group - see modules/k8s/rbac-bindings.
+# has no permissions until something binds their group - see modules/k8s/authz-controller-cluster.
 variable "cluster_identity_providers" {
   description = "OIDC identity provider for Kubernetes API access. OCI supports exactly one per cluster. Empty disables OIDC authentication."
   type        = any

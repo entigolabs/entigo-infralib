@@ -65,6 +65,5 @@ steps:
       - source: mimir
       - name: platform-apis
         source: platform-apis
-      - source: rbac-bindings
       - source: tempo
       - source: trivy
