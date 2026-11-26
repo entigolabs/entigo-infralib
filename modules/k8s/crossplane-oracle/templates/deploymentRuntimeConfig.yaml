@@ -17,6 +17,11 @@ spec:
       selector: {}
       strategy: {}
       template:
+        metadata:
+          annotations:
+            # A restart while the provider creates a resource loses its OCID, and the restarted
+            # provider creates it again, leaving the first one unmanaged.
+            cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
         spec:
           affinity:
             nodeAffinity:
@@ -88,6 +93,11 @@ spec:
       selector: {}
       strategy: {}
       template:
+        metadata:
+          annotations:
+            # A restart while the provider creates a resource loses its OCID, and the restarted
+            # provider creates it again, leaving the first one unmanaged.
+            cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
         spec:
           affinity:
             nodeAffinity:
