@@ -169,7 +169,8 @@ Pod images are pinned through the value that carries their tag.
 `modules/k8s/pod-images.sh modules/k8s/<module>` finds the images in the
 module's agent inputs, which already name every repository that can be pulled
 through a registry proxy. The tag of such an image is the `tag` value next to
-it: the script reads it from `values.yaml`, resolves its digest and writes
+it: the script reads it from `values.yaml`, or from the subchart's defaults when
+the module does not set it, resolves its digest and writes
 `<tag>@sha256:<digest>` to the same value path in `values-images.yaml`:
 
 ```yaml
@@ -184,8 +185,17 @@ job:
   tag: v1.25.14@sha256:516c...
 ```
 
-Only the images we build ourselves are pinned so far, the script lists the
-others as not pinned. The pin repeats the tag, so it has to be regenerated
+By default only the images we build ourselves are pinned, the script lists the
+others as not pinned. An image that is already pinned in the file stays pinned,
+so the images of another publisher are added by one run that names them, and
+kept by every later run:
+
+```sh
+PIN=goharbor/ modules/k8s/pod-images.sh modules/k8s/harbor
+```
+
+The digest is the one the tag points to: the multi-arch index when the image
+has one. The pin repeats the tag, so it has to be regenerated
 whenever a tag changes. The static check enforces that: it renders the module
 with and without `values-images.yaml` and fails when the file changes anything
 other than adding a digest. `pullpush.sh digests` runs `pod-images.sh` for a
@@ -626,7 +636,7 @@ every Crossplane provider and function, Helm test hooks left out.
 | external-secrets | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
 | google-gateway | – | 🔴 | 🟡 | 🔴 | 🔴 |
 | grafana | 🔴 0/3 | 🟡 | 🟡 | 🟡 | 🔴 |
-| harbor | 🟡 1/9 | 🟢 | 🟢 | 🟢 | 🔴 |
+| harbor | 🟢 9/9 | 🟢 | 🟢 | 🟢 | 🔴 |
 | hello-world | 🔴 0/1 | 🟡 | 🟡 | 🔴 | 🔴 |
 | istio-base | – | 🟡 | 🟡 | 🟡 | 🟡 |
 | istio-gateway | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
