@@ -1,0 +1,12 @@
+suites:
+  - zone
+  - postgresql
+  - cronjob
+  - kafka
+  - rabbitmq
+  - repository
+  - s3bucket
+  - valkey
+  - mariadb
+  - webaccess
+  - webapp
