@@ -165,6 +165,32 @@ version: after a version bump that did not regenerate the file the packages
 are installed by tag, and the mirror workflow fails until the file is
 regenerated.
 
+Pod images are pinned through the value that carries their tag.
+`modules/k8s/pod-images.sh modules/k8s/<module>` finds the images in the
+module's agent inputs, which already name every repository that can be pulled
+through a registry proxy. The tag of such an image is the `tag` value next to
+it: the script reads it from `values.yaml`, resolves its digest and writes
+`<tag>@sha256:<digest>` to the same value path in `values-images.yaml`:
+
+```yaml
+# agent_input.yaml
+job:
+  image: '{{ .toptout.ecr-proxy.hub_registry | "docker.io" }}/entigolabs/entigo-infralib-kubectl'
+# values.yaml
+job:
+  tag: "v1.25.14"
+# values-images.yaml
+job:
+  tag: v1.25.14@sha256:516c...
+```
+
+Only the images we build ourselves are pinned so far, the script lists the
+others as not pinned. The pin repeats the tag, so it has to be regenerated
+whenever a tag changes. The static check enforces that: it renders the module
+with and without `values-images.yaml` and fails when the file changes anything
+other than adding a digest. `pullpush.sh digests` runs `pod-images.sh` for a
+crossplane module whose file already has pod image digests.
+
 ## Agent inputs
 
 `agent_input.yaml` is a Helm values file with agent replacement tags in it. The
@@ -549,6 +575,82 @@ the chart.
 `test/k8s_unit_basic_test.go` runs with terratest against the live test clusters
 after the agent has deployed the module, one test function per cloud and
 environment. This is where cloud specific templates actually get verified.
+
+## Coverage: tests and image digests
+
+What each module is tested with in each cloud, and how many of its images are
+installed by sha256 digest.
+
+**Tests**, per cloud:
+
+- 🟢 the test uses the module: it creates a resource through it, reads data
+  from it, or checks what it wrote in the cloud.
+- 🟡 the test only checks that the module is installed and running (its
+  workloads or resources are available, its route answers).
+- 🔴 the module is not installed in the test environments of that cloud (no
+  `test/<cloud>_<env>.yaml`), so nothing is tested there.
+
+**Digests**, with the number of pinned images out of all images:
+
+- 🟢 every image is installed by digest.
+- 🟡 some are.
+- 🔴 none is.
+- – the module installs no image.
+
+The images are counted in the chart rendered with `values.yaml` and
+`values-images.yaml`: the `image:` of every container and the `package:` of
+every Crossplane provider and function, Helm test hooks left out.
+
+| Module | Digests | AWS | Google | Azure | Oracle |
+|---|---|:-:|:-:|:-:|:-:|
+| alloy | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🟡 |
+| argocd | 🟡 1/3 | 🟡 | 🟡 | 🟡 | 🟡 |
+| argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
+| authz-controller-cluster | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| aws-alb | 🟡 1/2 | 🟢 | 🔴 | 🔴 | 🔴 |
+| aws-storageclass | 🟢 1/1 | 🟢 | 🔴 | 🔴 | 🔴 |
+| azure-gateway | 🔴 0/3 | 🔴 | 🔴 | 🟢 | 🔴 |
+| cert-manager | 🔴 0/3 | 🟢 | 🔴 | 🟢 | 🔴 |
+| cilium | 🟢 4/4 | 🔴 | 🔴 | 🔴 | 🟡 |
+| cluster-autoscaler | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
+| crossplane-aws | 🟢 4/4 | 🟢 | 🔴 | 🔴 | 🔴 |
+| crossplane-azure | 🟡 4/6 | 🔴 | 🔴 | 🟢 | 🔴 |
+| crossplane-core | 🟡 1/2 | 🟡 | 🟡 | 🟡 | 🟡 |
+| crossplane-google | 🟢 4/4 | 🔴 | 🟢 | 🔴 | 🔴 |
+| crossplane-kafka | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| crossplane-oracle | 🔴 0/6 | 🔴 | 🔴 | 🔴 | 🟢 |
+| crossplane-sql | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| entigo-portal-agent | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| entigo-vulnerability-agent | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| external-dns | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
+| external-secrets | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
+| google-gateway | – | 🔴 | 🟡 | 🔴 | 🔴 |
+| grafana | 🔴 0/3 | 🟡 | 🟡 | 🟡 | 🔴 |
+| harbor | 🟡 1/9 | 🟢 | 🟢 | 🟢 | 🔴 |
+| hello-world | 🔴 0/1 | 🟡 | 🟡 | 🔴 | 🔴 |
+| istio-base | – | 🟡 | 🟡 | 🟡 | 🟡 |
+| istio-gateway | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
+| istio-istiod | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🟡 |
+| karpenter | 🟢 1/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| kiali | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
+| kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🔴 |
+| kyverno | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
+| loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🔴 |
+| metrics-server | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🟡 |
+| mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🔴 |
+| oci-native-ingress-controller | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🟢 |
+| oracle-gateway | – | 🔴 | 🔴 | 🔴 | 🟡 |
+| platform-apis | 🟢 16/16 | 🟡 | 🔴 | 🔴 | 🟡 |
+| prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
+| promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
+| rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
+| saml-proxy | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| tempo | 🔴 0/1 | 🟢 | 🟢 | 🔴 | 🔴 |
+| trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |
+| wireguard | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🔴 |
+
+The table is written by hand. Update the row of a module when its tests or its
+`values-images.yaml` change.
 
 ## Adding a new module
 

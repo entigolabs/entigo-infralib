@@ -4,6 +4,11 @@ global:
   sourceRepos:
   - ghcr.io/entigolabs
 platform-apis:
+  # pri runs zone access from RoleGrants in kcp root:martin:pri; biz stays on roleMapping groups.
+  authz:
+    enabled: true
+    organization: martin
+    workspace: pri
   zone:
     # The sweep that picks up edits to an existing Application runs on this interval, so the
     # tests would otherwise wait 10 minutes to see one.
@@ -11,6 +16,9 @@ platform-apis:
       syncInterval: 1m
     environmentConfig:
       granularEgress: false
+      # Also set by the infralib agent_input, repeated so these tests do not depend on that release
+      secretStoreNamespace: "{{ .tmodule.external-secrets }}"
+      # `roleMapping` and `namespaceRole` ignored in authz mode, needed if pri is switched back.
       roleMapping:
         - roleRef: maintainer
           groups: ["web-read-only-343159627493470238", "maintainer"]
@@ -22,7 +30,9 @@ platform-apis:
             verbs: ["create", "get"]
   database:
     environmentConfig:
-      backupBeforeDeletion: false
+      postgresBackupBeforeDeletion: false
+      mariaDBBackupBeforeDeletion: false
+      valkeyBackupBeforeDeletion: false
       backupRetentionPeriod: 0
   functions:
     function-go-templating:

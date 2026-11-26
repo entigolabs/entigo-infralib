@@ -20,6 +20,10 @@ locals {
      "BOTTLEROCKET_x86_64_NVIDIA" = "1.70.0-59b0684a"
   }
    
+  resolved_main_ami_release_version  = try(coalesce(var.eks_main_ami_release_version, local.ami_release_version[var.eks_main_ami_type]), null)
+  resolved_tools_ami_release_version = try(coalesce(var.eks_tools_ami_release_version, local.ami_release_version[var.eks_tools_ami_type]), null)
+  output_ami_release_version         = var.eks_tools_max_size > 0 ? local.resolved_tools_ami_release_version : (var.eks_main_max_size > 0 ? local.resolved_main_ami_release_version : null)
+
   iam_role_additional_policies = zipmap(compact(var.iam_role_additional_policies), compact(var.iam_role_additional_policies))
 
   # Node conditions and reasons that trigger EKS node auto repair (non GPU), https://docs.aws.amazon.com/eks/latest/userguide/node-health-nma.html
@@ -67,7 +71,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_main_ami_type
-      ami_release_version = try(coalesce(var.eks_main_ami_release_version, local.ami_release_version[var.eks_main_ami_type]), null)
+      ami_release_version = local.resolved_main_ami_release_version
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false
@@ -155,7 +159,7 @@ locals {
       key_name         = var.node_ssh_key_pair_name
       release_version = var.eks_cluster_version
       ami_type        = var.eks_tools_ami_type
-      ami_release_version = try(coalesce(var.eks_tools_ami_release_version, local.ami_release_version[var.eks_tools_ami_type]), null)
+      ami_release_version = local.resolved_tools_ami_release_version
       use_latest_ami_release_version = var.use_latest_ami_release_version
       iam_role_additional_policies = merge({ AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" }, local.iam_role_additional_policies)
       iam_role_attach_cni_policy = false

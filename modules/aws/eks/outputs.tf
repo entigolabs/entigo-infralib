@@ -180,3 +180,8 @@ output "region" {
   value = data.aws_region.current.region
 }
 
+output "ami_release_version" {
+  description = "AMI release version of the tools node group, or main when tools is disabled, used to align other node groups with this infralib release"
+  value = local.output_ami_release_version
+}
+

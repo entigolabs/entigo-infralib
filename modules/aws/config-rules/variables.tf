@@ -13,6 +13,12 @@ variable "config_logs_bucket" {
   default = ""
 }
 
+variable "force_destroy" {
+  description = "Delete the module's log buckets together with the objects in them when the module is removed. For environments that are torn down, such as test environments; leave it off where the logs must outlive the module."
+  type        = bool
+  default     = false
+}
+
 variable "operational_best_practices_conformance_pack_enabled" {
   type    = bool
   default = false

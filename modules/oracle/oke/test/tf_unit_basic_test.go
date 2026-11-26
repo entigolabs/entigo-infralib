@@ -73,6 +73,14 @@ func testOke(t *testing.T, e *env.Environment, servicesCidr string, withKms bool
 	assert.Equal(t, 2, *pool.NodeConfigDetails.Size, "Wrong tools node pool size")
 	assert.Equal(t, "VM.Standard.E4.Flex", *pool.NodeShape, "Wrong tools node shape")
 	assert.Equal(t, float32(2), *pool.NodeShapeConfig.Ocpus, "Wrong tools node OCPUs")
+
+	// A node pool is placed in every availability domain of the region, so its placements name
+	// the domains the output lists.
+	var wantADs []string
+	for _, p := range pool.NodeConfigDetails.PlacementConfigs {
+		wantADs = append(wantADs, *p.AvailabilityDomain)
+	}
+	assert.ElementsMatch(t, wantADs, outputs.StringList(t, "oke__availability_domains"), "Wrong availability_domains returned")
 	assert.Equal(t, float32(8), *pool.NodeShapeConfig.MemoryInGBs, "Wrong tools node memory")
 	if withKms {
 		require.NotNil(t, pool.NodeConfigDetails.KmsKeyId, "Tools nodes have no KMS key")

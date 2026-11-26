@@ -2,4 +2,4 @@
 # ./test.sh vendor modules/azure/aks, which updates the directories and vendor.lock.
 modules:
   - source: Azure/avm-res-containerservice-managedcluster/azurerm
-    version: 0.8.7
+    version: 0.9.0

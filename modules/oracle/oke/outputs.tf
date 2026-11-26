@@ -145,3 +145,9 @@ output "node_nsg_id" {
 output "pod_nsg_id" {
   value = oci_core_network_security_group.pods.id
 }
+
+output "availability_domains" {
+  # The region's availability domains. Their names carry a tenancy-specific prefix
+  # (wAtM:eu-frankfurt-2-ad-1), so a consumer that has to name one cannot hard-code it.
+  value = data.oci_identity_availability_domains.this.availability_domains[*].name
+}

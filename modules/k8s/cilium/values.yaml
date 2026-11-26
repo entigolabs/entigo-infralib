@@ -11,6 +11,8 @@ cilium:
               operator: In
               values:
               - "true"
+    unmanagedPodWatcher:
+      selector: ""
   hubble:
     tls:
       auto:
