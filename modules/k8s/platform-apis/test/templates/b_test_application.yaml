@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: b-apps
+  namespace: {{ .BApps }}
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .BApps }}
+  project: {{ .B }}
+  source:
+    chart: platform-apis-test-b-apps
+    repoURL: ghcr.io/entigolabs
+    targetRevision: 'v0.2.105'
+    helm:
+      releaseName: platform-apis-test-b-apps
+      values: |
+        targetRevision: 'v0.2.105'
+        prefix: '{{ .Prefix }}'
+        domain: '{{ .Domain }}'
+        gateway:
+          name: '{{ .Gateway }}'
+          namespace: '{{ .GatewayNamespace }}'
+        serviceIngressClass: '{{ .ServiceIngressClass }}'
+  syncPolicy: {}
