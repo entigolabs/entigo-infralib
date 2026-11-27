@@ -26,6 +26,7 @@ steps:
     modules:
       - source: alloy
       - source: argocd
+      - source: authz-controller-cluster
       - name: crossplane-system
         source: crossplane-core
       - name: crossplane-google
