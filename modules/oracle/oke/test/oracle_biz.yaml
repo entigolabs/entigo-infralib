@@ -2,3 +2,8 @@ is_public_ip_enabled: true
 # The k8s module tests reach the API from GitHub runners, whose addresses are not fixed.
 oke_api_access_cidrs: |
   ["0.0.0.0/0"]
+# The observability modules (loki, mimir, grafana, alloy, kube-state-metrics) do not fit
+# on the default two tools nodes: a node of this shape takes 31 pods.
+oke_tools_node_count: 3
+oke_tools_min_size: 3
+oke_tools_max_size: 5

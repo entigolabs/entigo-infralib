@@ -1,0 +1,7 @@
+loki:
+  gateway:
+    route:
+      main:
+        # Off by default on Oracle (Grafana reaches loki in-cluster); the unit test
+        # probes loki through the gateway, as on the other clouds.
+        enabled: true

@@ -11,6 +11,9 @@ global:
     region: ""
     # The in-cluster kube-apiserver ClusterIP, for the egress network policy.
     kubernetesServiceIp: ""
+    # The API endpoint's own address, which is where Cilium checks a connection to the
+    # Kubernetes API (templates/oracle/networkPolicy.yaml). Empty leaves that policy out.
+    privateEndpointIp: ""
     # Name of the classic tenancy Group the client puts loki's manually-created User into -
     # see templates/oracle/credentials.yaml. agent_input_oracle.yaml names it
     # <prefix>-<module>, matching the bucket; the Group itself is still the client's to

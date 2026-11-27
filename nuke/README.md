@@ -8,7 +8,7 @@ The files are the configurations of the nuke tools, in their own formats:
 |---|---|---|
 | `aws.yaml` | [aws-nuke](https://github.com/ekristen/aws-nuke) | the CI and maintainer IAM users and their keys, the `infralib.entigo.io` zone, SSO roles, the saml-proxy secrets |
 | `google.yaml` | [gcp-nuke](https://github.com/taivox/gcp-nuke) | the github service accounts, the `gcp.infralib.entigo.io` zone, the Artifact Registry repository |
-| `oracle.yaml` | [oci-nuke](https://github.com/entigolabs/oci-nuke) | the agent's state keys, the bootstrap policies, the vaults, keys and CAs |
+| `oracle.yaml` | [oci-nuke](https://github.com/entigolabs/oci-nuke) | the agent's state keys, the bootstrap policies, the vaults, keys and CAs, the loki and mimir users and groups |
 | `azure.yaml` | [azure-nuke](https://github.com/taivox/azure-nuke) | the Entra ID objects, the `infralib-permanent-*` resource group with the `azure.infralib.entigo.io` zone and its records, the role assignments of the CI and agent principals; key vault keys are soft-deleted so names can be reused |
 | `azure.yaml` | [azure-nuke](https://github.com/taivox/azure-nuke) | the `infralib-permanent-*` resource groups (parent DNS zones, AKS private DNS zone) with only the zones' apex NS/SOA records |
 

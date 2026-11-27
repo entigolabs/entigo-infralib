@@ -12,6 +12,7 @@ import (
 	"github.com/entigolabs/entigo-infralib-test/env"
 	"github.com/entigolabs/entigo-infralib-test/google"
 	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/oracle"
 )
 
 func TestLoki(t *testing.T) {
@@ -35,6 +36,8 @@ func TestLoki(t *testing.T) {
 			account, err := k8s.RunKubectlAndGetOutputE(t, c, "get", "accounts.storage.azure.m.upbound.io", c.Namespace, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
 			require.NoError(t, err, "storage Account error")
 			azure.WaitUntilBlobExists(t, azure.AccountNamed(account), fmt.Sprintf("%s-%s-logs", e.Prefix, c.Namespace), "loki_cluster_seed.json", 20, 6*time.Second)
+		case env.CloudOracle:
+			require.NoError(t, oracle.WaitUntilBucketFileAvailable(t, e.MustRegion(t), fmt.Sprintf("%s-%s", e.Prefix, c.Namespace), "loki_cluster_seed.json", 20, 6*time.Second), "File not found in Oracle bucket")
 		}
 
 		k8s.WaitUntilRouteReachable(t, c, "", routeRetries(e), 6*time.Second)
