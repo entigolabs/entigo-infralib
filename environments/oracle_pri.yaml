@@ -21,6 +21,7 @@ steps:
     modules:
       - source: alloy
       - source: argocd
+      - source: authz-controller-cluster
       - source: cilium
       - source: cluster-autoscaler
       - name: crossplane-system

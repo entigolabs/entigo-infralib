@@ -618,7 +618,7 @@ every Crossplane provider and function, Helm test hooks left out.
 | alloy | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟢 |
 | argocd | 🟡 1/3 | 🟡 | 🟡 | 🟡 | 🟡 |
 | argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | ✖ | ✖ | ✖ |
-| authz-controller-cluster | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| authz-controller-cluster | 🟢 1/1 | 🟢 | 🟡 | 🟡 | 🟢 |
 | aws-alb | 🟡 1/2 | 🟢 | ✖ | ✖ | ✖ |
 | aws-storageclass | 🟢 1/1 | 🟢 | ✖ | ✖ | ✖ |
 | azure-gateway | 🔴 0/3 | ✖ | ✖ | 🟢 | ✖ |
@@ -666,10 +666,10 @@ Summary. The score is the share of green among the modules that have images
 
 | | Digests | AWS | Google | Azure | Oracle |
 |---|:-:|:-:|:-:|:-:|:-:|
-| 🟢 | 11 | 12 | 8 | 9 | 7 |
-| 🟡 | 3 | 23 | 14 | 12 | 13 |
-| 🔴 | 27 | 2 | 10 | 11 | 15 |
-| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **25% (8 of 32)** | **28% (9 of 32)** | **20% (7 of 35)** |
+| 🟢 | 12 | 13 | 8 | 9 | 8 |
+| 🟡 | 3 | 22 | 15 | 13 | 13 |
+| 🔴 | 26 | 2 | 9 | 10 | 14 |
+| **Green of applicable** | **29% (12 of 41)** | **35% (13 of 37)** | **25% (8 of 32)** | **28% (9 of 32)** | **23% (8 of 35)** |
 
 `platform-apis` is tested from its own repository, where its tests run on AWS
 and Oracle.
