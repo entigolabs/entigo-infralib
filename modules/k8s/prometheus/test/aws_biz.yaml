@@ -1,31 +1,12 @@
 # biz collects metrics with alloy, which writes them to Mimir and to this Prometheus. So
-# Prometheus is only a store here: it accepts remote write and scrapes nothing but itself.
-# The same values are in modules/k8s/alloy/README.md, "Prometheus as the store".
+# Prometheus is only a store here and scrapes nothing but itself. The same values are in
+# modules/k8s/alloy/README.md, "Prometheus as the store".
 prometheus:
-  server:
-    # The list replaces the chart's, which holds web.enable-lifecycle.
-    extraFlags:
-      - web.enable-lifecycle
-      - web.enable-remote-write-receiver
-  scrapeConfigs:
-    kubernetes-api-servers:
-      enabled: false
-    kubernetes-nodes:
-      enabled: false
-    kubernetes-nodes-cadvisor:
-      enabled: false
-    kubernetes-service-endpoints:
-      enabled: false
-    kubernetes-service-endpoints-slow:
-      enabled: false
-    prometheus-pushgateway:
-      enabled: false
-    kubernetes-services:
-      enabled: false
-    kubernetes-pods:
-      enabled: false
-    kubernetes-pods-slow:
-      enabled: false
+  scrapeConfigs: null
+  extraScrapeConfigs: |
+    - job_name: prometheus
+      static_configs:
+        - targets: [localhost:9090]
   # The kube-state-metrics module and alloy's node agent take their place.
   kube-state-metrics:
     enabled: false

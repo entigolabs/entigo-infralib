@@ -190,51 +190,31 @@ With metrics enabled, alloy writes to the Mimir and to the Prometheus of the
 platform, whichever of the two modules exist, and to both when both do. The
 agent finds them; nothing has to be set.
 
-A Prometheus that alloy writes to is a store, not a collector. It needs its
-remote write receiver on (`--web.enable-remote-write-receiver`), and its own
-scrape jobs, node exporter and kube-state-metrics off, or everything is stored
+A Prometheus that alloy writes to is a store, not a collector. The `prometheus`
+module has its remote write receiver on by default; its own scrape jobs, node
+exporter and kube-state-metrics have to be turned off, or everything is stored
 twice. Enabling alloy metrics on a platform is the decision to stop Prometheus
-scraping there.
-
-The `prometheus` module has no single switch for this, the settings belong to
-its subcharts. These inputs turn it into a store that still scrapes itself:
+scraping there:
 
 ```yaml
       - name: prometheus
         source: prometheus
         inputs:
           prometheus:
-            server:
-              extraFlags:
-                - web.enable-lifecycle
-                - web.enable-remote-write-receiver
-            scrapeConfigs:
-              kubernetes-api-servers:
-                enabled: false
-              kubernetes-nodes:
-                enabled: false
-              kubernetes-nodes-cadvisor:
-                enabled: false
-              kubernetes-service-endpoints:
-                enabled: false
-              kubernetes-service-endpoints-slow:
-                enabled: false
-              prometheus-pushgateway:
-                enabled: false
-              kubernetes-services:
-                enabled: false
-              kubernetes-pods:
-                enabled: false
-              kubernetes-pods-slow:
-                enabled: false
+            scrapeConfigs: null
+            # Prometheus keeps scraping itself.
+            extraScrapeConfigs: |
+              - job_name: prometheus
+                static_configs:
+                  - targets: [localhost:9090]
             kube-state-metrics:
               enabled: false
             prometheus-node-exporter:
               enabled: false
 ```
 
-The receiver takes writes from anything that reaches the server, without
-authentication, so keep the module's route internal.
+The receiver has no authentication. The module's route and its ALB Ingress
+answer 404 on `/api/v1/write`, so only the cluster can write.
 
 - A Prometheus somewhere else: set `prometheusEndpoint` on both parts, the URL
   ends in `/api/v1/write`.

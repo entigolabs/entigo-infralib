@@ -14,6 +14,30 @@ prometheus:
         alb.ingress.kubernetes.io/scheme: internal
         alb.ingress.kubernetes.io/success-codes: 200-499
         alb.ingress.kubernetes.io/target-type: ip
+        # The same three paths the route keeps from the outside, see values.yaml.
+        alb.ingress.kubernetes.io/actions.cluster-only: '{"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"404","messageBody":"not found"}}'
+      extraPaths:
+        - path: /api/v1/write
+          pathType: Exact
+          backend:
+            service:
+              name: cluster-only
+              port:
+                name: use-annotation
+        - path: /-/reload
+          pathType: Exact
+          backend:
+            service:
+              name: cluster-only
+              port:
+                name: use-annotation
+        - path: /-/quit
+          pathType: Exact
+          backend:
+            service:
+              name: cluster-only
+              port:
+                name: use-annotation
       hosts:
         - prometheus
       tls: []
