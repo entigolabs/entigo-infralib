@@ -46,29 +46,6 @@ argocd:
               kinds:
               - ProviderConfigUsage
       resource.customizations: |
-        "apiextensions.crossplane.io/ManagedResourceDefinition":
-          health.lua: |
-            health_status = {}
-            health_status.status = "Progressing"
-            health_status.message = ""
-            -- guard conditions ~= nil to avoid Lua error on empty status
-            if obj.status ~= nil and obj.status.conditions ~= nil then
-              for i, condition in ipairs(obj.status.conditions) do
-                if condition.type == "Established" then
-                  if condition.status == "True" then
-                    health_status.status = "Healthy"
-                    health_status.message = "Resource is up-to-date."
-                    return health_status
-                  end
-                  if condition.reason == "InactiveManagedResource" then
-                    health_status.status = "Healthy"
-                    health_status.message = "Resource is up-to-date."
-                    return health_status
-                  end
-                end
-              end
-            end
-            return health_status
         "pkg.crossplane.io/Provider":
           health.lua: |
             -- Healthy only when the package is both installed and its
@@ -160,77 +137,6 @@ argocd:
                 return health_status
               end
               if condition.type == "Ready" and condition.status == "True" then
-                ready = true
-              end
-            end
-
-            if ready then
-              health_status.status = "Healthy"
-              health_status.message = "Resource is up-to-date."
-            end
-            return health_status
-
-        "*.crossplane.io/*":
-          health.lua: |
-            health_status = {
-              status = "Progressing",
-              message = "Provisioning ..."
-            }
-
-            local function contains (table, val)
-              for i, v in ipairs(table) do
-                if v == val then
-                  return true
-                end
-              end
-              return false
-            end
-
-            local has_no_status = {
-              "Composition",
-              "CompositionRevision",
-              "DeploymentRuntimeConfig",
-              "ClusterProviderConfig",
-              "EnvironmentConfig",
-              "ImageConfig",
-              "ProviderConfig",
-              "ProviderConfigUsage"
-            }
-
-            -- parenthesized: only statusless KINDS are healthy-by-definition
-            if (obj.status == nil or next(obj.status) == nil) and contains(has_no_status, obj.kind) then
-              health_status.status = "Healthy"
-              health_status.message = "Resource is up-to-date."
-              return health_status
-            end
-
-            if (obj.kind == "ProviderConfig" or obj.kind == "ClusterProviderConfig")
-                and obj.status ~= nil and obj.status.users ~= nil then
-              health_status.status = "Healthy"
-              health_status.message = "Resource is in use."
-              return health_status
-            end
-
-            if obj.status == nil or obj.status.conditions == nil then
-              return health_status
-            end
-
-            -- collect flags first, decide after the loop:
-            -- condition array order is not guaranteed
-            local ready = false
-            for i, condition in ipairs(obj.status.conditions) do
-              if condition.type == "LastAsyncOperation" and condition.status == "False" then
-                health_status.status = "Degraded"
-                health_status.message = condition.message or condition.reason or "Async operation failed"
-                return health_status
-              end
-              if condition.type == "Synced" and condition.status == "False" then
-                health_status.status = "Degraded"
-                health_status.message = condition.message or condition.reason or "Sync failed"
-                return health_status
-              end
-              if contains({"Ready", "Healthy", "Offered", "Established", "ValidPipeline", "RevisionHealthy", "Succeeded", "Watching", "Scheduling"}, condition.type)
-                  and condition.status == "True" then
                 ready = true
               end
             end
