@@ -15,10 +15,8 @@ locals {
   # ("must be a public subnet if public ip enabled"), so the subnet choice must follow it.
   endpoint_subnet_id = var.is_public_ip_enabled ? var.public_subnet_id : var.private_subnet_id
 
-  # An empty cluster_identity_providers and cluster_authentication_config means "no OIDC".
-  oidc_enabled = length(var.cluster_identity_providers) > 0 || var.cluster_authentication_config != ""
-  # OCI takes either the file or the individual fields
-  oidc_fields = var.cluster_authentication_config == "" ? var.cluster_identity_providers : {}
+  # An empty cluster_identity_providers means "no OIDC".
+  oidc_enabled = length(var.cluster_identity_providers) > 0
 
   # Whether the existing cluster has OIDC on, so that turning it off sends "enabled = false"
   # once. False before the cluster exists.
@@ -363,10 +361,6 @@ resource "oci_containerengine_cluster" "this" {
       condition     = var.oke_tools_node_count > 0 || var.oke_main_node_count > 0
       error_message = "Set oke_tools_node_count or oke_main_node_count above 0: the platform's own workloads run on the tools or main node pool."
     }
-    precondition {
-      condition     = var.cluster_authentication_config == "" || length(var.cluster_identity_providers) == 0
-      error_message = "Set cluster_identity_providers or cluster_authentication_config, not both: OCI takes either the individual OIDC fields or the configuration file."
-    }
   }
 
   # Encrypts etcd - and so every Kubernetes Secret - with a customer-managed key rather than
@@ -410,10 +404,9 @@ resource "oci_containerengine_cluster" "this" {
     #
     # Requires an enhanced cluster, which this module always creates - see type above.
     dynamic "open_id_connect_token_authentication_config" {
-      for_each = local.oidc_enabled || local.oidc_on_in_oci ? [local.oidc_fields] : []
+      for_each = local.oidc_enabled || local.oidc_on_in_oci ? [var.cluster_identity_providers] : []
       content {
         is_open_id_connect_auth_enabled = local.oidc_enabled
-        configuration_file              = var.cluster_authentication_config != "" ? base64encode(var.cluster_authentication_config) : null
 
         issuer_url         = try(open_id_connect_token_authentication_config.value.issuer_url, null)
         client_id          = try(open_id_connect_token_authentication_config.value.client_id, null)
