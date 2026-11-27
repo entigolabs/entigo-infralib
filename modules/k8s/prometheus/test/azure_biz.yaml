@@ -1,0 +1,14 @@
+# biz collects metrics with alloy, which writes them to Mimir and to this Prometheus. So
+# Prometheus is only a store here and scrapes nothing but itself. The same values are in
+# modules/k8s/alloy/README.md, "Prometheus as the store".
+prometheus:
+  scrapeConfigs: null
+  extraScrapeConfigs: |
+    - job_name: prometheus
+      static_configs:
+        - targets: [localhost:9090]
+  # The kube-state-metrics module and alloy's node agent take their place.
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false

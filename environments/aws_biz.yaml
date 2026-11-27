@@ -63,6 +63,7 @@ steps:
       - source: loki
       - source: metrics-server
       - source: mimir
+      - source: prometheus
       - name: platform-apis
         source: platform-apis
       - source: rbac-bindings

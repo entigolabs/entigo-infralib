@@ -190,11 +190,31 @@ With metrics enabled, alloy writes to the Mimir and to the Prometheus of the
 platform, whichever of the two modules exist, and to both when both do. The
 agent finds them; nothing has to be set.
 
-A Prometheus that alloy writes to is a store, not a collector. It needs its
-remote write receiver on (`--web.enable-remote-write-receiver`), and its own
-scrape jobs, node exporter and kube-state-metrics off, or everything is stored
+A Prometheus that alloy writes to is a store, not a collector. The `prometheus`
+module has its remote write receiver on by default; its own scrape jobs, node
+exporter and kube-state-metrics have to be turned off, or everything is stored
 twice. Enabling alloy metrics on a platform is the decision to stop Prometheus
-scraping there.
+scraping there:
+
+```yaml
+      - name: prometheus
+        source: prometheus
+        inputs:
+          prometheus:
+            scrapeConfigs: null
+            # Prometheus keeps scraping itself.
+            extraScrapeConfigs: |
+              - job_name: prometheus
+                static_configs:
+                  - targets: [localhost:9090]
+            kube-state-metrics:
+              enabled: false
+            prometheus-node-exporter:
+              enabled: false
+```
+
+The receiver has no authentication. The module's route answers 500 and its ALB
+Ingress 404 on `/api/v1/write`, so only the cluster can write.
 
 - A Prometheus somewhere else: set `prometheusEndpoint` on both parts, the URL
   ends in `/api/v1/write`.

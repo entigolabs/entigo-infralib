@@ -75,6 +75,27 @@ prometheus:
         - source_labels: [__meta_kubernetes_node_name]
           target_label: node
   server:
+    # The remote write receiver is on so that the alloy module can use this Prometheus as its
+    # store without further inputs. The list replaces the chart's, which holds
+    # web.enable-lifecycle: the config reloader sidecar needs that one to call /-/reload.
+    extraFlags:
+      - web.enable-lifecycle
+      - web.enable-remote-write-receiver
+    route:
+      main:
+        # Neither flag has authentication, so writing, reloading and shutting down are for the
+        # cluster only: a rule without a backend, for which the gateways answer 500.
+        additionalRules:
+          - matches:
+              - path:
+                  type: Exact
+                  value: /api/v1/write
+              - path:
+                  type: Exact
+                  value: /-/reload
+              - path:
+                  type: Exact
+                  value: /-/quit
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
