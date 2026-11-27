@@ -14,18 +14,24 @@ accounts:
         # compartment; its agent's state key, bootstrap policy, vault and key
         # survive like those of biz and pri.
         - entigo-infralib-exbiz-state
+      # The manually created users of loki and mimir and the groups their bucket
+      # policies name (modules/k8s/loki/templates/oracle/credentials.yaml). pri
+      # runs no mimir. Their Customer Secret Keys need no filter: only the keys of
+      # the user running the nuke are listed.
       OCIUser:
       - property: Name
         type: In
         values:
         - biz-loki
         - biz-mimir
+        - pri-loki
       OCIGroup:
       - property: Name
         type: In
         values:
         - biz-loki
         - biz-mimir
+        - pri-loki
       OCIPolicy:
       - property: Name
         type: In
