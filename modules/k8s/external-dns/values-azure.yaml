@@ -5,6 +5,7 @@ global:
     pubZoneId: ""
     intZoneId: ""
     existingIdentityId: ""
+    additionalPermissions: []
 
 external-dns:
   provider:
