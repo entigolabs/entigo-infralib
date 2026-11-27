@@ -23,6 +23,7 @@ steps:
     type: argocd-apps
     argocd_namespace: argocd-biz
     modules:
+      - source: alloy
       - source: argocd
       - source: cilium
       - source: cluster-autoscaler
@@ -34,8 +35,11 @@ steps:
       - source: istio-base
       - name: istio-system
         source: istio-istiod
+      - source: kube-state-metrics
       - source: kyverno
+      - source: loki
       - source: metrics-server
+      - source: mimir
       - source: oci-native-ingress-controller
       - source: oracle-gateway
       - source: platform-apis

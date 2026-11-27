@@ -19,6 +19,7 @@ steps:
     type: argocd-apps
     argocd_namespace: argocd-pri
     modules:
+      - source: alloy
       - source: argocd
       - source: cilium
       - source: cluster-autoscaler
@@ -31,8 +32,10 @@ steps:
       - name: istio-system
         source: istio-istiod
       - source: kyverno
+      - source: loki
       - source: metrics-server
       - source: oci-native-ingress-controller
       - source: oracle-gateway
       - source: platform-apis
+      - source: prometheus
       - source: trivy

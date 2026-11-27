@@ -615,7 +615,7 @@ every Crossplane provider and function, Helm test hooks left out.
 
 | Module | Digests | AWS | Google | Azure | Oracle |
 |---|---|:-:|:-:|:-:|:-:|
-| alloy | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟡 |
+| alloy | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟢 |
 | argocd | 🟡 1/3 | 🟡 | 🟡 | 🟡 | 🟡 |
 | argocd-ecr-updater (deprecated) | 🔴 0/1 | 🔴 | ✖ | ✖ | ✖ |
 | authz-controller-cluster | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
@@ -645,15 +645,15 @@ every Crossplane provider and function, Helm test hooks left out.
 | istio-istiod | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🟡 |
 | karpenter | 🟢 1/1 | 🟡 | ✖ | ✖ | ✖ |
 | kiali | 🔴 0/1 | 🟡 | 🟡 | 🟡 | 🔴 |
-| kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🔴 |
+| kube-state-metrics | 🔴 0/1 | 🟢 | 🟢 | 🟢 | 🟢 |
 | kyverno | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
-| loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🔴 |
+| loki | 🔴 0/3 | 🟢 | 🟢 | 🟢 | 🟢 |
 | metrics-server | 🔴 0/1 | 🟡 | ✖ | ✖ | 🟡 |
-| mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🔴 |
+| mimir | 🔴 0/2 | 🟢 | 🟢 | 🟢 | 🟢 |
 | oci-native-ingress-controller | 🔴 0/1 | ✖ | ✖ | ✖ | 🟢 |
 | oracle-gateway | – | ✖ | ✖ | ✖ | 🟡 |
 | platform-apis | 🟢 16/16 | 🟢 | 🔴 | 🔴 | 🟢 |
-| prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🔴 |
+| prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
 | saml-proxy | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
@@ -666,10 +666,10 @@ Summary. The score is the share of green among the modules that have images
 
 | | Digests | AWS | Google | Azure | Oracle |
 |---|:-:|:-:|:-:|:-:|:-:|
-| 🟢 | 11 | 12 | 8 | 9 | 3 |
+| 🟢 | 11 | 12 | 8 | 9 | 7 |
 | 🟡 | 3 | 23 | 14 | 12 | 12 |
-| 🔴 | 27 | 2 | 11 | 12 | 21 |
-| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **24% (8 of 33)** | **27% (9 of 33)** | **8% (3 of 36)** |
+| 🔴 | 27 | 2 | 11 | 12 | 17 |
+| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **24% (8 of 33)** | **27% (9 of 33)** | **19% (7 of 36)** |
 
 `platform-apis` is tested from its own repository, where its tests run on AWS
 and Oracle.
