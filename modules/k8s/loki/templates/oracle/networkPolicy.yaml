@@ -1,0 +1,50 @@
+{{- if eq .Values.global.cloudProvider "oracle" }}
+{{- with .Values.global.oracle.privateEndpointIp }}
+# The backend's rules sidecar watches ConfigMaps through the Kubernetes API. Cilium checks
+# the connection after Service translation, at the API endpoint's own address and port, which
+# the chart's policies (443 only) do not allow. Without this the sidecar restarts forever and
+# the backend never becomes ready.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $.Release.Name }}-kube-api
+  namespace: {{ $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: {{ . }}/32
+      ports:
+        - protocol: TCP
+          port: 6443
+{{- end }}
+{{- $route := .Values.loki.gateway.route.main }}
+{{- if and (eq (toString $route.enabled) "true") $route.parentRefs }}
+---
+# The gateway route: requests arrive from the Gateway's pods, which carry no netpol-loki label.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-gateway-route
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ (first $route.parentRefs).namespace }}
+      ports:
+        - protocol: TCP
+          port: http
+{{- end }}
+{{- end }}
