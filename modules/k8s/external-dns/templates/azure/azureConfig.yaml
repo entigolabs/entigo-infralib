@@ -1,6 +1,5 @@
 {{- if eq .Values.global.cloudProvider "azure" }}
 {{- $id := splitList "/" (required "global.azure.pubZoneId" .Values.global.azure.pubZoneId) }}
-# Credentials come from the workload identity webhook
 apiVersion: v1
 kind: Secret
 metadata:
@@ -14,4 +13,21 @@ stringData:
       "resourceGroup": {{ index $id 4 | quote }},
       "useWorkloadIdentityExtension": true
     }
+{{- if index .Values "external-dns-private" "enabled" }}
+{{- $int := splitList "/" (.Values.global.azure.intZoneId | default .Values.global.azure.pubZoneId) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: external-dns-azure-private
+type: Opaque
+stringData:
+  azure.json: |
+    {
+      "tenantId": {{ .Values.global.azure.tenantId | quote }},
+      "subscriptionId": {{ index $int 2 | quote }},
+      "resourceGroup": {{ index $int 4 | quote }},
+      "useWorkloadIdentityExtension": true
+    }
+{{- end }}
 {{- end }}

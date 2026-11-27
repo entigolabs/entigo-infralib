@@ -59,7 +59,7 @@ external-dns-private:
   extraVolumes:
     - name: azure-config-file
       secret:
-        secretName: external-dns-azure
+        secretName: external-dns-azure-private
   extraVolumeMounts:
     - name: azure-config-file
       mountPath: /etc/kubernetes
