@@ -25,13 +25,15 @@ accounts:
         - biz-loki
         - biz-mimir
         - pri-loki
+      # The groups are named <prefix>-<module name>, and a k8s module is named
+      # <module>-<prefix> in these environments.
       OCIGroup:
       - property: Name
         type: In
         values:
-        - biz-loki
-        - biz-mimir
-        - pri-loki
+        - biz-loki-biz
+        - biz-mimir-biz
+        - pri-loki-pri
       OCIPolicy:
       - property: Name
         type: In
