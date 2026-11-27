@@ -196,6 +196,46 @@ scrape jobs, node exporter and kube-state-metrics off, or everything is stored
 twice. Enabling alloy metrics on a platform is the decision to stop Prometheus
 scraping there.
 
+The `prometheus` module has no single switch for this, the settings belong to
+its subcharts. These inputs turn it into a store that still scrapes itself:
+
+```yaml
+      - name: prometheus
+        source: prometheus
+        inputs:
+          prometheus:
+            server:
+              extraFlags:
+                - web.enable-lifecycle
+                - web.enable-remote-write-receiver
+            scrapeConfigs:
+              kubernetes-api-servers:
+                enabled: false
+              kubernetes-nodes:
+                enabled: false
+              kubernetes-nodes-cadvisor:
+                enabled: false
+              kubernetes-service-endpoints:
+                enabled: false
+              kubernetes-service-endpoints-slow:
+                enabled: false
+              prometheus-pushgateway:
+                enabled: false
+              kubernetes-services:
+                enabled: false
+              kubernetes-pods:
+                enabled: false
+              kubernetes-pods-slow:
+                enabled: false
+            kube-state-metrics:
+              enabled: false
+            prometheus-node-exporter:
+              enabled: false
+```
+
+The receiver takes writes from anything that reaches the server, without
+authentication, so keep the module's route internal.
+
 - A Prometheus somewhere else: set `prometheusEndpoint` on both parts, the URL
   ends in `/api/v1/write`.
 - Not writing to a Mimir or Prometheus that is part of the platform: set
