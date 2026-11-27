@@ -399,7 +399,7 @@ resource "azurerm_role_assignment" "cluster_admin" {
 # aks:jwt:. Each authenticator updates the managed cluster, so after the node pools
 resource "azapi_resource" "jwt_authenticator" {
   for_each                  = var.cluster_identity_providers
-  type                      = "Microsoft.ContainerService/managedClusters/jwtAuthenticators@2026-06-02-preview"
+  type                      = "Microsoft.ContainerService/managedClusters/jwtAuthenticators@2026-09-02-preview"
   name                      = try(each.value.identity_provider_config_name, each.key)
   parent_id                 = module.aks.resource_id
   schema_validation_enabled = false
