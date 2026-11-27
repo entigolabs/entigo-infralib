@@ -302,6 +302,22 @@ variable "oke_api_access_cidrs" {
 #
 # Enabling this only makes the cluster ACCEPT such tokens. A user authenticated this way still
 # has no permissions until something binds their group - see modules/k8s/rbac-bindings.
+# The whole OIDC login as a Kubernetes AuthenticationConfiguration (apiserver.config.k8s.io/v1beta1) instead of
+# cluster_identity_providers, for what the individual fields can't do: several issuers, CEL claimMappings and
+# validation rules, a separate issuer.discoveryURL (e.g. a private copy of a public issuer's discovery document) or
+# issuer.certificateAuthority. OCI then uses only the file.
+# https://kubernetes.io/docs/reference/access-authn-authz/authentication/#using-authentication-configuration
+variable "cluster_authentication_config" {
+  description = "Kubernetes AuthenticationConfiguration YAML for OIDC authentication, instead of cluster_identity_providers. Empty = not used"
+  type        = string
+  nullable    = false
+  default     = ""
+  validation {
+    condition     = var.cluster_authentication_config == "" || can(yamldecode(var.cluster_authentication_config).jwt)
+    error_message = "cluster_authentication_config must be an AuthenticationConfiguration YAML with a jwt list."
+  }
+}
+
 variable "cluster_identity_providers" {
   description = "OIDC identity provider for Kubernetes API access. OCI supports exactly one per cluster. Empty disables OIDC authentication."
   type        = any
