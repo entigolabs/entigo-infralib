@@ -2,44 +2,25 @@ ARG BASE_TAG=latest
 FROM entigolabs/entigo-infralib-tools:${BASE_TAG} AS tools
 FROM alpine:3.24
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-ENV PATH="/opt/venv/bin:$PATH"
-
-#Install AWS SDK
+# No cloud CLI: the step scripts reach the bucket, the registry and the cluster
+# with shackle, and OpenTofu and its providers talk to the cloud themselves.
+# That leaves this image the same for every cloud but Azure, apart from the
+# stand-in below; it stays one per cloud because the agent picks a step's
+# image by cloud and the test images are built on it.
 RUN apk --no-cache add \
     ca-certificates \
-    python3 \
-    py3-pip \
     jq \
     yq \
     git \
     sudo \
     bash \
-    docker-credential-ecr-login \
     && rm -rf /var/cache/apk/* \
-    && python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --no-cache-dir awscli \
-    && rm -rf \
-       /root/.cache/pip \
-       /opt/venv/bin/pip* \
-       /opt/venv/lib/python3.*/site-packages/awscli/examples \
-       /opt/venv/lib/python3.*/site-packages/pip \
-       /opt/venv/lib/python3.*/site-packages/setuptools \
-       /opt/venv/lib/python3.*/site-packages/wheel \
-       /opt/venv/lib/python3.*/site-packages/*/tests \
-       /opt/venv/lib/python3.*/site-packages/*/test \
-       /opt/venv/lib/python3.*/site-packages/pip-* \
-    # botocore reads gzipped service models (.json.gz) as well as plain ones;
-    # compressed they are a fifth of the size (121 MiB -> 25 MiB).
-    && find /opt/venv/lib/python3.*/site-packages/awscli/botocore/data -type f -name "*.json" -exec gzip -9 {} + \
-    && find /opt/venv -type f -name "*.pyc" -delete \
-    && find /opt/venv -type f -name "*.pyo" -delete \
-    && apk del py3-pip \
     && echo "entigo ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers.d/entigo \
     && addgroup -g 1000 entigo && adduser -u 1000 -G entigo -D entigo && chown entigo /usr/local/share/ca-certificates
-
 # Copy stripped binaries from tools image
 COPY --from=tools /entigo-bin/* /usr/bin/
 COPY --from=tools /entigo-scripts/* /usr/bin/
-
+# `aws eks get-token` for the provider configuration of earlier releases.
+COPY aws /usr/bin/aws
 USER 1000
 WORKDIR /app

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Stands in for the AWS CLI, which this image does not have, for one call:
+# `aws eks get-token`. The Kubernetes provider configuration of earlier
+# releases (providers/kubernetes.tf) runs it as its credential plugin, and a
+# step can pair this image with the modules of such a release. shackle makes
+# the same token.
+if [ "$1" = eks ] && [ "$2" = get-token ]; then
+    shift 2
+    cluster="" region=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --cluster-name) cluster=$2; shift ;;
+            --cluster-name=*) cluster=${1#*=} ;;
+            --region) region=$2; shift ;;
+            --region=*) region=${1#*=} ;;
+        esac
+        shift
+    done
+    [ -n "$cluster" ] || { echo "aws eks get-token: --cluster-name is required" >&2; exit 2; }
+    exec shackle token aws --cluster "$cluster" ${region:+--region "$region"}
+fi
+echo "This image has no AWS CLI: the step scripts use shackle (https://github.com/entigolabs/shackle)." >&2
+echo "Not available: aws $*" >&2
+exit 127
