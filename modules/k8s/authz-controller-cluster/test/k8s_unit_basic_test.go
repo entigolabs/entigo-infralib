@@ -99,24 +99,36 @@ func testRoleGrant(t *testing.T, c *k8s.Client) {
 	_, err = k8s.WaitUntilObjectAvailable(t, c, roleGrants, "", name, isClusterReady, 30, 4*time.Second)
 	require.NoError(t, err, "RoleGrant %s is not ClusterReady", name)
 
-	role, err := clientset.RbacV1().ClusterRoles().Get(ctx, rulesName, metav1.GetOptions{})
-	require.NoError(t, err, "ClusterRole error")
-	granted := false
-	for _, rule := range role.Rules {
-		if len(rule.APIGroups) == 1 && rule.APIGroups[0] == "argoproj.io" &&
-			len(rule.Resources) == 1 && rule.Resources[0] == "applications" &&
-			len(rule.Verbs) == 1 && rule.Verbs[0] == "get" {
-			granted = true
+	// ClusterReady alone does not mean the objects are there to stay: the definition's own
+	// reconcile sweeps the objects of grants it does not know yet and the grant renders
+	// them again, so wait for them instead of reading once.
+	subject := fmt.Sprintf("oidc:%s", entry)
+	retry.DoWithRetry(t, fmt.Sprintf("ClusterRole and ClusterRoleBinding %s", rulesName), 30, 4*time.Second, func() (string, error) {
+		role, err := clientset.RbacV1().ClusterRoles().Get(ctx, rulesName, metav1.GetOptions{})
+		if err != nil {
+			return "", err
 		}
-	}
-	require.True(t, granted, "ClusterRole %s rules %v lack the definition's rule", rulesName, role.Rules)
-
-	binding, err := clientset.RbacV1().ClusterRoleBindings().Get(ctx, rulesName, metav1.GetOptions{})
-	require.NoError(t, err, "ClusterRoleBinding error")
-	require.Equal(t, rulesName, binding.RoleRef.Name)
-	require.Len(t, binding.Subjects, 1)
-	require.Equal(t, "Group", binding.Subjects[0].Kind)
-	require.Equal(t, fmt.Sprintf("oidc:%s", entry), binding.Subjects[0].Name)
+		granted := false
+		for _, rule := range role.Rules {
+			if len(rule.APIGroups) == 1 && rule.APIGroups[0] == "argoproj.io" &&
+				len(rule.Resources) == 1 && rule.Resources[0] == "applications" &&
+				len(rule.Verbs) == 1 && rule.Verbs[0] == "get" {
+				granted = true
+			}
+		}
+		if !granted {
+			return "", fmt.Errorf("ClusterRole %s rules %v lack the definition's rule", rulesName, role.Rules)
+		}
+		binding, err := clientset.RbacV1().ClusterRoleBindings().Get(ctx, rulesName, metav1.GetOptions{})
+		if err != nil {
+			return "", err
+		}
+		if binding.RoleRef.Name != rulesName || len(binding.Subjects) != 1 ||
+			binding.Subjects[0].Kind != "Group" || binding.Subjects[0].Name != subject {
+			return "", fmt.Errorf("ClusterRoleBinding %s binds %s to %v, want group %s", rulesName, binding.RoleRef.Name, binding.Subjects, subject)
+		}
+		return "", nil
+	})
 
 	policy := fmt.Sprintf("p, role:%s, applications, get, */*, allow\ng, %s, role:%s\n", name, entry, name)
 	retry.DoWithRetry(t, fmt.Sprintf("%s in argocd-rbac-cm", policyKey), 30, 4*time.Second, func() (string, error) {
