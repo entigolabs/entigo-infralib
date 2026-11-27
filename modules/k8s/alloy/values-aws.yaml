@@ -14,11 +14,13 @@ node-agent:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: kube-system
-      # Loki and Mimir, in this cluster or in another one.
+      # Loki and Mimir, in this cluster or in another one; 9090 is the Prometheus server.
       - ports:
           - port: 80
             protocol: TCP
           - port: 8080
+            protocol: TCP
+          - port: 9090
             protocol: TCP
       # Kubelet / cAdvisor on the local node
       - ports:

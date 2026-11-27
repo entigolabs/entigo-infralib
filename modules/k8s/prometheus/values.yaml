@@ -84,7 +84,7 @@ prometheus:
     route:
       main:
         # Neither flag has authentication, so writing, reloading and shutting down are for the
-        # cluster only: a rule without a backend makes the gateway answer 404.
+        # cluster only: a rule without a backend, for which the gateways answer 500.
         additionalRules:
           - matches:
               - path:

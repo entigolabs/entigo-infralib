@@ -213,8 +213,8 @@ scraping there:
               enabled: false
 ```
 
-The receiver has no authentication. The module's route and its ALB Ingress
-answer 404 on `/api/v1/write`, so only the cluster can write.
+The receiver has no authentication. The module's route answers 500 and its ALB
+Ingress 404 on `/api/v1/write`, so only the cluster can write.
 
 - A Prometheus somewhere else: set `prometheusEndpoint` on both parts, the URL
   ends in `/api/v1/write`.
