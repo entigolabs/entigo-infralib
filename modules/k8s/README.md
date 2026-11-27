@@ -656,7 +656,7 @@ every Crossplane provider and function, Helm test hooks left out.
 | prometheus | 🔴 0/5 | 🟡 | 🟡 | 🟡 | 🟡 |
 | promtail (deprecated) | 🔴 0/1 | 🔴 | 🔴 | 🔴 | 🔴 |
 | rbac-bindings | – | 🟡 | 🔴 | 🔴 | 🔴 |
-| saml-proxy | 🔴 0/1 | 🟡 | 🔴 | 🔴 | 🔴 |
+| saml-proxy | 🔴 0/1 | 🟡 | ✖ | ✖ | ✖ |
 | tempo | 🔴 0/1 | 🟢 | 🟢 | 🔴 | 🔴 |
 | trivy | 🔴 0/2 | 🟡 | 🟡 | 🟡 | 🟡 |
 | wireguard | 🔴 0/4 | 🟡 | 🟡 | 🟡 | 🔴 |
@@ -668,8 +668,8 @@ Summary. The score is the share of green among the modules that have images
 |---|:-:|:-:|:-:|:-:|:-:|
 | 🟢 | 11 | 12 | 8 | 9 | 7 |
 | 🟡 | 3 | 23 | 14 | 12 | 13 |
-| 🔴 | 27 | 2 | 11 | 12 | 16 |
-| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **24% (8 of 33)** | **27% (9 of 33)** | **19% (7 of 36)** |
+| 🔴 | 27 | 2 | 10 | 11 | 15 |
+| **Green of applicable** | **27% (11 of 41)** | **32% (12 of 37)** | **25% (8 of 32)** | **28% (9 of 32)** | **20% (7 of 35)** |
 
 `platform-apis` is tested from its own repository, where its tests run on AWS
 and Oracle.
