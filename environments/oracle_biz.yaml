@@ -32,6 +32,7 @@ steps:
       - name: crossplane-oracle
         source: crossplane-oracle
       - source: external-dns
+      - source: grafana
       - source: istio-base
       - name: istio-system
         source: istio-istiod
