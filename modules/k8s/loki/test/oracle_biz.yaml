@@ -1,9 +1,3 @@
-global:
-  oracle:
-    # The group the manually created user is in (templates/oracle/credentials.yaml).
-    # The default is <prefix>-<module name>, and the module is named loki-biz here.
-    serviceAccountGroupName: biz-loki
-
 loki:
   gateway:
     route:

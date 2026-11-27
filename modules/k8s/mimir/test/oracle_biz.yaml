@@ -1,8 +1,4 @@
 global:
-  oracle:
-    # The group the manually created user is in (templates/oracle/credentials.yaml).
-    # The default is <prefix>-<module name>, and the module is named mimir-biz here.
-    serviceAccountGroupName: biz-mimir
   # Off by default on Oracle; the unit test probes mimir through the gateway, as on
   # the other clouds.
   createRoute: true
