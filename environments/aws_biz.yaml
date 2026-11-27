@@ -68,3 +68,4 @@ steps:
       - source: rbac-bindings
       - source: tempo
       - source: trivy
+      - source: trust-private-ca

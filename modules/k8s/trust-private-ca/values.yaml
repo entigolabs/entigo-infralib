@@ -1,0 +1,8 @@
+# CA certificates in PEM, one entry per certificate: <name>: <certificate>
+certificates: {}
+
+# Namespaces whose pods get the certificates mounted
+namespaces: []
+
+# Directory in the containers the certificates are mounted into, as the file <module name>.crt
+mountPath: /etc/ssl/certs

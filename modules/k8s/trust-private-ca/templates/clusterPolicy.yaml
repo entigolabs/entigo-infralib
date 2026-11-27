@@ -1,0 +1,66 @@
+{{- if and .Values.certificates .Values.namespaces }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ .Release.Name }}-copy
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Force=true,Replace=true
+spec:
+  rules:
+    - name: copy-certificates
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+              names:
+                {{- toYaml .Values.namespaces | nindent 16 }}
+      generate:
+        apiVersion: v1
+        kind: ConfigMap
+        name: {{ .Release.Name }}
+        namespace: "{{ "{{" }}request.object.metadata.name{{ "}}" }}"
+        synchronize: true
+        generateExisting: true
+        clone:
+          namespace: {{ .Release.Namespace }}
+          name: {{ .Release.Name }}
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ .Release.Name }}-mount
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  rules:
+    - name: mount-certificates
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- toYaml .Values.namespaces | nindent 16 }}
+      mutate:
+        patchStrategicMerge:
+          spec:
+            volumes:
+              - name: {{ .Release.Name }}
+                configMap:
+                  name: {{ .Release.Name }}
+            initContainers:
+              - (name): "*"
+                volumeMounts:
+                  - name: {{ .Release.Name }}
+                    mountPath: {{ .Values.mountPath | trimSuffix "/" }}/{{ .Release.Name }}.crt
+                    subPath: {{ .Release.Name }}.crt
+                    readOnly: true
+            containers:
+              - (name): "*"
+                volumeMounts:
+                  - name: {{ .Release.Name }}
+                    mountPath: {{ .Values.mountPath | trimSuffix "/" }}/{{ .Release.Name }}.crt
+                    subPath: {{ .Release.Name }}.crt
+                    readOnly: true
+{{- end }}

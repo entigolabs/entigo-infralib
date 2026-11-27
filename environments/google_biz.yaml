@@ -49,3 +49,4 @@ steps:
       - source: mimir
       - source: tempo
       - source: trivy
+      - source: trust-private-ca

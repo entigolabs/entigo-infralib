@@ -44,4 +44,5 @@ steps:
       - source: loki
       - source: prometheus
       - source: trivy
+      - source: trust-private-ca
       - source: wireguard

@@ -1,0 +1,8 @@
+# Without certificates and namespaces the chart renders nothing to check
+certificates:
+  test: |
+    -----BEGIN CERTIFICATE-----
+    test
+    -----END CERTIFICATE-----
+namespaces:
+  - default

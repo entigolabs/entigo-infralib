@@ -41,3 +41,4 @@ steps:
       - source: platform-apis
       - source: prometheus
       - source: trivy
+      - source: trust-private-ca

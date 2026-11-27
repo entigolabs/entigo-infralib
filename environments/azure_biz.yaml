@@ -49,3 +49,4 @@ steps:
       - source: loki
       - source: mimir
       - source: trivy
+      - source: trust-private-ca
