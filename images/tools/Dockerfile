@@ -10,7 +10,7 @@ COPY --from=agent /usr/bin/ei-agent /entigo-bin/ei-agent
 # shackle (https://github.com/entigolabs/shackle): kubeconfig and cluster
 # tokens, registry credentials and bucket copy for every cloud from one static
 # binary. The step scripts use it instead of the cloud CLIs.
-COPY --from=ghcr.io/entigolabs/shackle:v0.1.9@sha256:563af2c0b76422c6ccacb91c7466d1e80eec0c9d8b880f7bb030786d4f1226ff /usr/local/bin/shackle /entigo-bin/shackle
+COPY --from=ghcr.io/entigolabs/shackle:v0.1.10@sha256:83c51053357bf1fcd3d31489c04197292cbe27eebc2c36e0fb665addb0a7cf05 /usr/local/bin/shackle /entigo-bin/shackle
 
 RUN apk --no-cache add \
     unzip \

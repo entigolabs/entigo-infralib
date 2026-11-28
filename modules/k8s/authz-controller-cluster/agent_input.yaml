@@ -1,3 +1,5 @@
 authz-controller-cluster:
+  image:
+    repository: '{{ .toptout.ecr-proxy.hub_registry | .toptout.gar-proxy.hub_registry | .toptout.acr-proxy.hub_registry | "docker.io" }}/entigolabs/authz-controller-cluster'
   config:
     ARGOCD_NAMESPACE: "{{ .toptmodule.argocd }}"

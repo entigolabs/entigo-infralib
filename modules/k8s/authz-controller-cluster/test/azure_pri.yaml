@@ -1,0 +1,4 @@
+authz-controller-cluster:
+  config:
+    ORGANIZATION: martin
+    WORKSPACE: azpri

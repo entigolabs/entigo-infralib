@@ -36,24 +36,22 @@ func TestAlloy(t *testing.T) {
 		// there for this, the test inputs turn it on (node-agent.service.enabled).
 		addr, stop := k8s.PortForwardService(t, c, nodeAgent, 12345)
 		defer stop()
-		// Oracle has no Loki, Mimir or Prometheus to deliver to, only the components are checked.
-		delivers := e.Cloud != env.CloudOracle
 		_, err = retry.DoWithRetryE(t, "the node agent delivers logs and metrics", 30, 10*time.Second, func() (string, error) {
 			metrics, err := get(fmt.Sprintf("http://%s/metrics", addr))
 			if err != nil {
 				return "", err
 			}
-			return "", undelivered(metrics, delivers)
+			return "", undelivered(metrics)
 		})
 		require.NoError(t, err)
 	})
 }
 
 // undelivered names what a node agent's /metrics page shows as not working: a component that is
-// not healthy and, when the agent has stores to deliver to, no log line accepted by Loki, or a
+// not healthy, no log line accepted by Loki, or a
 // metrics endpoint that has accepted no sample yet. Metrics are off by default (pri), then there
 // is no endpoint to look at.
-func undelivered(metrics string, delivers bool) error {
+func undelivered(metrics string) error {
 	var problems []string
 	logs := 0.0
 	for _, line := range strings.Split(metrics, "\n") {
@@ -69,12 +67,12 @@ func undelivered(metrics string, delivers bool) error {
 			logs += value
 		// The time of the newest sample the endpoint accepted, 0 until the first one.
 		case strings.HasPrefix(series, "prometheus_remote_storage_queue_highest_sent_timestamp_seconds{"):
-			if value == 0 && delivers {
+			if value == 0 {
 				problems = append(problems, "no sample accepted yet: "+series)
 			}
 		}
 	}
-	if delivers && logs == 0 {
+	if logs == 0 {
 		problems = append(problems, "no log line accepted by Loki (loki_write_sent_entries_total)")
 	}
 	if len(problems) > 0 {

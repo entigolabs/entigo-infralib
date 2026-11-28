@@ -12,6 +12,7 @@ import (
 	"github.com/entigolabs/entigo-infralib-test/env"
 	"github.com/entigolabs/entigo-infralib-test/google"
 	"github.com/entigolabs/entigo-infralib-test/k8s"
+	"github.com/entigolabs/entigo-infralib-test/oracle"
 )
 
 func TestMimir(t *testing.T) {
@@ -42,6 +43,8 @@ func TestMimir(t *testing.T) {
 			account, err := k8s.RunKubectlAndGetOutputE(t, c, "get", "accounts.storage.azure.m.upbound.io", c.Namespace, "-o", `jsonpath={.metadata.annotations.crossplane\.io/external-name}`)
 			require.NoError(t, err, "storage Account error")
 			azure.WaitUntilBlobExists(t, azure.AccountNamed(account), fmt.Sprintf("%s-%s-metrics", e.Prefix, c.Namespace), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second)
+		case env.CloudOracle:
+			require.NoError(t, oracle.WaitUntilBucketFileAvailable(t, e.MustRegion(t), fmt.Sprintf("%s-%s", e.Prefix, c.Namespace), "blocks/__mimir_cluster/mimir_cluster_seed.json", 20, 6*time.Second), "File not found in Oracle bucket")
 		}
 
 		// The chart's HTTPRoute is the only one in the namespace.

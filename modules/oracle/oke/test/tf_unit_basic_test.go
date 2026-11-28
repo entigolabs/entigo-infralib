@@ -22,17 +22,17 @@ func TestOke(t *testing.T) {
 	})
 }
 
-// oracle_biz.yaml only makes the API endpoint public; everything else is the module's default.
+// oracle_biz.yaml makes the API endpoint public and gives the tools pool three to five nodes.
 func testOkeBiz(t *testing.T, e *env.Environment) {
-	testOke(t, e, "10.96.0.0/16", true)
+	testOke(t, e, "10.96.0.0/16", true, 3, 5)
 }
 
 // oracle_pri.yaml also moves the service range off the default. pri has no kms, so its node disks get no key.
 func testOkePri(t *testing.T, e *env.Environment) {
-	testOke(t, e, "10.97.0.0/16", false)
+	testOke(t, e, "10.97.0.0/16", false, 2, 3)
 }
 
-func testOke(t *testing.T, e *env.Environment, servicesCidr string, withKms bool) {
+func testOke(t *testing.T, e *env.Environment, servicesCidr string, withKms bool, toolsMin, toolsMax int) {
 	outputs := tf.Get(t, e)
 	// vpc and kms are in the net step, wherever this module is deployed.
 	netOutputs := tf.GetStep(t, e, "net")
@@ -70,7 +70,9 @@ func testOke(t *testing.T, e *env.Environment, servicesCidr string, withKms bool
 	pool := poolResponse.NodePool
 	assert.Equal(t, modulePrefix+"-tools", *pool.Name, "Wrong tools node pool name")
 	assert.Equal(t, clusterId, *pool.ClusterId, "Tools node pool is not in the cluster")
-	assert.Equal(t, 2, *pool.NodeConfigDetails.Size, "Wrong tools node pool size")
+	// The cluster-autoscaler moves the size between the pool's limits, so no exact count.
+	assert.GreaterOrEqual(t, *pool.NodeConfigDetails.Size, toolsMin, "Tools node pool is below its minimum size")
+	assert.LessOrEqual(t, *pool.NodeConfigDetails.Size, toolsMax, "Tools node pool is above its maximum size")
 	assert.Equal(t, "VM.Standard.E4.Flex", *pool.NodeShape, "Wrong tools node shape")
 	assert.Equal(t, float32(2), *pool.NodeShapeConfig.Ocpus, "Wrong tools node OCPUs")
 

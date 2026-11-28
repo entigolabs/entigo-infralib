@@ -176,6 +176,7 @@ mimir-distributed:
           region: {{ .Values.global.aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
+          dualstack_enabled: false
           signature_version: v4
 
         {{- if index .Values "metadata-cache" "enabled" }}
@@ -202,6 +203,7 @@ mimir-distributed:
           region: {{ .Values.global.aws.region }}
           endpoint: s3.amazonaws.com
           insecure: false
+          dualstack_enabled: false
           signature_version: v4
 
       server:
