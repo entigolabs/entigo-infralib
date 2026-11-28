@@ -1,0 +1,8 @@
+global:
+  # Off by default on Oracle; the unit test probes mimir through the gateway, as on
+  # the other clouds.
+  createRoute: true
+
+mimir-distributed:
+  alertmanager:
+    enabled: true

@@ -5,6 +5,7 @@ global:
     objectStorageNamespace: "{{ .toutput.oke.object_storage_namespace }}"
     region: "{{ .toutput.oke.region }}"
     kubernetesServiceIp: "{{ .toutput.oke.kubernetes_service_ip }}"
+    privateEndpointIp: "{{ .toutput.oke.private_endpoint_ip }}"
     # The telemetry key, matching loki and mimir on aws (telemetry_alias_arn) and google
     # (telemetry_key_id). Optional (.toptout) so a deployment without a kms module still
     # renders - the bucket then falls back to Oracle-managed encryption.
